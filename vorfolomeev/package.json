@@ -1,0 +1,98 @@
+{
+    "name": "vms",
+    "displayName": "VMS",
+    "description": "",
+    "version": "0.0.2",
+    "publisher": "vorfol",
+    "engines": {
+        "vscode": "^1.26.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:VMS.buildProject",
+        "onCommand:VMS.editProject"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "VMS.buildProject",
+                    "when": "config.open-vms.common.build-enabled"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "VMS.buildProject",
+                "title": "%command.buildProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "VMS.editProject",
+                "title": "%command.editProject.title%",
+                "category": "%command.category%"
+            }
+        ],
+        "configuration": {
+            "title": "%configuration.title%",
+            "properties": {
+                "open-vms.common.build-enabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%properties.common.build-enabled.description%"
+                },
+                "open-vms.connection.host": {
+                    "type": "string",
+                    "default": "host",
+                    "description": "%properties.connection.host.description%"
+                },
+                "open-vms.connection.port": {
+                    "type": "number",
+                    "default": 22,
+                    "description": "%properties.connection.port.description%"
+                },
+                "open-vms.connection.username": {
+                    "type": "string",
+                    "default": "",
+                    "description": "%properties.connection.username.description%"
+                },
+                "open-vms.connection.password": {
+                    "type": "string",
+                    "default": "",
+                    "description": "%properties.connection.password.description%"
+                },
+                "open-vms.filter.include": {
+                    "type": "string",
+                    "default": "**/*.*",
+                    "description": "%properties.filter.include.description%"
+                },
+                "open-vms.filter.exclude": {
+                    "type": "string",
+                    "default": "**/{.vscode,node-modules}/*.*",
+                    "description": "%properties.filter.exclude.description%"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "devDependencies": {
+        "@types/node": "^10.x.x",
+        "typescript": "^3.x.x",
+        "@types/ssh2": "^0.5.35"
+    },
+    "dependencies": {
+        "vscode": "^1.1.21",
+        "util": "^0.11.0",
+        "fs": "0.0.1-security",
+        "ssh2": "^0.6.1",
+        "vscode-nls": "^4.0.0"
+    },
+    "enableProposedAPI": true
+}

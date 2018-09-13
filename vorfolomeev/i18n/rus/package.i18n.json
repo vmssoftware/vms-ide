@@ -1,0 +1,13 @@
+{
+    "configuration.title": "OpenVMS настройки",
+    "command.category": "OpenVMS",
+    "command.buildProject.title": "Компилировать на VMS",
+    "command.editProject.title": "Редактировать настройки проекта OpenVMS",
+    "properties.common.build-enabled.description": "Разрешить компиляцию",
+    "properties.connection.host.description": "Адрес (сетевое имя) OpenVMS компьютера для проекта",
+    "properties.connection.port.description": "OpenVMS ssh порт",
+    "properties.connection.username.description": "Имя пользователя",
+    "properties.connection.password.description": "Пароль",
+    "properties.filter.include.description": "Маска файлов проекта",
+    "properties.filter.exclude.description": "Маска файлов не в проекте"
+}
