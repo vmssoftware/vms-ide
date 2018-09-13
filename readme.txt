@@ -1,1 +1,1 @@
-Repository containing code for new OpenVMS IDE based on Visual Studio Code
+Repository containing code for new OpenVMS IDE based on Visual Studio Code.
