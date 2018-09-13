@@ -1,12 +1,16 @@
 
-import { Event } from "vscode";
-import { Disposable } from "vscode";
-import { EventEmitter } from "vscode";
+//import { Event } from "vscode";
+//import { Disposable } from "vscode";
+//import { EventEmitter } from "vscode";
 
 import * as nls from 'vscode-nls';
 import * as fs from "fs";
 import * as path from "path";
 import { workspace } from "vscode";
+import { Uri } from "vscode";
+import { FileSystemWatcher } from "vscode";
+import { WaitFireEventEmitter } from '../wait-fire-event-emitter';
+import { Event } from 'vscode';
 
 let _localize = nls.loadMessageBundle();
 
@@ -99,11 +103,13 @@ export class ConfigPool implements Config {
     }
 
     setStorage(storage: ConfigStorage) {
+        console.log('setStorage');
         this._storage = storage;
         this.load();
     }
 
     getStorage() : ConfigStorage {
+        console.log('getStorage');
         return this._storage;
     }
 
@@ -113,6 +119,7 @@ export class ConfigPool implements Config {
      * Add ConfigSection to pool. ConfigPool will keep it up to date.
      */
     add(cfg: ConfigSection) : boolean {
+        console.log('add ' + cfg.name());
         this._pool[cfg.name()] = cfg;
         this.load();
         return true;
@@ -122,16 +129,19 @@ export class ConfigPool implements Config {
      * Get kept ConfigSection.
      */
     get(section: string) : Thenable<ConfigSection|undefined> {
+        console.log('get = ' + section);
         return new Promise<ConfigSection>(async (resolve,reject) => {
             if (this._loadPromise) {
                 await this._loadPromise;
             }
             resolve(this._pool[section]);
+            console.log('get => ok ' + section);
         });
     }
 
     protected _loadPromise : Thenable<ConfigStorageActionResult> | undefined = undefined;
     load() : Thenable<ConfigStorageActionResult> {
+        console.log('load =');
         if (!this._loadPromise) {
             this._loadPromise = new Promise<ConfigStorageActionResult>(async (resolve,reject) => {
                 //do load
@@ -158,11 +168,14 @@ export class ConfigPool implements Config {
                         }
                         this._storage.fillEnd().then((ended) => {
                             resolve(ended | ret_code);
+                            console.log('load => ' + ((ended | ret_code)?'fail':'ok'));
                         });
                     } else {
                         resolve(started); //didn't start
+                        console.log('load => fail');
                     }
                     this._loadPromise = undefined;
+                    console.log('load => clear');
                 });
             });
         }
@@ -171,6 +184,7 @@ export class ConfigPool implements Config {
 
     protected _savePromise : Thenable<ConfigStorageActionResult> | undefined = undefined;
     save() : Thenable<ConfigStorageActionResult> {
+        console.log('save =');
         if (!this._savePromise) {
             this._savePromise = new Promise<ConfigStorageActionResult>(async (resolve,reject) => {
                 //do save
@@ -193,10 +207,12 @@ export class ConfigPool implements Config {
                         this._storage.storeEnd().then((ended) => {
                             resolve(ended | ret_code);
                             this._savePromise = undefined;
+                            console.log('save => ok');
                         });
                     } else {
                         resolve(started); //didn't start
                         this._savePromise = undefined;
+                        console.log('save => fail');
                     }
                 });
             });
@@ -359,6 +375,7 @@ export class FilterSection implements ConfigSection {
     protected _json_data: any = {};
     protected _fillStartPromise: Thenable<ConfigStorageActionResult> | undefined;
     fillStart(): Thenable<ConfigStorageActionResult> {
+        console.log('fillStart =');
         if (!this._fillStartPromise) {
             this._fillStartPromise = new Promise<ConfigStorageActionResult>(async (resolve, reject) => {
                 fs.readFile(this._filename, (err, data) => {
@@ -369,11 +386,14 @@ export class FilterSection implements ConfigSection {
                         try {
                             this._json_data = JSON.parse(content);
                             resolve(ConfigStorageActionResult.ok);
+                            console.log('fillStart => ok');
                         } catch (error) {
                             resolve(ConfigStorageActionResult.prepare_failed);
+                            console.log('fillStart => fail');
                         }
                     }
                     this._fillStartPromise = undefined;
+                    console.log('fillStart => clear');
                 });
             })
         } 
@@ -388,37 +408,45 @@ export class FilterSection implements ConfigSection {
                     data[key] = json_section[key];
                 }
             }
+            console.log('fillData => ok ' + section);
             return Promise.resolve(ConfigStorageActionResult.ok);
         } else {
+            console.log('fillData => fail ' + section);
             return Promise.resolve(ConfigStorageActionResult.some_data_failed);
         }
     }
 
     fillEnd(): Thenable<ConfigStorageActionResult> {
+        console.log('fillEnd');
         this._json_data = {};
         return Promise.resolve(ConfigStorageActionResult.ok);
     }
 
     storeStart(): Thenable<ConfigStorageActionResult> {
+        console.log('storeStart');
         this._json_data = {};
         return Promise.resolve(ConfigStorageActionResult.ok);
     }
 
     storeData(section: string, data: ConfigData): Thenable<ConfigStorageActionResult> {
         //TODO: test if section was added before?
+        console.log('storeData ' + section);
         this._json_data[section] = data;
         return Promise.resolve(ConfigStorageActionResult.ok);
     }
 
     protected _storePromise: Thenable<ConfigStorageActionResult> | undefined;
     storeEnd(): Thenable<ConfigStorageActionResult> {
+        console.log('storeEnd =');
         if (!this._storePromise) {
             this._storePromise = new Promise<ConfigStorageActionResult>((resolve, reject) => {
                 fs.writeFile(this._filename, JSON.stringify(this._json_data, null, 4), (err) => {
                     this._json_data = {};
                     if (err) {
+                        console.log('storeEnd => fail');
                         resolve(ConfigStorageActionResult.end_failed);
                     } else {
+                        console.log('storeEnd => ok');
                         resolve(ConfigStorageActionResult.ok);
                     }
                     this._storePromise = undefined;
@@ -447,18 +475,35 @@ export class DummyEditor implements ConfigEditor {
  * 
  */
 
+export async function Delay(msec: number) {
+    return new Promise((resolve,reject) => {
+        setTimeout(() => {
+            resolve();
+        }, msec);
+    })
+}
+
+
 export class FS_Proxy_Config implements ConfigHelper {
 
     protected _config : ConfigPool;
     protected _storage : ConfigStorage;
     protected _editor : ConfigEditor;
 
-    private readonly _relative_file_name = '.vscode/openvms-settings.json';
+    protected _dummyStorage : ConfigStorage;
+
+    protected readonly _relative_file_name = '.vscode/openvms-settings.json';
 
     protected constructor() {
-        this._storage = this.getStorage();
+        this._dummyStorage = new DummyStorage();
+        this._storage = this._dummyStorage;
         this._config = new ConfigPool(this._storage);
         this._editor = new DummyEditor();
+        workspace.onDidChangeWorkspaceFolders((e) => {
+            console.log('onDidChangeWorkspaceFolders');
+            this.updateConfigStorage();
+        })
+        this.updateConfigStorage();
     }
 
     private static _instance : FS_Proxy_Config | undefined = undefined;
@@ -470,58 +515,56 @@ export class FS_Proxy_Config implements ConfigHelper {
     }
     
     getConfig(): Config {
-        if (!this._config) {
-            let storage = this.getStorage();
-            this._config = new ConfigPool(storage);
-        }
         return this._config;
     }
 
-    saveConfig(): Thenable<ConfigStorageActionResult>{
-        if (this._config) {
-            return this._config.save();
-        }
-        return Promise.resolve(ConfigStorageActionResult.fail);
-    }
-    
-    protected _file_name: string = '';
     getStorage(): ConfigStorage {
-        if (!this._storage) {
-            if (workspace.rootPath) {
-                this._file_name = path.join(workspace.rootPath, this._relative_file_name);
-                this._storage = new FS_ConfigStorage(this._file_name);
-                let watcher = workspace.createFileSystemWatcher(this._file_name);
-                watcher.onDidChange((uri) => {
-                    if (!this._storage.isStoring()) {
-                        this._config.load();
-                    }
-                });
-            } else {
-                this._storage = new DummyStorage();
-            }
-            workspace.onDidChangeWorkspaceFolders((e) => {
-                if (this._storage instanceof DummyStorage) {
-                    //create new FS_ConfigStorage
-                }
-            })
-        }
         return this._storage;
-    }
-
-    protected createFS_Storage(rootPath: string) : void {
-        this._file_name = path.join(workspace.rootPath, this._relative_file_name);
-        this._storage = new FS_ConfigStorage(this._file_name);
-        let watcher = workspace.createFileSystemWatcher(this._file_name);
-        watcher.onDidChange((uri) => {
-            if (!this._storage.isStoring()) {
-                this._config.load();
-            }
-        });
     }
 
     getEditor(): ConfigEditor {
         return this._editor;
     }
+
+    protected _file_uri: Uri = Uri.parse('undefined:');
+    protected updateConfigStorage() {
+        console.log('updateConfigStorage start: ', this._storage);
+        if (this._storage instanceof DummyStorage) {
+            if (workspace.workspaceFolders) {
+                this.createFS_Storage(workspace.workspaceFolders[0].uri);
+                if (this._config) {
+                    this._config.setStorage(this._storage);
+                }
+            }
+        } else if (this._storage instanceof FS_ConfigStorage) {
+            if (!workspace.getWorkspaceFolder(this._file_uri)) {
+                this._watcher && this._watcher.dispose();
+                this._storage = new DummyStorage();
+                this.updateConfigStorage();
+            }
+        }
+        console.log('updateConfigStorage end: ', this._storage);
+    }
+
+    protected _waitFireEventEmitter = new WaitFireEventEmitter<null>(1000);
+    protected _onDidChengeFired: Event<null> = this._waitFireEventEmitter.event;
+    protected _watcher: FileSystemWatcher | undefined = undefined;
+    protected createFS_Storage(rootUri: Uri) : void {
+        console.log('createFS_Storage');
+        this._file_uri = Uri.file(path.join(rootUri.fsPath, this._relative_file_name));
+        this._storage = new FS_ConfigStorage(this._file_uri.fsPath);
+        this._watcher = workspace.createFileSystemWatcher(this._file_uri.fsPath);
+        this._watcher.onDidChange(async (uri) => {
+            console.log('onDidChange: ' + uri);
+            this._waitFireEventEmitter.fire();  //will real fire after 250msec
+        });
+        this._onDidChengeFired(() => {
+            if (this._config && this._storage && !this._storage.isStoring()) {
+                console.log('load on change');
+                this._config.load();
+            }
+        });
+}
 
 }
 
@@ -539,15 +582,21 @@ export async function Test()  {
 
     setTimeout(async () => {
         let userpass_get = await cfg.get(UserPasswordSection._section);
-        console.log(userpass_get === userpass);
+        console.log('userpass_get === userpass: ' + (userpass_get === userpass));
         let filetr_get = await cfg.get(FilterSection._section);
-        console.log(filetr_get === filter);
+        console.log('filetr_get === filter: ' + (filetr_get === filter));
+
+        userpass.password = "password";
+        userpass.username += "+";
+
         let save_result = await cfg.save();
-        console.log(save_result);
+        console.log('after save' + save_result);
+
         userpass_get = await cfg.get(UserPasswordSection._section);
-        console.log(userpass_get === userpass);
+        console.log('userpass_get === userpass: ' + (userpass_get === userpass));
         filetr_get = await cfg.get(FilterSection._section);
-        console.log(filetr_get === filter);
+        console.log('filetr_get === filter: ' + (filetr_get === filter));
+
     }, 1000);
     
     return true;
