@@ -487,42 +487,29 @@ export async function Delay(msec: number) {
  * Collects all calls and fire only one if during _msec were no more calls
  * 
  */
-export class Collector {
+export class Debouncer {
 
     constructor(protected _msec: number, protected _log?: boolean) {
         
     }
 
     protected _timer: NodeJS.Timer | undefined = undefined;
-    protected _promise: Promise<void> | undefined = undefined;
-    protected _resolve_fn: {(value?: void | PromiseLike<void> | undefined) : void} | undefined = undefined;
 
-    protected initTimer() {
-        this._log && console.log('initTimer');
-        this._timer = setTimeout(() => {
-            this._timer = undefined;
-            this._promise = undefined;
-            this._resolve_fn && this._resolve_fn();
-            this._log && console.log('==resolved==');
-        }, this._msec);
-    }
-    
-    async collect() {
-        this._log && console.log('collect: start');
+    async debounce() {
+        this._log && console.log('debounce: start');
         if (this._timer) {
-            this._log && console.log('collect: timer exists - clear timer');
+            this._log && console.log('debounce: timer exists - clear timer');
             clearTimeout(this._timer);
         }
-        this.initTimer();
-        if (!this._promise) {
-            this._log && console.log('collect: creating promise');
-            this._promise = new Promise((resolve, reject) => {
-                this._log && console.log('collect: resolve function saved');
-                this._resolve_fn = resolve;
-            });
-        }
-        this._log && console.log('collect: end');
-        return this._promise;
+        this._log && console.log('debounce: creating promise');
+        return new Promise((resolve, reject) => {
+            this._log && console.log('debounce: creating timer');
+            this._timer = setTimeout(() => {
+                this._log && console.log('debounce: timer fired');
+                this._timer = undefined;
+                resolve();
+            }, this._msec);
+        });
     }
 }
 
@@ -588,7 +575,7 @@ export class FS_Proxy_Config implements ConfigHelper {
         console.log('updateConfigStorage end: ', this._storage);
     }
 
-    protected _collector = new Collector(1000, true);
+    protected _debouncer = new Debouncer(1000);
     protected _watcher: FileSystemWatcher | undefined = undefined;
     protected createFS_Storage(rootUri: Uri) : void {
         console.log('createFS_Storage');
@@ -597,7 +584,7 @@ export class FS_Proxy_Config implements ConfigHelper {
         this._watcher = workspace.createFileSystemWatcher(this._file_uri.fsPath);
         this._watcher.onDidChange(async (uri) => {
             console.log('onDidChange: ' + uri);
-            this._collector.collect().then(() => {
+            this._debouncer.debounce().then(() => {
                 console.log('load on change');
                 this._config.load();
             })
