@@ -5,7 +5,7 @@
     "version": "0.0.2",
     "publisher": "vorfol",
     "engines": {
-        "vscode": "^1.26.0"
+        "vscode": "^1.27.0"
     },
     "categories": [
         "Other"
@@ -73,6 +73,22 @@
                     "type": "string",
                     "default": "**/{.vscode,node-modules}/*.*",
                     "description": "%properties.filter.exclude.description%"
+                },
+                "open-vms.host_collection.default": {
+                    "type": "string",
+                    "default": "default",
+                    "description": "default host in collection"
+                },
+                "open-vms.host_collection.hosts": {
+                    "type": "array",
+                    "default": [
+                        {
+                            "host": "",
+                            "port": 0,
+                            "username": ""
+                        }
+                    ],
+                    "description": "array of hosts"
                 }
             }
         }
@@ -88,10 +104,11 @@
         "@types/ssh2": "^0.5.35"
     },
     "dependencies": {
-        "vscode": "^1.1.21",
-        "util": "^0.11.0",
+        "fast-glob": "^2.2.2",
         "fs": "0.0.1-security",
         "ssh2": "^0.6.1",
+        "util": "^0.11.0",
+        "vscode": "^1.1.21",
         "vscode-nls": "^4.0.0"
     },
     "enableProposedAPI": true
