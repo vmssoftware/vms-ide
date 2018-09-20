@@ -1,6 +1,7 @@
 import { Uri } from "vscode";
 import { Config } from "../config_v2/config_v2";
 import { FilterSection } from "../config_v2/sections/filter";
+import * as path from 'path';
 
 
 export interface SyncHelper {
@@ -208,9 +209,11 @@ export class FS_FileSystem implements FS_Wrapper {
                     let uris: Uri[] = [];
                     for(let item of result) {
                         if (typeof item === 'string') {
-                            uris.push(Uri.file(item));
+                            let res_path = path.join(this._roots[0].fsPath, item);
+                            uris.push(Uri.file(res_path));
                         } else if (item.path) {
-                            uris.push(Uri.file(item.path));
+                            let res_path = path.join(this._roots[0].fsPath, item.path);
+                            uris.push(Uri.file(res_path));
                         }
                     }
                     resolve(uris);

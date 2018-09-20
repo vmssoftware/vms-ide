@@ -52,7 +52,9 @@ export async function activate(context: ExtensionContext) {
                 let filter = await _config.get(FilterSection._section);
                 if (filter && FilterSection.is(filter)) {
                     let uris = await fs.files(filter.include, filter.exclude);
-                    console.log(uris);
+                    for(let uri of uris) {
+                        console.log(uri.fsPath);
+                    }
                 }
             } catch(err) {
                 console.log(err);
