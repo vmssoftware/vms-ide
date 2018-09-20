@@ -1,3 +1,12 @@
+/**
+ * 
+ * 
+ * 
+ * DEPRECATED
+ * 
+ * 
+ * 
+ */
 
 export interface FilterConfig {
     include: string;

@@ -1,3 +1,13 @@
+/**
+ * 
+ * 
+ * 
+ * DEPRECATED
+ * 
+ * 
+ * 
+ */
+
 import {workspace} from 'vscode';
 
 import {ToOutputChannel} from './output-channel';

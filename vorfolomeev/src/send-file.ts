@@ -13,11 +13,6 @@ let _localize = nls.loadMessageBundle();
 const localStatFn = util.promisify(fs.stat);
 const mTimeTreshold = 2;    //two seconds
 
-// function Delay(ms : number) : Thenable<boolean> {
-//     return new Promise((resolve, reject) => {
-//         setTimeout(() => resolve(true), ms);
-//     });
-// }
 
 /**
  * Send file using SFTP client
@@ -64,7 +59,7 @@ export function SendFile(sftp : SFTPWrapper, file : Uri ) : Promise<boolean> {
                     dir = '';
                 } else {
                     //translate to VMS path - TODO: form settings?
-                    dir = '[.' + dir.replace('\\', '.')+']';
+                    dir = '[.' + dir.replace( /\\/g, '.')+']';
 
                     let dir_exists = await new Promise<boolean>((resolve, reject) => {
                         sftp.stat( dir, (error: any, stats: Stats) => {
