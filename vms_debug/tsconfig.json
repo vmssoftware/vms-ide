@@ -1,0 +1,24 @@
+{
+	"compileOnSave": false,
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es6",
+
+		"noImplicitAny": false,
+		"removeComments": false,
+		"noUnusedLocals": true,
+		"noImplicitThis": true,
+		"inlineSourceMap": false,
+		"sourceMap": true,
+		"outDir": "out",
+		"lib": [
+			"es6"
+		],
+		"preserveConstEnums": true,
+		"strictNullChecks": true,
+		"noUnusedParameters": false
+	},
+	"exclude": [
+		"node_modules"
+	]
+}

@@ -1,0 +1,173 @@
+{
+	"name": "vms-debug",
+	"displayName": "VMS C Debug",
+	"version": "0.27.0",
+	"publisher": "andreweinand",
+	"description": "Starter extension for developing debug adapters for VS Code.",
+	"author": {
+		"name": "Microsoft Corporation",
+		"email": "aweinand@microsoft.com"
+	},
+	"license": "MIT",
+	"keywords": [
+		"multi-root ready"
+	],
+	"engines": {
+		"vscode": "^1.18.0",
+		"node": "^7.9.0"
+	},
+	"icon": "images/mock-debug-icon.png",
+	"categories": [
+		"Debuggers",
+		"Other"
+	],
+	"private": true,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Microsoft/vscode-mock-debug.git"
+	},
+	"bugs": {
+		"url": "https://github.com/Microsoft/vscode-mock-debug/issues"
+	},
+	"scripts": {
+		"prepublish": "tsc -p ./",
+		"compile": "tsc -p ./",
+		"tslint": "tslint ./**/*.ts",
+		"watch": "tsc -w -p ./",
+		"test": "mocha -u tdd ./out/tests/",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"package": "vsce package",
+		"publish": "vsce publish"
+	},
+	"devDependencies": {
+		"typescript": "^2.6.1",
+		"vscode": "^1.1.6",
+		"tslint": "^5.8.0",
+		"@types/node": "^7.0.43",
+		"@types/mocha": "^2.2.42"
+	},
+	"dependencies": {
+		"await-notify": "^1.0.1",
+		"del": "^3.0.0",
+		"gulp": "^3.9.1",
+		"gulp-typescript": "^5.0.0-alpha.3",
+		"run-sequence": "^2.2.1",
+		"ssh2": "^0.6.1",
+		"vsce": "^1.49.1",
+		"vscode-debugadapter": "^1.31.0",
+		"vscode-debugadapter-testsupport": "1.27.0",
+		"vscode-nls": "^2.0.2",
+		"vscode-nls-dev": "^2.1.3"
+	},
+	"main": "./out/extension",
+	"activationEvents": [
+		"onDebug",
+		"onCommand:extension.vms-debug.connect",
+		"onCommand:extension.vms-debug.getProgramName"
+	],
+	"contributes": {
+		"commands": [
+			{
+				"command": "extension.vms-debug.connect",
+				"title": "%extension.vms_connect%"
+			}
+		],
+		"breakpoints": [
+			{
+				"language": "c"
+			}
+		],
+		"debuggers": [
+			{
+				"type": "vms_dbg",
+				"label": "%extension.vms_c_debug%",
+				"program": "./out/debugAdapter.js",
+				"runtime": "node",
+				"configurationAttributes": {
+					"launch": {
+						"required": [
+							"program"
+						],
+						"properties": {
+							"program": {
+								"type": "string",
+								"description": "Absolute path to a text file.",
+								"default": "${workspaceFolder}/${command:AskForProgramName}"
+							},
+							"stopOnEntry": {
+								"type": "boolean",
+								"description": "Automatically stop after launch.",
+								"default": true
+							},
+							"trace": {
+								"type": "boolean",
+								"description": "Enable logging of the Debug Adapter Protocol.",
+								"default": true
+							}
+						}
+					}
+				},
+				"initialConfigurations": [
+					{
+						"type": "vms_dbg",
+						"request": "launch",
+						"name": "Ask for file name",
+						"program": "${workspaceFolder}/${command:AskForProgramName}",
+						"stopOnEntry": true
+					}
+				],
+				"configurationSnippets": [
+					{
+						"label": "VMS C Debug: Launch",
+						"description": "A new configuration for 'debugging' a user selected markdown file.",
+						"body": {
+							"type": "vms_dbg",
+							"request": "launch",
+							"name": "Ask for file name",
+							"program": "^\"\\${workspaceFolder}/\\${command:AskForProgramName}\"",
+							"stopOnEntry": true
+						}
+					}
+				],
+				"variables": {
+					"AskForProgramName": "extension.vms-debug.getProgramName"
+				}
+			}
+		],
+        "configuration": {
+            "title": "OpenVMS settings",
+            "properties": {
+                "open-vms.enable-test": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable test findFiles()"
+                },
+                "open-vms.host": {
+                    "type": "string",
+                    "default": "104.207.199.181",
+                    "description": "OpenVMS host to build, run and debug current workspace"
+                },
+                "open-vms.port": {
+                    "type": "number",
+                    "default": 22,
+                    "description": "OpenVMS ssh port"
+                },
+                "open-vms.username": {
+                    "type": "string",
+                    "default": "kulikovskiy",
+                    "description": "Username"
+                },
+                "open-vms.password": {
+                    "type": "string",
+                    "default": "Qaz515402",
+                    "description": "Password"
+                },
+                "open-vms.filter": {
+                    "type": "string",
+                    "default": "**/*.{c,cpp,h}",
+                    "description": "Files to send to OpenVMS"
+                }
+            }
+        }
+	}
+}

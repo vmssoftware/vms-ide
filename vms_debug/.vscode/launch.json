@@ -1,0 +1,53 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "extensionHost",
+			"request": "launch",
+			"name": "Extension",
+			"preLaunchTask": "npm",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}"
+			],
+			"outFiles": [ "${workspaceFolder}/out/src/**/*.js" ]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Server",
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/src/debugAdapter.ts",
+			"args": [ "--server=4711" ],
+			"outFiles": [ "${workspaceFolder}/out/src/**/*.js" ]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Tests",
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+			"args": [
+				"-u", "tdd",
+				"--timeout", "999999",
+				"--colors",
+				"./out/tests/"
+			],
+			"outFiles": [ "${workspaceFolder}/out/src/**/*.js" ],
+			"internalConsoleOptions": "openOnSessionStart"
+		},
+		{
+			"type": "vms_dbg",
+			"request": "launch",
+			"name": "VMS C Debug",
+			"program": "${workspaceFolder}/${command:AskForProgramName}",
+			"stopOnEntry": true
+		}
+	],
+	"compounds": [
+		{
+			"name": "Extension + Server",
+			"configurations": [ "Extension", "Server" ]
+		}
+	]
+}
