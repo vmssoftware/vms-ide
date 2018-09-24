@@ -55,35 +55,52 @@ export enum CSA_Result {
  */
 export interface ConfigStorage {
 
-    fillStart() : Thenable<CSA_Result>;
-    fillData(section: string, data: ConfigData) : Thenable<CSA_Result>;
-    fillEnd() : Thenable<CSA_Result>;
+    fillStart() : Promise<CSA_Result>;
+    fillData(section: string, data: ConfigData) : Promise<CSA_Result>;
+    fillEnd() : Promise<CSA_Result>;
 
-    storeStart() : Thenable<CSA_Result>;
-    storeData(section: string, data: ConfigData) : Thenable<CSA_Result>;
-    storeEnd() : Thenable<CSA_Result>;
-
-    isStoring(): boolean;
+    storeStart() : Promise<CSA_Result>;
+    storeData(section: string, data: ConfigData) : Promise<CSA_Result>;
+    storeEnd() : Promise<CSA_Result>;
 }
 
 /**
  * 
  */
 export interface Config {
+    /**
+     * Add a config section to hold within
+     * @param cfg - implementation of config section
+     */
     add(cfg: ConfigSection) : boolean;
-    get(section: string) : Thenable<ConfigSection|undefined>;
 
-    load() : Thenable<CSA_Result>;
-    save() : Thenable<CSA_Result>;
+    /**
+     * Retrieve config section
+     * @param section - config section name
+     */
+    get(section: string) : Promise<ConfigSection|undefined>;
 
-    onDidChange: Event<null>;
+    /**
+     * Load configuration from outer storage
+     */
+    load() : Promise<CSA_Result>;
+
+    /*
+     * Save configuration to outer storage
+     */
+    save() : Promise<CSA_Result>;
+
+    /**
+     * Calls when configuration did load
+     */
+    onDidLoad: Event<null>;
 }
 
 /**
  * 
  */
 export interface ConfigEditor {
-    invoke() : Thenable<boolean>;
+    invoke() : Promise<boolean>;
 }
 
 /**
@@ -92,8 +109,6 @@ export interface ConfigEditor {
 export interface ConfigHelper extends Disposable {
 
     getConfig() : Config;
-
-    //getStorage() : ConfigStorage;
 
     getEditor() : ConfigEditor;
 

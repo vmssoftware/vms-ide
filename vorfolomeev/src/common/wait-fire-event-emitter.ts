@@ -41,3 +41,10 @@ export class WaitFireEventEmitter<T> {
         }, this._wait_msec);
     }
 }
+
+// let w = new WaitFireEventEmitter<number>(1000);
+// w.event((n) => {
+//     //will appear 1000 millseconds after last fire()
+//     console.log(`fired ${n}`);
+// });
+// w.fire(1);

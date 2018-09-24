@@ -1,4 +1,4 @@
-import { Configuration, SerializeHelper } from "./config";
+import { Configuration, SerializeHelper } from "./configuration";
 import { Disposable } from "vscode";
 
 import * as nls from 'vscode-nls';
@@ -44,7 +44,7 @@ export class ProxyConfiguration implements Configuration {
         return true;
     }    
     
-    get(section: string): Thenable<any> {
+    get(section: string): Promise<any> {
         //TODO: test existing?
         return this._proxy[section];
     }
@@ -63,7 +63,7 @@ export class ProxyConfiguration implements Configuration {
      */
     private _loadPromise: Promise<boolean> | undefined;
 
-    load(): Thenable<boolean> 
+    load(): Promise<boolean> 
     {
         console.log('proxy-config load() called');
         if (!this._loadPromise) {
@@ -96,12 +96,12 @@ export class ProxyConfiguration implements Configuration {
         return this._loadPromise;
     }
 
-    save(): Thenable<boolean> {
+    save(): Promise<boolean> {
         let serializer = this._helper.getSerializer();
         return serializer.save(this._proxy);
     }
 
-    edit(): Thenable<boolean> {
+    edit(): Promise<boolean> {
         let editor = this._helper.getEditor();
         let serializer = this._helper.getSerializer();
         return editor.invoke(serializer.getUri());

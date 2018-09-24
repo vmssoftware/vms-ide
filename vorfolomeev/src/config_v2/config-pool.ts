@@ -10,19 +10,12 @@ export let _log_this_file = console.log;
 
 /**
  * ConfigPool
- * 
- * 
- * 
- * 
- * 
  */
-
 export class ConfigPool implements Config {
-
 
     private _changeEmitter = new EventEmitter<null>();
     
-    onDidChange: Event<null> = this._changeEmitter.event;
+    onDidLoad: Event<null> = this._changeEmitter.event;
 
     private _fireImmediate: any = undefined;
     private fireChangeSoon(): void {
@@ -65,21 +58,52 @@ export class ConfigPool implements Config {
     }
     
     /**
+     * Let it possible to freeze/unfreeze get() operation because of the changes that are being made outside.
+     * Note - unstackable! Onle the last freeze/unfreeze is taking effect.
+     */
+    private _freezePromise : Promise<boolean> | undefined = undefined;
+    private _freezeResolve : {(value?: boolean | PromiseLike<boolean> | undefined) : void} | undefined = undefined;
+    freeze() : void {
+        _log_this_file('freeze');
+        if (!this._freezePromise) {
+            this._freezePromise = new Promise<boolean>((resolve, reject)=>{
+                this._freezeResolve = resolve;
+            })
+        }
+    }
+
+    unfreeze() : void {
+        _log_this_file('unfreeze');
+        if (this._freezeResolve) {
+            this._freezeResolve(true);
+        }
+        this._freezeResolve = undefined;
+        this._freezePromise = undefined;
+    }
+
+    /**
      * Get kept ConfigSection.
      */
-    get(section: string) : Thenable<ConfigSection|undefined> {
+    get(section: string) : Promise<ConfigSection|undefined> {
         _log_this_file('get = ' + section);
         return new Promise<ConfigSection>(async (resolve,reject) => {
+            let promises: any[] = [];
             if (this._loadPromise) {
-                await this._loadPromise;
+                promises.push(this._loadPromise);
+            }
+            if (this._freezePromise) {
+                promises.push(this._freezePromise);
+            }
+            if (promises.length) {
+                await Promise.all(promises);
             }
             resolve(this._pool[section]);
             _log_this_file('get => ok ' + section);
         });
     }
 
-    protected _loadPromise : Thenable<CSA_Result> | undefined = undefined;
-    load() : Thenable<CSA_Result> {
+    protected _loadPromise : Promise<CSA_Result> | undefined = undefined;
+    load() : Promise<CSA_Result> {
         _log_this_file('load =');
         if (!this._loadPromise) {
             this._loadPromise = new Promise<CSA_Result>(async (resolve,reject) => {
@@ -126,8 +150,8 @@ export class ConfigPool implements Config {
         return this._loadPromise;
     }
 
-    protected _savePromise : Thenable<CSA_Result> | undefined = undefined;
-    save() : Thenable<CSA_Result> {
+    protected _savePromise : Promise<CSA_Result> | undefined = undefined;
+    save() : Promise<CSA_Result> {
         _log_this_file('save =');
         if (!this._savePromise) {
             this._savePromise = new Promise<CSA_Result>(async (resolve,reject) => {

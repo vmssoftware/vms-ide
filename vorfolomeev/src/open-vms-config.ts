@@ -9,9 +9,9 @@ export type ConnectMethod = 'user_password' | 'keys';
 
 export interface ConfigSerializer {
     
-    Load() : Thenable<any>;
+    Load() : Promise<any>;
 
-    Save(obj: any) : Thenable<boolean>;
+    Save(obj: any) : Promise<boolean>;
 
     Uri() : Uri;
 }
@@ -67,7 +67,7 @@ export class ConfigProvider {
         return true;
     }
 
-    Load() : Thenable<boolean> {
+    Load() : Promise<boolean> {
         this._config_holder = {};
         this._loaded = false;
         return new Promise<boolean>( async (resolve, _reject) => {
@@ -82,7 +82,7 @@ export class ConfigProvider {
         });
     }    
 
-    Save() : Thenable<boolean> {
+    Save() : Promise<boolean> {
         return this._cfg_serializer.Save(this._config_holder);
     }    
 
@@ -97,7 +97,7 @@ export class WS_ConfigSerializer implements ConfigSerializer {
     private static readonly _openSettingsCommand = 'workbench.action.openWorkspaceSettings';
     private static readonly _configurationSection = 'open-vms';
 
-    Load(): Thenable<any> {
+    Load(): Promise<any> {
         let configuration = workspace.getConfiguration(WS_ConfigSerializer._configurationSection);
         let ret = { 
             HostConfig: {
@@ -110,7 +110,7 @@ export class WS_ConfigSerializer implements ConfigSerializer {
         };
         return Promise.resolve(ret);
     }    
-    Save(obj: any): Thenable<boolean> {
+    Save(obj: any): Promise<boolean> {
         let configuration = workspace.getConfiguration(WS_ConfigSerializer._configurationSection);
         return new Promise<boolean>(async (resolve, reject) => {
             await configuration.update('host', obj.host);
@@ -138,7 +138,7 @@ export class FS_ConfigSerializer implements ConfigSerializer {
         return Uri.file(this._file_name);
     }
 
-    Load(): Thenable<any> {
+    Load(): Promise<any> {
         return new Promise<any>((resolve, _reject) => {
             fs.readFile(this._file_name, (err, data) =>{
                 if (err) {
@@ -156,7 +156,7 @@ export class FS_ConfigSerializer implements ConfigSerializer {
         })
     }    
 
-    Save(obj: any): Thenable<boolean> {
+    Save(obj: any): Promise<boolean> {
         if (obj) {
             return new Promise<boolean>((resolve, _reject) => {
                 //do save obj
@@ -196,7 +196,7 @@ export class VSC_ConfigSerializer implements ConfigSerializer {
         return Uri.parse('empty:');
     }
 
-    Load(): Thenable<any> {
+    Load(): Promise<any> {
         let _uri = this.Uri();
         if (_uri.scheme === 'untitled') {
             return Promise.resolve(undefined);
@@ -214,7 +214,7 @@ export class VSC_ConfigSerializer implements ConfigSerializer {
         }
     }    
 
-    Save(obj: any): Thenable<boolean> {
+    Save(obj: any): Promise<boolean> {
         let _uri = this.Uri();
         if (_uri.scheme === 'untitled' || !obj) {
             return Promise.resolve(false);

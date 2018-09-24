@@ -86,7 +86,7 @@ export class Sync_v1 implements Synchronizer {
             try {
                 let primaryStat = await this._primary.stat(path, stat);
                 let secondaryStat = await this._secondary.stat(path, stat);
-                let doSend = primaryStat && (!secondaryStat || (primaryStat.mod_time != secondaryStat.mod_time));
+                let doSend = !!primaryStat && (!secondaryStat || (primaryStat.mod_time != secondaryStat.mod_time));
                 resolve(doSend);
             } catch(err) {
                 resolve(true);  //do send if getting stats is failed

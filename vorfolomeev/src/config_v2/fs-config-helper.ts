@@ -118,17 +118,21 @@ export class FS_Config_Helper implements ConfigHelper {
 
         this._watcher = workspace.createFileSystemWatcher(this._file_uri.fsPath);
         this._watcher.onDidCreate(async (uri) => {
+            this._config.freeze();
             _log_this_file('onDidCreate: ' + uri);
-            this._debouncer.debounce().then(() => {
+            this._debouncer.debounce().then(async () => {
                 _log_this_file('load on create');
-                this._config.load();
+                await this._config.load();
+                this._config.unfreeze();
             })
         });
         this._watcher.onDidChange(async (uri) => {
+            this._config.freeze();
             _log_this_file('onDidChange: ' + uri);
-            this._debouncer.debounce().then(() => {
+            this._debouncer.debounce().then(async () => {
                 _log_this_file('load on change');
-                this._config.load();
+                await this._config.load();
+                this._config.unfreeze();
             })
         });
     }

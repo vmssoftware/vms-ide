@@ -9,15 +9,15 @@ export interface Configuration extends Disposable {
     
     add(section: string, object: any) : boolean;
 
-    get(section: string) : Thenable<any>;
+    get(section: string) : Promise<any>;
 
     remove(section: string) : boolean;
 
-    load() : Thenable<boolean>;
+    load() : Promise<boolean>;
     
-    save() : Thenable<boolean>;
+    save() : Promise<boolean>;
     
-    edit() : Thenable<boolean>;
+    edit() : Promise<boolean>;
 }
 
 /** Serializer 
@@ -25,9 +25,9 @@ export interface Configuration extends Disposable {
 */
 export interface Serializer extends Disposable {
     
-    load(obj: any) : Thenable<any>;
+    load(obj: any) : Promise<any>;
 
-    save(obj: any) : Thenable<boolean>;
+    save(obj: any) : Promise<boolean>;
 
     getUri() : Uri;
 
@@ -39,7 +39,7 @@ export interface Serializer extends Disposable {
 */
 export interface Editor extends Disposable {
     
-    invoke(uri: Uri): Thenable<boolean>;
+    invoke(uri: Uri): Promise<boolean>;
 }
 
 /** Serialize helper

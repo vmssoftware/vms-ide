@@ -1,4 +1,4 @@
-import { Editor, Serializer, SerializeHelper } from "./config";
+import { Editor, Serializer, SerializeHelper } from "./configuration";
 import { Uri } from 'vscode';
 import { Disposable } from "vscode";
 import { Event } from "vscode";
@@ -95,7 +95,7 @@ export class FS_Editor implements Editor {
         console.log(this._log_disposed);
     }
 
-    invoke(uri?: Uri): Thenable<boolean> {
+    invoke(uri?: Uri): Promise<boolean> {
         if (uri && uri.scheme === _fs_scheme) {
             return new Promise<boolean>((resolve, reject) => {
                 window.showTextDocument(uri).then((text_editor) => {
@@ -120,11 +120,11 @@ export class Dummy_FS_Serializer implements Serializer {
         this._dispose.push( this._emitter );
     }
 
-    load(obj: any): Thenable<any> {
+    load(obj: any): Promise<any> {
         return Promise.resolve({});
     }    
     
-    save(obj: any): Thenable<boolean> {
+    save(obj: any): Promise<boolean> {
         return Promise.resolve(false);
     }
 
@@ -177,7 +177,7 @@ export class FS_Serializer implements Serializer {
         this._dispose.push( fs_watcher );
     }
 
-    load(obj: any): Thenable<any> {
+    load(obj: any): Promise<any> {
         return new Promise<any>(async (resolve, reject) => {
             let ret: any = {};
             try {
@@ -208,7 +208,7 @@ export class FS_Serializer implements Serializer {
         });
     }    
 
-    save(obj: any): Thenable<boolean> {
+    save(obj: any): Promise<boolean> {
         return new Promise<boolean>(async (resolve, reject) => {
             try {
                 let content = JSON.stringify(obj, null, 4);

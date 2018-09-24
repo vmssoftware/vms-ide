@@ -18,7 +18,7 @@ export class VFS_ConfigStorage extends FS_ConfigStorage {
         super(_fileUri.fsPath);
     }   
 
-    fillStart(): Thenable<CSA_Result> {
+    fillStart(): Promise<CSA_Result> {
         _log_this_file('fillStart =');
         if (!this._fillStartPromise) {
             this._fillStartPromise = new Promise<CSA_Result>(async (resolve, reject) => {
@@ -39,7 +39,7 @@ export class VFS_ConfigStorage extends FS_ConfigStorage {
         return this._fillStartPromise;
     }     
 
-    storeEnd(): Thenable<CSA_Result> {
+    storeEnd(): Promise<CSA_Result> {
         _log_this_file('storeEnd =');
         if (!this._storePromise) {
             this._storePromise = new Promise<CSA_Result>(async (resolve, reject) => {

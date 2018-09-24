@@ -15,8 +15,8 @@ export let _log_this_file = console.log;
     }
 
     protected _json_data: any = {};
-    protected _fillStartPromise: Thenable<CSA_Result> | undefined;
-    fillStart(): Thenable<CSA_Result> {
+    protected _fillStartPromise: Promise<CSA_Result> | undefined;
+    fillStart(): Promise<CSA_Result> {
         _log_this_file('fillStart =');
         if (!this._fillStartPromise) {
             this._fillStartPromise = new Promise<CSA_Result>(async (resolve, reject) => {
@@ -42,7 +42,7 @@ export let _log_this_file = console.log;
         return this._fillStartPromise;
     }     
 
-    fillData(section: string, data: ConfigData): Thenable<CSA_Result> {
+    fillData(section: string, data: ConfigData): Promise<CSA_Result> {
         if (this._json_data && this._json_data[section]) {
             let json_section = this._json_data[section];
             for(let key in data) {
@@ -58,27 +58,27 @@ export let _log_this_file = console.log;
         }
     }
 
-    fillEnd(): Thenable<CSA_Result> {
+    fillEnd(): Promise<CSA_Result> {
         _log_this_file('fillEnd');
         this._json_data = {};
         return Promise.resolve(CSA_Result.ok);
     }
 
-    storeStart(): Thenable<CSA_Result> {
+    storeStart(): Promise<CSA_Result> {
         _log_this_file('storeStart');
         this._json_data = {};
         return Promise.resolve(CSA_Result.ok);
     }
 
-    storeData(section: string, data: ConfigData): Thenable<CSA_Result> {
+    storeData(section: string, data: ConfigData): Promise<CSA_Result> {
         //TODO: test if section was added before?
         _log_this_file('storeData ' + section);
         this._json_data[section] = data;
         return Promise.resolve(CSA_Result.ok);
     }
 
-    protected _storePromise: Thenable<CSA_Result> | undefined;
-    storeEnd(): Thenable<CSA_Result> {
+    protected _storePromise: Promise<CSA_Result> | undefined;
+    storeEnd(): Promise<CSA_Result> {
         _log_this_file('storeEnd =');
         if (!this._storePromise) {
             this._storePromise = new Promise<CSA_Result>((resolve, reject) => {
@@ -96,10 +96,6 @@ export let _log_this_file = console.log;
             })
         }
         return this._storePromise;
-    }
-
-    isStoring(): boolean {
-        return !!this._storePromise;
     }
 
 }

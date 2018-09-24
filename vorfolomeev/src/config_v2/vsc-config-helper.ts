@@ -33,9 +33,9 @@ export class VSC_Config_Helper implements ConfigHelper {
     protected _dispose : Disposable[] = [];
 
     /**
-     * Wait for a second before do some real action
+     * Wait for three seconds before do some real action
      */
-    protected _debouncer = new Debouncer(1000);
+    protected _debouncer = new Debouncer(3000);
 
     protected constructor() {
         this._storage = new VSC_ConfigStorage(this._section);
@@ -43,9 +43,11 @@ export class VSC_Config_Helper implements ConfigHelper {
         this._editor = new VSC_WorkspaceConfigEditor();
         this._dispose.push( workspace.onDidChangeConfiguration((e) => {
             if (e.affectsConfiguration(this._section)) {
+                this._config.freeze();
                 _log_this_file('onDidChangeConfiguration');
-                this._debouncer.debounce().then(() => {
-                    this._config.load();
+                this._debouncer.debounce().then(async () => {
+                    await this._config.load();
+                    this._config.unfreeze();
                 });
             }
         }));

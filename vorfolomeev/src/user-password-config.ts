@@ -26,7 +26,7 @@ export class UserPasswordHostConfig implements HostConfig {
     /**
      * Test password and prompt user if it is empty.
      */
-    ensurePassword() : Thenable<boolean> {
+    ensurePassword() : Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
             if (!this.password) {
                 let prompt = _localize('user_pass_cfg.prompt', "Enter password for {0}{1}:{2}", 

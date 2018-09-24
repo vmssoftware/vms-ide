@@ -31,13 +31,13 @@ export class SSH_Settings implements UserPasswordHostConfig {
 
     }
 
-    protected _ensurePasswordPromise : Thenable<boolean> | undefined = undefined;
+    protected _ensurePasswordPromise : Promise<boolean> | undefined = undefined;
     private _pass_was_entered: boolean = false;
 
     /**
      * Test password and prompt user if it is empty.
      */
-    ensurePassword() : Thenable<boolean> {
+    ensurePassword() : Promise<boolean> {
         if (this.password) {  //exists and isn't empty
             return Promise.resolve(true);
         }

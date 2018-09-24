@@ -134,40 +134,40 @@
 				}
 			}
 		],
-        "configuration": {
-            "title": "OpenVMS settings",
-            "properties": {
-                "open-vms.enable-test": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enable test findFiles()"
-                },
-                "open-vms.host": {
-                    "type": "string",
-                    "default": "104.207.199.181",
-                    "description": "OpenVMS host to build, run and debug current workspace"
-                },
-                "open-vms.port": {
-                    "type": "number",
-                    "default": 22,
-                    "description": "OpenVMS ssh port"
-                },
-                "open-vms.username": {
-                    "type": "string",
-                    "default": "kulikovskiy",
-                    "description": "Username"
-                },
-                "open-vms.password": {
-                    "type": "string",
-                    "default": "Qaz515402",
-                    "description": "Password"
-                },
-                "open-vms.filter": {
-                    "type": "string",
-                    "default": "**/*.{c,cpp,h}",
-                    "description": "Files to send to OpenVMS"
-                }
-            }
-        }
+		"configuration": {
+			"title": "OpenVMS settings",
+			"properties": {
+				"open-vms.enable-test": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable test findFiles()"
+				},
+				"open-vms.host": {
+					"type": "string",
+					"default": "104.207.199.181",
+					"description": "OpenVMS host to build, run and debug current workspace"
+				},
+				"open-vms.port": {
+					"type": "number",
+					"default": 22,
+					"description": "OpenVMS ssh port"
+				},
+				"open-vms.username": {
+					"type": "string",
+					"default": "kulikovskiy",
+					"description": "Username"
+				},
+				"open-vms.password": {
+					"type": "string",
+					"default": "Qaz515402",
+					"description": "Password"
+				},
+				"open-vms.filter": {
+					"type": "string",
+					"default": "**/*.{c,cpp,h}",
+					"description": "Files to send to OpenVMS"
+				}
+			}
+		}
 	}
 }

@@ -17,7 +17,7 @@ export class VSC_ConfigStorage implements ConfigStorage {
 
     }
 
-    fillStart(): Thenable<CSA_Result> {
+    fillStart(): Promise<CSA_Result> {
         _log_this_file('fillStart =');
         return Promise.resolve(CSA_Result.ok);
     }     
@@ -30,7 +30,7 @@ export class VSC_ConfigStorage implements ConfigStorage {
         return value;
     }
 
-    fillData(section: string, data: ConfigData): Thenable<CSA_Result> {
+    fillData(section: string, data: ConfigData): Promise<CSA_Result> {
         let configuration = workspace.getConfiguration(this._section);
         for(let key in data) {
             data[key] = this.setCfgValue(data[key], `${section}.${key}`, configuration);
@@ -39,17 +39,17 @@ export class VSC_ConfigStorage implements ConfigStorage {
         return Promise.resolve(CSA_Result.ok);
     }
 
-    fillEnd(): Thenable<CSA_Result> {
+    fillEnd(): Promise<CSA_Result> {
         _log_this_file('fillEnd');
         return Promise.resolve(CSA_Result.ok);
     }
 
-    storeStart(): Thenable<CSA_Result> {
+    storeStart(): Promise<CSA_Result> {
         _log_this_file('storeStart');
         return Promise.resolve(CSA_Result.ok);
     }
 
-    storeData(section: string, data: ConfigData): Thenable<CSA_Result> {
+    storeData(section: string, data: ConfigData): Promise<CSA_Result> {
         return new Promise(async (resolve, reject) => {
             let ret_code = CSA_Result.ok;
             let configuration = workspace.getConfiguration(this._section);
@@ -70,14 +70,10 @@ export class VSC_ConfigStorage implements ConfigStorage {
         });
     }
 
-    protected _storePromise: Thenable<CSA_Result> | undefined;
-    storeEnd(): Thenable<CSA_Result> {
+    protected _storePromise: Promise<CSA_Result> | undefined;
+    storeEnd(): Promise<CSA_Result> {
         _log_this_file('storeEnd =');
         return Promise.resolve(CSA_Result.ok);
-    }
-
-    isStoring(): boolean {
-        return false;
     }
 
 }

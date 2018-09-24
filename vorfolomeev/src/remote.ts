@@ -32,39 +32,39 @@ export interface RemoteSystem {
      * @mode "r", "w"
      * @returns handle to opened file
      */
-    OpenFile(file : ProjectFile, mode: string) : Thenable<Handle>;
+    OpenFile(file : ProjectFile, mode: string) : Promise<Handle>;
 
     /** Close file
      * 
     */
-    CloseFile(handle : Handle) : Thenable<boolean>;
+    CloseFile(handle : Handle) : Promise<boolean>;
 
     /** Read file
      * @handle handle to previously opened file
      * @bytes bytes to read
      * @returns buffer (full file content)
      */
-    ReadFile(handle: Handle, bytes: number) : Thenable<Buffer>;
+    ReadFile(handle: Handle, bytes: number) : Promise<Buffer>;
 
     /** Write to file
      * @handle handle to previously opened file
      * @buffer buffer to write
      * @returns read bytes
      */
-    WriteFile(handle: Handle, buffer: Buffer) : Thenable<number>;
+    WriteFile(handle: Handle, buffer: Buffer) : Promise<number>;
 
     /** Seek in file
      * @pos new position
      * @returns current position after SeekFile
      */
-    SeekFile(handle: Handle, pos: number) : Thenable<number>;
+    SeekFile(handle: Handle, pos: number) : Promise<number>;
 
     /** Get file stats
      * @file 
      * @status stats to fill
      * @returns filled stats
      */
-    FileStatus(file: ProjectFile, status: FileStatus) : Thenable<FileStatus>;
+    FileStatus(file: ProjectFile, status: FileStatus) : Promise<FileStatus>;
 
     /** Enumerate all project files
      * @options include, exclude etc.

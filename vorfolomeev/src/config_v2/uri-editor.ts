@@ -10,7 +10,7 @@ export class UriEditor implements ConfigEditor {
 
     }
 
-    invoke(): Thenable<boolean> {
+    invoke(): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
             window.showTextDocument(this._uri).then((text_editor) => {
                 resolve(true);

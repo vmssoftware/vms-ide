@@ -1,4 +1,4 @@
-import { Editor, Serializer, SerializeHelper } from "./config";
+import { Editor, Serializer, SerializeHelper } from "./configuration";
 import { commands } from "vscode";
 import { Uri } from 'vscode';
 import { workspace } from "vscode";
@@ -49,7 +49,7 @@ export class WS_Editor implements Editor {
         console.log(this._log_disposed);
     }
 
-    invoke(uri: Uri): Thenable<boolean> {
+    invoke(uri: Uri): Promise<boolean> {
         if (uri.scheme === _ws_scheme) {
             return new Promise<boolean>((resolve, reject) => {
                 commands.executeCommand(uri.path).then(() => {
@@ -100,7 +100,7 @@ export class WS_Serializer implements Serializer {
         }));
     }
 
-    load(obj: any): Thenable<any> {
+    load(obj: any): Promise<any> {
         return new Promise<any>(async (resolve, reject) => {
             let configuration = workspace.getConfiguration(this._section);
             let ret: any = {};
@@ -119,7 +119,7 @@ export class WS_Serializer implements Serializer {
         });
     }    
 
-    save(obj: any): Thenable<boolean> {
+    save(obj: any): Promise<boolean> {
         return new Promise<boolean>(async (resolve, reject) => {
             let configuration = workspace.getConfiguration(this._section);
             for(let section in obj) {
