@@ -99,9 +99,9 @@
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "devDependencies": {
-        "@types/node": "^10.x.x",
-        "typescript": "^3.x.x",
-        "@types/ssh2": "^0.5.35"
+        "@types/node": "^10.11.0",
+        "@types/ssh2": "^0.5.35",
+        "typescript": "^3.x.x"
     },
     "dependencies": {
         "fast-glob": "^2.2.2",

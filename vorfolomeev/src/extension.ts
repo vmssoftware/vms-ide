@@ -2,7 +2,7 @@
 import {commands} from 'vscode';
 import {ExtensionContext} from 'vscode';
  
-import {RunBuildCommand} from './run-build-command';
+//import {RunBuildCommand} from './run-build-command';
 
 import * as nls from 'vscode-nls';
 
@@ -11,10 +11,12 @@ import { InitCfg as ConnectionInitCfg } from './create-ssh-client';
 import { ConfigHelper, Config } from './config_v2/config_v2';
 import { HostCollection } from './config_v2/sections/host-collection';
 import { VSC_Config_Helper } from './config_v2/vsc-config-helper';
-//import { FS_FileSystem } from './synchronize/synchronizer';
-//import { workspace } from 'vscode';
-//import { Uri } from 'vscode';
-//import { FilterSection } from './config_v2/sections/filter';
+import { FS_FileSystem } from './synchronize/synchronizer';
+import { workspace } from 'vscode';
+import { Uri } from 'vscode';
+import { FilterSection } from './config_v2/sections/filter';
+
+//import { testPad } from 'yet_another_test_one';
 
 //const _lang_opt = { locale: env.language };
 //const _lang_opt = { locale: 'ru' };
@@ -23,8 +25,8 @@ let _localize = nls.config()();
 export async function activate(context: ExtensionContext) {
 
     console.log(_localize('extension.activated', 'OpenVMS extension is activated'));
-    
-    let _helper: ConfigHelper = VSC_Config_Helper.getConfigHelper();
+
+    let _helper: ConfigHelper = VSC_Config_Helper.getConfigHelper('open-vms');
     let _config: Config = _helper.getConfig();
     
     let _hosts = new HostCollection();
@@ -41,25 +43,25 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push( commands.registerCommand('VMS.buildProject', async () => {
         console.log('build start');
-        await RunBuildCommand();
-        // if (workspace.workspaceFolders) {
-        //     try {
-        //         let ws_uris: Uri[] = [];
-        //         for(let ws of workspace.workspaceFolders) {
-        //             ws_uris.push(ws.uri);
-        //         }
-        //         let fs = new FS_FileSystem(ws_uris);
-        //         let filter = await _config.get(FilterSection._section);
-        //         if (filter && FilterSection.is(filter)) {
-        //             let uris = await fs.files(filter.include, filter.exclude);
-        //             for(let uri of uris) {
-        //                 console.log(uri.fsPath);
-        //             }
-        //         }
-        //     } catch(err) {
-        //         console.log(err);
-        //     }
-        // }
+        //await RunBuildCommand();
+        if (workspace.workspaceFolders) {
+            try {
+                let ws_uris: Uri[] = [];
+                for(let ws of workspace.workspaceFolders) {
+                    ws_uris.push(ws.uri);
+                }
+                let fs = new FS_FileSystem(ws_uris);
+                let filter = await _config.get(FilterSection._section);
+                if (filter && FilterSection.is(filter)) {
+                    let uris = await fs.files(filter.include, filter.exclude);
+                    for(let uri of uris) {
+                        console.log(uri.fsPath);
+                    }
+                }
+            } catch(err) {
+                console.log(err);
+            }
+        }
         console.log('build end');
     }));
 

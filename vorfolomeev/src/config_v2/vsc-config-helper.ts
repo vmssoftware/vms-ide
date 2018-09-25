@@ -28,8 +28,6 @@ export class VSC_Config_Helper implements ConfigHelper {
     protected _storage : ConfigStorage;
     protected _editor : ConfigEditor;
 
-    protected readonly _section = 'open-vms';
-
     protected _dispose : Disposable[] = [];
 
     /**
@@ -37,7 +35,7 @@ export class VSC_Config_Helper implements ConfigHelper {
      */
     protected _debouncer = new Debouncer(3000);
 
-    protected constructor() {
+    protected constructor(protected _section: string) {
         this._storage = new VSC_ConfigStorage(this._section);
         this._config = new ConfigPool(this._storage);
         this._editor = new VSC_WorkspaceConfigEditor();
@@ -53,21 +51,17 @@ export class VSC_Config_Helper implements ConfigHelper {
         }));
     }
 
-    private static _instance : VSC_Config_Helper | undefined = undefined;
-    static getConfigHelper() : VSC_Config_Helper {
-        if (VSC_Config_Helper._instance === undefined) {
-            VSC_Config_Helper._instance = new VSC_Config_Helper();
+    private static _instances : { [key:string] : VSC_Config_Helper} = {};
+    static getConfigHelper(section: string) : VSC_Config_Helper {
+        if (VSC_Config_Helper._instances[section] === undefined) {
+            VSC_Config_Helper._instances[section] = new VSC_Config_Helper(section);
         }
-        return VSC_Config_Helper._instance;
+        return VSC_Config_Helper._instances[section];
     }
     
     getConfig(): Config {
         return this._config;
     }
-
-    // getStorage(): ConfigStorage {
-    //     return this._storage;
-    // }
 
     getEditor(): ConfigEditor {
         return this._editor;

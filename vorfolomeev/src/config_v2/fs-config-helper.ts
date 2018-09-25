@@ -35,11 +35,9 @@ export class FS_Config_Helper implements ConfigHelper {
     protected _storage : ConfigStorage;
     protected _editor : ConfigEditor;
 
-    protected readonly _relative_file_name = '.vscode/openvms-settings.json';
-
     protected _dispose : Disposable[] = [];
 
-    protected constructor() {
+    protected constructor(protected _relative_file_name: string) {
         this._storage = new DummyStorage();
         this._config = new ConfigPool(this._storage);
         this._editor = new DummyEditor();
@@ -50,21 +48,21 @@ export class FS_Config_Helper implements ConfigHelper {
         this.updateConfigStorage();
     }
 
-    private static _instance : FS_Config_Helper | undefined = undefined;
-    static getConfigHelper() : FS_Config_Helper {
-        if (FS_Config_Helper._instance === undefined) {
-            FS_Config_Helper._instance = new FS_Config_Helper();
+    private static readonly _folder = '.vscode';
+    private static readonly _suffix = '-settings.json';
+
+    private static _instances : { [key:string] : FS_Config_Helper} = {};
+    static getConfigHelper(section: string) : FS_Config_Helper {
+        if (FS_Config_Helper._instances[section] === undefined) {
+            let relative_file_name = path.join(FS_Config_Helper._folder, section, FS_Config_Helper._suffix);
+            FS_Config_Helper._instances[section] = new FS_Config_Helper(relative_file_name);
         }
-        return FS_Config_Helper._instance;
+        return FS_Config_Helper._instances[section];
     }
     
     getConfig(): Config {
         return this._config;
     }
-
-    // getStorage(): ConfigStorage {
-    //     return this._storage;
-    // }
 
     getEditor(): ConfigEditor {
         return this._editor;

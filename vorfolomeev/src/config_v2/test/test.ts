@@ -9,7 +9,7 @@ export let _log_this_file = console.log;
 
 export async function Test()  {
     
-    let helper : ConfigHelper = FS_Config_Helper.getConfigHelper();
+    let helper : ConfigHelper = FS_Config_Helper.getConfigHelper('open-vms');
 
     let cfg = helper.getConfig();
 
