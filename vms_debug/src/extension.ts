@@ -58,8 +58,8 @@ export function deactivate()
 let DataCb = function(data: string, mode: ModeWork) : void
 {
     console.log(data);
-    shell.SendCommand("type login.com");
-	shell.DisconectSession();
+    //shell.SendCommand("type login.com");
+	//shell.DisconectSession();
 
 	if(session)
 	{
@@ -69,7 +69,8 @@ let DataCb = function(data: string, mode: ModeWork) : void
 
 let ReadyCb = function() : void
 {
-    shell.SendCommand("ls");
+	//shell.SendCommand("ls");
+	shell.SendCommandToQueue("cd [.demos]");
 	console.log("ready");
 
 	serverIsConnect = true;

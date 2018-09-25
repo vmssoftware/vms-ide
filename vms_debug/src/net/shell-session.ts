@@ -70,7 +70,8 @@ export class ShellSession
             {
                 if(data.includes("\n\r"))
                 {
-                    this.enterCmd = data;
+                    this.enterCmd += data;
+                    this.enterCmd = this.enterCmd.substring(2);
                     this.readyCmd = true;
                     this.funcReady();
                 }
@@ -151,6 +152,11 @@ export class ShellSession
                 if(!result)
                 {
                     this.queueCmd.push(command);
+                    this.readyCmd = true;
+                }
+                else
+                {
+                    this.readyCmd = false;
                 }
             }
             else
@@ -162,17 +168,8 @@ export class ShellSession
         {
             this.queueCmd.push(command);
         }
-
-        this.readyCmd = false;
     }
 
-    public DataRead() :string
-    {
-        let data : string = this.resultData;
-        this.resultData = "";
-
-        return data;
-    }
 
     public GetStream() : ClientChannel
     {

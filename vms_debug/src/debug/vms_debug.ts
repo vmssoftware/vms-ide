@@ -109,7 +109,8 @@ export class VMSDebugSession extends LoggingDebugSession
 		response.body.supportsEvaluateForHovers = true;
 
 		// make VS Code to show a 'step back' button
-		response.body.supportsStepBack = true;
+		response.body.supportsStepBack = false;
+		//response.body.supportsStepInTargetsRequest = false;
 
 		this.sendResponse(response);
 
@@ -179,7 +180,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.sendResponse(response);
 	}
 
-	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void
+	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void//call 1
 	{
 		const startFrame = typeof args.startFrame === 'number' ? args.startFrame : 0;
 		const maxLevels = typeof args.levels === 'number' ? args.levels : 1000;
@@ -194,7 +195,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.sendResponse(response);
 	}
 
-	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void
+	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void//call 2
 	{
 		const frameReference = args.frameId;
 		const scopes = new Array<Scope>();
@@ -208,7 +209,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.sendResponse(response);
 	}
 
-	protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void
+	protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void//call 3
 	{
 		const variables = new Array<DebugProtocol.Variable>();
 		const id = this._variableHandles.get(args.variablesReference);
@@ -246,42 +247,6 @@ export class VMSDebugSession extends LoggingDebugSession
 			variables: variables
 		};
 
-		this.sendResponse(response);
-	}
-
-	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void
-	{
-		this._runtime.continue();
-		this.sendResponse(response);
-	}
-
-	protected reverseContinueRequest(response: DebugProtocol.ReverseContinueResponse, args: DebugProtocol.ReverseContinueArguments) : void
-	{
-		this._runtime.continue(true);
-		this.sendResponse(response);
- 	}
-
-	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void
-	{
-		this._runtime.step();
-		this.sendResponse(response);
-	}
-
-	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void
-	{
-		this._runtime.step();
-		this.sendResponse(response);
-	}
-
-	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void
-	{
-		this._runtime.step();
-		this.sendResponse(response);
-	}
-
-	protected stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void
-	{
-		this._runtime.step(true);
 		this.sendResponse(response);
 	}
 
@@ -326,6 +291,50 @@ export class VMSDebugSession extends LoggingDebugSession
 		};
 
 		this.sendResponse(response);
+	}
+
+
+	//buttons events
+	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void
+	{
+		this.sendResponse(response);//first response
+		this._runtime.continue();//second command
+	}
+
+	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void
+	{
+		this.sendResponse(response);
+		this._runtime.stepNext();
+		//this._runtime.step();
+	}
+
+	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void
+	{
+		this.sendResponse(response);
+		this._runtime.step();
+	}
+
+	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void
+	{
+		this.sendResponse(response);
+		this._runtime.step();
+	}
+
+	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments): void
+	{
+		this.sendResponse(response);
+	}
+
+	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void
+	{
+		// if((Object)args.terminateDebuggee)
+		// {
+		// 	this._runtime.stop();
+		// }
+		// else
+		// {
+		// }
+		this.sendResponse(response);//disconnect or restart event
 	}
 
 	//---- helpers
