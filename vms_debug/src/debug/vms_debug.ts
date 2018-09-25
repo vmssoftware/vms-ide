@@ -304,37 +304,31 @@ export class VMSDebugSession extends LoggingDebugSession
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void
 	{
 		this.sendResponse(response);
-		this._runtime.stepNext();
-		//this._runtime.step();
+		this._runtime.stepOver();
 	}
 
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void
 	{
 		this.sendResponse(response);
-		this._runtime.step();
+		this._runtime.stepInto();
 	}
 
 	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void
 	{
 		this.sendResponse(response);
-		this._runtime.step();
+		this._runtime.stepOut();
 	}
 
 	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments): void
 	{
 		this.sendResponse(response);
+		this._runtime.stop();
 	}
 
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void
 	{
-		// if((Object)args.terminateDebuggee)
-		// {
-		// 	this._runtime.stop();
-		// }
-		// else
-		// {
-		// }
 		this.sendResponse(response);//disconnect or restart event
+		this._runtime.exit();
 	}
 
 	//---- helpers

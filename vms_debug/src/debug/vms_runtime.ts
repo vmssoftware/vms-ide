@@ -5,6 +5,8 @@
 import { readFileSync } from 'fs';
 import { EventEmitter } from 'events';
 import { ShellSession, ModeWork } from '../net/shell-session';
+import { OsCommands } from '../command/os_commands';
+import { DebugCommands } from '../command/debug_commands';
 
 export interface VMSBreakpoint
 {
@@ -35,6 +37,8 @@ export class VMSRuntime extends EventEmitter
 	private _sourceFile: string;
 	private buttonPressd : DebugButtonEvent;
 	private shell : ShellSession;
+	private osCmd : OsCommands;
+	private dbgCmd : DebugCommands;
 
 	public get sourceFile()
 	{
@@ -61,6 +65,8 @@ export class VMSRuntime extends EventEmitter
 
 		this.shell = shell;
 		this.buttonPressd = DebugButtonEvent.btnNoEvent;
+		this.osCmd = new OsCommands();
+		this.dbgCmd = new DebugCommands();
 	}
 
 	/**
@@ -71,8 +77,8 @@ export class VMSRuntime extends EventEmitter
 		this.loadSource(program);
 		this._currentLine = -1;
 
-		this.shell.SendCommandToQueue("debug /keep");
-		this.shell.SendCommandToQueue("run hello");
+		this.shell.SendCommandToQueue(this.osCmd.runDebug());
+		this.shell.SendCommandToQueue(this.dbgCmd.run("hello"));
 
 		this.verifyBreakpoints(this._sourceFile);
 
@@ -91,42 +97,56 @@ export class VMSRuntime extends EventEmitter
 	/**
 	 * Continue execution to the end/beginning.
 	 */
-	public continue(reverse = false)
+	public continue()
 	{
 		this.buttonPressd = DebugButtonEvent.btnContinue;
-		this.run(reverse, undefined);
+		//this.run(reverse, undefined);
+		this.shell.SendCommand(this.dbgCmd.go());
+		this._currentLine = -1;
 	}
 
 	/**
-	 * Step to the next/previous non empty line.
+	 * Step to the next non empty line.
 	 */
 	public step(reverse = false, event = 'stopOnStep')
 	{
 		this.run(reverse, event);
 	}
 
-	public stepNext(event = 'stopOnStep')
+	public stepOver()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStepOver;
 
-		this.shell.SendCommand("step");
-		this._currentLine = 10;
+		this.shell.SendCommand(this.dbgCmd.step());
+		this._currentLine++;
 	}
 
 	public stepInto()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStepInto;
+
+		this.shell.SendCommand(this.dbgCmd.stepIn());
+		this._currentLine++;
 	}
 
 	public stepOut()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStepOut;
+
+		this.shell.SendCommand(this.dbgCmd.stepOut());
+		this._currentLine++;
 	}
 
 	public stop()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStop;
-		this.shell.SendCommandToQueue("exit");
+		this.shell.SendCommandToQueue(this.dbgCmd.stop());
+	}
+
+	public exit()
+	{
+		this.buttonPressd = DebugButtonEvent.btnStop;
+		this.shell.SendCommandToQueue(this.dbgCmd.exit());
 	}
 
 	/**
@@ -370,9 +390,11 @@ export class VMSRuntime extends EventEmitter
 					break;
 
 				case DebugButtonEvent.btnStepInto:
+					this.sendEvent('stopOnEntry');
 					break;
 
 				case DebugButtonEvent.btnStepOut:
+					this.sendEvent('stopOnEntry');
 					break;
 
 				case DebugButtonEvent.btnRestart:
