@@ -13,14 +13,29 @@ export interface VMSBreakpoint
 	verified: boolean;
 }
 
+export enum DebugButtonEvent
+{
+	btnNoEvent = 0,
+    btnContinue = 1,
+	btnStepOver,
+	btnStepInto,
+	btnStepOut,
+	btnRestart,
+	btnPause,
+	btnStop,
+}
+
+
 /**
  * A VMS runtime with minimal debugger functionality.
  */
 export class VMSRuntime extends EventEmitter
 {
-
 	// the initial (and one and only) file we are 'debugging'
 	private _sourceFile: string;
+	private buttonPressd : DebugButtonEvent;
+	private shell : ShellSession;
+
 	public get sourceFile()
 	{
 		return this._sourceFile;
@@ -43,6 +58,9 @@ export class VMSRuntime extends EventEmitter
 	constructor(shell : ShellSession)
 	{
 		super();
+
+		this.shell = shell;
+		this.buttonPressd = DebugButtonEvent.btnNoEvent;
 	}
 
 	/**
@@ -52,6 +70,9 @@ export class VMSRuntime extends EventEmitter
 	{
 		this.loadSource(program);
 		this._currentLine = -1;
+
+		this.shell.SendCommandToQueue("debug /keep");
+		this.shell.SendCommandToQueue("run hello");
 
 		this.verifyBreakpoints(this._sourceFile);
 
@@ -72,6 +93,7 @@ export class VMSRuntime extends EventEmitter
 	 */
 	public continue(reverse = false)
 	{
+		this.buttonPressd = DebugButtonEvent.btnContinue;
 		this.run(reverse, undefined);
 	}
 
@@ -81,6 +103,30 @@ export class VMSRuntime extends EventEmitter
 	public step(reverse = false, event = 'stopOnStep')
 	{
 		this.run(reverse, event);
+	}
+
+	public stepNext(event = 'stopOnStep')
+	{
+		this.buttonPressd = DebugButtonEvent.btnStepOver;
+
+		this.shell.SendCommand("step");
+		this._currentLine = 10;
+	}
+
+	public stepInto()
+	{
+		this.buttonPressd = DebugButtonEvent.btnStepInto;
+	}
+
+	public stepOut()
+	{
+		this.buttonPressd = DebugButtonEvent.btnStepOut;
+	}
+
+	public stop()
+	{
+		this.buttonPressd = DebugButtonEvent.btnStop;
+		this.shell.SendCommandToQueue("exit");
 	}
 
 	/**
@@ -307,14 +353,40 @@ export class VMSRuntime extends EventEmitter
 	{
 		//parse data
 		//action
-		//send rasponse
+		//send event
 		if(mode === ModeWork.shell)
 		{
 
 		}
 		else if(mode === ModeWork.debug)
 		{
+			switch(this.buttonPressd)
+			{
+				case DebugButtonEvent.btnContinue:
+					break;
 
+				case DebugButtonEvent.btnStepOver:
+					this.sendEvent('stopOnEntry');
+					break;
+
+				case DebugButtonEvent.btnStepInto:
+					break;
+
+				case DebugButtonEvent.btnStepOut:
+					break;
+
+				case DebugButtonEvent.btnRestart:
+					break;
+
+				case DebugButtonEvent.btnPause:
+					break;
+
+				case DebugButtonEvent.btnStop:
+					break;
+
+				default:
+					break;
+			}
 		}
 	}
 }
