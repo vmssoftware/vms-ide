@@ -16,7 +16,10 @@ import { workspace } from 'vscode';
 import { Uri } from 'vscode';
 import { FilterSection } from './config_v2/sections/filter';
 
-//import { testPad } from '@vorfol/yet_another_test_one';
+import { TestC } from '@vorfol/config-helper';
+
+let testC = new TestC('started');
+console.log(testC.getMessage());
 
 //const _lang_opt = { locale: env.language };
 //const _lang_opt = { locale: 'ru' };

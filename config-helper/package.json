@@ -1,0 +1,21 @@
+{
+  "name": "@vorfol/config-helper",
+  "displayName": "Appliedtech: config-helper",
+  "version": "0.0.1",
+  "description": "Config helper",
+  "publisher": "vorfol",
+  "main": "out/main",
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "author": "vorfol",
+  "license": "ISC",
+  "devDependencies": {
+      "@types/node": "^10.11.0",
+      "typescript": "^3.x.x"
+  },
+  "dependencies": {
+      "vscode": "^1.1.21"
+  }
+}
