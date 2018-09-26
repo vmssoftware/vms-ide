@@ -16,7 +16,7 @@ import { workspace } from 'vscode';
 import { Uri } from 'vscode';
 import { FilterSection } from './config_v2/sections/filter';
 
-//import { testPad } from 'yet_another_test_one';
+//import { testPad } from '@vorfol/yet_another_test_one';
 
 //const _lang_opt = { locale: env.language };
 //const _lang_opt = { locale: 'ru' };
