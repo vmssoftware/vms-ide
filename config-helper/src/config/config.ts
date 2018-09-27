@@ -35,13 +35,6 @@ export interface ConfigSection {
 /**
  * 
  */
-export interface ConfigObject {
-    [key:string] : ConfigSection;
-}
-
-/**
- * 
- */
 export enum CSA_Result {
     ok = 0,
     fail = 1,

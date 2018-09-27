@@ -1,9 +1,12 @@
 {
   "name": "@vorfol/config-helper",
-  "displayName": "Appliedtech: config-helper",
-  "version": "0.0.1",
+  "displayName": "VMS: config-helper",
+  "version": "0.1.4",
   "description": "Config helper",
   "publisher": "vorfol",
+  "engines": {
+    "vscode": "^1.27.0"
+  },
   "main": "out/main",
   "scripts": {
     "compile": "tsc -p ./",
@@ -12,10 +15,11 @@
   "author": "vorfol",
   "license": "ISC",
   "devDependencies": {
-      "@types/node": "^10.11.0",
-      "typescript": "^3.x.x"
+    "@types/node": "^10.11.0",
+    "typescript": "^3.0.3"
   },
   "dependencies": {
-      "vscode": "^1.1.21"
+    "vscode-nls": "^4.0.0",
+    "vscode": "^1.1.21"
   }
 }

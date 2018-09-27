@@ -1,4 +1,4 @@
-import { ConfigData, ConfigSection } from "../config_v2";
+import { ConfigData, ConfigSection } from "@vorfol/config-helper";
 
 export class FilterSection implements ConfigSection {
 

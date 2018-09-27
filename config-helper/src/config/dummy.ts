@@ -1,4 +1,4 @@
-import { ConfigEditor, CSA_Result, ConfigData, ConfigStorage } from "./config_v2";
+import { ConfigEditor, CSA_Result, ConfigStorage } from "./config";
 
 /**
  * Dummy implementations
@@ -12,7 +12,7 @@ export class DummyStorage implements ConfigStorage {
         return Promise.resolve(CSA_Result.prepare_failed);
     }     
     
-    fillData(section: string, data: ConfigData): Promise<CSA_Result> {
+    fillData(): Promise<CSA_Result> {
         return Promise.resolve(CSA_Result.some_data_failed);
     }
 
@@ -24,7 +24,7 @@ export class DummyStorage implements ConfigStorage {
         return Promise.resolve(CSA_Result.prepare_failed);
     }
 
-    storeData(section: string, data: ConfigData): Promise<CSA_Result> {
+    storeData(): Promise<CSA_Result> {
         return Promise.resolve(CSA_Result.some_data_failed);
     }
 

@@ -1,4 +1,4 @@
-import { Config, ConfigStorage, ConfigObject, ConfigSection, CSA_Result } from "./config_v2";
+import { Config, ConfigStorage, ConfigSection, CSA_Result } from "./config";
 
 import * as nls from 'vscode-nls';
 import { EventEmitter } from "vscode";
@@ -40,19 +40,14 @@ export class ConfigPool implements Config {
         this.load();
     }
 
-    // getStorage() : ConfigStorage {
-    //     _log_this_file('getStorage');
-    //     return this._storage;
-    // }
-
-    protected _pool : ConfigObject = {};
+    protected _pool : Map<string, ConfigSection> = new Map<string,ConfigSection>();
 
     /**
      * Add ConfigSection to pool. ConfigPool will keep it up to date.
      */
     add(cfg: ConfigSection) : boolean {
         _log_this_file('add ' + cfg.name());
-        this._pool[cfg.name()] = cfg;
+        this._pool.set(cfg.name(), cfg);
         this.load();
         return true;
     }
@@ -66,7 +61,7 @@ export class ConfigPool implements Config {
     freeze() : void {
         _log_this_file('freeze');
         if (!this._freezePromise) {
-            this._freezePromise = new Promise<boolean>((resolve, reject)=>{
+            this._freezePromise = new Promise<boolean>((resolve)=>{
                 this._freezeResolve = resolve;
             })
         }
@@ -86,7 +81,7 @@ export class ConfigPool implements Config {
      */
     get(section: string) : Promise<ConfigSection|undefined> {
         _log_this_file('get = ' + section);
-        return new Promise<ConfigSection>(async (resolve,reject) => {
+        return new Promise<ConfigSection>(async (resolve) => {
             let promises: any[] = [];
             if (this._loadPromise) {
                 promises.push(this._loadPromise);
@@ -97,7 +92,7 @@ export class ConfigPool implements Config {
             if (promises.length) {
                 await Promise.all(promises);
             }
-            resolve(this._pool[section]);
+            resolve(this._pool.get(section));
             _log_this_file('get => ok ' + section);
         });
     }
@@ -106,14 +101,13 @@ export class ConfigPool implements Config {
     load() : Promise<CSA_Result> {
         _log_this_file('load =');
         if (!this._loadPromise) {
-            this._loadPromise = new Promise<CSA_Result>(async (resolve,reject) => {
+            this._loadPromise = new Promise<CSA_Result>(async (resolve) => {
                 //do load
                 let changed = false;
                 this._storage.fillStart().then(async (started) => {
                     if (started === CSA_Result.ok) {
                         let ret_code = CSA_Result.ok;
-                        for(let section_name in this._pool) {
-                            let cfg = this._pool[section_name];
+                        for(let [section_name, cfg] of this._pool) {
                             if (cfg.name() === section_name) {
                                 let data = cfg.templateToFillFrom();
                                 try {
@@ -154,13 +148,12 @@ export class ConfigPool implements Config {
     save() : Promise<CSA_Result> {
         _log_this_file('save =');
         if (!this._savePromise) {
-            this._savePromise = new Promise<CSA_Result>(async (resolve,reject) => {
+            this._savePromise = new Promise<CSA_Result>(async (resolve) => {
                 //do save
                 this._storage.storeStart().then( async (started) => {
                     if (started === CSA_Result.ok) {
                         let ret_code = CSA_Result.ok;
-                        for(let section_name in this._pool) {
-                            let cfg = this._pool[section_name];
+                        for(let [section_name, cfg] of this._pool) {
                             if (cfg.name() === section_name) {
                                 let data = cfg.store();
                                 try {

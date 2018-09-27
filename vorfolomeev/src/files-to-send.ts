@@ -1,14 +1,14 @@
 import {workspace} from 'vscode';
 
-import { Config } from './config_v2/config_v2';
-import { FilterSection } from './config_v2/sections/filter';
+import { ConfigHelper } from '@vorfol/config-helper';
+import { FilterSection } from './config/sections/filter';
 
 let _filter = new FilterSection();
-let _cfg : Config| undefined = undefined;
+let _cfg : ConfigHelper | undefined = undefined;
 
-export async function InitCfg(cfg: Config) {
+export async function InitCfg(cfg: ConfigHelper) {
     _cfg = cfg;
-    _cfg.add(_filter);
+    _cfg.getConfig().add(_filter);
     console.log('added ' + _filter.name());
 }
 
@@ -19,7 +19,7 @@ export async function InitCfg(cfg: Config) {
 export async function FilesToSend() {
     //ensure we are not in -=loading=-
     if (_cfg) {
-        await _cfg.get(_filter.name());
+        await _cfg.getConfig().get(_filter.name());
     }
     let files = workspace.findFiles(_filter.include, _filter.exclude);
     return files;

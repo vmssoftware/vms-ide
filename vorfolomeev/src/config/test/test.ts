@@ -1,5 +1,4 @@
-import { ConfigHelper } from "../config_v2";
-import { FS_Config_Helper } from "../fs-config-helper";
+import { ConfigHelper } from '@vorfol/config-helper';
 import { UserPasswordSection } from "../sections/user-password";
 import { FilterSection } from "../sections/filter";
 import { HostCollection } from "../sections/host-collection";
@@ -9,7 +8,7 @@ export let _log_this_file = console.log;
 
 export async function Test()  {
     
-    let helper : ConfigHelper = FS_Config_Helper.getConfigHelper('open-vms');
+    let helper = ConfigHelper.getConfigHelper('open-vms');
 
     let cfg = helper.getConfig();
 

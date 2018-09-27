@@ -1,6 +1,6 @@
 import { Uri } from "vscode";
-import { Config } from "../config_v2/config_v2";
-import { FilterSection } from "../config_v2/sections/filter";
+import { ConfigHelper } from '@vorfol/config-helper';
+import { FilterSection } from "../config/sections/filter";
 import * as path from 'path';
 
 
@@ -67,11 +67,11 @@ export class Sync_v1 implements Synchronizer {
     
     protected _filter: FilterSection = new FilterSection();
     
-    constructor(protected _cfg: Config, 
+    constructor(protected _cfg: ConfigHelper, 
                 protected _primary: FS_Wrapper, 
                 protected _secondary: FS_Wrapper) {
         
-        _cfg.add(this._filter);
+        _cfg.getConfig().add(this._filter);
     }
     
     protected _syncPromise: Promise<boolean> | undefined = undefined;

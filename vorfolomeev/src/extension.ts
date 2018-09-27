@@ -8,18 +8,13 @@ import * as nls from 'vscode-nls';
 
 import { InitCfg as FilesToSendInitCfg } from './files-to-send';
 import { InitCfg as ConnectionInitCfg } from './create-ssh-client';
-import { ConfigHelper, Config } from './config_v2/config_v2';
-import { HostCollection } from './config_v2/sections/host-collection';
-import { VSC_Config_Helper } from './config_v2/vsc-config-helper';
+import { HostCollection } from './config/sections/host-collection';
 import { FS_FileSystem } from './synchronize/synchronizer';
 import { workspace } from 'vscode';
 import { Uri } from 'vscode';
-import { FilterSection } from './config_v2/sections/filter';
+import { FilterSection } from './config/sections/filter';
 
-import { TestC } from '@vorfol/config-helper';
-
-let testC = new TestC('started');
-console.log(testC.getMessage());
+import { ConfigHelper } from '@vorfol/config-helper';
 
 //const _lang_opt = { locale: env.language };
 //const _lang_opt = { locale: 'ru' };
@@ -29,18 +24,17 @@ export async function activate(context: ExtensionContext) {
 
     console.log(_localize('extension.activated', 'OpenVMS extension is activated'));
 
-    let _helper: ConfigHelper = VSC_Config_Helper.getConfigHelper('open-vms');
-    let _config: Config = _helper.getConfig();
-    
+    let _helper = ConfigHelper.getConfigHelper('open-vms');
+
     let _hosts = new HostCollection();
-    _config.add(_hosts);
+    _helper.getConfig().add(_hosts);
     
-    FilesToSendInitCfg(_config).then(() => {
+    FilesToSendInitCfg(_helper).then(() => {
         console.log('FilesToSendInitCfg configured');
     });
 
     //test full path to Config object
-    ConnectionInitCfg(_config).then(() => {
+    ConnectionInitCfg(_helper).then(() => {
         console.log('ConnectionInitCfg configured');
     });
 
@@ -54,7 +48,7 @@ export async function activate(context: ExtensionContext) {
                     ws_uris.push(ws.uri);
                 }
                 let fs = new FS_FileSystem(ws_uris);
-                let filter = await _config.get(FilterSection._section);
+                let filter = await _helper.getConfig().get(FilterSection._section);
                 if (filter && FilterSection.is(filter)) {
                     let uris = await fs.files(filter.include, filter.exclude);
                     for(let uri of uris) {
@@ -70,8 +64,6 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push( commands.registerCommand('VMS.editProject', async () => {
         console.log('edit start');
-        //we have to save current configuration before edit
-        await _config.save();
         let _editor = _helper.getEditor();
         await _editor.invoke();
         console.log('edit end');

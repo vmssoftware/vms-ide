@@ -1,5 +1,5 @@
 
-import { CSA_Result, ConfigStorage, ConfigData, ValueData } from "./config_v2";
+import { CSA_Result, ConfigStorage, ConfigData, ValueData } from "./config";
 import { workspace } from "vscode";
 import { WorkspaceConfiguration } from "vscode";
 
@@ -50,7 +50,7 @@ export class VSC_ConfigStorage implements ConfigStorage {
     }
 
     storeData(section: string, data: ConfigData): Promise<CSA_Result> {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
             let ret_code = CSA_Result.ok;
             let configuration = workspace.getConfiguration(this._section);
             for(let key in data) {

@@ -104,7 +104,7 @@
         "typescript": "^3.x.x"
     },
     "dependencies": {
-        "@vorfol/config-helper": "0.0.1",
+        "@vorfol/config-helper": "^0.1.4",
         "fast-glob": "^2.2.2",
         "fs": "0.0.1-security",
         "ssh2": "^0.6.1",

@@ -1,4 +1,4 @@
-import { ConfigHelper, ConfigStorage, ConfigEditor, Config } from "./config_v2";
+import { ConfigHelper, ConfigStorage, ConfigEditor, Config } from "./config";
 import { ConfigPool } from "./config-pool";
 import { Disposable } from "vscode";
 import { VSC_ConfigStorage } from "./vsc-storage";
@@ -38,7 +38,7 @@ export class VSC_Config_Helper implements ConfigHelper {
     protected constructor(protected _section: string) {
         this._storage = new VSC_ConfigStorage(this._section);
         this._config = new ConfigPool(this._storage);
-        this._editor = new VSC_WorkspaceConfigEditor();
+        this._editor = new VSC_WorkspaceConfigEditor(this._config);
         this._dispose.push( workspace.onDidChangeConfiguration((e) => {
             if (e.affectsConfiguration(this._section)) {
                 this._config.freeze();

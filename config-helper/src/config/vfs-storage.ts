@@ -1,4 +1,4 @@
-import { CSA_Result } from "./config_v2";
+import { CSA_Result } from "./config";
 import { Uri } from "vscode";
 import { workspace } from "vscode";
 import { FS_ConfigStorage } from "./fs-storage";
@@ -21,7 +21,7 @@ export class VFS_ConfigStorage extends FS_ConfigStorage {
     fillStart(): Promise<CSA_Result> {
         _log_this_file('fillStart =');
         if (!this._fillStartPromise) {
-            this._fillStartPromise = new Promise<CSA_Result>(async (resolve, reject) => {
+            this._fillStartPromise = new Promise<CSA_Result>(async (resolve) => {
                 try {
                     let text_doc = await workspace.openTextDocument(this._fileUri);
                     let content = text_doc.getText();
@@ -42,7 +42,7 @@ export class VFS_ConfigStorage extends FS_ConfigStorage {
     storeEnd(): Promise<CSA_Result> {
         _log_this_file('storeEnd =');
         if (!this._storePromise) {
-            this._storePromise = new Promise<CSA_Result>(async (resolve, reject) => {
+            this._storePromise = new Promise<CSA_Result>(async (resolve) => {
                 try {
                     let range : Range | undefined = undefined;
                     try {

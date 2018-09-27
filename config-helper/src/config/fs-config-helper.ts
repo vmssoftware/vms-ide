@@ -3,7 +3,7 @@ import { FS_ConfigStorage } from "./fs-storage";
 import { Uri } from "vscode";
 import { FileSystemWatcher } from "vscode";
 import { Debouncer } from "../common/debounce";
-import { ConfigEditor, ConfigStorage, Config, ConfigHelper } from "./config_v2";
+import { ConfigEditor, ConfigStorage, Config, ConfigHelper } from "./config";
 import { ConfigPool } from "./config-pool";
 import * as path from 'path';
 import { DummyStorage, DummyEditor } from "./dummy";
@@ -41,7 +41,7 @@ export class FS_Config_Helper implements ConfigHelper {
         this._storage = new DummyStorage();
         this._config = new ConfigPool(this._storage);
         this._editor = new DummyEditor();
-        this._dispose.push( workspace.onDidChangeWorkspaceFolders((e) => {
+        this._dispose.push( workspace.onDidChangeWorkspaceFolders(() => {
             _log_this_file('onDidChangeWorkspaceFolders');
             this.updateConfigStorage();
         }));
@@ -82,10 +82,8 @@ export class FS_Config_Helper implements ConfigHelper {
             if (workspace.workspaceFolders) {
                 //allocate storage in first workspace
                 this.createFS_Storage(workspace.workspaceFolders[0].uri);
-                this._editor = new UriEditor(this._file_uri);
-                if (this._config) {
-                    this._config.setStorage(this._storage);
-                }
+                this._editor = new UriEditor(this._file_uri, this._config);
+                this._config.setStorage(this._storage);
             }
         } else if (this._storage instanceof FS_ConfigStorage) {
             if (!workspace.getWorkspaceFolder(this._file_uri)) {

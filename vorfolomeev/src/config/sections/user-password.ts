@@ -1,4 +1,4 @@
-import { ConfigSection, ConfigData } from "../config_v2";
+import { ConfigSection, ConfigData } from "@vorfol/config-helper";
 import { UserPasswordHostConfig } from "../../host-config";
 import { isNumber, isString } from "util";
 

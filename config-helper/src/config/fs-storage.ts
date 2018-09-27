@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { CSA_Result, ConfigStorage, ConfigData } from "./config_v2";
+import { CSA_Result, ConfigStorage, ConfigData } from "./config";
 
 export let _log_this_file = console.log;
 //_log_this_file = function() {};
@@ -19,7 +19,7 @@ export let _log_this_file = console.log;
     fillStart(): Promise<CSA_Result> {
         _log_this_file('fillStart =');
         if (!this._fillStartPromise) {
-            this._fillStartPromise = new Promise<CSA_Result>(async (resolve, reject) => {
+            this._fillStartPromise = new Promise<CSA_Result>(async (resolve) => {
                 fs.readFile(this._filename, (err, data) => {
                     if (err) {
                         resolve(CSA_Result.prepare_failed);
@@ -81,7 +81,7 @@ export let _log_this_file = console.log;
     storeEnd(): Promise<CSA_Result> {
         _log_this_file('storeEnd =');
         if (!this._storePromise) {
-            this._storePromise = new Promise<CSA_Result>((resolve, reject) => {
+            this._storePromise = new Promise<CSA_Result>((resolve) => {
                 fs.writeFile(this._filename, JSON.stringify(this._json_data, null, 4), (err) => {
                     this._json_data = {};
                     if (err) {
