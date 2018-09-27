@@ -2,13 +2,6 @@ import { ConfigSection, ConfigData } from "@vorfol/config-helper";
 import { UserPasswordHostConfig } from "../../host-config";
 import { isNumber, isString } from "util";
 
-/**
- *  ConfigSection implementations 
- * 
- * 
- * 
- */
-
 export class UserPasswordSection implements ConfigSection, UserPasswordHostConfig {
     
     host: string = '';

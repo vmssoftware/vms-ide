@@ -63,7 +63,7 @@ export interface FS_Wrapper {
  * 
  */
 
-export class Sync_v1 implements Synchronizer {
+export class Sync_v2 implements Synchronizer {
     
     protected _filter: FilterSection = new FilterSection();
     
