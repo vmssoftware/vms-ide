@@ -4,12 +4,13 @@ import { SourceFile, Source } from "./sync";
 import { Uri } from 'vscode';
 
 let _log_ = console.log;
+//comment next line to allow debug output
 _log_ = function() {};
 
-export class FSSourceFile implements SourceFile {
+export class FS_SourceFile implements SourceFile {
 
     protected _fullPath: string;
-    constructor(protected _source: FSSource, protected _relPath: string) {
+    constructor(protected _source: FS_Source, protected _relPath: string) {
         this._fullPath = path.join(this._source.rootPath, this._relPath);
         _log_(`source created: ${this._fullPath}`);
     }
@@ -47,7 +48,7 @@ export class FSSourceFile implements SourceFile {
     }
 }
 
-export class FSSource implements Source {
+export class FS_Source implements Source {
 
     protected _fsPathRoot: string;
     constructor(protected _root: Uri) {
@@ -64,11 +65,11 @@ export class FSSource implements Source {
                 let fsPath = uri.fsPath;
                 if (fsPath.startsWith(this._fsPathRoot)) {
                     let fsTail = fsPath.slice(this._fsPathRoot.length);
-                    _log_(`FSSource ${this._root.toString()} accept: ${uri.toString()}`);
-                    return new FSSourceFile(this, fsTail);
+                    _log_(`source ${this._root.toString()} accept: ${uri.toString()}`);
+                    return new FS_SourceFile(this, fsTail);
                 }
             }
-            _log_(`FSSource ${this._root.toString()} doesn't accept: ${uri.toString()}`);
+            _log_(`source ${this._root.toString()} doesn't accept: ${uri.toString()}`);
             return undefined;
         });
     }

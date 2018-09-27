@@ -1,25 +1,39 @@
 import { Sync, Source, Target, SourceFile } from "./sync";
-import { Uri } from "vscode";
+import { Uri, Disposable } from "vscode";
 
 let _log_ = console.log;
 //_log_ = function() {};
 
 export class Sync_v1 implements Sync {
 
-    protected _sources: Map<string, Source> = new Map<string, Source>();
+    protected _sources: Source[] = [];
 
     constructor(protected _target: Target) {
 
     }
 
-    addSource(name: string, source: Source) {
-        this._sources.set(name, source);
+    addSource(source: Source): Disposable {
+        this._sources.push(source);
+        return {
+            dispose: () => {
+                this._sources.some((value, index, arr)=>{
+                    if (value === source) {
+                        arr.splice(index, 1);
+                        _log_(`disposed: ${value} at ${index}`);
+                        return true;
+                    }
+                    return false;
+                })
+            }
+        };
     }
 
     postFile(uri: Uri): Promise<boolean> {
         return new Promise<boolean>(async (resolve)=>{
             let sourceFile: SourceFile | undefined;
-            for (let source of this._sources.values()) {
+            let ret_code = false;
+            //find appropriate source
+            for (let source of this._sources) {
                 try {
                     sourceFile = await source.accept(uri);
                 } catch(err) {
@@ -30,26 +44,23 @@ export class Sync_v1 implements Sync {
                 }
             }
             if (sourceFile) {
-                let modTime = sourceFile.modTime;
+                //update target if need
                 try {
-                    let date = await modTime;
-                    if (date) {
-                        let targetFile = await this._target.test(sourceFile.relativePath, date);
+                    let modTime = await sourceFile.modTime;
+                    if (modTime) {
+                        let targetFile = await this._target.test(sourceFile.relativePath, modTime);
                         if (targetFile.needUpdate) {
                             let content = await sourceFile.content;
                             if (content) {
-                                let result = await targetFile.updateContent(content);
-                                resolve(result);
+                                ret_code = await targetFile.updateContent(content);
                             }
                         }
                     }
                 } catch(err) {
                     _log_(err);
-                    resolve(false);
                 }
-            } else {
-                resolve(false);
             }
+            resolve(ret_code);
         });
     }
 }

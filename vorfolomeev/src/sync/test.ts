@@ -1,7 +1,7 @@
 import { Target, TargetFile, SourceFile, Source, Sync } from "./sync";
-import { Uri, workspace } from "vscode";
+import { Uri, workspace, Disposable } from "vscode";
 import { Sync_v1 } from "./sync_v1";
-import { FSSource } from "./fs-source";
+import { FS_Source } from "./fs-source";
 
 let _date_1 = new Date(Date.UTC(2018, 9, 20, 14, 25, 33, 123));
 
@@ -103,7 +103,7 @@ export function TestTargetTest_v1() {
     let sync = new Sync_v1(tt1);
 
     for(let src of _sources) {
-        sync.addSource(src, new SourceTest_v1(Uri.parse(src)));
+        sync.addSource(new SourceTest_v1(Uri.parse(src)));
     }
 
     let allFiles = _files.map(file => sync.postFile(Uri.parse(file)).then((result)=>{
@@ -118,9 +118,11 @@ export function TestFSSource() {
     let tt1 = new TargetTest_v1();
     let sync = new Sync_v1(tt1);
 
+    let disposables: Disposable[] = [];
+
     if (workspace.workspaceFolders) {
         for(let ws of workspace.workspaceFolders) {
-            sync.addSource(ws.name, new FSSource(ws.uri));    
+            disposables.push(sync.addSource(new FS_Source(ws.uri)));
         }
     }
 
@@ -130,6 +132,8 @@ export function TestFSSource() {
         }));
         Promise.all(allFiles).then(()=>{
             console.log('All done');
+            disposables.forEach(v => v.dispose());
+            disposables = [];
         });
     });
 
