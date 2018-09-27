@@ -10,6 +10,8 @@ import { VMSDebugSession } from './debug/vms_debug';
 import { ShellSession, ModeWork } from './net/shell-session';
 import * as Net from 'net';
 import * as nls from 'vscode-nls';
+import { OsCommands } from './command/os_commands';
+import {ToOutputChannel} from './io/output-channel';
 
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();//nls.config({ locale: 'ru',  cacheLanguageResolution: true, messageFormat : nls.MessageFormat.both})();
 //const localize = nls.loadMessageBundle();
@@ -33,7 +35,40 @@ export function activate(context: vscode.ExtensionContext)
 
 		const message = localize('extention.conecting', "Connecting to the server")
 		vscode.window.showInformationMessage(message);
-    }));
+	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.compile', () =>
+	{
+		let osCmd = new OsCommands();
+		shell.SendCommandToQueue(osCmd.cleanMMS("comp.mms;15"));
+		shell.SendCommandToQueue(osCmd.runMMS("comp.mms;15"));
+
+		const message = localize('extention.compile', "Compile program")
+		vscode.window.showInformationMessage(message);
+	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.run', () =>
+	{
+		let prompt = `Enter file name`;
+
+		vscode.window.showInputBox( { prompt }).then((value) =>
+		{
+			let osCmd = new OsCommands();
+
+			if (value)
+			{
+				shell.SendCommandToQueue(osCmd.runProgram(value));
+				const message = localize('extention.run', "Run program")
+				vscode.window.showInformationMessage(message);
+			}
+			else
+			{
+				//const message = localize('extention.run', "Run program")
+				vscode.window.showInformationMessage("error");
+			}
+        });
+	}));
+
 
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.getProgramName', config =>
 	{
@@ -57,9 +92,8 @@ export function deactivate()
 
 let DataCb = function(data: string, mode: ModeWork) : void
 {
-    console.log(data);
-    //shell.SendCommand("type login.com");
-	//shell.DisconectSession();
+	console.log(data);
+	ToOutputChannel(data);
 
 	if(session)
 	{

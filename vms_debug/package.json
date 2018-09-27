@@ -63,6 +63,8 @@
 	"activationEvents": [
 		"onDebug",
 		"onCommand:extension.vms-debug.connect",
+		"onCommand:extension.vms-debug.compile",
+		"onCommand:extension.vms-debug.run",
 		"onCommand:extension.vms-debug.getProgramName"
 	],
 	"contributes": {
@@ -70,11 +72,22 @@
 			{
 				"command": "extension.vms-debug.connect",
 				"title": "%extension.vms_connect%"
+			},
+			{
+				"command": "extension.vms-debug.compile",
+				"title": "%extension.vms_compile%"
+			},
+			{
+				"command": "extension.vms-debug.run",
+				"title": "%extension.vms_run%"
 			}
 		],
 		"breakpoints": [
 			{
 				"language": "c"
+			},
+			{
+				"language": "cpp"
 			}
 		],
 		"debuggers": [

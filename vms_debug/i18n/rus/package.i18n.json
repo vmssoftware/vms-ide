@@ -1,4 +1,6 @@
 {
     "extension.vms_c_debug": "Отладка VMS C",
-    "extension.vms_connect": "Подключиться к VMS серверу"
+    "extension.vms_connect": "Подключиться к VMS серверу",
+    "extension.vms_compile": "Скомпилировать программу",
+    "extension.vms_run": "Запустить программу"
 }

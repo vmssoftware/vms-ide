@@ -46,10 +46,11 @@ export class VMSRuntime extends EventEmitter
 	}
 
 	// the contents (= lines) of the one and only file
-	private _sourceLines: string[];
+	private sourceLines: string[];
 
 	// This is the next line that will be 'executed'
-	private _currentLine = 0;
+	private currentLine = 0;
+	private shiftLine = 0;
 
 	// maps from sourceFile to array of VMS breakpoints
 	private _breakPoints = new Map<string, VMSBreakpoint[]>();
@@ -75,7 +76,7 @@ export class VMSRuntime extends EventEmitter
 	public start(program: string, stopOnEntry: boolean)
 	{
 		this.loadSource(program);
-		this._currentLine = -1;
+		this.currentLine = -1;
 
 		this.shell.SendCommandToQueue(this.osCmd.runDebug());
 		this.shell.SendCommandToQueue(this.dbgCmd.run("hello"));
@@ -85,7 +86,8 @@ export class VMSRuntime extends EventEmitter
 		if (stopOnEntry)
 		{
 			// we step once
-			this.step(false, 'stopOnEntry');
+			//this.step(false, 'stopOnEntry');
+			this.continue();
 		}
 		else
 		{
@@ -100,41 +102,34 @@ export class VMSRuntime extends EventEmitter
 	public continue()
 	{
 		this.buttonPressd = DebugButtonEvent.btnContinue;
-		//this.run(reverse, undefined);
-		this.shell.SendCommand(this.dbgCmd.go());
-		this._currentLine = -1;
+
+		this.shell.SendCommandToQueue(this.dbgCmd.go());
+		this.currentLine = -1;
 	}
 
 	/**
 	 * Step to the next non empty line.
 	 */
-	public step(reverse = false, event = 'stopOnStep')
-	{
-		this.run(reverse, event);
-	}
-
 	public stepOver()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStepOver;
 
-		this.shell.SendCommand(this.dbgCmd.step());
-		this._currentLine++;
+		this.shell.SendCommandToQueue(this.dbgCmd.step());
 	}
 
 	public stepInto()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStepInto;
 
-		this.shell.SendCommand(this.dbgCmd.stepIn());
-		this._currentLine++;
+		this.shell.SendCommandToQueue(this.dbgCmd.stepIn());
 	}
 
 	public stepOut()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStepOut;
 
-		this.shell.SendCommand(this.dbgCmd.stepOut());
-		this._currentLine++;
+		this.shell.SendCommandToQueue(this.dbgCmd.stepOut());
+		this.shell.SendCommandToQueue(this.dbgCmd.step());
 	}
 
 	public stop()
@@ -154,7 +149,7 @@ export class VMSRuntime extends EventEmitter
 	 */
 	public stack(startFrame: number, endFrame: number): any
 	{
-		const words = this._sourceLines[this._currentLine].trim().split(/\s+/);
+		const words = this.sourceLines[this.currentLine].trim().split(/\s+/);
 
 		const frames = new Array<any>();
 		// every word of the current line becomes a stack frame.
@@ -165,7 +160,7 @@ export class VMSRuntime extends EventEmitter
 				index: i,
 				name: `${name}(${i})`,
 				file: this._sourceFile,
-				line: this._currentLine
+				line: this.currentLine
 			});
 		}
 		return {
@@ -173,6 +168,13 @@ export class VMSRuntime extends EventEmitter
 			count: words.length
 		};
 	}
+
+	public getVariableValue(nameVar : string)
+	{
+		this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVar));
+	}
+
+
 
 	/*
 	 * Set breakpoint in file with given line.
@@ -231,7 +233,7 @@ export class VMSRuntime extends EventEmitter
 		if (this._sourceFile !== file)
 		{
 			this._sourceFile = file;
-			this._sourceLines = readFileSync(this._sourceFile).toString().split('\n');
+			this.sourceLines = readFileSync(this._sourceFile).toString().split('\n');
 		}
 	}
 
@@ -243,25 +245,25 @@ export class VMSRuntime extends EventEmitter
 	{
 		if (reverse)
 		{
-			for (let ln = this._currentLine-1; ln >= 0; ln--)
+			for (let ln = this.currentLine-1; ln >= 0; ln--)
 			{
 				if (this.fireEventsForLine(ln, stepEvent))
 				{
-					this._currentLine = ln;
+					this.currentLine = ln;
 					return;
 				}
 			}
 			// no more lines: stop at first line
-			this._currentLine = 0;
+			this.currentLine = 0;
 			this.sendEvent('stopOnEntry');
 		}
 		else
 		{
-			for (let ln = this._currentLine+1; ln < this._sourceLines.length; ln++)
+			for (let ln = this.currentLine+1; ln < this.sourceLines.length; ln++)
 			{
 				if (this.fireEventsForLine(ln, stepEvent))
 				{
-					this._currentLine = ln;
+					this.currentLine = ln;
 					return true;
 				}
 			}
@@ -280,9 +282,9 @@ export class VMSRuntime extends EventEmitter
 
 			bps.forEach(bp =>
 			{
-				if (!bp.verified && bp.line < this._sourceLines.length)
+				if (!bp.verified && bp.line < this.sourceLines.length)
 				{
-					const srcLine = this._sourceLines[bp.line].trim();
+					const srcLine = this.sourceLines[bp.line].trim();
 
 					// if a line is empty or starts with '+' we don't allow to set a breakpoint but move the breakpoint down
 					if (srcLine.length === 0 || srcLine.indexOf('+') === 0)
@@ -312,7 +314,7 @@ export class VMSRuntime extends EventEmitter
 	 */
 	private fireEventsForLine(ln: number, stepEvent?: string): boolean
 	{
-		const line = this._sourceLines[ln].trim();
+		const line = this.sourceLines[ln].trim();
 
 		// if 'log(...)' found in source -> send argument to debug console
 		const matches = /log\((.*)\)/.exec(line);
@@ -380,27 +382,66 @@ export class VMSRuntime extends EventEmitter
 		}
 		else if(mode === ModeWork.debug)
 		{
+			let msgLines =data.split("\n");
+
+			for(let i = 0; i < msgLines.length; i++)
+			{
+				if(msgLines[i].includes("stepped to") || msgLines[i].includes("break at routine"))
+				{
+					let array = msgLines[i+1].split(":");//number: string of code; array[0]-number, array[1]-string of code
+
+					if(this.shiftLine === 0)
+					{
+						const curLineCode = array[1].trim();
+
+						for(let j = 0; j < this.sourceLines.length; j++)
+						{
+							const line = this.sourceLines[j].trim();
+
+							if(line !== "" && curLineCode !== "")
+							{
+								if(curLineCode.includes(line))
+								{
+									this.shiftLine = parseInt(array[0], 10) - j;
+									break
+								}
+							}
+						}
+					}
+
+					this.currentLine = parseInt(array[0], 10) - this.shiftLine;
+					break;
+				}
+			}
+
+			if(data.includes("examine"))//show selected variable
+			{
+				this.sendEvent('examine', data);
+			}
+
 			switch(this.buttonPressd)
 			{
 				case DebugButtonEvent.btnContinue:
+					this.sendEvent('stopOnBreakpoint');
 					break;
 
 				case DebugButtonEvent.btnStepOver:
-					this.sendEvent('stopOnEntry');
+					this.sendEvent('stopOnStep');
 					break;
 
 				case DebugButtonEvent.btnStepInto:
-					this.sendEvent('stopOnEntry');
+					this.sendEvent('stopOnStep');
 					break;
 
 				case DebugButtonEvent.btnStepOut:
-					this.sendEvent('stopOnEntry');
+					this.sendEvent('stopOnStep');
 					break;
 
 				case DebugButtonEvent.btnRestart:
 					break;
 
 				case DebugButtonEvent.btnPause:
+					this.sendEvent('stopOnStep');
 					break;
 
 				case DebugButtonEvent.btnStop:

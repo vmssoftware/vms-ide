@@ -20,6 +20,7 @@ export enum DebugCmdVMS
 	dbgBreakPointsDeactivate = "deactivate break /all",
 	dbgBreakPointDeactivate = "deactivate break %line",
 
+	dbgExamine = "examine",
 	dbgEvaluate = "evaluate",
 	dbgDeposit = "deposit",
 
@@ -110,7 +111,15 @@ export class DebugCommands
 		return DebugCmdVMS.dbgBreakPointDeactivate + " " + numberLine.valueOf;
 	}
 
+
 	//get value of variable by name
+	//(show format) (file\locateFunc\nameVar:       value) - local variable
+	//(show format) (file\nameVar:       value) - global variable
+	public examine(nameVar : string) : string
+	{
+		return DebugCmdVMS.dbgExamine + " " + nameVar;
+	}
+	//get value of variable by name (don't for array)
 	public evaluate(nameVar : string) : string
 	{
 		return DebugCmdVMS.dbgEvaluate + " " + nameVar;
@@ -138,7 +147,7 @@ export class DebugCommands
 	{
 		return DebugCmdVMS.dbgDump + " " + nameVar;
 	}
-	public dumpAddress(addressStart : string, addressStop) : string
+	public dumpAddress(addressStart : string, addressStop : string) : string
 	{
 		return DebugCmdVMS.dbgDump + " " + addressStart + ":" + addressStop;
 	}
@@ -146,7 +155,7 @@ export class DebugCommands
 	{
 		return DebugCmdVMS.dbgDumpHex + " " + nameVar;
 	}
-	public dumpAddressHex(addressStart : string, addressStop) : string
+	public dumpAddressHex(addressStart : string, addressStop : string) : string
 	{
 		return DebugCmdVMS.dbgDumpHex + " " + addressStart + ":" + addressStop;
 	}

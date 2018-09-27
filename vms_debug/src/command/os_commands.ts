@@ -5,6 +5,7 @@ export enum OsCmdVMS
 	osHomeDir = "set def sys$login",
 	osExit = "logout",
 
+	dbgRunProgram = "run /nodebug",
 	dbgRunDbg = "debug /keep",
 	dbgRunCC = "cc",
 	dbgRunCOM = "@",
@@ -34,6 +35,11 @@ export class OsCommands
 		return OsCmdVMS.osExit;
 	}
 
+
+	public runProgram(programName : string) : string
+	{
+		return OsCmdVMS.dbgRunProgram + " " + programName;
+	}
 
 	public runDebug() : string
 	{

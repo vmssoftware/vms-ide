@@ -43,6 +43,8 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	private _configurationDone = new Subject();
 
+	private response: DebugProtocol.EvaluateResponse;
+
 	/**
 	 * Creates a new debug adapter that is used for one debug session.
 	 * We configure the default implementation of a debug adapter here.
@@ -56,6 +58,18 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.setDebuggerColumnsStartAt1(false);
 
 		this._runtime = new VMSRuntime(shell);
+
+		this._runtime.on('examine', (data : string) =>
+		{
+			let reply: string | undefined = undefined;
+
+			this.response.body =
+			{
+				result: reply ? reply : `context: '${data}'`,
+				variablesReference: 0
+			};
+			this.sendResponse(this.response);
+		});
 
 		// setup event handlers
 		this._runtime.on('stopOnEntry', () =>
@@ -155,10 +169,12 @@ export class VMSDebugSession extends LoggingDebugSession
 		this._runtime.clearBreakpoints(path);
 
 		// set and verify breakpoint locations
-		const actualBreakpoints = clientLines.map(l => {
+		const actualBreakpoints = clientLines.map(l =>
+		{
 			let { verified, line, id } = this._runtime.setBreakPoint(path, this.convertClientLineToDebugger(l));
 			const bp = <DebugProtocol.Breakpoint> new Breakpoint(verified, this.convertDebuggerLineToClient(line));
 			bp.id= id;
+
 			return bp;
 		});
 
@@ -255,6 +271,8 @@ export class VMSDebugSession extends LoggingDebugSession
 
 		let reply: string | undefined = undefined;
 
+		this._runtime.getVariableValue(args.expression);
+
 		if (args.context === 'repl')
 		{
 			// 'evaluate' supports to create and delete breakpoints from the 'repl':
@@ -284,13 +302,15 @@ export class VMSDebugSession extends LoggingDebugSession
 			}
 		}
 
-		response.body =
-		{
-			result: reply ? reply : `evaluate(context: '${args.context}', '${args.expression}')`,
-			variablesReference: 0
-		};
+		this.response = response;
 
-		this.sendResponse(response);
+		// response.body =
+		// {
+		// 	result: reply ? reply : `evaluate(context: '${args.context}', '${args.expression}')`,
+		// 	variablesReference: 0
+		// };
+
+		//this.sendResponse(response);
 	}
 
 
