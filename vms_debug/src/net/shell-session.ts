@@ -103,7 +103,7 @@ export class ShellSession
         {
             this.resultData += data;
         }
-    };
+    }
 
     private CloseCb = (code : any, signal : any) : void =>
     {
@@ -112,7 +112,7 @@ export class ShellSession
             this.sshClient.end();
         }
         console.log("Connection was closed");
-    };
+    }
 
     private ClientErrorCb = (err: Error & ClientErrorExtensions) : void =>
     {
@@ -125,7 +125,7 @@ export class ShellSession
         {
             console.log(err);
         }
-    };
+    }
 
     public SendCommand(command : string) : boolean
     {
@@ -173,7 +173,7 @@ export class ShellSession
 
     public GetStream() : ClientChannel
     {
-        return this.stream!
+        return this.stream!;
     }
 
     public GetSftp() : SFTPWrapper

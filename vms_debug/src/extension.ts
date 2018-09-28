@@ -33,7 +33,7 @@ export function activate(context: vscode.ExtensionContext)
 	{
 		shell = new ShellSession(DataCb, ReadyCb);
 
-		const message = localize('extention.conecting', "Connecting to the server")
+		const message = localize('extention.conecting', "Connecting to the server");
 		vscode.window.showInformationMessage(message);
 	}));
 
@@ -43,7 +43,7 @@ export function activate(context: vscode.ExtensionContext)
 		shell.SendCommandToQueue(osCmd.cleanMMS("comp.mms;15"));
 		shell.SendCommandToQueue(osCmd.runMMS("comp.mms;15"));
 
-		const message = localize('extention.compile', "Compile program")
+		const message = localize('extention.compile', "Compile program");
 		vscode.window.showInformationMessage(message);
 	}));
 
@@ -58,7 +58,7 @@ export function activate(context: vscode.ExtensionContext)
 			if (value)
 			{
 				shell.SendCommandToQueue(osCmd.runProgram(value));
-				const message = localize('extention.run', "Run program")
+				const message = localize('extention.run', "Run program");
 				vscode.window.showInformationMessage(message);
 			}
 			else
@@ -74,13 +74,13 @@ export function activate(context: vscode.ExtensionContext)
 	{
 		return vscode.window.showInputBox(
 		{
-			placeHolder: "Please enter the name of a markdown file in the workspace folder",
-			value: "readme.md"
+			placeHolder: "Please enter the name of a c/c++ file in the workspace folder",
+			value: "hello.c"
 		});
 	}));
 
 	// register a configuration provider for 'vms' debug type
-	const provider = new VMSConfigurationProvider()
+	const provider = new VMSConfigurationProvider();
 	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('vms_dbg', provider));
 	context.subscriptions.push(provider);
 }
@@ -109,7 +109,7 @@ let ReadyCb = function() : void
 
 	serverIsConnect = true;
 
-	const message = localize('extention.connected', "Connected to the server")
+	const message = localize('extention.connected', "Connected to the server");
 	vscode.window.showInformationMessage(message);
 };
 
@@ -171,7 +171,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 		}
 		else
 		{
-			const message = localize('extention.not_connected', "Do not connected to the server")
+			const message = localize('extention.not_connected', "Do not connected to the server");
 			vscode.window.showInformationMessage(message);
 		}
 
