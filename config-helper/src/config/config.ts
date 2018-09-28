@@ -3,106 +3,104 @@ import { Event } from "vscode";
 
 /**
  * Base types and interfaces
- * 
- * 
- * 
  */
 
 export type SimplyData = string | number | boolean | null;
-export type ValueData = SimplyData | Array<ConfigData>;
+export type ValueData = SimplyData | IConfigData[];
 
 /**
- * 
+ * ConfigData
  */
-export interface ConfigData {
-    [key: string] : ValueData;
+export interface IConfigData {
+    [key: string]: ValueData;
 }
 
 /**
- * 
+ * IConfigSection
  */
-export interface ConfigSection {
+export interface IConfigSection {
 
     name(): string;
 
-    store(): ConfigData;
+    store(): IConfigData;
 
-    fillFrom(data: ConfigData): boolean;
+    fillFrom(data: IConfigData): boolean;
 
-    templateToFillFrom(): ConfigData;
+    templateToFillFrom(): IConfigData;
 }
 
 /**
- * 
+ * CSAResult
  */
-export enum CSA_Result {
+export enum CSAResult {
     ok = 0,
     fail = 1,
     prepare_failed = 2,
     some_data_failed = 4,
-    end_failed = 8
+    end_failed = 8,
 }
 
 /**
- * 
+ * IConfigStorage
  */
-export interface ConfigStorage {
+export interface IConfigStorage {
 
-    fillStart() : Promise<CSA_Result>;
-    fillData(section: string, data: ConfigData) : Promise<CSA_Result>;
-    fillEnd() : Promise<CSA_Result>;
+    fillStart(): Promise<CSAResult>;
+    fillData(section: string, data: IConfigData): Promise<CSAResult>;
+    fillEnd(): Promise<CSAResult>;
 
-    storeStart() : Promise<CSA_Result>;
-    storeData(section: string, data: ConfigData) : Promise<CSA_Result>;
-    storeEnd() : Promise<CSA_Result>;
+    storeStart(): Promise<CSAResult>;
+    storeData(section: string, data: IConfigData): Promise<CSAResult>;
+    storeEnd(): Promise<CSAResult>;
 }
 
 /**
- * 
+ * IConfig
  */
-export interface Config {
+export interface IConfig {
+    /**
+     * Calls when configuration did load
+     */
+    onDidLoad: Event<null>;
+
     /**
      * Add a config section to hold within
      * @param cfg - implementation of config section
      */
-    add(cfg: ConfigSection) : boolean;
+    add(cfg: IConfigSection): boolean;
 
     /**
      * Retrieve config section
      * @param section - config section name
      */
-    get(section: string) : Promise<ConfigSection|undefined>;
+    get(section: string): Promise<IConfigSection|undefined>;
 
     /**
      * Load configuration from outer storage
      */
-    load() : Promise<CSA_Result>;
+    load(): Promise<CSAResult>;
 
     /*
      * Save configuration to outer storage
      */
-    save() : Promise<CSA_Result>;
+    save(): Promise<CSAResult>;
 
-    /**
-     * Calls when configuration did load
-     */
-    onDidLoad: Event<null>;
 }
 
 /**
- * 
+ * IConfigEditor
  */
-export interface ConfigEditor {
-    invoke() : Promise<boolean>;
+export interface IConfigEditor {
+    invoke(): Promise<boolean>;
 }
 
 /**
- * 
+ * IConfigHelper
  */
-export interface ConfigHelper extends Disposable {
+export interface IConfigHelper extends Disposable {
 
-    getConfig() : Config;
+    getConfig(): IConfig;
 
-    getEditor() : ConfigEditor;
+    getEditor(): IConfigEditor;
 
 }

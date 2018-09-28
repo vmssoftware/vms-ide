@@ -1,101 +1,102 @@
 import * as fs from "fs";
-import { CSA_Result, ConfigStorage, ConfigData } from "./config";
+import { CSAResult, IConfigData, IConfigStorage } from "./config";
 
-export let _log_this_file = console.log;
-//_log_this_file = function() {};
+// tslint:disable-next-line:no-console
+export let logFn = console.log;
+// tslint:disable-next-line:no-empty
+logFn = () => {};
 
 /**
-  * 
-  * 
-  * 
-  */
- export class FS_ConfigStorage implements ConfigStorage {
+ * FSConfigStorage
+ */
+export class FSConfigStorage implements IConfigStorage {
 
-    constructor(protected _filename: string) {
+    protected jsonData: any = {};
+    protected fillStartPromise: Promise<CSAResult> | undefined;
+    protected storePromise: Promise<CSAResult> | undefined;
+
+    constructor(protected fileName: string) {
     }
 
-    protected _json_data: any = {};
-    protected _fillStartPromise: Promise<CSA_Result> | undefined;
-    fillStart(): Promise<CSA_Result> {
-        _log_this_file('fillStart =');
-        if (!this._fillStartPromise) {
-            this._fillStartPromise = new Promise<CSA_Result>(async (resolve) => {
-                fs.readFile(this._filename, (err, data) => {
+    public fillStart(): Promise<CSAResult> {
+        logFn("fillStart =");
+        if (!this.fillStartPromise) {
+            this.fillStartPromise = new Promise<CSAResult>(async (resolve) => {
+                fs.readFile(this.fileName, (err, data) => {
                     if (err) {
-                        resolve(CSA_Result.prepare_failed);
+                        resolve(CSAResult.prepare_failed);
                     } else {
-                        let content = data.toString('utf8');
+                        const content = data.toString("utf8");
                         try {
-                            this._json_data = JSON.parse(content);
-                            resolve(CSA_Result.ok);
-                            _log_this_file('fillStart => ok');
+                            this.jsonData = JSON.parse(content);
+                            resolve(CSAResult.ok);
+                            logFn("fillStart => ok");
                         } catch (error) {
-                            resolve(CSA_Result.prepare_failed);
-                            _log_this_file('fillStart => fail');
+                            resolve(CSAResult.prepare_failed);
+                            logFn("fillStart => fail");
                         }
                     }
-                    this._fillStartPromise = undefined;
-                    _log_this_file('fillStart => clear');
+                    this.fillStartPromise = undefined;
+                    logFn("fillStart => clear");
                 });
-            })
-        } 
-        return this._fillStartPromise;
-    }     
+            });
+        }
+        return this.fillStartPromise;
+    }
 
-    fillData(section: string, data: ConfigData): Promise<CSA_Result> {
-        if (this._json_data && this._json_data[section]) {
-            let json_section = this._json_data[section];
-            for(let key in data) {
-                if (json_section[key] !== undefined) {
-                    data[key] = json_section[key];
+    public fillData(section: string, data: IConfigData): Promise<CSAResult> {
+        if (this.jsonData && this.jsonData[section]) {
+            const jsonSection = this.jsonData[section];
+            for (const key in data) {
+                if (jsonSection[key] !== undefined) {
+                    data[key] = jsonSection[key];
                 }
             }
-            _log_this_file('fillData => ok ' + section);
-            return Promise.resolve(CSA_Result.ok);
+            logFn("fillData => ok " + section);
+            return Promise.resolve(CSAResult.ok);
         } else {
-            _log_this_file('fillData => fail ' + section);
-            return Promise.resolve(CSA_Result.some_data_failed);
+            logFn("fillData => fail " + section);
+            return Promise.resolve(CSAResult.some_data_failed);
         }
     }
 
-    fillEnd(): Promise<CSA_Result> {
-        _log_this_file('fillEnd');
-        this._json_data = {};
-        return Promise.resolve(CSA_Result.ok);
+    public fillEnd(): Promise<CSAResult> {
+        logFn("fillEnd");
+        this.jsonData = {};
+        return Promise.resolve(CSAResult.ok);
     }
 
-    storeStart(): Promise<CSA_Result> {
-        _log_this_file('storeStart');
-        this._json_data = {};
-        return Promise.resolve(CSA_Result.ok);
+    public storeStart(): Promise<CSAResult> {
+        logFn("storeStart");
+        this.jsonData = {};
+        return Promise.resolve(CSAResult.ok);
     }
 
-    storeData(section: string, data: ConfigData): Promise<CSA_Result> {
-        //TODO: test if section was added before?
-        _log_this_file('storeData ' + section);
-        this._json_data[section] = data;
-        return Promise.resolve(CSA_Result.ok);
+    public storeData(section: string, data: IConfigData): Promise<CSAResult> {
+        // TODO: test if section was added before?
+        logFn("storeData " + section);
+        this.jsonData[section] = data;
+        return Promise.resolve(CSAResult.ok);
     }
 
-    protected _storePromise: Promise<CSA_Result> | undefined;
-    storeEnd(): Promise<CSA_Result> {
-        _log_this_file('storeEnd =');
-        if (!this._storePromise) {
-            this._storePromise = new Promise<CSA_Result>((resolve) => {
-                fs.writeFile(this._filename, JSON.stringify(this._json_data, null, 4), (err) => {
-                    this._json_data = {};
+    public storeEnd(): Promise<CSAResult> {
+        logFn("storeEnd =");
+        if (!this.storePromise) {
+            this.storePromise = new Promise<CSAResult>((resolve) => {
+                fs.writeFile(this.fileName, JSON.stringify(this.jsonData, null, 4), (err) => {
+                    this.jsonData = {};
                     if (err) {
-                        _log_this_file('storeEnd => fail');
-                        resolve(CSA_Result.end_failed);
+                        logFn("storeEnd => fail");
+                        resolve(CSAResult.end_failed);
                     } else {
-                        _log_this_file('storeEnd => ok');
-                        resolve(CSA_Result.ok);
+                        logFn("storeEnd => ok");
+                        resolve(CSAResult.ok);
                     }
-                    this._storePromise = undefined;
+                    this.storePromise = undefined;
                 });
-            })
+            });
         }
-        return this._storePromise;
+        return this.storePromise;
     }
 
 }

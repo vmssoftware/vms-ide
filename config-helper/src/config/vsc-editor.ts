@@ -1,19 +1,20 @@
 
-import { ConfigEditor, Config } from "./config";
 import { commands } from "vscode";
+import { IConfig, IConfigEditor } from "./config";
 
-export class VSC_WorkspaceConfigEditor implements ConfigEditor {
+export class VSCWorkspaceConfigEditor implements IConfigEditor {
 
-    constructor(private _cfg: Config) {
+    private readonly command = "workbench.action.openWorkspaceSettings";
+
+    constructor(private cfg: IConfig) {
 
     }
 
-    private readonly _command = 'workbench.action.openWorkspaceSettings';
-    invoke(): Promise<boolean> {
+    public invoke(): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
-            this._cfg.save().then(()=>{
-                //execute edit command in any case
-                commands.executeCommand(this._command).then(() => {
+            this.cfg.save().then(() => {
+                // execute edit command in any case
+                commands.executeCommand(this.command).then(() => {
                     resolve(true);
                 }, () => {
                     resolve(false);

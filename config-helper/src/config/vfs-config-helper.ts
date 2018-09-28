@@ -1,9 +1,9 @@
-import { FS_Config_Helper } from "./fs-config-helper";
+import { FSConfigHelper } from "./fs-config-helper";
 import { Uri } from "vscode";
-import { VFS_ConfigStorage } from "./vfs-storage";
+import { VFSConfigStorage } from "./vfs-storage";
 
-export let _log_this_file = console.log;
-//_log_this_file = function() {};
+export let _log_ = console.log;
+_log_ = function() {};
 
 /**
  * 
@@ -11,11 +11,14 @@ export let _log_this_file = console.log;
  * 
  * 
  */
-export class VFS_Config_Helper extends FS_Config_Helper {
+export class VFSConfigHelper extends FSConfigHelper {
 
     protected createConcreteFS_Storage(uri: Uri) {
         //TODO: test URI and return appropriate FS
-        return new VFS_ConfigStorage(uri);
+        return new VFSConfigStorage(uri);
     }
+}
 
+export class Q_W {
+    
 }

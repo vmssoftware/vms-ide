@@ -1,19 +1,17 @@
 
-import { ConfigEditor, Config } from "./config";
-import { Uri } from "vscode";
-import { window } from "vscode";
+import { Uri, window } from "vscode";
+import { IConfig, IConfigEditor } from "./config";
 
+export class UriEditor implements IConfigEditor {
 
-export class UriEditor implements ConfigEditor {
-
-    constructor(protected _uri: Uri, protected _cfg: Config) {
+    constructor(protected uri: Uri, protected cfg: IConfig) {
 
     }
 
-    invoke(): Promise<boolean> {
+    public invoke(): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
-            this._cfg.save().then(()=>{
-                window.showTextDocument(this._uri).then(() => {
+            this.cfg.save().then(() => {
+                window.showTextDocument(this.uri).then(() => {
                     resolve(true);
                 }, () => {
                     resolve(false);

@@ -1,78 +1,76 @@
-import { CSA_Result } from "./config";
-import { Uri } from "vscode";
-import { workspace } from "vscode";
-import { FS_ConfigStorage } from "./fs-storage";
-import { Range } from "vscode";
-import { WorkspaceEdit } from "vscode";
-import { Position } from "vscode";
+import { Position, Range, Uri, workspace, WorkspaceEdit } from "vscode";
+import { CSAResult } from "./config";
+import { FSConfigStorage } from "./fs-storage";
 
-export let _log_this_file = console.log;
-//_log_this_file = function() {};
+// tslint:disable-next-line:no-console
+export let logFn = console.log;
+// tslint:disable-next-line:no-empty
+logFn = () => {};
 
 /**
  * Such as FS_ConfigStorage, but using VS Code provided read/write functions
  */
-export class VFS_ConfigStorage extends FS_ConfigStorage {
+export class VFSConfigStorage extends FSConfigStorage {
 
-    constructor(protected _fileUri: Uri) {
-        super(_fileUri.fsPath);
-    }   
+    constructor(protected fileUri: Uri) {
+        super(fileUri.fsPath);
+    }
 
-    fillStart(): Promise<CSA_Result> {
-        _log_this_file('fillStart =');
-        if (!this._fillStartPromise) {
-            this._fillStartPromise = new Promise<CSA_Result>(async (resolve) => {
+    public fillStart(): Promise<CSAResult> {
+        logFn("fillStart =");
+        if (!this.fillStartPromise) {
+            this.fillStartPromise = new Promise<CSAResult>(async (resolve) => {
                 try {
-                    let text_doc = await workspace.openTextDocument(this._fileUri);
-                    let content = text_doc.getText();
-                    this._json_data = JSON.parse(content);
-                    resolve(CSA_Result.ok);
-                    _log_this_file('fillStart => ok');
+                    const textDoc = await workspace.openTextDocument(this.fileUri);
+                    const content = textDoc.getText();
+                    this.jsonData = JSON.parse(content);
+                    resolve(CSAResult.ok);
+                    logFn("fillStart => ok");
                 } catch (error) {
-                    resolve(CSA_Result.prepare_failed);
-                    _log_this_file('fillStart => fail');
+                    resolve(CSAResult.prepare_failed);
+                    logFn("fillStart => fail");
                 }
-                this._fillStartPromise = undefined;
-                _log_this_file('fillStart => clear');
+                this.fillStartPromise = undefined;
+                logFn("fillStart => clear");
             });
-        } 
-        return this._fillStartPromise;
-    }     
+        }
+        return this.fillStartPromise;
+    }
 
-    storeEnd(): Promise<CSA_Result> {
-        _log_this_file('storeEnd =');
-        if (!this._storePromise) {
-            this._storePromise = new Promise<CSA_Result>(async (resolve) => {
+    public storeEnd(): Promise<CSAResult> {
+        logFn("storeEnd =");
+        if (!this.storePromise) {
+            this.storePromise = new Promise<CSAResult>(async (resolve) => {
                 try {
-                    let range : Range | undefined = undefined;
+                    let range: Range | undefined;
                     try {
-                        let text_doc = await workspace.openTextDocument(this._fileUri);
-                        range = text_doc.validateRange(new Range(0,0,32767,32767));
+                        const textDoc = await workspace.openTextDocument(this.fileUri);
+                        range = textDoc.validateRange(new Range(0, 0, 32767, 32767));
                     } catch (err) {
                         range = undefined;
                     }
-                    let we = new WorkspaceEdit();
-                    let str = JSON.stringify(this._json_data, null, 4);
+                    const we = new WorkspaceEdit();
+                    const str = JSON.stringify(this.jsonData, null, 4);
                     if (!range) {
-                        we.createFile(this._fileUri);
-                        we.insert(this._fileUri, new Position(0, 0), str);
+                        we.createFile(this.fileUri);
+                        we.insert(this.fileUri, new Position(0, 0), str);
                     } else {
-                        we.replace(this._fileUri, range, str);
+                        we.replace(this.fileUri, range, str);
                     }
-                    let status = await workspace.applyEdit(we);
+                    const status = await workspace.applyEdit(we);
                     if (status) {
-                        let text_doc = await workspace.openTextDocument(this._fileUri);
-                        let saved = await text_doc.save();
-                        resolve(saved?CSA_Result.ok:CSA_Result.end_failed);
+                        const textDoc = await workspace.openTextDocument(this.fileUri);
+                        const saved = await textDoc.save();
+                        resolve(saved ? CSAResult.ok : CSAResult.end_failed);
                     } else {
-                        resolve(CSA_Result.end_failed);
+                        resolve(CSAResult.end_failed);
                     }
-                } catch(err) {
-                    resolve(CSA_Result.end_failed);
+                } catch (err) {
+                    resolve(CSAResult.end_failed);
                 }
-            })
+            });
         }
-        return this._storePromise;
+        return this.storePromise;
     }
 
 }

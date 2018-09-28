@@ -1,79 +1,82 @@
 
-import { CSA_Result, ConfigStorage, ConfigData, ValueData } from "./config";
-import { workspace } from "vscode";
-import { WorkspaceConfiguration } from "vscode";
+import { workspace, WorkspaceConfiguration } from "vscode";
+import { CSAResult, IConfigData, IConfigStorage, ValueData } from "./config";
 
-export let _log_this_file = console.log;
-//_log_this_file = function() {};
+// tslint:disable-next-line:no-console
+export let logFn = console.log;
+// tslint:disable-next-line:no-empty
+logFn = () => {};
 
 /**
-  * 
-  * 
-  * 
-  */
-export class VSC_ConfigStorage implements ConfigStorage {
+ * VSCConfigStorage
+ */
+export class VSCConfigStorage implements IConfigStorage {
 
-    constructor(protected _section: string) {
+    protected storePromise: Promise<CSAResult> | undefined;
+
+    constructor(protected section: string) {
 
     }
 
-    fillStart(): Promise<CSA_Result> {
-        _log_this_file('fillStart =');
-        return Promise.resolve(CSA_Result.ok);
-    }     
+    public fillStart(): Promise<CSAResult> {
+        logFn("fillStart =");
+        return Promise.resolve(CSAResult.ok);
+    }
 
-    protected setCfgValue<T extends ValueData>(value: T, cfg_key: string, configuration: WorkspaceConfiguration) : T {
-        let tmp = configuration.get<T>(cfg_key);
+    public fillData(section: string, data: IConfigData): Promise<CSAResult> {
+        const configuration = workspace.getConfiguration(this.section);
+        // tslint:disable-next-line:forin
+        for (const key in data) {
+            data[key] = this.setCfgValue(data[key], `${section}.${key}`, configuration);
+        }
+        logFn("fillData => ok " + section);
+        return Promise.resolve(CSAResult.ok);
+    }
+
+    public fillEnd(): Promise<CSAResult> {
+        logFn("fillEnd");
+        return Promise.resolve(CSAResult.ok);
+    }
+
+    public storeStart(): Promise<CSAResult> {
+        logFn("storeStart");
+        return Promise.resolve(CSAResult.ok);
+    }
+
+    public storeData(section: string, data: IConfigData): Promise<CSAResult> {
+        return new Promise(async (resolve) => {
+            let retCode = CSAResult.ok;
+            const configuration = workspace.getConfiguration(this.section);
+            // tslint:disable-next-line:forin
+            for (const key in data) {
+                const cfgKey = `${section}.${key}`;
+                try {
+                    await configuration.update(cfgKey, data[key]);
+                } catch (err) {
+                    logFn("update failed: " + cfgKey);
+                    if (err instanceof Error) {
+                        logFn(err.message);
+                    }
+                    // tslint:disable-next-line:no-bitwise
+                    retCode |= CSAResult.some_data_failed;
+                }
+            }
+            logFn("storeData " + section);
+            resolve(retCode);
+        });
+    }
+
+    public storeEnd(): Promise<CSAResult> {
+        logFn("storeEnd =");
+        return Promise.resolve(CSAResult.ok);
+    }
+
+    protected setCfgValue<T extends ValueData>(value: T, cfgKey: string, configuration: WorkspaceConfiguration): T {
+        const tmp = configuration.get<T>(cfgKey);
         if (tmp) {
             value = tmp;
         }
         return value;
-    }
-
-    fillData(section: string, data: ConfigData): Promise<CSA_Result> {
-        let configuration = workspace.getConfiguration(this._section);
-        for(let key in data) {
-            data[key] = this.setCfgValue(data[key], `${section}.${key}`, configuration);
-        }
-        _log_this_file('fillData => ok ' + section);
-        return Promise.resolve(CSA_Result.ok);
-    }
-
-    fillEnd(): Promise<CSA_Result> {
-        _log_this_file('fillEnd');
-        return Promise.resolve(CSA_Result.ok);
-    }
-
-    storeStart(): Promise<CSA_Result> {
-        _log_this_file('storeStart');
-        return Promise.resolve(CSA_Result.ok);
-    }
-
-    storeData(section: string, data: ConfigData): Promise<CSA_Result> {
-        return new Promise(async (resolve) => {
-            let ret_code = CSA_Result.ok;
-            let configuration = workspace.getConfiguration(this._section);
-            for(let key in data) {
-                let cfg_key = `${section}.${key}`;
-                try {
-                    await configuration.update(cfg_key, data[key]);
-                } catch(err) {
-                    _log_this_file('update failed: ' + cfg_key);
-                    if (err instanceof Error) {
-                        _log_this_file(err.message);
-                    }
-                    ret_code |= CSA_Result.some_data_failed;
-                };
-            }
-            _log_this_file('storeData ' + section);
-            resolve(ret_code);
-        });
-    }
-
-    protected _storePromise: Promise<CSA_Result> | undefined;
-    storeEnd(): Promise<CSA_Result> {
-        _log_this_file('storeEnd =');
-        return Promise.resolve(CSA_Result.ok);
     }
 
 }

@@ -1,185 +1,191 @@
-import { Config, ConfigStorage, ConfigSection, CSA_Result } from "./config";
+import { Event, EventEmitter } from "vscode";
+import * as nls from "vscode-nls";
+import { CSAResult, IConfig, IConfigSection, IConfigStorage } from "./config";
 
-import * as nls from 'vscode-nls';
-import { EventEmitter } from "vscode";
-import { Event } from "vscode";
-let _localize = nls.loadMessageBundle();
+const localize = nls.loadMessageBundle();
 
-export let _log_this_file = console.log;
-//_log_this_file = function() {};
+// tslint:disable-next-line:no-console
+export let logFn = console.log;
+
+// tslint:disable-next-line:no-empty
+logFn = () => {};
 
 /**
  * ConfigPool
  */
-export class ConfigPool implements Config {
+export class ConfigPool implements IConfig {
 
-    private _changeEmitter = new EventEmitter<null>();
-    
-    onDidLoad: Event<null> = this._changeEmitter.event;
+    public onDidLoad: Event<null>;
 
-    private _fireImmediate: any = undefined;
-    private fireChangeSoon(): void {
-        if (this._fireImmediate) {
-            clearImmediate(this._fireImmediate);
-        }
-        this._fireImmediate = setImmediate(() => {
-            this._fireImmediate = undefined;
-            this._changeEmitter.fire();
-        });
+    protected pool: Map<string, IConfigSection> = new Map<string, IConfigSection>();
+    protected loadPromise: Promise<CSAResult> | undefined = undefined;
+    protected savePromise: Promise<CSAResult> | undefined = undefined;
+    protected fireImmediate: any = undefined;
+    protected changeEmitter = new EventEmitter<null>();
+    protected freezePromise: Promise<boolean> | undefined = undefined;
+    protected freezeResolve: ((value?: boolean | PromiseLike<boolean> | undefined) => void) | undefined = undefined;
+
+    constructor(protected storage: IConfigStorage) {
+        this.onDidLoad = this.changeEmitter.event;
     }
 
-    protected _storage: ConfigStorage;
-
-    constructor(storage: ConfigStorage) {
-        this._storage = storage;
-    }
-
-    setStorage(storage: ConfigStorage) {
-        _log_this_file('setStorage');
-        this._storage = storage;
+    public setStorage(storage: IConfigStorage) {
+        logFn("setStorage");
+        this.storage = storage;
         this.load();
     }
-
-    protected _pool : Map<string, ConfigSection> = new Map<string,ConfigSection>();
 
     /**
      * Add ConfigSection to pool. ConfigPool will keep it up to date.
      */
-    add(cfg: ConfigSection) : boolean {
-        _log_this_file('add ' + cfg.name());
-        this._pool.set(cfg.name(), cfg);
+    public add(cfg: IConfigSection): boolean {
+        logFn("add " + cfg.name());
+        this.pool.set(cfg.name(), cfg);
         this.load();
         return true;
     }
-    
+
     /**
      * Let it possible to freeze/unfreeze get() operation because of the changes that are being made outside.
      * Note - unstackable! Onle the last freeze/unfreeze is taking effect.
      */
-    private _freezePromise : Promise<boolean> | undefined = undefined;
-    private _freezeResolve : {(value?: boolean | PromiseLike<boolean> | undefined) : void} | undefined = undefined;
-    freeze() : void {
-        _log_this_file('freeze');
-        if (!this._freezePromise) {
-            this._freezePromise = new Promise<boolean>((resolve)=>{
-                this._freezeResolve = resolve;
-            })
+    public freeze(): void {
+        logFn("freeze");
+        if (!this.freezePromise) {
+            this.freezePromise = new Promise<boolean>((resolve) => {
+                this.freezeResolve = resolve;
+            });
         }
     }
 
-    unfreeze() : void {
-        _log_this_file('unfreeze');
-        if (this._freezeResolve) {
-            this._freezeResolve(true);
+    public unfreeze(): void {
+        logFn("unfreeze");
+        if (this.freezeResolve) {
+            this.freezeResolve(true);
         }
-        this._freezeResolve = undefined;
-        this._freezePromise = undefined;
+        this.freezeResolve = undefined;
+        this.freezePromise = undefined;
     }
 
     /**
      * Get kept ConfigSection.
      */
-    get(section: string) : Promise<ConfigSection|undefined> {
-        _log_this_file('get = ' + section);
-        return new Promise<ConfigSection>(async (resolve) => {
-            let promises: any[] = [];
-            if (this._loadPromise) {
-                promises.push(this._loadPromise);
+    public get(section: string): Promise<IConfigSection|undefined> {
+        logFn("get = " + section);
+        return new Promise<IConfigSection>(async (resolve) => {
+            const promises: any[] = [];
+            if (this.loadPromise) {
+                promises.push(this.loadPromise);
             }
-            if (this._freezePromise) {
-                promises.push(this._freezePromise);
+            if (this.freezePromise) {
+                promises.push(this.freezePromise);
             }
             if (promises.length) {
                 await Promise.all(promises);
             }
-            resolve(this._pool.get(section));
-            _log_this_file('get => ok ' + section);
+            resolve(this.pool.get(section));
+            logFn("get => ok " + section);
         });
     }
 
-    protected _loadPromise : Promise<CSA_Result> | undefined = undefined;
-    load() : Promise<CSA_Result> {
-        _log_this_file('load =');
-        if (!this._loadPromise) {
-            this._loadPromise = new Promise<CSA_Result>(async (resolve) => {
-                //do load
+    public load(): Promise<CSAResult> {
+        logFn("load =");
+        if (!this.loadPromise) {
+            this.loadPromise = new Promise<CSAResult>(async (resolve) => {
+                // do load
                 let changed = false;
-                this._storage.fillStart().then(async (started) => {
-                    if (started === CSA_Result.ok) {
-                        let ret_code = CSA_Result.ok;
-                        for(let [section_name, cfg] of this._pool) {
-                            if (cfg.name() === section_name) {
-                                let data = cfg.templateToFillFrom();
+                this.storage.fillStart().then(async (started) => {
+                    if (started === CSAResult.ok) {
+                        let retCode = CSAResult.ok;
+                        for (const [sectionName, cfg] of this.pool) {
+                            if (cfg.name() === sectionName) {
+                                const data = cfg.templateToFillFrom();
                                 try {
-                                    let r = await this._storage.fillData(section_name, data);
-                                    if (r === CSA_Result.ok) {
+                                    const r = await this.storage.fillData(sectionName, data);
+                                    if (r === CSAResult.ok) {
                                         changed = cfg.fillFrom(data) || changed;
                                     } else {
-                                        ret_code |= r;
+                                        // tslint:disable-next-line:no-bitwise
+                                        retCode |= r;
                                     }
                                 } catch (err) {
-                                    _log_this_file( _localize('config_v2.filldata.failed', 'filling data("{0}") failed', section_name ));
-                                    _log_this_file(err);
-                                    ret_code |= CSA_Result.some_data_failed;
+                                    logFn( localize("config.filldata.failed",
+                                                    "filling data('{0}') failed", sectionName ));
+                                    logFn(err);
+                                    // tslint:disable-next-line:no-bitwise
+                                    retCode |= CSAResult.some_data_failed;
                                 }
                             }
                         }
                         if (changed) {
                             this.fireChangeSoon();
                         }
-                        this._storage.fillEnd().then((ended) => {
-                            ret_code |= ended;
-                            resolve(ret_code);
-                            _log_this_file('load => ' + (ret_code?'fail':'ok'));
+                        this.storage.fillEnd().then((ended) => {
+                            // tslint:disable-next-line:no-bitwise
+                            retCode |= ended;
+                            resolve(retCode);
+                            logFn("load => " + (retCode ? "fail" : "ok"));
                         });
                     } else {
-                        resolve(started); //didn't start
-                        _log_this_file('load => fail');
+                        resolve(started);   // didn't start
+                        logFn("load => fail");
                     }
-                    this._loadPromise = undefined;
-                    _log_this_file('load => clear');
+                    this.loadPromise = undefined;
+                    logFn("load => clear");
                 });
             });
         }
-        return this._loadPromise;
+        return this.loadPromise;
     }
 
-    protected _savePromise : Promise<CSA_Result> | undefined = undefined;
-    save() : Promise<CSA_Result> {
-        _log_this_file('save =');
-        if (!this._savePromise) {
-            this._savePromise = new Promise<CSA_Result>(async (resolve) => {
-                //do save
-                this._storage.storeStart().then( async (started) => {
-                    if (started === CSA_Result.ok) {
-                        let ret_code = CSA_Result.ok;
-                        for(let [section_name, cfg] of this._pool) {
-                            if (cfg.name() === section_name) {
-                                let data = cfg.store();
+    public save(): Promise<CSAResult> {
+        logFn("save =");
+        if (!this.savePromise) {
+            this.savePromise = new Promise<CSAResult>(async (resolve) => {
+                // do save
+                this.storage.storeStart().then( async (started) => {
+                    if (started === CSAResult.ok) {
+                        let retCode = CSAResult.ok;
+                        for (const [sectionName, cfg] of this.pool) {
+                            if (cfg.name() === sectionName) {
+                                const data = cfg.store();
                                 try {
-                                    ret_code |= await this._storage.storeData(section_name, data);
-                                } catch(err) {
-                                    _log_this_file( _localize('config_v2.storedata.failed', 'storing data("{0}") failed', section_name ));
-                                    _log_this_file(err);
-                                    ret_code |= CSA_Result.some_data_failed;
+                                    // tslint:disable-next-line:no-bitwise
+                                    retCode |= await this.storage.storeData(sectionName, data);
+                                } catch (err) {
+                                    logFn( localize("config_v2.storedata.failed",
+                                                    "storing data('{0}') failed", sectionName ));
+                                    logFn(err);
+                                    // tslint:disable-next-line:no-bitwise
+                                    retCode |= CSAResult.some_data_failed;
                                 }
                             }
                         }
-                        this._storage.storeEnd().then((ended) => {
-                            ret_code |= ended;
-                            resolve(ret_code);
-                            this._savePromise = undefined;
-                            _log_this_file('save => ' + (ret_code?'fail':'ok'));
+                        this.storage.storeEnd().then((ended) => {
+                            // tslint:disable-next-line:no-bitwise
+                            retCode |= ended;
+                            resolve(retCode);
+                            this.savePromise = undefined;
+                            logFn("save => " + (retCode ? "fail" : "ok"));
                         });
                     } else {
-                        resolve(started); //didn't start
-                        this._savePromise = undefined;
-                        _log_this_file('save => fail');
+                        resolve(started);   // didn't start
+                        this.savePromise = undefined;
+                        logFn("save => fail");
                     }
                 });
             });
         }
-        return this._savePromise;
+        return this.savePromise;
     }
-}
+    protected fireChangeSoon(): void {
+        if (this.fireImmediate) {
+            clearImmediate(this.fireImmediate);
+        }
+        this.fireImmediate = setImmediate(() => {
+            this.fireImmediate = undefined;
+            this.changeEmitter.fire();
+        });
+    }
 
+}

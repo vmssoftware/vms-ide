@@ -1,13 +1,3 @@
 
-export { VSC_Config_Helper as ConfigHelper } from './config/vsc-config-helper';
-export { ConfigData, ConfigSection } from './config/config';
-
-export class TestC {
-    constructor(public message: string) {
-
-    }
-
-    getMessage() : string {
-        return this.message;
-    }
-}
+export { VSCConfigHelper as ConfigHelper } from "./config/vsc-config-helper";
+export { IConfigData, IConfigSection } from "./config/config";

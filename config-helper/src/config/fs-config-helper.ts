@@ -1,141 +1,139 @@
-import { workspace } from "vscode";
-import { FS_ConfigStorage } from "./fs-storage";
-import { Uri } from "vscode";
-import { FileSystemWatcher } from "vscode";
+import * as path from "path";
+import { Disposable, FileSystemWatcher, Uri, workspace } from "vscode";
 import { Debouncer } from "../common/debounce";
-import { ConfigEditor, ConfigStorage, Config, ConfigHelper } from "./config";
+import { IConfig, IConfigEditor, IConfigHelper, IConfigStorage } from "./config";
 import { ConfigPool } from "./config-pool";
-import * as path from 'path';
-import { DummyStorage, DummyEditor } from "./dummy";
-import { Disposable } from "vscode";
+import { DummyEditor } from "./dummy-editor";
+import { DummyStorage } from "./dummy-storage";
+import { FSConfigStorage } from "./fs-storage";
 import { UriEditor } from "./uri-editor";
 
-export let _log_this_file = console.log;
-//_log_this_file = function() {};
+// tslint:disable-next-line:no-console
+export let logFn = console.log;
+// tslint:disable-next-line:no-empty
+logFn = () => {};
 
 /**
- * 
  * ConfigHelper implementation
- * 
- * 
  */
-export class FS_Config_Helper implements ConfigHelper {
+export class FSConfigHelper implements IConfigHelper {
 
-    dispose() {
-        for(let disp of this._dispose) {
-            disp.dispose();
+    public static getConfigHelper(section: string): FSConfigHelper {
+        if (FSConfigHelper.instances.get(section) === undefined) {
+            const relativeFileName = path.join(FSConfigHelper.folder, section, FSConfigHelper.suffix);
+            FSConfigHelper.instances.set(section, new FSConfigHelper(relativeFileName));
         }
-        this._dispose = [];
-        //dispose watcher, does it dispose all events inside?
-        this._watcher && this._watcher.dispose();
-        this._watcher = undefined;
+        return FSConfigHelper.instances.get(section)!;
     }
 
-    protected _config : ConfigPool;
-    protected _storage : ConfigStorage;
-    protected _editor : ConfigEditor;
+    private static readonly folder = ".vscode";
+    private static readonly suffix = "-settings.json";
+    private static instances: Map<string, FSConfigHelper> = new Map<string, FSConfigHelper>();
 
-    protected _dispose : Disposable[] = [];
+    protected config: ConfigPool;
+    protected storage: IConfigStorage;
+    protected editor: IConfigEditor;
+    protected disposables: Disposable[] = [];
+    /**
+     * Uri to store configuration to
+     */
+    protected fileUri: Uri = Uri.parse("undefined:");
+    /**
+     * Wait for a second before do some real action
+     */
+    protected debouncer = new Debouncer(1000);
+    protected watcher: FileSystemWatcher | undefined = undefined;
 
-    protected constructor(protected _relative_file_name: string) {
-        this._storage = new DummyStorage();
-        this._config = new ConfigPool(this._storage);
-        this._editor = new DummyEditor();
-        this._dispose.push( workspace.onDidChangeWorkspaceFolders(() => {
-            _log_this_file('onDidChangeWorkspaceFolders');
+    protected constructor(protected relativeFileName: string) {
+        this.storage = new DummyStorage();
+        this.config = new ConfigPool(this.storage);
+        this.editor = new DummyEditor();
+        this.disposables.push( workspace.onDidChangeWorkspaceFolders(() => {
+            logFn("onDidChangeWorkspaceFolders");
             this.updateConfigStorage();
         }));
         this.updateConfigStorage();
     }
 
-    private static readonly _folder = '.vscode';
-    private static readonly _suffix = '-settings.json';
-
-    private static _instances : { [key:string] : FS_Config_Helper} = {};
-    static getConfigHelper(section: string) : FS_Config_Helper {
-        if (FS_Config_Helper._instances[section] === undefined) {
-            let relative_file_name = path.join(FS_Config_Helper._folder, section, FS_Config_Helper._suffix);
-            FS_Config_Helper._instances[section] = new FS_Config_Helper(relative_file_name);
+    public dispose() {
+        for (const disp of this.disposables) {
+            disp.dispose();
         }
-        return FS_Config_Helper._instances[section];
-    }
-    
-    getConfig(): Config {
-        return this._config;
-    }
-
-    getEditor(): ConfigEditor {
-        return this._editor;
+        this.disposables = [];
+        // dispose watcher, does it dispose all events inside?
+        if (this.watcher) {
+            this.watcher.dispose();
+        }
+        this.watcher = undefined;
     }
 
-    /**
-     * Uri to store configuration to
-     */
-    protected _file_uri: Uri = Uri.parse('undefined:');
+    public getConfig(): IConfig {
+        return this.config;
+    }
+
+    public getEditor(): IConfigEditor {
+        return this.editor;
+    }
 
     /**
      * Test workspace folders and create appropriate _storage
      */
     protected updateConfigStorage() {
-        _log_this_file('updateConfigStorage start: ', this._storage);
-        if (this._storage instanceof DummyStorage) {
+        logFn("updateConfigStorage start: ", this.storage);
+        if (this.storage instanceof DummyStorage) {
             if (workspace.workspaceFolders) {
-                //allocate storage in first workspace
+                // allocate storage in first workspace
                 this.createFS_Storage(workspace.workspaceFolders[0].uri);
-                this._editor = new UriEditor(this._file_uri, this._config);
-                this._config.setStorage(this._storage);
+                this.editor = new UriEditor(this.fileUri, this.config);
+                this.config.setStorage(this.storage);
             }
-        } else if (this._storage instanceof FS_ConfigStorage) {
-            if (!workspace.getWorkspaceFolder(this._file_uri)) {
-                //current workspace is deleted - allocate another one
-                this._watcher && this._watcher.dispose();
-                this._watcher = undefined;
-                this._storage = new DummyStorage();
+        } else if (this.storage instanceof FSConfigStorage) {
+            if (!workspace.getWorkspaceFolder(this.fileUri)) {
+                // current workspace is deleted - allocate another one
+                if (this.watcher) {
+                    this.watcher.dispose();
+                }
+                this.watcher = undefined;
+                this.storage = new DummyStorage();
                 this.updateConfigStorage();
             }
         }
-        _log_this_file('updateConfigStorage end: ', this._storage);
+        logFn("updateConfigStorage end: ", this.storage);
     }
 
     /**
-     * Wait for a second before do some real action
-     */
-    protected _debouncer = new Debouncer(1000);
-
-    protected _watcher: FileSystemWatcher | undefined = undefined;
-    /**
      * Doesn't real allocate storage file, just prepare to and watch after the changes
      */
-    protected createFS_Storage(rootUri: Uri) : void {
-        _log_this_file('createFS_Storage');
-        this._file_uri = Uri.file(path.join(rootUri.fsPath, this._relative_file_name));
+    protected createFS_Storage(rootUri: Uri): void {
+        logFn("createFS_Storage");
+        this.fileUri = Uri.file(path.join(rootUri.fsPath, this.relativeFileName));
 
-        this._storage = this.createConcreteFS_Storage(this._file_uri);
+        this.storage = this.createConcreteFS_Storage(this.fileUri);
 
-        this._watcher = workspace.createFileSystemWatcher(this._file_uri.fsPath);
-        this._watcher.onDidCreate(async (uri) => {
-            this._config.freeze();
-            _log_this_file('onDidCreate: ' + uri);
-            this._debouncer.debounce().then(async () => {
-                _log_this_file('load on create');
-                await this._config.load();
-                this._config.unfreeze();
-            })
+        this.watcher = workspace.createFileSystemWatcher(this.fileUri.fsPath);
+        this.watcher.onDidCreate(async (uri) => {
+            this.config.freeze();
+            logFn("onDidCreate: " + uri);
+            this.debouncer.debounce().then(async () => {
+                logFn("load on create");
+                await this.config.load();
+                this.config.unfreeze();
+            });
         });
-        this._watcher.onDidChange(async (uri) => {
-            this._config.freeze();
-            _log_this_file('onDidChange: ' + uri);
-            this._debouncer.debounce().then(async () => {
-                _log_this_file('load on change');
-                await this._config.load();
-                this._config.unfreeze();
-            })
+        this.watcher.onDidChange(async (uri) => {
+            this.config.freeze();
+            logFn("onDidChange: " + uri);
+            this.debouncer.debounce().then(async () => {
+                logFn("load on change");
+                await this.config.load();
+                this.config.unfreeze();
+            });
         });
     }
 
     protected createConcreteFS_Storage(uri: Uri) {
-        //TODO: test URI and return appropriate FS
-        return new FS_ConfigStorage(uri.fsPath);
+        // TODO: test URI and return appropriate FS
+        return new FSConfigStorage(uri.fsPath);
     }
 
 }
