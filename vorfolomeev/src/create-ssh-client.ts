@@ -3,7 +3,7 @@ import {Client} from 'ssh2';
 import * as nls from 'vscode-nls';
 import { UserPasswordSection } from './config/sections/user-password';
 import { SSH_Settings } from './ssh-settings';
-import { ConfigHelper } from '@vorfol/config-helper';
+import { IConfigHelper } from "./ext-api/config";
 let _localize = nls.loadMessageBundle();
 
 const _messagePasswordIsEmpty = _localize('create_ssh.warning', 'Please, enter password.');
@@ -13,9 +13,9 @@ const _log_close = _localize('create_ssh.closed', 'Client closed');
 
 let _user_password_section: UserPasswordSection = new UserPasswordSection();
 let _settings: SSH_Settings = new SSH_Settings(_user_password_section);
-let _cfg: ConfigHelper | undefined = undefined;
+let _cfg: IConfigHelper | undefined = undefined;
 
-export async function InitCfg(config: ConfigHelper) {
+export async function InitCfg(config: IConfigHelper) {
     _cfg = config;
     _cfg.getConfig().add(_user_password_section);
     console.log('added ' + _user_password_section.name());

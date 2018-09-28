@@ -99,7 +99,7 @@
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "extensionDependencies": [
-        "vorfol.common-test"
+        "vorfol.config-helper"
     ],
     "devDependencies": {
         "@types/node": "^10.11.2",
@@ -107,7 +107,6 @@
         "typescript": "^3.1.1"
     },
     "dependencies": {
-        "@vorfol/config-helper": "^0.1.5",
         "fast-glob": "^2.2.2",
         "fs": "0.0.1-security",
         "ssh2": "^0.6.1",

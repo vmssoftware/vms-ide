@@ -1,4 +1,4 @@
-import { IConfigData, IConfigSection } from "@vorfol/config-helper";
+import { IConfigData, IConfigSection } from "./../../ext-api/config";
 
 export class FilterSection implements IConfigSection {
 

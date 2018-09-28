@@ -1,4 +1,4 @@
-import { IConfigData, IConfigSection } from "@vorfol/config-helper";
+import { IConfigData, IConfigSection } from "./../../ext-api/config";
 import { UserPasswordSection } from "./user-password";
 import { isString } from "util";
 

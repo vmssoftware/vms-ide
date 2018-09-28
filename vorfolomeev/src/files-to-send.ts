@@ -1,12 +1,12 @@
 import {workspace} from 'vscode';
 
-import { ConfigHelper } from '@vorfol/config-helper';
+import { IConfigHelper } from "./ext-api/config";
 import { FilterSection } from './config/sections/filter';
 
 let _filter = new FilterSection();
-let _cfg : ConfigHelper | undefined = undefined;
+let _cfg : IConfigHelper | undefined = undefined;
 
-export async function InitCfg(cfg: ConfigHelper) {
+export async function InitCfg(cfg: IConfigHelper) {
     _cfg = cfg;
     _cfg.getConfig().add(_filter);
     console.log('added ' + _filter.name());

@@ -1,5 +1,5 @@
 import { Uri } from "vscode";
-import { ConfigHelper } from '@vorfol/config-helper';
+import { IConfigHelper } from "./../ext-api/config";
 import { FilterSection } from "../config/sections/filter";
 import * as path from 'path';
 
@@ -67,7 +67,7 @@ export class Sync_v2 implements Synchronizer {
     
     protected _filter: FilterSection = new FilterSection();
     
-    constructor(protected _cfg: ConfigHelper, 
+    constructor(protected _cfg: IConfigHelper, 
                 protected _primary: FS_Wrapper, 
                 protected _secondary: FS_Wrapper) {
         
