@@ -1,8 +1,8 @@
-import { ConfigSection, ConfigData } from "@vorfol/config-helper";
+import { IConfigSection, IConfigData } from "@vorfol/config-helper";
 import { UserPasswordHostConfig } from "../../host-config";
 import { isNumber, isString } from "util";
 
-export class UserPasswordSection implements ConfigSection, UserPasswordHostConfig {
+export class UserPasswordSection implements IConfigSection, UserPasswordHostConfig {
     
     host: string = '';
     port: number = 22;
@@ -22,7 +22,7 @@ export class UserPasswordSection implements ConfigSection, UserPasswordHostConfi
         return UserPasswordSection._section;
     }
 
-    store(): ConfigData {
+    store(): IConfigData {
         //do not store password
         return { host: this.host, 
                  port: this.port, 
@@ -30,7 +30,7 @@ export class UserPasswordSection implements ConfigSection, UserPasswordHostConfi
             };
     }
 
-    templateToFillFrom(): ConfigData {
+    templateToFillFrom(): IConfigData {
         return { host: '', 
                  port: 0, 
                  username: '',
@@ -38,7 +38,7 @@ export class UserPasswordSection implements ConfigSection, UserPasswordHostConfi
             };
     }
     
-    fillFrom(data: ConfigData): boolean {
+    fillFrom(data: IConfigData): boolean {
         if (typeof data.host === 'string') {
             this.host = data.host;
         }

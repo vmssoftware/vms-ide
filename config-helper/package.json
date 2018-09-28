@@ -1,7 +1,7 @@
 {
   "name": "@vorfol/config-helper",
   "displayName": "VMS: config-helper",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "description": "Config helper",
   "publisher": "vorfol",
   "engines": {

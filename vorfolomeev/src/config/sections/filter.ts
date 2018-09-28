@@ -1,8 +1,8 @@
-import { ConfigData, ConfigSection } from "@vorfol/config-helper";
+import { IConfigData, IConfigSection } from "@vorfol/config-helper";
 
-export class FilterSection implements ConfigSection {
+export class FilterSection implements IConfigSection {
 
-    static is(candidate: ConfigSection): candidate is FilterSection {
+    static is(candidate: IConfigSection): candidate is FilterSection {
         return candidate instanceof FilterSection;
     }
 
@@ -15,19 +15,19 @@ export class FilterSection implements ConfigSection {
         return FilterSection._section;
     }
 
-    store(): ConfigData {
+    store(): IConfigData {
         return { include: this.include, 
                  exclude: this.exclude
             };
     }
 
-    templateToFillFrom(): ConfigData {
+    templateToFillFrom(): IConfigData {
         return { include: '', 
                  exclude: ''
             };
     }
 
-    fillFrom(data: ConfigData): boolean {
+    fillFrom(data: IConfigData): boolean {
         if (typeof data.include === 'string') {
             this.include = data.include;
         }

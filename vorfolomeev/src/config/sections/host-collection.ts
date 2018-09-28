@@ -1,4 +1,4 @@
-import { ConfigData, ConfigSection } from "@vorfol/config-helper";
+import { IConfigData, IConfigSection } from "@vorfol/config-helper";
 import { UserPasswordSection } from "./user-password";
 import { isString } from "util";
 
@@ -14,19 +14,19 @@ export class LabeledUserPasswordSection extends UserPasswordSection {
         return this.label;
     }
 
-    store(): ConfigData {
+    store(): IConfigData {
         let ret = super.store();
         ret['label'] = this.label;
         return ret;
     }
 
-    templateToFillFrom(): ConfigData {
+    templateToFillFrom(): IConfigData {
         let ret = super.templateToFillFrom();
         ret['label'] = '';
         return ret;
     }
 
-    fillFrom(data: ConfigData): boolean {
+    fillFrom(data: IConfigData): boolean {
         if (typeof data.label === 'string') {
             this.label = data.label;
         }
@@ -34,7 +34,7 @@ export class LabeledUserPasswordSection extends UserPasswordSection {
     }
 }
 
-export class HostCollection implements ConfigSection {
+export class HostCollection implements IConfigSection {
 
     default: string = '';
     hosts: LabeledUserPasswordSection[] = [];
@@ -43,8 +43,8 @@ export class HostCollection implements ConfigSection {
     name(): string {
         return HostCollection._section;
     }    
-    store(): ConfigData {
-        let ret : ConfigData = {};
+    store(): IConfigData {
+        let ret : IConfigData = {};
         ret.default = this.default;
         ret.hosts = [];
         for(let tmp of this.hosts) {
@@ -52,7 +52,7 @@ export class HostCollection implements ConfigSection {
         }
         return ret;
     }
-    fillFrom(data: ConfigData): boolean {
+    fillFrom(data: IConfigData): boolean {
         this.default = '';
         this.hosts = [];
 
@@ -69,8 +69,8 @@ export class HostCollection implements ConfigSection {
         }
         return true;
     }
-    templateToFillFrom(): ConfigData {
-        let ret : ConfigData = {   
+    templateToFillFrom(): IConfigData {
+        let ret : IConfigData = {   
             default: '',
             hosts: [ new LabeledUserPasswordSection().templateToFillFrom() ]
         };
