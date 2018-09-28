@@ -1,6 +1,6 @@
+import { Debouncer } from "@vorfol/debouncer";
 import * as path from "path";
 import { Disposable, FileSystemWatcher, Uri, workspace } from "vscode";
-import { Debouncer } from "../common/debounce";
 import { IConfig, IConfigEditor, IConfigHelper, IConfigStorage } from "./config";
 import { ConfigPool } from "./config-pool";
 import { DummyEditor } from "./dummy-editor";

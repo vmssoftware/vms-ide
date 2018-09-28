@@ -8,6 +8,7 @@ import { ConfigHelper } from '@vorfol/config-helper';
 import { TestFSSource } from './sync/test';
 
 import * as nls from 'vscode-nls';
+import { testExtApi } from './test-ext-api';
 let _localize = nls.config()();
 
 export async function activate(context: ExtensionContext) {
@@ -40,11 +41,14 @@ export async function activate(context: ExtensionContext) {
         let _editor = _helper.getEditor();
         await _editor.invoke();
         console.log('edit end');
+        testExtApi();
     }));
 
     context.subscriptions.push(_helper);
 
     console.log('activation end');
+    
+    testExtApi();
 }
 
 // this method is called when your extension is deactivated

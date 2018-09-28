@@ -1,5 +1,5 @@
+import { Debouncer } from "@vorfol/debouncer";
 import { Disposable, workspace } from "vscode";
-import { Debouncer } from "../common/debounce";
 import { IConfig, IConfigEditor, IConfigHelper, IConfigStorage } from "./config";
 import { ConfigPool } from "./config-pool";
 import { VSCWorkspaceConfigEditor } from "./vsc-editor";
