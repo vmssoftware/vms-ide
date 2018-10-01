@@ -49,6 +49,7 @@ export class VMSRuntime extends EventEmitter
 	private sourceLines: string[];
 
 	// This is the next line that will be 'executed'
+	private currentFile : string = "";
 	private currentLine = 0;
 	private shiftLine = 0;
 
@@ -232,6 +233,7 @@ export class VMSRuntime extends EventEmitter
 	{
 		if (this._sourceFile !== file)
 		{
+			//file = "C:/Users/akulikovskiy/Desktop/ctest/add.c";
 			this._sourceFile = file;
 			this.sourceLines = readFileSync(this._sourceFile).toString().split('\n');
 		}
@@ -320,7 +322,7 @@ export class VMSRuntime extends EventEmitter
 		const matches = /log\((.*)\)/.exec(line);
 		if (matches && matches.length === 2)
 		{
-			this.sendEvent('output', matches[1], this._sourceFile, ln, matches.index)
+			this.sendEvent('output', matches[1], this._sourceFile, ln, matches.index);
 		}
 
 		// if word 'exception' found in source -> throw exception
@@ -388,6 +390,32 @@ export class VMSRuntime extends EventEmitter
 			{
 				if(msgLines[i].includes("stepped to") || msgLines[i].includes("break at routine"))
 				{
+
+					let fileName : string = "";
+					if(msgLines[i].includes("ADD"))
+					{
+						fileName = "ADD";
+						if(fileName !== this.currentFile)
+						{
+							this.currentFile = fileName;
+							this.shiftLine = 0;
+							let path = "C:/Users/akulikovskiy/Desktop/ctest/add.c";
+							this.loadSource(path);
+						}
+					}
+					else if(msgLines[i].includes("HELLO"))
+					{
+						fileName = "HELLO";
+						if(fileName !== this.currentFile)
+						{
+							this.currentFile = fileName;
+							this.shiftLine = 0;
+							let path = "C:/Users/akulikovskiy/Desktop/ctest/hello.c";
+							this.loadSource(path);
+						}
+					}
+
+
 					let array = msgLines[i+1].split(":");//number: string of code; array[0]-number, array[1]-string of code
 
 					if(this.shiftLine === 0)
@@ -403,7 +431,7 @@ export class VMSRuntime extends EventEmitter
 								if(curLineCode.includes(line))
 								{
 									this.shiftLine = parseInt(array[0], 10) - j;
-									break
+									break;
 								}
 							}
 						}
@@ -411,6 +439,10 @@ export class VMSRuntime extends EventEmitter
 
 					this.currentLine = parseInt(array[0], 10) - this.shiftLine;
 					break;
+				}
+				else if(msgLines[i].includes("%DEBUG-I-EXITSTATUS, is '%SYSTEM-S-NORMAL, normal successful completion"))
+				{
+					this.sendEvent('end');
 				}
 			}
 
