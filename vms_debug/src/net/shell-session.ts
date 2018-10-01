@@ -53,7 +53,7 @@ export class ShellSession
                 {
                     this.sshClient.end();
                 }
-                this.ShellInitialise();
+                //this.ShellInitialise();
             }
             else
             {

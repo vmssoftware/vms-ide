@@ -1,69 +1,74 @@
 import { Client, ClientChannel, SFTPWrapper, ClientErrorExtensions } from 'ssh2';
-import { SSHSettings } from './host-settings';
-import { WorkspaceSettings } from '../config/workspace-settings';
+import { UserPasswordSection } from '../config/sections/user-password';
+import { SSHSettings } from './ssh-settings';
+import { IConfigHelper } from '../ext-api/config';
+import * as nls from 'vscode-nls';
 
-let _messageHostSettingsIncomlete = `Host settings is incomplete: need username, host and port.`;
-let _messagePasswordIsEmpty = `Please, enter password.`;
-let _passwordCache : Map<string, string> = new Map<string, string>();
+let _localize = nls.loadMessageBundle();
+
+let _user_password_section: UserPasswordSection = new UserPasswordSection();
+let _settings: SSHSettings = new SSHSettings(_user_password_section);
+let _cfg: IConfigHelper | undefined = undefined;
+
+export async function InitCfg(config: IConfigHelper) {
+    _cfg = config;
+    _cfg.getConfig().add(_user_password_section);
+    console.log('added ' + _user_password_section.name());
+}
 
 
 export class SSHClient
 {
-    constructor()
-    {
+    private static readonly _messagePasswordIsEmpty = _localize('create_ssh.warning', 'Please, enter password.');
+    private static readonly _log_end = _localize('create_ssh.ends', 'Client ends');
+    private static readonly _log_close_err = _localize('create_ssh.closed_err', 'Client closed with error');
+    private static readonly _log_close = _localize('create_ssh.closed', 'Client closed');
 
-    }
-    /** Build cache settings string
-     *
-     */
-    private CacheString(settings: SSHSettings): string
-    {
-        return `${settings.username}@${settings.host}:${settings.port}`;
+    constructor() {
     }
 
-    /** Create SSH client using settings from current workspace.
-     *
-     *  Also ensures password and save it into cache (by 'username@host:port')
-    */
     public async CreateClientSSH(ClientErrorCB : (err: Error & ClientErrorExtensions) => void) : Promise<Client>
     {
         return new Promise(async (resolve : (client : Client) => void, reject: (error: Error) => void) =>
         {
+            //ensure we are not in -=loading=-
+            if (_cfg) {
+                await _cfg.getConfig().get(_user_password_section.name());
+            }
+
             let client = new Client();
-            //Get all from project config
-            let sshSettings = SSHSettings.FromWorkspace();
 
-            if (!sshSettings.IsComplete)
-            {
-                WorkspaceSettings.WarnUser();
-                reject(new Error(_messageHostSettingsIncomlete));
-                return;
-            }
-
-            //Get password from cache
-            sshSettings.password = _passwordCache.get(this.CacheString(sshSettings)) || '';
             //Allow user to setup password, if it doesn't exist
-            if (!await sshSettings.EnsurePassword())
-            {
-                reject(new Error(_messagePasswordIsEmpty));
+            if (!await _settings.ensurePassword()) {
+                reject(new Error(SSHClient._messagePasswordIsEmpty));
                 return;
             }
 
-            client.on('ready', () =>
-            {
-                //Put password to cache
-                _passwordCache.set(this.CacheString(sshSettings), sshSettings.password);
-                //client.removeAllListeners('error');
+            //OnReady
+            client.on('ready', () => {
+                _settings.didUse(true);
                 resolve(client);
-            })
-            .on('error', (error) =>
-            {
-                //Remove passowrd from cache
-                _passwordCache.delete(this.CacheString(sshSettings));
+            });
+            //OnError
+            client.on('error', (error) => {
+                _settings.didUse(false);
                 reject(error);
                 ClientErrorCB(error);
-            })
-            .connect(sshSettings);
+            });
+            //OnEnd
+            client.on('end', () => {
+                console.log(SSHClient._log_end);
+            });
+            //OnClose
+            client.on('close', (hadError) => {
+                if (hadError) {
+                    console.log(SSHClient._log_close_err);
+                } else {
+                    console.log(SSHClient._log_close);
+                }
+            });
+            //client.connect(Object.assign({debug: console.log}, _settings));
+            client.connect( _settings );
         });
     }
 

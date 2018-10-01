@@ -1,20 +1,20 @@
 {
 	"name": "vms-debug",
 	"displayName": "VMS C Debug",
-	"version": "0.27.0",
-	"publisher": "andreweinand",
-	"description": "Starter extension for developing debug adapters for VS Code.",
+	"version": "0.27.1",
+	"publisher": "vmssoftware",
+	"description": "The extension for developing debug adapters for VS Code.",
 	"author": {
-		"name": "Microsoft Corporation",
-		"email": "aweinand@microsoft.com"
+		"name": "VMS Software",
+		"email": "akulikovskiy@vmssoftware.com"
 	},
 	"license": "MIT",
 	"keywords": [
-		"multi-root ready"
+		"does not multi-root ready"
 	],
 	"engines": {
-		"vscode": "^1.18.0",
-		"node": "^7.9.0"
+		"vscode": "^1.27.0",
+		"node": "^10.0.0"
 	},
 	"icon": "images/mock-debug-icon.png",
 	"categories": [
@@ -24,10 +24,10 @@
 	"private": true,
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Microsoft/vscode-mock-debug.git"
+		"url": "https://host/project.git"
 	},
 	"bugs": {
-		"url": "https://github.com/Microsoft/vscode-mock-debug/issues"
+		"url": "https://host/project/issues"
 	},
 	"scripts": {
 		"prepublish": "tsc -p ./",
@@ -40,11 +40,11 @@
 		"publish": "vsce publish"
 	},
 	"devDependencies": {
-		"typescript": "^2.6.1",
-		"vscode": "^1.1.6",
-		"tslint": "^5.8.0",
-		"@types/node": "^7.0.43",
-		"@types/mocha": "^2.2.42"
+		"typescript": "^3.0.0",
+		"vscode": "^1.1.21",
+		"tslint": "^5.11.0",
+		"@types/node": "^10.0.0",
+		"@types/mocha": "^5.0.0"
 	},
 	"dependencies": {
 		"await-notify": "^1.0.1",
@@ -56,30 +56,42 @@
 		"vsce": "^1.49.1",
 		"vscode-debugadapter": "^1.31.0",
 		"vscode-debugadapter-testsupport": "1.27.0",
-		"vscode-nls": "^2.0.2",
-		"vscode-nls-dev": "^2.1.3"
+		"vscode-nls": "^4.0.0",
+		"vscode-nls-dev": "^3.2.0"
 	},
+    "extensionDependencies": [
+        "vorfol.config-helper"
+    ],
 	"main": "./out/extension",
 	"activationEvents": [
 		"onDebug",
 		"onCommand:extension.vms-debug.connect",
 		"onCommand:extension.vms-debug.compile",
 		"onCommand:extension.vms-debug.run",
-		"onCommand:extension.vms-debug.getProgramName"
+		"onCommand:extension.vms-debug.getProgramName",
+		"onCommand:extension.vms-debug.edit_settings"
 	],
 	"contributes": {
 		"commands": [
 			{
+				"command": "extension.vms-debug.edit_settings",
+				"title": "%extension.edit_settings%",
+				"category": "%command.category%"
+			},
+			{
 				"command": "extension.vms-debug.connect",
-				"title": "%extension.vms_connect%"
+				"title": "%extension.vms_connect%",
+				"category": "%command.category%"
 			},
 			{
 				"command": "extension.vms-debug.compile",
-				"title": "%extension.vms_compile%"
+				"title": "%extension.vms_compile%",
+				"category": "%command.category%"
 			},
 			{
 				"command": "extension.vms-debug.run",
-				"title": "%extension.vms_run%"
+				"title": "%extension.vms_run%",
+				"category": "%command.category%"
 			}
 		],
 		"breakpoints": [
@@ -148,39 +160,60 @@
 			}
 		],
 		"configuration": {
-			"title": "OpenVMS settings",
-			"properties": {
-				"open-vms.enable-test": {
-					"type": "boolean",
-					"default": false,
-					"description": "Enable test findFiles()"
-				},
-				"open-vms.host": {
-					"type": "string",
-					"default": "104.207.199.181",
-					"description": "OpenVMS host to build, run and debug current workspace"
-				},
-				"open-vms.port": {
-					"type": "number",
-					"default": 22,
-					"description": "OpenVMS ssh port"
-				},
-				"open-vms.username": {
-					"type": "string",
-					"default": "kulikovskiy",
-					"description": "Username"
-				},
-				"open-vms.password": {
-					"type": "string",
-					"default": "Qaz515402",
-					"description": "Password"
-				},
-				"open-vms.filter": {
-					"type": "string",
-					"default": "**/*.{c,cpp,h}",
-					"description": "Files to send to OpenVMS"
-				}
-			}
+            "title": "%configuration.title%",
+            "properties": {
+                "open-vms.common.build-enabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%properties.common.build-enabled.description%"
+                },
+                "open-vms.connection.host": {
+                    "type": "string",
+                    "default": "host",
+                    "description": "%properties.connection.host.description%"
+                },
+                "open-vms.connection.port": {
+                    "type": "number",
+                    "default": 22,
+                    "description": "%properties.connection.port.description%"
+                },
+                "open-vms.connection.username": {
+                    "type": "string",
+                    "default": "",
+                    "description": "%properties.connection.username.description%"
+                },
+                "open-vms.connection.password": {
+                    "type": "string",
+                    "default": "",
+                    "description": "%properties.connection.password.description%"
+                },
+                "open-vms.filter.include": {
+                    "type": "string",
+                    "default": "**/*.*",
+                    "description": "%properties.filter.include.description%"
+                },
+                "open-vms.filter.exclude": {
+                    "type": "string",
+                    "default": "**/{.vscode,node-modules}/*.*",
+                    "description": "%properties.filter.exclude.description%"
+                },
+                "open-vms.host_collection.default": {
+                    "type": "string",
+                    "default": "default",
+                    "description": "default host in collection"
+                },
+                "open-vms.host_collection.hosts": {
+                    "type": "array",
+                    "default": [
+                        {
+                            "host": "",
+                            "port": 0,
+                            "username": ""
+                        }
+                    ],
+                    "description": "array of hosts"
+                }
+            }
 		}
 	}
 }
