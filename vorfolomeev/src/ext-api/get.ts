@@ -1,12 +1,5 @@
-import { IConfigHelper, IConfig, IConfigEditor } from "./config";
+import { ConfigHelper } from "./config";
 import { extensions } from "vscode";
-
-export declare class ConfigHelper implements IConfigHelper {
-    static getConfigHelper(section: string): IConfigHelper;
-    getConfig(): IConfig;
-    getEditor(): IConfigEditor;
-    dispose():void;
-}
 
 export async function getConfigHelperFromApi(): Promise<typeof ConfigHelper | undefined> {
     return new Promise<typeof ConfigHelper|undefined>((resolve)=> {

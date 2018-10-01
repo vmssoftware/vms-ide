@@ -78,3 +78,12 @@ export interface IConfigHelper extends Disposable {
     getConfig(): IConfig;
     getEditor(): IConfigEditor;
 }
+/**
+ * ConfigHelper
+ */
+export declare class ConfigHelper implements IConfigHelper {
+    static getConfigHelper(section: string): IConfigHelper;
+    getConfig(): IConfig;
+    getEditor(): IConfigEditor;
+    dispose(): void;
+}
