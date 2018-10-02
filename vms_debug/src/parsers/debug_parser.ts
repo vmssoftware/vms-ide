@@ -1,4 +1,5 @@
-import { HolderShiftLine } from './debug_shift_line';
+import { HolderDebugFileInfo, DebugFileInfo } from './debug_file_info';
+import { readFileSync } from 'fs';
 
 export enum MessageDebuger
 {
@@ -6,60 +7,100 @@ export enum MessageDebuger
 	msgBreak = "break at routine",
 	msgKeyDbg = "%DEBUG-I-EXITSTATUS",
 	msgEnd = "%DEBUG-I-EXITSTATUS, is '%SYSTEM-S-NORMAL, normal successful completion",
+
+// 	%DCL-W-ACTIMAGE, error activating image HELLO
+// -CLI-E-IMAGEFNF, image file not found BOSTON$DKA400:[KULIKOVSKIY.DEMOS]HELLO.EXE
+// go
+// %DEBUG-E-NOPROCESSES, the current command is targetted at an empty process set
 }
 
 
 export class DebugParser
 {
-	private shiftLines : HolderShiftLine;
+	private fleInfo : HolderDebugFileInfo;
 
 	constructor()
 	{
-		this.shiftLines = new HolderShiftLine();
+		this.fleInfo = new HolderDebugFileInfo();
 	}
 
 
-	public getCurrentLineNumber(data : string, curSourceFile : string, sourceLines: string[]) : number
+	public getCurrentLineInfo(data : string, sourcePaths: string[]) : DebugFileInfo | undefined
 	{
+		let sourceLines: string[];
 		let currentLineNumber : number = -1;
-		let msgLines =data.split("\n");
+		let debugFileInfo : DebugFileInfo | undefined;
+		let msgLines = data.split("\n");
 
 		for(let i = 0; i < msgLines.length; i++)
 		{
 			if(msgLines[i].includes(MessageDebuger.msgStepped) ||
-				msgLines[i].includes(MessageDebuger.msgStepped))
+				msgLines[i].includes(MessageDebuger.msgBreak))
 			{
-				let name = this.findeFileName(msgLines[i]);
-				let shift = this.shiftLines.getShiftLine(name);
+				let name = this.findFileName(msgLines[i]);
+				let shift = this.fleInfo.getShiftLine(name);
+
 				let array = msgLines[i+1].split(":");//number: string of code; array[0]-number, array[1]-string of code
 
 				if(shift === -1)
 				{
+					let pathFile = this.findPathFileByName(name, sourcePaths);
+					sourceLines = this.loadSource(pathFile);
+
 					//calculate shift line
 					shift = this.calculateShiftLine(msgLines[i+1], sourceLines);
 
 					if(shift !== -1)//calculate successfull
 					{
-						this.shiftLines.setShiftLine(name, shift);
 						currentLineNumber = parseInt(array[0], 10) - shift;
+						this.fleInfo.setItem(pathFile, name, shift, currentLineNumber);
+						debugFileInfo = this.fleInfo.getItem(name);
 					}
 				}
 				else
 				{
 					currentLineNumber = parseInt(array[0], 10) - shift;
+					debugFileInfo = this.fleInfo.getItem(name);
+
+					if(debugFileInfo)
+					{
+						debugFileInfo.currLine = currentLineNumber;
+					}
 				}
 
 				break;
 			}
 		}
 
-		return currentLineNumber;
+		return debugFileInfo;
+	}
+
+
+	private findPathFileByName(fileName : string, sourcePaths : string[]) : string
+	{
+		let pathFile : string = "";
+
+		for(let item of sourcePaths)
+		{
+			let folders = item.split("\\");
+
+			for(let folder of folders)
+			{
+				if(folder.includes(fileName))
+				{
+					pathFile = item;
+					break;
+				}
+			}
+		}
+
+		return pathFile;
 	}
 
 	//examples a lines
 	//stepped to HELLO\main\%LINE 1631
 	//break at routine HELLO\main
-	private findeFileName(line : string) : string
+	private findFileName(line : string) : string
 	{
 		let name :string = "";
 		let array = line.split(" ");
@@ -68,7 +109,7 @@ export class DebugParser
 		{
 			if(item.includes("\\"))
 			{
-				item.toLowerCase();
+				item = item.toLowerCase();
 				let names = item.split("\\");
 				name = names[0];
 
@@ -103,5 +144,10 @@ export class DebugParser
 		}
 
 		return shift;
+	}
+
+	private loadSource(file: string): string[]
+	{
+		return readFileSync(file).toString().split('\n');
 	}
 }
