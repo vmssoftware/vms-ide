@@ -7,6 +7,8 @@ import { EventEmitter } from 'events';
 import { ShellSession, ModeWork } from '../net/shell-session';
 import { OsCommands } from '../command/os_commands';
 import { DebugCommands } from '../command/debug_commands';
+import { DebugParser } from '../parsers/debug_parser';
+import { workspace, Uri } from 'vscode';
 
 export interface VMSBreakpoint
 {
@@ -39,6 +41,7 @@ export class VMSRuntime extends EventEmitter
 	private shell : ShellSession;
 	private osCmd : OsCommands;
 	private dbgCmd : DebugCommands;
+	private dbgParser : DebugParser;
 
 	public get sourceFile()
 	{
@@ -47,6 +50,7 @@ export class VMSRuntime extends EventEmitter
 
 	// the contents (= lines) of the one and only file
 	private sourceLines: string[];
+	private sourcePaths: string[];
 
 	// This is the next line that will be 'executed'
 	private currentFile : string = "";
@@ -69,13 +73,15 @@ export class VMSRuntime extends EventEmitter
 		this.buttonPressd = DebugButtonEvent.btnNoEvent;
 		this.osCmd = new OsCommands();
 		this.dbgCmd = new DebugCommands();
+		this.dbgParser = new DebugParser();
 	}
 
 	/**
 	 * Start executing the given program.
 	 */
-	public start(program: string, stopOnEntry: boolean)
+	public async start(program: string, stopOnEntry: boolean)
 	{
+		this.sourcePaths = await this.loadSourcePathList("c");
 		this.loadSource(program);
 		this.currentLine = -1;
 
@@ -229,48 +235,25 @@ export class VMSRuntime extends EventEmitter
 
 	// private methods
 
+	private async loadSourcePathList(extensionFile : string) : Promise<string[]>
+	{
+		let list : string[] = [];
+		let uris : Uri[] = await workspace.findFiles("**/*." + extensionFile);
+
+		for(let item of uris)
+		{
+			list.push(item.fsPath);
+		}
+
+		return list;
+	}
+
 	private loadSource(file: string)
 	{
 		if (this._sourceFile !== file)
 		{
-			//file = "C:/Users/akulikovskiy/Desktop/ctest/add.c";
 			this._sourceFile = file;
 			this.sourceLines = readFileSync(this._sourceFile).toString().split('\n');
-		}
-	}
-
-	/**
-	 * Run through the file.
-	 * If stepEvent is specified only run a single step and emit the stepEvent.
-	 */
-	private run(reverse = false, stepEvent?: string)
-	{
-		if (reverse)
-		{
-			for (let ln = this.currentLine-1; ln >= 0; ln--)
-			{
-				if (this.fireEventsForLine(ln, stepEvent))
-				{
-					this.currentLine = ln;
-					return;
-				}
-			}
-			// no more lines: stop at first line
-			this.currentLine = 0;
-			this.sendEvent('stopOnEntry');
-		}
-		else
-		{
-			for (let ln = this.currentLine+1; ln < this.sourceLines.length; ln++)
-			{
-				if (this.fireEventsForLine(ln, stepEvent))
-				{
-					this.currentLine = ln;
-					return true;
-				}
-			}
-			// no more lines: run to end
-			this.sendEvent('end');
 		}
 	}
 
@@ -386,65 +369,27 @@ export class VMSRuntime extends EventEmitter
 		{
 			let msgLines =data.split("\n");
 
+			let lineInfo = this.dbgParser.getCurrentLineInfo(data, this.sourcePaths);
+
+			if(lineInfo)
+			{
+				this.loadSource(lineInfo.filePath);
+				this.currentLine = lineInfo.currLine;
+			}
+
+
 			for(let i = 0; i < msgLines.length; i++)
 			{
 				if(msgLines[i].includes("stepped to") || msgLines[i].includes("break at routine"))
 				{
-
-					let fileName : string = "";
-					if(msgLines[i].includes("ADD"))
-					{
-						fileName = "ADD";
-						if(fileName !== this.currentFile)
-						{
-							this.currentFile = fileName;
-							this.shiftLine = 0;
-							let path = "C:/Users/akulikovskiy/Desktop/ctest/add.c";
-							this.loadSource(path);
-						}
-					}
-					else if(msgLines[i].includes("HELLO"))
-					{
-						fileName = "HELLO";
-						if(fileName !== this.currentFile)
-						{
-							this.currentFile = fileName;
-							this.shiftLine = 0;
-							let path = "C:/Users/akulikovskiy/Desktop/ctest/hello.c";
-							this.loadSource(path);
-						}
-					}
-
-
-					let array = msgLines[i+1].split(":");//number: string of code; array[0]-number, array[1]-string of code
-
-					if(this.shiftLine === 0)
-					{
-						const curLineCode = array[1].trim();
-
-						for(let j = 0; j < this.sourceLines.length; j++)
-						{
-							const line = this.sourceLines[j].trim();
-
-							if(line !== "" && curLineCode !== "")
-							{
-								if(curLineCode.includes(line))
-								{
-									this.shiftLine = parseInt(array[0], 10) - j;
-									break;
-								}
-							}
-						}
-					}
-
-					this.currentLine = parseInt(array[0], 10) - this.shiftLine;
-					break;
+				 	break;
 				}
 				else if(msgLines[i].includes("%DEBUG-I-EXITSTATUS, is '%SYSTEM-S-NORMAL, normal successful completion"))
 				{
 					this.sendEvent('end');
 				}
 			}
+
 
 			if(data.includes("examine"))//show selected variable
 			{

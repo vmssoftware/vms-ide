@@ -43,8 +43,8 @@ export function activate(context: vscode.ExtensionContext)
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.compile', () =>
 	{
 		let osCmd = new OsCommands();
-		shell.SendCommandToQueue(osCmd.cleanMMS("comp.mms;15"));
-		shell.SendCommandToQueue(osCmd.runMMS("comp.mms;15"));
+		shell.SendCommandToQueue(osCmd.cleanMMS("comp.mms"));
+		shell.SendCommandToQueue(osCmd.runMMS("comp.mms"));
 
 		const message = localize('extention.compile', "Compile program");
 		vscode.window.showInformationMessage(message);
