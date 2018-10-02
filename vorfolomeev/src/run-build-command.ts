@@ -1,33 +1,37 @@
 
-import {ToOutputChannel} from './output-channel';
-import {CreateSSHClient} from './create-ssh-client';
-import {CreateSFTP} from './create-sftp';
-import {SendFile} from './send-file';
-import {ExecSSHCommand} from './exec-ssh-command';
-import {FilesToSend} from './files-to-send';
+import {CreateSFTP} from "./create-sftp";
+import {CreateSSHClient} from "./create-ssh-client";
+import {ExecSSHCommand} from "./exec-ssh-command";
+import {FilesToSend} from "./files-to-send";
+import {ToOutputChannel} from "./output-channel";
+import {SendFile} from "./send-file";
 
-let _commandBuilAll = `show time`;
+const commandBuilAll = `show time`;
+
+// tslint:disable-next-line:no-console
+let logFn = console.log;
+// tslint:disable-next-line:no-empty
+logFn = () => {};
 
 /** Process BUILD command
- * 
+ *
  */
 export async function RunBuildCommand() {
     try {
 
-        //get list before creating client to check 'filter' settings... ugly?
-        let files = await FilesToSend();
+        // get list before creating client to check 'filter' settings... ugly?
+        const files = await FilesToSend();
 
-        let sshClient = await CreateSSHClient();
-        let sftp = await CreateSFTP(sshClient);
-        
-        
-        for(let file of files) {
+        const sshClient = await CreateSSHClient();
+        const sftp = await CreateSFTP(sshClient);
+
+        for (const file of files) {
             await SendFile(sftp, file);
         }
         sftp.end();
 
-        //NOTE: sshClient.exec will close connection
-        let sshResult = await ExecSSHCommand(sshClient, _commandBuilAll);
+        // NOTE: sshClient.exec will close connection
+        const sshResult = await ExecSSHCommand(sshClient, commandBuilAll);
 
         ToOutputChannel(sshResult.stdout);
         if (sshResult.stderr) {
@@ -35,14 +39,11 @@ export async function RunBuildCommand() {
         }
 
         sshClient.end();
-    }
-    catch(error) {
+    } catch (error) {
         if (error instanceof Error) {
             ToOutputChannel(error.message);
-        }
-        else {
-            console.log(error);
+        } else {
+            logFn(error);
         }
     }
 }
-

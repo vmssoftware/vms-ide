@@ -1,80 +1,79 @@
-import * as nls from 'vscode-nls';
 import { window } from "vscode";
-import { UserPasswordHostConfig } from './host-config';
-let _localize = nls.loadMessageBundle();
+import * as nls from "vscode-nls";
+import { IUserPasswordHostConfig } from "./host-config";
+const localize = nls.loadMessageBundle();
 
 /**
  * SSH settings helper
  * It uses outer HostConfig implementation to hold/retrieve data
- * 
+ *
  */
 
-export class SSH_Settings implements UserPasswordHostConfig {
+export class SSHSettings implements IUserPasswordHostConfig {
 
     get host() {
-        return this._user_password.host;
+        return this.userPassword.host;
     }
 
     get port() {
-        return this._user_password.port;
+        return this.userPassword.port;
     }
 
     get username() {
-        return this._user_password.username;
+        return this.userPassword.username;
     }
 
     get password() {
-        return this._user_password.password;
-    }
-    
-    constructor(protected _user_password : UserPasswordHostConfig) {
-
+        return this.userPassword.password;
     }
 
-    protected _ensurePasswordPromise : Promise<boolean> | undefined = undefined;
-    private _pass_was_entered: boolean = false;
+    protected ensurePasswordPromise: Promise<boolean> | undefined = undefined;
+    private passWasEntered: boolean = false;
+
+    constructor(protected userPassword: IUserPasswordHostConfig) {
+
+    }
 
     /**
      * Test password and prompt user if it is empty.
      */
-    ensurePassword() : Promise<boolean> {
-        if (this.password) {  //exists and isn't empty
+    public ensurePassword(): Promise<boolean> {
+        if (this.password) {  // exists and isn't empty
             return Promise.resolve(true);
         }
-        if (!this._ensurePasswordPromise) {
-            this._ensurePasswordPromise = new Promise<boolean>((resolve, reject) => {
-                let prompt = _localize('user_password.prompt', "Enter password for {0}{1}:{2}", 
-                    this.username ? this.username+'@':'', this.host, this.port);
+        if (!this.ensurePasswordPromise) {
+            this.ensurePasswordPromise = new Promise<boolean>((resolve, reject) => {
+                const prompt = localize("user_password.prompt", "Enter password for {0}{1}:{2}",
+                    this.username ? this.username + "@" : "", this.host, this.port);
                 window.showInputBox( { password: true, prompt })
                 .then((value) => {
                     if (value) {
-                        this._user_password.password = value;
-                        //clear password only if user entered it
-                        this._pass_was_entered = true;
+                        this.userPassword.password = value;
+                        // clear password only if user entered it
+                        this.passWasEntered = true;
                         resolve(true);
-                    }
-                    else {
+                    } else {
                         resolve(false);
                     }
-                    this._ensurePasswordPromise = undefined;
+                    this.ensurePasswordPromise = undefined;
                 }, (error) => {
-                    this._user_password.password = '';
+                    this.userPassword.password = "";
                     resolve(false);
-                    this._ensurePasswordPromise = undefined;
+                    this.ensurePasswordPromise = undefined;
                 });
-            })
+            });
         }
-        return this._ensurePasswordPromise;
+        return this.ensurePasswordPromise;
     }
 
     /**
      * One must call this function after trying to connect.
-     * @param using_result true if all ok and connect estabilished, else false
+     * @param usingResult true if all ok and connect estabilished, else false
      */
-    didUse(using_result: boolean) : void {
-        if (!using_result && this._pass_was_entered) {
-            this._user_password.password = '';
+    public didUse(usingResult: boolean): void {
+        if (!usingResult && this.passWasEntered) {
+            this.userPassword.password = "";
         }
-        this._pass_was_entered = false;
+        this.passWasEntered = false;
     }
 }

@@ -1,5 +1,5 @@
 
-export interface UserPasswordHostConfig {
+export interface IUserPasswordHostConfig {
     host: string;
     port?: number;
     username?: string;

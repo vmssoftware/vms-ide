@@ -1,75 +1,34 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { SourceFile, Source } from "./sync";
-import { Uri } from 'vscode';
+import { Uri } from "vscode";
+import { FSSourceFile } from "./fs-source-file";
+import { ISource, ISourceFile } from "./sync";
 
-let _log_ = console.log;
-//comment next line to allow debug output
-_log_ = function() {};
+// tslint:disable-next-line:no-console
+let logFn = console.log;
+// tslint:disable-next-line:no-empty
+logFn = () => {};
 
-export class FS_SourceFile implements SourceFile {
+export class FSSource implements ISource {
 
-    protected _fullPath: string;
-    constructor(protected _source: FS_Source, protected _relPath: string) {
-        this._fullPath = path.join(this._source.rootPath, this._relPath);
-        _log_(`source created: ${this._fullPath}`);
+    protected fsPathRoot: string;
+    constructor(protected root: Uri) {
+        this.fsPathRoot = root.fsPath;
     }
 
-    get relativePath(): string {
-        return this._relPath;
+    get rootPath(): string {
+        return this.fsPathRoot;
     }
 
-    get content(): Promise<Buffer|undefined> {
-        return new Promise<Buffer|undefined>(resolve => {
-            fs.readFile(this._fullPath, (err, data) => {
-                if (err) {
-                    resolve(undefined);
-                    _log_(`content of ${this._fullPath} failed: ${err}`);
-                } else {
-                    _log_(`content of ${this._fullPath} length: ${data.length}`);
-                    resolve(data);
-                }
-            });
-        });
-    }
-
-    get modTime(): Promise<Date|undefined> {
-        return new Promise<Date|undefined>( resolve => {
-            fs.stat(this._fullPath, (err, stats) => {
-                if (err) {
-                    resolve(undefined);
-                    _log_(`date of ${this._fullPath} failed: ${err}`);
-                } else {
-                    resolve(stats.mtime);
-                    _log_(`date of ${this._fullPath} ok: ${stats.mtime.toUTCString()}`);
-                }
-            });
-        });
-    }
-}
-
-export class FS_Source implements Source {
-
-    protected _fsPathRoot: string;
-    constructor(protected _root: Uri) {
-        this._fsPathRoot = _root.fsPath;
-    }
-
-    get rootPath() : string {
-        return this._fsPathRoot;
-    }
-
-    accept(uri: Uri): Promise<SourceFile|undefined> {
+    public accept(uri: Uri): Promise<ISourceFile|undefined> {
         return Promise.resolve().then(() => {
-            if (uri.scheme == this._root.scheme) {
-                let fsPath = uri.fsPath;
-                if (fsPath.startsWith(this._fsPathRoot)) {
-                    let fsTail = fsPath.slice(this._fsPathRoot.length);
-                    _log_(`source ${this._root.toString()} accept: ${uri.toString()}`);
-                    return new FS_SourceFile(this, fsTail);
+            if (uri.scheme === this.root.scheme) {
+                const fsPath = uri.fsPath;
+                if (fsPath.startsWith(this.fsPathRoot)) {
+                    const fsTail = fsPath.slice(this.fsPathRoot.length);
+                    logFn(`source ${this.root.toString()} accept: ${uri.toString()}`);
+                    return new FSSourceFile(this, fsTail);
                 }
             }
-            _log_(`source ${this._root.toString()} doesn't accept: ${uri.toString()}`);
+            logFn(`source ${this.root.toString()} doesn't accept: ${uri.toString()}`);
             return undefined;
         });
     }

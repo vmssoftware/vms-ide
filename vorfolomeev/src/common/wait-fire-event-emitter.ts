@@ -10,38 +10,39 @@ import { Event } from "vscode";
  */
 export class WaitFireEventEmitter<T> {
 
-    private _emitter = new EventEmitter<T>();
+    public event: Event<T>;
 
-    event: Event<T> = this._emitter.event;
-    
-    constructor(private _wait_msec: number) {
-        
+    private fireSoonHandle: NodeJS.Timer | undefined;
+    private emitter = new EventEmitter<T>();
+
+    constructor(private waitMsec: number) {
+        this.event = this.emitter.event;
     }
 
-    fire(data?: T) {
+    public fire(data?: T) {
         this._fireSoon(data);
     }
 
-    dispose(): void {
-        if (this._fireSoonHandle) {
-            clearTimeout(this._fireSoonHandle);
-            this._fireSoonHandle = undefined;
+    public dispose(): void {
+        if (this.fireSoonHandle) {
+            clearTimeout(this.fireSoonHandle);
+            this.fireSoonHandle = undefined;
         }
-        this._emitter.dispose();
-    } 
-
-    private _fireSoonHandle: NodeJS.Timer | undefined;
+        this.emitter.dispose();
+    }
 
     private _fireSoon(e: T | undefined): void {
-        if (this._fireSoonHandle) {
-            clearTimeout(this._fireSoonHandle);
+        if (this.fireSoonHandle) {
+            clearTimeout(this.fireSoonHandle);
         }
-        this._fireSoonHandle = setTimeout(() => {
-            this._emitter.fire(e);
-        }, this._wait_msec);
+        this.fireSoonHandle = setTimeout(() => {
+            this.emitter.fire(e);
+        }, this.waitMsec);
     }
 }
-
+/**
+ * Example
+ */
 // let w = new WaitFireEventEmitter<number>(1000);
 // w.event((n) => {
 //     //will appear 1000 millseconds after last fire()

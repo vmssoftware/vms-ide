@@ -1,10 +1,15 @@
 
-import {ToOutputChannel} from './output-channel';
-//import {CreateSSHClient} from './create-ssh-client';
-//import {ExecSSHCommand} from './exec-ssh-command';
+import {ToOutputChannel} from "./output-channel";
+// import {CreateSSHClient} from './create-ssh-client';
+// import {ExecSSHCommand} from './exec-ssh-command';
+
+// tslint:disable-next-line:no-console
+let logFn = console.log;
+// tslint:disable-next-line:no-empty
+logFn = () => {};
 
 /** Process DEBUG command
- * 
+ *
  */
 export async function RunDebugCommand() {
     try {
@@ -17,15 +22,11 @@ export async function RunDebugCommand() {
         // }
 
         // sshClient.end();
-    }
-    catch(error) {
+    } catch (error) {
         if (error instanceof Error) {
             ToOutputChannel(error.message);
-        }
-        else {
-            console.log(error);
+        } else {
+            logFn(error);
         }
     }
 }
-
-

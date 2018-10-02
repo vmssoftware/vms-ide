@@ -1,27 +1,33 @@
-import {Client} from 'ssh2';
-import {ClientChannel} from 'ssh2';
+import {Client} from "ssh2";
+import {ClientChannel} from "ssh2";
 
 /** Result of ExecSSHCommand
  */
-type ExecCmdResult = { stdout: string, stderr: string};
+interface IExecCmdResult { stdout: string; stderr: string; }
 
 /** Execute SSH command using given client.
- * 
+ *
  *  @returns [result strings](#ExecCmdResult)
  */
-export function ExecSSHCommand(client : Client, command: string) : Promise<ExecCmdResult> {
-    return new Promise((resolve : (result : ExecCmdResult) => void, reject : (error:Error) => void) => {
-        client.exec(command, (error : Error, stream : ClientChannel) => {
+export function ExecSSHCommand(client: Client, command: string): Promise<IExecCmdResult> {
+    return new Promise((resolve: (result: IExecCmdResult) => void, reject: (error: Error) => void) => {
+        // client.shell((err, channel) => {
+        //     if (err) {
+        //         reject(err);
+        //     } else {
+        //         channel.isPaused
+        //     }
+        // });
+        client.exec(command, (error: Error, stream: ClientChannel) => {
             if (error) {
                 reject(error);
-            }
-            else {
-                let result : ExecCmdResult = {stdout: '', stderr: ''};
-                stream.on('close', (code : any, signal : any) => {
+            } else {
+                const result: IExecCmdResult = {stdout: "", stderr: ""};
+                stream.on("close", (code: any, signal: any) => {
                     resolve(result);
-                }).on('data', function(data : string) {
+                }).on("data", (data: string) => {
                     result.stdout += data;
-                }).stderr.on('data', function(data) {
+                }).stderr.on("data", (data) => {
                     result.stderr += data;
                 });
             }
