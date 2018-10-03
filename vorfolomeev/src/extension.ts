@@ -24,11 +24,11 @@ export async function activate(context: ExtensionContext) {
 
     logFn(localize("extension.activated", "OpenVMS extension is activated"));
 
-    let helper: IConfigHelper | undefined;
+    let configHelper: IConfigHelper | undefined;
     getConfigHelperFromApi().then((helperApi) => {
         if (helperApi) {
-            helper = helperApi.getConfigHelper("open-vms");
-            context.subscriptions.push(helper);
+            configHelper = helperApi.getConfigHelper("open-vms");
+            context.subscriptions.push(configHelper);
         }
     });
 
@@ -38,23 +38,50 @@ export async function activate(context: ExtensionContext) {
         logFn("build start");
         // TestFSSource();
         // await RunBuildCommand();
-        if (helper) {
+        if (configHelper) {
             if (!ssh) {
-                ssh = new SshHelper(helper);
+                ssh = new SshHelper(configHelper);
             }
-            ssh.sendFile(`abcd1.txt`, Buffer.allocUnsafe(100)).then((result) => {
-                ToOutputChannel(`"send" abcd1.txt: ${result}, ${ssh && ssh.lastError ? ssh.lastError : "no errors" }`);
+            ssh.updateContent(`abcd1.txt`, Buffer.allocUnsafe(100)).then((r) => {
+                ToOutputChannel(`"send" abcd1.txt: ${r}, ${(ssh && ssh.lastError) ? ssh.lastError : "no errors" }`);
             });
-            ssh.sendFile(`abcd2.txt`, Buffer.allocUnsafe(100)).then((result) => {
-                ToOutputChannel(`"send" abcd2.txt: ${result}, ${ssh && ssh.lastError ? ssh.lastError : "no errors" }`);
+            ssh.updateContent(`abcd2.txt`, Buffer.allocUnsafe(100)).then((r) => {
+                ToOutputChannel(`"send" abcd2.txt: ${r}, ${(ssh && ssh.lastError) ? ssh.lastError : "no errors" }`);
             });
-            ssh.getFileModTime(`abcd1.txt`).then((result) => {
-                // tslint:disable-next-line:max-line-length
-                ToOutputChannel(`"modTime" abcd1.txt: ${result}, ${ssh && ssh.lastError ? ssh.lastError : "no errors" }`);
+            ssh.getModifiedDate(`abcd1.txt`).then((r) => {
+                ToOutputChannel(`"modTime" abcd1.txt: ${r}, ${(ssh && ssh.lastError) ? ssh.lastError : "no errors" }`);
             });
-            ssh.getFileModTime(`abcd2.txt`).then((result) => {
-                // tslint:disable-next-line:max-line-length
-                ToOutputChannel(`"modTime" abcd2.txt: ${result}, ${ssh && ssh.lastError ? ssh.lastError : "no errors" }`);
+            ssh.executeShellCmd("dir").then((r) => {
+                if (!r) {
+                    ToOutputChannel(`"shellExec" dir: failed: ${ssh ? ssh.lastError : "..."} `);
+                } else {
+                    ToOutputChannel(r.stdout);
+                    if (r.stderr) {
+                        ToOutputChannel(`ERROR: ${r.stderr}`);
+                    }
+                }
+            });
+            ssh.getModifiedDate(`abcd2.txt`).then((r) => {
+                ToOutputChannel(`"modTime" abcd2.txt: ${r}, ${ssh && ssh.lastError ? ssh.lastError : "no errors" }`);
+            });
+            ssh.updateContent(`abcd3.txt`, Buffer.allocUnsafe(100)).then((r) => {
+                ToOutputChannel(`"send" abcd3.txt: ${r}, ${(ssh && ssh.lastError) ? ssh.lastError : "no errors" }`);
+            });
+            ssh.executeCmd("set def [.wrk]").then((r) => {
+                if (!r) {
+                    ToOutputChannel(`"exec" dir: failed: ${ssh ? ssh.lastError : "..."} `);
+                } else {
+                    ToOutputChannel(r.stdout);
+                    if (r.stderr) {
+                        ToOutputChannel(`ERROR: ${r.stderr}`);
+                    }
+                }
+            });
+            ssh.getModifiedDate(`abcd3.txt`).then((r) => {
+                ToOutputChannel(`"modTime" abcd3.txt: ${r}, ${ssh && ssh.lastError ? ssh.lastError : "no errors" }`);
+            });
+            ssh.waitComplete().then((r) => {
+                ToOutputChannel(`"complete" ${(ssh && ssh.lastError) ? ssh.lastError : "no errors" }`);
                 if (ssh) {
                     ssh.dispose();
                     ssh = undefined;
@@ -67,8 +94,8 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push( commands.registerCommand("VMS.editProject", async () => {
         logFn("edit start");
-        if (helper) {
-            const editor = helper.getEditor();
+        if (configHelper) {
+            const editor = configHelper.getEditor();
             await editor.invoke();
         }
         logFn("edit end");
