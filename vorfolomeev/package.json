@@ -44,6 +44,11 @@
                     "default": false,
                     "description": "%properties.common.build-enabled.description%"
                 },
+                "open-vms.shell.ending": {
+                    "type": "string",
+                    "default": "> ",
+                    "description": "%properties.shell.ending.description%"
+                },
                 "open-vms.connection.host": {
                     "type": "string",
                     "default": "host",

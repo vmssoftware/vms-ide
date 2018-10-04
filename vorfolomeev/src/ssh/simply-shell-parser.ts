@@ -1,9 +1,9 @@
 import { IShellParser } from "./shell-parser";
 
 // tslint:disable-next-line:no-console
-const logFn = console.log;
+export let logFn = console.log;
 // tslint:disable-next-line:no-empty
-// logFn = () => {};
+logFn = () => {};
 
 export class SimplyShellParser implements IShellParser {
 

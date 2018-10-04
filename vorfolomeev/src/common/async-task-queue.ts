@@ -6,8 +6,21 @@ export class AsyncTaskQueue {
     protected isRunning: boolean = false;
     protected isStopped: boolean = false;
 
-    public enqueue(task: SimplyFn): void {
-        this.tasks.push(task);
+    public get numTasks(): number {
+        return this.tasks.length;
+    }
+
+    /**
+     * Enqueue task to execute
+     * @param task
+     * @param next to set task in first position
+     */
+    public enqueue(task: SimplyFn, next: boolean = false): void {
+        if (next) {
+            this.tasks.unshift(task);
+        } else {
+            this.tasks.push(task);
+        }
         this.start();
     }
 

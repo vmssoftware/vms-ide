@@ -3,13 +3,7 @@ import * as nls from "vscode-nls";
 import { IUserPasswordHostConfig } from "./host-config";
 const localize = nls.loadMessageBundle();
 
-/**
- * SSH settings helper
- * It uses outer HostConfig implementation to hold/retrieve data
- *
- */
-
-export class SSHSettings implements IUserPasswordHostConfig {
+export class PasswordChecker  {
 
     get host() {
         return this.userPassword.host;

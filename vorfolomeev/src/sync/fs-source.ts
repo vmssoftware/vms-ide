@@ -3,7 +3,7 @@ import { FSSourceFile } from "./fs-source-file";
 import { ISource, ISourceFile } from "./sync";
 
 // tslint:disable-next-line:no-console
-let logFn = console.log;
+export let logFn = console.log;
 // tslint:disable-next-line:no-empty
 logFn = () => {};
 

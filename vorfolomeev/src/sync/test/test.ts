@@ -1,14 +1,17 @@
 import { Disposable, Uri, workspace } from "vscode";
-import { FSSource } from "./fs-source";
-import { ISource, ISourceFile, ISync, ITarget, ITargetFile } from "./sync";
-import { SyncV1 } from "./sync-v1";
+import { IConfigHelper } from "../../ext-api/config";
+import { VmsSshHelper } from "../../vms/vms-ssh-helper";
+import { FSSource } from "../fs-source";
+import { SshTarget } from "../ssh-target";
+import { ISource, ISourceFile, ISync, ITarget, ITargetFile } from "../sync";
+import { SyncV1 } from "../sync-v1";
 
 const date1 = new Date(Date.UTC(2018, 9, 20, 14, 25, 33, 123));
 
 // tslint:disable-next-line:no-console
-const logFn = console.log;
+export let logFn = console.log;
 // tslint:disable-next-line:no-empty
-// logFn = () => {};
+logFn = () => {};
 
 class SourceFileTestV1 implements ISourceFile {
     constructor(public relPath: string) {
@@ -154,4 +157,29 @@ function postFiles(sync: ISync, i: number) {
             postFiles(sync, idx);
         }, Math.random() * 300, i + 1);
     }
+}
+
+export function TestFSSourceVMSTarget(configHelper: IConfigHelper) {
+    const vmsSshHelper = new VmsSshHelper(configHelper);
+    const vmsTarget = new SshTarget(vmsSshHelper);
+    const sync = new SyncV1(vmsTarget);
+
+    let disposables: Disposable[] = [];
+
+    if (workspace.workspaceFolders) {
+        for (const ws of workspace.workspaceFolders) {
+            disposables.push(sync.addSource(new FSSource(ws.uri)));
+        }
+    }
+
+    workspace.findFiles("**/*.{c,cpp,h}").then((uris) => {
+        const allFiles = uris.map((uri) => sync.postFile(uri).then((result) => {
+            logFn(`${uri} is processed: ${result}`);
+        }));
+        Promise.all(allFiles).then(() => {
+            logFn("All done");
+            disposables.forEach((v) => v.dispose());
+            disposables = [];
+        });
+    });
 }

@@ -2,7 +2,7 @@ import { Disposable, Uri } from "vscode";
 import { ISource, ISourceFile, ISync, ITarget } from "./sync";
 
 // tslint:disable-next-line:no-console
-let logFn = console.log;
+export let logFn = console.log;
 // tslint:disable-next-line:no-empty
 logFn = () => {};
 

@@ -9,7 +9,7 @@ import {SendFile} from "./send-file";
 const commandBuilAll = `show time`;
 
 // tslint:disable-next-line:no-console
-let logFn = console.log;
+export let logFn = console.log;
 // tslint:disable-next-line:no-empty
 logFn = () => {};
 

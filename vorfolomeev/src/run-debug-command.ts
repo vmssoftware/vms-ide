@@ -4,7 +4,7 @@ import {ToOutputChannel} from "./output-channel";
 // import {ExecSSHCommand} from './exec-ssh-command';
 
 // tslint:disable-next-line:no-console
-let logFn = console.log;
+export let logFn = console.log;
 // tslint:disable-next-line:no-empty
 logFn = () => {};
 

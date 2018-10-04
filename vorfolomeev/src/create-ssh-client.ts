@@ -3,7 +3,7 @@ import {Client} from "ssh2";
 import * as nls from "vscode-nls";
 import { UserPasswordSection } from "./config/sections/user-password";
 import { IConfigHelper } from "./ext-api/config";
-import { SSHSettings } from "./ssh-settings";
+import { PasswordChecker } from "./password-checker";
 const localize = nls.loadMessageBundle();
 
 const messagePasswordIsEmpty = localize("create_ssh.warning", "Please, enter password.");
@@ -12,11 +12,11 @@ const logCloseErr = localize("create_ssh.closed_err", "Client closed with error"
 const logClose = localize("create_ssh.closed", "Client closed");
 
 const userPasswordSection: UserPasswordSection = new UserPasswordSection();
-const settings: SSHSettings = new SSHSettings(userPasswordSection);
+const passwordChecker: PasswordChecker = new PasswordChecker(userPasswordSection);
 let cfg: IConfigHelper | undefined;
 
 // tslint:disable-next-line:no-console
-let logFn = console.log;
+export let logFn = console.log;
 // tslint:disable-next-line:no-empty
 logFn = () => {};
 
@@ -42,19 +42,19 @@ export function CreateSSHClient()  {
         const client = new Client();
 
         // Allow user to setup password, if it doesn't exist
-        if (!await settings.ensurePassword()) {
+        if (!await passwordChecker.ensurePassword()) {
             reject(new Error(messagePasswordIsEmpty));
             return;
         }
 
         // OnReady
         client.on("ready", () => {
-            settings.didUse(true);
+            passwordChecker.didUse(true);
             resolve(client);
         });
         // OnError
         client.on("error", (error) => {
-            settings.didUse(false);
+            passwordChecker.didUse(false);
             reject(error);
         });
         // OnEnd
@@ -69,7 +69,7 @@ export function CreateSSHClient()  {
                 logFn(logClose);
             }
         });
-        // client.connect(Object.assign({debug: console.log}, _settings));
-        client.connect( settings );
+        // client.connect(Object.assign({debug: console.log}, userPasswordSection));
+        client.connect( userPasswordSection );
     });
 }
