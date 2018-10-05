@@ -1,25 +1,24 @@
 import { Uri } from "vscode";
 
-
-export interface Sync {
-    postFile(uri: Uri): Promise<boolean>
+export interface ISync {
+    postFile(uri: Uri): Promise<boolean>;
 }
 
-export interface Source {
-    accept(uri: Uri) : Promise<SourceFile | undefined>;
+export interface ISource {
+    accept(uri: Uri): Promise<ISourceFile | undefined>;
 }
 
-export interface SourceFile {
+export interface ISourceFile {
     relativePath: string;
     content: Promise<Buffer|undefined>;
     modTime: Promise<Date|undefined>;
 }
 
-export interface Target {
-    test(relativePath: string, modTime: Date): Promise<TargetFile>;
+export interface ITarget {
+    test(relativePath: string, modTime: Date): Promise<ITargetFile>;
 }
 
-export interface TargetFile {
+export interface ITargetFile {
     needUpdate: boolean;
     updateContent(content: Buffer): Promise<boolean>;
 }

@@ -1,54 +1,55 @@
-import { IConfigSection, IConfigData } from "./../../ext-api/config";
-import { UserPasswordHostConfig } from "../../host-config";
 import { isNumber, isString } from "util";
+import { IUserPasswordHostConfig } from "../../host-config";
+import { IConfigData, IConfigSection } from "../config";
 
-export class UserPasswordSection implements IConfigSection, UserPasswordHostConfig {
-    
-    host: string = '';
-    port: number = 22;
-    username: string = '';
-    password: string = '';
+export class UserPasswordSection implements IConfigSection, IUserPasswordHostConfig {
 
-    static is(candidate: any): candidate is UserPasswordHostConfig {
-        return isString(candidate.host) && 
-               isNumber(candidate.port) &&
-               isString(candidate.username) &&
-               isString(candidate.password);
+    public static readonly section = "connection";
+
+    public static is(candidate: any): candidate is IUserPasswordHostConfig {
+        return typeof candidate.host === "string" &&
+               typeof candidate.port === "number" &&
+               typeof candidate.username === "string" &&
+               typeof candidate.password === "string";
     }
 
-    static readonly _section = 'connection';
+    public host: string = "";
+    public port: number = 22;
+    public username: string = "";
+    public password: string = "";
 
-    name(): string {
-        return UserPasswordSection._section;
+    public name(): string {
+        return UserPasswordSection.section;
     }
 
-    store(): IConfigData {
-        //do not store password
-        return { host: this.host, 
-                 port: this.port, 
-                 username: this.username
+    public store(): IConfigData {
+        // do not store password
+        return { host: this.host,
+                 port: this.port,
+                 username: this.username,
             };
     }
 
-    templateToFillFrom(): IConfigData {
-        return { host: '', 
-                 port: 0, 
-                 username: '',
-                 password: ''
+    public templateToFillFrom(): IConfigData {
+        return { host: "",
+                 port: 0,
+                 username: "",
+                 // tslint:disable-next-line:object-literal-sort-keys
+                 password: "",
             };
     }
-    
-    fillFrom(data: IConfigData): boolean {
-        if (typeof data.host === 'string') {
+
+    public fillFrom(data: IConfigData): boolean {
+        if (typeof data.host === "string") {
             this.host = data.host;
         }
-        if (typeof data.port === 'number') {
+        if (typeof data.port === "number") {
             this.port = data.port;
         }
-        if (typeof data.username === 'string') {
+        if (typeof data.username === "string") {
             this.username = data.username;
         }
-        if (typeof data.password === 'string') {
+        if (typeof data.password === "string") {
             this.password = data.password;
         }
         return true;

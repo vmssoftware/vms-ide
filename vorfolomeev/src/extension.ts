@@ -1,64 +1,82 @@
 
-import {commands} from 'vscode';
-import {ExtensionContext} from 'vscode';
-import { InitCfg as FilesToSendInitCfg } from './files-to-send';
-import { InitCfg as ConnectionInitCfg } from './create-ssh-client';
-import { HostCollection } from './config/sections/host-collection';
-import { IConfigHelper } from './ext-api/config';
-import { TestFSSource } from './sync/test';
+import { commands, window } from "vscode";
+import { ExtensionContext } from "vscode";
+import { IConfigHelper } from "./config/config";
+import { GetConfigHelperFromApi } from "./config/get-config-helper";
+import { SyncronizeProject } from "./syncronize";
 
-import * as nls from 'vscode-nls';
+import * as nls from "vscode-nls";
+import { ToOutputChannel } from "./output-channel";
 
-import { getConfigHelperFromApi } from './ext-api/get';
+const localize = nls.config()();
 
-let _localize = nls.config()();
+// tslint:disable-next-line:no-console
+export let logFn = console.log;
+// tslint:disable-next-line:no-empty
+// logFn = () => {};
 
 export async function activate(context: ExtensionContext) {
 
-    console.log(_localize('extension.activated', 'OpenVMS extension is activated'));
+    require("./ssh/ssh-helper").logFn = logFn;
+    require("./ssh/simply-shell-parser").logFn = logFn;
+    require("./sync/sync-impl").logFn = logFn;
+    require("./vms/vms-ssh-helper").logFn = logFn;
+    require("./syncronize").logFn = logFn;
+    require("./sync/fs-source").logFn = logFn;
+    require("./sync/fs-source-file").logFn = logFn;
 
-    let helper: IConfigHelper | undefined = undefined;
-    getConfigHelperFromApi().then((helperApi) => {
+    logFn(localize("extension.activated", "OpenVMS extension is activated"));
+
+    let configHelper: IConfigHelper | undefined;
+    GetConfigHelperFromApi().then((helperApi) => {
         if (helperApi) {
-            
-            helper = helperApi.getConfigHelper('open-vms');
-
-            const config = helper.getConfig();
-            config.add(new HostCollection());
-
-            FilesToSendInitCfg(helper).then(() => {
-                console.log('FilesToSendInitCfg configured');
-            });
-        
-            //test full path to Config object
-            ConnectionInitCfg(helper).then(() => {
-                console.log('ConnectionInitCfg configured');
-            });
-
-            context.subscriptions.push(helper);        
+            configHelper = helperApi.getConfigHelper("open-vms");
+            context.subscriptions.push(configHelper);
         }
     });
 
-    context.subscriptions.push( commands.registerCommand('VMS.buildProject', async () => {
-        console.log('build start');
-        TestFSSource();
-        //await RunBuildCommand();
-        console.log('build end');
-    }));
-
-    context.subscriptions.push( commands.registerCommand('VMS.editProject', async () => {
-        console.log('edit start');
-        if (helper) {
-            let _editor = helper.getEditor();
-            await _editor.invoke();
+    let syncInProgress = false;
+    context.subscriptions.push( commands.registerCommand("VMS.syncProject", async () => {
+        logFn("sync start");
+        if (configHelper) {
+            if (syncInProgress) {
+                window.showInformationMessage("Syncronization in progress");
+            } else {
+                syncInProgress = true;
+                SyncronizeProject(configHelper).then((result) => {
+                    if (result) {
+                        ToOutputChannel(`Syncronization: sent ${result.sent ? result.sent : "none"} of ${result.all}`);
+                    } else {
+                        ToOutputChannel(`Syncronization: failed`);
+                    }
+                    syncInProgress = false;
+                });
+            }
         }
-        console.log('edit end');
+        logFn("sync end");
     }));
 
-    console.log('activation end');
+    context.subscriptions.push( commands.registerCommand("VMS.buildProject", async () => {
+        logFn("build start");
+        if (configHelper) {
+            // BuildProject(configHelper);
+        }
+        logFn("build end");
+    }));
+
+    context.subscriptions.push( commands.registerCommand("VMS.editProject", async () => {
+        logFn("edit start");
+        if (configHelper) {
+            const editor = configHelper.getEditor();
+            await editor.invoke();
+        }
+        logFn("edit end");
+    }));
+
+    logFn("activation end");
 }
 
 // this method is called when your extension is deactivated
+// tslint:disable-next-line:no-empty
 export function deactivate() {
-
 }

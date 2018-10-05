@@ -12,6 +12,7 @@
     ],
     "activationEvents": [
         "onCommand:VMS.buildProject",
+        "onCommand:VMS.syncProject",
         "onCommand:VMS.editProject"
     ],
     "main": "./out/extension",
@@ -31,6 +32,11 @@
                 "category": "%command.category%"
             },
             {
+                "command": "VMS.syncProject",
+                "title": "%command.syncProject.title%",
+                "category": "%command.category%"
+            },
+            {
                 "command": "VMS.editProject",
                 "title": "%command.editProject.title%",
                 "category": "%command.category%"
@@ -43,6 +49,11 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%properties.common.build-enabled.description%"
+                },
+                "open-vms.shell.ending": {
+                    "type": "string",
+                    "default": "> ",
+                    "description": "%properties.shell.ending.description%"
                 },
                 "open-vms.connection.host": {
                     "type": "string",
@@ -110,6 +121,7 @@
         "fast-glob": "^2.2.2",
         "fs": "0.0.1-security",
         "ssh2": "^0.6.1",
+        "tslint": "^5.11.0",
         "util": "^0.11.0",
         "vscode": "^1.1.21",
         "vscode-nls": "^4.0.0"
