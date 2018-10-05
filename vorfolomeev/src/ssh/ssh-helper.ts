@@ -23,7 +23,7 @@ export interface IExecutionResult {
     stderr?: string;
 }
 
-export interface ISshSettings {
+export interface ISshHelperSettings {
     host?: string;
     port?: number;
     username?: string;
@@ -54,7 +54,7 @@ export class SshHelper implements ISshHelper {
 
     constructor(private configHelper: IConfigHelper,
                 pathConverter?: IPathConverter,
-                private override?: ISshSettings) {
+                private override?: ISshHelperSettings) {
         this.pathConverter = pathConverter || new FsPathConverter();
     }
 

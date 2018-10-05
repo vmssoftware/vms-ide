@@ -1,6 +1,4 @@
-import { IConfigHelper } from "../config/config";
 import { ISshHelper } from "../ssh/ssh-helper";
-import { VmsSshHelper } from "../vms/vms-ssh-helper";
 import { DummyTargetFile } from "./dummy-target-file";
 import { SshTargetFile } from "./ssh-target-file";
 import { ITarget, ITargetFile } from "./sync";

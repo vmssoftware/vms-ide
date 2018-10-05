@@ -100,6 +100,31 @@
                         }
                     ],
                     "description": "array of hosts"
+                },
+                "open-vms.project.root": {
+                    "type": "string",
+                    "default": "project",
+                    "description": "%properties.project.root.description%"
+                },
+                "open-vms.project.exclude": {
+                    "type": "string",
+                    "default": "**/{.vscode,node-modules}/*.*",
+                    "description": "%properties.project.exclude.description%"
+                },
+                "open-vms.project.source": {
+                    "type": "string",
+                    "default": "*.{c,cpp}",
+                    "description": "%properties.project.source.description%"
+                },
+                "open-vms.project.headers": {
+                    "type": "string",
+                    "default": "*.{h,hpp}",
+                    "description": "%properties.project.headers.description%"
+                },
+                "open-vms.project.resource": {
+                    "type": "string",
+                    "default": "*.*",
+                    "description": "%properties.project.resource.description%"
                 }
             }
         }
