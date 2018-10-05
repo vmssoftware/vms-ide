@@ -1,6 +1,6 @@
 import { isNumber, isString } from "util";
 import { IUserPasswordHostConfig } from "../../host-config";
-import { IConfigData, IConfigSection } from "./../../ext-api/config";
+import { IConfigData, IConfigSection } from "../config";
 
 export class UserPasswordSection implements IConfigSection, IUserPasswordHostConfig {
 

@@ -1,8 +1,8 @@
 
 import { commands, window } from "vscode";
 import { ExtensionContext } from "vscode";
-import { IConfigHelper } from "./ext-api/config";
-import { GetConfigHelperFromApi } from "./ext-api/get";
+import { IConfigHelper } from "./config/config";
+import { GetConfigHelperFromApi } from "./config/get-config-helper";
 import { SyncronizeProject } from "./syncronize";
 
 import * as nls from "vscode-nls";
@@ -17,11 +17,13 @@ export let logFn = console.log;
 
 export async function activate(context: ExtensionContext) {
 
-    // require("./ssh/ssh-helper").logFn = logFn;
-    // require("./ssh/simply-shell-parser").logFn = logFn;
-    // require("./sync/sync-v1").logFn = logFn;
-    // require("./sync/test/test").logFn = logFn;
-    // require("./vms/vms-ssh-helper").logFn = logFn;
+    require("./ssh/ssh-helper").logFn = logFn;
+    require("./ssh/simply-shell-parser").logFn = logFn;
+    require("./sync/sync-impl").logFn = logFn;
+    require("./vms/vms-ssh-helper").logFn = logFn;
+    require("./syncronize").logFn = logFn;
+    require("./sync/fs-source").logFn = logFn;
+    require("./sync/fs-source-file").logFn = logFn;
 
     logFn(localize("extension.activated", "OpenVMS extension is activated"));
 

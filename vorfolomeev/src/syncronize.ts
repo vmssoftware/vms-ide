@@ -1,5 +1,5 @@
 import { Disposable, workspace } from "vscode";
-import { IConfigHelper } from "./ext-api/config";
+import { IConfigHelper } from "./config/config";
 import { FSSource } from "./sync/fs-source";
 import { SshTarget } from "./sync/ssh-target";
 import { SyncImplement } from "./sync/sync-impl";
@@ -57,6 +57,7 @@ export async function SyncronizeProject(configHelper: IConfigHelper) {
                 }, ret);
                 resolve(ret);
             }).catch((err) => {
+                logFn(`Failed: ${err}`);
                 resolve(undefined);
             });
         });

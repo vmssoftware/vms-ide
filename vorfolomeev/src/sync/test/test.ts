@@ -1,5 +1,5 @@
 import { Disposable, Uri, workspace } from "vscode";
-import { IConfigHelper } from "../../ext-api/config";
+import { IConfigHelper } from "../../config/config";
 import { VmsSshHelper } from "../../vms/vms-ssh-helper";
 import { FSSource } from "../fs-source";
 import { SshTarget } from "../ssh-target";

@@ -1,11 +1,11 @@
-import { isString } from "util";
-import { IConfigData, IConfigSection } from "../../ext-api/config";
+
+import { IConfigData, IConfigSection } from "../config";
 import { UserPasswordSection } from "./user-password";
 
 export class LabeledUserPasswordSection extends UserPasswordSection {
 
     public static is(candidate: any): candidate is LabeledUserPasswordSection {
-        return isString(candidate.label) && UserPasswordSection.is(candidate);
+        return typeof candidate.label === "string" && UserPasswordSection.is(candidate);
     }
 
     public label: string = "";

@@ -1,12 +1,13 @@
 import { Client, ClientChannel, PseudoTtyOptions, SFTPWrapper} from "ssh2";
 import { InputAttributes, Stats } from "ssh2-streams";
-import { Disposable } from "vscode";
 import { AsyncTaskQueue } from "../common/async-task-queue";
+import { IConfigHelper } from "../config/config";
 import { ShellSection } from "../config/sections/shell";
 import { UserPasswordSection } from "../config/sections/user-password";
-import { IConfigHelper } from "../ext-api/config";
 import { IUserPasswordHostConfig } from "../host-config";
 import { PasswordChecker } from "../password-checker";
+import { FsPathConverter } from "./fs-path-converter";
+import { IPathConverter } from "./path-converter";
 import { IShellParser } from "./shell-parser";
 import { SimplyShellParser } from "./simply-shell-parser";
 
@@ -34,12 +35,11 @@ export interface ISshHelper {
     lastError: any;
     dispose(): Promise<boolean>;
     waitComplete(): Promise<boolean>;
-    executeShellCmd(cmd: string, parser?: IShellParser | undefined): Promise<IExecutionResult | undefined>;
-    executeCmd(cmd: string, next?: boolean): Promise<IExecutionResult|undefined>;
-    getModifiedTime(relPath: string): Promise<Date | undefined>;
-    setModifiedTime(relPath: string, date: Date): Promise<boolean>;
-    updateContent(relPath: string, buffer: Buffer): Promise<boolean>;
-    ensurePath(relPath: string): Promise<boolean>;
+    executeShellCmd(cmd: string, parser?: IShellParser, asap?: boolean): Promise<IExecutionResult|undefined>;
+    executeCmd(cmd: string, asap?: boolean): Promise<IExecutionResult|undefined>;
+    getModifiedTime(relPath: string, asap?: boolean): Promise<Date | undefined>;
+    setModifiedTime(relPath: string, date: Date, asap?: boolean): Promise<boolean>;
+    updateContent(relPath: string, buffer: Buffer, asap?: boolean): Promise<boolean>;
 }
 
 export class SshHelper implements ISshHelper {
@@ -49,11 +49,13 @@ export class SshHelper implements ISshHelper {
     private client: Client | undefined;
     private channel: ClientChannel | undefined;
     private sftp: SFTPWrapper | undefined;
-
+    private pathConverter: IPathConverter;
     private taskQueue: AsyncTaskQueue = new AsyncTaskQueue();
 
-    constructor(private configHelper: IConfigHelper, private override?: ISshSettings) {
-
+    constructor(private configHelper: IConfigHelper,
+                pathConverter?: IPathConverter,
+                private override?: ISshSettings) {
+        this.pathConverter = pathConverter || new FsPathConverter();
     }
 
     public dispose(): Promise<boolean> {
@@ -64,6 +66,9 @@ export class SshHelper implements ISshHelper {
         });
     }
 
+    /**
+     * Wait while queue isn't empty
+     */
     public waitComplete(): Promise<boolean> {
         return new Promise<boolean>(async (resolve) => {
             this.taskQueue.enqueue( async () => {
@@ -72,100 +77,142 @@ export class SshHelper implements ISshHelper {
         });
     }
 
-    // tslint:disable-next-line:max-line-length
-    public executeShellCmd(cmd: string, parser?: IShellParser, next: boolean = false): Promise<IExecutionResult|undefined> {
+    /**
+     * Execute cmd in shell
+     * @param cmd command to execute
+     * @param parser custom pareser
+     * @param asap as soon as possible
+     */
+    public executeShellCmd(cmd: string, parser?: IShellParser, asap: boolean = false)
+        : Promise<IExecutionResult|undefined> {
         return new Promise<IExecutionResult|undefined>(async (resolve) => {
             this.taskQueue.enqueue( async () => {
                 this.lastError = undefined;
                 const retCode = await this.ensureShell();
                 if (!retCode || !this.channel ) {
-                    logFn(`executeShellCmd: failed shell: ${this.lastError} of ${cmd}`);
+                    logFn(`executeShellCmd: failed shell: ${cmd} => ${this.lastError}`);
                     resolve(undefined);
                 } else {
                     const result = await this.shellExec(cmd, parser);
                     logFn(`executeShellCmd: ok : ${cmd}`);
                     resolve(result);
                 }
-            });
+            }, asap);
         });
     }
 
-    public executeCmd(cmd: string, next: boolean = false): Promise<IExecutionResult|undefined> {
+    /**
+     * Execuet command and close connection (no shell)
+     * @param cmd command
+     * @param asap as soon as posiible
+     */
+    public executeCmd(cmd: string, asap: boolean = false): Promise<IExecutionResult|undefined> {
         return new Promise<IExecutionResult|undefined>(async (resolve) => {
             this.taskQueue.enqueue( async () => {
                 this.lastError = undefined;
                 const retCode = await this.ensureConnection();
                 if (!retCode || !this.client ) {
-                    logFn(`executeCmd: failed exec: ${this.lastError} of ${cmd}`);
+                    logFn(`executeCmd: failed exec: ${cmd} => ${this.lastError}`);
                     resolve(undefined);
                 } else {
                     const result = await this.cmdExec(cmd);
                     logFn(`executeCmd: ok: ${cmd}`);
                     resolve(result);
                 }
-            }, next);
+            }, asap);
         });
     }
 
-    public getModifiedTime(relPath: string): Promise<Date|undefined> {
+    /**
+     * Get file modification time
+     * @param relPath relative path
+     * @param asap as soon as possible
+     */
+    public getModifiedTime(relPath: string, asap: boolean = false): Promise<Date|undefined> {
         return new Promise<Date|undefined>(async (resolve) => {
             this.taskQueue.enqueue( async () => {
                 this.lastError = undefined;
                 const retCode = await this.ensureSftp();
                 if (!retCode || !this.sftp ) {
-                    logFn(`getFileModTime: failed sftp: ${this.lastError} of ${relPath}`);
+                    logFn(`getFileModTime: failed sftp: ${relPath} => ${this.lastError}`);
                     resolve(undefined);
                 } else {
-                    const stats = await this.sftpStats(relPath);
+                    const converted = this.pathConverter.from(relPath).fullPath;
+                    const stats = await this.sftpStats(converted);
                     if (!stats) {
-                        logFn(`getFileModTime: failed: ${this.lastError}`);
+                        logFn(`getFileModTime: failed: ${relPath} => ${this.lastError}`);
                         resolve(undefined);
                     } else {
-                        const date = new Date(stats.mtime * 1000);  // mtime in seconds
+                        const date = new Date(stats.mtime);
                         logFn(`getFileModTime: ok: ${date}`);
                         resolve(date);
                     }
                 }
-            });
+            }, asap);
         });
     }
 
-    public setModifiedTime(relPath: string, date: Date): Promise<boolean> {
+    /**
+     * Set modification file time
+     * @param relPath relative path
+     * @param date date to set
+     * @param asap as soon as posiible
+     */
+    public setModifiedTime(relPath: string, date: Date, asap: boolean = false): Promise<boolean> {
         return new Promise<boolean>(async (resolve) => {
             this.taskQueue.enqueue( async () => {
                 this.lastError = undefined;
                 let retCode = await this.ensureSftp();
                 if (!retCode || !this.sftp ) {
-                    logFn(`getFileModTime: failed sftp: ${this.lastError} of ${relPath}`);
+                    logFn(`getFileModTime: failed sftp: ${relPath} => ${this.lastError}`);
                     resolve(undefined);
                 } else {
-                    // const dateNum = Math.floor(date.valueOf() / 1000);
                     const attr: InputAttributes = { atime: date, mtime: date};
-                    retCode = await this.sftpSetStats(relPath, attr);
+                    const converted = this.pathConverter.from(relPath).fullPath;
+                    retCode = await this.sftpSetStats(converted, attr);
                     logFn(`getFileModTime: ok: ${date}`);
                     resolve(retCode);
                 }
-            });
+            }, asap);
         });
     }
 
-    public updateContent(relPath: string, buffer: Buffer): Promise<boolean> {
+    /**
+     * Update file content. Also create directory if need.
+     * @param relPath relative path
+     * @param buffer buffer to send
+     * @param asap as soon as possible
+     */
+    public updateContent(relPath: string, buffer: Buffer, asap: boolean = false): Promise<boolean> {
         return new Promise<boolean>(async (resolve) => {
             this.taskQueue.enqueue( async () => {
                 this.lastError = undefined;
                 let retCode = await this.ensureSftp();
                 if (!retCode || !this.sftp ) {
-                    logFn(`sendFile: failed sftp: ${this.lastError} of ${relPath}`);
+                    logFn(`sendFile: failed sftp: ${relPath} => ${this.lastError}`);
                     resolve(false);
                 } else {
-                    const handle = await this.sftpOpen(relPath);
+                    // ensure directory
+                    const converted = this.pathConverter.from(relPath);
+                    const dir = converted.directory;
+                    const stats = await this.sftpStats(dir);
+                    if (!stats) {
+                        // create directory
+                        const result = await this.sftpMkDir(dir);
+                        if (!result) {
+                            logFn(`sendFile: failed create directory for: ${relPath} => ${this.lastError}`);
+                            resolve(false);
+                            return;
+                        }
+                    }
+                    const handle = await this.sftpOpen(converted.fullPath);
                     if (!handle || !handle.length) {
-                        logFn(`sendFile: failed open: ${this.lastError} of ${relPath}`);
+                        logFn(`sendFile: failed open: ${relPath} => ${this.lastError}`);
                         resolve(false);
                     } else {
                         retCode = await this.sftpWrite(handle, buffer);
                         if (!retCode) {
-                            logFn(`sendFile: failed write: ${this.lastError} of ${relPath}`);
+                            logFn(`sendFile: failed write: ${relPath} => ${this.lastError}`);
                             resolve(false);
                         } else {
                             retCode = await this.sftpClose(handle);
@@ -173,33 +220,7 @@ export class SshHelper implements ISshHelper {
                         }
                     }
                 }
-            });
-        });
-    }
-
-    /**
-     * Tset if directory exists and create it if it does not
-     * @param relPath relative directory
-     */
-    public ensurePath(relPath: string): Promise<boolean> {
-        return new Promise<boolean>(async (resolve) => {
-            this.taskQueue.enqueue( async () => {
-                this.lastError = undefined;
-                const retCode = await this.ensureSftp();
-                if (!retCode || !this.sftp ) {
-                    logFn(`ensurePath: failed sftp: ${this.lastError} of ${relPath}`);
-                    resolve(false);
-                } else {
-                    const stats = await this.sftpStats(relPath);
-                    if (stats) {
-                        resolve(true);
-                        return;
-                    }
-                    // create directory
-                    const result = await this.sftpMkDir(relPath);
-                    resolve(result);
-                }
-            });
+            }, asap);
         });
     }
 
@@ -277,7 +298,7 @@ export class SshHelper implements ISshHelper {
                         if (typeof data === "string") {
                             logFn(`ERR: ${data}`);
                             if (parser.onDataErr(data)) {
-                                logFn(`createShell: failed`);
+                                logFn(`createShell: failed => ${data}`);
                                 channelRet.removeAllListeners("data");
                                 channelRet.stderr.removeAllListeners("data");
                                 resolve(false);
@@ -557,7 +578,7 @@ export class SshHelper implements ISshHelper {
             if (!this.channel) {
                 resolve(undefined);
                 this.lastError = new Error("No channel");
-                logFn(`shellExec: failed: ${this.lastError}`);
+                logFn(`shellExec: failed: ${cmd} => ${this.lastError}`);
                 return;
             }
             const channel = this.channel;
@@ -607,14 +628,14 @@ export class SshHelper implements ISshHelper {
     private cmdExecutor(resolve: Resolve<IExecutionResult|undefined>, cmd: string): void {
         if (!this.client) {
             this.lastError = new Error("No client");
-            logFn(`cmdExec: failed: ${this.lastError}`);
+            logFn(`cmdExec: failed: ${cmd} => ${this.lastError}`);
             resolve(undefined);
             return;
         }
         if (!this.client.exec(cmd, (err, channel) => {
             if (err) {
                 this.lastError = err;
-                logFn(`cmdExec: exec failed: ${this.lastError}`);
+                logFn(`cmdExec: exec failed: ${cmd} => ${this.lastError}`);
                 resolve(undefined);
             } else {
                 const parser = new SimplyShellParser("> ");

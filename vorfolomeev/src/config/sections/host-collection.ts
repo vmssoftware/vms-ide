@@ -1,7 +1,6 @@
-import { isString } from "util";
-import { IConfigData, IConfigSection } from "./../../ext-api/config";
+
+import { IConfigData, IConfigSection } from "../config";
 import { LabeledUserPasswordSection } from "./labeled-user-password";
-import { UserPasswordSection } from "./user-password";
 
 export class HostCollection implements IConfigSection {
 

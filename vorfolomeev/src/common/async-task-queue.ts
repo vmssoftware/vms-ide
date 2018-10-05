@@ -13,10 +13,10 @@ export class AsyncTaskQueue {
     /**
      * Enqueue task to execute
      * @param task
-     * @param next to set task in first position
+     * @param asap to set task in first position
      */
-    public enqueue(task: SimplyFn, next: boolean = false): void {
-        if (next) {
+    public enqueue(task: SimplyFn, asap: boolean = false): void {
+        if (asap) {
             this.tasks.unshift(task);
         } else {
             this.tasks.push(task);

@@ -1,4 +1,4 @@
-import { IConfigData, IConfigSection } from "./../../ext-api/config";
+import { IConfigData, IConfigSection } from "../config";
 
 export class FilterSection implements IConfigSection {
 

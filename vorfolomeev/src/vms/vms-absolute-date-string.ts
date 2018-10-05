@@ -1,5 +1,5 @@
 
-export function Date2VmsAbsDateStr(date: Date, locale: string = "en-US"): string {
+export function VmsAbsoluteDateString(date: Date, locale: string = "en-US"): string {
     const f = new Intl.DateTimeFormat(locale, {month: "short"});
     const day = date.getUTCDate().toString(10).padStart(2, "0");
     const month = f.format(date);

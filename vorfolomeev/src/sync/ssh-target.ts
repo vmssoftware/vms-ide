@@ -1,4 +1,4 @@
-import { IConfigHelper } from "../ext-api/config";
+import { IConfigHelper } from "../config/config";
 import { ISshHelper } from "../ssh/ssh-helper";
 import { VmsSshHelper } from "../vms/vms-ssh-helper";
 import { DummyTargetFile } from "./dummy-target-file";
