@@ -6,7 +6,7 @@ export let logFn = console.log;
 // tslint:disable-next-line:no-empty
 logFn = () => {};
 
-export class SyncV1 implements ISync {
+export class SyncImplement implements ISync {
 
     protected sources: ISource[] = [];
 
@@ -55,7 +55,10 @@ export class SyncV1 implements ISync {
                             const content = await sourceFile.content;
                             if (content) {
                                 retCode = await targetFile.updateContent(content);
+                                logFn(`Updated: ${sourceFile.relativePath}`);
                             }
+                        } else {
+                            logFn(`The same: ${sourceFile.relativePath}`);
                         }
                     }
                 } catch (err) {

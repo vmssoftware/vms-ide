@@ -4,7 +4,7 @@ import { VmsSshHelper } from "../../vms/vms-ssh-helper";
 import { FSSource } from "../fs-source";
 import { SshTarget } from "../ssh-target";
 import { ISource, ISourceFile, ISync, ITarget, ITargetFile } from "../sync";
-import { SyncV1 } from "../sync-v1";
+import { SyncImplement } from "../sync-impl";
 
 const date1 = new Date(Date.UTC(2018, 9, 20, 14, 25, 33, 123));
 
@@ -105,7 +105,7 @@ const files: string[] = [
 
 export function TestTargetTestV1() {
     const tt1 = new TargetTestV1();
-    const sync = new SyncV1(tt1);
+    const sync = new SyncImplement(tt1);
 
     for (const src of sources) {
         sync.addSource(new SourceTestV1(Uri.parse(src)));
@@ -121,7 +121,7 @@ export function TestTargetTestV1() {
 
 export function TestFSSource() {
     const tt1 = new TargetTestV1();
-    const sync = new SyncV1(tt1);
+    const sync = new SyncImplement(tt1);
 
     let disposables: Disposable[] = [];
 
@@ -159,21 +159,26 @@ function postFiles(sync: ISync, i: number) {
     }
 }
 
+let syncMaster: SyncImplement | undefined;
+
 export function TestFSSourceVMSTarget(configHelper: IConfigHelper) {
-    const vmsSshHelper = new VmsSshHelper(configHelper);
-    const vmsTarget = new SshTarget(vmsSshHelper);
-    const sync = new SyncV1(vmsTarget);
+
+    if (!syncMaster) {
+        const vmsSshHelper = new VmsSshHelper(configHelper);
+        const vmsTarget = new SshTarget(vmsSshHelper);
+        syncMaster = new SyncImplement(vmsTarget);
+    }
 
     let disposables: Disposable[] = [];
 
     if (workspace.workspaceFolders) {
         for (const ws of workspace.workspaceFolders) {
-            disposables.push(sync.addSource(new FSSource(ws.uri)));
+            disposables.push(syncMaster.addSource(new FSSource(ws.uri)));
         }
     }
 
     workspace.findFiles("**/*.{c,cpp,h}").then((uris) => {
-        const allFiles = uris.map((uri) => sync.postFile(uri).then((result) => {
+        const allFiles = uris.map((uri) => syncMaster!.postFile(uri).then((result) => {
             logFn(`${uri} is processed: ${result}`);
         }));
         Promise.all(allFiles).then(() => {

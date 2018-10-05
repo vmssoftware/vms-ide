@@ -12,6 +12,7 @@
     ],
     "activationEvents": [
         "onCommand:VMS.buildProject",
+        "onCommand:VMS.syncProject",
         "onCommand:VMS.editProject"
     ],
     "main": "./out/extension",
@@ -28,6 +29,11 @@
             {
                 "command": "VMS.buildProject",
                 "title": "%command.buildProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "VMS.syncProject",
+                "title": "%command.syncProject.title%",
                 "category": "%command.category%"
             },
             {

@@ -1,5 +1,5 @@
 import { Client, ClientChannel, PseudoTtyOptions, SFTPWrapper} from "ssh2";
-import { InputAttributes } from "ssh2-streams";
+import { InputAttributes, Stats } from "ssh2-streams";
 import { Disposable } from "vscode";
 import { AsyncTaskQueue } from "../common/async-task-queue";
 import { ShellSection } from "../config/sections/shell";
@@ -35,10 +35,11 @@ export interface ISshHelper {
     dispose(): Promise<boolean>;
     waitComplete(): Promise<boolean>;
     executeShellCmd(cmd: string, parser?: IShellParser | undefined): Promise<IExecutionResult | undefined>;
-    executeCmd(cmd: string): Promise<IExecutionResult | undefined>;
+    executeCmd(cmd: string, next?: boolean): Promise<IExecutionResult|undefined>;
     getModifiedTime(relPath: string): Promise<Date | undefined>;
     setModifiedTime(relPath: string, date: Date): Promise<boolean>;
     updateContent(relPath: string, buffer: Buffer): Promise<boolean>;
+    ensurePath(relPath: string): Promise<boolean>;
 }
 
 export class SshHelper implements ISshHelper {
@@ -71,7 +72,8 @@ export class SshHelper implements ISshHelper {
         });
     }
 
-    public executeShellCmd(cmd: string, parser?: IShellParser): Promise<IExecutionResult|undefined> {
+    // tslint:disable-next-line:max-line-length
+    public executeShellCmd(cmd: string, parser?: IShellParser, next: boolean = false): Promise<IExecutionResult|undefined> {
         return new Promise<IExecutionResult|undefined>(async (resolve) => {
             this.taskQueue.enqueue( async () => {
                 this.lastError = undefined;
@@ -81,6 +83,7 @@ export class SshHelper implements ISshHelper {
                     resolve(undefined);
                 } else {
                     const result = await this.shellExec(cmd, parser);
+                    logFn(`executeShellCmd: ok : ${cmd}`);
                     resolve(result);
                 }
             });
@@ -93,7 +96,7 @@ export class SshHelper implements ISshHelper {
                 this.lastError = undefined;
                 const retCode = await this.ensureConnection();
                 if (!retCode || !this.client ) {
-                    logFn(`executeCmd: failed shell: ${this.lastError} of ${cmd}`);
+                    logFn(`executeCmd: failed exec: ${this.lastError} of ${cmd}`);
                     resolve(undefined);
                 } else {
                     const result = await this.cmdExec(cmd);
@@ -113,11 +116,12 @@ export class SshHelper implements ISshHelper {
                     logFn(`getFileModTime: failed sftp: ${this.lastError} of ${relPath}`);
                     resolve(undefined);
                 } else {
-                    const date = await this.sftpGetModTime(relPath);
-                    if (!date) {
+                    const stats = await this.sftpStats(relPath);
+                    if (!stats) {
                         logFn(`getFileModTime: failed: ${this.lastError}`);
                         resolve(undefined);
                     } else {
+                        const date = new Date(stats.mtime * 1000);  // mtime in seconds
                         logFn(`getFileModTime: ok: ${date}`);
                         resolve(date);
                     }
@@ -135,7 +139,9 @@ export class SshHelper implements ISshHelper {
                     logFn(`getFileModTime: failed sftp: ${this.lastError} of ${relPath}`);
                     resolve(undefined);
                 } else {
-                    retCode = await this.sftpSetModTime(relPath, date);
+                    // const dateNum = Math.floor(date.valueOf() / 1000);
+                    const attr: InputAttributes = { atime: date, mtime: date};
+                    retCode = await this.sftpSetStats(relPath, attr);
                     logFn(`getFileModTime: ok: ${date}`);
                     resolve(retCode);
                 }
@@ -166,6 +172,32 @@ export class SshHelper implements ISshHelper {
                             resolve(retCode);
                         }
                     }
+                }
+            });
+        });
+    }
+
+    /**
+     * Tset if directory exists and create it if it does not
+     * @param relPath relative directory
+     */
+    public ensurePath(relPath: string): Promise<boolean> {
+        return new Promise<boolean>(async (resolve) => {
+            this.taskQueue.enqueue( async () => {
+                this.lastError = undefined;
+                const retCode = await this.ensureSftp();
+                if (!retCode || !this.sftp ) {
+                    logFn(`ensurePath: failed sftp: ${this.lastError} of ${relPath}`);
+                    resolve(false);
+                } else {
+                    const stats = await this.sftpStats(relPath);
+                    if (stats) {
+                        resolve(true);
+                        return;
+                    }
+                    // create directory
+                    const result = await this.sftpMkDir(relPath);
+                    resolve(result);
                 }
             });
         });
@@ -227,6 +259,11 @@ export class SshHelper implements ISshHelper {
                             if (parser.onData(data)) {
                                 logFn(`createShell: ok`);
                                 this.channel = channelRet;
+                                // send one command and close connection
+                                this.channel.on("close", () => {
+                                    logFn(`shell: closed`);
+                                    this.channel = undefined;
+                                });
                                 channelRet.removeAllListeners("data");
                                 channelRet.stderr.removeAllListeners("data");
                                 resolve(true);
@@ -241,6 +278,8 @@ export class SshHelper implements ISshHelper {
                             logFn(`ERR: ${data}`);
                             if (parser.onDataErr(data)) {
                                 logFn(`createShell: failed`);
+                                channelRet.removeAllListeners("data");
+                                channelRet.stderr.removeAllListeners("data");
                                 resolve(false);
                             }
                         }
@@ -253,6 +292,7 @@ export class SshHelper implements ISshHelper {
     private stopShell(): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
             if (this.channel) {
+                logFn(`Shell was created and now it is ended.`);
                 this.channel.end(() => {
                     resolve(true);
                 });
@@ -264,7 +304,7 @@ export class SshHelper implements ISshHelper {
 
     private ensureSftp(): Promise<boolean> {
         if (this.sftp) {
-            logFn(`ensureSftp: already`);
+            logFn(`ensureSftp: already created`);
             return Promise.resolve(true);
         }
         return this.createSFTP();
@@ -306,6 +346,7 @@ export class SshHelper implements ISshHelper {
     private stopSftp(): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
             if (this.sftp) {
+                logFn(`SFTP was created and now it is stopped.`);
                 this.sftp.end();
             }
             resolve(true);
@@ -488,37 +529,6 @@ export class SshHelper implements ISshHelper {
         });
     }
 
-    private sftpGetModTimeExecutor(resolve: Resolve<Date|undefined>, relPath: string): void {
-        if (!this.sftp) {
-            this.lastError = new Error("No sftp");
-            logFn(`sftpGetModTime: no sftp`);
-            resolve(undefined);
-            return;
-        }
-        if (!this.sftp.stat(relPath, (err, stats) => {
-            if (err) {
-                this.lastError = err;
-                resolve(undefined);
-                return;
-            }
-            const date = new Date(stats.mtime * 1000);  // mtime in seconds
-            resolve(date);
-            // logFn(`sftpGetModTime: ok ${date}`);
-        })) {
-            // execute later on "continue" event
-            logFn(`sftpGetModTime: wait`);
-            this.sftp.once("continue", () => {
-                this.sftpGetModTimeExecutor(resolve, relPath);
-            });
-        }
-    }
-
-    private sftpGetModTime(relPath: string): Promise<Date|undefined> {
-        return new Promise<Date|undefined>((resolve) => {
-            this.sftpGetModTimeExecutor(resolve, relPath);
-        });
-    }
-
     /**
      * From config
      */
@@ -562,11 +572,6 @@ export class SshHelper implements ISshHelper {
                     if (shellParser instanceof SimplyShellParser) {
                         result = shellParser;
                     }
-                    // send one command and close connection
-                    channel.on("close", () => {
-                        resolve(result);
-                        logFn(`shellExec: closed`);
-                    });
                     channel.on("data", (data: any) => {
                         if (Buffer.isBuffer(data)) {
                             data = data.toString("utf8");
@@ -613,7 +618,7 @@ export class SshHelper implements ISshHelper {
                 resolve(undefined);
             } else {
                 const parser = new SimplyShellParser("> ");
-                // send one command and close connection
+                // send one command and this channel will be closed
                 channel.on("close", () => {
                     resolve(parser);
                     logFn(`cmdExec: closed`);
@@ -642,7 +647,7 @@ export class SshHelper implements ISshHelper {
                 });
             }
         })) {
-            logFn(`sftpGetModTime: wait`);
+            logFn(`cmdExec: wait`);
             this.client.once("continue", () => {
                 this.cmdExecutor(resolve, cmd);
             });
@@ -655,16 +660,14 @@ export class SshHelper implements ISshHelper {
         });
     }
 
-    private sftpSetModTimeExecutor(resolve: Resolve<boolean>, relPath: string, date: Date): void {
+    private sftpSetStatsExecutor(resolve: Resolve<boolean>, relPath: string, stats: InputAttributes): void {
         if (!this.sftp) {
             this.lastError = new Error("No sftp");
             logFn(`sftpSetModTime: no sftp`);
             resolve(undefined);
             return;
         }
-        // const dateNum = Math.floor(date.valueOf() / 1000);
-        const attr: InputAttributes = { atime: date, mtime: date};
-        if (!this.sftp.setstat(relPath, attr , (err) => {
+        if (!this.sftp.setstat(relPath, stats , (err) => {
             if (err) {
                 this.lastError = err;
                 resolve(false);
@@ -675,14 +678,14 @@ export class SshHelper implements ISshHelper {
             // execute later on "continue" event
             logFn(`sftpSetModTime: wait`);
             this.sftp.once("continue", () => {
-                this.sftpSetModTimeExecutor(resolve, relPath, date);
+                this.sftpSetStatsExecutor(resolve, relPath, stats);
             });
         }
     }
 
-    private sftpSetModTime(relPath: string, date: Date): Promise<boolean> {
+    private sftpSetStats(relPath: string, stats: InputAttributes): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
-            this.sftpSetModTimeExecutor(resolve, relPath, date);
+            this.sftpSetStatsExecutor(resolve, relPath, stats);
         });
     }
 
@@ -696,5 +699,63 @@ export class SshHelper implements ISshHelper {
             logFn(`waitComplete: queue is empty`);
             resolve(true);
         }
-}
+    }
+
+    private sftpStats(relPath: string): Promise<Stats|undefined> {
+        return new Promise<Stats|undefined>((resolve) => {
+            this.sftpStatExecutor(resolve, relPath);
+        });
+    }
+
+    private sftpStatExecutor(resolve: Resolve<Stats|undefined>, relPath: string): void {
+        if (!this.sftp) {
+            this.lastError = new Error("No sftp");
+            logFn(`sftpStats: no sftp`);
+            resolve(undefined);
+            return;
+        }
+        if (!this.sftp.stat(relPath, (err, stats) => {
+            if (err) {
+                this.lastError = err;
+                resolve(undefined);
+                return;
+            }
+            resolve(stats);
+        })) {
+            // execute later on "continue" event
+            logFn(`sftpStatExecutor: wait`);
+            this.sftp.once("continue", () => {
+                this.sftpStatExecutor(resolve, relPath);
+            });
+        }
+    }
+
+    private sftpMkDir(relPath: string): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            this.sftpMkDirExecutor(resolve, relPath);
+        });
+    }
+
+    private sftpMkDirExecutor(resolve: Resolve<boolean>, relPath: string): void {
+        if (!this.sftp) {
+            this.lastError = new Error("No sftp");
+            logFn(`sftpMkDir: no sftp`);
+            resolve(undefined);
+            return;
+        }
+        if (!this.sftp.mkdir(relPath, (err) => {
+            if (err) {
+                this.lastError = err;
+                resolve(false);
+            } else {
+                resolve(true);
+            }
+        })) {
+            // execute later on "continue" event
+            logFn(`sftpMkDirExecutor: wait`);
+            this.sftp.once("continue", () => {
+                this.sftpMkDirExecutor(resolve, relPath);
+            });
+        }
+    }
 }
