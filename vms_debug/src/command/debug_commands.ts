@@ -9,7 +9,7 @@ export enum DebugCmdVMS
 	dbgGo = "go",
 	dbgStep = "step /over",
 	dbgStepIn = "step /into",
-	dbgStepOut = "step /return",
+	dbgStepReturn = "step /return",
 
 	dbgBreakPointSet = "set break %line",
 	dbgBreakPointRemove = "cancel break %line",
@@ -72,19 +72,19 @@ export class DebugCommands
 	{
 		return DebugCmdVMS.dbgStepIn;
 	}
-	public stepOut() : string
+	public stepReturn() : string
 	{
-		return DebugCmdVMS.dbgStepOut;
+		return DebugCmdVMS.dbgStepReturn;
 	}
 
 	//break points
 	public breakPointSet(numberLine : number) : string
 	{
-		return DebugCmdVMS.dbgBreakPointSet + " " + numberLine.valueOf;
+		return DebugCmdVMS.dbgBreakPointSet + " " + numberLine.toString();
 	}
 	public breakPointRemove(numberLine : number) : string
 	{
-		return DebugCmdVMS.dbgBreakPointRemove + " " + numberLine.valueOf;
+		return DebugCmdVMS.dbgBreakPointRemove + " " + numberLine.toString();
 	}
 	public breakPointsRemove() : string
 	{
@@ -100,7 +100,7 @@ export class DebugCommands
 	}
 	public breakPointActivate(numberLine : number) : string
 	{
-		return DebugCmdVMS.dbgBreakPointActivate + " " + numberLine.valueOf;
+		return DebugCmdVMS.dbgBreakPointActivate + " " + numberLine.toString();
 	}
 	public breakPointsDeactivate() : string
 	{
@@ -108,7 +108,7 @@ export class DebugCommands
 	}
 	public breakPointDeactivate(numberLine : number) : string
 	{
-		return DebugCmdVMS.dbgBreakPointDeactivate + " " + numberLine.valueOf;
+		return DebugCmdVMS.dbgBreakPointDeactivate + " " + numberLine.toString();
 	}
 
 
@@ -128,7 +128,7 @@ export class DebugCommands
 	//set value of variable by name
 	public deposit(nameVar : string, value : number) : string
 	{
-		return DebugCmdVMS.dbgDeposit + " " + nameVar + "=" + value.valueOf;
+		return DebugCmdVMS.dbgDeposit + " " + nameVar + "=" + value.toString();
 	}
 
 	//show call stack

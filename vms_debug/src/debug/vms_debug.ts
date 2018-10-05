@@ -155,7 +155,8 @@ export class VMSDebugSession extends LoggingDebugSession
 		await this._configurationDone.wait(1000);
 
 		// start the program in the runtime
-		this._runtime.start(args.program, !!args.stopOnEntry);
+		//this._runtime.start(args.program, !!args.stopOnEntry);
+		this._runtime.start("hello", "c");
 
 		this.sendResponse(response);
 	}
@@ -173,7 +174,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		{
 			let { verified, line, id } = this._runtime.setBreakPoint(path, this.convertClientLineToDebugger(l));
 			const bp = <DebugProtocol.Breakpoint> new Breakpoint(verified, this.convertDebuggerLineToClient(line));
-			bp.id= id;
+			bp.id = id;
 
 			return bp;
 		});
@@ -279,8 +280,8 @@ export class VMSDebugSession extends LoggingDebugSession
 			const matches = /new +([0-9]+)/.exec(args.expression);
 			if (matches && matches.length === 2)
 			{
-				const mbp = this._runtime.setBreakPoint(this._runtime.sourceFile, this.convertClientLineToDebugger(parseInt(matches[1])));
-				const bp = <DebugProtocol.Breakpoint> new Breakpoint(mbp.verified, this.convertDebuggerLineToClient(mbp.line), undefined, this.createSource(this._runtime.sourceFile));
+				const mbp = this._runtime.setBreakPoint(this._runtime.getSourceFile(), this.convertClientLineToDebugger(parseInt(matches[1])));
+				const bp = <DebugProtocol.Breakpoint> new Breakpoint(mbp.verified, this.convertDebuggerLineToClient(mbp.line), undefined, this.createSource(this._runtime.getSourceFile()));
 				bp.id= mbp.id;
 				this.sendEvent(new BreakpointEvent('new', bp));
 				reply = `breakpoint created`;
@@ -290,7 +291,7 @@ export class VMSDebugSession extends LoggingDebugSession
 				const matches = /del +([0-9]+)/.exec(args.expression);
 				if (matches && matches.length === 2)
 				{
-					const mbp = this._runtime.clearBreakPoint(this._runtime.sourceFile, this.convertClientLineToDebugger(parseInt(matches[1])));
+					const mbp = this._runtime.clearBreakPoint(this._runtime.getSourceFile(), this.convertClientLineToDebugger(parseInt(matches[1])));
 					if (mbp)
 					{
 						const bp = <DebugProtocol.Breakpoint> new Breakpoint(false);

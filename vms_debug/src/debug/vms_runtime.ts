@@ -15,6 +15,7 @@ export interface VMSBreakpoint
 	id: number;
 	line: number;
 	verified: boolean;
+	installed: boolean;
 }
 
 export enum DebugButtonEvent
@@ -36,26 +37,20 @@ export enum DebugButtonEvent
 export class VMSRuntime extends EventEmitter
 {
 	// the initial (and one and only) file we are 'debugging'
-	private _sourceFile: string;
+	private sourceFile: string;
 	private buttonPressd : DebugButtonEvent;
 	private shell : ShellSession;
 	private osCmd : OsCommands;
 	private dbgCmd : DebugCommands;
 	private dbgParser : DebugParser;
-
-	public get sourceFile()
-	{
-		return this._sourceFile;
-	}
+	private debugRun : boolean;
 
 	// the contents (= lines) of the one and only file
 	private sourceLines: string[];
 	private sourcePaths: string[];
 
 	// This is the next line that will be 'executed'
-	private currentFile : string = "";
 	private currentLine = 0;
-	private shiftLine = 0;
 
 	// maps from sourceFile to array of VMS breakpoints
 	private _breakPoints = new Map<string, VMSBreakpoint[]>();
@@ -74,38 +69,27 @@ export class VMSRuntime extends EventEmitter
 		this.osCmd = new OsCommands();
 		this.dbgCmd = new DebugCommands();
 		this.dbgParser = new DebugParser();
+		this.debugRun = false;
 	}
 
 	/**
 	 * Start executing the given program.
 	 */
-	public async start(program: string, stopOnEntry: boolean)
+	public async start(programName: string, languageExt: string)
 	{
-		this.sourcePaths = await this.loadSourcePathList("c");
-		this.loadSource(program);
 		this.currentLine = -1;
+		this.sourcePaths = await this.loadSourcePathList(languageExt);
 
+		//run debuger
 		this.shell.SendCommandToQueue(this.osCmd.runDebug());
-		this.shell.SendCommandToQueue(this.dbgCmd.run("hello"));
+		this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
 
-		this.verifyBreakpoints(this._sourceFile);
+		this.setRemoteBreakpoints();
 
-		if (stopOnEntry)
-		{
-			// we step once
-			//this.step(false, 'stopOnEntry');
-			this.continue();
-		}
-		else
-		{
-			// we just start to run until we hit a breakpoint or an exception
-			this.continue();
-		}
+		this.continue();
 	}
 
-	/**
-	 * Continue execution to the end/beginning.
-	 */
+	//Continue execution to the end/beginning.
 	public continue()
 	{
 		this.buttonPressd = DebugButtonEvent.btnContinue;
@@ -114,28 +98,22 @@ export class VMSRuntime extends EventEmitter
 		this.currentLine = -1;
 	}
 
-	/**
-	 * Step to the next non empty line.
-	 */
 	public stepOver()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStepOver;
-
 		this.shell.SendCommandToQueue(this.dbgCmd.step());
 	}
 
 	public stepInto()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStepInto;
-
 		this.shell.SendCommandToQueue(this.dbgCmd.stepIn());
 	}
 
 	public stepOut()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStepOut;
-
-		this.shell.SendCommandToQueue(this.dbgCmd.stepOut());
+		this.shell.SendCommandToQueue(this.dbgCmd.stepReturn());
 		this.shell.SendCommandToQueue(this.dbgCmd.step());
 	}
 
@@ -151,9 +129,18 @@ export class VMSRuntime extends EventEmitter
 		this.shell.SendCommandToQueue(this.dbgCmd.exit());
 	}
 
-	/**
-	 * Returns a fake 'stacktrace' where every 'stackframe' is a word from the current line.
-	 */
+
+	public getVariableValue(nameVar : string)
+	{
+		this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVar));
+	}
+
+	public getSourceFile() : string
+	{
+		return this.sourceFile;
+	}
+
+
 	public stack(startFrame: number, endFrame: number): any
 	{
 		const words = this.sourceLines[this.currentLine].trim().split(/\s+/);
@@ -166,7 +153,7 @@ export class VMSRuntime extends EventEmitter
 			frames.push({
 				index: i,
 				name: `${name}(${i})`,
-				file: this._sourceFile,
+				file: this.sourceFile,
 				line: this.currentLine
 			});
 		}
@@ -176,16 +163,7 @@ export class VMSRuntime extends EventEmitter
 		};
 	}
 
-	public getVariableValue(nameVar : string)
-	{
-		this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVar));
-	}
-
-
-
-	/*
-	 * Set breakpoint in file with given line.
-	 */
+	//Set breakpoint in file with given line.
 	public setBreakPoint(path: string, line: number) : VMSBreakpoint
 	{
 		const bp = <VMSBreakpoint> { verified: false, line, id: this._breakpointId++ };
@@ -194,6 +172,7 @@ export class VMSRuntime extends EventEmitter
 		if (!bps)
 		{
 			bps = new Array<VMSBreakpoint>();
+			//
 			this._breakPoints.set(path, bps);
 		}
 
@@ -201,12 +180,16 @@ export class VMSRuntime extends EventEmitter
 
 		this.verifyBreakpoints(path);
 
+		//set remote breakpoint if debug runing
+		if(this.debugRun === true)
+		{
+			this.setRemoteBreakpoints();
+		}
+
 		return bp;
 	}
 
-	/*
-	 * Clear breakpoint in file with given line.
-	 */
+	//Clear breakpoint in file with given line.
 	public clearBreakPoint(path: string, line: number) : VMSBreakpoint | undefined
 	{
 		let bps = this._breakPoints.get(path);
@@ -225,15 +208,13 @@ export class VMSRuntime extends EventEmitter
 		return undefined;
 	}
 
-	/*
-	 * Clear all breakpoints for file.
-	 */
+	//Clear all breakpoints for file.
 	public clearBreakpoints(path: string): void
 	{
 		this._breakPoints.delete(path);
 	}
 
-	// private methods
+	// private methods //
 
 	private async loadSourcePathList(extensionFile : string) : Promise<string[]>
 	{
@@ -250,10 +231,10 @@ export class VMSRuntime extends EventEmitter
 
 	private loadSource(file: string)
 	{
-		if (this._sourceFile !== file)
+		if (this.sourceFile !== file)
 		{
-			this._sourceFile = file;
-			this.sourceLines = readFileSync(this._sourceFile).toString().split('\n');
+			this.sourceFile = file;
+			this.sourceLines = readFileSync(this.sourceFile).toString().split('\n');
 		}
 	}
 
@@ -281,72 +262,38 @@ export class VMSRuntime extends EventEmitter
 					{
 						bp.line--;
 					}
-					// don't set 'verified' to true if the line contains the word 'lazy'
-					// in this case the breakpoint will be verified 'lazy' after hitting it once.
-					if (srcLine.indexOf('lazy') < 0)
-					{
-						bp.verified = true;
-						this.sendEvent('breakpointValidated', bp);
-					}
+
+					bp.verified = true;
+					this.sendEvent('breakpointValidated', bp);
 				}
 			});
 		}
 	}
 
-	/**
-	 * Fire events if line has a breakpoint or the word 'exception' is found.
-	 * Returns true is execution needs to stop.
-	 */
-	private fireEventsForLine(ln: number, stepEvent?: string): boolean
+	private setRemoteBreakpoints() : void
 	{
-		const line = this.sourceLines[ln].trim();
-
-		// if 'log(...)' found in source -> send argument to debug console
-		const matches = /log\((.*)\)/.exec(line);
-		if (matches && matches.length === 2)
+		for(let path of this.sourcePaths)
 		{
-			this.sendEvent('output', matches[1], this._sourceFile, ln, matches.index);
-		}
+			path = path.toLowerCase();
+			let bps = this._breakPoints.get(path);
 
-		// if word 'exception' found in source -> throw exception
-		if (line.indexOf('exception') >= 0)
-		{
-			this.sendEvent('stopOnException');
-			return true;
-		}
-
-		// is there a breakpoint?
-		const breakpoints = this._breakPoints.get(this._sourceFile);
-		if (breakpoints)
-		{
-			const bps = breakpoints.filter(bp => bp.line === ln);
-			if (bps.length > 0)
+			if (bps)
 			{
-				// send 'stopped' event
-				this.sendEvent('stopOnBreakpoint');
+				this.loadSource(path);
 
-				// the following shows the use of 'breakpoint' events to update properties of a breakpoint in the UI
-				// if breakpoint is not yet verified, verify it now and send a 'breakpoint' update event
-				if (!bps[0].verified)
+				bps.forEach(bp =>
 				{
-					bps[0].verified = true;
-					this.sendEvent('breakpointValidated', bps[0]);
-				}
+					if (!bp.installed)
+					{
+						this.shell.SendCommandToQueue(this.dbgCmd.breakPointSet(1644));
 
-				return true;
+						bp.installed = true;
+					}
+				});
 			}
 		}
-
-		// non-empty line
-		if (stepEvent && line.length > 0)
-		{
-			this.sendEvent(stepEvent);
-			return true;
-		}
-
-		// nothing interesting found -> continue
-		return false;
 	}
+
 
 	private sendEvent(event: string, ... args: any[])
 	{
@@ -358,74 +305,87 @@ export class VMSRuntime extends EventEmitter
 
 	public receiveData(data: string, mode: ModeWork)
 	{
-		//parse data
-		//action
-		//send event
 		if(mode === ModeWork.shell)
 		{
-
+			this.debugRun = false;
 		}
 		else if(mode === ModeWork.debug)
 		{
-			let msgLines =data.split("\n");
+			this.debugRun = true;
 
-			let lineInfo = this.dbgParser.getCurrentLineInfo(data, this.sourcePaths);
+			this.dbgParser.parseDebugData(data, this.sourcePaths);
 
-			if(lineInfo)
+			let lineInfo = this.dbgParser.getFileInfo();
+			let messageCommand = this.dbgParser.getCommandMessage();
+			let messageDebug = this.dbgParser.getDebugMessage();
+			let messageUser = this.dbgParser.getUserMessage();
+
+			if(messageCommand !== "")
 			{
-				this.loadSource(lineInfo.filePath);
-				this.currentLine = lineInfo.currLine;
-			}
+				console.log(messageCommand);
 
-
-			for(let i = 0; i < msgLines.length; i++)
-			{
-				if(msgLines[i].includes("stepped to") || msgLines[i].includes("break at routine"))
+				if(messageCommand.includes("examine"))//show selected variable
 				{
-				 	break;
+					let messageData = this.dbgParser.getDataMessage();
+					this.sendEvent('examine', messageData);
 				}
-				else if(msgLines[i].includes("%DEBUG-I-EXITSTATUS, is '%SYSTEM-S-NORMAL, normal successful completion"))
+			}
+			if(messageUser !== "")
+			{
+				console.log(messageUser);
+			}
+			if(messageDebug !== "")
+			{
+				console.log(messageDebug);
+
+				if(messageDebug.includes("is '%SYSTEM-S-NORMAL, normal successful completion"))
 				{
 					this.sendEvent('end');
 				}
 			}
 
-
-			if(data.includes("examine"))//show selected variable
+			if(lineInfo)
 			{
-				this.sendEvent('examine', data);
-			}
+				this.loadSource(lineInfo.filePath);
+				this.currentLine = lineInfo.currLine;
 
-			switch(this.buttonPressd)
-			{
-				case DebugButtonEvent.btnContinue:
-					this.sendEvent('stopOnBreakpoint');
-					break;
+				switch(this.buttonPressd)
+				{
+					case DebugButtonEvent.btnContinue:
+						this.sendEvent('stopOnBreakpoint');
+						this.buttonPressd = 0;
+						break;
 
-				case DebugButtonEvent.btnStepOver:
-					this.sendEvent('stopOnStep');
-					break;
+					case DebugButtonEvent.btnStepOver:
+						this.sendEvent('stopOnStep');
+						this.buttonPressd = 0;
+						break;
 
-				case DebugButtonEvent.btnStepInto:
-					this.sendEvent('stopOnStep');
-					break;
+					case DebugButtonEvent.btnStepInto:
+						this.sendEvent('stopOnStep');
+						this.buttonPressd = 0;
+						break;
 
-				case DebugButtonEvent.btnStepOut:
-					this.sendEvent('stopOnStep');
-					break;
+					case DebugButtonEvent.btnStepOut:
+						this.buttonPressd = DebugButtonEvent.btnStepOver;
+						break;
 
-				case DebugButtonEvent.btnRestart:
-					break;
+					case DebugButtonEvent.btnRestart:
+						this.buttonPressd = 0;
+						break;
 
-				case DebugButtonEvent.btnPause:
-					this.sendEvent('stopOnStep');
-					break;
+					case DebugButtonEvent.btnPause:
+						this.sendEvent('stopOnStep');
+						this.buttonPressd = 0;
+						break;
 
-				case DebugButtonEvent.btnStop:
-					break;
+					case DebugButtonEvent.btnStop:
+						this.buttonPressd = 0;
+						break;
 
-				default:
-					break;
+					default:
+						break;
+				}
 			}
 		}
 	}

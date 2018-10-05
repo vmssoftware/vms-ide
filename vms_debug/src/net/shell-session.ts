@@ -14,11 +14,13 @@ export class ShellSession
     private stream : ClientChannel | undefined;
     private sftp : SFTPWrapper | undefined;
     private enterCmd : string;
+    private mode : ModeWork;
     private resultData : string;
     private funcData : Function;
     private funcReady : Function;
     private queueCmd = new Queue<string>();
     private readyCmd : boolean;
+    private currentCmd : string;
 
 
     constructor( DataCb: (data: string, mode: ModeWork) => void, ReadyCb: () => void)
@@ -28,6 +30,8 @@ export class ShellSession
         this.funcData = DataCb;
         this.funcReady = ReadyCb;
         this.readyCmd = false;
+        this.currentCmd = "";
+        this.mode = ModeWork.shell;
 
         this.ShellInitialise();
     }
@@ -79,18 +83,21 @@ export class ShellSession
         }
         else if(data.includes(this.enterCmd) || data.includes("DBG> "))
         {
-            let mode : ModeWork;
-
             if(data.includes("DBG> "))
             {
-                mode = ModeWork.debug;
+                if(this.mode === ModeWork.shell)
+                {
+                    this.resultData = "";
+                }
+
+                this.mode = ModeWork.debug;
             }
             else
             {
-                mode = ModeWork.shell;
+                this. mode = ModeWork.shell;
             }
 
-            this.funcData(this.resultData, mode);
+            this.funcData(this.resultData, this.mode);
             this.resultData = "";
             this.readyCmd = true;
 
@@ -127,12 +134,18 @@ export class ShellSession
         }
     }
 
+    public getCurrentCommand() : string
+    {
+        return this.currentCmd;
+    }
+
     public SendCommand(command : string) : boolean
     {
         let result = false;
 
         if(this.stream)
         {
+            this.currentCmd = command;
             result = this.stream.write(command + '\r\n');
         }
 
@@ -147,6 +160,7 @@ export class ShellSession
             {
                 let result : boolean;
 
+                this.currentCmd = command;
                 result = this.stream.write(command + '\r\n');
 
                 if(!result)

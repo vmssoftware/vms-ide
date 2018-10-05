@@ -32,6 +32,9 @@ let serverIsConnect : boolean = false;
 
 export function activate(context: vscode.ExtensionContext)
 {
+	const matches = /log\((.*)\)/.exec("rt +log(d.gsx) srf");
+	const matches1 = "haghdak ajdhs,sfgsdf;sfbvsd; sdf, asdf".split(/\s+/);
+
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.connect', () =>
 	{
 		shell = new ShellSession(DataCb, ReadyCb);
@@ -114,11 +117,12 @@ export function activate(context: vscode.ExtensionContext)
 export function deactivate()
 {
 	// nothing to do
+	shell.DisconectSession();
 }
 
 let DataCb = function(data: string, mode: ModeWork) : void
 {
-	console.log(data);
+	//console.log(data);
 	ToOutputChannel(data);
 
 	if(session)
@@ -129,7 +133,6 @@ let DataCb = function(data: string, mode: ModeWork) : void
 
 let ReadyCb = function() : void
 {
-	//shell.SendCommand("ls");
 	shell.SendCommandToQueue("cd [.demos]");
 	console.log("ready");
 
@@ -197,6 +200,11 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 		}
 		else
 		{
+			config.type = "";
+			config.name = "";
+			config.request = "";
+			config.program = "";
+
 			const message = localize('extention.not_connected', "Do not connected to the server");
 			vscode.window.showInformationMessage(message);
 		}

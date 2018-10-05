@@ -1,6 +1,6 @@
 {
 	"extension.vms_c_debug": "VMS C Debug",
-	"extension.vms_connect": "VMS connect to server",
+	"extension.vms_connect": "Connect to server",
 	"extension.vms_compile": "Run compile",
     "extension.vms_run": "Run program",
     "extension.edit_settings": "Edit settings",
