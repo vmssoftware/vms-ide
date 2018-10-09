@@ -1,9 +1,10 @@
-import { ISshHelper } from "../ssh/ssh-helper";
+
 import { ITargetFile } from "./sync";
+import { ISyncSiteHelper } from "./sync-site-helper";
 
-export class SshTargetFile implements ITargetFile {
+export class SyncSiteTargetFile implements ITargetFile {
 
-    constructor(protected relPath: string, protected sshHelper: ISshHelper, protected date: Date) {
+    constructor(protected relPath: string, protected sshHelper: ISyncSiteHelper, protected date: Date) {
     }
 
     get needUpdate(): boolean {

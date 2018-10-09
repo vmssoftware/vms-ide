@@ -75,32 +75,6 @@
                     "default": "",
                     "description": "%properties.connection.password.description%"
                 },
-                "open-vms.filter.include": {
-                    "type": "string",
-                    "default": "**/*.*",
-                    "description": "%properties.filter.include.description%"
-                },
-                "open-vms.filter.exclude": {
-                    "type": "string",
-                    "default": "**/{.vscode,node-modules}/*.*",
-                    "description": "%properties.filter.exclude.description%"
-                },
-                "open-vms.host_collection.default": {
-                    "type": "string",
-                    "default": "default",
-                    "description": "default host in collection"
-                },
-                "open-vms.host_collection.hosts": {
-                    "type": "array",
-                    "default": [
-                        {
-                            "host": "",
-                            "port": 0,
-                            "username": ""
-                        }
-                    ],
-                    "description": "array of hosts"
-                },
                 "open-vms.project.root": {
                     "type": "string",
                     "default": "project",
@@ -108,22 +82,22 @@
                 },
                 "open-vms.project.exclude": {
                     "type": "string",
-                    "default": "**/{.vscode,node-modules}/*.*",
+                    "default": "**/{.vscode,node-modules}",
                     "description": "%properties.project.exclude.description%"
                 },
                 "open-vms.project.source": {
                     "type": "string",
-                    "default": "*.{c,cpp}",
+                    "default": "**/*.{c,cpp}",
                     "description": "%properties.project.source.description%"
                 },
                 "open-vms.project.headers": {
                     "type": "string",
-                    "default": "*.{h,hpp}",
+                    "default": "**/*.{h,hpp}",
                     "description": "%properties.project.headers.description%"
                 },
                 "open-vms.project.resource": {
                     "type": "string",
-                    "default": "*.*",
+                    "default": "**/resource/**/*.*",
                     "description": "%properties.project.resource.description%"
                 }
             }

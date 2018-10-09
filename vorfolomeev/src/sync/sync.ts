@@ -1,6 +1,7 @@
-import { Uri } from "vscode";
+import { Disposable, Uri } from "vscode";
 
 export interface ISync {
+    addSource(source: ISource): Disposable;
     postFile(uri: Uri): Promise<boolean>;
 }
 

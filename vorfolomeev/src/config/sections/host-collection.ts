@@ -2,6 +2,24 @@
 import { IConfigData, IConfigSection } from "../config";
 import { LabeledUserPasswordSection } from "./labeled-user-password";
 
+// Add this to PACKAGE.JSON
+// "open-vms.host_collection.default": {
+//     "type": "string",
+//     "default": "default",
+//     "description": "default host in collection"
+// },
+// "open-vms.host_collection.hosts": {
+//     "type": "array",
+//     "default": [
+//         {
+//             "host": "",
+//             "port": 0,
+//             "username": ""
+//         }
+//     ],
+//     "description": "array of hosts"
+// },
+
 export class HostCollection implements IConfigSection {
 
     public static readonly section = "host_collection";

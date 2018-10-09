@@ -4,8 +4,9 @@ export class ShellSection implements IConfigSection {
 
     public static readonly section = "shell";
 
-    public static is(candidate: IConfigSection): candidate is ShellSection {
-        return candidate instanceof ShellSection;
+    public static is(candidate: any): candidate is ShellSection {
+        return !!candidate &&
+            typeof candidate.ending === "string";
     }
 
     public ending: string = "> ";

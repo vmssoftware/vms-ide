@@ -5,7 +5,12 @@ export class ProjectSection implements IConfigSection {
     public static readonly section = "project";
 
     public static is(candidate: any): candidate is ProjectSection {
-        return !!candidate && candidate instanceof ProjectSection;
+        return !!candidate &&
+        typeof candidate.exclude === "string" &&
+        typeof candidate.headers === "string" &&
+        typeof candidate.resource === "string" &&
+        typeof candidate.root === "string" &&
+        typeof candidate.source === "string";
     }
 
     public exclude: string = "**/{node_modules,.vscode}/**";

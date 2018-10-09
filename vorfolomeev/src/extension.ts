@@ -3,7 +3,7 @@ import { commands, window } from "vscode";
 import { ExtensionContext } from "vscode";
 import { IConfigHelper } from "./config/config";
 import { GetConfigHelperFromApi } from "./config/get-config-helper";
-import { SyncronizeProject } from "./syncronize";
+import { Synchronizer } from "./syncronize";
 
 import * as nls from "vscode-nls";
 import { ToOutputChannel } from "./output-channel";
@@ -17,13 +17,20 @@ export let logFn = console.log;
 
 export async function activate(context: ExtensionContext) {
 
-    require("./ssh/ssh-helper").logFn = logFn;
-    require("./ssh/simply-shell-parser").logFn = logFn;
-    require("./sync/sync-impl").logFn = logFn;
-    require("./vms/vms-ssh-helper").logFn = logFn;
-    require("./syncronize").logFn = logFn;
-    require("./sync/fs-source").logFn = logFn;
-    require("./sync/fs-source-file").logFn = logFn;
+    // uncomment lines to enable log
+    // require("./ssh/connection").logFn = logFn;
+    // require("./ssh/sftp-connection").logFn = logFn;
+    // require("./ssh/shell-connection").logFn = logFn;
+    // require("./ssh/exec").logFn = logFn;
+    // require("./ssh/queued-connection").logFn = logFn;
+    // require("./ssh/simply-shell-parser").logFn = logFn;
+    // require("./ssh/password-checker-2").logFn = logFn;
+    // require("./sync/sync-impl").logFn = logFn;
+    // require("./sync/fs-source").logFn = logFn;
+    // require("./sync/fs-source-file").logFn = logFn;
+    // require("./sync/sync-impl").logFn = logFn;
+    // require("./vms/vms-ssh-helper").logFn = logFn;
+    // require("./syncronize").logFn = logFn;
 
     logFn(localize("extension.activated", "OpenVMS extension is activated"));
 
@@ -36,6 +43,7 @@ export async function activate(context: ExtensionContext) {
     });
 
     let syncInProgress = false;
+    let synchronizer: Synchronizer | undefined;
     context.subscriptions.push( commands.registerCommand("VMS.syncProject", async () => {
         logFn("sync start");
         if (configHelper) {
@@ -43,7 +51,10 @@ export async function activate(context: ExtensionContext) {
                 window.showInformationMessage("Syncronization in progress");
             } else {
                 syncInProgress = true;
-                SyncronizeProject(configHelper).then((result) => {
+                if (!synchronizer) {
+                    synchronizer = new Synchronizer();
+                }
+                synchronizer.SyncronizeProject(configHelper).then((result) => {
                     if (result) {
                         ToOutputChannel(`Syncronization: sent ${result.sent ? result.sent : "none"} of ${result.all}`);
                     } else {

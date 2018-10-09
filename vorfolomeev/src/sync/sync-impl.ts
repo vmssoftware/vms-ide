@@ -58,7 +58,7 @@ export class SyncImplement implements ISync {
                                 logFn(`Updated: ${sourceFile.relativePath}`);
                             }
                         } else {
-                            logFn(`The same: ${sourceFile.relativePath}`);
+                            logFn(`Do not need to update (or cannot): ${sourceFile.relativePath}`);
                         }
                     }
                 } catch (err) {

@@ -7,10 +7,11 @@ export class UserPasswordSection implements IConfigSection, IUserPasswordHostCon
     public static readonly section = "connection";
 
     public static is(candidate: any): candidate is IUserPasswordHostConfig {
-        return typeof candidate.host === "string" &&
-               typeof candidate.port === "number" &&
-               typeof candidate.username === "string" &&
-               typeof candidate.password === "string";
+        return !!candidate &&
+            typeof candidate.host === "string" &&
+            typeof candidate.port === "number" &&
+            typeof candidate.username === "string" &&
+            typeof candidate.password === "string";
     }
 
     public host: string = "";
@@ -31,12 +32,12 @@ export class UserPasswordSection implements IConfigSection, IUserPasswordHostCon
     }
 
     public templateToFillFrom(): IConfigData {
-        return { host: "",
-                 port: 0,
-                 username: "",
-                 // tslint:disable-next-line:object-literal-sort-keys
-                 password: "",
-            };
+        return {
+            host: "",
+            password: "",
+            port: 0,
+            username: "",
+        };
     }
 
     public fillFrom(data: IConfigData): boolean {

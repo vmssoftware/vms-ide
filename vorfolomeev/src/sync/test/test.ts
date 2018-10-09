@@ -2,9 +2,9 @@ import { Disposable, Uri, workspace } from "vscode";
 import { IConfigHelper } from "../../config/config";
 import { VmsSshHelper } from "../../vms/vms-ssh-helper";
 import { FSSource } from "../fs-source";
-import { SshTarget } from "../ssh-target";
 import { ISource, ISourceFile, ISync, ITarget, ITargetFile } from "../sync";
 import { SyncImplement } from "../sync-impl";
+import { SyncSiteTarget } from "../sync-site-target";
 
 const date1 = new Date(Date.UTC(2018, 9, 20, 14, 25, 33, 123));
 
@@ -159,32 +159,32 @@ function postFiles(sync: ISync, i: number) {
     }
 }
 
-let syncMaster: SyncImplement | undefined;
+// let syncMaster: SyncImplement | undefined;
 
-export function TestFSSourceVMSTarget(configHelper: IConfigHelper) {
+// export function TestFSSourceVMSTarget(configHelper: IConfigHelper) {
 
-    if (!syncMaster) {
-        const vmsSshHelper = new VmsSshHelper(configHelper);
-        const vmsTarget = new SshTarget(vmsSshHelper);
-        syncMaster = new SyncImplement(vmsTarget);
-    }
+//     if (!syncMaster) {
+//         const vmsSshHelper = new VmsSshHelper(configHelper);
+//         const vmsTarget = new SyncSiteTarget(vmsSshHelper);
+//         syncMaster = new SyncImplement(vmsTarget);
+//     }
 
-    let disposables: Disposable[] = [];
+//     let disposables: Disposable[] = [];
 
-    if (workspace.workspaceFolders) {
-        for (const ws of workspace.workspaceFolders) {
-            disposables.push(syncMaster.addSource(new FSSource(ws.uri)));
-        }
-    }
+//     if (workspace.workspaceFolders) {
+//         for (const ws of workspace.workspaceFolders) {
+//             disposables.push(syncMaster.addSource(new FSSource(ws.uri)));
+//         }
+//     }
 
-    workspace.findFiles("**/*.{c,cpp,h}").then((uris) => {
-        const allFiles = uris.map((uri) => syncMaster!.postFile(uri).then((result) => {
-            logFn(`${uri} is processed: ${result}`);
-        }));
-        Promise.all(allFiles).then(() => {
-            logFn("All done");
-            disposables.forEach((v) => v.dispose());
-            disposables = [];
-        });
-    });
-}
+//     workspace.findFiles("**/*.{c,cpp,h}").then((uris) => {
+//         const allFiles = uris.map((uri) => syncMaster!.postFile(uri).then((result) => {
+//             logFn(`${uri} is processed: ${result}`);
+//         }));
+//         Promise.all(allFiles).then(() => {
+//             logFn("All done");
+//             disposables.forEach((v) => v.dispose());
+//             disposables = [];
+//         });
+//     });
+// }

@@ -1,5 +1,20 @@
 import { IConfigData, IConfigSection } from "../config";
 
+// Add this to PACKAGE.JSON
+// "open-vms.filter.include": {
+//     "type": "string",
+//     "default": "**/*.*",
+//     "description": "%properties.filter.include.description%"
+// },
+// "open-vms.filter.exclude": {
+//     "type": "string",
+//     "default": "**/{.vscode,node-modules}/*.*",
+//     "description": "%properties.filter.exclude.description%"
+// },
+
+/**
+ * deprecated
+ */
 export class FilterSection implements IConfigSection {
 
     public static readonly section = "filter";
