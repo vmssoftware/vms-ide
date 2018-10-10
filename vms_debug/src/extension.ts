@@ -32,9 +32,6 @@ let serverIsConnect : boolean = false;
 
 export function activate(context: vscode.ExtensionContext)
 {
-	const matches = /log\((.*)\)/.exec("rt +log(d.gsx) srf");
-	const matches1 = "haghdak ajdhs,sfgsdf;sfbvsd; sdf, asdf".split(/\s+/);
-
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.connect', () =>
 	{
 		shell = new ShellSession(DataCb, ReadyCb);

@@ -165,19 +165,26 @@ export class VMSDebugSession extends LoggingDebugSession
 	{
 		const path = <string>args.source.path;
 		const clientLines = args.lines || [];
+		let debugLines : number[] = [];
+		const actualBreakpoints : DebugProtocol.Breakpoint[] = [];
 
-		// clear all breakpoints for this file
-		this._runtime.clearBreakpoints(path);
-
-		// set and verify breakpoint locations
-		const actualBreakpoints = clientLines.map(l =>
+		for(let item of clientLines)
 		{
-			let { verified, line, id } = this._runtime.setBreakPoint(path, this.convertClientLineToDebugger(l));
-			const bp = <DebugProtocol.Breakpoint> new Breakpoint(verified, this.convertDebuggerLineToClient(line));
-			bp.id = id;
+			debugLines.push(this.convertClientLineToDebugger(item));
+		}
 
-			return bp;
-		});
+		// set and verify breakpoints locations
+		let bps = this._runtime.setBreakPoints(path, debugLines);
+
+		if(bps)
+		{
+			for(let item of bps)
+			{
+				const bp = <DebugProtocol.Breakpoint> new Breakpoint(item.verified, this.convertDebuggerLineToClient(item.line));
+				bp.id = item.id;
+				actualBreakpoints.push(bp);
+			}
+		}
 
 		// send back the actual breakpoint positions
 		response.body = {

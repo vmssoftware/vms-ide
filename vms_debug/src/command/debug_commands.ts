@@ -11,14 +11,14 @@ export enum DebugCmdVMS
 	dbgStepIn = "step /into",
 	dbgStepReturn = "step /return",
 
-	dbgBreakPointSet = "set break %line",
-	dbgBreakPointRemove = "cancel break %line",
+	dbgBreakPointSet = "set break",
+	dbgBreakPointRemove = "cancel break",
 	dbgBreakPointsRemove = "cancel break /all",
 	dbgBreakPointShow = "show break",
 	dbgBreakPointsActivate = "activate break /all",
-	dbgBreakPointActivate = "activate break %line",
+	dbgBreakPointActivate = "activate break",
 	dbgBreakPointsDeactivate = "deactivate break /all",
-	dbgBreakPointDeactivate = "deactivate break %line",
+	dbgBreakPointDeactivate = "deactivate break",
 
 	dbgExamine = "examine",
 	dbgEvaluate = "evaluate",
@@ -78,13 +78,13 @@ export class DebugCommands
 	}
 
 	//break points
-	public breakPointSet(numberLine : number) : string
+	public breakPointSet(fileName : string, numberLine : number) : string
 	{
-		return DebugCmdVMS.dbgBreakPointSet + " " + numberLine.toString();
+		return DebugCmdVMS.dbgBreakPointSet + " " + fileName.toUpperCase()  + "\\%line " + numberLine.toString();
 	}
-	public breakPointRemove(numberLine : number) : string
+	public breakPointRemove(fileName : string, numberLine : number) : string
 	{
-		return DebugCmdVMS.dbgBreakPointRemove + " " + numberLine.toString();
+		return DebugCmdVMS.dbgBreakPointRemove + " " + fileName.toUpperCase()  + "\\%line " + numberLine.toString();
 	}
 	public breakPointsRemove() : string
 	{
@@ -98,17 +98,17 @@ export class DebugCommands
 	{
 		return DebugCmdVMS.dbgBreakPointsActivate;
 	}
-	public breakPointActivate(numberLine : number) : string
+	public breakPointActivate(fileName : string, numberLine : number) : string
 	{
-		return DebugCmdVMS.dbgBreakPointActivate + " " + numberLine.toString();
+		return DebugCmdVMS.dbgBreakPointActivate + " " + fileName.toUpperCase()  + "\\%line " + numberLine.toString();
 	}
 	public breakPointsDeactivate() : string
 	{
 		return DebugCmdVMS.dbgBreakPointsDeactivate;
 	}
-	public breakPointDeactivate(numberLine : number) : string
+	public breakPointDeactivate(fileName : string, numberLine : number) : string
 	{
-		return DebugCmdVMS.dbgBreakPointDeactivate + " " + numberLine.toString();
+		return DebugCmdVMS.dbgBreakPointDeactivate + " " + fileName.toUpperCase()  + "\\%line " + numberLine.toString();
 	}
 
 
