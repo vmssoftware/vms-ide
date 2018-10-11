@@ -290,6 +290,25 @@ export class DebugParser
 	{
 		return readFileSync(file).toString().split('\n');
 	}
+
+
+	public findeBreakPointNumberLine(currentNumberLine : number, sourceListLines: string[]) : number
+	{
+		let index = 1;
+		let number : number = -1;
+
+		let line = sourceListLines[currentNumberLine - 1 + 4].trim();
+		let array = line.split(" ");
+
+		while(array[index] === "")
+		{
+			index++;
+		}
+
+		number = parseInt(array[index], 10);
+
+		return number;
+	}
 }
 
 class QueueDbg<T>
