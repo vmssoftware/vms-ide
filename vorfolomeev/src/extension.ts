@@ -7,6 +7,7 @@ import { Synchronizer } from "./syncronize";
 
 import * as nls from "vscode-nls";
 import { ToOutputChannel } from "./output-channel";
+import { DownloadProject } from "./vms/download-project";
 
 const localize = nls.config()();
 
@@ -18,19 +19,20 @@ export let logFn = console.log;
 export async function activate(context: ExtensionContext) {
 
     // uncomment lines to enable log
-    // require("./ssh/connection").logFn = logFn;
-    // require("./ssh/sftp-connection").logFn = logFn;
-    // require("./ssh/shell-connection").logFn = logFn;
-    // require("./ssh/exec").logFn = logFn;
-    // require("./ssh/queued-connection").logFn = logFn;
-    // require("./ssh/simply-shell-parser").logFn = logFn;
-    // require("./ssh/password-checker-2").logFn = logFn;
-    // require("./sync/sync-impl").logFn = logFn;
-    // require("./sync/fs-source").logFn = logFn;
-    // require("./sync/fs-source-file").logFn = logFn;
-    // require("./sync/sync-impl").logFn = logFn;
-    // require("./vms/vms-ssh-helper").logFn = logFn;
-    // require("./syncronize").logFn = logFn;
+    require("./ssh/connection").logFn = logFn;
+    require("./ssh/sftp-connection").logFn = logFn;
+    require("./ssh/shell-connection").logFn = logFn;
+    require("./ssh/exec").logFn = logFn;
+    require("./ssh/queued-connection").logFn = logFn;
+    require("./ssh/simply-shell-parser").logFn = logFn;
+    require("./ssh/password-checker-3").logFn = logFn;
+    require("./sync/sync-impl").logFn = logFn;
+    require("./sync/fs-source").logFn = logFn;
+    require("./sync/fs-source-file").logFn = logFn;
+    require("./sync/sync-impl").logFn = logFn;
+    require("./vms/vms-ssh-helper").logFn = logFn;
+    require("./syncronize").logFn = logFn;
+    require("./vms/download-project").logFn = logFn;
 
     logFn(localize("extension.activated", "OpenVMS extension is activated"));
 
@@ -42,52 +44,50 @@ export async function activate(context: ExtensionContext) {
         }
     });
 
-    let syncInProgress = false;
     let synchronizer: Synchronizer | undefined;
     context.subscriptions.push( commands.registerCommand("VMS.syncProject", async () => {
-        logFn("sync start");
         if (configHelper) {
-            if (syncInProgress) {
+            if (!synchronizer) {
+                synchronizer = new Synchronizer();
+            }
+            if (synchronizer.isInProgress) {
                 window.showInformationMessage("Syncronization in progress");
             } else {
-                syncInProgress = true;
-                if (!synchronizer) {
-                    synchronizer = new Synchronizer();
-                }
                 synchronizer.SyncronizeProject(configHelper).then((result) => {
                     if (result) {
-                        ToOutputChannel(`Syncronization: sent ${result.sent ? result.sent : "none"} of ${result.all}`);
+                        window.showInformationMessage(`Syncronization: sent ${result.sent} of ${result.all}`);
                     } else {
-                        ToOutputChannel(`Syncronization: failed`);
+                        window.showErrorMessage(`Syncronization: failed`);
                     }
-                    syncInProgress = false;
                 });
             }
         }
-        logFn("sync end");
+    }));
+
+    context.subscriptions.push( commands.registerCommand("VMS.downloadProject", async () => {
+        if (configHelper) {
+            DownloadProject(configHelper).then((result) => {
+                ToOutputChannel(`DownloadProject returns ${result}`);
+            });
+        }
     }));
 
     context.subscriptions.push( commands.registerCommand("VMS.buildProject", async () => {
-        logFn("build start");
         if (configHelper) {
             // BuildProject(configHelper);
         }
-        logFn("build end");
     }));
 
     context.subscriptions.push( commands.registerCommand("VMS.editProject", async () => {
-        logFn("edit start");
         if (configHelper) {
             const editor = configHelper.getEditor();
             await editor.invoke();
         }
-        logFn("edit end");
     }));
-
-    logFn("activation end");
 }
 
 // this method is called when your extension is deactivated
 // tslint:disable-next-line:no-empty
 export function deactivate() {
+    logFn(localize("extension.deactivated", "OpenVMS extension is deactivated"));
 }

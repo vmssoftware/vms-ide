@@ -5,7 +5,7 @@
     "version": "0.0.2",
     "publisher": "vorfol",
     "engines": {
-        "vscode": "^1.27.0"
+        "vscode": "^1.28.0"
     },
     "categories": [
         "Other"
@@ -13,6 +13,7 @@
     "activationEvents": [
         "onCommand:VMS.buildProject",
         "onCommand:VMS.syncProject",
+        "onCommand:VMS.downloadProject",
         "onCommand:VMS.editProject"
     ],
     "main": "./out/extension",
@@ -34,6 +35,11 @@
             {
                 "command": "VMS.syncProject",
                 "title": "%command.syncProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "VMS.downloadProject",
+                "title": "%command.downloadProject.title%",
                 "category": "%command.category%"
             },
             {

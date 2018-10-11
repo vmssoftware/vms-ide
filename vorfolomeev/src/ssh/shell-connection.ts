@@ -34,6 +34,13 @@ export class ShellConnecttion extends QueuedConnection {
         this.parser = settings.parser;
     }
 
+    public settingsChanged(settings: IShellSettings) {
+        this.taskQueue.enqueue(async () => {
+            this.parser = settings.parser;
+            super.settingsChanged(settings);
+        });
+    }
+
     /**
      * Execute cmd in shell
      * @param cmd command to execute
@@ -92,6 +99,7 @@ export class ShellConnecttion extends QueuedConnection {
                     });
                     // initail shell parser => must parse output and resolve promise when prompt appears
                     const parser = this.parser || new SimplyShellParser("> ");
+                    parser.initialize();
                     channelRet.on("data", (data: any) => {
                         if (Buffer.isBuffer(data)) {
                             data = data.toString("utf8");
@@ -151,7 +159,10 @@ export class ShellConnecttion extends QueuedConnection {
                         logFn(`shell: cancelled on execution`);
                         finalize();
                     };
+
                     const shellParser: IShellParser = parser || new SimplyShellParser("> ");
+                    shellParser.initialize();
+
                     if (shellParser instanceof SimplyShellParser) {
                         result = shellParser;
                     }

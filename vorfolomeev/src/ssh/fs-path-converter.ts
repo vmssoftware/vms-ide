@@ -27,4 +27,8 @@ export class FsPathConverter implements IPathConverter {
     public get file(): string {
         return this.fileName;
     }
+
+    public get initial(): string {
+        return this.fsPath || "";
+    }
 }

@@ -13,4 +13,9 @@ export interface IShellParser {
      * @returns true when discard all and ready to another command
      */
     onDataErr(data: string): boolean;
+
+    /**
+     * Initialize parser before sending data
+     */
+    initialize(): void;
 }

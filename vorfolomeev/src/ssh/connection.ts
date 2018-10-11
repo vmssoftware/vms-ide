@@ -1,5 +1,6 @@
 import { Client, ConnectConfig } from "ssh2";
 import { inspect } from "util";
+import { isSimplyEq } from "../common/simply-compare";
 import { IConnectConfigResolver } from "./connect-config-resolver";
 
 // tslint:disable-next-line:no-console
@@ -8,8 +9,8 @@ export let logFn = console.log;
 logFn = () => {};
 
 export interface ISshConnectionSettings  {
+    connectConfig: ConnectConfig;
     settingsResolver?: IConnectConfigResolver;
-    connectConfig?: ConnectConfig;
 }
 
 export class SshConnection {
@@ -30,16 +31,22 @@ export class SshConnection {
         this.connectConfig = Object.assign({}, settings.connectConfig);
     }
 
-    // public changeSettings(settings: ISshConnectionSettings): boolean {
-    //     const {settingsResolver, ...connectConfig} = settings;    // remove our own settings
-    //     if (settingsResolver) { // only if new resolver exists
-    //         this.settingsResolver = settingsResolver;
-    //     }
-    //     // TODO: test new settings and disconnects if are different
-    //     this.disconnect();
-    //     Object.assign(this.connectConfig, connectConfig);
-    //     return true;
-    // }
+    /**
+     * Returns true if client will be re-connected
+     * @param settings
+     */
+    public settingsChanged(settings: ISshConnectionSettings) {
+        this.settingsResolver = settings.settingsResolver;
+        const reConnect = !isSimplyEq(settings.connectConfig, this.connectConfig);
+        this.connectConfig = Object.assign({}, settings.connectConfig);
+        if (reConnect) {
+            if (this.client) {
+                logFn(`SshConnection: end current connection`);
+                this.client.end();
+                this.client = undefined;
+            }
+        }
+    }
 
     public disconnect() {
         if (this.client) {

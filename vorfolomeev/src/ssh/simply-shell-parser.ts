@@ -6,7 +6,6 @@ export let logFn = console.log;
 logFn = () => {};
 
 export class SimplyShellParser implements IShellParser {
-
     public stdout: string;
     public stderr: string;
 
@@ -27,4 +26,10 @@ export class SimplyShellParser implements IShellParser {
         this.stderr += data;
         return false;   // no error can invoke another command
     }
+
+    public initialize(): void {
+        this.stdout = "";
+        this.stderr = "";
+    }
+
 }

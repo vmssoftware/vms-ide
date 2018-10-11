@@ -6,15 +6,28 @@ export class VmsPathConverterRoot extends VmsPathConverter {
 
     private root: string | undefined;
 
-    constructor(fsPath?: string, root?: string) {
-        if (fsPath && root) {
-            fsPath = path.join(root, fsPath);
+    /**
+     * Note: root is first
+     * @param root
+     * @param fsPath
+     */
+    constructor(root?: string, fsPath?: string) {
+        let fullPath = root || "";
+        // ensure directory
+        if (!fullPath.endsWith(path.sep)) {
+            fullPath += path.sep;
         }
-        super(fsPath);
+        if (fsPath && fsPath.length) {
+            if (fsPath.startsWith(path.sep)) {
+                fsPath = fsPath.slice(1);
+            }
+            fullPath += fsPath;
+        }
+        super(fullPath);
         this.root = root;
     }
 
-    public from(relPath: string): IPathConverter {
-        return new VmsPathConverterRoot(relPath, this.root);
+    public from(relPath: string): VmsPathConverterRoot {
+        return new VmsPathConverterRoot(this.root, relPath);
     }
 }

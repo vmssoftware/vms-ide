@@ -3,6 +3,7 @@
     "command.category": "OpenVMS",
     "command.buildProject.title": "Компилировать на VMS",
     "command.syncProject.title": "Синхронизировать файлы с VMS",
+    "command.downloadProject.title": "Download project files from VMS",
     "command.editProject.title": "Редактировать настройки проекта OpenVMS",
     "properties.project.root.description": "VMS root",
     "properties.project.exclude.description": "Exclude pattern",

@@ -22,8 +22,21 @@ export class PasswordCacheNode {
 // tslint:disable-next-line:max-classes-per-file
 export class AsyncPasswordChecker implements IConnectConfigResolver {
 
+    public static GetInstance(): AsyncPasswordChecker {
+        if (!this.instance) {
+            this.instance = new AsyncPasswordChecker();
+        }
+        return this.instance;
+    }
+
+    private static instance: AsyncPasswordChecker | undefined;
+
     protected cache: Map<string, PasswordCacheNode> = new Map<string, PasswordCacheNode>();
     protected taskQueue: AsyncTaskQueue = new AsyncTaskQueue();
+
+    private constructor() {
+        // no
+    }
 
     // remove failed settings only
     public clearCache(): boolean {

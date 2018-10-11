@@ -31,19 +31,30 @@ export class VmsSshHelper implements ISyncSiteHelper {
 
     private sftpConnection: SftpConnection;
     private shellConnection: ShellConnecttion;
-    private timeZoneOffsetPromise: Promise<number | undefined>;   // in seconds
+    private timeZoneOffsetPromise: Promise<number | undefined> | undefined;   // in seconds
     private pathConverter: IPathConverter;
     private settings: IVmsSShSettings;
 
     private readonly cmdGetTimeOffset = `WRITE SYS$OUTPUT F$TRNLNM("SYS$TIMEZONE_DIFFERENTIAL")`;
 
     constructor(settings: IVmsSShSettings) {
-        this.pathConverter = new VmsPathConverterRoot(undefined, settings.root);
+        this.pathConverter = new VmsPathConverterRoot(settings.root);
         settings.pathConverter = this.pathConverter;
         this.sftpConnection = new SftpConnection(settings);
         this.shellConnection = new ShellConnecttion(settings);
         this.settings = Object.assign({}, settings);
-        this.timeZoneOffsetPromise = this.getTimeZoneOffset();   // just post task
+    }
+
+    public settingsChanged(settings: IVmsSShSettings) {
+        if (this.settings.root !== settings.root) {
+            // create new pathConverter
+            this.pathConverter = new VmsPathConverterRoot(settings.root);
+        }
+        settings.pathConverter = this.pathConverter;
+        this.sftpConnection.settingsChanged(settings);
+        this.shellConnection.settingsChanged(settings);
+        this.settings = Object.assign({}, settings);
+        this.timeZoneOffsetPromise = undefined;
     }
 
     public dispose(): Promise<boolean> {
@@ -90,6 +101,9 @@ export class VmsSshHelper implements ISyncSiteHelper {
             const fileName = converted.fullPath;
             const utcDate = date.valueOf();
             let siteDate = utcDate;
+            if (!this.timeZoneOffsetPromise) {
+                this.timeZoneOffsetPromise = this.getTimeZoneOffset();
+            }
             const timeOffset = await this.timeZoneOffsetPromise;
             if (typeof timeOffset === "number") {
                 siteDate += timeOffset * 1000; // date.valueOf() in milliseconds
@@ -97,13 +111,13 @@ export class VmsSshHelper implements ISyncSiteHelper {
             const dateString = VmsAbsoluteDateString(new Date(siteDate));
             // we have to set both mod and att times
             const strCmd = `set file ${fileName} /attributes=(mod="${dateString}",att="${dateString}")`;
-            this.executeShellCmd(strCmd, undefined, asap).then((result) => {
-                if (result) {
-                    resolve(true);
-                } else {
-                    resolve(false);
-                }
-            });
+            const result = await this.executeShellCmd(strCmd, undefined, asap);
+            if (result) {
+                // it doesn't matter what exactly returns. it may fail on VMS site. we sould parse result
+                resolve(true);
+            } else {
+                resolve(false);
+            }
         });
     }
 
