@@ -17,6 +17,8 @@ export class HolderDebugFileInfo
 
 	public getShiftLine(fileName : string) : number
 	{
+		fileName = fileName.toLowerCase();
+
 		for (let item of this.fileInfo)
 		{
 			if(item.fileName === fileName)
@@ -31,6 +33,7 @@ export class HolderDebugFileInfo
 	public getIndexItem(fileName : string) : number
 	{
 		let index : number = -1;
+		fileName = fileName.toLowerCase();
 
 		for (let item of this.fileInfo)
 		{
@@ -47,6 +50,8 @@ export class HolderDebugFileInfo
 
 	public getItem(fileName : string) : DebugFileInfo | undefined
 	{
+		fileName = fileName.toLowerCase();
+
 		for (let item of this.fileInfo)
 		{
 			if(item.fileName === fileName)

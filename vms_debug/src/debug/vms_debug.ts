@@ -12,6 +12,8 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { basename } from 'path';
 import { VMSRuntime, VMSBreakpoint } from './vms_runtime';
 import { ShellSession, ModeWork } from '../net/shell-session';
+import { DebugCmdVMS } from '../command/debug_commands';
+import { Queue } from '../queue/queues';
 const { Subject } = require('await-notify');
 
 
@@ -43,7 +45,8 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	private _configurationDone = new Subject();
 
-	private response: DebugProtocol.EvaluateResponse;
+	private responseEvaluate: DebugProtocol.EvaluateResponse;
+	private responseStackTrace =  new Queue<DebugProtocol.StackTraceResponse>();
 
 	/**
 	 * Creates a new debug adapter that is used for one debug session.
@@ -59,16 +62,27 @@ export class VMSDebugSession extends LoggingDebugSession
 
 		this._runtime = new VMSRuntime(shell);
 
-		this._runtime.on('examine', (data : string) =>
+		// response event handlers
+		this._runtime.on(DebugCmdVMS.dbgExamine, (data : string) =>
 		{
 			let reply: string | undefined = undefined;
 
-			this.response.body =
+			this.responseEvaluate.body =
 			{
 				result: reply ? reply : `context: '${data}'`,
 				variablesReference: 0
 			};
-			this.sendResponse(this.response);
+			this.sendResponse(this.responseEvaluate);
+		});
+		this._runtime.on(DebugCmdVMS.dbgStack, (stack : any) =>
+		{
+			let response = this.responseStackTrace.pop();
+
+			response.body = {
+				stackFrames: stack.frames.map(f => new StackFrame(f.index, f.name, this.createSource(f.file), this.convertDebuggerLineToClient(f.line))),
+				totalFrames: stack.count
+			};
+			this.sendResponse(response);
 		});
 
 		// setup event handlers
@@ -88,10 +102,6 @@ export class VMSDebugSession extends LoggingDebugSession
 		{
 			this.sendEvent(new StoppedEvent('exception', VMSDebugSession.THREAD_ID));
 		});
-		this._runtime.on('breakpointValidated', (bp: VMSBreakpoint) =>
-		{
-			this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ verified: bp.verified, id: bp.id }));
-		});
 		this._runtime.on('output', (text, filePath, line, column) =>
 		{
 			const e: DebugProtocol.OutputEvent = new OutputEvent(`${text}\n`);
@@ -103,6 +113,21 @@ export class VMSDebugSession extends LoggingDebugSession
 		this._runtime.on('end', () =>
 		{
 			this.sendEvent(new TerminatedEvent());
+		});
+
+		// breakpoints event handlers
+		this._runtime.on('breakpointValidated', (bp: VMSBreakpoint) =>
+		{
+			this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ verified: bp.verified, id: bp.id }));
+		});
+		this._runtime.on('breakpointRemoved', (bp: VMSBreakpoint | undefined) =>
+		{
+			if (bp)
+			{
+				const mbp = <DebugProtocol.Breakpoint> new Breakpoint(false);
+				mbp.id= bp.id;
+				this.sendEvent(new BreakpointEvent('removed', mbp));
+			}
 		});
 	}
 
@@ -210,13 +235,8 @@ export class VMSDebugSession extends LoggingDebugSession
 		const maxLevels = typeof args.levels === 'number' ? args.levels : 1000;
 		const endFrame = startFrame + maxLevels;
 
-		const stk = this._runtime.stack(startFrame, endFrame);
-
-		response.body = {
-			stackFrames: stk.frames.map(f => new StackFrame(f.index, f.name, this.createSource(f.file), this.convertDebuggerLineToClient(f.line))),
-			totalFrames: stk.count
-		};
-		this.sendResponse(response);
+		this._runtime.stack(startFrame, endFrame);
+		this.responseStackTrace.push(response);
 	}
 
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void//call 2
@@ -276,49 +296,8 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void
 	{
-
-		let reply: string | undefined = undefined;
-
-		this._runtime.getVariableValue(args.expression);
-
-		if (args.context === 'repl')
-		{
-			// 'evaluate' supports to create and delete breakpoints from the 'repl':
-			const matches = /new +([0-9]+)/.exec(args.expression);
-			if (matches && matches.length === 2)
-			{
-				const mbp = this._runtime.setBreakPoint(this._runtime.getSourceFile(), this.convertClientLineToDebugger(parseInt(matches[1])));
-				const bp = <DebugProtocol.Breakpoint> new Breakpoint(mbp.verified, this.convertDebuggerLineToClient(mbp.line), undefined, this.createSource(this._runtime.getSourceFile()));
-				bp.id= mbp.id;
-				this.sendEvent(new BreakpointEvent('new', bp));
-				reply = `breakpoint created`;
-			}
-			else
-			{
-				const matches = /del +([0-9]+)/.exec(args.expression);
-				if (matches && matches.length === 2)
-				{
-					const mbp = this._runtime.clearBreakPoint(this._runtime.getSourceFile(), this.convertClientLineToDebugger(parseInt(matches[1])));
-					if (mbp)
-					{
-						const bp = <DebugProtocol.Breakpoint> new Breakpoint(false);
-						bp.id= mbp.id;
-						this.sendEvent(new BreakpointEvent('removed', bp));
-						reply = `breakpoint deleted`;
-					}
-				}
-			}
-		}
-
-		this.response = response;
-
-		// response.body =
-		// {
-		// 	result: reply ? reply : `evaluate(context: '${args.context}', '${args.expression}')`,
-		// 	variablesReference: 0
-		// };
-
-		//this.sendResponse(response);
+		this._runtime.variableValue(args.expression);
+		this.responseEvaluate = response;
 	}
 
 

@@ -1,6 +1,7 @@
 import {ToOutputChannel} from '../io/output-channel';
 import { SSHClient } from './ssh-client';
 import { Client, ClientChannel, SFTPWrapper, ClientErrorExtensions } from 'ssh2';
+import { Queue } from '../queue/queues';
 
 export enum ModeWork
 {
@@ -97,8 +98,12 @@ export class ShellSession
                 this. mode = ModeWork.shell;
             }
 
-            this.funcData(this.resultData, this.mode);
-            this.resultData = "";
+            if(this.resultData !== "")
+            {
+                this.funcData(this.resultData, this.mode);
+                this.resultData = "";
+            }
+
             this.readyCmd = true;
 
             if(this.queueCmd.size() > 0)
@@ -202,14 +207,4 @@ export class ShellSession
             this.stream.end("logoff\r\n");
         }
     }
-}
-
-
-class Queue<T>
-{
-    private data : any[] = [];
-
-    push = (item: T) => this.data.push(item);
-    pop = (): T => this.data.shift();
-    size = () : number => this.data.length;
 }

@@ -7,7 +7,7 @@ import * as Path from 'path';
 import { EventEmitter } from 'events';
 import { ShellSession, ModeWork } from '../net/shell-session';
 import { OsCommands } from '../command/os_commands';
-import { DebugCommands } from '../command/debug_commands';
+import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
 import { DebugParser } from '../parsers/debug_parser';
 import { workspace, Uri } from 'vscode';
 
@@ -46,6 +46,9 @@ export class VMSRuntime extends EventEmitter
 	private dbgParser : DebugParser;
 	private debugRun : boolean;
 
+	private stackStartFrame: number;
+	private stackEndFrame: number;
+
 	// the contents (= lines) of the one and only file
 	private sourceLines: string[];
 	private sourcePaths: string[];
@@ -73,7 +76,7 @@ export class VMSRuntime extends EventEmitter
 		this.buttonPressd = DebugButtonEvent.btnNoEvent;
 		this.osCmd = new OsCommands();
 		this.dbgCmd = new DebugCommands();
-		this.dbgParser = new DebugParser();
+		this.dbgParser = new DebugParser(this.dbgCmd);
 		this.debugRun = false;
 	}
 
@@ -138,45 +141,22 @@ export class VMSRuntime extends EventEmitter
 		this.shell.SendCommandToQueue(this.dbgCmd.exit());
 	}
 
-
-	public getVariableValue(nameVar : string)
+	public variableValue(nameVar : string)
 	{
 		this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVar));
+	}
+
+	public stack(startFrame: number, endFrame: number)
+	{
+		this.stackStartFrame = startFrame;
+		this.stackEndFrame = endFrame;
+
+		this.shell.SendCommandToQueue(this.dbgCmd.callStack());
 	}
 
 	public getSourceFile() : string
 	{
 		return this.sourceFile;
-	}
-
-
-	public stack(startFrame: number, endFrame: number): any//??????????????????
-	{
-		const words = this.sourceLines[this.currentLine].trim().split(/\s+/);
-
-		// DBG> show calls
-		// module name    routine name     line           rel PC           abs PC
-		// *REM            rem                12       0000000000000012 0000000000020432
-		// *HELLO          main             1648       0000000000000360 0000000000020360
-		// *HELLO          __main           1634       00000000000000E0 00000000000200E0
-        //                                    			FFFFFFFF80A3CF10 FFFFFFFF80A3CF10
-
-		const frames = new Array<any>();
-		// every word of the current line becomes a stack frame.
-		for (let i = startFrame; i < Math.min(endFrame, words.length); i++)
-		{
-			const name = words[i];	// use a word of the line as the stackframe name
-			frames.push({
-				index: i,
-				name: `${name}(${i})`,
-				file: this.sourceFile,
-				line: this.currentLine
-			});
-		}
-		return {
-			frames: frames,
-			count: words.length
-		};
 	}
 
 
@@ -285,7 +265,8 @@ export class VMSRuntime extends EventEmitter
 	// Clear breakpoint in file with given line.
 	public clearBreakPoint(path: string, line: number) : VMSBreakpoint | undefined
 	{
-		let bps = this.breakPoints.get(path);
+		let key = path.substring(2);
+		let bps = this.breakPoints.get(key);
 
 		if (bps)
 		{
@@ -387,17 +368,19 @@ export class VMSRuntime extends EventEmitter
 			{
 				if (!bp.verified && bp.line < this.sourceLines.length)
 				{
-					const srcLine = this.sourceLines[bp.line].trim();
+					let srcLine = this.sourceLines[bp.line].trim();
 
 					// if a line is empty or starts with '{' we don't allow to set a breakpoint but move the breakpoint down
-					if (srcLine.length === 0 || srcLine.indexOf('{') === 0)
+					while ((srcLine.length === 0 || srcLine.indexOf('{') === 0) && bp.line < this.sourceLines.length)
 					{
 						bp.line++;
+						srcLine = this.sourceLines[bp.line].trim();
 					}
 					// if a line starts with '}' we don't allow to set a breakpoint but move the breakpoint up
-					if (srcLine.indexOf('}') === 0)
+					while (srcLine.indexOf('}') === 0 && bp.line < this.sourceLines.length)
 					{
 						bp.line--;
+						srcLine = this.sourceLines[bp.line].trim();
 					}
 
 					bp.verified = true;
@@ -439,9 +422,15 @@ export class VMSRuntime extends EventEmitter
 				{
 					//finde number of line
 					let numberLine = this.dbgParser.findeBreakPointNumberLine(bp.line,  this.lisLines);
-					if(numberLine !== NaN)
+
+					if(!Number.isNaN(numberLine))
 					{
 						this.shell.SendCommandToQueue(this.dbgCmd.breakPointRemove(bp.file, numberLine));
+					}
+					else//clear breakpoint
+					{
+						const bpm = this.clearBreakPoint(path, bp.line);
+						this.sendEvent('breakpointRemoved', bpm);
 					}
 				});
 			}
@@ -458,15 +447,19 @@ export class VMSRuntime extends EventEmitter
 					//finde number of line
 					let numberLine = this.dbgParser.findeBreakPointNumberLine(bp.line,  this.lisLines);
 
-					if(numberLine !== NaN)
+					if(!Number.isNaN(numberLine))
 					{
 						this.shell.SendCommandToQueue(this.dbgCmd.breakPointSet(bp.file, numberLine));
+					}
+					else//clear breakpoint
+					{
+						const bpm = this.clearBreakPoint(path, bp.line);
+						this.sendEvent('breakpointRemoved', bpm);
 					}
 				});
 			}
 		}
 	}
-
 
 	private sendEvent(event: string, ... args: any[])
 	{
@@ -486,7 +479,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			this.debugRun = true;
 
-			this.dbgParser.parseDebugData(data, this.sourcePaths);
+			this.dbgParser.parseDebugData(data, this.sourcePaths, this.lisPaths);
 
 			let lineInfo = this.dbgParser.getFileInfo();
 			let messageCommand = this.dbgParser.getCommandMessage();
@@ -497,10 +490,17 @@ export class VMSRuntime extends EventEmitter
 			{
 				console.log(messageCommand);
 
-				if(messageCommand.includes("examine"))//show selected variable
+				if(messageCommand.includes(DebugCmdVMS.dbgExamine))//show selected variable
 				{
 					let messageData = this.dbgParser.getDataMessage();
-					this.sendEvent('examine', messageData);
+					this.sendEvent(DebugCmdVMS.dbgExamine, messageData);
+				}
+				else if(messageCommand.includes(DebugCmdVMS.dbgCallStack))//show call stack
+				{
+					let messageData = this.dbgParser.getDataMessage();
+
+					let stack = this.dbgParser.parseCallStackMsg(messageData, this.sourcePaths, this.lisPaths, this.stackStartFrame, this.stackEndFrame);
+					this.sendEvent(DebugCmdVMS.dbgStack, stack);
 				}
 			}
 			if(messageUser !== "")
