@@ -144,10 +144,8 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 {
 	private _server?: Net.Server;
 
-	/**
-	 * Massage a debug configuration just before a debug session is being launched,
-	 * e.g. add all missing attributes to the debug configuration.
-	 */
+	//Massage a debug configuration just before a debug session is being launched,
+	//e.g. add all missing attributes to the debug configuration.
 	resolveDebugConfiguration(folder: WorkspaceFolder | undefined, config: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration>
 	{
 		if(serverIsConnect === true)
@@ -206,7 +204,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 			vscode.window.showInformationMessage(message);
 		}
 
-		return config;
+		return config;//resolveDebugConfiguration needs to explicitly return null to open launch.json
 	}
 
 	dispose()

@@ -65,6 +65,8 @@ export class HolderDebugFileInfo
 
 	public setItem(filePath: string, fileName : string, shitfLine : number, currLine: number) : number
 	{
+		fileName = fileName.toLowerCase();
+
 		let item = <DebugFileInfo> { filePath, fileName, shitfLine, currLine };
 
 		return this.fileInfo.push(item);

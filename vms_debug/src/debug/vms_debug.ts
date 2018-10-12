@@ -131,25 +131,21 @@ export class VMSDebugSession extends LoggingDebugSession
 		});
 	}
 
-	/**
-	 * The 'initialize' request is the first request called by the frontend
-	 * to interrogate the features the debug adapter provides.
-	 */
+	// The 'initialize' request is the first request called by the frontend
+	// to interrogate the features the debug adapter provides.
 	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void
 	{
-
 		// build and return the capabilities of this debug adapter:
 		response.body = response.body || {};
 
 		// the adapter implements the configurationDoneRequest.
 		response.body.supportsConfigurationDoneRequest = true;
-
 		// make VS Code to use 'evaluate' when hovering over source
 		response.body.supportsEvaluateForHovers = true;
-
 		// make VS Code to show a 'step back' button
 		response.body.supportsStepBack = false;
-		//response.body.supportsStepInTargetsRequest = false;
+		// make VS Code to use 'set variable'
+		response.body.supportsSetVariable = true;
 
 		this.sendResponse(response);
 
@@ -291,6 +287,11 @@ export class VMSDebugSession extends LoggingDebugSession
 			variables: variables
 		};
 
+		this.sendResponse(response);
+	}
+
+	protected setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments): void
+	{
 		this.sendResponse(response);
 	}
 

@@ -114,61 +114,64 @@ export class DebugParser
 			{
 				let lineCode : number = i+1;
 
-				for(let j = i+1; j < msgLines.length-1; j++)
+				if(lineCode < msgLines.length)
 				{
-					if(msgLines[j].includes(MessageDebuger.msgKeyDbg) ||
-						msgLines[j].includes(MessageDebuger.msgKeySys))//debug message
+					for(let j = i+1; j < msgLines.length-1; j++)
 					{
-						this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLines[j]);
-						lineCode = msgLines.length-1;
+						if(msgLines[j].includes(MessageDebuger.msgKeyDbg) ||
+							msgLines[j].includes(MessageDebuger.msgKeySys))//debug message
+						{
+							this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLines[j]);
+							lineCode = msgLines.length-1;
+						}
 					}
-				}
 
-				//number: string of code; array[0]-number, array[1]-string of code
-				let array = msgLines[lineCode].split(":");
-				let name = this.findFileName(msgLines[i]);
+					//number: string of code; array[0]-number, array[1]-string of code
+					let array = msgLines[lineCode].split(":");
+					let name = this.findFileName(msgLines[i]);
 
-				if(name === "")
-				{
-					name = this.currentName;
-				}
-				else
-				{
-					this.currentName = name;
-				}
+					if(name === "")
+					{
+						name = this.currentName;
+					}
+					else
+					{
+						this.currentName = name;
+					}
 
-				let shift = this.fleInfo.getShiftLine(name);
+					let shift = this.fleInfo.getShiftLine(name);
 
-				if(shift === -1)
-				{
-					let pathFile = this.findPathFileByName(name, sourcePaths);
-					let pathLisFile = this.findPathFileByName(name, lisPaths);
-					lisLines = this.loadSource(pathLisFile);
+					if(shift === -1)
+					{
+						let pathFile = this.findPathFileByName(name, sourcePaths);
+						let pathLisFile = this.findPathFileByName(name, lisPaths);
+						lisLines = this.loadSource(pathLisFile);
 
-					//calculate shift line
-					shift = this.calculateShiftLine(msgLines[lineCode], lisLines);
+						//calculate shift line
+						shift = this.calculateShiftLine(msgLines[lineCode], lisLines);
 
-					if(shift !== -1)//calculate successfull
+						if(shift !== -1)//calculate successfull
+						{
+							currentLineNumber = parseInt(array[0], 10) - shift;
+							this.fleInfo.setItem(pathFile, name, shift, currentLineNumber);
+							debugFileInfo = this.fleInfo.getItem(name);
+
+							if(debugFileInfo)
+							{
+								this.queueMsgFileInfo.push(debugFileInfo);
+							}
+						}
+					}
+					else
 					{
 						currentLineNumber = parseInt(array[0], 10) - shift;
-						this.fleInfo.setItem(pathFile, name, shift, currentLineNumber);
 						debugFileInfo = this.fleInfo.getItem(name);
 
 						if(debugFileInfo)
 						{
+							debugFileInfo.currLine = currentLineNumber;
 							this.queueMsgFileInfo.push(debugFileInfo);
 						}
-					}
-				}
-				else
-				{
-					currentLineNumber = parseInt(array[0], 10) - shift;
-					debugFileInfo = this.fleInfo.getItem(name);
-
-					if(debugFileInfo)
-					{
-						debugFileInfo.currLine = currentLineNumber;
-						this.queueMsgFileInfo.push(debugFileInfo);
 					}
 				}
 
@@ -182,8 +185,15 @@ export class DebugParser
 
 				if(len > 80)
 				{
-					this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLines[i] + msgLines[i+1]);
-					i++;
+					if((i+1) < msgLines.length)
+					{
+						this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLines[i] + msgLines[i+1]);
+						i++;
+					}
+					else
+					{
+						this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLines[i]);
+					}
 				}
 				else
 				{
@@ -220,7 +230,7 @@ export class DebugParser
 			if(columns.length > 4)
 			{
 				const routineName = columns[1];
-				let fileName = columns[0].substring(1);
+				let fileName = columns[0].substring(1);//remove symbol '*'
 				let numberLineDebug = columns[2];
 				let pathFile = this.findPathFileByName(fileName, sourcePaths);
 				let pathLisFile = this.findPathFileByName(fileName, lisPaths);
@@ -229,9 +239,11 @@ export class DebugParser
 				if(shift === -1)
 				{
 					let lisLines = this.loadSource(pathLisFile);
-
 					//get source line
 					numberLine = this.getNumberLineSourceCode(numberLineDebug, lisLines);
+					//save file info
+					shift = parseInt(numberLineDebug, 10) - numberLine;
+					this.fleInfo.setItem(pathFile, fileName, shift, numberLine);
 				}
 				else
 				{
@@ -259,6 +271,7 @@ export class DebugParser
 	{
 
 	}
+
 
 	public getFileInfo() : DebugFileInfo | undefined
 	{
@@ -321,13 +334,13 @@ export class DebugParser
 	}
 
 
-	private findPathFileByName(fileName : string, sourcePaths : string[]) : string
+	private findPathFileByName(fileName : string, paths : string[]) : string
 	{
 		let pathFile : string = "";
 
 		fileName = fileName.toLowerCase();
 
-		for(let item of sourcePaths)
+		for(let item of paths)
 		{
 			let folders = item.split("\\");
 
@@ -430,7 +443,7 @@ export class DebugParser
 		let line = sourceLisLines[currentNumberLine - 1 + 4].trim();
 		let array = line.split(/\s+/);
 
-		if(parseInt(array[0], 10) !== NaN)
+		if(!Number.isNaN(parseInt(array[0], 10)))
 		{
 			number = parseInt(array[1], 10);
 		}
