@@ -7,7 +7,7 @@ let channel: OutputChannel;
 
 /** Channel name
  */
-const outputChannelName = "VMS Build";
+const outputChannelName = "OpenVMS extension";
 
 /** Get or create new output channel named [`VMS Build`](#_outputChannelName)
  */

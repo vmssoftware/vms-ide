@@ -1,8 +1,8 @@
 
-import { ITargetFile } from "./sync";
+import { ITargetFileOld } from "./sync-old";
 import { ISyncSiteHelper } from "./sync-site-helper";
 
-export class SyncSiteTargetFile implements ITargetFile {
+export class SyncSiteTargetFile implements ITargetFileOld {
 
     constructor(protected relPath: string, protected sshHelper: ISyncSiteHelper, protected date: Date) {
     }

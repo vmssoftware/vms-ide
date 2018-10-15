@@ -1,20 +1,18 @@
 import * as fs from "fs";
 import * as path from "path";
 import { Uri } from "vscode";
-import { FSSource } from "./fs-source";
-import { ISourceFile } from "./sync";
+import { FSSourceOld } from "./fs-source-old";
+import { ISourceFileOld } from "./sync-old";
 
-// tslint:disable-next-line:no-console
-export let logFn = console.log;
-// tslint:disable-next-line:no-empty
-logFn = () => {};
+export type LogType = (message?: any, ...optionalParams: any[]) => void;
+export let logFn: LogType | undefined;
 
-export class FSSourceFile implements ISourceFile {
+export class FSSourceFileOld implements ISourceFileOld {
 
     protected fullPath: string;
-    constructor(protected source: FSSource, protected relPath: string) {
+    constructor(protected source: FSSourceOld, protected relPath: string) {
         this.fullPath = path.join(this.source.rootPath, this.relPath);
-        logFn(`source created: ${this.fullPath}`);
+        if (logFn) { logFn(`source created: ${this.fullPath}`); }
     }
 
     get relativePath(): string {
@@ -26,9 +24,9 @@ export class FSSourceFile implements ISourceFile {
             fs.readFile(this.fullPath, (err, data) => {
                 if (err) {
                     resolve(undefined);
-                    logFn(`content of ${this.fullPath} failed: ${err}`);
+                    if (logFn) { logFn(`content of ${this.fullPath} failed: ${err}`); }
                 } else {
-                    logFn(`content of ${this.fullPath} length: ${data.length}`);
+                    if (logFn) { logFn(`content of ${this.fullPath} length: ${data.length}`); }
                     resolve(data);
                 }
             });
@@ -40,10 +38,10 @@ export class FSSourceFile implements ISourceFile {
             fs.stat(this.fullPath, (err, stats) => {
                 if (err) {
                     resolve(undefined);
-                    logFn(`date of ${this.fullPath} failed: ${err}`);
+                    if (logFn) { logFn(`date of ${this.fullPath} failed: ${err}`); }
                 } else {
                     resolve(stats.mtime);
-                    logFn(`date of ${this.fullPath} ok: ${stats.mtime.toUTCString()}`);
+                    if (logFn) { logFn(`date of ${this.fullPath} ok: ${stats.mtime.toUTCString()}`); }
                 }
             });
         });

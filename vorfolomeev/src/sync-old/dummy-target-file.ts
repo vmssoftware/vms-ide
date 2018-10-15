@@ -1,6 +1,6 @@
-import { ITargetFile } from "./sync";
+import { ITargetFileOld } from "./sync-old";
 
-export class DummyTargetFile implements ITargetFile {
+export class DummyTargetFile implements ITargetFileOld {
 
     constructor(public relPath: string) {
 

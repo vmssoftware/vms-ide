@@ -6,8 +6,12 @@ export class Lock {
     private locked = false;
     private emitter = new EventEmitter();
 
-    constructor() {
-        this.emitter.setMaxListeners(100);
+    constructor(initialState = false) {
+        this.locked = initialState;
+    }
+
+    public get isLocked(): boolean {
+        return this.locked;
     }
 
     public acquire(): Promise<void> {

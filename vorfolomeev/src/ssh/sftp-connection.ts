@@ -5,10 +5,8 @@ import { ISshConnectionSettings, SshConnection } from "./connection";
 import { IPathConverter } from "./path-converter";
 import { QueuedConnection } from "./queued-connection";
 
-// tslint:disable-next-line:no-console
-export let logFn = console.log;
-// tslint:disable-next-line:no-empty
-logFn = () => {};
+export type LogType = (message?: any, ...optionalParams: any[]) => void;
+export let logFn: LogType | undefined;
 
 type Resolve<T> = ((value?: T | PromiseLike<T> | undefined) => void);
 
@@ -48,7 +46,7 @@ export class SftpConnection extends QueuedConnection {
                 this.lastError = undefined;
                 const retCode = await this.ensureSftp();
                 if (!retCode || !this.sftp ) {
-                    logFn(`getFileModTime: failed sftp: ${relPath} => ${this.lastError}`);
+                    if (logFn) { logFn(`getFileModTime: failed sftp: ${relPath} => ${this.lastError}`); }
                     resolve(undefined);
                 } else {
                     let converted = relPath;
@@ -57,11 +55,11 @@ export class SftpConnection extends QueuedConnection {
                     }
                     const stats = await this.sftpStats(converted);
                     if (!stats) {
-                        logFn(`getFileModTime: failed: ${relPath} => ${this.lastError}`);
+                        if (logFn) { logFn(`getFileModTime: failed: ${relPath} => ${this.lastError}`); }
                         resolve(undefined);
                     } else {
                         const date = new Date(stats.mtime);
-                        logFn(`getFileModTime: ok: ${date}`);
+                        if (logFn) { logFn(`getFileModTime: ok: ${date}`); }
                         resolve(date);
                     }
                 }
@@ -81,7 +79,7 @@ export class SftpConnection extends QueuedConnection {
                 this.lastError = undefined;
                 let retCode = await this.ensureSftp();
                 if (!retCode || !this.sftp ) {
-                    logFn(`getFileModTime: failed sftp: ${relPath} => ${this.lastError}`);
+                    if (logFn) { logFn(`getFileModTime: failed sftp: ${relPath} => ${this.lastError}`); }
                     resolve(undefined);
                 } else {
                     const attr: InputAttributes = { atime: date, mtime: date};
@@ -90,7 +88,7 @@ export class SftpConnection extends QueuedConnection {
                         converted = this.pathConverter.from(relPath).fullPath;
                     }
                     retCode = await this.sftpSetStats(converted, attr);
-                    logFn(`getFileModTime: ok: ${date}`);
+                    if (logFn) { logFn(`getFileModTime: ok: ${date}`); }
                     resolve(retCode);
                 }
             }, asap);
@@ -109,7 +107,7 @@ export class SftpConnection extends QueuedConnection {
                 this.lastError = undefined;
                 let retCode = await this.ensureSftp();
                 if (!retCode || !this.sftp ) {
-                    logFn(`updateContent: failed sftp: ${relPath} => ${this.lastError}`);
+                    if (logFn) { logFn(`updateContent: failed sftp: ${relPath} => ${this.lastError}`); }
                     resolve(false);
                 } else {
                     // ensure directory
@@ -123,7 +121,8 @@ export class SftpConnection extends QueuedConnection {
                             // create directory
                             const result = await this.sftpMkDir(dir);
                             if (!result) {
-                                logFn(`updateContent: failed create directory for: ${relPath} => ${this.lastError}`);
+                                // tslint:disable-next-line:max-line-length
+                                if (logFn) { logFn(`updateContent: failed create directory for: ${relPath} => ${this.lastError}`); }
                                 resolve(false);
                                 return;
                             }
@@ -131,12 +130,12 @@ export class SftpConnection extends QueuedConnection {
                     }
                     const handle = await this.sftpOpen(converted, "w");
                     if (!handle || !handle.length) {
-                        logFn(`updateContent: failed open: ${relPath} => ${this.lastError}`);
+                        if (logFn) { logFn(`updateContent: failed open: ${relPath} => ${this.lastError}`); }
                         resolve(false);
                     } else {
                         retCode = await this.sftpWrite(handle, buffer);
                         if (!retCode) {
-                            logFn(`updateContent: failed write: ${relPath} => ${this.lastError}`);
+                            if (logFn) { logFn(`updateContent: failed write: ${relPath} => ${this.lastError}`); }
                             resolve(false);
                         } else {
                             retCode = await this.sftpClose(handle);
@@ -154,7 +153,7 @@ export class SftpConnection extends QueuedConnection {
                 this.lastError = undefined;
                 let retCode = await this.ensureSftp();
                 if (!retCode || !this.sftp ) {
-                    logFn(`getContent: failed sftp: ${relPath} => ${this.lastError}`);
+                    if (logFn) { logFn(`getContent: failed sftp: ${relPath} => ${this.lastError}`); }
                     resolve(undefined);
                 } else {
                     let converted = relPath;
@@ -170,12 +169,12 @@ export class SftpConnection extends QueuedConnection {
                     const buffer = Buffer.allocUnsafe(stats.size);
                     const handle = await this.sftpOpen(converted, "r");
                     if (!handle || !handle.length) {
-                        logFn(`getContent: failed open: ${relPath} => ${this.lastError}`);
+                        if (logFn) { logFn(`getContent: failed open: ${relPath} => ${this.lastError}`); }
                         resolve(undefined);
                     } else {
                         const readBytes = await this.sftpRead(handle, buffer, 0, buffer.length, 0);
                         if (readBytes !== buffer.length) {
-                            logFn(`getContent: failed write: ${relPath} => ${this.lastError}`);
+                            if (logFn) { logFn(`getContent: failed write: ${relPath} => ${this.lastError}`); }
                             resolve(undefined);
                         } else {
                             retCode = await this.sftpClose(handle);
@@ -203,7 +202,7 @@ export class SftpConnection extends QueuedConnection {
                 this.lastError = undefined;
                 let retCode = await this.ensureSftp();
                 if (!retCode || !this.sftp ) {
-                    logFn(`readDirectoryTree: failed sftp: ${directory} => ${this.lastError}`);
+                    if (logFn) { logFn(`readDirectoryTree: failed sftp: ${directory} => ${this.lastError}`); }
                     resolve(false);
                     return;
                 }
@@ -215,7 +214,7 @@ export class SftpConnection extends QueuedConnection {
 
     protected ensureSftp(): Promise<boolean> {
         if (this.sftp) {
-            logFn(`ensureSftp: already exists`);
+            if (logFn) { logFn(`ensureSftp: already exists`); }
             return Promise.resolve(true);
         }
         return this.createSFTP();
@@ -225,7 +224,7 @@ export class SftpConnection extends QueuedConnection {
         return new Promise<boolean>(async (resolve) => {
             const retCode = await this.ensureConnection();
             if (!retCode || !this.client) {
-                logFn(`createSFTP: failed connect: ${this.lastError}`);
+                if (logFn) { logFn(`createSFTP: failed connect: ${this.lastError}`); }
                 resolve(false);
                 return;
             }
@@ -233,20 +232,20 @@ export class SftpConnection extends QueuedConnection {
                 if (err) {
                     this.lastError = err;
                     resolve(false);
-                    logFn(`createSFTP: failed sftp: ${this.lastError}`);
+                    if (logFn) { logFn(`createSFTP: failed sftp: ${this.lastError}`); }
                 } else {
                     sftpRet.on("error", (errSftp) => {
                         this.sftp = undefined;
                         this.lastError = errSftp;
-                        logFn(`SFTP: on error: ${this.lastError}`);
+                        if (logFn) { logFn(`SFTP: on error: ${this.lastError}`); }
                     });
                     sftpRet.on("end", () => {
                         this.sftp = undefined;
-                        logFn(`SFTP: end`);
+                        if (logFn) { logFn(`SFTP: end`); }
                     });
                     this.sftp = sftpRet;
                     resolve(true);
-                    logFn(`createSFTP: ok`);
+                    if (logFn) { logFn(`createSFTP: ok`); }
                 }
             });
         });
@@ -255,7 +254,7 @@ export class SftpConnection extends QueuedConnection {
     protected sftpOpenExecutor(resolve: Resolve<Buffer>, relPath: string, mode: string): void {
         if (!this.sftp) {
             this.lastError = new Error("No sftp");
-            logFn(`sftpOpen: no sftp`);
+            if (logFn) { logFn(`sftpOpen: no sftp`); }
             resolve(Buffer.allocUnsafe(0));
             return;
         }
@@ -265,11 +264,11 @@ export class SftpConnection extends QueuedConnection {
                 resolve(Buffer.allocUnsafe(0));
             } else {
                 resolve(handle);
-                logFn(`sftpOpen: ok`);
+                if (logFn) { logFn(`sftpOpen: ok`); }
             }
         })) {
             // execute later on "continue" event
-            logFn(`sftpOpen: wait`);
+            if (logFn) { logFn(`sftpOpen: wait`); }
             this.sftp.once("continue", () => {
                 this.sftpOpenExecutor(resolve, relPath, mode);
             });
@@ -285,7 +284,7 @@ export class SftpConnection extends QueuedConnection {
     protected sftpWriteExecutor(resolve: Resolve<boolean>, handle: Buffer, buffer: Buffer): void {
         if (!this.sftp) {
             this.lastError = new Error("No sftp");
-            logFn(`sftpWrite: no sftp`);
+            if (logFn) { logFn(`sftpWrite: no sftp`); }
             resolve(false);
             return;
         }
@@ -296,10 +295,10 @@ export class SftpConnection extends QueuedConnection {
                 return;
             }
             resolve(true);
-            logFn(`sftpWrite: ok`);
+            if (logFn) { logFn(`sftpWrite: ok`); }
         })) {
             // execute later on "continue" event
-            logFn(`sftpWrite: wait`);
+            if (logFn) { logFn(`sftpWrite: wait`); }
             this.sftp.once("continue", () => {
                 this.sftpWriteExecutor(resolve, handle, buffer);
             });
@@ -326,7 +325,7 @@ export class SftpConnection extends QueuedConnection {
                                position: number): void {
         if (!this.sftp) {
             this.lastError = new Error("No sftp");
-            logFn(`sftpRead: no sftp`);
+            if (logFn) { logFn(`sftpRead: no sftp`); }
             resolve(0);
             return;
         }
@@ -334,14 +333,14 @@ export class SftpConnection extends QueuedConnection {
             if (err) {
                 this.lastError = err;
                 resolve(0);
-                logFn(`sftpRead: failed: ${this.lastError}`);
+                if (logFn) { logFn(`sftpRead: failed: ${this.lastError}`); }
             } else {
                 resolve(bytesRead);
-                logFn(`sftpRead: ok`);
+                if (logFn) { logFn(`sftpRead: ok`); }
             }
         })) {
             // execute later on "continue" event
-            logFn(`sftpRead: wait`);
+            if (logFn) { logFn(`sftpRead: wait`); }
             this.sftp.once("continue", () => {
                 this.sftpReadExecutor(resolve, handle, buffer, offset, length, position);
             });
@@ -351,7 +350,7 @@ export class SftpConnection extends QueuedConnection {
     protected sftpCloseExecutor(resolve: Resolve<boolean>, handle: Buffer): void {
         if (!this.sftp) {
             this.lastError = new Error("No sftp");
-            logFn(`sftpClose: no sftp`);
+            if (logFn) { logFn(`sftpClose: no sftp`); }
             resolve(false);
             return;
         }
@@ -359,14 +358,14 @@ export class SftpConnection extends QueuedConnection {
             if (err) {
                 this.lastError = err;
                 resolve(false);
-                logFn(`sftpClose: failed: ${this.lastError}`);
+                if (logFn) { logFn(`sftpClose: failed: ${this.lastError}`); }
                 return;
             }
             resolve(true);
-            logFn(`sftpClose: ok`);
+            if (logFn) { logFn(`sftpClose: ok`); }
         })) {
             // execute later on "continue" event
-            logFn(`sftpClose: wait`);
+            if (logFn) { logFn(`sftpClose: wait`); }
             this.sftp.once("continue", () => {
                 this.sftpCloseExecutor(resolve, handle);
             });
@@ -382,7 +381,7 @@ export class SftpConnection extends QueuedConnection {
     protected sftpSetStatsExecutor(resolve: Resolve<boolean>, relPath: string, stats: InputAttributes): void {
         if (!this.sftp) {
             this.lastError = new Error("No sftp");
-            logFn(`sftpSetModTime: no sftp`);
+            if (logFn) { logFn(`sftpSetModTime: no sftp`); }
             resolve(undefined);
             return;
         }
@@ -395,7 +394,7 @@ export class SftpConnection extends QueuedConnection {
             resolve(true);
         })) {
             // execute later on "continue" event
-            logFn(`sftpSetModTime: wait`);
+            if (logFn) { logFn(`sftpSetModTime: wait`); }
             this.sftp.once("continue", () => {
                 this.sftpSetStatsExecutor(resolve, relPath, stats);
             });
@@ -417,7 +416,7 @@ export class SftpConnection extends QueuedConnection {
     protected sftpStatExecutor(resolve: Resolve<Stats|undefined>, relPath: string): void {
         if (!this.sftp) {
             this.lastError = new Error("No sftp");
-            logFn(`sftpStats: no sftp`);
+            if (logFn) { logFn(`sftpStats: no sftp`); }
             resolve(undefined);
             return;
         }
@@ -430,7 +429,7 @@ export class SftpConnection extends QueuedConnection {
             resolve(stats);
         })) {
             // execute later on "continue" event
-            logFn(`sftpStatExecutor: wait`);
+            if (logFn) { logFn(`sftpStatExecutor: wait`); }
             this.sftp.once("continue", () => {
                 this.sftpStatExecutor(resolve, relPath);
             });
@@ -446,7 +445,7 @@ export class SftpConnection extends QueuedConnection {
     protected sftpMkDirExecutor(resolve: Resolve<boolean>, relPath: string): void {
         if (!this.sftp) {
             this.lastError = new Error("No sftp");
-            logFn(`sftpMkDir: no sftp`);
+            if (logFn) { logFn(`sftpMkDir: no sftp`); }
             resolve(undefined);
             return;
         }
@@ -459,7 +458,7 @@ export class SftpConnection extends QueuedConnection {
             }
         })) {
             // execute later on "continue" event
-            logFn(`sftpMkDirExecutor: wait`);
+            if (logFn) { logFn(`sftpMkDirExecutor: wait`); }
             this.sftp.once("continue", () => {
                 this.sftpMkDirExecutor(resolve, relPath);
             });
@@ -475,36 +474,36 @@ export class SftpConnection extends QueuedConnection {
     protected sftpReadDirectoryTreeExecutor(resolve: Resolve<boolean>, directory: string, files: string[]): void {
         if (!this.sftp) {
             this.lastError = new Error("No sftp");
-            logFn(`sftpReadDirectoryTree: no sftp`);
+            if (logFn) { logFn(`sftpReadDirectoryTree: no sftp`); }
             resolve(false);
             return;
         }
         if (directory.length > 0) {
             if (!directory.endsWith(path.sep)) {
-                logFn(`sftpReadDirectoryTree: add slash`);
+                if (logFn) { logFn(`sftpReadDirectoryTree: add slash`); }
                 directory += path.sep;
             }
         }
         let converted = directory;
         if (this.pathConverter) {
-            logFn(`sftpReadDirectoryTree: converting`);
+            if (logFn) { logFn(`sftpReadDirectoryTree: converting`); }
             converted = this.pathConverter.from(directory).directory;
         }
-        logFn(`sftpReadDirectoryTree: converted is ${converted}`);
+        if (logFn) { logFn(`sftpReadDirectoryTree: converted is ${converted}`); }
         if (!this.sftp.readdir(converted, async (err, list) => {
             if (err) {
                 this.lastError = err;
-                logFn(`sftpReadDirectoryTree: ${this.lastError}`);
+                if (logFn) { logFn(`sftpReadDirectoryTree: ${this.lastError}`); }
                 resolve(false);
             } else {
                 // go through list
                 for (const file of list) {
                     if (file.longname.charAt(0) === "d") {
-                        logFn(`sftpReadDirectoryTree: is directory ${file.filename}`);
+                        if (logFn) { logFn(`sftpReadDirectoryTree: is directory ${file.filename}`); }
                         await this.sftpReadDirectoryTree(directory + file.filename + path.sep, files);
                     } else {
                         // TODO: implement path concatenation in IPathConverter
-                        logFn(`sftpReadDirectoryTree: is file ${file.filename}`);
+                        if (logFn) { logFn(`sftpReadDirectoryTree: is file ${file.filename}`); }
                         files.push(converted + file.filename);
                     }
                 }
@@ -512,7 +511,7 @@ export class SftpConnection extends QueuedConnection {
             }
         })) {
             // execute later on "continue" event
-            logFn(`sftpReadDirectoryTreeExecutor: wait`);
+            if (logFn) { logFn(`sftpReadDirectoryTreeExecutor: wait`); }
             this.sftp.once("continue", () => {
                 this.sftpReadDirectoryTreeExecutor(resolve, directory, files);
             });

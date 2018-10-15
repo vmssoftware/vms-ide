@@ -11,30 +11,31 @@ import { DownloadProject } from "./vms/download-project";
 
 const localize = nls.config()();
 
+export type LogType = (message?: any, ...optionalParams: any[]) => void;
+export let logFn: LogType | undefined;
+
 // tslint:disable-next-line:no-console
-export let logFn = console.log;
-// tslint:disable-next-line:no-empty
-// logFn = () => {};
+logFn = console.log;
 
 export async function activate(context: ExtensionContext) {
 
     // uncomment lines to enable log
-    require("./ssh/connection").logFn = logFn;
-    require("./ssh/sftp-connection").logFn = logFn;
-    require("./ssh/shell-connection").logFn = logFn;
-    require("./ssh/exec").logFn = logFn;
-    require("./ssh/queued-connection").logFn = logFn;
-    require("./ssh/simply-shell-parser").logFn = logFn;
-    require("./ssh/password-checker-3").logFn = logFn;
-    require("./sync/sync-impl").logFn = logFn;
-    require("./sync/fs-source").logFn = logFn;
-    require("./sync/fs-source-file").logFn = logFn;
-    require("./sync/sync-impl").logFn = logFn;
-    require("./vms/vms-ssh-helper").logFn = logFn;
-    require("./syncronize").logFn = logFn;
-    require("./vms/download-project").logFn = logFn;
+    // require("./ssh/connection").logFn = logFn;
+    // require("./ssh/sftp-connection").logFn = logFn;
+    // require("./ssh/shell-connection").logFn = logFn;
+    // require("./ssh/exec").logFn = logFn;
+    // require("./ssh/queued-connection").logFn = logFn;
+    // require("./ssh/simply-shell-parser").logFn = logFn;
+    // require("./ssh/password-checker").logFn = logFn;
+    // require("./sync/sync-impl").logFn = logFn;
+    // require("./sync/fs-source").logFn = logFn;
+    // require("./sync/fs-source-file").logFn = logFn;
+    // require("./sync/sync-impl").logFn = logFn;
+    // require("./vms/vms-ssh-helper").logFn = logFn;
+    // require("./syncronize").logFn = logFn;
+    // require("./vms/download-project").logFn = logFn;
 
-    logFn(localize("extension.activated", "OpenVMS extension is activated"));
+    if (logFn) logFn(localize("extension.activated", "OpenVMS extension is activated"));
 
     let configHelper: IConfigHelper | undefined;
     GetConfigHelperFromApi().then((helperApi) => {
@@ -89,5 +90,5 @@ export async function activate(context: ExtensionContext) {
 // this method is called when your extension is deactivated
 // tslint:disable-next-line:no-empty
 export function deactivate() {
-    logFn(localize("extension.deactivated", "OpenVMS extension is deactivated"));
+    if (logFn) logFn(localize("extension.deactivated", "OpenVMS extension is deactivated"));
 }

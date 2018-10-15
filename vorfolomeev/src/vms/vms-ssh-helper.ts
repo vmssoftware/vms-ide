@@ -4,14 +4,12 @@ import { IPathConverter } from "../ssh/path-converter";
 import { ISftpSettings, SftpConnection } from "../ssh/sftp-connection";
 import { IExecutionResult, IShellSettings, ShellConnecttion } from "../ssh/shell-connection";
 import { IShellParser } from "../ssh/shell-parser";
-import { ISyncSiteHelper } from "../sync/sync-site-helper";
+import { ISyncSiteHelper } from "../sync-old/sync-site-helper";
 import { VmsAbsoluteDateString } from "./vms-absolute-date-string";
 import { VmsPathConverterRoot } from "./vms-path-converter-root";
 
-// tslint:disable-next-line:no-console
-export let logFn = console.log;
-// tslint:disable-next-line:no-empty
-logFn = () => {};
+export type LogType = (message?: any, ...optionalParams: any[]) => void;
+export let logFn: LogType | undefined;
 
 export interface IVmsSShSettings extends ISftpSettings, IShellSettings {
     root?: string;
@@ -89,7 +87,7 @@ export class VmsSshHelper implements ISyncSiteHelper {
             if (date) {
                 // vms sftp returns mtime in seconds
                 date = new Date( date.valueOf() * 1000 );
-                logFn(`VMS date of ${relPath} is ${date}`);
+                if (logFn) { logFn(`VMS date of ${relPath} is ${date}`); }
             }
             return date;
         });
@@ -139,7 +137,7 @@ export class VmsSshHelper implements ISyncSiteHelper {
                     return false;
                 });
             }
-            logFn(`getTimeOffset after executeCmd: ${offsetInMinutes}`);
+            if (logFn) { logFn(`getTimeOffset after executeCmd: ${offsetInMinutes}`); }
             resolve(offsetInMinutes);
         });
     }

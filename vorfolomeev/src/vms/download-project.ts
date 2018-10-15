@@ -3,14 +3,12 @@ import { IConfigHelper } from "../config/config";
 import { ProjectSection } from "../config/sections/project";
 import { UserPasswordSection } from "../config/sections/user-password";
 import { ToOutputChannel } from "../output-channel";
-import { PasswordResolver } from "../ssh/password-checker-4";
+import { PasswordResolver } from "../ssh/password-checker";
 import { ISftpSettings, SftpConnection } from "../ssh/sftp-connection";
 import { VmsPathConverterRoot } from "./vms-path-converter-root";
 
-// tslint:disable-next-line:no-console
-export let logFn = console.log;
-// tslint:disable-next-line:no-empty
-logFn = () => {};
+export type LogType = (message?: any, ...optionalParams: any[]) => void;
+export let logFn: LogType | undefined;
 
 export function DownloadProject(configHelper: IConfigHelper): Promise<boolean> {
     return Promise.resolve().then(async () => {

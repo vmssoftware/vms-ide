@@ -5,18 +5,16 @@ import { ConfigHelper, IConfigHelper } from "./config/config";
 import { ProjectSection } from "./config/sections/project";
 import { ShellSection } from "./config/sections/shell";
 import { UserPasswordSection } from "./config/sections/user-password";
-import { PasswordResolver } from "./ssh/password-checker-4";
+import { PasswordResolver } from "./ssh/password-checker";
 import { SimplyShellParser } from "./ssh/simply-shell-parser";
-import { FSSource } from "./sync/fs-source";
-import { ISync } from "./sync/sync";
-import { SyncImplement } from "./sync/sync-impl";
-import { SyncSiteTarget } from "./sync/sync-site-target";
+import { FSSourceOld } from "./sync-old/fs-source-old";
+import { SyncImplement } from "./sync-old/sync-impl";
+import { ISyncOld } from "./sync-old/sync-old";
+import { SyncSiteTarget } from "./sync-old/sync-site-target";
 import { IVmsSShSettings, VmsSshHelper } from "./vms/vms-ssh-helper";
 
-// tslint:disable-next-line:no-console
-export let logFn = console.log;
-// tslint:disable-next-line:no-empty
-logFn = () => {};
+export type LogType = (message?: any, ...optionalParams: any[]) => void;
+export let logFn: LogType | undefined;
 
 export interface ISyncResult {
     sent: number;
@@ -25,7 +23,7 @@ export interface ISyncResult {
 
 export class Synchronizer {
 
-    private syncMaster: ISync | undefined;
+    private syncMaster: ISyncOld | undefined;
     private vmsSshHelper: VmsSshHelper | undefined;
     private vmsTarget: SyncSiteTarget | undefined;
     private didLoadDispose: Disposable | undefined;
@@ -66,7 +64,7 @@ export class Synchronizer {
             // add and remove workspaces on each call
             if (workspace.workspaceFolders) {
                 for (const ws of workspace.workspaceFolders) {
-                    disposables.push(this.syncMaster.addSource(new FSSource(ws.uri)));
+                    disposables.push(this.syncMaster.addSource(new FSSourceOld(ws.uri)));
                 }
             }
 
@@ -86,11 +84,11 @@ export class Synchronizer {
                 Promise.all([source, headers, resource]).then((arrFound) => {
                     const allUri = arrFound[0].concat(arrFound[1]).concat(arrFound[2]);
                     const allFiles = allUri.map((uri) => syncronizer.postFile(uri).then((result) => {
-                        logFn(`${uri} is processed: ${result}`);
+                        if (logFn) { logFn(`${uri} is processed: ${result}`); }
                         return result;
                     }));
                     Promise.all(allFiles).then((results) => {
-                        logFn("All done");
+                        if (logFn) { logFn("All done"); }
                         disposables.forEach((v) => v.dispose());
                         disposables = [];
                         const ret: ISyncResult = { sent: 0, all: 0};
@@ -107,12 +105,12 @@ export class Synchronizer {
                         }
                         this.inProgress = false;
                     }).catch((err) => {
-                        logFn(`Failed: ${err}`);
+                        if (logFn) { logFn(`Failed: ${err}`); }
                         resolve(undefined);
                         this.inProgress = false;
                     });
                 }).catch((err) => {
-                    logFn(`Find files filed: ${err}`);
+                    if (logFn) { logFn(`Find files filed: ${err}`); }
                     window.showErrorMessage("Error while find project files");
                     resolve(undefined);
                     this.inProgress = false;
@@ -153,7 +151,7 @@ export class Synchronizer {
         });
     }
 
-    private BuildSynchronizer(configHelper: IConfigHelper): Promise<ISync|undefined> {
+    private BuildSynchronizer(configHelper: IConfigHelper): Promise<ISyncOld|undefined> {
         return Promise.resolve().then(async () => {
             const vmsSettings: IVmsSShSettings = await this.BuildVmsSettings(configHelper);
             this.vmsSshHelper = new VmsSshHelper(vmsSettings);
@@ -163,7 +161,7 @@ export class Synchronizer {
     }
 
     private OnDidLoadNewConfiguration(): void {
-        logFn("New config did load");
+        if (logFn) { logFn("New config did load"); }
         if (this.configHelper) {
             this.BuildVmsSettings(this.configHelper).then((settings) => {
                 if (this.vmsSshHelper) {

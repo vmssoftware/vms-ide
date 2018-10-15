@@ -4,10 +4,8 @@ import { QueuedConnection } from "./queued-connection";
 import { IShellParser } from "./shell-parser";
 import { SimplyShellParser } from "./simply-shell-parser";
 
-// tslint:disable-next-line:no-console
-export let logFn = console.log;
-// tslint:disable-next-line:no-empty
-logFn = () => {};
+export type LogType = (message?: any, ...optionalParams: any[]) => void;
+export let logFn: LogType | undefined;
 
 type Resolve<T> = ((value?: T | PromiseLike<T> | undefined) => void);
 
@@ -54,11 +52,11 @@ export class ShellConnecttion extends QueuedConnection {
                 this.lastError = undefined;
                 const retCode = await this.ensureShell();
                 if (!retCode || !this.channel ) {
-                    logFn(`executeShellCmd: failed shell: ${cmd} => ${this.lastError}`);
+                    if (logFn) logFn(`executeShellCmd: failed shell: ${cmd} => ${this.lastError}`);
                     resolve(undefined);
                 } else {
                     const result = await this.shellExec(cmd, parser);
-                    logFn(`executeShellCmd: ok : ${cmd}`);
+                    if (logFn) logFn(`executeShellCmd: ok : ${cmd}`);
                     resolve(result);
                 }
             }, asap);
@@ -67,7 +65,7 @@ export class ShellConnecttion extends QueuedConnection {
 
     private ensureShell(): Promise<boolean> {
         if (this.channel) {
-            logFn(`ensureShell: already exists`);
+            if (logFn) logFn(`ensureShell: already exists`);
             return Promise.resolve(true);
         }
         return this.createShell();
@@ -77,7 +75,7 @@ export class ShellConnecttion extends QueuedConnection {
         return new Promise<boolean>(async (resolve) => {
             const retCode = await this.ensureConnection();
             if (!retCode || !this.client) {
-                logFn(`createShell: failed connect: ${this.lastError}`);
+                if (logFn) logFn(`createShell: failed connect: ${this.lastError}`);
                 resolve(false);
                 return;
             }
@@ -85,16 +83,16 @@ export class ShellConnecttion extends QueuedConnection {
                 if (err) {
                     this.lastError = err;
                     resolve(false);
-                    logFn(`createShell: failed shell: ${this.lastError}`);
+                    if (logFn) logFn(`createShell: failed shell: ${this.lastError}`);
                 } else {
                     this.cancelOperation = () => {
                         this.channel = undefined;
-                        logFn(`shell: cancelled on creation`);
+                        if (logFn) logFn(`shell: cancelled on creation`);
                         resolve(false);
                     };
                     channelRet.on("close", () => {
                         this.channel = undefined;
-                        logFn(`shell: closed`);
+                        if (logFn) logFn(`shell: closed`);
                         resolve(false);
                     });
                     // initail shell parser => must parse output and resolve promise when prompt appears
@@ -106,7 +104,7 @@ export class ShellConnecttion extends QueuedConnection {
                         }
                         if (typeof data === "string") {
                             if (parser.onData(data)) {
-                                logFn(`createShell: ok`);
+                                if (logFn) logFn(`createShell: ok`);
                                 this.channel = channelRet;
                                 channelRet.removeAllListeners("data");
                                 channelRet.stderr.removeAllListeners("data");
@@ -119,9 +117,9 @@ export class ShellConnecttion extends QueuedConnection {
                             data = data.toString("utf8");
                         }
                         if (typeof data === "string") {
-                            logFn(`ERR: ${data}`);
+                            if (logFn) logFn(`ERR: ${data}`);
                             if (parser.onDataErr(data)) {
-                                logFn(`createShell: failed => ${data}`);
+                                if (logFn) logFn(`createShell: failed => ${data}`);
                                 channelRet.removeAllListeners("data");
                                 channelRet.stderr.removeAllListeners("data");
                                 resolve(false);
@@ -138,12 +136,12 @@ export class ShellConnecttion extends QueuedConnection {
             if (!this.channel) {
                 resolve(undefined);
                 this.lastError = new Error("No channel");
-                logFn(`shellExec: failed: ${cmd} => ${this.lastError}`);
+                if (logFn) logFn(`shellExec: failed: ${cmd} => ${this.lastError}`);
                 return;
             }
             const channel = this.channel;
             const retCode = this.channel.write(cmd + "\r\n", async (err) => {
-                logFn(`write cmd: flushed`);
+                if (logFn) logFn(`write cmd: flushed`);
                 if (err) {
                     this.lastError = err;
                     resolve(undefined);
@@ -156,7 +154,7 @@ export class ShellConnecttion extends QueuedConnection {
                     };
                     this.cancelOperation = () => {
                         this.channel = undefined;
-                        logFn(`shell: cancelled on execution`);
+                        if (logFn) logFn(`shell: cancelled on execution`);
                         finalize();
                     };
 
@@ -172,7 +170,7 @@ export class ShellConnecttion extends QueuedConnection {
                         }
                         if (typeof data === "string") {
                             if (shellParser.onData(data)) {
-                                logFn(`shellExec: parsed ok`);
+                                if (logFn) logFn(`shellExec: parsed ok`);
                                 finalize();
                             }
                         }
@@ -183,14 +181,14 @@ export class ShellConnecttion extends QueuedConnection {
                         }
                         if (typeof data === "string") {
                             if (shellParser.onData(data)) {
-                                logFn(`shellExec: parsed stderr ok`);
+                                if (logFn) logFn(`shellExec: parsed stderr ok`);
                                 finalize();
                             }
                         }
                     });
                 }
             });
-            logFn(`write cmd: ${retCode}`);
+            if (logFn) logFn(`write cmd: ${retCode}`);
         });
     }
 }

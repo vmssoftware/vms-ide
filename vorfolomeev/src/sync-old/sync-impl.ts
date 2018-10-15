@@ -1,27 +1,26 @@
 import { Disposable, Uri } from "vscode";
-import { ISource, ISourceFile, ISync, ITarget } from "./sync";
+import { ISourceFileOld, ISourceOld, ISyncOld, ITargetOld } from "./sync-old";
 
-// tslint:disable-next-line:no-console
-export let logFn = console.log;
-// tslint:disable-next-line:no-empty
-logFn = () => {};
+export type LogType = (message?: any, ...optionalParams: any[]) => void;
+export let logFn: LogType | undefined;
 
-export class SyncImplement implements ISync {
+export class SyncImplement implements ISyncOld {
 
-    protected sources: ISource[] = [];
+    protected sources: ISourceOld[] = [];
 
-    constructor(protected target: ITarget) {
+    constructor(protected target: ITargetOld) {
 
     }
 
-    public addSource(source: ISource): Disposable {
+    public addSource(source: ISourceOld): Disposable {
         this.sources.push(source);
         return {
             dispose: () => {
                 this.sources.some((value, index, arr) => {
                     if (value === source) {
                         arr.splice(index, 1);
-                        logFn(`disposed: ${value} at ${index}`);
+                        // tslint:disable-next-line:no-unused-expression
+                        logFn && logFn(`disposed: ${value} at ${index}`);
                         return true;
                     }
                     return false;
@@ -32,14 +31,15 @@ export class SyncImplement implements ISync {
 
     public postFile(uri: Uri): Promise<boolean> {
         return new Promise<boolean>(async (resolve) => {
-            let sourceFile: ISourceFile | undefined;
+            let sourceFile: ISourceFileOld | undefined;
             let retCode = false;
             // find appropriate source
             for (const source of this.sources) {
                 try {
                     sourceFile = await source.accept(uri);
                 } catch (err) {
-                    logFn(err);
+                    // tslint:disable-next-line:no-unused-expression
+                    logFn && logFn(err);
                 }
                 if (sourceFile) {
                     break;
@@ -55,14 +55,17 @@ export class SyncImplement implements ISync {
                             const content = await sourceFile.content;
                             if (content) {
                                 retCode = await targetFile.updateContent(content);
-                                logFn(`Updated: ${sourceFile.relativePath}`);
+                                // tslint:disable-next-line:no-unused-expression
+                                logFn && logFn(`Updated: ${sourceFile.relativePath}`);
                             }
                         } else {
-                            logFn(`Do not need to update (or cannot): ${sourceFile.relativePath}`);
+                            // tslint:disable-next-line:no-unused-expression
+                            logFn && logFn(`Do not need to update (or cannot): ${sourceFile.relativePath}`);
                         }
                     }
                 } catch (err) {
-                    logFn(err);
+                    // tslint:disable-next-line:no-unused-expression
+                    logFn && logFn(err);
                 }
             }
             resolve(retCode);
