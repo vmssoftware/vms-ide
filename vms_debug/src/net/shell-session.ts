@@ -1,6 +1,7 @@
 import {ToOutputChannel} from '../io/output-channel';
 import { SSHClient } from './ssh-client';
 import { Client, ClientChannel, SFTPWrapper, ClientErrorExtensions } from 'ssh2';
+import { Queue } from '../queue/queues';
 
 export enum ModeWork
 {
@@ -10,6 +11,7 @@ export enum ModeWork
 
 export class ShellSession
 {
+    private userPrompt : string = "$$$> ";
     private sshClient : Client | undefined;
     private stream : ClientChannel | undefined;
     private sftp : SFTPWrapper | undefined;
@@ -21,6 +23,7 @@ export class ShellSession
     private queueCmd = new Queue<string>();
     private readyCmd : boolean;
     private currentCmd : string;
+    private stepSetupTerminal : number;
 
 
     constructor( DataCb: (data: string, mode: ModeWork) => void, ReadyCb: () => void)
@@ -32,6 +35,7 @@ export class ShellSession
         this.readyCmd = false;
         this.currentCmd = "";
         this.mode = ModeWork.shell;
+        this.stepSetupTerminal = 0;
 
         this.ShellInitialise();
     }
@@ -41,6 +45,8 @@ export class ShellSession
     {
         try
         {
+            this.stepSetupTerminal = 0;
+
             let conn = await new SSHClient();
 
             this.sshClient = await conn.CreateClientSSH(this.ClientErrorCb);
@@ -70,18 +76,43 @@ export class ShellSession
     {
         if(this.enterCmd === "")
         {
-            if(data.includes("> "))
+            if(data.includes(this.userPrompt))
             {
-                if(data.includes("\n\r"))
+                this.enterCmd = this.userPrompt;
+                this.readyCmd = true;
+                this.funcReady();
+            }
+            else
+            {
+                //setup terminal on connecting
+                switch(this.stepSetupTerminal)
                 {
-                    this.enterCmd += data;
-                    this.enterCmd = this.enterCmd.substring(2);
-                    this.readyCmd = true;
-                    this.funcReady();
+                    case 0:
+                        this.stepSetupTerminal++;
+                        this.stream.write("\x1B[?62;1c");
+                        break;
+
+                    case 1:
+                        this.stepSetupTerminal++;
+                        this.stream.write("\x1B[24;80R");
+                        break;
+
+                    case 2:
+                        this.stepSetupTerminal++;
+                        this.stream.write("\x1B[0;0R");
+                        break;
+
+                    case 3:
+                        this.stepSetupTerminal++;
+                        this.stream.write("set prompt =\"" + this.userPrompt + "\"" + '\r\n');//setup prompt >
+                        break;
+
+                    default:
+                        break;
                 }
             }
         }
-        else if(data.includes(this.enterCmd) || data.includes("DBG> "))
+        else if(data.includes(this.enterCmd) || data.includes("DBG> ") || data.includes("$$$> "))
         {
             if(data.includes("DBG> "))
             {
@@ -97,8 +128,12 @@ export class ShellSession
                 this. mode = ModeWork.shell;
             }
 
-            this.funcData(this.resultData, this.mode);
-            this.resultData = "";
+            if(this.resultData !== "")
+            {
+                this.funcData(this.resultData, this.mode);
+                this.resultData = "";
+            }
+
             this.readyCmd = true;
 
             if(this.queueCmd.size() > 0)
@@ -202,14 +237,4 @@ export class ShellSession
             this.stream.end("logoff\r\n");
         }
     }
-}
-
-
-class Queue<T>
-{
-    private data : any[] = [];
-
-    push = (item: T) => this.data.push(item);
-    pop = (): T => this.data.shift();
-    size = () : number => this.data.length;
 }
