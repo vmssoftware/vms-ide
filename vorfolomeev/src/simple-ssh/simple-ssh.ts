@@ -8,18 +8,19 @@ export let logFn: LogType | undefined;
 
 export class SimpleSsh {
 
-    protected emitter = new EventEmitter();
+    public clientCleaned: symbol = Symbol.for("clientCleaned");
 
-    protected client: Client | undefined;
+    protected emitter = new EventEmitter();
     protected keyString: string;
 
-    protected clientCleaned: symbol = Symbol.for("clientCleaned");
+    protected client?: Client;
+    protected lastClientError?: Error;
 
     constructor(protected config: ConnectConfig, protected resolver?: IConnectConfigResolver) {
         this.keyString = this.buildKeyString(this.config);
     }
 
-    public subscribe(event: string | symbol, listener: () => void) {
+    public subscribe(event: string | symbol, listener: (...args: any[]) => void) {
         this.emitter.on(event, listener);
         return { dispose: () => {
             this.emitter.removeListener(event, listener);
@@ -43,7 +44,11 @@ export class SimpleSsh {
             logFn && logFn(`client still exists ${this.keyString}`);
             this.client.end();
             this.client = undefined;    // reset client
-            setImmediate(() => this.emitter.emit(this.clientCleaned));
+            const lastError = this.lastClientError;
+            setImmediate(() => {
+                this.emitter.emit(this.clientCleaned, lastError);
+            });
+            this.lastClientError = undefined;
         }
     }
 
@@ -68,14 +73,16 @@ export class SimpleSsh {
             // tslint:disable-next-line:no-unused-expression
             logFn && logFn(`client error ${err} ${this.keyString}`);
             waitClient.release();
+            this.lastClientError = err;
         });
 
         client.on("close", (hadError) => {
             // tslint:disable-next-line:no-unused-expression
             logFn && logFn(`client closed ${hadError ? hadError : ""} ${this.keyString}`);
-            if (this.client) {
-                this.client.emit("end");
-            }
+            this.cleanClient();
+            // if (this.client) {
+            //     this.client.emit("end");
+            // }
         });
 
         client.on("end", () => {

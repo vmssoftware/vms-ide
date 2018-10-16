@@ -7,16 +7,18 @@ export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 export class SimpleExecSsh extends SimpleSsh {
+    public execCleaned: symbol = Symbol.for("execCleaned");
 
-    protected channel: ClientChannel | undefined;
     protected lock = new Lock();
-    protected execCleaned: symbol = Symbol.for("execCleaned");
+    protected channel?: ClientChannel;
+    protected lastExecError?: Error;
 
     public async execCmd(cmd: string): Promise<ClientChannel|undefined> {
 
         const opName = `exec command "${cmd}" via ${this.keyString}`;
 
         await this.lock.acquire();
+        this.lastExecError = undefined;
 
         const hasClient = await super.connect();
         if (hasClient && this.client) {
@@ -30,6 +32,7 @@ export class SimpleExecSsh extends SimpleSsh {
                     if (err) {
                         // tslint:disable-next-line:no-unused-expression
                         logFn && logFn(`${opName} failed: ${err}`);
+                        this.lastExecError = err;
                     } else {
                         channel.on("close", () => {
                             // tslint:disable-next-line:no-unused-expression
@@ -68,7 +71,11 @@ export class SimpleExecSsh extends SimpleSsh {
             logFn && logFn(`clean exec: channel still exists ${this.keyString}`);
             this.channel = undefined;   // channel reset
             this.lock.release();
-            setImmediate(() => this.emitter.emit(this.execCleaned));
+            const lasError = this.lastExecError;
+            setImmediate(() => {
+                this.emitter.emit(this.execCleaned, lasError);
+            });
+            this.lastExecError = undefined;
         }
     }
 

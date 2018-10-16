@@ -24,17 +24,21 @@ export class SimpleShellSsh extends SimpleSsh {
         this.timeOut = timeOut;
     }
 
-    protected channel: ClientChannel | undefined;
+    public shellCleaned: symbol = Symbol.for("shellCleaned");
+
     protected lock = new Lock();
+
+    protected channel?: ClientChannel;
     protected prompt?: string;  // found prompt
+    protected lastShellError?: Error;
 
     protected timeOut = 20000;
     protected readonly eol = "\r\n";
-    protected shellCleaned: symbol = Symbol.for("shellCleaned");
 
     public async execCmd(cmd: string): Promise<ClientChannel|undefined> {
 
         await this.lock.acquire();
+        this.lastShellError = undefined;
 
         const hasShell = await this.connect();
 
@@ -53,6 +57,7 @@ export class SimpleShellSsh extends SimpleSsh {
                 if (err) {
                     // tslint:disable-next-line:no-unused-expression
                     logFn && logFn(`shell exec failed: "${cmd.trim()}", ${err}`);
+                    this.lastShellError = err;
                 } else {
                     // tslint:disable-next-line:no-unused-expression
                     logFn && logFn(`shell exec: has written "${cmd.trim()}"`);
@@ -84,8 +89,12 @@ export class SimpleShellSsh extends SimpleSsh {
         }
         this.channel = undefined;   // channel reset
         delete this.prompt;         // no more welcome
-        setImmediate(() => { this.emitter.emit(this.shellCleaned); });
+        const lastError = this.lastShellError;
+        setImmediate(() => {
+            this.emitter.emit(this.shellCleaned, lastError);
+        });
         this.lock.release();        // next, if exists
+        this.lastShellError = undefined;
     }
 
     protected async connect(): Promise<boolean> {
@@ -95,6 +104,7 @@ export class SimpleShellSsh extends SimpleSsh {
             logFn && logFn(`${opName} already in action`);
             return true;
         }
+        this.lastShellError = undefined;
         const hasClient = await super.connect();
         if (hasClient && this.client) {
 
@@ -107,6 +117,7 @@ export class SimpleShellSsh extends SimpleSsh {
                     if (err) {
                         // tslint:disable-next-line:no-unused-expression
                         logFn && logFn(`${opName} failed: ${err}`);
+                        this.lastShellError = err;
                     } else {
                         channel.on("close", () => {
                             // tslint:disable-next-line:no-unused-expression

@@ -1,7 +1,7 @@
 import { Readable, Writable } from "stream";
 import { Lock } from "../common/lock";
 import { SimpleSftp } from "../simple-ssh/simple-sftp";
-import { IHasCreateWriteStream, ISource } from "./source";
+import { ICanCreateWriteStream, ISource } from "./source";
 
 export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
@@ -36,7 +36,7 @@ export class FtpSource implements ISource {
         return this.sftp.createWriteStream(filename);
     }
 
-    public async pipe(filename: string, dest: IHasCreateWriteStream): Promise<boolean> {
+    public async pipe(filename: string, dest: ICanCreateWriteStream): Promise<boolean> {
         let errPassed = false;
 
         const srcStream: Readable|undefined = await this.sftp.createReadStream(filename);

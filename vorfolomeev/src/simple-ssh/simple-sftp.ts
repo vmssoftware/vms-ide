@@ -13,15 +13,18 @@ export enum SimpleSftpEventType {
 }
 
 export class SimpleSftp extends SimpleSsh {
+    public sftpCleaned: symbol = Symbol.for("sftpCleaned");
+    public readStreamCleaned: symbol = Symbol.for("readStreamCleaned");
+    public writeStreamCleaned: symbol = Symbol.for("writeStreamCleaned");
 
-    protected readStream: stream.Readable|undefined;
-    protected writeStream: stream.Writable|undefined;
-    protected sftp: SFTPWrapper | undefined;
     protected lock: Lock = new Lock();
+
+    protected readStream?: stream.Readable;
+    protected writeStream?: stream.Writable;
+    protected sftp?: SFTPWrapper;
     protected file?: string;
-    protected sftpCleaned: symbol = Symbol.for("sftpCleaned");
-    protected readStreamCleaned: symbol = Symbol.for("readStreamCleaned");
-    protected writeStreamCleaned: symbol = Symbol.for("writeStreamCleaned");
+    protected lastSftpError?: Error;
+    protected lastOperationError?: Error;
 
     constructor(public config: ConnectConfig, resolver?: IConnectConfigResolver) {
         super(config, resolver);
@@ -44,6 +47,7 @@ export class SimpleSftp extends SimpleSsh {
         await this.lock.acquire();
 
         this.file = file;
+        this.lastOperationError = undefined;
 
         // tslint:disable-next-line:no-unused-expression
         logFn && logFn(`try read from ${file} via ${this.keyString}`);
@@ -54,10 +58,12 @@ export class SimpleSftp extends SimpleSsh {
             this.readStream.on("error", (err) => {
                 // tslint:disable-next-line:no-unused-expression
                 logFn && logFn(`read stream error: ${err} in ${file}`);
-                if (this.readStream) {
-                    // let it "end"
-                    this.readStream.emit("end");
-                }
+                this.lastOperationError = err;
+                this.cleanReadableStream();
+                // if (this.readStream) {
+                //     // let it "end"
+                //     this.readStream.emit("end");
+                // }
             });
 
             this.readStream.on("end", () => {
@@ -80,6 +86,7 @@ export class SimpleSftp extends SimpleSsh {
         await this.lock.acquire();
 
         this.file = file;
+        this.lastOperationError = undefined;
 
         // tslint:disable-next-line:no-unused-expression
         logFn && logFn(`try write to ${file} via ${this.keyString}`);
@@ -90,10 +97,12 @@ export class SimpleSftp extends SimpleSsh {
             this.writeStream.on("error", (err) => {
                 // tslint:disable-next-line:no-unused-expression
                 logFn && logFn(`write stream error: ${err} in ${file}`);
-                if (this.writeStream) {
-                    // let it "finish"?
-                    this.writeStream.emit("finish");
-                }
+                this.lastOperationError = err;
+                this.cleanWriteableStream();
+                // if (this.writeStream) {
+                //     // let it "finish"?
+                //     this.writeStream.emit("finish");
+                // }
             });
 
             this.writeStream.on("finish", () => {
@@ -115,6 +124,7 @@ export class SimpleSftp extends SimpleSsh {
      */
     public async readDirectory(directory: string): Promise<FileEntry[]|undefined> {
         await this.lock.acquire();
+        this.lastOperationError = undefined;
 
         this.file = directory;
         let files: FileEntry[] | undefined;
@@ -128,12 +138,14 @@ export class SimpleSftp extends SimpleSsh {
             await WaitableOperation(opName, this.sftp, "continue", this.emitter, this.sftpCleaned, (complete) => {
                 if (!this.sftp) {
                     complete.release();
+                    this.lastOperationError = this.lastSftpError;
                     return false;
                 }
                 return !this.sftp.readdir(directory, (err, list) => {
                     if (err) {
                         // tslint:disable-next-line:no-unused-expression
                         logFn && logFn(`${opName} failed: ${err}`);
+                        this.lastOperationError = err;
                     } else {
                         files = list;
                     }
@@ -153,6 +165,7 @@ export class SimpleSftp extends SimpleSsh {
      */
     public async getFileStats(filename: string): Promise<Stats|undefined> {
         await this.lock.acquire();
+        this.lastOperationError = undefined;
 
         this.file = filename;
         let retStat: Stats | undefined;
@@ -166,12 +179,14 @@ export class SimpleSftp extends SimpleSsh {
             await WaitableOperation(opName, this.sftp, "continue", this.emitter, this.sftpCleaned, (complete) => {
                 if (!this.sftp) {
                     complete.release();
+                    this.lastOperationError = this.lastSftpError;
                     return false;
                 }
                 return !this.sftp.stat(filename, (err, stat) => {
                     if (err) {
                         // tslint:disable-next-line:no-unused-expression
                         logFn && logFn(`${opName} failed: ${err}`);
+                        this.lastOperationError = err;
                     } else {
                         retStat = stat;
                     }
@@ -193,6 +208,7 @@ export class SimpleSftp extends SimpleSsh {
      */
     public async setFileStats(filename: string, attr: InputAttributes): Promise<boolean> {
         await this.lock.acquire();
+        this.lastOperationError = undefined;
 
         this.file = filename;
         let retCode = false;
@@ -206,12 +222,14 @@ export class SimpleSftp extends SimpleSsh {
             await WaitableOperation(opName, this.sftp, "continue", this.emitter, this.sftpCleaned, (complete) => {
                 if (!this.sftp) {
                     complete.release();
+                    this.lastOperationError = this.lastSftpError;
                     return false;
                 }
                 return !this.sftp.setstat(filename, attr, (err) => {
                     if (err) {
                         // tslint:disable-next-line:no-unused-expression
                         logFn && logFn(`${opName} failed: ${err}`);
+                        this.lastOperationError = err;
                     }
                     retCode = (err === undefined);
                     complete.release();
@@ -241,6 +259,7 @@ export class SimpleSftp extends SimpleSsh {
             await WaitableOperation(opName, this.client, "continue", this.emitter, this.clientCleaned, (complete) => {
                 if (!this.client) {
                     complete.release();
+                    this.lastSftpError = this.lastClientError;
                     return false;
                 }
                 return !this.client.sftp((err, sftp) => {
@@ -262,6 +281,7 @@ export class SimpleSftp extends SimpleSsh {
                         this.sftp.on("error", (errSftp) => {
                             // tslint:disable-next-line:no-unused-expression
                             logFn && logFn(`${opName} error: ${errSftp}`);
+                            this.lastSftpError = err;
                         });
 
                         this.sftp.on("close", () => {
@@ -291,7 +311,11 @@ export class SimpleSftp extends SimpleSsh {
             logFn && logFn(`sftp still exists, end it ${this.keyString}`);
             this.sftp.end();
             this.sftp = undefined;  // reset sftp
-            setImmediate(() => { this.emitter.emit(this.sftpCleaned); });
+            const lastError = this.lastSftpError;
+            setImmediate(() => {
+                this.emitter.emit(this.sftpCleaned, lastError);
+            });
+            this.lastSftpError = undefined;
         }
     }
 
@@ -306,7 +330,11 @@ export class SimpleSftp extends SimpleSsh {
             logFn && logFn(`read stream still exists: for ${this.keyString} ${this.file}`);
             this.readStream = undefined;    // stream reset
             this.lock.release();
-            setImmediate(() => this.emitter.emit(this.readStreamCleaned));
+            const lastError = this.lastOperationError;
+            setImmediate(() => {
+                this.emitter.emit(this.readStreamCleaned, lastError);
+            });
+            this.lastOperationError = undefined;
         }
     }
 
@@ -321,7 +349,11 @@ export class SimpleSftp extends SimpleSsh {
             logFn && logFn(`write stream still exists: for ${this.keyString} ${this.file}`);
             this.writeStream = undefined;    // stream reset
             this.lock.release();
-            setImmediate(() => { this.emitter.emit(this.writeStreamCleaned); });
+            const lastError = this.lastOperationError;
+            setImmediate(() => {
+                this.emitter.emit(this.writeStreamCleaned, lastError);
+            });
+            this.lastOperationError = undefined;
         }
     }
 

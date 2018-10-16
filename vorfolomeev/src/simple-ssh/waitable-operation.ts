@@ -57,5 +57,5 @@ export async function WaitableOperation(operationName: string,
 
     await operationDone.acquire();  // wait until completed or failed
 
-    failEmitter.off(failEvent, onFailed);
+    failEmitter.removeListener(failEvent, onFailed);
 }
