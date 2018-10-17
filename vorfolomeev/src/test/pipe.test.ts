@@ -1,16 +1,50 @@
 import * as assert from "assert";
 import { ConnectConfig } from "ssh2";
+import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
+import { ConnectConfigResolverImpl, settingsCache } from "../config-resolve/connect-config-resolver-impl";
 import { FakeReadStream } from "../stream/fake-read-stream";
 import { FakeWriteStream } from "../stream/fake-write-stream";
 import { PipeFile } from "../stream/pipe";
 import { SftpReadWriteStream } from "../stream/sftp-stream";
 import { TestConfiguration } from "./config/config";
+import { ContextPasswordFiller } from "./context-password-filler";
 
 type LogType = (message?: any, ...optionalParams: any[]) => void;
 
 suite("Pipe tests", function(this: Mocha.Suite) {
 
     this.timeout(0);
+
+    test("TestPipeRealToAnotherReal with resolver with correct context filler", async () => {
+
+        const configLocal = await TestConfiguration(true);
+        const configVms = await TestConfiguration(false);
+
+        const filler = new ContextPasswordFiller([
+            {
+                host: configLocal.host,
+                password: configLocal.password,
+            },
+            {
+                host: configVms.host,
+                password: configVms.password,
+            },
+        ], 0);
+
+        delete configLocal.password;
+        delete configVms.password;
+
+        const resolver = new ConnectConfigResolverImpl([filler]);
+
+        // hard reset
+        settingsCache.clear();
+
+        assert.equal(
+            await TestPipeRealToAnotherReal(configLocal, configVms, resolver),
+            true,
+            "TestPipeRealToAnotherReal");
+
+    });
 
     test("TestPipeFakeToFake", async () => {
         assert.equal(await TestPipeFakeToFake(), true, "TestPipeFakeToFake");
@@ -117,10 +151,13 @@ suite("Pipe tests", function(this: Mocha.Suite) {
         return result;
     }
 
-    async function TestPipeRealToAnotherReal(configSrc: ConnectConfig, configDst: ConnectConfig, log?: LogType) {
+    async function TestPipeRealToAnotherReal(configSrc: ConnectConfig,
+                                             configDst: ConnectConfig,
+                                             resolver?: IConnectConfigResolver,
+                                             log?: LogType) {
 
-        const src = new SftpReadWriteStream(configSrc, undefined, log);
-        const dst = new SftpReadWriteStream(configDst, undefined, log);
+        const src = new SftpReadWriteStream(configSrc, resolver, log);
+        const dst = new SftpReadWriteStream(configDst, resolver, log);
 
         const result = await PipeFile(src, dst, "test.txt", "test_new.txt", log);
 

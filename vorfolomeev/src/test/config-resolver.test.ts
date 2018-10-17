@@ -8,8 +8,7 @@ import * as assert from "assert";
 import { ConnectConfig } from "ssh2";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 import { ConnectConfigResolverImpl, settingsCache } from "../config-resolve/connect-config-resolver-impl";
-import { ISettingsFiller } from "../config-resolve/settings-filler";
-import { ConstPasswordFiller } from "./password-filler";
+import { ContextPasswordFiller } from "./context-password-filler";
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
@@ -140,7 +139,10 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
 
         // no resolver, so must pass settings as is
         // discard settings if no feedback in one second
-        const filler = new ConstPasswordFiller(correctPassword, 2000);
+        const filler = new ContextPasswordFiller([
+            { host: configTest.host,
+              password: correctPassword,
+            }], 2000);
         const resolver = new ConnectConfigResolverImpl([filler], 1000);
 
         // hard reset
@@ -179,7 +181,10 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
 
         // no resolver, so must pass settings as is
         // discard settings if no feedback in one second
-        const filler = new ConstPasswordFiller(incorrectPassword, 2000);
+        const filler = new ContextPasswordFiller([
+            { host: configTest.host,
+              password: incorrectPassword,
+            }], 2000);
         const resolver = new ConnectConfigResolverImpl([filler], 1000);
 
         // hard reset
@@ -213,7 +218,10 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
 
         // no resolver, so must pass settings as is
         // discard settings if no feedback in one second
-        const filler = new ConstPasswordFiller("", 2000);
+        const filler = new ContextPasswordFiller([
+            { host: configTest.host,
+              password: "",
+            }], 2000);
         const resolver = new ConnectConfigResolverImpl([filler], 1000);
 
         // hard reset

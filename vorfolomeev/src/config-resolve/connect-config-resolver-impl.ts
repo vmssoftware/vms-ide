@@ -33,7 +33,7 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
      * @param settingsFillers fillers
      * @param timeout timeout for feedback, in ms. else lock will be released and accepted set to false
      */
-    constructor(protected settingsFillers?: ISettingsFiller[], protected timeout = 30000) {
+    constructor(protected settingsFillers?: ISettingsFiller[], protected timeout = 0) {
     }
 
     /**
@@ -98,7 +98,8 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
                 retConfig = node.settings;  // return it if there are no fillers
             }
 
-            if (retConfig !== undefined) {
+            if (this.timeout !== 0 &&       // only if timeout period is provided
+                retConfig !== undefined) {
                 // setup timer before return settings to the fisrt callee
                 node.timer = setTimeout(() => {
                     if (node) {
