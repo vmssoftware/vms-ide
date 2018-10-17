@@ -2,6 +2,7 @@ import { Client, ConnectConfig, SFTPWrapper } from "ssh2";
 import stream = require("stream");
 import { Lock } from "../common/lock";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
+import { WaitableOperation } from "../simple-ssh/waitable-operation";
 import { ICanCreateReadStream, ICanCreateWriteStream } from "./pipe";
 import { SftpClient } from "./sftp-client";
 
@@ -10,28 +11,28 @@ type LogType = (message?: any, ...optionalParams: any[]) => void;
 export class SftpReadWriteStream extends SftpClient implements ICanCreateReadStream, ICanCreateWriteStream {
 
     public static async makeSftp(client: Client, log?: LogType) {
-        const waitSftp = new Lock(true, "waitSftp");
         let sftp: SFTPWrapper | undefined;
-        client.sftp((clientError, sftpGot) => {
-            if (clientError) {
-                if (log) { log(`${clientError}`); }
-                waitSftp.release();
-            } else {
-                if (log) { log(`sftp ready`); }
-                sftpGot.on("end", () => {
-                    if (log) { log(`sftp ends`); }
-                });
-                sftpGot.on("error", (sftpError) => {
-                    if (log) { log(`sftp error: ${sftpError}`); }
-                });
-                sftpGot.on("close", () => {
-                    if (log) { log(`sftp close`); }
-                });
-                sftp = sftpGot;
-                waitSftp.release();
-            }
+        await WaitableOperation("create sftp", client, "continue", client, "error", (complete) => {
+            return !client.sftp((clientError, sftpGot) => {
+                if (clientError) {
+                    if (log) { log(`${clientError}`); }
+                    complete.release();
+                } else {
+                    if (log) { log(`sftp ready`); }
+                    sftpGot.on("end", () => {
+                        if (log) { log(`sftp ends`); }
+                    });
+                    sftpGot.on("error", (sftpError) => {
+                        if (log) { log(`sftp error: ${sftpError}`); }
+                    });
+                    sftpGot.on("close", () => {
+                        if (log) { log(`sftp close`); }
+                    });
+                    sftp = sftpGot;
+                    complete.release();
+                }
+            });
         });
-        await waitSftp.acquire();
         return sftp;
     }
 
