@@ -22,16 +22,128 @@ import { WriteToBufferCreator } from "./write-to-buffer-creator";
 // Defines a Mocha test suite to group tests of similar kind together
 suite("SFTP tests", function(this: Mocha.Suite) {
 
+    // no more SimpleSftp
+    return;
+
+    type LogType = (message?: any, ...optionalParams: any[]) => void;
+    // tslint:disable-next-line:prefer-const
+    let logFn: LogType | undefined;
+
+    // tslint:disable-next-line:no-console
+    logFn = console.log;
+
     this.timeout(0);
+
+    require("./../simple-ssh/simple-ssh").logFn = logFn;
+    require("./../simple-ssh/simple-sftp").logFn = logFn;
+
+    test("Pipe to denied", async () => {
+
+        const sftp = new SimpleSftp(await TestConfiguration(true));
+
+        const testFiles = [
+            { file: "denied.tst", content: "", expected: true },
+        ];
+
+        const all = [];
+        for (const tst of testFiles) {
+            all.push(Promise.resolve().then(async () => {
+                const stream = new Readable({
+                    read: () => {
+                        stream.push(tst.content);
+                        stream.push(null);
+                    },
+                });
+                const inlineCreator = {
+                    createReadStream() {
+                        return stream;
+                    },
+                };
+                const result = await PipeFile(inlineCreator, sftp, tst.file);
+                assert.equal(result.errPassed, tst.expected, `Unexpected result in ${tst.file}`);
+            }));
+        }
+
+        return Promise.all(all).then((results) => {
+            assert.ok(true, "done");
+        });
+    });
+
+    return;
+
+    test("Pipe to 3 files", async () => {
+
+        const sftp = new SimpleSftp(await TestConfiguration(true));
+
+        const testFiles = [
+            { file: "test.tst", content: "1\r\n2\r\n3", expected: false },
+            { file: "denied.tst", content: "", expected: true },
+            { file: "newfile.tst", content: "abcd\r\n1234", expected: false },
+        ];
+
+        const all = [];
+        for (const tst of testFiles) {
+            all.push(Promise.resolve().then(async () => {
+                const stream = new Readable({
+                    read: () => {
+                        stream.push(tst.content);
+                        stream.push(null);
+                    },
+                });
+                const inlineCreator = {
+                    createReadStream() {
+                        return stream;
+                    },
+                };
+                const result = await PipeFile(inlineCreator, sftp, tst.file);
+                assert.equal(result.errPassed, tst.expected, `Unexpected result in ${tst.file}`);
+            }));
+        }
+
+        return Promise.all(all).then((results) => {
+            assert.ok(true, "done");
+        });
+    });
+
+    test("Pipe from 3 files", async () => {
+
+        const sftp = new SimpleSftp(await TestConfiguration(true));
+
+        const testFiles = [
+            { file: "test.tst", content: "1\r\n2\r\n3", expected: false },
+            { file: "unexisting.tst", content: "", expected: true },
+            { file: "newfile.tst", content: "abcd\r\n1234", expected: false },
+        ];
+
+        const all = [];
+        for (const tst of testFiles) {
+            all.push(Promise.resolve().then(async () => {
+                const wsCreator = new WriteToBufferCreator();
+                const result = await PipeFile(sftp, wsCreator, tst.file);
+                assert.equal(result.errPassed, tst.expected, `Unexpected result in ${tst.file}`);
+                const allBuff = Buffer.concat(wsCreator.stream.chunks);
+                const strRet = allBuff.toString("utf8");
+                assert.equal(ContentTest(strRet, tst.content), true, `Content is different ${tst.file}`);
+            }));
+        }
+
+        return Promise.all(all).then((results) => {
+            assert.ok(true, "done");
+        });
+    });
 
     test("Pipe to file", async () => {
 
-        const sftp = new SimpleSftp(await TestConfiguration());
+        const sftp = new SimpleSftp(await TestConfiguration(true));
 
         const testFile = { file: "test.tst", content: "1\r\n2\r\n3" };
 
-        const stream = new Readable();
-        stream.push(testFile.content);
+        const stream = new Readable({
+            read: () => {
+                stream.push(testFile.content);
+                stream.push(null);
+            },
+        });
 
         const inlineCreator = {
             createReadStream() {
@@ -46,7 +158,7 @@ suite("SFTP tests", function(this: Mocha.Suite) {
 
     test("Pipe from file", async () => {
 
-        const sftp = new SimpleSftp(await TestConfiguration());
+        const sftp = new SimpleSftp(await TestConfiguration(true));
 
         const wsCreator = new WriteToBufferCreator();
 
@@ -61,36 +173,9 @@ suite("SFTP tests", function(this: Mocha.Suite) {
 
     });
 
-    test("Pipe from 3 files", async () => {
-
-        const sftp = new SimpleSftp(await TestConfiguration());
-
-        const testFiles = [
-            { file: "test.tst", content: "1\r\n2\r\n3" },
-            { file: "unexisting.tst", content: "" },
-            { file: "newfile.tst", content: "abcd\r\n1234" },
-        ];
-
-        const all = [];
-        for (const tst of testFiles) {
-            all.push(Promise.resolve().then(async () => {
-                const wsCreator = new WriteToBufferCreator();
-                const result = await PipeFile(sftp, wsCreator, testFiles[0].file);
-                assert.equal(result.errPassed, false, "File must be read");
-                const allBuff = Buffer.concat(wsCreator.stream.chunks);
-                const strRet = allBuff.toString("utf8");
-                assert.equal(ContentTest(strRet, tst.content), true, `Content is different ${tst.file}`);
-            }));
-        }
-
-        return Promise.all(all).then((results) => {
-            assert.ok(true, "done");
-        });
-    });
-
     test("Write file wrong path", async () => {
 
-        const sftp = new SimpleSftp(await TestConfiguration());
+        const sftp = new SimpleSftp(await TestConfiguration(true));
 
         const result = await WriteFile("wrongpath/file.tst", " ", sftp);
         assert.equal(result, false, "Write must be failed");
@@ -99,7 +184,7 @@ suite("SFTP tests", function(this: Mocha.Suite) {
 
     test("Write file", async () => {
 
-        const sftp = new SimpleSftp(await TestConfiguration());
+        const sftp = new SimpleSftp(await TestConfiguration(true));
 
         const result = await WriteFile("newfile.tst", "abcd\r\n1234", sftp);
         assert.equal(result, true, "Write failed");
@@ -108,7 +193,7 @@ suite("SFTP tests", function(this: Mocha.Suite) {
 
     test("Write file denied", async () => {
 
-        const sftp = new SimpleSftp(await TestConfiguration());
+        const sftp = new SimpleSftp(await TestConfiguration(true));
 
         const result = await WriteFile("denied.tst", " ", sftp);
         assert.equal(result, false, "Write must be failed");
@@ -123,7 +208,7 @@ suite("SFTP tests", function(this: Mocha.Suite) {
             { file: "newfile.tst", content: "abcd\r\n1234" },
         ];
 
-        const sftp = new SimpleSftp(await TestConfiguration());
+        const sftp = new SimpleSftp(await TestConfiguration(true));
         const all = [];
         for (const tst of testFiles) {
             all.push(ReadFileViaReadLine(tst.file, sftp).then((result) => {
@@ -140,9 +225,7 @@ suite("SFTP tests", function(this: Mocha.Suite) {
 
     test("Read unexisting file", async () => {
 
-        const all = [];
-
-        const sftp = new SimpleSftp(await TestConfiguration());
+        const sftp = new SimpleSftp(await TestConfiguration(true));
 
         const content = await ReadFileViaReadLine("not_existing_test.tst", sftp);
 
@@ -152,7 +235,7 @@ suite("SFTP tests", function(this: Mocha.Suite) {
 
     test("Write and then read 2 files in parallel", async () => {
 
-        const sftp = new SimpleSftp(await TestConfiguration());
+        const sftp = new SimpleSftp(await TestConfiguration(true));
 
         const testFiles = [
             { file: "newfile.tst", content: "abcd\r\n1234" },
@@ -180,7 +263,7 @@ suite("SFTP tests", function(this: Mocha.Suite) {
 
         const all = [];
 
-        const sftp = new SimpleSftp(await TestConfiguration());
+        const sftp = new SimpleSftp(await TestConfiguration(true));
 
         const content = await ReadFileViaReadLine("test.tst", sftp);
 
@@ -190,7 +273,7 @@ suite("SFTP tests", function(this: Mocha.Suite) {
 
     test("Read 2 files in parallel", async () => {
 
-        const sftp = new SimpleSftp(await TestConfiguration());
+        const sftp = new SimpleSftp(await TestConfiguration(true));
 
         const all = [];
         all.push(ReadFileViaReadLine("denied.tst", sftp));
@@ -205,7 +288,7 @@ suite("SFTP tests", function(this: Mocha.Suite) {
 
     test("Write 2 files in parallel", async () => {
 
-        const sftp = new SimpleSftp(await TestConfiguration());
+        const sftp = new SimpleSftp(await TestConfiguration(true));
 
         const all = [];
         all.push(WriteFile("newfile.tst", "abcd\r\n1234", sftp));
@@ -281,40 +364,26 @@ suite("SFTP tests", function(this: Mocha.Suite) {
             const dstStream: Writable|undefined = await dest.createWriteStream(file);
             if (dstStream) {
 
-                const doneSource = new Lock(true);
-                const doneDest = new Lock(true);
+                const done = new Lock(true);
 
                 srcStream.pipe(dstStream);
 
                 srcStream.once("error", (err) => {
-                    if (!errPassed) {
-                        setImmediate(() => dstStream.emit("error", err));
-                        errPassed = true;
-                    }
-                    doneSource.release();
+                    errPassed = true;
                 });
 
                 dstStream.once("error", (err) => {
-                    if (!errPassed) {
-                        setImmediate(() => srcStream.emit("error", err));
-                        errPassed = true;
-                    }
-                    doneDest.release();
+                    errPassed = true;
                 });
 
-                srcStream.once("end", () => {
-                    doneSource.release();
+                dstStream.on("unpipe", (src) => {
+                    assert.equal(src, srcStream, "Unpipep stream must be the same as piped");
+                    done.release();
                 });
 
-                dstStream.once("finish", () => {
-                    doneDest.release();
-                });
-
-                await doneSource.acquire();
-                await doneDest.acquire();
+                await done.acquire();
 
             } else {
-                // srcStream close?
                 srcStream.emit("error", new Error("no dest"));
             }
         }

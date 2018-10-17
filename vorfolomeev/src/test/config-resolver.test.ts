@@ -6,10 +6,10 @@
 // The module 'assert' provides assertion methods from node
 import * as assert from "assert";
 import { ConnectConfig } from "ssh2";
-import { IConnectConfigResolver } from "../simple-ssh/connect-config-resolver";
-import { ConnectConfigResolverImpl, settingsCache } from "../simple-ssh/connect-config-resolver-impl";
-import { ISettingsFiller } from "../simple-ssh/settings-filler";
-import { PasswordFiller } from "./password-filler";
+import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
+import { ConnectConfigResolverImpl, settingsCache } from "../config-resolve/connect-config-resolver-impl";
+import { ISettingsFiller } from "../config-resolve/settings-filler";
+import { ConstPasswordFiller } from "./password-filler";
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
@@ -20,7 +20,6 @@ import { PasswordFiller } from "./password-filler";
 suite("Config resolver tests", function(this: Mocha.Suite) {
 
     this.timeout(0);
-    return;
 
     test("Resolve config without filler", async () => {
 
@@ -141,7 +140,7 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
 
         // no resolver, so must pass settings as is
         // discard settings if no feedback in one second
-        const filler = new PasswordFiller(correctPassword, 2000);
+        const filler = new ConstPasswordFiller(correctPassword, 2000);
         const resolver = new ConnectConfigResolverImpl([filler], 1000);
 
         // hard reset
@@ -180,7 +179,7 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
 
         // no resolver, so must pass settings as is
         // discard settings if no feedback in one second
-        const filler = new PasswordFiller(incorrectPassword, 2000);
+        const filler = new ConstPasswordFiller(incorrectPassword, 2000);
         const resolver = new ConnectConfigResolverImpl([filler], 1000);
 
         // hard reset
@@ -214,7 +213,7 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
 
         // no resolver, so must pass settings as is
         // discard settings if no feedback in one second
-        const filler = new PasswordFiller("", 2000);
+        const filler = new ConstPasswordFiller("", 2000);
         const resolver = new ConnectConfigResolverImpl([filler], 1000);
 
         // hard reset

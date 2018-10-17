@@ -6,7 +6,7 @@ export class Lock {
     private locked = false;
     private emitter = new EventEmitter();
 
-    constructor(initialState = false) {
+    constructor(initialState = false, public name?: string) {
         this.locked = initialState;
     }
 

@@ -1,7 +1,7 @@
 import { Client, ConnectConfig } from "ssh2";
 import { inspect } from "util";
 import { isSimplyEq } from "../common/simply-compare";
-import { IConnectConfigResolver } from "./connect-config-resolver";
+import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 
 export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
@@ -39,7 +39,7 @@ export class SshConnection {
         this.connectConfig = Object.assign({}, settings.connectConfig);
         if (reConnect) {
             if (this.client) {
-                if (logFn) logFn(`SshConnection: end current connection`);
+                if (logFn) { logFn(`SshConnection: end current connection`); }
                 this.client.end();
                 this.client = undefined;
             }
@@ -55,7 +55,7 @@ export class SshConnection {
 
     protected ensureConnection(): Promise<boolean> {
         if (this.client) {
-            if (logFn) logFn(`ensureConnection: already exists`);
+            if (logFn) { logFn(`ensureConnection: already exists`); }
             return Promise.resolve(true);
         } else {
             return this.connect();
@@ -73,7 +73,7 @@ export class SshConnection {
             if (this.settingsResolver) {
                 // we have to use resolver
                 innerConfig = await this.settingsResolver.resolveConnectConfig(this.connectConfig);
-                if (logFn) logFn(`connect: after resolver: ${inspect(innerConfig)}`);
+                if (logFn) { logFn(`connect: after resolver: ${inspect(innerConfig)}`); }
             }
             if (!innerConfig) {
                 // resolver was refusing configuration
@@ -94,15 +94,15 @@ export class SshConnection {
             const client = new Client();
             // OnReady - only once
             client.once("ready", () => {
-                if (logFn) logFn(`innerConnet: ready`);
+                if (logFn) { logFn(`innerConnet: ready`); }
                 this.client = client;
                 // OnClose now
                 this.client.on("close", (hadError) => {
                     if ( hadError ) {
                         this.lastError = new Error("Closed with error");
-                        if (logFn) logFn(`innerConnet: closed: ${this.lastError}`);
+                        if (logFn) { logFn(`innerConnet: closed: ${this.lastError}`); }
                     } else {
-                        if (logFn) logFn(`innerConnet: closed`);
+                        if (logFn) { logFn(`innerConnet: closed`); }
                     }
                     this.client = undefined;
                     if (this.cancelOperation) {
@@ -115,7 +115,7 @@ export class SshConnection {
             // OnError - only once
             client.once("error", (error) => {
                 this.lastError = error;
-                if (logFn) logFn(`innerConnet: error: ${this.lastError}`);
+                if (logFn) { logFn(`innerConnet: error: ${this.lastError}`); }
                 resolve(false);
             });
             // clientTmp.connect(Object.assign({debug: logFn}, config));

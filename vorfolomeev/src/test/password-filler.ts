@@ -1,8 +1,8 @@
 import { ConnectConfig } from "ssh2";
-import { ISettingsFiller } from "../simple-ssh/settings-filler";
+import { ISettingsFiller } from "../config-resolve/settings-filler";
 import { Lock } from "./../common/lock";
 
-export class PasswordFiller implements ISettingsFiller {
+export class ConstPasswordFiller implements ISettingsFiller {
 
     private lock = new Lock();
 

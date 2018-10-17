@@ -1,6 +1,6 @@
 import { ConnectConfig } from "ssh2";
 import { inspect } from "util";
-import { Lock } from "./../common/lock";
+import { Lock } from "../common/lock";
 import { IConnectConfigResolver } from "./connect-config-resolver";
 import { ISettingsFiller } from "./settings-filler";
 

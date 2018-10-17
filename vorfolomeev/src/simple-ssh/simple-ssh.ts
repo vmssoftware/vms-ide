@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { Client, ConnectConfig } from "ssh2";
-import { Lock } from "./../common/lock";
-import { IConnectConfigResolver } from "./connect-config-resolver";
+import { Lock } from "../common/lock";
+import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 
 export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
@@ -79,10 +79,12 @@ export class SimpleSsh {
         client.on("close", (hadError) => {
             // tslint:disable-next-line:no-unused-expression
             logFn && logFn(`client closed ${hadError ? hadError : ""} ${this.keyString}`);
-            this.cleanClient();
-            // if (this.client) {
-            //     this.client.emit("end");
-            // }
+            // let it "end"?
+            setImmediate(() => {
+                if (this.client) {
+                    this.client.emit("end");
+                }
+            });
         });
 
         client.on("end", () => {

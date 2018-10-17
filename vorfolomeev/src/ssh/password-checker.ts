@@ -2,7 +2,7 @@ import { ConnectConfig } from "ssh2";
 import { inspect } from "util";
 import { IAskPassword } from "../common/ask-password";
 import { Lock } from "../common/lock";
-import { IConnectConfigResolver } from "./connect-config-resolver";
+import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 
 export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
@@ -43,32 +43,32 @@ export class PasswordResolver implements IConnectConfigResolver {
     public resolveConnectConfig(settings: ConnectConfig): Promise<ConnectConfig | undefined> {
         return new Promise<ConnectConfig|undefined>(async (resolveSettings) => {
             const cacheStr = this.buildCacheString(settings);
-            if (logFn) logFn(`resolveConnectConfig: try ${cacheStr}`);
+            if (logFn) { logFn(`resolveConnectConfig: try ${cacheStr}`); }
             let node = settingsCache.get(cacheStr);
             if (!node) {
-                if (logFn) logFn(`resolveConnectConfig: create node ${cacheStr}`);
+                if (logFn) { logFn(`resolveConnectConfig: create node ${cacheStr}`); }
                 node = new SettingsCacheNode();
                 settingsCache.set(cacheStr, node);
             }
             await node.lock.acquire();
-            if (logFn) logFn(`resolveConnectConfig: lock acquired ${cacheStr}`);
+            if (logFn) { logFn(`resolveConnectConfig: lock acquired ${cacheStr}`); }
             if (node.accepted === undefined) {
                 // no one has got password before
-                if (logFn) logFn(`resolveConnectConfig: first call ${cacheStr}`);
+                if (logFn) { logFn(`resolveConnectConfig: first call ${cacheStr}`); }
                 if (this.testSettings(settings)) {
                     // ask password
                     const prompt = `Enter password for ${cacheStr} `;
                     // node: IAskPassword must provide lock itself, to prevent different nodes dialogs intersection
                     const password = await this.askPass.askPassword(prompt);
-                    if (logFn) logFn(`resolveConnectConfig: password provided ${cacheStr}`);
+                    if (logFn) { logFn(`resolveConnectConfig: password provided ${cacheStr}`); }
                     node.settings = Object.assign({}, settings);
                     node.settings.password = password;
-                    if (logFn) logFn(`resolveConnectConfig: resolve settings ${cacheStr}`);
+                    if (logFn) { logFn(`resolveConnectConfig: resolve settings ${cacheStr}`); }
                     resolveSettings(node.settings);
                     // setup timer
                     node.timer = setTimeout(() => {
                         if (node) {
-                            if (logFn) logFn(`resolveConnectConfig: lock released by timeout ${cacheStr}`);
+                            if (logFn) { logFn(`resolveConnectConfig: lock released by timeout ${cacheStr}`); }
                             node.lock.release();
                             node.accepted = false;
                             delete node.timer;
@@ -76,11 +76,11 @@ export class PasswordResolver implements IConnectConfigResolver {
                     }, this.timeout);
                 } else {
                     // mark unaccepted for next calls
-                    if (logFn) logFn(`resolveConnectConfig: incorrect settings ${cacheStr}`);
+                    if (logFn) { logFn(`resolveConnectConfig: incorrect settings ${cacheStr}`); }
                     node.accepted = false;
-                    if (logFn) logFn(`resolveConnectConfig: resolve undefined ${cacheStr}`);
+                    if (logFn) { logFn(`resolveConnectConfig: resolve undefined ${cacheStr}`); }
                     resolveSettings(undefined);
-                    if (logFn) logFn(`resolveConnectConfig: lock released ${cacheStr}`);
+                    if (logFn) { logFn(`resolveConnectConfig: lock released ${cacheStr}`); }
                     node.lock.release();
                 }
             } else {
@@ -93,7 +93,7 @@ export class PasswordResolver implements IConnectConfigResolver {
                 } else {
                     resolveSettings(undefined);
                 }
-                if (logFn) logFn(`resolveConnectConfig: lock released ${cacheStr}`);
+                if (logFn) { logFn(`resolveConnectConfig: lock released ${cacheStr}`); }
                 node.lock.release();
             }
         });
@@ -106,22 +106,22 @@ export class PasswordResolver implements IConnectConfigResolver {
      */
     public feedBack(settings: ConnectConfig, accepted: boolean): void {
         const cacheStr = this.buildCacheString(settings);
-        if (logFn) logFn(`feedBack: element ${cacheStr} accepted=${accepted}`);
+        if (logFn) { logFn(`feedBack: element ${cacheStr} accepted=${accepted}`); }
         const node = settingsCache.get(cacheStr);
         if (node) {
             if (node.accepted === undefined) {
                 node.accepted = accepted;
-                if (logFn) logFn(`feedback: lock released ${cacheStr}`);
+                if (logFn) { logFn(`feedback: lock released ${cacheStr}`); }
                 node.lock.release();
             } else {
-                if (logFn) logFn(`feedback: already acc=${node.accepted} ${cacheStr}`);
+                if (logFn) { logFn(`feedback: already acc=${node.accepted} ${cacheStr}`); }
             }
             if (node.timer) {
                 clearTimeout(node.timer);
                 delete node.timer;
             }
         } else {
-            if (logFn) logFn(`feedBack: no node ${cacheStr}`);
+            if (logFn) { logFn(`feedBack: no node ${cacheStr}`); }
         }
     }
 
@@ -129,10 +129,10 @@ export class PasswordResolver implements IConnectConfigResolver {
      * Remove bad entries
      */
     public clearCache(): boolean {
-        if (logFn) logFn(`clearCache: ${settingsCache.size}`);
+        if (logFn) { logFn(`clearCache: ${settingsCache.size}`); }
         for (const [key, node] of settingsCache) {
             if (node.canClear) {
-                if (logFn) logFn(`clearCache: delete ${key}`, inspect(node));
+                if (logFn) { logFn(`clearCache: delete ${key}`, inspect(node)); }
                 // as a precaution
                 node.lock.release();
                 settingsCache.delete(key);

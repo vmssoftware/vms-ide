@@ -1,6 +1,6 @@
 import * as readline from "readline";
 import { ConnectConfig } from "ssh2";
-import { Lock } from "./../common/lock";
+import { Lock } from "../common/lock";
 import { ISettingsFiller } from "./settings-filler";
 
 export class PasswordConsoleFiller implements ISettingsFiller {

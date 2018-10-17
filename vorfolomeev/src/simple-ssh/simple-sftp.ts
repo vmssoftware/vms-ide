@@ -1,8 +1,8 @@
 import { Client, ConnectConfig, SFTPWrapper } from "ssh2";
 import { FileEntry, InputAttributes, Stats } from "ssh2-streams";
 import stream = require("stream");
-import { Lock } from "./../common/lock";
-import { IConnectConfigResolver } from "./connect-config-resolver";
+import { Lock } from "../common/lock";
+import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 import { SimpleSsh } from "./simple-ssh";
 import { WaitableOperation } from "./waitable-operation";
 
@@ -59,11 +59,12 @@ export class SimpleSftp extends SimpleSsh {
                 // tslint:disable-next-line:no-unused-expression
                 logFn && logFn(`read stream error: ${err} in ${file}`);
                 this.lastOperationError = err;
-                this.cleanReadableStream();
-                // if (this.readStream) {
-                //     // let it "end"
-                //     this.readStream.emit("end");
-                // }
+                // let it "end"?
+                setImmediate(() => {
+                    if (this.readStream) {
+                        this.readStream.emit("end");
+                    }
+                });
             });
 
             this.readStream.on("end", () => {
@@ -98,11 +99,12 @@ export class SimpleSftp extends SimpleSsh {
                 // tslint:disable-next-line:no-unused-expression
                 logFn && logFn(`write stream error: ${err} in ${file}`);
                 this.lastOperationError = err;
-                this.cleanWriteableStream();
-                // if (this.writeStream) {
-                //     // let it "finish"?
-                //     this.writeStream.emit("finish");
-                // }
+                // let it "finish"?
+                setImmediate(() => {
+                    if (this.writeStream) {
+                        this.writeStream.emit("finish");
+                    }
+                });
             });
 
             this.writeStream.on("finish", () => {
