@@ -1,14 +1,11 @@
 import { Client, ClientChannel, ConnectConfig } from "ssh2";
 import { Lock } from "../common/lock";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
-import { ICanParseWelcome } from "./parse-welcome";
+import { ICanCreateClientChannel } from "./can-create-client-channel";
+import { ICanParseWelcome } from "./can-parse-welcome";
 import { SftpClient } from "./sftp-client";
 
 type LogType = (message?: any, ...optionalParams: any[]) => void;
-
-export interface ICanCreateClientChannel {
-    createClientChannel(): Promise<ClientChannel|undefined>;
-}
 
 export class SftpShell extends SftpClient implements ICanCreateClientChannel {
 
@@ -48,16 +45,7 @@ export class SftpShell extends SftpClient implements ICanCreateClientChannel {
     }
 
     public async createClientChannel(): Promise<ClientChannel | undefined> {
-        await this.waitOperation.acquire();
         await this.ensureChannel();
-        if (this.channel) {
-            if (this.prompt === undefined &&
-                this.welcomeParser !== undefined) {
-                this.prompt = await this.welcomeParser.parseWelcome(this.channel);
-            }
-        } else {
-            this.waitOperation.release();
-        }
         return this.channel;
     }
 
@@ -75,9 +63,17 @@ export class SftpShell extends SftpClient implements ICanCreateClientChannel {
     }
 
     private async ensureChannel() {
-        await this.ensureClient();
-        if (this.client) {
-            this.channel = await SftpShell.makeChannel(this.client, this.log);
+        if (!this.channel) {
+            await this.ensureClient();
+            if (this.client) {
+                this.channel = await SftpShell.makeChannel(this.client, this.log);
+                if (this.channel) {
+                    if (this.prompt === undefined &&
+                        this.welcomeParser !== undefined) {
+                        this.prompt = await this.welcomeParser.parseWelcome(this.channel);
+                    }
+                }
+            }
         }
     }
 }

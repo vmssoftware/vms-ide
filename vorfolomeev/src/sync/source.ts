@@ -1,12 +1,4 @@
-import { Readable, Writable } from "stream";
-
-export interface ICanCreateWriteStream {
-    createWriteStream(file: string): Writable | Promise<Writable|undefined>;
-}
-
-export interface ICanCreateReadStream {
-    createReadStream(file: string): Readable | Promise<Readable|undefined>;
-}
+import { ICanCreateReadStream, ICanCreateWriteStream } from "../stream/can-create-stream";
 
 export interface ISource extends ICanCreateReadStream, ICanCreateWriteStream {
     findFiles(patterns: string[], ignore: string[]): Promise<string[]>;

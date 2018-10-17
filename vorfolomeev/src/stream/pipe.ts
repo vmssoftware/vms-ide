@@ -1,16 +1,9 @@
 import assert = require("assert");
 import { Readable, Writable } from "stream";
 import { Lock } from "../common/lock";
+import { ICanCreateReadStream, ICanCreateWriteStream } from "./can-create-stream";
 
 type LogType = (message?: any, ...optionalParams: any[]) => void;
-
-export interface ICanCreateWriteStream {
-    createWriteStream(filename: string): Promise<Writable|undefined> | Writable | undefined;
-}
-
-export interface ICanCreateReadStream {
-    createReadStream(filename: string): Promise<Readable|undefined> | Readable | undefined;
-}
 
 export async function PipeFile(source: ICanCreateReadStream,
                                dest: ICanCreateWriteStream,

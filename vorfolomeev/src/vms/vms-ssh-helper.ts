@@ -1,19 +1,17 @@
 
 import { SshExec } from "../ssh/exec";
+import { IExecutionResult } from "../ssh/execution-result";
 import { IPathConverter } from "../ssh/path-converter";
-import { ISftpSettings, SftpConnection } from "../ssh/sftp-connection";
-import { IExecutionResult, IShellSettings, ShellConnecttion } from "../ssh/shell-connection";
+import { SftpConnection } from "../ssh/sftp-connection";
+import { ShellConnecttion } from "../ssh/shell-connection";
 import { IShellParser } from "../ssh/shell-parser";
 import { ISyncSiteHelper } from "../sync-old/sync-site-helper";
 import { VmsAbsoluteDateString } from "./vms-absolute-date-string";
 import { VmsPathConverterRoot } from "./vms-path-converter-root";
+import { IVmsSShSettings } from "./vms-ssh-settings";
 
 export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
-
-export interface IVmsSShSettings extends ISftpSettings, IShellSettings {
-    root?: string;
-}
 
 export class VmsSshHelper implements ISyncSiteHelper {
 

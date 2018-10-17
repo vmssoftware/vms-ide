@@ -1,11 +1,8 @@
 import { ClientChannel } from "ssh2";
 import { Lock } from "../common/lock";
+import { ICanParseWelcome } from "./can-parse-welcome";
 
 type LogType = (message?: any, ...optionalParams: any[]) => void;
-
-export interface ICanParseWelcome {
-    parseWelcome(channel: ClientChannel): Promise<string|undefined>;
-}
 
 export class ParseWelcomeBuru implements ICanParseWelcome {
 
@@ -35,7 +32,7 @@ export class ParseWelcomeBuru implements ICanParseWelcome {
                         const promptStart = welcome.lastIndexOf(ParseWelcomeBuru.eol);
                         if (promptStart >= 0 &&
                             promptStart + ParseWelcomeBuru.eol.length !== welcome.length) {
-                            prompt = welcome.slice(promptStart + ParseWelcomeBuru.length);
+                            prompt = welcome.slice(promptStart + ParseWelcomeBuru.eol.length);
                             if (this.log) { this.log(`parse: found prompt "${prompt}"`); }
                             waitParse.release();
                         }

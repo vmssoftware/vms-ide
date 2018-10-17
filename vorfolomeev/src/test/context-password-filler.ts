@@ -11,7 +11,7 @@ export class ContextPasswordFiller implements ISettingsFiller {
 
     private lock = new Lock();
 
-    constructor(public contexts: IContextPassword[] = [], public timeout = 0) {
+    constructor(public contexts: IContextPassword[] = [], public emulateUserDelay = 0) {
     }
 
     public testSettings(settings: ConnectConfig): boolean {
@@ -32,14 +32,18 @@ export class ContextPasswordFiller implements ISettingsFiller {
 
         for (const context of this.contexts) {
             if (context.host === settings.host) {
-                await this.lock.acquire();  // to prevent concurrent use of console
-                const waitUser = new Lock(true);    // simulate user
-                setTimeout(() => {
+                if (this.emulateUserDelay !== 0) {
+                    await this.lock.acquire();  // to prevent concurrent use of console
+                    const waitUser = new Lock(true);    // simulate user
+                    setTimeout(() => {
+                        settings.password = context.password;
+                        waitUser.release();
+                    }, this.emulateUserDelay);
+                    await waitUser.acquire();   // do not pass until password entered
+                    this.lock.release();
+                } else {
                     settings.password = context.password;
-                    waitUser.release();
-                }, this.timeout);
-                await waitUser.acquire();   // do not pass until password entered
-                this.lock.release();
+                }
             }
         }
 

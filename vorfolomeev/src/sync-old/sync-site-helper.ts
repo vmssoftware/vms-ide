@@ -1,4 +1,5 @@
-import { IExecutionResult } from "../ssh/exec";
+
+import { IExecutionResult } from "../ssh/execution-result";
 import { IShellParser } from "../ssh/shell-parser";
 
 export interface ISyncSiteHelper {

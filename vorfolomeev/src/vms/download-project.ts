@@ -4,7 +4,8 @@ import { ProjectSection } from "../config/sections/project";
 import { UserPasswordSection } from "../config/sections/user-password";
 import { ToOutputChannel } from "../output-channel";
 import { PasswordResolver } from "../ssh/password-checker";
-import { ISftpSettings, SftpConnection } from "../ssh/sftp-connection";
+import { SftpConnection } from "../ssh/sftp-connection";
+import { ISftpSettings } from "../ssh/sftp-settings";
 import { VmsPathConverterRoot } from "./vms-path-converter-root";
 
 export type LogType = (message?: any, ...optionalParams: any[]) => void;

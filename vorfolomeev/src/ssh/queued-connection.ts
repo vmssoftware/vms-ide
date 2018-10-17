@@ -1,5 +1,6 @@
 import { AsyncTaskQueue } from "../common/async-task-queue";
-import { ISshConnectionSettings, SshConnection } from "./connection";
+import { SshConnection } from "./connection";
+import { ISshConnectionSettings } from "./ssh-connection-settings";
 
 export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;

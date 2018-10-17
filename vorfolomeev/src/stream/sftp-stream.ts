@@ -3,7 +3,7 @@ import stream = require("stream");
 import { Lock } from "../common/lock";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 import { WaitableOperation } from "../simple-ssh/waitable-operation";
-import { ICanCreateReadStream, ICanCreateWriteStream } from "./pipe";
+import { ICanCreateReadStream, ICanCreateWriteStream } from "./can-create-stream";
 import { SftpClient } from "./sftp-client";
 
 type LogType = (message?: any, ...optionalParams: any[]) => void;
@@ -83,17 +83,10 @@ export class SftpReadWriteStream extends SftpClient implements ICanCreateReadStr
     public async createReadStream(file: string) {
         await this.waitOperation.acquire();
         let readStream: stream.Readable | undefined;
+        await this.ensureSftp();
         if (this.sftp) {
             readStream = SftpReadWriteStream.makeReadStream(this.sftp, file, this.log);
-            this.waitOperation.release();
-        } else {
-            await this.ensureSftp();
-            if (this.sftp) {
-                readStream = SftpReadWriteStream.makeReadStream(this.sftp, file, this.log);
-            }
-            this.waitOperation.release();
         }
-        await this.waitOperation.acquire();
         this.waitOperation.release();
         return readStream;
     }
@@ -101,25 +94,20 @@ export class SftpReadWriteStream extends SftpClient implements ICanCreateReadStr
     public async createWriteStream(file: string) {
         await this.waitOperation.acquire();
         let writeStream: stream.Writable | undefined;
+        await this.ensureSftp();
         if (this.sftp) {
             writeStream = SftpReadWriteStream.makeWriteStream(this.sftp, file);
-            this.waitOperation.release();
-        } else {
-            await this.ensureSftp();
-            if (this.sftp) {
-                writeStream = SftpReadWriteStream.makeWriteStream(this.sftp, file);
-            }
-            this.waitOperation.release();
         }
-        await this.waitOperation.acquire();
         this.waitOperation.release();
         return writeStream;
     }
 
     private async ensureSftp() {
-        await this.ensureClient();
-        if (this.client) {
-            this.sftp = await SftpReadWriteStream.makeSftp(this.client, this.log);
+        if (!this.sftp) {
+            await this.ensureClient();
+            if (this.client) {
+                this.sftp = await SftpReadWriteStream.makeSftp(this.client, this.log);
+            }
         }
     }
 }

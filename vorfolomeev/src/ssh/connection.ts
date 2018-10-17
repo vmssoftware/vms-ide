@@ -2,14 +2,10 @@ import { Client, ConnectConfig } from "ssh2";
 import { inspect } from "util";
 import { isSimplyEq } from "../common/simply-compare";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
+import { ISshConnectionSettings } from "./ssh-connection-settings";
 
 export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
-
-export interface ISshConnectionSettings  {
-    connectConfig: ConnectConfig;
-    settingsResolver?: IConnectConfigResolver;
-}
 
 export class SshConnection {
 

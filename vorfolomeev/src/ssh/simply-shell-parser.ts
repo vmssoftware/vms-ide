@@ -13,14 +13,14 @@ export class SimplyShellParser implements IShellParser {
     }
 
     public onData(data: string): boolean {
-        if (logFn) logFn(data);
+        if (logFn) { logFn(data); }
         this.stdout += data;
         const retCode = this.stdout.endsWith(this.ending);  // because ending may start in previous data
         return retCode;
     }
 
     public onDataErr(data: string): boolean {
-        if (logFn) logFn(data);
+        if (logFn) { logFn(data); }
         this.stderr += data;
         return false;   // no error can invoke another command
     }

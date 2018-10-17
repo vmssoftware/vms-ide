@@ -11,15 +11,12 @@ import { FSSourceOld } from "./sync-old/fs-source-old";
 import { SyncImplement } from "./sync-old/sync-impl";
 import { ISyncOld } from "./sync-old/sync-old";
 import { SyncSiteTarget } from "./sync-old/sync-site-target";
-import { IVmsSShSettings, VmsSshHelper } from "./vms/vms-ssh-helper";
+import { ISyncResult } from "./sync-result";
+import { VmsSshHelper } from "./vms/vms-ssh-helper";
+import { IVmsSShSettings } from "./vms/vms-ssh-settings";
 
 export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
-
-export interface ISyncResult {
-    sent: number;
-    all: number;
-}
 
 export class Synchronizer {
 
