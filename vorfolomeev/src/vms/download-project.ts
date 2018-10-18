@@ -1,3 +1,4 @@
+import { LogType } from "../common/log-type";
 import { ConnectConfigResolverImpl } from "../config-resolve/connect-config-resolver-impl";
 import { PasswordVscodeFiller } from "../config-resolve/password-vscode-filler";
 import { IConfigHelper } from "../config/config";
@@ -8,7 +9,6 @@ import { SftpConnection } from "../ssh/sftp-connection";
 import { ISftpSettings } from "../ssh/sftp-settings";
 import { VmsPathConverterRoot } from "./vms-path-converter-root";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 export function DownloadProject(configHelper: IConfigHelper): Promise<boolean> {

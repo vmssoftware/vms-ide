@@ -1,9 +1,9 @@
 import { ClientChannel } from "ssh2";
 import { Lock } from "../common/lock";
+import { LogType } from "../common/log-type";
 import { SimpleSsh } from "./simple-ssh";
 import { WaitableOperation } from "./waitable-operation";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 export class SimpleExecSsh extends SimpleSsh {

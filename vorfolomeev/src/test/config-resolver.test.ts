@@ -6,9 +6,9 @@
 // The module 'assert' provides assertion methods from node
 import * as assert from "assert";
 import { ConnectConfig } from "ssh2";
+import { ContextPasswordFiller } from "../common/context-password-filler";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 import { ConnectConfigResolverImpl, settingsCache } from "../config-resolve/connect-config-resolver-impl";
-import { ContextPasswordFiller } from "./context-password-filler";
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it

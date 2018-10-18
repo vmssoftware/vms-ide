@@ -1,8 +1,7 @@
 import { ClientChannel } from "ssh2";
 import { Lock } from "../common/lock";
+import { LogType } from "../common/log-type";
 import { ICanParseWelcome } from "./can-parse-welcome";
-
-type LogType = (message?: any, ...optionalParams: any[]) => void;
 
 export class ParseWelcomeVms implements ICanParseWelcome {
 

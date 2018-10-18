@@ -1,10 +1,10 @@
 import { ConnectConfig } from "ssh2";
 import { inspect } from "util";
 import { Lock } from "../common/lock";
+import { LogType } from "../common/log-type";
 import { IConnectConfigResolver } from "./connect-config-resolver";
 import { ISettingsFiller } from "./settings-filler";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 class SettingsCacheNode {

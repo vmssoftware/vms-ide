@@ -1,8 +1,8 @@
 import { Writable } from "stream";
+import { LogType } from "../common/log-type";
+import { IPromptCatcher } from "./prompt-catcher";
 
-type LogType = (message?: any, ...optionalParams: any[]) => void;
-
-export class PromptedStreamCatcher {
+export class PromptCatcherDefault implements IPromptCatcher {
 
     public readyEvent: symbol = Symbol("ready");
     public content = "";    // The content that caught until prompt is encountered.
@@ -14,7 +14,7 @@ export class PromptedStreamCatcher {
     constructor(public prompt: string, public log?: LogType) {
     }
 
-    public async createWriteStream(filename: string) {
+    public async createWriteStream() {
         this.content = "";
         const writeable = new Writable({
             write: (chunk: any, encoding: string, callback: (error?: Error | null) => void) => {
@@ -25,7 +25,7 @@ export class PromptedStreamCatcher {
                 }
                 if (this.content.endsWith(this.prompt)) {
                     // emit event and clear lastString
-                    const content = this.content;
+                    const content = this.content.slice(0, this.content.length - this.prompt.length);
                     setImmediate(() => writeable.emit(this.readyEvent, content));
                     this.content = "";
                 }
@@ -34,8 +34,19 @@ export class PromptedStreamCatcher {
         });
         writeable.on("error", (err) => {
             if (this.log) {
-                this.log(`${err}`);
+                this.log(`PromptCatcher error: ${err}`);
             }
+        });
+        writeable.on("close", () => {
+            if (this.log) {
+                this.log(`PromptCatcher closed`);
+            }
+        });
+        writeable.on("unpipe", () => {
+            if (this.log) {
+                this.log(`PromptCatcher unpiped`);
+            }
+            setImmediate(() => writeable.emit(this.readyEvent, undefined));
         });
         return writeable;
     }

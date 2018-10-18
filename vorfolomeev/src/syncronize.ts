@@ -1,4 +1,5 @@
 import { Disposable, window, workspace } from "vscode";
+import { LogType } from "./common/log-type";
 import { ConnectConfigResolverImpl } from "./config-resolve/connect-config-resolver-impl";
 import { PasswordVscodeFiller } from "./config-resolve/password-vscode-filler";
 import { IConfigHelper } from "./config/config";
@@ -14,7 +15,6 @@ import { ISyncResult } from "./sync-result";
 import { VmsSshHelper } from "./vms/vms-ssh-helper";
 import { IVmsSShSettings } from "./vms/vms-ssh-settings";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 export class Synchronizer {

@@ -1,9 +1,9 @@
 import { EventEmitter } from "events";
 import { Client, ConnectConfig } from "ssh2";
 import { Lock } from "../common/lock";
+import { LogType } from "../common/log-type";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 export class SimpleSsh {

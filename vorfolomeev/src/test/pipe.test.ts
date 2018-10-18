@@ -1,31 +1,49 @@
 import * as assert from "assert";
 import { ConnectConfig } from "ssh2";
+import { ContextPasswordFiller } from "../common/context-password-filler";
+import { LogType } from "../common/log-type";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 import { ConnectConfigResolverImpl, settingsCache } from "../config-resolve/connect-config-resolver-impl";
 import { FakeReadStream } from "../stream/fake-read-stream";
 import { FakeWriteStream } from "../stream/fake-write-stream";
 import { PipeFile } from "../stream/pipe";
-import { SftpReadWriteStream } from "../stream/sftp-stream";
+import { SftpClient } from "../stream/sftp-client";
 import { TestConfiguration } from "./config/config";
-import { ContextPasswordFiller } from "./context-password-filler";
-
-type LogType = (message?: any, ...optionalParams: any[]) => void;
 
 suite("Pipe tests", function(this: Mocha.Suite) {
-
-    return;
 
     this.timeout(0);
 
     // tslint:disable-next-line:no-console
-    const logFn = console.log;
-
-    test("TestPipeRealToAnotherReal with resolver with correct context filler", async () => {
-
-        const configLocal = await TestConfiguration(true);
-        const configVms = await TestConfiguration(false);
-
-        const filler = new ContextPasswordFiller([
+    // const logFn = console.log;
+    const logFn = undefined;
+    let configLocal: ConnectConfig;
+    let configVms: ConnectConfig;
+    let filler: ContextPasswordFiller;
+    let resolver: IConnectConfigResolver;
+    const fileData = [
+        { file: "test1.txt", buffer: Buffer.from("1234\r\nabcd") },
+        { file: "test2.txt", buffer: Buffer.from("1\r\n2\r\n3\r\n4\r\n5") },
+    ];
+    const srcData = [
+        Buffer.from("1234\r\n"),
+        Buffer.from("abcd\r\n"),
+    ];
+    const srcBadData = [
+        Buffer.from("1234\r\n"),
+        Buffer.from("abcd\r\n"),
+        null,
+    ];
+    const srcBaDestData = [
+        Buffer.from("1234\r\n"),
+        FakeWriteStream.badChunk,
+    ];
+    this.beforeAll(async () => {
+        // get configs with passwords
+        configLocal = await TestConfiguration(true);
+        configVms = await TestConfiguration(false);
+        // prepare filler based on passwords from configs
+        filler = new ContextPasswordFiller([
             {
                 host: configLocal.host,
                 password: configLocal.password,
@@ -35,100 +53,75 @@ suite("Pipe tests", function(this: Mocha.Suite) {
                 password: configVms.password,
             },
         ], 0);
-
+        // remove passwords
         delete configLocal.password;
         delete configVms.password;
+        resolver = new ConnectConfigResolverImpl([filler]);
+    });
 
-        const resolver = new ConnectConfigResolverImpl([filler]);
+    test("TestPipeFakeToFake srcData", async () => {
+        const result = await TestPipeFakeToFake(srcData, logFn);
+        assert.equal(result.resultPipe, true, "pipe result");
+        assert.equal(result.resultPipe, true, "compare result");
+    });
 
+    return;
+
+    test("TestPipeRealToAnotherReal with resolver with correct context filler", async () => {
         // hard reset
         settingsCache.clear();
-
         assert.equal(
-            await TestPipeRealToAnotherReal(configLocal, configVms, resolver),
+            await TestPipeRealToAnotherReal(configLocal, configVms, "test.txt", "test_new.txt", resolver, logFn),
             true,
             "TestPipeRealToAnotherReal");
-
     });
 
-    test("TestPipeFakeToFake", async () => {
-        assert.equal(await TestPipeFakeToFake(), true, "TestPipeFakeToFake");
+    test("TestPipeRealToFake local", async () => {
+        assert.equal(await TestPipeRealToFake(configVms, logFn), true, "TestPipeRealToFake");
     });
 
-    test("TestPipeRealToFake", async () => {
-        const config = await TestConfiguration(false);
-        assert.equal(await TestPipeRealToFake(config), true, "TestPipeRealToFake");
+    test("TestPipeRealToTheSameReal local", async () => {
+        assert.equal(await TestPipeRealToTheSameReal(configLocal), true, "TestPipeRealToTheSameReal");
     });
 
-    test("TestPipeRealToTheSameReal", async () => {
-        const config = await TestConfiguration(false);
-        assert.equal(await TestPipeRealToTheSameReal(config), true, "TestPipeRealToTheSameReal");
+    test("TestPipeFakeToReal local", async () => {
+        assert.equal(await TestPipeFakeToReal(srcData, configLocal), true, "TestPipeFakeToReal");
     });
 
-    test("TestPipeFakeToReal", async () => {
-        const config = await TestConfiguration(false);
-        assert.equal(await TestPipeFakeToReal(config), true, "TestPipeFakeToReal");
+    test("TestPipeRealToAnotherReal local vms", async () => {
+        assert.equal(await TestPipeRealToAnotherReal(configLocal,
+            configVms, "test.txt", "test_new.txt", resolver, logFn), true, "TestPipeRealToAnotherReal");
     });
 
-    test("TestPipeRealToAnotherReal", async () => {
-        const configLocal = await TestConfiguration(true);
-        const configVms = await TestConfiguration(false);
-        assert.equal(await TestPipeRealToAnotherReal(configLocal, configVms), true, "TestPipeRealToAnotherReal");
-    });
+    /**
+     * Try different data
+     * @param sourceArray data
+     * @param log log
+     */
+    async function TestPipeFakeToFake(sourceArray: Array<Buffer|null>, log?: LogType) {
 
-    async function TestPipeFakeToFake(log?: LogType) {
-
-        const srcData = [
-            Buffer.from("1234\r\n"),
-            Buffer.from("abcd\r\n"),
-        ];
-
-        const srcBadData = [
-            Buffer.from("1234\r\n"),
-            Buffer.from("abcd\r\n"),
-            null,
-        ];
-
-        const srcBaDestData = [
-            Buffer.from("1234\r\n"),
-            FakeWriteStream.badChunk,
-        ];
-
-        const src = new FakeReadStream(srcData, log);
-        const dst = new FakeWriteStream(undefined, log);
-
-        const result = await PipeFile(src, dst, "test.txt", undefined, log);
-
-        assert.equal(result, true, "pipeFile must return true");
-
-        assert.equal(Buffer.concat(dst.chunks).toString("utf8"),
-                     Buffer.concat(srcData).toString("utf8"), "Content is different");
-
-        // test bad source
-        src.chunks = srcBadData;
-        const resultBadSource = await PipeFile(src, dst, "test.txt", undefined, log);
-
-        assert.equal(resultBadSource, false, "pipeFile must return false");
-
-        // test bad dest data
-        src.chunks = srcBaDestData;
-        const resultBadDestData = await PipeFile(src, dst, "test.txt", undefined, log);
-
-        assert.equal(resultBadDestData, false, "pipeFile must return false");
-
-        // test bad dest
-        src.chunks = srcData;
-        dst.emulateError = true;
-        const resultBadDest = await PipeFile(src, dst, "test.txt", undefined, log);
-
-        assert.equal(resultBadDest, false, "pipeFile must return false");
-
-        return result && !resultBadSource && !resultBadDest;
+        const src = new FakeReadStream(sourceArray, log);
+        const dst = new FakeWriteStream(false, log);
+        const resultPipe = await PipeFile(src, dst, "in", "out", log);
+        const sourceString = sourceArray.map((buffer) => {
+            if (Buffer.isBuffer(buffer)) {
+                return buffer.toString("utf8");
+            }
+            return "";
+        }).join("");
+        const destString = dst.chunks.map((buffer) => {
+            if (Buffer.isBuffer(buffer)) {
+                return buffer.toString("utf8");
+            }
+            return "";
+        }).join("");
+        const resultCompare = sourceString === destString;
+        return { resultPipe, resultCompare };
     }
 
     async function TestPipeRealToFake(config: ConnectConfig, log?: LogType) {
 
-        const src = new SftpReadWriteStream(config, undefined, log);
+        const src = new SftpClient(config, undefined, log);
         const dst = new FakeWriteStream(undefined, log);
 
         const result = await PipeFile(src, dst, "test.txt", "test_new.txt", log);
@@ -147,7 +140,7 @@ suite("Pipe tests", function(this: Mocha.Suite) {
 
     async function TestPipeRealToTheSameReal(config: ConnectConfig, log?: LogType) {
 
-        const src = new SftpReadWriteStream(config, undefined, log);
+        const src = new SftpClient(config, undefined, log);
 
         const result = await PipeFile(src, src, "test.txt", "test_new.txt", log);
 
@@ -158,34 +151,26 @@ suite("Pipe tests", function(this: Mocha.Suite) {
 
     async function TestPipeRealToAnotherReal(configSrc: ConnectConfig,
                                              configDst: ConnectConfig,
-                                             resolver?: IConnectConfigResolver,
+                                             srcFile: string,
+                                             dstFile: string,
+                                             configResolver?: IConnectConfigResolver,
                                              log?: LogType) {
 
-        const src = new SftpReadWriteStream(configSrc, resolver, log);
-        const dst = new SftpReadWriteStream(configDst, resolver, log);
+        const src = new SftpClient(configSrc, configResolver, log);
+        const dst = new SftpClient(configDst, configResolver, log);
 
-        const result = await PipeFile(src, dst, "test.txt", "test_new.txt", log);
+        const result = await PipeFile(src, dst, srcFile, dstFile, log);
 
         src.dispose();
+        dst.dispose();
 
         return result;
     }
 
-    async function TestPipeFakeToReal(config: ConnectConfig, log?: LogType) {
+    async function TestPipeFakeToReal(sourceArray: Array<Buffer|null>, config: ConnectConfig, log?: LogType) {
 
-        const srcData = [
-            Buffer.from("1234\r\n"),
-            Buffer.from("abcd\r\n"),
-        ];
-
-        const srcBadData = [
-            Buffer.from("1234\r\n"),
-            Buffer.from("abcd\r\n"),
-            null,
-        ];
-
-        const src = new FakeReadStream(srcData, log);
-        const dst = new SftpReadWriteStream(config, undefined, log);
+        const src = new FakeReadStream(sourceArray, log);
+        const dst = new SftpClient(config, undefined, log);
 
         const result = await PipeFile(src, dst, "test.txt", "test_good.txt", log);
 

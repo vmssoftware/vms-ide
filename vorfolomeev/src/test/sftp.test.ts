@@ -8,11 +8,12 @@ import * as assert from "assert";
 import fs from "fs";
 import readline from "readline";
 import { Readable, Writable } from "stream";
+import { CrLfTrimmedEq } from "../common/cr-lf-trimmed-eq";
 import { Lock } from "../common/lock";
+import { LogType } from "../common/log-type";
+import { WriteToBufferCreator } from "../common/write-to-buffer-creator";
 import { SimpleSftp } from "../simple-ssh/simple-sftp";
 import { TestConfiguration } from "./config/config";
-import { ContentTest } from "./contents";
-import { WriteToBufferCreator } from "./write-to-buffer-creator";
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
@@ -25,7 +26,6 @@ suite("SFTP tests", function(this: Mocha.Suite) {
     // no more SimpleSftp
     return;
 
-    type LogType = (message?: any, ...optionalParams: any[]) => void;
     // tslint:disable-next-line:prefer-const
     let logFn: LogType | undefined;
 
@@ -123,7 +123,7 @@ suite("SFTP tests", function(this: Mocha.Suite) {
                 assert.equal(result.errPassed, tst.expected, `Unexpected result in ${tst.file}`);
                 const allBuff = Buffer.concat(wsCreator.stream.chunks);
                 const strRet = allBuff.toString("utf8");
-                assert.equal(ContentTest(strRet, tst.content), true, `Content is different ${tst.file}`);
+                assert.equal(CrLfTrimmedEq(strRet, tst.content), true, `Content is different ${tst.file}`);
             }));
         }
 
@@ -169,7 +169,7 @@ suite("SFTP tests", function(this: Mocha.Suite) {
 
         const allBuff = Buffer.concat(wsCreator.stream.chunks);
         const strRet = allBuff.toString("utf8");
-        assert.equal(ContentTest(strRet, testFile.content), true, "Content is different");
+        assert.equal(CrLfTrimmedEq(strRet, testFile.content), true, "Content is different");
 
     });
 
@@ -212,7 +212,7 @@ suite("SFTP tests", function(this: Mocha.Suite) {
         const all = [];
         for (const tst of testFiles) {
             all.push(ReadFileViaReadLine(tst.file, sftp).then((result) => {
-                assert.equal( ContentTest(result, tst.content), true, `Contents are different ${tst.file}`);
+                assert.equal( CrLfTrimmedEq(result, tst.content), true, `Contents are different ${tst.file}`);
                 return true;
             }));
         }
@@ -247,7 +247,7 @@ suite("SFTP tests", function(this: Mocha.Suite) {
             all.push(WriteFile(tst.file, tst.content, sftp).then((result) => {
                 assert.equal(result, true, `Write ${tst.file} failed`);
                 return ReadFileViaReadLine(tst.file, sftp).then((content) => {
-                    assert.equal( ContentTest( content, tst.content), true, `Contents are different ${tst.file}`);
+                    assert.equal( CrLfTrimmedEq( content, tst.content), true, `Contents are different ${tst.file}`);
                     return true;
                 });
             }));

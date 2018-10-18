@@ -1,4 +1,5 @@
 import { Disposable, Uri, workspace } from "vscode";
+import { LogType } from "../../common/log-type";
 import { IConfigHelper } from "../../config/config";
 import { VmsSshHelper } from "../../vms/vms-ssh-helper";
 import { FSSourceOld } from "../fs-source-old";
@@ -8,7 +9,6 @@ import { SyncSiteTarget } from "../sync-site-target";
 
 const date1 = new Date(Date.UTC(2018, 9, 20, 14, 25, 33, 123));
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 class SourceFileTestV1 implements ISourceFileOld {

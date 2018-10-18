@@ -1,11 +1,11 @@
 import { ClientChannel } from "ssh2";
+import { LogType } from "../common/log-type";
 import { IExecutionResult } from "./execution-result";
 import { QueuedConnection } from "./queued-connection";
 import { IShellParser } from "./shell-parser";
 import { IShellSettings } from "./shell-settings";
 import { SimplyShellParser } from "./simply-shell-parser";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 export class ShellConnecttion extends QueuedConnection {

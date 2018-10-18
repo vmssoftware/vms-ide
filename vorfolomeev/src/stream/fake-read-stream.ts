@@ -1,6 +1,5 @@
 import { Readable } from "stream";
-
-type LogType = (message?: any, ...optionalParams: any[]) => void;
+import { LogType } from "../common/log-type";
 
 export class FakeReadStream {
 

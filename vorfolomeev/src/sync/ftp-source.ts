@@ -1,10 +1,10 @@
 import { Readable, Writable } from "stream";
 import { Lock } from "../common/lock";
+import { LogType } from "../common/log-type";
 import { SimpleSftp } from "../simple-ssh/simple-sftp";
 import { ICanCreateWriteStream } from "../stream/can-create-stream";
 import { ISource } from "./source";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 export class FtpSource implements ISource {

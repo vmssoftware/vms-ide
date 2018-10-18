@@ -1,8 +1,6 @@
 import { EventEmitter } from "events";
 import { Lock } from "../common/lock";
-
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
-export let logFn: LogType | undefined;
+import { LogType } from "../common/log-type";
 
 /**
  * Waitable operation executor
@@ -13,6 +11,7 @@ export let logFn: LogType | undefined;
  * @param failEvent emitted when operation failed
  * @param operation function, must return true if we should wait "continue" event.
  *                  also must reset complete lock if all ok
+ * @param logFn like console.log
  * @returns when operation is done or failed
  */
 export async function WaitableOperation(operationName: string,
@@ -20,15 +19,15 @@ export async function WaitableOperation(operationName: string,
                                         continueEvent: string | symbol,
                                         failEmitter: EventEmitter,
                                         failEvent: string | symbol,
-                                        operation: (complete: Lock) => boolean) {
+                                        operation: (complete: Lock) => boolean,
+                                        logFn?: LogType) {
 
     let shouldWait = false;
     const operationDone = new Lock(true);
     const mayContinue = new Lock(true);
 
     const onFailed = () => {
-        // tslint:disable-next-line:no-unused-expression
-        logFn && logFn(`${operationName} failed`);
+        if (logFn) { logFn(`${operationName} failed`); }
         // release all locks
         mayContinue.release();
         operationDone.release();
@@ -38,7 +37,7 @@ export async function WaitableOperation(operationName: string,
 
     const onContinue = () => {
         // tslint:disable-next-line:no-unused-expression
-        logFn && logFn(`${operationName} may continue`);
+        if (logFn) { logFn(`${operationName} may continue`); }
         mayContinue.release();
     };
 
@@ -48,10 +47,10 @@ export async function WaitableOperation(operationName: string,
         shouldWait = operation(operationDone);
         if (shouldWait) {
             // tslint:disable-next-line:no-unused-expression
-            logFn && logFn(`${operationName} should wait`);
+            if (logFn) { logFn(`${operationName} should wait`); }
             continueEmitter.on(continueEvent, onContinue);
             await mayContinue.acquire();   // wait until "continue" or failed
-            continueEmitter.off(continueEvent, onContinue);
+            continueEmitter.removeListener(continueEvent, onContinue);
         }
     } while (shouldWait);
 

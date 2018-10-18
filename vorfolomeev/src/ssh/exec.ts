@@ -1,9 +1,9 @@
+import { LogType } from "../common/log-type";
 import { SshConnection } from "./connection";
 import { IExecutionResult } from "./execution-result";
 import { SimplyShellParser } from "./simply-shell-parser";
 import { ISshConnectionSettings } from "./ssh-connection-settings";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 type Resolve<T> = ((value?: T | PromiseLike<T> | undefined) => void);

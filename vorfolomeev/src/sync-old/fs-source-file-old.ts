@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import { Uri } from "vscode";
+import { LogType } from "../common/log-type";
 import { FSSourceOld } from "./fs-source-old";
 import { ISourceFileOld } from "./sync-old";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 export class FSSourceFileOld implements ISourceFileOld {

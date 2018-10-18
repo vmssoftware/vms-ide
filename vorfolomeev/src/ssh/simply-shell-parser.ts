@@ -1,6 +1,6 @@
+import { LogType } from "../common/log-type";
 import { IShellParser } from "./shell-parser";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 export class SimplyShellParser implements IShellParser {

@@ -1,6 +1,6 @@
 import { ConnectConfig } from "ssh2";
 import { ISettingsFiller } from "../config-resolve/settings-filler";
-import { Lock } from "./../common/lock";
+import { Lock } from "./lock";
 
 export interface IContextPassword {
     host?: string;

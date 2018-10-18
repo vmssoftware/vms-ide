@@ -1,7 +1,7 @@
 import { Disposable, Uri } from "vscode";
+import { LogType } from "../common/log-type";
 import { ISourceFileOld, ISourceOld, ISyncOld, ITargetOld } from "./sync-old";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 export class SyncImplement implements ISyncOld {

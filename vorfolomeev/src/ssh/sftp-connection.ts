@@ -1,11 +1,11 @@
 import * as path from "path";
 import { SFTPWrapper } from "ssh2";
 import { InputAttributes, Stats } from "ssh2-streams";
+import { LogType } from "../common/log-type";
 import { IPathConverter } from "./path-converter";
 import { QueuedConnection } from "./queued-connection";
 import { ISftpSettings } from "./sftp-settings";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 type Resolve<T> = ((value?: T | PromiseLike<T> | undefined) => void);

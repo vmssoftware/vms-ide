@@ -1,34 +1,50 @@
-import * as assert from "assert";
 import { ConnectConfig } from "ssh2";
-import { Delay } from "../common/delay";
-import { Lock } from "../common/lock";
+import { ContextPasswordFiller } from "../common/context-password-filler";
+import { LogType } from "../common/log-type";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 import { ConnectConfigResolverImpl, settingsCache } from "../config-resolve/connect-config-resolver-impl";
 import { ICanParseWelcome } from "../stream/can-parse-welcome";
-import { FakeReadStream } from "../stream/fake-read-stream";
-import { FakeWriteStream } from "../stream/fake-write-stream";
 import { ParseWelcome } from "../stream/parse-welcome";
 import { ParseWelcomeVms } from "../stream/parse-welcome-vms";
-import { PromptedStreamCatcher } from "../stream/prompted-stream-catcher";
-import { SftpShell } from "../stream/sftp-shell";
+import { IPromptCatcher } from "../stream/prompt-catcher";
+import { PromptCatcherDefault } from "../stream/prompt-catcher-default";
+import { PromptCatcherVms } from "../stream/prompt-catcher-vms";
+import { SshShell } from "../stream/ssh-shell";
 import { TestConfiguration } from "./config/config";
-import { ContextPasswordFiller } from "./context-password-filler";
-
-type LogType = (message?: any, ...optionalParams: any[]) => void;
 
 suite("Shell tests", function(this: Mocha.Suite) {
 
     this.timeout(0);
 
+    return;
+
     // tslint:disable-next-line:no-console
     const logFn = console.log;
+    // const logFn = undefined;
+    let configLocal: ConnectConfig;
+    let configVms: ConnectConfig;
+    let filler: ContextPasswordFiller;
+    let resolver: IConnectConfigResolver;
+    let parser: ICanParseWelcome;
+    let parserVms: ICanParseWelcome;
+    let promptCatcher: IPromptCatcher;
+    let promptCatcherVms: IPromptCatcher;
+    const defaultExitCommand = "exit";
+    const defaultCommands = [
+        "dir",
+        "echo Hi",
+    ];
+    const vmsExitCommand = "logout";
+    const vmsCommands = [
+        "dir",
+        "sh time",
+    ];
 
-    test("TestCreateShell with resolver with correct context filler", async () => {
+    this.beforeAll(async () => {
+        configLocal = await TestConfiguration(true);
+        configVms = await TestConfiguration(false);
 
-        const configLocal = await TestConfiguration(true);
-        const configVms = await TestConfiguration(false);
-
-        const filler = new ContextPasswordFiller([
+        filler = new ContextPasswordFiller([
             {
                 host: configLocal.host,
                 password: configLocal.password,
@@ -41,107 +57,63 @@ suite("Shell tests", function(this: Mocha.Suite) {
 
         delete configLocal.password;
         delete configVms.password;
+        resolver = new ConnectConfigResolverImpl([filler]);
+        parser = new ParseWelcome(0, logFn);
+        promptCatcher = new PromptCatcherDefault("", logFn);
+        parserVms = new ParseWelcomeVms(5000, logFn);
+        promptCatcherVms = new PromptCatcherVms("", logFn);
+    });
 
-        const resolver = new ConnectConfigResolverImpl([filler]);
-        const parser = new ParseWelcome(0, logFn);
-
-        // hard reset
+    test("TestShell no password", async () => {
         settingsCache.clear();
+        return await TestShell(defaultCommands, configLocal, undefined, parser, promptCatcher, logFn);
+    });
 
-        assert.equal(
-            await TestCreateShellWithAutoPipe(configLocal, resolver, parser, logFn),
-            true,
-            "TestCreateShellWithAutoPipe local");
+    test("TestShell local +quit welcome-prompt prompt-catch", async () => {
+        settingsCache.clear();
+        const logoutInserted = defaultCommands.concat([defaultExitCommand], defaultCommands);
+        return await TestShell(logoutInserted, configLocal, resolver, parser, promptCatcher, logFn);
+    });
 
-        if (logFn) { logFn(`${"-".repeat(30)}`); }
+    test("TestShell vms +quit welcome-prompt prompt-catch", async () => {
+        settingsCache.clear();
+        const logoutInserted = vmsCommands.concat([vmsExitCommand], vmsCommands);
+        return await TestShell(logoutInserted, configVms, resolver, parser, promptCatcher, logFn);
+    });
 
-        assert.equal(
-            await TestCreateShellWithPromptCatcher(configLocal, resolver, parser, logFn),
-            true,
-            "TestCreateShellWithPromptCatcher local prompt-catch");
+    test("TestShell vms +quit welcome-vms vms-catch", async () => {
+        settingsCache.clear();
+        const logoutInserted = vmsCommands.concat([vmsExitCommand], vmsCommands);
+        return await TestShell(logoutInserted, configVms, resolver, parserVms, promptCatcherVms, logFn);
+    });
 
-        if (logFn) { logFn(`${"-".repeat(30)}`); }
+    test("TestShell local welcome-prompt prompt-catch", async () => {
+        settingsCache.clear();
+        return await TestShell(defaultCommands, configLocal, resolver, parser, promptCatcher, logFn);
+    });
 
-        assert.equal(
-                await TestCreateShellWithPromptCatcher(configVms, resolver, parser, logFn),
-                true,
-                "TestCreateShellWithPromptCatcher vms prompt-catch");
+    test("TestShell vms welcome-prompt prompt-catch", async () => {
+        settingsCache.clear();
+        return await TestShell(vmsCommands, configVms, resolver, parser, promptCatcher, logFn);
+    });
 
-        if (logFn) { logFn(`${"-".repeat(30)}`); }
+    test("TestShell vms welcome-vms vms-catch", async () => {
+        settingsCache.clear();
+        return await TestShell(vmsCommands, configVms, resolver, parserVms, promptCatcherVms, logFn);
+    });
 
-        const parserVms = new ParseWelcomeVms(5000, logFn);
-        assert.equal(
-                    await TestCreateShellWithPromptCatcher(configVms, resolver, parserVms, logFn),
-                    true,
-                    "TestCreateShellWithPromptCatcher vms vms-catch");
-                });
-
-    async function TestCreateShellWithAutoPipe(configSrc: ConnectConfig,
-                                               resolver?: IConnectConfigResolver,
-                                               parser?: ICanParseWelcome,
-                                               log?: LogType) {
-        const shell = new SftpShell(configSrc, resolver, parser, log);
-        const channel = await shell.createClientChannel();
-        if (channel) {
-            const srcData = [
-                "dir\r\n",
-                "sh time\r\n",
-            ];
-            const src = new FakeReadStream(srcData, log);
-            const dst = new FakeWriteStream(undefined, log);
-            const sourceStream = await src.createReadStream("");
-            const destStream = await dst.createWriteStream("");
-            sourceStream.pipe(channel).pipe(destStream);
-            const wait = new Lock(true);
-            channel.on("close", () => {
-                wait.release();
-            });
-            await wait.acquire();
-            const answer = Buffer.concat(dst.chunks).toString("utf8");
-            if (log) { log(answer); }
-            channel.end();
-        }
-        shell.dispose();
-        return true;
-    }
-
-    async function TestCreateShellWithPromptCatcher(configSrc: ConnectConfig,
-                                                    resolver?: IConnectConfigResolver,
-                                                    parser?: ICanParseWelcome,
-                                                    log?: LogType) {
-        const shell = new SftpShell(configSrc, resolver, parser, log);
-        const channel = await shell.createClientChannel();
-        if (channel) {
-            assert.ok(shell.prompt, "No prompt found");
-            const commands = [
-                "dir\r\n",
-                "sh time\r\n",
-                "dir /full\r\n",
-            ];
-            const promptCatcher = new PromptedStreamCatcher(shell.prompt!);
-            const promptCatchStream = await promptCatcher.createWriteStream("");
-            channel.pipe(promptCatchStream);
-            for (const command of commands) {
-                channel.write(command);
-                const waitReady = new Lock(true);
-                const commandCatch = (content: string) => {
-                    // skip garbage from previuos commands
-                    if (content.startsWith(command)) {
-                        if (log) { log(`ready to the next command`); }
-                        if (typeof content === "string") {
-                            if (log) {
-                                log(`command: ${command}\r\ncontent:\r\n${content}`);
-                            }
-                        }
-                        promptCatcher.content = "";
-                        waitReady.release();
-                        promptCatchStream.removeListener(promptCatcher.readyEvent, commandCatch);
-                    }
-                };
-                promptCatchStream.on(promptCatcher.readyEvent, commandCatch);
-                await waitReady.acquire();
+    async function TestShell(commands: string[],
+                             config: ConnectConfig,
+                             configResolver?: IConnectConfigResolver,
+                             welcomeParser?: ICanParseWelcome,
+                             catcher?: IPromptCatcher,
+                             log?: LogType) {
+        const shell = new SshShell(config, configResolver, welcomeParser, catcher, log);
+        for (const command of commands) {
+            const content = await shell.execCmd(command);
+            if (log) {
+                log(`command: ${command}\r\ncontent:\r\n${content}`);
             }
-            channel.end();
         }
         shell.dispose();
         return true;

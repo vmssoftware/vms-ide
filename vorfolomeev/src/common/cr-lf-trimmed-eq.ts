@@ -1,4 +1,4 @@
-export function ContentTest(one: string, two: string): boolean {
+export function CrLfTrimmedEq(one: string, two: string): boolean {
     if (one === two) {
         return true;
     }

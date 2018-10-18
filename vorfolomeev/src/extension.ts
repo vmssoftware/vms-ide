@@ -1,16 +1,16 @@
 
 import { commands, ExtensionContext, window } from "vscode";
+import { LogType } from "./common/log-type";
 import { IConfigHelper } from "./config/config";
 import { GetConfigHelperFromApi } from "./config/get-config-helper";
+import { ToOutputChannel } from "./output-channel";
 import { Synchronizer } from "./syncronize";
+import { DownloadProject } from "./vms/download-project";
 
 import * as nls from "vscode-nls";
-import { ToOutputChannel } from "./output-channel";
-import { DownloadProject } from "./vms/download-project";
 
 const localize = nls.config()();
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 // tslint:disable-next-line:no-console

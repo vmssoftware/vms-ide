@@ -1,9 +1,8 @@
 import assert = require("assert");
 import { Readable, Writable } from "stream";
 import { Lock } from "../common/lock";
+import { LogType } from "../common/log-type";
 import { ICanCreateReadStream, ICanCreateWriteStream } from "./can-create-stream";
-
-type LogType = (message?: any, ...optionalParams: any[]) => void;
 
 export async function PipeFile(source: ICanCreateReadStream,
                                dest: ICanCreateWriteStream,

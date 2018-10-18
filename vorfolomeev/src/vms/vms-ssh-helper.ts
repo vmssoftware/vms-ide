@@ -1,4 +1,5 @@
 
+import { LogType } from "../common/log-type";
 import { SshExec } from "../ssh/exec";
 import { IExecutionResult } from "../ssh/execution-result";
 import { IPathConverter } from "../ssh/path-converter";
@@ -10,7 +11,6 @@ import { VmsAbsoluteDateString } from "./vms-absolute-date-string";
 import { VmsPathConverterRoot } from "./vms-path-converter-root";
 import { IVmsSShSettings } from "./vms-ssh-settings";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 export class VmsSshHelper implements ISyncSiteHelper {

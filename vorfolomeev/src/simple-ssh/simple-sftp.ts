@@ -2,11 +2,11 @@ import { Client, ConnectConfig, SFTPWrapper } from "ssh2";
 import { FileEntry, InputAttributes, Stats } from "ssh2-streams";
 import stream = require("stream");
 import { Lock } from "../common/lock";
+import { LogType } from "../common/log-type";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 import { SimpleSsh } from "./simple-ssh";
 import { WaitableOperation } from "./waitable-operation";
 
-export type LogType = (message?: any, ...optionalParams: any[]) => void;
 export let logFn: LogType | undefined;
 
 export enum SimpleSftpEventType {
