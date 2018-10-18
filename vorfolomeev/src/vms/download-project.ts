@@ -1,9 +1,9 @@
-import { AskPasswordWindow } from "../common/ask-password-window";
+import { ConnectConfigResolverImpl } from "../config-resolve/connect-config-resolver-impl";
+import { PasswordVscodeFiller } from "../config-resolve/password-vscode-filler";
 import { IConfigHelper } from "../config/config";
 import { ProjectSection } from "../config/sections/project";
 import { UserPasswordSection } from "../config/sections/user-password";
 import { ToOutputChannel } from "../output-channel";
-import { PasswordResolver } from "../ssh/password-checker";
 import { SftpConnection } from "../ssh/sftp-connection";
 import { ISftpSettings } from "../ssh/sftp-settings";
 import { VmsPathConverterRoot } from "./vms-path-converter-root";
@@ -21,7 +21,8 @@ export function DownloadProject(configHelper: IConfigHelper): Promise<boolean> {
         }
         if (UserPasswordSection.is(userPasswordSection)) {
             sftpSettings.connectConfig = Object.assign({}, userPasswordSection);
-            sftpSettings.settingsResolver = new PasswordResolver(new AskPasswordWindow());
+            const resolver = new ConnectConfigResolverImpl([new PasswordVscodeFiller()]);
+            sftpSettings.settingsResolver = resolver;
         }
         let projectSection = await configHelper.getConfig().get(ProjectSection.section);
         if (!projectSection) {
@@ -31,6 +32,7 @@ export function DownloadProject(configHelper: IConfigHelper): Promise<boolean> {
         if (ProjectSection.is(projectSection)) {
             sftpSettings.pathConverter = new VmsPathConverterRoot(projectSection.root);
         }
+        ConnectConfigResolverImpl.clearCache();
         const sftp = new SftpConnection(sftpSettings);
         const files: string[] = [];
         const retCode = await sftp.readDirectoryTree("", files);
@@ -39,6 +41,9 @@ export function DownloadProject(configHelper: IConfigHelper): Promise<boolean> {
                 ToOutputChannel(file);
             }
             return true;
+        }
+        if (sftp.lastError) {
+            ToOutputChannel(sftp.lastError);
         }
         return false;
     });

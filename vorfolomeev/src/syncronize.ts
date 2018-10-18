@@ -1,11 +1,10 @@
 import { Disposable, window, workspace } from "vscode";
-import { IAskPassword } from "./common/ask-password";
-import { AskPasswordWindow } from "./common/ask-password-window";
-import { ConfigHelper, IConfigHelper } from "./config/config";
+import { ConnectConfigResolverImpl } from "./config-resolve/connect-config-resolver-impl";
+import { PasswordVscodeFiller } from "./config-resolve/password-vscode-filler";
+import { IConfigHelper } from "./config/config";
 import { ProjectSection } from "./config/sections/project";
 import { ShellSection } from "./config/sections/shell";
 import { UserPasswordSection } from "./config/sections/user-password";
-import { PasswordResolver } from "./ssh/password-checker";
 import { SimplyShellParser } from "./ssh/simply-shell-parser";
 import { FSSourceOld } from "./sync-old/fs-source-old";
 import { SyncImplement } from "./sync-old/sync-impl";
@@ -24,10 +23,9 @@ export class Synchronizer {
     private vmsSshHelper: VmsSshHelper | undefined;
     private vmsTarget: SyncSiteTarget | undefined;
     private didLoadDispose: Disposable | undefined;
-    private passwordChecker = new PasswordResolver(new AskPasswordWindow());
+    private resolver = new ConnectConfigResolverImpl([new PasswordVscodeFiller()]);
     private inProgress = false;
     private configHelper: IConfigHelper | undefined;
-    private askPass: IAskPassword = new AskPasswordWindow();
 
     public get isInProgress(): boolean {
         return this.inProgress;
@@ -67,7 +65,7 @@ export class Synchronizer {
 
             const syncronizer = this.syncMaster;    // save
 
-            this.passwordChecker.clearCache();
+            this.resolver.clearCache();
 
             const project = await configHelper.getConfig().get(ProjectSection.section);
             if (!ProjectSection.is(project)) {
@@ -126,7 +124,7 @@ export class Synchronizer {
             }
             if (UserPasswordSection.is(userPasswordSection)) {
                 vmsSettings.connectConfig = Object.assign({}, userPasswordSection);
-                vmsSettings.settingsResolver = this.passwordChecker;
+                vmsSettings.settingsResolver = this.resolver;
             }
             let projectSection = await configHelper.getConfig().get(ProjectSection.section);
             if (!projectSection) {

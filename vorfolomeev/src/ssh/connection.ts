@@ -71,15 +71,15 @@ export class SshConnection {
                 innerConfig = await this.settingsResolver.resolveConnectConfig(this.connectConfig);
                 if (logFn) { logFn(`connect: after resolver: ${inspect(innerConfig)}`); }
             }
-            if (!innerConfig) {
+            if (innerConfig) {
+                retCode = await this.innerConnect(innerConfig);
+            } else {
                 // resolver was refusing configuration
                 this.lastError = new Error("Settings is not resolved");
-                resolve(false);
-                return;
+                retCode = false;
             }
-            retCode = await this.innerConnect(innerConfig);
             if (this.settingsResolver) {
-                this.settingsResolver.feedBack(innerConfig, retCode);
+                this.settingsResolver.feedBack(this.connectConfig, retCode);
             }
             resolve(retCode);
         });

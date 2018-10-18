@@ -29,11 +29,70 @@ export const settingsCache: Map<string, SettingsCacheNode> = new Map<string, Set
 export class ConnectConfigResolverImpl implements IConnectConfigResolver {
 
     /**
+     * Build key string
+     * @param settings
+     */
+    public static buildCacheString(settings: ConnectConfig): string {
+        return JSON.stringify(settings);
+    }
+
+    /**
+     * Remove bad entries
+     */
+    public static clearCache(): boolean {
+        if (logFn) { logFn(`clearCache: ${settingsCache.size}`); }
+        for (const [key, node] of settingsCache) {
+            if (node.canClear) {
+                if (logFn) { logFn(`clearCache: delete ${key}`, inspect(node)); }
+                // as a precaution
+                node.lock.release();
+                settingsCache.delete(key);
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Receive feedback from one who used settings.
+     * @param settings previous unresolved settings
+     * @param accepted true if resolved settings was accepted
+     */
+    public static feedBack(settings: ConnectConfig, accepted: boolean): void {
+        const cacheStr = ConnectConfigResolverImpl.buildCacheString(settings);
+        if (logFn) { logFn(`feedBack: element ${cacheStr} accepted=${accepted}`); }
+        const node = settingsCache.get(cacheStr);
+        if (node) {
+            if (node.accepted === undefined) {
+                node.accepted = accepted;
+                if (logFn) { logFn(`feedback: lock released ${cacheStr}`); }
+                node.lock.release();
+            } else {
+                if (logFn) { logFn(`feedback: already acc=${node.accepted} ${cacheStr}`); }
+            }
+            if (node.timer) {
+                clearTimeout(node.timer);
+                delete node.timer;
+            }
+        } else {
+            if (logFn) { logFn(`feedBack: no node ${cacheStr}`); }
+        }
+    }
+
+    /**
      * PasswordResolver
      * @param settingsFillers fillers
      * @param timeout timeout for feedback, in ms. else lock will be released and accepted set to false
      */
     constructor(protected settingsFillers?: ISettingsFiller[], protected timeout = 0) {
+    }
+
+    public clearCache(): boolean {
+        ConnectConfigResolverImpl.clearCache();
+        return true;
+    }
+
+    public feedBack(settings: ConnectConfig, accepted: boolean): void {
+        ConnectConfigResolverImpl.feedBack(settings, accepted);
     }
 
     /**
@@ -45,7 +104,7 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
 
         let retConfig: ConnectConfig | undefined;
 
-        const cacheStr = this.buildCacheString(settings);
+        const cacheStr = ConnectConfigResolverImpl.buildCacheString(settings);
         if (logFn) {
             logFn(`resolveConnectConfig: try ${cacheStr}`);
         }
@@ -131,56 +190,6 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
             logFn(`resolveConnectConfig: config returned ${cacheStr}`);
         }
         return retConfig;
-    }
-
-    /**
-     * Receive feedback from one who used settings.
-     * @param settings previous unresolved settings
-     * @param accepted true if resolved settings was accepted
-     */
-    public feedBack(settings: ConnectConfig, accepted: boolean): void {
-        const cacheStr = this.buildCacheString(settings);
-        if (logFn) { logFn(`feedBack: element ${cacheStr} accepted=${accepted}`); }
-        const node = settingsCache.get(cacheStr);
-        if (node) {
-            if (node.accepted === undefined) {
-                node.accepted = accepted;
-                if (logFn) { logFn(`feedback: lock released ${cacheStr}`); }
-                node.lock.release();
-            } else {
-                if (logFn) { logFn(`feedback: already acc=${node.accepted} ${cacheStr}`); }
-            }
-            if (node.timer) {
-                clearTimeout(node.timer);
-                delete node.timer;
-            }
-        } else {
-            if (logFn) { logFn(`feedBack: no node ${cacheStr}`); }
-        }
-    }
-
-    /**
-     * Remove bad entries
-     */
-    public clearCache(): boolean {
-        if (logFn) { logFn(`clearCache: ${settingsCache.size}`); }
-        for (const [key, node] of settingsCache) {
-            if (node.canClear) {
-                if (logFn) { logFn(`clearCache: delete ${key}`, inspect(node)); }
-                // as a precaution
-                node.lock.release();
-                settingsCache.delete(key);
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Build key string
-     * @param settings
-     */
-    public buildCacheString(settings: ConnectConfig): string {
-        return JSON.stringify(settings);
     }
 
 }
