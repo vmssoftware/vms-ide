@@ -1,6 +1,5 @@
 
-import { commands, window } from "vscode";
-import { ExtensionContext } from "vscode";
+import { commands, ExtensionContext, window } from "vscode";
 import { IConfigHelper } from "./config/config";
 import { GetConfigHelperFromApi } from "./config/get-config-helper";
 import { Synchronizer } from "./syncronize";
@@ -35,7 +34,7 @@ export async function activate(context: ExtensionContext) {
     // require("./syncronize").logFn = logFn;
     // require("./vms/download-project").logFn = logFn;
 
-    if (logFn) logFn(localize("extension.activated", "OpenVMS extension is activated"));
+    if (logFn) { logFn(localize("extension.activated", "OpenVMS extension is activated")); }
 
     let configHelper: IConfigHelper | undefined;
     GetConfigHelperFromApi().then((helperApi) => {
@@ -90,5 +89,5 @@ export async function activate(context: ExtensionContext) {
 // this method is called when your extension is deactivated
 // tslint:disable-next-line:no-empty
 export function deactivate() {
-    if (logFn) logFn(localize("extension.deactivated", "OpenVMS extension is deactivated"));
+    if (logFn) { logFn(localize("extension.deactivated", "OpenVMS extension is deactivated")); }
 }

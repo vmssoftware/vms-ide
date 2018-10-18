@@ -15,18 +15,17 @@ export class SftpShell extends SftpClient implements ICanCreateClientChannel {
         client.shell((clientError, channelGot) => {
             if (clientError) {
                 if (log) { log(`${clientError}`); }
-                waitChannel.release();
             } else {
                 if (log) { log(`channel ready`); }
                 channelGot.on("close", () => {
                     if (log) { log(`channel close`); }
                 });
                 channelGot.on("exit", (exitCode, signalName, didCoreDump, description) => {
-                    if (log) { log(`channel exit: ${exitCode}`); }
+                    if (log) { log(`channel exit ${exitCode}`); }
                 });
                 channel = channelGot;
-                waitChannel.release();
             }
+            waitChannel.release();
         });
         await waitChannel.acquire();
         return channel;
@@ -46,6 +45,7 @@ export class SftpShell extends SftpClient implements ICanCreateClientChannel {
 
     public async createClientChannel(): Promise<ClientChannel | undefined> {
         await this.ensureChannel();
+        // TODO: hold this and allow only commands passed
         return this.channel;
     }
 

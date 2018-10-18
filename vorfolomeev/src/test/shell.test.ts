@@ -7,10 +7,10 @@ import { ConnectConfigResolverImpl, settingsCache } from "../config-resolve/conn
 import { ICanParseWelcome } from "../stream/can-parse-welcome";
 import { FakeReadStream } from "../stream/fake-read-stream";
 import { FakeWriteStream } from "../stream/fake-write-stream";
-import { ParseWelcomeBuru } from "../stream/parse-welcome-buru";
+import { ParseWelcome } from "../stream/parse-welcome";
 import { ParseWelcomeVms } from "../stream/parse-welcome-vms";
+import { PromptedStreamCatcher } from "../stream/prompted-stream-catcher";
 import { SftpShell } from "../stream/sftp-shell";
-import { VmsPromptFindStream } from "../stream/vms-prompt-find-stream";
 import { TestConfiguration } from "./config/config";
 import { ContextPasswordFiller } from "./context-password-filler";
 
@@ -43,29 +43,43 @@ suite("Shell tests", function(this: Mocha.Suite) {
         delete configVms.password;
 
         const resolver = new ConnectConfigResolverImpl([filler]);
-        const parserBuru = new ParseWelcomeBuru(0, logFn);
+        const parser = new ParseWelcome(0, logFn);
 
         // hard reset
         settingsCache.clear();
 
         assert.equal(
-            await TestCreateShell(configLocal, resolver, parserBuru, logFn),
+            await TestCreateShellWithAutoPipe(configLocal, resolver, parser, logFn),
             true,
-            "TestCreateShell");
+            "TestCreateShellWithAutoPipe local");
+
+        if (logFn) { logFn(`${"-".repeat(30)}`); }
+
+        assert.equal(
+            await TestCreateShellWithPromptCatcher(configLocal, resolver, parser, logFn),
+            true,
+            "TestCreateShellWithPromptCatcher local prompt-catch");
+
+        if (logFn) { logFn(`${"-".repeat(30)}`); }
+
+        assert.equal(
+                await TestCreateShellWithPromptCatcher(configVms, resolver, parser, logFn),
+                true,
+                "TestCreateShellWithPromptCatcher vms prompt-catch");
 
         if (logFn) { logFn(`${"-".repeat(30)}`); }
 
         const parserVms = new ParseWelcomeVms(5000, logFn);
         assert.equal(
-            await TestCreateVmsShell(configVms, resolver, parserVms, logFn),
-            true,
-            "TestCreateVmsShell");
-    });
+                    await TestCreateShellWithPromptCatcher(configVms, resolver, parserVms, logFn),
+                    true,
+                    "TestCreateShellWithPromptCatcher vms vms-catch");
+                });
 
-    async function TestCreateShell(configSrc: ConnectConfig,
-                                   resolver?: IConnectConfigResolver,
-                                   parser?: ICanParseWelcome,
-                                   log?: LogType) {
+    async function TestCreateShellWithAutoPipe(configSrc: ConnectConfig,
+                                               resolver?: IConnectConfigResolver,
+                                               parser?: ICanParseWelcome,
+                                               log?: LogType) {
         const shell = new SftpShell(configSrc, resolver, parser, log);
         const channel = await shell.createClientChannel();
         if (channel) {
@@ -91,10 +105,10 @@ suite("Shell tests", function(this: Mocha.Suite) {
         return true;
     }
 
-    async function TestCreateVmsShell(configSrc: ConnectConfig,
-                                      resolver?: IConnectConfigResolver,
-                                      parser?: ICanParseWelcome,
-                                      log?: LogType) {
+    async function TestCreateShellWithPromptCatcher(configSrc: ConnectConfig,
+                                                    resolver?: IConnectConfigResolver,
+                                                    parser?: ICanParseWelcome,
+                                                    log?: LogType) {
         const shell = new SftpShell(configSrc, resolver, parser, log);
         const channel = await shell.createClientChannel();
         if (channel) {
@@ -102,31 +116,31 @@ suite("Shell tests", function(this: Mocha.Suite) {
             const commands = [
                 "dir\r\n",
                 "sh time\r\n",
-                // "dir /full\r\n",
-                // Buffer.from([3]),
+                "dir /full\r\n",
             ];
-            const promptCatcher = new VmsPromptFindStream(shell.prompt!);
+            const promptCatcher = new PromptedStreamCatcher(shell.prompt!);
             const promptCatchStream = await promptCatcher.createWriteStream("");
             channel.pipe(promptCatchStream);
-            const wait = new Lock(true);
-            channel.on("close", () => {
-                wait.release();
-            });
-            let cmdIdx = 0;
-            channel.write(commands[cmdIdx++]);
-            promptCatchStream.on("ready", () => {
-                if (log) { log(`ready to the next command`); }
-                const answer = Buffer.concat(promptCatcher.chunks).toString("utf8");
-                if (log) { log(answer); }
-                promptCatcher.chunks = [];
-                if (cmdIdx >= commands.length) {
-                    if (log) { log(`all commands passed`); }
-                    wait.release();
-                } else {
-                    channel.write(commands[cmdIdx++]);
-                }
-            });
-            await wait.acquire();
+            for (const command of commands) {
+                channel.write(command);
+                const waitReady = new Lock(true);
+                const commandCatch = (content: string) => {
+                    // skip garbage from previuos commands
+                    if (content.startsWith(command)) {
+                        if (log) { log(`ready to the next command`); }
+                        if (typeof content === "string") {
+                            if (log) {
+                                log(`command: ${command}\r\ncontent:\r\n${content}`);
+                            }
+                        }
+                        promptCatcher.content = "";
+                        waitReady.release();
+                        promptCatchStream.removeListener(promptCatcher.readyEvent, commandCatch);
+                    }
+                };
+                promptCatchStream.on(promptCatcher.readyEvent, commandCatch);
+                await waitReady.acquire();
+            }
             channel.end();
         }
         shell.dispose();

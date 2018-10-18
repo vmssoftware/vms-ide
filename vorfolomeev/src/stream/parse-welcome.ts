@@ -1,12 +1,13 @@
+import os from "os";
 import { ClientChannel } from "ssh2";
 import { Lock } from "../common/lock";
 import { ICanParseWelcome } from "./can-parse-welcome";
 
 type LogType = (message?: any, ...optionalParams: any[]) => void;
 
-export class ParseWelcomeBuru implements ICanParseWelcome {
+export class ParseWelcome implements ICanParseWelcome {
 
-    public static eol = "\r\n";
+    public static eol = os.EOL;
 
     constructor(public timeout = 0, public log?: LogType) {
     }
@@ -25,17 +26,29 @@ export class ParseWelcomeBuru implements ICanParseWelcome {
                 if (this.log) { this.log(`parse: on data`); }
                 if (Buffer.isBuffer(data)) {
                     if (data.includes(27)) {
-                        channel.write(ParseWelcomeBuru.eol);
+                        channel.write(ParseWelcome.eol);
                     } else {
                         const strData = data.toString("utf8");
                         welcome += strData;
-                        const promptStart = welcome.lastIndexOf(ParseWelcomeBuru.eol);
-                        if (promptStart >= 0 &&
-                            promptStart + ParseWelcomeBuru.eol.length !== welcome.length) {
-                            prompt = welcome.slice(promptStart + ParseWelcomeBuru.eol.length);
-                            if (this.log) { this.log(`parse: found prompt "${prompt}"`); }
-                            waitParse.release();
+                        const lines = welcome.split(ParseWelcome.eol);
+                        // lines = lines.map((line) => line.trim()).filter((line) => line !== "");
+                        if (lines.length > 1) {
+                            if (lines[lines.length - 1] === lines[lines.length - 2]) {
+                                prompt = lines[lines.length - 1];
+                                if (this.log) { this.log(`parse: found prompt "${prompt}"`); }
+                                waitParse.release();
+                            }
                         }
+                        if (prompt === undefined) {
+                            channel.write(ParseWelcome.eol);
+                        }
+                        // const promptStart = welcome.lastIndexOf(ParseWelcome.eol);
+                        // if (promptStart >= 0 &&
+                        //     promptStart + ParseWelcome.eol.length !== welcome.length) {
+                        //     prompt = welcome.slice(promptStart + ParseWelcome.eol.length);
+                        //     if (this.log) { this.log(`parse: found prompt "${prompt}"`); }
+                        //     waitParse.release();
+                        // }
                     }
                 } else {
                     if (this.log) { this.log(`parse: data is not Buffer`); }
