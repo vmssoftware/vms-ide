@@ -1,5 +1,7 @@
-import { Client, ConnectConfig, SFTPWrapper } from "ssh2";
 import stream = require("stream");
+
+import { ConnectConfig, SFTPWrapper } from "ssh2";
+import { FileEntry, Stats } from "ssh2-streams";
 import { Lock } from "../common/lock";
 import { LogType } from "../common/log-type";
 import { IUnSubscribe, Subscribe } from "../common/subscribe";
@@ -56,6 +58,58 @@ export class SftpClient extends SshClient implements ICanCreateReadStream, ICanC
         return writeStream;
     }
 
+    public async getStat(file: string) {
+        await this.waitOperation.acquire();
+        let statRet: Stats | undefined;
+        await this.ensureSftp();
+        if (this.sftp) {
+            const opName = `get stat ${file} via sftp${this.tag ? " " + this.tag : ""}`;
+            await WaitableOperation(opName, this.sftp, "continue", this.sftp, "error", (complete) => {
+                if (!this.sftp) {
+                    return false;
+                }
+                return !this.sftp.stat(file, (err, stat) => {
+                    if (err) {
+                        if (this.debugLog) {
+                            this.debugLog(`${opName} error: ${err}`);
+                        }
+                    } else {
+                        statRet = stat;
+                    }
+                    complete.release();
+                });
+            }, this.debugLog);
+        }
+        this.waitOperation.release();
+        return statRet;
+    }
+
+    public async readDirectory(directory: string) {
+        await this.waitOperation.acquire();
+        let files: FileEntry[] | undefined;
+        await this.ensureSftp();
+        if (this.sftp) {
+            const opName = `read directory ${directory} via sftp${this.tag ? " " + this.tag : ""}`;
+            await WaitableOperation(opName, this.sftp, "continue", this.sftp, "error", (complete) => {
+                if (!this.sftp) {
+                    return false;
+                }
+                return !this.sftp.readdir(directory, (err, list) => {
+                    if (err) {
+                        if (this.debugLog) {
+                            this.debugLog(`${opName} error: ${err}`);
+                        }
+                    } else {
+                        files = list;
+                    }
+                    complete.release();
+                });
+            }, this.debugLog);
+        }
+        this.waitOperation.release();
+        return files;
+    }
+
     public dispose() {
         this.waitOperation.release();
         if (this.sftp) {
@@ -83,15 +137,15 @@ export class SftpClient extends SshClient implements ICanCreateReadStream, ICanC
 
     private async sftpConnect() {
         if (this.client) {
-            await WaitableOperation(`create sftp${this.tag ? " " + this.tag : ""}`,
-                                    this.client, "continue", this.client, "error", (complete) => {
+            const opName = `create sftp${this.tag ? " " + this.tag : ""}`;
+            await WaitableOperation(opName, this.client, "continue", this.client, "error", (complete) => {
                 if (!this.client) {
                     return false;
                 }
                 return !this.client.sftp((err, sftpGot) => {
                     if (err) {
                         if (this.debugLog) {
-                            this.debugLog(`${err}`);
+                            this.debugLog(`${opName} error: ${err}`);
                         }
                     } else {
                         if (this.debugLog) {

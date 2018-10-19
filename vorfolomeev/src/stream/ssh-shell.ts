@@ -1,5 +1,6 @@
 import os from "os";
-import { Client, ClientChannel, ConnectConfig } from "ssh2";
+
+import { ClientChannel, ConnectConfig } from "ssh2";
 import { Lock } from "../common/lock";
 import { LogType } from "../common/log-type";
 import { IUnSubscribe, Subscribe } from "../common/subscribe";
@@ -81,15 +82,15 @@ export class SshShell extends SshClient {
 
     private async shellConnect() {
         if (this.client) {
-            await WaitableOperation(`create shell${this.tag ? " " + this.tag : ""}`,
-                                    this.client, "continue", this.client, "error", (complete) => {
+            const opName = `create shell${this.tag ? " " + this.tag : ""}`;
+            await WaitableOperation(opName, this.client, "continue", this.client, "error", (complete) => {
                 if (!this.client) {
                     return false;
                 }
                 return !this.client.shell((clientError, channelGot) => {
                     if (clientError) {
                         if (this.debugLog) {
-                            this.debugLog(`${clientError}`);
+                            this.debugLog(`${opName} error: ${clientError}`);
                         }
                     } else {
                         if (this.debugLog) {

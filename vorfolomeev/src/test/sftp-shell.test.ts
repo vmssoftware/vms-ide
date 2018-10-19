@@ -14,6 +14,8 @@ import { TestConfiguration } from "./config/config";
 
 suite("Shell tests", function(this: Mocha.Suite) {
 
+    return;
+
     this.timeout(0);
 
     // const debugLogFn = undefined;

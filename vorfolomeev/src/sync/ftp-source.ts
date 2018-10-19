@@ -1,3 +1,4 @@
+import { FileEntry } from "ssh2-streams";
 import { Readable, Writable } from "stream";
 import { Lock } from "../common/lock";
 import { LogType } from "../common/log-type";
@@ -12,7 +13,7 @@ export class FtpSource implements ISource {
     constructor(protected sftp: SimpleSftp) {
     }
 
-    public findFiles(patterns: string[], ignore: string[]): Promise<string[]> {
+    public findFiles(include: string, exclude: string): Promise<FileEntry[]> {
         throw new Error("Method not implemented.");
     }
 
