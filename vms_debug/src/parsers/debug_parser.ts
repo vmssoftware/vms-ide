@@ -27,13 +27,16 @@ export enum MessagePrompt
 export class DebugParser
 {
 	private currentName : string;
-	private queueMsgFileInfo = new Queue<DebugFileInfo>();
 	private queueMsgDebug = new Queue<string>();
 	private queueMsgUser = new Queue<string>();
 	private queueMsgCommand = new Queue<string>();
 	private queueMsgData = new Queue<string>();
 	private fleInfo : HolderDebugFileInfo;
 	private dbgCmd : DebugCommands;
+	private stateParseLine;
+	private fileNameFind : string;
+	private command : string;
+	private commandDone : boolean;
 
 
 	constructor(commands : DebugCommands)
@@ -41,28 +44,54 @@ export class DebugParser
 		this.currentName = "";
 		this.fleInfo = new HolderDebugFileInfo();
 		this.dbgCmd = commands;
+		this.stateParseLine = 0;
+		this.fileNameFind = "";
+		this.command = "";
+		this.commandDone = false;
 	}
 
 
 	public parseDebugData(data : string, sourcePaths: string[], lisPaths: string[])
 	{
 		let msgLines = data.split("\n");
-		let command = this.dbgCmd.getCurrentCommand();
 
-		if(command !== "")
+		if(this.command === "")
 		{
-			if(msgLines[0].trim() !== "")
+			this.command = this.dbgCmd.getCurrentCommand();
+		}
+
+		if(this.command !== "")
+		{
+			for(let line of msgLines)
 			{
-				this.queueMsgCommand.push(MessagePrompt.prmtCMD + msgLines[0].trim());
+				line = line.trim();
+
+				if(line !== "")
+				{
+					if(line.includes(this.command))
+					{
+						this.queueMsgCommand.push(MessagePrompt.prmtCMD + line);
+						break;
+					}
+					else
+					{
+						if(line.includes(DebugCmdVMS.dbgStop))//???
+						{
+							this.command = this.dbgCmd.getCurrentCommand();
+							this.queueMsgCommand.push(MessagePrompt.prmtCMD + this.command);
+						}
+					}
+				}
 			}
 		}
 
-		switch(command)
+		switch(this.command)
 		{
 			case DebugCmdVMS.dbgRunExe:
 			case DebugCmdVMS.dbgRerunExe:
 			case DebugCmdVMS.dbgStop:
 			case DebugCmdVMS.dbgExit:
+				this.commandDone = true;
 				break;
 
 			case "":
@@ -70,7 +99,16 @@ export class DebugParser
 			case DebugCmdVMS.dbgStep:
 			case DebugCmdVMS.dbgStepIn:
 			case DebugCmdVMS.dbgStepReturn:
-				this.parseStepMsg(msgLines, sourcePaths, lisPaths);
+				for(let item of msgLines)
+				{
+					if(item !== "")
+					{
+						if(this.command === "" || !item.includes(this.command))
+						{
+							this.parseLineMsg(item, sourcePaths, lisPaths);
+						}
+					}
+				}
 				break;
 
 			case DebugCmdVMS.dbgBreakPointSet:
@@ -78,6 +116,7 @@ export class DebugParser
 			case DebugCmdVMS.dbgBreakPointShow:
 			case DebugCmdVMS.dbgBreakPointActivate:
 			case DebugCmdVMS.dbgBreakPointDeactivate:
+				this.commandDone = true;
 				break;
 
 			case DebugCmdVMS.dbgCurrentLine:
@@ -87,9 +126,73 @@ export class DebugParser
 			case DebugCmdVMS.dbgCallStack:
 			case DebugCmdVMS.dbgStack:
 			case DebugCmdVMS.dbgDump:
-				for(let i = 1; i < msgLines.length; i++)
+				for(let item of msgLines)
 				{
-					this.queueMsgData.push(msgLines[i]);
+					if(item !== "")
+					{
+						if(!item.includes(this.command))
+						{
+							this.queueMsgData.push(item);
+						}
+					}
+				}
+				this.commandDone = true;
+				break;
+
+			default:
+				this.commandDone = true;
+				break;
+		}
+
+		if(this.commandDone)
+		{
+			this.command = "";
+		}
+	}
+
+
+	private parseLineMsg(msgLine: string, sourcePaths: string[], lisPaths: string[])
+	{
+		switch(this.stateParseLine)
+		{
+			case 0:
+				if(msgLine.includes(MessageDebuger.msgStepped) ||
+					msgLine.includes(MessageDebuger.msgBreak) ||
+					msgLine.includes(MessageDebuger.msgSteppedReturn) ||
+					msgLine.includes(MessageDebuger.msgException))
+				{
+					//this.fileNameFind = this.findFileName(msgLine);
+					this.stateParseLine = 1;
+				}
+				else if(msgLine.includes(MessageDebuger.msgKeyDbg) ||
+						msgLine.includes(MessageDebuger.msgKeySys) ||
+						msgLine.includes(MessageDebuger.msgKeyDcl))//debug message
+				{
+					this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLine);
+					this.stateParseLine = 0;
+				}
+				else//user message
+				{
+					if(msgLine.trim() !== "")
+					{
+						this.queueMsgUser.push(MessagePrompt.prmtUSER + msgLine);
+					}
+
+					this.stateParseLine = 0;
+				}
+				break;
+
+			case 1:
+				if(msgLine.includes(MessageDebuger.msgKeyDbg) ||
+					msgLine.includes(MessageDebuger.msgKeySys))//debug message
+				{
+					this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLine);
+				}
+				else
+				{
+					//this.parseNumberLineCodeMsg(this.fileNameFind, msgLine, sourcePaths, lisPaths);
+					this.commandDone = true;
+					this.stateParseLine = 0;
 				}
 				break;
 
@@ -98,116 +201,60 @@ export class DebugParser
 		}
 	}
 
-
-	private parseStepMsg(msgLines: string[], sourcePaths: string[], lisPaths: string[])
+	//examples debug lines
+	//1629:   int count = 5;
+	//1631:   for(int i = 1; i < 3; i++)
+	private parseNumberLineCodeMsg(fileName : string, msgLine: string, sourcePaths: string[], lisPaths: string[]) : DebugFileInfo | undefined
 	{
-		let lisLines: string[];
-		let currentLineNumber : number = -1;
 		let debugFileInfo : DebugFileInfo | undefined;
 
-		for(let i = 1; i < msgLines.length; i++)
+		if(msgLine.includes(":"))
 		{
-			if(msgLines[i].includes(MessageDebuger.msgStepped) ||
-				msgLines[i].includes(MessageDebuger.msgBreak) ||
-				msgLines[i].includes(MessageDebuger.msgSteppedReturn) ||
-				msgLines[i].includes(MessageDebuger.msgException))
+			let lisLines : string[];
+			let currentLineNumber : number = -1;
+			//number: string of code; array[0]-number, array[1]-string of code
+			let array = msgLine.split(":");
+
+			if(fileName === "")
 			{
-				let lineCode : number = i+1;
-
-				if(lineCode < msgLines.length)
-				{
-					for(let j = i+1; j < msgLines.length-1; j++)
-					{
-						if(msgLines[j].includes(MessageDebuger.msgKeyDbg) ||
-							msgLines[j].includes(MessageDebuger.msgKeySys))//debug message
-						{
-							this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLines[j]);
-							lineCode = msgLines.length-1;
-						}
-					}
-
-					//number: string of code; array[0]-number, array[1]-string of code
-					let array = msgLines[lineCode].split(":");
-					let name = this.findFileName(msgLines[i]);
-
-					if(name === "")
-					{
-						name = this.currentName;
-					}
-					else
-					{
-						this.currentName = name;
-					}
-
-					let shift = this.fleInfo.getShiftLine(name);
-
-					if(shift === -1)
-					{
-						let pathFile = this.findPathFileByName(name, sourcePaths);
-						let pathLisFile = this.findPathFileByName(name, lisPaths);
-						lisLines = this.loadSource(pathLisFile);
-
-						//calculate shift line
-						shift = this.calculateShiftLine(msgLines[lineCode], lisLines);
-
-						if(shift !== -1)//calculate successfull
-						{
-							currentLineNumber = parseInt(array[0], 10) - shift;
-							this.fleInfo.setItem(pathFile, name, shift, currentLineNumber);
-							debugFileInfo = this.fleInfo.getItem(name);
-
-							if(debugFileInfo)
-							{
-								this.queueMsgFileInfo.push(debugFileInfo);
-							}
-						}
-					}
-					else
-					{
-						currentLineNumber = parseInt(array[0], 10) - shift;
-						debugFileInfo = this.fleInfo.getItem(name);
-
-						if(debugFileInfo)
-						{
-							debugFileInfo.currLine = currentLineNumber;
-							this.queueMsgFileInfo.push(debugFileInfo);
-						}
-					}
-				}
-
-				break;
+				fileName = this.currentName;
 			}
-			else if(msgLines[i].includes(MessageDebuger.msgKeyDbg) ||
-					msgLines[i].includes(MessageDebuger.msgKeySys) ||
-					msgLines[i].includes(MessageDebuger.msgKeyDcl))//debug message
+			else
 			{
-				let len = msgLines[i].length;
+				this.currentName = fileName;
+			}
 
-				if(len > 80)
+			let shift = this.fleInfo.getShiftLine(fileName);
+
+			if(shift === -1)
+			{
+				let pathFile = this.findPathFileByName(fileName, sourcePaths);
+				let pathLisFile = this.findPathFileByName(fileName, lisPaths);
+				lisLines = this.loadSource(pathLisFile);
+
+				//calculate shift line
+				shift = this.calculateShiftLine(msgLine, lisLines);
+
+				if(shift !== -1)//calculate successfull
 				{
-					if((i+1) < msgLines.length)
-					{
-						this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLines[i] + msgLines[i+1]);
-						i++;
-					}
-					else
-					{
-						this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLines[i]);
-					}
-				}
-				else
-				{
-					this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLines[i]);
+					currentLineNumber = parseInt(array[0], 10) - shift;
+					this.fleInfo.setItem(pathFile, fileName, shift, currentLineNumber);
+					debugFileInfo = this.fleInfo.getItem(fileName);
 				}
 			}
-			else//user message
+			else
 			{
-				if(msgLines[i].trim() !== "")
+				currentLineNumber = parseInt(array[0], 10) - shift;
+				debugFileInfo = this.fleInfo.getItem(fileName);
+
+				if(debugFileInfo)
 				{
-					this.queueMsgUser.push(MessagePrompt.prmtUSER + msgLines[i]);
+					debugFileInfo.currLine = currentLineNumber;
 				}
 			}
 		}
+
+		return debugFileInfo;
 	}
 
 	//examples a lines
@@ -227,7 +274,7 @@ export class DebugParser
 		{
 			const columns = msgLines[i].trim().split(/\s+/);
 
-			if(columns.length > 4)
+			if(columns.length === 5 && columns[0].includes("*"))
 			{
 				const routineName = columns[1];
 				let fileName = columns[0].substring(1);//remove symbol '*'
@@ -236,28 +283,31 @@ export class DebugParser
 				let pathLisFile = this.findPathFileByName(fileName, lisPaths);
 				let shift = this.fleInfo.getShiftLine(fileName);
 
-				if(shift === -1)
+				if(pathFile !== "" && pathLisFile !== "")
 				{
-					let lisLines = this.loadSource(pathLisFile);
-					//get source line
-					numberLine = this.getNumberLineSourceCode(numberLineDebug, lisLines);
-					//save file info
-					shift = parseInt(numberLineDebug, 10) - numberLine;
-					this.fleInfo.setItem(pathFile, fileName, shift, numberLine);
-				}
-				else
-				{
-					numberLine = parseInt(numberLineDebug, 10) - this.fleInfo.getShiftLine(fileName);
-				}
+					if(shift === -1)
+					{
+						let lisLines = this.loadSource(pathLisFile);
+						//get source line
+						numberLine = this.getNumberLineSourceCode(numberLineDebug, lisLines);
+						//save file info
+						shift = parseInt(numberLineDebug, 10) - numberLine;
+						this.fleInfo.setItem(pathFile, fileName, shift, numberLine);
+					}
+					else
+					{
+						numberLine = parseInt(numberLineDebug, 10) - this.fleInfo.getShiftLine(fileName);
+					}
 
-				frames.push({
-					index: startFrame,
-					name: `${routineName}(${startFrame})`,
-					file: pathFile,
-					line: numberLine
-				});
+					frames.push({
+						index: startFrame,
+						name: `${routineName}(${startFrame})`,
+						file: pathFile,
+						line: numberLine
+					});
 
-				startFrame++;
+					startFrame++;
+				}
 			}
 		}
 
@@ -273,16 +323,12 @@ export class DebugParser
 	}
 
 
-	public getFileInfo() : DebugFileInfo | undefined
+	public getCommandStatus() : boolean
 	{
-		let fileInfo : DebugFileInfo | undefined;
+		let status = this.commandDone;
+		this.commandDone = false;
 
-		if(this.queueMsgFileInfo.size() > 0)
-		{
-			fileInfo = this.queueMsgFileInfo.pop();
-		}
-
-		return fileInfo;
+		return status;
 	}
 
 	public getCommandMessage() : string

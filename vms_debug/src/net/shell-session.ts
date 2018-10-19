@@ -2,6 +2,7 @@ import {ToOutputChannel} from '../io/output-channel';
 import { SSHClient } from './ssh-client';
 import { Client, ClientChannel, SFTPWrapper, ClientErrorExtensions } from 'ssh2';
 import { Queue } from '../queue/queues';
+import { DebugCmdVMS } from '../command/debug_commands';
 
 export enum ModeWork
 {
@@ -78,7 +79,7 @@ export class ShellSession
         {
             if(data.includes(this.userPrompt))
             {
-                this.enterCmd = this.userPrompt;
+                this.enterCmd = this.userPrompt;//set prompt
                 this.readyCmd = true;
                 this.funcReady();
             }
@@ -89,17 +90,18 @@ export class ShellSession
                 {
                     case 0:
                         this.stepSetupTerminal++;
-                        this.stream.write("\x1B[?62;1c");
+                        this.stream.write("\x1B[?62;1c");//answer on <esc>[c
                         break;
 
                     case 1:
                         this.stepSetupTerminal++;
-                        this.stream.write("\x1B[24;80R");
+                        this.stream.write("\x1B[24;132R");//answer on <esc>7<esc>[255;255H<esc>[6n<esc>8
+                        this.stream.write("\x1B[0;0R");
                         break;
 
                     case 2:
                         this.stepSetupTerminal++;
-                        this.stream.write("\x1B[0;0R");
+                        //this.stream.write("\x1B[0;0R");//answer on <esc>[62"p<esc> F
                         break;
 
                     case 3:
@@ -112,7 +114,7 @@ export class ShellSession
                 }
             }
         }
-        else if(data.includes(this.enterCmd) || data.includes("DBG> ") || data.includes("$$$> "))
+        else if(data.includes(this.enterCmd) || data.includes("DBG> "))
         {
             if(data.includes("DBG> "))
             {
@@ -144,6 +146,18 @@ export class ShellSession
         else
         {
             this.resultData += data;
+
+            if(this.currentCmd.includes(DebugCmdVMS.dbgGo) ||
+                this.currentCmd.includes(DebugCmdVMS.dbgStep) ||
+                this.currentCmd.includes(DebugCmdVMS.dbgStepIn) ||
+                this.currentCmd.includes(DebugCmdVMS.dbgStepReturn))
+            {
+                if(this.resultData !== "")
+                {
+                    this.funcData(this.resultData, this.mode);
+                    this.resultData = "";
+                }
+            }
         }
     }
 

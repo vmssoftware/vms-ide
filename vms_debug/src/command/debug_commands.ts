@@ -27,6 +27,9 @@ export enum DebugCmdVMS
 	dbgStack = "show stack",
 
 	dbgDump = "dump",
+
+	dbgSetModeNoWait = "set mode nowait",
+	dbgSetModeScreen = "set mode screen",
 }
 
 
@@ -63,7 +66,7 @@ export class DebugCommands
 		return DebugCmdVMS.dbgRerunExe;
 	}
 
-	public currentLine() : string//show current line
+	public showCurrentLine() : string//show current line
 	{
 		this.queueCmd.push(DebugCmdVMS.dbgCurrentLine);
 
@@ -228,4 +231,17 @@ export class DebugCommands
 
 	//trace
 	//watch
+
+	public modeNoWait() : string
+	{
+		this.queueCmd.push(DebugCmdVMS.dbgSetModeNoWait);
+
+		return DebugCmdVMS.dbgSetModeNoWait;
+	}
+	public modeScreen() : string
+	{
+		this.queueCmd.push(DebugCmdVMS.dbgSetModeScreen);
+
+		return DebugCmdVMS.dbgSetModeScreen;
+	}
 }

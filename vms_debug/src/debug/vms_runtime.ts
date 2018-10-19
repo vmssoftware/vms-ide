@@ -10,6 +10,9 @@ import { OsCommands } from '../command/os_commands';
 import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
 import { DebugParser } from '../parsers/debug_parser';
 import { workspace, Uri } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import {ToOutputChannel} from '../io/output-channel';
+
 
 export interface VMSBreakpoint
 {
@@ -55,9 +58,6 @@ export class VMSRuntime extends EventEmitter
 	private lisLines: string[];
 	private lisPaths: string[];
 
-	// This is the next line that will be 'executed'
-	private currentLine = 0;
-
 	// maps from sourceFile to array of VMS breakpoints
 	private breakPoints = new Map<string, VMSBreakpoint[]>();
 	private breakPointsSet = new Map<string, VMSBreakpoint[]>();
@@ -83,7 +83,6 @@ export class VMSRuntime extends EventEmitter
 	// Start executing the given program.
 	public async start(programName: string, languageExt: string)
 	{
-		this.currentLine = -1;
 		this.sourcePaths = await this.loadSourcePathList(languageExt);
 		this.lisPaths = await this.loadSourcePathList("lis");
 
@@ -94,6 +93,8 @@ export class VMSRuntime extends EventEmitter
 
 		//run debuger
 		this.shell.SendCommandToQueue(this.osCmd.runDebug());
+		//this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
+		this.shell.SendCommandToQueue(this.dbgCmd.modeNoWait());
 		this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
 
 		this.setRemoteBreakpointsAll();
@@ -107,7 +108,6 @@ export class VMSRuntime extends EventEmitter
 		this.buttonPressd = DebugButtonEvent.btnContinue;
 
 		this.shell.SendCommandToQueue(this.dbgCmd.go());
-		this.currentLine = -1;
 	}
 
 	public stepOver()
@@ -126,13 +126,12 @@ export class VMSRuntime extends EventEmitter
 	{
 		this.buttonPressd = DebugButtonEvent.btnStepOut;
 		this.shell.SendCommandToQueue(this.dbgCmd.stepReturn());
-		this.shell.SendCommandToQueue(this.dbgCmd.step());
 	}
 
 	public stop()
 	{
-		this.buttonPressd = DebugButtonEvent.btnStop;
-		this.shell.SendCommandToQueue(this.dbgCmd.stop());
+		this.buttonPressd = DebugButtonEvent.btnPause;
+		this.shell.SendCommand(this.dbgCmd.stop());
 	}
 
 	public exit()
@@ -152,6 +151,35 @@ export class VMSRuntime extends EventEmitter
 		this.stackEndFrame = endFrame;
 
 		this.shell.SendCommandToQueue(this.dbgCmd.callStack());
+	}
+
+	public getVariables(id : string) : Array<DebugProtocol.Variable>
+	{
+		const variables = new Array<DebugProtocol.Variable>();
+
+		if (id !== null)
+		{
+			variables.push({
+				name: id + "_i",
+				type: "int",
+				value: "123",
+				variablesReference: 0
+			});
+			variables.push({
+				name: id + "_f",
+				type: "float",
+				value: "3.14",
+				variablesReference: 0
+			});
+			variables.push({
+				name: id + "_s",
+				type: "string",
+				value: "hello world",
+				variablesReference: 0
+			});
+		}
+
+		return variables;
 	}
 
 	public getSourceFile() : string
@@ -481,14 +509,13 @@ export class VMSRuntime extends EventEmitter
 
 			this.dbgParser.parseDebugData(data, this.sourcePaths, this.lisPaths);
 
-			let lineInfo = this.dbgParser.getFileInfo();
 			let messageCommand = this.dbgParser.getCommandMessage();
 			let messageDebug = this.dbgParser.getDebugMessage();
 			let messageUser = this.dbgParser.getUserMessage();
 
 			if(messageCommand !== "")
 			{
-				console.log(messageCommand);
+				ToOutputChannel(messageCommand);
 
 				if(messageCommand.includes(DebugCmdVMS.dbgExamine))//show selected variable
 				{
@@ -505,11 +532,11 @@ export class VMSRuntime extends EventEmitter
 			}
 			if(messageUser !== "")
 			{
-				console.log(messageUser);
+				ToOutputChannel(messageUser);
 			}
 			if(messageDebug !== "")
 			{
-				console.log(messageDebug);
+				ToOutputChannel(messageDebug);
 
 				if(messageDebug.includes("is '%SYSTEM-S-NORMAL, normal successful completion"))
 				{
@@ -517,11 +544,8 @@ export class VMSRuntime extends EventEmitter
 				}
 			}
 
-			if(lineInfo)
+			if(this.dbgParser.getCommandStatus())
 			{
-				this.loadSource(lineInfo.filePath);
-				this.currentLine = lineInfo.currLine;
-
 				switch(this.buttonPressd)
 				{
 					case DebugButtonEvent.btnContinue:
@@ -541,6 +565,7 @@ export class VMSRuntime extends EventEmitter
 
 					case DebugButtonEvent.btnStepOut:
 						this.buttonPressd = DebugButtonEvent.btnStepOver;
+						this.shell.SendCommandToQueue(this.dbgCmd.step());
 						break;
 
 					case DebugButtonEvent.btnRestart:

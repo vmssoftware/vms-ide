@@ -11,10 +11,11 @@ import { ShellSession, ModeWork } from './net/shell-session';
 import * as Net from 'net';
 import * as nls from 'vscode-nls';
 import { OsCommands } from './command/os_commands';
-import {ToOutputChannel} from './io/output-channel';
 import { IConfigHelper } from './ext-api/config';
 import { getConfigHelperFromApi } from './ext-api/get';
 import { InitCfg as SSHInitCfg } from './net/ssh-client';
+import {ToOutputChannel} from './io/output-channel';
+
 
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();//nls.config({ locale: 'ru',  cacheLanguageResolution: true, messageFormat : nls.MessageFormat.both})();
 //const localize = nls.loadMessageBundle();
@@ -120,7 +121,6 @@ export function deactivate()
 let DataCb = function(data: string, mode: ModeWork) : void
 {
 	//console.log(data);
-	ToOutputChannel(data);
 
 	if(session)
 	{
@@ -137,6 +137,7 @@ let ReadyCb = function() : void
 
 	const message = localize('extention.connected', "Connected to the server");
 	vscode.window.showInformationMessage(message);
+	ToOutputChannel(message);
 };
 
 
