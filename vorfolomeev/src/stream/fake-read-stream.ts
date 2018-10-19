@@ -39,7 +39,7 @@ export class FakeReadStream {
         });
         readable.on("error", (err) => {
             if (this.log) {
-                this.log(err);
+                this.log(`${err}`);
             }
         });
         return readable;

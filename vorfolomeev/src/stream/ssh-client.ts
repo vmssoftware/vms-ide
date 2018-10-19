@@ -5,58 +5,25 @@ import { IUnSubscribe, Subscribe } from "../common/subscribe";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 
 export class SshClient {
-
-    public static async makeClient(config: ConnectConfig, resolver?: IConnectConfigResolver, log?: LogType) {
-        const waitClient = new Lock(true, "waitClient");
-        let client: Client | undefined;
-        client = new Client();
-        const ready = Subscribe(client, "ready", () => {
-            if (log) {
-                log(`client ready`);
-            }
-            waitClient.release();
-        });
-        const error = Subscribe(client, "error", (err) => {
-            if (log) {
-                log(`client error ${err}`);
-            }
-            waitClient.release();
-            client = undefined;
-        });
-        // resolve config now and there
-        if (resolver) {
-            const configResolved = await resolver.resolveConnectConfig(config);
-            if (configResolved) {
-                client.connect(configResolved);
-            } else {
-                if (log) {
-                    log(`no config resolved`);
-                }
-                waitClient.release();
-            }
-        } else {
-            client.connect(config);
-        }
-        await waitClient.acquire();
-        if (resolver) {
-            resolver.feedBack(config, client !== undefined);
-        }
-        ready.unsubscribe();
-        error.unsubscribe();
-        return client;
-    }
+    public lastClientError?: Error;
 
     protected client?: Client;
-    private unsubscribeError?: IUnSubscribe;
-    private unsubscribeEnd?: IUnSubscribe;
-    private unsubscribeClose?: IUnSubscribe;
+
+    private clientReady?: IUnSubscribe;
+    private clientError?: IUnSubscribe;
+    private clientEnd?: IUnSubscribe;
 
     /**
      * No auto closing client anymore, use dispose()
      * @param config configuration
-     * @param log like console.log
+     * @param resolver config resolver
+     * @param debugLog like console.log
+     * @param tag for logging usage
      */
-    constructor(public config: ConnectConfig, public resolver?: IConnectConfigResolver, public log?: LogType) {
+    constructor(public config: ConnectConfig,
+                public resolver?: IConnectConfigResolver,
+                public debugLog?: LogType,
+                public tag?: string) {
     }
 
     public dispose() {
@@ -67,44 +34,73 @@ export class SshClient {
     }
 
     protected cleanClient() {
-        if (this.unsubscribeError) {
-            this.unsubscribeError.unsubscribe();
-            delete this.unsubscribeError;
+        if (this.clientReady) {
+            this.clientReady.unsubscribe();
+            delete this.clientReady;
         }
-        if (this.unsubscribeEnd) {
-            this.unsubscribeEnd.unsubscribe();
-            delete this.unsubscribeEnd;
+        if (this.clientError) {
+            this.clientError.unsubscribe();
+            delete this.clientError;
         }
-        if (this.unsubscribeClose) {
-            this.unsubscribeClose.unsubscribe();
-            delete this.unsubscribeClose;
+        if (this.clientEnd) {
+            this.clientEnd.unsubscribe();
+            delete this.clientEnd;
         }
         delete this.client;
     }
 
     protected async ensureClient() {
         if (!this.client) {
-            this.client = await SshClient.makeClient(this.config, this.resolver, this.log);
-            if (this.client) {
-                this.unsubscribeError = Subscribe(this.client, "error", (err) => {
-                    if (this.log) {
-                        this.log(`this client error ${err}`);
-                    }
-                    this.cleanClient();
-                });
-                this.unsubscribeEnd = Subscribe(this.client, "end", () => {
-                    if (this.log) {
-                        this.log(`this client end`);
-                    }
-                    this.cleanClient();
-                });
-                this.unsubscribeClose = Subscribe(this.client, "close", (hadError) => {
-                    if (this.log) {
-                        this.log(`this client closed${hadError ? " with error" : ""}`);
-                    }
-                    this.cleanClient();
-                });
-            }
+            return await this.clientConnect();
         }
+        return true;
+    }
+
+    private async clientConnect() {
+        const waitClient = new Lock(true, "waitClient");
+        const client = new Client();
+        this.clientReady = Subscribe(client, "ready", () => {
+            if (this.debugLog) {
+                this.debugLog(`client${this.tag ? " " + this.tag : ""} ready`);
+            }
+            waitClient.release();
+            this.client = client;
+            // subscribe "end" only here
+            this.clientEnd = Subscribe(client, "end", () => {
+                if (this.debugLog) {
+                    this.debugLog(`client${this.tag ? " " + this.tag : ""} end`);
+                }
+                this.cleanClient();
+            });
+        });
+        this.clientError = Subscribe(client, "error", (err) => {
+            this.lastClientError = err;
+            if (this.debugLog) {
+                this.debugLog(`client${this.tag ? " " + this.tag : ""} error: ${err}`);
+            }
+            if (!this.client) {
+                waitClient.release();
+            }
+        });
+        // resolve config now and there
+        if (this.resolver) {
+            const configResolved = await this.resolver.resolveConnectConfig(this.config);
+            if (configResolved) {
+                client.connect(configResolved);
+            } else {
+                if (this.debugLog) {
+                    this.debugLog(`no config resolved`);
+                }
+                waitClient.release();
+            }
+        } else {
+            client.connect(this.config);
+        }
+        await waitClient.acquire();
+        const connected = this.client !== undefined;
+        if (this.resolver) {
+            this.resolver.feedBack(this.config, connected);
+        }
+        return connected;
     }
 }

@@ -13,47 +13,32 @@ import { SshClient } from "./ssh-client";
 
 export class SshShell extends SshClient {
 
-    public static async makeChannel(client: Client, log?: LogType) {
-        let channel: ClientChannel | undefined;
-        await WaitableOperation("create shell", client, "continue", client, "error", (complete) => {
-            return !client.shell((clientError, channelGot) => {
-                if (clientError) {
-                    if (log) { log(`${clientError}`); }
-                } else {
-                    if (log) { log(`channel ready`); }
-                    channel = channelGot;
-                }
-                complete.release();
-            });
-        }, log);
-        return channel;
-    }
-
     private prompt?: string;             // given prompt from other side
     private channel?: ClientChannel;
-    private disposeOnClose?: IUnSubscribe;
-    private disposeOnExit?: IUnSubscribe;
+    private shellClose?: IUnSubscribe;
+    private shellExit?: IUnSubscribe;
     private waitOperation = new Lock(false, "waitOperation");
 
     constructor(config: ConnectConfig,
                 resolver?: IConnectConfigResolver,
                 private welcomeParser?: ICanParseWelcome,
                 private promptCatcher?: IPromptCatcher,
-                log?: LogType) {
-        super(config, resolver, log);
+                debugLog?: LogType,
+                tag?: string) {
+        super(config, resolver, debugLog, tag);
     }
 
     public dispose() {
         this.waitOperation.release();
-        this.cleanChannel();
         super.dispose();
+        this.cleanChannel();
     }
 
     public async execCmd(command: string) {
         let contentRet: string | undefined;
         await this.waitOperation.acquire();
         if (!this.welcomeParser) {
-            this.welcomeParser = new ParseWelcome(0, this.log);
+            this.welcomeParser = new ParseWelcome(0, this.debugLog);
         }
         await this.ensureChannel();
         if (this.channel && this.prompt) {
@@ -70,7 +55,9 @@ export class SshShell extends SshClient {
                     // skip garbage from previuos commands
                     if (typeof content === "string") {
                         if (content.startsWith(command)) {
-                            if (this.log) { this.log(`command output found`); }
+                            if (this.debugLog) {
+                                this.debugLog(`shell${this.tag ? " " + this.tag : ""} command output found`);
+                            }
                             contentRet = content;
                             waitReady.release();
                         }
@@ -92,14 +79,51 @@ export class SshShell extends SshClient {
         return contentRet;
     }
 
-    private cleanChannel() {
-        if (this.disposeOnClose) {
-            this.disposeOnClose.unsubscribe();
-            delete this.disposeOnClose;
+    private async shellConnect() {
+        if (this.client) {
+            await WaitableOperation(`create shell${this.tag ? " " + this.tag : ""}`,
+                                    this.client, "continue", this.client, "error", (complete) => {
+                if (!this.client) {
+                    return false;
+                }
+                return !this.client.shell((clientError, channelGot) => {
+                    if (clientError) {
+                        if (this.debugLog) {
+                            this.debugLog(`${clientError}`);
+                        }
+                    } else {
+                        if (this.debugLog) {
+                            this.debugLog(`shell${this.tag ? " " + this.tag : ""} ready`);
+                        }
+                        this.channel = channelGot;
+                        this.shellClose = Subscribe(this.channel, "close", () => {
+                            if (this.debugLog) {
+                                this.debugLog(`shell${this.tag ? " " + this.tag : ""} close`);
+                            }
+                            this.cleanChannel();
+                        });
+                        this.shellExit = Subscribe(this.channel, "exit", (exitCode) => {
+                            if (this.debugLog) {
+                                this.debugLog(`shell${this.tag ? " " + this.tag : ""} exit ${exitCode}`);
+                            }
+                            this.cleanChannel();
+                        });
+                    }
+                    complete.release();
+                });
+            }, this.debugLog);
         }
-        if (this.disposeOnExit) {
-            this.disposeOnExit.unsubscribe();
-            delete this.disposeOnExit;
+        return this.channel !== undefined;
+    }
+
+    private cleanChannel() {
+        if (this.shellClose) {
+            this.shellClose.unsubscribe();
+            delete this.shellClose;
+        }
+        if (this.shellExit) {
+            this.shellExit.unsubscribe();
+            delete this.shellExit;
         }
         delete this.channel;
         delete this.prompt;
@@ -109,17 +133,10 @@ export class SshShell extends SshClient {
         if (!this.channel) {
             await this.ensureClient();
             if (this.client) {
-                this.channel = await SshShell.makeChannel(this.client, this.log);
+                await this.shellConnect();
                 if (this.channel) {
-                    this.disposeOnClose = Subscribe(this.channel, "close", () => {
-                        if (this.log) { this.log(`channel close`); }
-                        this.cleanChannel();
-                    });
-                    const disposeOnExit = Subscribe(this.channel, "exit", (exitCode) => {
-                        if (this.log) { this.log(`channel exit ${exitCode}`); }
-                        this.cleanChannel();
-                    });
-                    if (this.prompt === undefined && this.welcomeParser !== undefined) {
+                    if (this.prompt === undefined &&
+                        this.welcomeParser !== undefined) {
                         this.prompt = await this.welcomeParser.parseWelcome(this.channel);
                     }
                 }

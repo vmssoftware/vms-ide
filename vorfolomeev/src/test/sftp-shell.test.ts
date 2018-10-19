@@ -16,11 +16,11 @@ suite("Shell tests", function(this: Mocha.Suite) {
 
     this.timeout(0);
 
-    return;
-
+    // const debugLogFn = undefined;
+    let debugLogFn: LogType | undefined;
+    debugLogFn = undefined;
     // tslint:disable-next-line:no-console
-    const logFn = console.log;
-    // const logFn = undefined;
+    // debugLogFn = console.log;
     let configLocal: ConnectConfig;
     let configVms: ConnectConfig;
     let filler: ContextPasswordFiller;
@@ -58,48 +58,48 @@ suite("Shell tests", function(this: Mocha.Suite) {
         delete configLocal.password;
         delete configVms.password;
         resolver = new ConnectConfigResolverImpl([filler]);
-        parser = new ParseWelcome(0, logFn);
-        promptCatcher = new PromptCatcherDefault("", logFn);
-        parserVms = new ParseWelcomeVms(5000, logFn);
-        promptCatcherVms = new PromptCatcherVms("", logFn);
+        parser = new ParseWelcome(0, debugLogFn);
+        promptCatcher = new PromptCatcherDefault("", debugLogFn);
+        parserVms = new ParseWelcomeVms(5000, debugLogFn);
+        promptCatcherVms = new PromptCatcherVms("", debugLogFn);
     });
 
     test("TestShell no password", async () => {
         settingsCache.clear();
-        return await TestShell(defaultCommands, configLocal, undefined, parser, promptCatcher, logFn);
+        return await TestShell(defaultCommands, configLocal, undefined, parser, promptCatcher, debugLogFn);
     });
 
     test("TestShell local +quit welcome-prompt prompt-catch", async () => {
         settingsCache.clear();
         const logoutInserted = defaultCommands.concat([defaultExitCommand], defaultCommands);
-        return await TestShell(logoutInserted, configLocal, resolver, parser, promptCatcher, logFn);
+        return await TestShell(logoutInserted, configLocal, resolver, parser, promptCatcher, debugLogFn);
     });
 
     test("TestShell vms +quit welcome-prompt prompt-catch", async () => {
         settingsCache.clear();
         const logoutInserted = vmsCommands.concat([vmsExitCommand], vmsCommands);
-        return await TestShell(logoutInserted, configVms, resolver, parser, promptCatcher, logFn);
+        return await TestShell(logoutInserted, configVms, resolver, parser, promptCatcher, debugLogFn);
     });
 
     test("TestShell vms +quit welcome-vms vms-catch", async () => {
         settingsCache.clear();
         const logoutInserted = vmsCommands.concat([vmsExitCommand], vmsCommands);
-        return await TestShell(logoutInserted, configVms, resolver, parserVms, promptCatcherVms, logFn);
+        return await TestShell(logoutInserted, configVms, resolver, parserVms, promptCatcherVms, debugLogFn);
     });
 
     test("TestShell local welcome-prompt prompt-catch", async () => {
         settingsCache.clear();
-        return await TestShell(defaultCommands, configLocal, resolver, parser, promptCatcher, logFn);
+        return await TestShell(defaultCommands, configLocal, resolver, parser, promptCatcher, debugLogFn);
     });
 
     test("TestShell vms welcome-prompt prompt-catch", async () => {
         settingsCache.clear();
-        return await TestShell(vmsCommands, configVms, resolver, parser, promptCatcher, logFn);
+        return await TestShell(vmsCommands, configVms, resolver, parser, promptCatcher, debugLogFn);
     });
 
     test("TestShell vms welcome-vms vms-catch", async () => {
         settingsCache.clear();
-        return await TestShell(vmsCommands, configVms, resolver, parserVms, promptCatcherVms, logFn);
+        return await TestShell(vmsCommands, configVms, resolver, parserVms, promptCatcherVms, debugLogFn);
     });
 
     async function TestShell(commands: string[],
@@ -107,12 +107,15 @@ suite("Shell tests", function(this: Mocha.Suite) {
                              configResolver?: IConnectConfigResolver,
                              welcomeParser?: ICanParseWelcome,
                              catcher?: IPromptCatcher,
-                             log?: LogType) {
-        const shell = new SshShell(config, configResolver, welcomeParser, catcher, log);
+                             debugLog?: LogType) {
+        const shell = new SshShell(config, configResolver, welcomeParser, catcher, debugLog, "*");
         for (const command of commands) {
+            if (debugLog) {
+                debugLog(`start exec command: ${command}`);
+            }
             const content = await shell.execCmd(command);
-            if (log) {
-                log(`command: ${command}\r\ncontent:\r\n${content}`);
+            if (debugLog) {
+                debugLog(`end command: ${command}\r\ncontent:\r\n${content}`);
             }
         }
         shell.dispose();
