@@ -1,8 +1,10 @@
 import { IConfigData, IConfigSection } from "../config";
 
+export type DownloadAction = "overwrite" | "skip" | "edit";
+
 export interface IWorkspaceSection  {
     cmdTimeout: number;
-    downloadNewer: "overwrite" | "skip" | "edit";
+    downloadNewFiles: DownloadAction;
     feedbackTimeout: number;
     welcomeTimeout: number;
 }
@@ -14,13 +16,13 @@ export class WorkspaceSection implements IConfigSection {
     public static is(candidate: any): candidate is WorkspaceSection {
         return !!candidate &&
         typeof candidate.cmdTimeout === "number" &&
-        typeof candidate.downloadNewer === "string" &&
+        typeof candidate.downloadNewFiles === "string" &&
         typeof candidate.feedbackTimeout === "number" &&
         typeof candidate.welcomeTimeout === "number";
     }
 
     public cmdTimeout: number = 0; // in msec
-    public downloadNewer: "overwrite" | "skip" | "edit" = "edit";
+    public downloadNewFiles: DownloadAction = "edit";
     public feedbackTimeout: number = 0; // in msec
     public welcomeTimeout: number = 0; // in msec
 
@@ -35,7 +37,7 @@ export class WorkspaceSection implements IConfigSection {
     public templateToFillFrom(): IConfigData {
         return {
             cmdTimeout: this.cmdTimeout,
-            downloadNewer: this.downloadNewer,
+            downloadNewFiles: this.downloadNewFiles,
             feedbackTimeout: this.feedbackTimeout,
             welcomeTimeout: this.welcomeTimeout,
         };
@@ -44,14 +46,14 @@ export class WorkspaceSection implements IConfigSection {
     public fillFrom(data: IConfigData): boolean {
         if (WorkspaceSection.is(data)) {
             this.cmdTimeout = data.cmdTimeout;
-            switch (data.downloadNewer) {
+            switch (data.downloadNewFiles) {
                 case "overwrite":
                 case "skip":
                 case "edit":
-                    this.downloadNewer = data.downloadNewer;
+                    this.downloadNewFiles = data.downloadNewFiles;
                     break;
                 default:
-                    this.downloadNewer = "edit";
+                    this.downloadNewFiles = "edit";
                     break;
             }
             this.feedbackTimeout = data.feedbackTimeout;

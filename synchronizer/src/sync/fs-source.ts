@@ -7,7 +7,7 @@ import fs from "fs";
 import util from "util";
 
 const fsGetStat = util.promisify(fs.stat);
-const fsSetStat = util.promisify(fs.utimes);
+const fsSetDate = util.promisify(fs.utimes);
 const fsReadDir = util.promisify(fs.readdir);
 const fsMkDir = util.promisify(fs.mkdir);
 const fsExist = util.promisify(fs.exists);
@@ -78,7 +78,7 @@ export class FsSource implements ISource, IReadDirectory {
 
     public async setDate(filename: string, date: Date): Promise<boolean> {
         filename = this.root + ftpPathSeparator + filename;
-        const result = await fsSetStat(filename, date, date).then(() => {
+        const result = await fsSetDate(filename, date, date).then(() => {
             return true;
         }).catch((err) => {
             if (this.debugLog) {

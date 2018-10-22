@@ -106,7 +106,7 @@
                     "default": 0,
                     "description": "%properties.workspace.cmdTimeout.description%"
                 },
-                "open-vms.workspace.downloadNewer": {
+                "open-vms.workspace.downloadNewFiles": {
                     "type": "string",
                     "enum": [
                         "overwrite",
@@ -119,7 +119,7 @@
                         "Download and edit"
                     ],
                     "default": "edit",
-                    "description": "%properties.workspace.downloadNewer.description%"
+                    "description": "%properties.workspace.downloadNewFiles.description%"
                 },
                 "open-vms.workspace.feedbackTimeout": {
                     "type": "number",

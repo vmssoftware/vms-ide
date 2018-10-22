@@ -4,10 +4,10 @@ import { ftpPathSeparator } from "../common/find-files";
 import { LogType } from "../common/log-type";
 import { ConnectConfigResolverImpl } from "../config-resolve/connect-config-resolver-impl";
 import { PasswordVscodeFiller } from "../config-resolve/password-vscode-filler";
-import { IConfig } from "../config/config";
+import { IConfig, IConfigSection } from "../config/config";
 import { ConnectionSection } from "../config/sections/connection";
 import { ProjectSection } from "../config/sections/project";
-import { WorkspaceSection } from "../config/sections/workspace";
+import { DownloadAction, WorkspaceSection } from "../config/sections/workspace";
 import { EnsureSettings } from "../ensure-settings";
 import { ToOutputChannel } from "../output-channel";
 import { ParseWelcomeVms } from "../stream/parse-welcome-vms";
@@ -17,8 +17,10 @@ import { IFileEntry } from "../stream/read-directory";
 import { SftpClient } from "../stream/sftp-client";
 import { SshShell } from "../stream/ssh-shell";
 import { FsSource } from "./fs-source";
-import { SftpSource } from "./sftp-source";
+import { ISource } from "./source";
 import { VmsSource } from "./vms-source";
+
+interface IDispose { dispose: () => void; }
 
 export class Synchronizer {
 
@@ -26,7 +28,21 @@ export class Synchronizer {
         return this.inProgress;
     }
 
-    public static CompareLists(localList: IFileEntry[], remoteList: IFileEntry[], debugLog?: LogType) {
+    private inProgress = false;
+    private remoteSource?: ISource;
+    private localSource?: ISource;
+    private include?: string;   // parsed
+    private exclude?: string;
+    private disposables: IDispose[] = [];
+    private connectionSection?: IConfigSection;
+    private projectSection?: IConfigSection;
+    private workspaceSection?: IConfigSection;
+    private downloadNewFiles: DownloadAction = "edit";
+
+    constructor(public debugLog?: LogType) {
+    }
+
+    public CompareLists(localList: IFileEntry[], remoteList: IFileEntry[]) {
         const upload: IFileEntry[] = [];    // from local to remote
         const download: IFileEntry[] = [];  // from remote to local
         const remoteLeft = remoteList.slice(0);
@@ -50,11 +66,6 @@ export class Synchronizer {
         return { upload, download };
     }
 
-    private inProgress = false;
-
-    constructor(public debugLog?: LogType) {
-    }
-
     public async SyncronizeProject(config: IConfig) {
         if (this.inProgress) {
             ToOutputChannel(`Synchronization is in progress`);
@@ -66,90 +77,39 @@ export class Synchronizer {
             return false;
         }
         this.inProgress = true;
-        let retCode = false;
-        await EnsureSettings(config);
-        const [connectionSection,
-               projectSection,
-               workspaceSection] = await Promise.all(
-                   [config.get(ConnectionSection.section),
-                    config.get(ProjectSection.section),
-                    config.get(WorkspaceSection.section)]);
-        ConnectConfigResolverImpl.clearCache();
-        if (ConnectionSection.is(connectionSection) &&
-            ProjectSection.is(projectSection) &&
-            WorkspaceSection.is(workspaceSection)) {
-            const includes = [
-                projectSection.source,
-                projectSection.resource,
-                projectSection.headers,
-            ];
-            const include = includes.join(",");
-            const fillers = [new PasswordVscodeFiller()];
-            const resolver = new ConnectConfigResolverImpl(fillers, workspaceSection.feedbackTimeout, this.debugLog);
-            const remoteSftp = new SftpClient(connectionSection, resolver, this.debugLog);
-            const remoteWelcome = new ParseWelcomeVms(workspaceSection.welcomeTimeout, this.debugLog);
-            const remotePrompter = new PromptCatcherVms("", this.debugLog);
-            const remoteShell = new SshShell(connectionSection, resolver, remoteWelcome, remotePrompter, this.debugLog);
-            const remoteSource = new VmsSource(remoteSftp, remoteShell, projectSection.root, this.debugLog);
-            const localSource = new FsSource(workspace.workspaceFolders[0].uri.fsPath, this.debugLog);
+        let retCode = await this.Prepare(config);
+        if (retCode &&
+            this.localSource &&
+            this.remoteSource &&
+            this.include &&
+            this.exclude) {
             const [remoteList,
-                   localList] = await Promise.all([remoteSource.findFiles(include, projectSection.exclude),
-                                                   localSource.findFiles(include, projectSection.exclude)]);
-            const compareResult = Synchronizer.CompareLists(localList, remoteList, this.debugLog);
+                   localList] = await Promise.all([this.remoteSource.findFiles(this.include, this.exclude),
+                                                   this.localSource.findFiles(this.include, this.exclude)]);
+            const compareResult = this.CompareLists(localList, remoteList);
             const waitAll = [];
             for (const uploadFile of compareResult.upload) {
-                waitAll.push(Promise.resolve().then(async () => {
-                    const dirEnd = uploadFile.filename.lastIndexOf(ftpPathSeparator);
-                    if (dirEnd !== -1) {
-                        const dir = uploadFile.filename.slice(0, dirEnd);
-                        await remoteSource.ensureDirectory(dir);
-                    }
-                    return PipeFile(localSource,
-                                    remoteSource,
-                                    uploadFile.filename,
-                                    uploadFile.filename,
-                                    this.debugLog)
+                waitAll.push(
+                    this.TransferFile(this.localSource, this.remoteSource, uploadFile.filename, uploadFile.date)
                         .then((ok) => {
-                            if (ok) {
-                                ToOutputChannel(`${uploadFile.filename} is uploaded`);
-                                return remoteSource.setDate(uploadFile.filename, uploadFile.date);
-                            } else {
-                                ToOutputChannel(`${uploadFile.filename} is failed to upload`);
-                            }
-                            return false;
-                        });
-                }));
+                            ToOutputChannel(`${uploadFile.filename} if ${ok ? "uploaded" : "failed to upload"}`);
+                            return ok;
+                        }).catch(() => false));
             }
-            if (workspaceSection.downloadNewer === "overwrite") {
+            if (this.downloadNewFiles === "overwrite") {
                 for (const downloadFile of compareResult.download) {
-                    waitAll.push(Promise.resolve().then(async () => {
-                        const dirEnd = downloadFile.filename.lastIndexOf(ftpPathSeparator);
-                        if (dirEnd !== -1) {
-                            const dir = downloadFile.filename.slice(0, dirEnd);
-                            await localSource.ensureDirectory(dir);
-                        }
-                        return PipeFile(remoteSource,
-                                        localSource,
-                                        downloadFile.filename,
-                                        downloadFile.filename,
-                                        this.debugLog)
+                    waitAll.push(
+                        this.TransferFile(this.remoteSource, this.localSource, downloadFile.filename, downloadFile.date)
                             .then((ok) => {
-                                if (ok) {
-                                    ToOutputChannel(`${downloadFile.filename} is downloaded`);
-                                    return localSource.setDate(downloadFile.filename, downloadFile.date);
-                                } else {
-                                    ToOutputChannel(`${downloadFile.filename} is failed to download`);
-                                }
-                                return false;
-                            });
-                    }));
+                                ToOutputChannel(`${downloadFile.filename} if ${ok ? "downloaded" : "failed to download"}`);
+                                return ok;
+                            }).catch(() => false));
                 }
-            } else if (workspaceSection.downloadNewer === "edit") {
+            } else if (this.downloadNewFiles === "edit") {
                 // TODO: pipe to FakeStreams and create edits
             }
             await Promise.all(waitAll);
-            remoteSftp.dispose();
-            remoteShell.dispose();
+            this.dispose();
             retCode = true;
         } else {
             ToOutputChannel(`In first please edit settings`);
@@ -158,4 +118,65 @@ export class Synchronizer {
         return retCode;
     }
 
+    public dispose() {
+        for (const disposable of this.disposables) {
+            disposable.dispose();
+        }
+        this.disposables = [];
+    }
+
+    private async Prepare(config: IConfig) {
+        await EnsureSettings(config);
+        const [connectionSection,
+               projectSection,
+               workspaceSection] = await Promise.all(
+                   [config.get(ConnectionSection.section),
+                    config.get(ProjectSection.section),
+                    config.get(WorkspaceSection.section)]);
+        this.connectionSection = connectionSection;
+        this.projectSection = projectSection;
+        this.workspaceSection = workspaceSection;
+        ConnectConfigResolverImpl.clearCache();
+        if (ConnectionSection.is(this.connectionSection) &&
+            ProjectSection.is(this.projectSection) &&
+            WorkspaceSection.is(this.workspaceSection) &&
+            workspace.workspaceFolders &&
+            workspace.workspaceFolders.length > 0) {
+            const includes = [
+                this.projectSection.source,
+                this.projectSection.resource,
+                this.projectSection.headers,
+            ];
+            this.include = includes.join(",");
+            this.downloadNewFiles = this.workspaceSection.downloadNewFiles;
+            this.exclude = this.projectSection.exclude;
+            const fillers = [new PasswordVscodeFiller()];
+            const resolver = new ConnectConfigResolverImpl(fillers, this.workspaceSection.feedbackTimeout, this.debugLog);
+            const remoteSftp = new SftpClient(this.connectionSection, resolver, this.debugLog);
+            this.disposables.push(remoteSftp);
+            const remoteWelcome = new ParseWelcomeVms(this.workspaceSection.welcomeTimeout, this.debugLog);
+            const remotePrompter = new PromptCatcherVms("", this.debugLog);
+            const remoteShell = new SshShell(this.connectionSection, resolver, remoteWelcome, remotePrompter, this.debugLog);
+            this.disposables.push(remoteShell);
+            this.remoteSource = new VmsSource(remoteSftp, remoteShell, this.projectSection.root, this.debugLog);
+            this.localSource = new FsSource(workspace.workspaceFolders[0].uri.fsPath, this.debugLog);
+            return true;
+        }
+        return false;
+    }
+
+    private async TransferFile(from: ISource, to: ISource, file: string, date: Date) {
+        const dirEnd = file.lastIndexOf(ftpPathSeparator);
+        if (dirEnd !== -1) {
+            const dir = file.slice(0, dirEnd);
+            await to.ensureDirectory(dir);
+        }
+        return PipeFile(from, to, file, file, this.debugLog)
+            .then((ok) => {
+                if (ok) {
+                    return to.setDate(file, date);
+                }
+                return false;
+            });
+    }
 }

@@ -17,7 +17,7 @@
     "properties.project.resource.description": "Resource pattern",
     "properties.project.root.description": "VMS root",
     "properties.workspace.cmdTimeout.description": "CMD timeout",
-    "properties.workspace.downloadNewer.description": "Action",
+    "properties.workspace.downloadNewFiles.description": "Download action",
     "properties.workspace.feedbackTimeout.description": "Feedback timeout",
     "properties.workspace.welcomeTimeout.description": "Welcoms timeout"
 }
