@@ -14,7 +14,7 @@ const localize = nls.config()();
 let debugLogFn: LogType | undefined;
 debugLogFn = undefined;
 // tslint:disable-next-line:no-console
-// debugLogFn = console.log;
+debugLogFn = console.log;
 
 export async function activate(context: ExtensionContext) {
 
@@ -35,11 +35,12 @@ export async function activate(context: ExtensionContext) {
         if (configHelper) {
             if (!synchronizer) {
                 synchronizer = new Synchronizer(debugLogFn);
+                context.subscriptions.push(synchronizer);
             }
             if (synchronizer.isInProgress) {
                 window.showInformationMessage("Syncronization in progress");
             } else {
-                synchronizer.SyncronizeProject(configHelper.getConfig()).then((result) => {
+                synchronizer.syncronizeProject(configHelper.getConfig()).then((result) => {
                     ToOutputChannel(`Synchronization is done.`);
                     if (result) {
                         window.showInformationMessage(`Syncronization: ok`);

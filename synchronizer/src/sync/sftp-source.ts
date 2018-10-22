@@ -6,14 +6,15 @@ import { SftpClient } from "../stream/sftp-client";
 import { ISource } from "./source";
 
 export class SftpSource implements ISource {
-    constructor(protected sftp: SftpClient, protected root: string, public debugLog?: LogType) {
+    constructor(protected sftp: SftpClient, public root?: string, public debugLog?: LogType, public attempts?: number) {
         root = root || "";
         this.root = root.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
     }
 
     public findFiles(include: string, exclude: string): Promise<IFileEntry[]> {
-        return findFiles(this.sftp, this.root, include, exclude, this.debugLog).then((list) => {
-            let pos = this.root.length;
+        // we sure the root exists
+        return findFiles(this.sftp, this.root!, include, exclude, this.debugLog).then((list) => {
+            let pos = this.root!.length;
             if (pos > 0) {
                 pos += ftpPathSeparator.length;
                 for (const file of list) {
@@ -41,6 +42,7 @@ export class SftpSource implements ISource {
         };
         filename = this.root + ftpPathSeparator + filename;
         await this.sftp.setStat(filename, newTime);
+        // TODO: test result and try this.attempts times again
         return true;
     }
 

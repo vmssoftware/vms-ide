@@ -5,6 +5,12 @@
  * @param b
  */
 export function isSimplyEq(a: any, b: any): boolean {
+    if (a === b) {
+        return true;
+    }
+    if (a === undefined || b === undefined) {
+        return false;
+    }
     let count = 0;
     for (const key in a) {
         if (a.hasOwnProperty(key)) {

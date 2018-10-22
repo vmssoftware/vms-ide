@@ -14,7 +14,7 @@ const fsExist = util.promisify(fs.exists);
 
 export class FsSource implements ISource, IReadDirectory {
 
-    constructor(protected root: string, public debugLog?: LogType) {
+    constructor(public root?: string, public debugLog?: LogType, public attempts?: number) {
         root = root || "";
         this.root = root.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
     }
@@ -81,6 +81,7 @@ export class FsSource implements ISource, IReadDirectory {
         const result = await fsSetDate(filename, date, date).then(() => {
             return true;
         }).catch((err) => {
+            // TODO: try this.attempts times
             if (this.debugLog) {
                 this.debugLog(`${err}`);
             }

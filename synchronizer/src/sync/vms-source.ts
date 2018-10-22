@@ -11,6 +11,7 @@ import { VmsPathConverter } from "../vms/vms-path-converter";
 import { SftpSource } from "./sftp-source";
 
 const cmdGetTimeOffset = `WRITE SYS$OUTPUT F$TRNLNM("SYS$TIMEZONE_DIFFERENTIAL")`;
+const errorResponse = `%SET-E-`;
 
 export class VmsSource extends SftpSource {
 
@@ -19,9 +20,10 @@ export class VmsSource extends SftpSource {
 
     constructor(sftp: SftpClient,
                 protected shell: SshShell,
-                root: string,
-                debugLog?: LogType) {
-        super(sftp, root, debugLog);
+                root?: string,
+                debugLog?: LogType,
+                attempts?: number) {
+        super(sftp, root, debugLog, attempts);
     }
 
     public async setDate(filename: string, date: Date): Promise<boolean> {
@@ -36,10 +38,20 @@ export class VmsSource extends SftpSource {
             const siteFileDate = new Date(date.valueOf() + this.timeOffsetInSeconds * 1000);
             const dateString = VmsAbsoluteDateString(siteFileDate);
             const strCmd = `set file ${converter.fullPath} /attributes=(mod="${dateString}",att="${dateString}")`;
-            const result = await this.shell.execCmd(strCmd);
-            if (result) {
-                return true;
-            }
+            let attempts = this.attempts || 3;
+            do {
+                const result = await this.shell.execCmd(strCmd);
+                if (result) {
+                    const error = result.split("\n").map((s) => s.trim()).some((s) => s.startsWith(errorResponse));
+                    if (error && this.debugLog) {
+                        this.debugLog(`set date: ${result}`);
+                    } else {
+                        return true;    // good return here
+                    }
+                } else {
+                    break;
+                }
+            } while (--attempts);
         }
         return false;
     }

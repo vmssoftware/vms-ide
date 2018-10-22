@@ -19,5 +19,7 @@
     "properties.workspace.cmdTimeout.description": "CMD timeout",
     "properties.workspace.downloadNewFiles.description": "Download action",
     "properties.workspace.feedbackTimeout.description": "Feedback timeout",
+    "properties.workspace.keepAlive.description": "Keep alive",
+    "properties.workspace.setTimeAttempts.description": "Set time attempts",
     "properties.workspace.welcomeTimeout.description": "Welcoms timeout"
 }

@@ -9,11 +9,11 @@ export interface IProjectSection {
     source: string;
 }
 
-export class ProjectSection implements IConfigSection {
+export class ProjectSection implements IProjectSection, IConfigSection {
 
     public static readonly section = "project";
 
-    public static is(candidate: any): candidate is ProjectSection {
+    public static is(candidate: any): candidate is IProjectSection {
         return !!candidate &&
         typeof candidate.builders === "string" &&
         typeof candidate.exclude === "string" &&

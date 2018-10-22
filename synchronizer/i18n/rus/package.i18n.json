@@ -19,5 +19,7 @@
     "properties.workspace.cmdTimeout.description": "CMD таймаут",
     "properties.workspace.downloadNewer.description": "Действие",
     "properties.workspace.feedbackTimeout.description": "Feedback таймаут",
+    "properties.workspace.keepAlive.description": "Сохранять соединения",
+    "properties.workspace.setTimeAttempts.description": "Количество попыток установить дату на файл",
     "properties.workspace.welcomeTimeout.description": "Welcoms таймаут"
 }

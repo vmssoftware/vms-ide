@@ -126,6 +126,16 @@
                     "default": 0,
                     "description": "%properties.workspace.feedbackTimeout.description%"
                 },
+                "open-vms.workspace.keepAlive": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%properties.workspace.keepAlive.description%"
+                },
+                "open-vms.workspace.setTimeAttempts": {
+                    "type": "number",
+                    "default": 3,
+                    "description": "%properties.workspace.setTimeAttempts.description%"
+                },
                 "open-vms.workspace.welcomeTimeout": {
                     "type": "number",
                     "default": 0,

@@ -17,6 +17,9 @@ export class PromptCatcherVms extends PromptCatcherDefault {
         const stream = await super.createWriteStream();
         stream._write = (chunk: any, encoding: string, callback: (error?: Error) => void) => {
                 if (Buffer.isBuffer(chunk)) {
+                    if (this.log) {
+                        this.log(`raw chunk data: ${chunk.toString("utf8")}`);
+                    }
                     const promptIdx = chunk.indexOf(0);
                     if (promptIdx >= 0) {
                         // emit event and clear lastString
@@ -24,7 +27,7 @@ export class PromptCatcherVms extends PromptCatcherDefault {
                         setImmediate(() => stream.emit(this.readyEvent, content));
                         this.content = "";
                     } else {
-                    this.content += chunk.toString("utf8");
+                        this.content += chunk.toString("utf8");
                     }
                 } else {
                     if (this.log) {

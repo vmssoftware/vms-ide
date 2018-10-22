@@ -93,7 +93,7 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
      * @param settingsFillers fillers
      * @param timeout timeout for feedback, in ms. else lock will be released and accepted set to false
      */
-    constructor(protected settingsFillers?: ISettingsFiller[], protected timeout?: number, public debugLog?: LogType) {
+    constructor(public settingsFillers?: ISettingsFiller[], public timeout?: number, public debugLog?: LogType) {
     }
 
     public clearCache(): boolean {

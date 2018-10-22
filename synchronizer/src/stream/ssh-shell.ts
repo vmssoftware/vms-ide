@@ -41,6 +41,10 @@ export class SshShell extends SshClient {
         this.cleanChannel();
     }
 
+    /**
+     * Exec one command and continue. No "\r" or "\n" allowed inside command.
+     * @param command command to execute
+     */
     public async execCmd(command: string) {
         let contentRet: string | undefined;
         await this.waitOperation.acquire();
@@ -58,12 +62,15 @@ export class SshShell extends SshClient {
                 const promptCatchStream = await this.promptCatcher.createWriteStream();
                 if (promptCatchStream) {
                     const waitReady = new Lock(true);
-                    const tstCommand = command.split("\n").map((s) => s.trim()).join("");
+                    const trimmedCommand = command.trim();
                     const unsubscriber = Subscribe(promptCatchStream, readyEvent, (content) => {
                         // skip garbage from previuos commands
                         if (typeof content === "string") {
-                            const tstContent = content.split("\n").map((s) => s.trim()).join("");
-                            if (tstContent.startsWith(tstCommand)) {
+                            if (this.debugLog) {
+                                this.debugLog(`shell${this.tag ? " " + this.tag : ""} command raw output: ${content}`);
+                            }
+                            const tstContent = content.replace(/\r?\n|\r/g, "").trim();
+                            if (tstContent.startsWith(trimmedCommand)) {
                                 if (this.debugLog) {
                                     this.debugLog(`shell${this.tag ? " " + this.tag : ""} command output found`);
                                 }
@@ -74,7 +81,10 @@ export class SshShell extends SshClient {
                             waitReady.release();
                         }
                     });
-                    this.channel.write(command.trim() + os.EOL);
+                    this.channel.write(trimmedCommand + os.EOL);
+                    if (this.debugLog) {
+                        this.debugLog(`shell${this.tag ? " " + this.tag : ""} command written: ${trimmedCommand}`);
+                    }
                     this.channel.pipe(promptCatchStream);
                     await waitReady.acquire();
                     unsubscriber.unsubscribe();

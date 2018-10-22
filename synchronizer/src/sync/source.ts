@@ -2,6 +2,8 @@ import { ICanCreateReadStream, ICanCreateWriteStream } from "../stream/can-creat
 import { IFileEntry } from "../stream/read-directory";
 
 export interface ISource extends ICanCreateReadStream, ICanCreateWriteStream {
+    root?: string;
+    attempts?: number;
     findFiles(include: string, exclude: string): Promise<IFileEntry[]>;
     getDate(filename: string): Promise<Date|undefined>;
     setDate(filename: string, date: Date): Promise<boolean>;

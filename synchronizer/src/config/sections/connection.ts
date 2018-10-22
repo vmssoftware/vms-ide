@@ -4,25 +4,25 @@ export interface IConnectionSection {
     host: string;
     port: number;
     username: string;
-    password: string;
+    password?: string;
 }
 
-export class ConnectionSection implements IConfigSection {
+export class ConnectionSection implements IConnectionSection, IConfigSection {
 
     public static readonly section = "connection";
 
-    public static is(candidate: any): candidate is ConnectionSection {
+    public static is(candidate: any): candidate is IConnectionSection {
         return !!candidate &&
             typeof candidate.host === "string" &&
             typeof candidate.port === "number" &&
             typeof candidate.username === "string" &&
-            typeof candidate.password === "string";
+            (typeof candidate.password === "string" || candidate.password === undefined);
     }
 
     public host: string = "";
     public port: number = 22;
     public username: string = "";
-    public password: string = "";
+    public password?: string = "";
 
     public name(): string {
         return ConnectionSection.section;
@@ -30,9 +30,9 @@ export class ConnectionSection implements IConfigSection {
 
     public store(): IConfigData {
         // do not store password
-        const t = this.templateToFillFrom();
-        delete t.password;
-        return t;
+        const storeMe = this.templateToFillFrom();
+        delete storeMe.password;
+        return storeMe;
     }
 
     public templateToFillFrom(): IConfigData {
@@ -49,10 +49,9 @@ export class ConnectionSection implements IConfigSection {
             this.host = data.host;
             this.port = data.port;
             this.username = data.username;
-            this.password = data.password;
+            this.password = data.password || "";
             return true;
         }
         return false;
     }
-
 }
