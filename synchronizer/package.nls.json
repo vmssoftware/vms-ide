@@ -1,0 +1,23 @@
+{
+    "configuration.title": "OpenVMS settings",
+    "command.category": "OpenVMS",
+    "command.buildProject.title": "Build on VMS",
+    "command.downloadProject.title": "Download project files from VMS",
+    "command.editProject.title": "Edit OpenVMS project settings",
+    "command.syncProject.title": "Syncronize project files with VMS",
+    "properties.common.build-enabled.description": "Enable build command",
+    "properties.connection.host.description": "OpenVMS host to build, run and debug current workspace",
+    "properties.connection.port.description": "OpenVMS ssh port",
+    "properties.connection.username.description": "Username",
+    "properties.connection.password.description": "Password",
+    "properties.project.builders.description": "Exclude pattern",
+    "properties.project.exclude.description": "Exclude pattern",
+    "properties.project.headers.description": "Headers pattern",
+    "properties.project.source.description": "Source pattern",
+    "properties.project.resource.description": "Resource pattern",
+    "properties.project.root.description": "VMS root",
+    "properties.workspace.cmdTimeout.description": "CMD timeout",
+    "properties.workspace.downloadNewer.description": "Action",
+    "properties.workspace.feedbackTimeout.description": "Feedback timeout",
+    "properties.workspace.welcomeTimeout.description": "Welcoms timeout"
+}

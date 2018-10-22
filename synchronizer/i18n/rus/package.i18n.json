@@ -1,0 +1,23 @@
+{
+    "configuration.title": "OpenVMS настройки",
+    "command.category": "OpenVMS",
+    "command.buildProject.title": "Компилировать на VMS",
+    "command.downloadProject.title": "Скачать проект из VMS",
+    "command.editProject.title": "Редактировать OpenVMS настройки",
+    "command.syncProject.title": "Синхронизировать проект с VMS",
+    "properties.common.build-enabled.description": "Разрешить компиляцию",
+    "properties.connection.host.description": "Адрес (сетевое имя) OpenVMS компьютера для проекта",
+    "properties.connection.port.description": "OpenVMS ssh порт",
+    "properties.connection.username.description": "Пользователь",
+    "properties.connection.password.description": "Пароль",
+    "properties.project.builders.description": "Файлы для постройки проекта",
+    "properties.project.exclude.description": "Исключить",
+    "properties.project.headers.description": "Заголовочные файлы",
+    "properties.project.source.description": "Исходники",
+    "properties.project.resource.description": "Ресурсы",
+    "properties.project.root.description": "VMS корень проекта",
+    "properties.workspace.cmdTimeout.description": "CMD таймаут",
+    "properties.workspace.downloadNewer.description": "Действие",
+    "properties.workspace.feedbackTimeout.description": "Feedback таймаут",
+    "properties.workspace.welcomeTimeout.description": "Welcoms таймаут"
+}
