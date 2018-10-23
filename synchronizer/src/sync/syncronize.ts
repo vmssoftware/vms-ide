@@ -1,4 +1,5 @@
-import { Disposable, workspace } from "vscode";
+import path from "path";
+import vscode from "vscode";
 
 import { Delay } from "../common/delay";
 import { ftpPathSeparator } from "../common/find-files";
@@ -13,6 +14,7 @@ import { ProjectSection } from "../config/sections/project";
 import { DownloadAction, WorkspaceSection } from "../config/sections/workspace";
 import { EnsureSettings } from "../ensure-settings";
 import { ToOutputChannel } from "../output-channel";
+import { FakeWriteStream } from "../stream/fake-write-stream";
 import { ParseWelcomeVms } from "../stream/parse-welcome-vms";
 import { PipeFile } from "../stream/pipe";
 import { IPromptCatcher } from "../stream/prompt-catcher";
@@ -24,8 +26,6 @@ import { IWelcomeParser } from "../stream/welcome-parser";
 import { FsSource } from "./fs-source";
 import { ISource } from "./source";
 import { VmsSource } from "./vms-source";
-
-interface IDispose { dispose: () => void; }
 
 export class Synchronizer {
 
@@ -47,7 +47,7 @@ export class Synchronizer {
     private projectSection?: IConfigData;
     private workspaceSection?: IConfigData;
     private downloadNewFiles: DownloadAction = "edit";
-    private onDidLoadDisposable?: Disposable;
+    private onDidLoadDisposable?: vscode.Disposable;
 
     constructor(public debugLog?: LogType) {
     }
@@ -118,8 +118,8 @@ export class Synchronizer {
             ToOutputChannel(`Synchronization is in progress`);
             return false;
         }
-        if (!workspace.workspaceFolders ||
-            workspace.workspaceFolders.length < 1) {
+        if (!vscode.workspace.workspaceFolders ||
+            vscode.workspace.workspaceFolders.length < 1) {
             ToOutputChannel(`There is no workspace to synchronize`);
             return false;
         }
@@ -159,8 +159,17 @@ export class Synchronizer {
                                 return ok;
                             }).catch(() => false));
                 }
+            } else if (this.downloadNewFiles === "skip") {
+                for (const downloadFile of compareResult.download) {
+                    ToOutputChannel(`Remote ${downloadFile.filename} is newer, please check and download it manually`);
+                }
             } else if (this.downloadNewFiles === "edit") {
-                // TODO: pipe to FakeStreams and create edits
+                for (const downloadFile of compareResult.download) {
+                    waitAll.push(this.editFile(this.remoteSource, downloadFile.filename));
+                }
+                if (compareResult.download.length > 0) {
+                    ToOutputChannel(`Please edit and save ${compareResult.download.length} files manually`);
+                }
             }
             // wait all operations are done
             const results = await Promise.all(waitAll);
@@ -244,8 +253,8 @@ export class Synchronizer {
         if (ConnectionSection.is(this.connectionSection) &&
             ProjectSection.is(this.projectSection) &&
             WorkspaceSection.is(this.workspaceSection) &&
-            workspace.workspaceFolders &&
-            workspace.workspaceFolders.length > 0) {
+            vscode.workspace.workspaceFolders &&
+            vscode.workspace.workspaceFolders.length > 0) {
             // reparse includes
             const includes = [
                 this.projectSection.source,
@@ -302,12 +311,12 @@ export class Synchronizer {
                 if (this.debugLog) {
                     this.debugLog(`Create local source`);
                 }
-                this.localSource = new FsSource(workspace.workspaceFolders[0].uri.fsPath, this.debugLog);
+                this.localSource = new FsSource(vscode.workspace.workspaceFolders[0].uri.fsPath, this.debugLog);
             } else {
                 if (this.debugLog) {
                     this.debugLog(`Update local source`);
                 }
-                this.localSource.root = workspace.workspaceFolders[0].uri.fsPath;
+                this.localSource.root = vscode.workspace.workspaceFolders[0].uri.fsPath;
             }
             return true;
         }
@@ -331,5 +340,25 @@ export class Synchronizer {
             }).catch(() => {
                 return false;
             });
+    }
+
+    private async editFile(source: ISource, file: string) {
+        const fake = new FakeWriteStream(false, this.debugLog);
+        return PipeFile(source, fake, file, file, this.debugLog)
+            .then((ok) => {
+                const content = Buffer.concat(fake.chunks).toString("utf8");
+                if (vscode.workspace.workspaceFolders &&
+                    vscode.workspace.workspaceFolders.length > 0) {
+                    const rootUri = vscode.workspace.workspaceFolders[0].uri;
+                    const uri = vscode.Uri.file(path.join(rootUri.fsPath, file));
+                    return vscode.workspace.openTextDocument({content})
+                        .then((doc) => {
+                            const title = `Remote ${file} <-> Local`;
+                            return vscode.commands.executeCommand("vscode.diff", doc.uri, uri, title, { preview: false });
+                        })
+                        .then(() => true);
+                }
+                return false;
+            }).catch(() => false);
     }
 }

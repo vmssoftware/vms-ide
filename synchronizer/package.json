@@ -22,10 +22,6 @@
         "menus": {
             "commandPalette": [
                 {
-                    "command": "VMS.buildProject",
-                    "when": "config.open-vms.common.build-enabled"
-                },
-                {
                     "command": "VMS.stopSync",
                     "when": "config.open-vms.common.stopSyncEnable"
                 }
@@ -56,11 +52,6 @@
         "configuration": {
             "title": "%configuration.title%",
             "properties": {
-                "open-vms.common.build-enabled": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "%properties.common.build-enabled.description%"
-                },
                 "open-vms.common.stopSyncEnable": {
                     "type": "boolean",
                     "default": false,
