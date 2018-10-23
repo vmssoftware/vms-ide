@@ -8,6 +8,7 @@ import { Synchronizer } from "./sync/syncronize";
 
 import * as nls from "vscode-nls";
 import { EnsureSettings } from "./ensure-settings";
+import { setStopCommand } from "./stop";
 
 const localize = nls.config()();
 
@@ -16,7 +17,12 @@ debugLogFn = undefined;
 // tslint:disable-next-line:no-console
 debugLogFn = console.log;
 
+let contextSaved: ExtensionContext | undefined;
+
 export async function activate(context: ExtensionContext) {
+
+    contextSaved = context;
+    setStopCommand(context, false);
 
     if (debugLogFn) {
         debugLogFn(localize("extension.activated", "OpenVMS extension is activated"));
@@ -40,12 +46,14 @@ export async function activate(context: ExtensionContext) {
             if (synchronizer.isInProgress) {
                 window.showInformationMessage("Syncronization in progress");
             } else {
+                setStopCommand(context, true);
                 synchronizer.syncronizeProject(configHelper.getConfig()).then((result) => {
+                    setStopCommand(context, false);
                     ToOutputChannel(`Synchronization is done.`);
                     if (result) {
                         window.showInformationMessage(`Syncronization: ok`);
                     } else {
-                        window.showErrorMessage(`Syncronization: failed`);
+                        window.showErrorMessage(`Syncronization: some files failed to synchronize, see output`);
                     }
                 });
             }
@@ -55,6 +63,12 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("VMS.buildProject", async () => {
         if (configHelper) {
             // BuildProject(configHelper);
+        }
+    }));
+
+    context.subscriptions.push( commands.registerCommand("VMS.stopSync", async () => {
+        if (synchronizer) {
+            synchronizer.disableRemote();
         }
     }));
 
@@ -70,6 +84,9 @@ export async function activate(context: ExtensionContext) {
 // this method is called when your extension is deactivated
 // tslint:disable-next-line:no-empty
 export function deactivate() {
+    if (contextSaved) {
+        setStopCommand(contextSaved, false);
+    }
     if (debugLogFn) {
         debugLogFn(localize("extension.deactivated", "OpenVMS extension is deactivated"));
     }

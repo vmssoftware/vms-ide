@@ -13,6 +13,7 @@
     "activationEvents": [
         "onCommand:VMS.buildProject",
         "onCommand:VMS.syncProject",
+        "onCommand:VMS.stopSync",
         "onCommand:VMS.downloadProject",
         "onCommand:VMS.editProject"
     ],
@@ -23,6 +24,10 @@
                 {
                     "command": "VMS.buildProject",
                     "when": "config.open-vms.common.build-enabled"
+                },
+                {
+                    "command": "VMS.stopSync",
+                    "when": "config.open-vms.common.stopSyncEnable"
                 }
             ]
         },
@@ -38,6 +43,11 @@
                 "category": "%command.category%"
             },
             {
+                "command": "VMS.stopSync",
+                "title": "%command.stopSync.title%",
+                "category": "%command.category%"
+            },
+            {
                 "command": "VMS.editProject",
                 "title": "%command.editProject.title%",
                 "category": "%command.category%"
@@ -50,6 +60,11 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%properties.common.build-enabled.description%"
+                },
+                "open-vms.common.stopSyncEnable": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%properties.common.stopSyncEnable.description%"
                 },
                 "open-vms.connection.host": {
                     "type": "string",

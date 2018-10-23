@@ -29,16 +29,14 @@ export async function PipeFile(source: ICanCreateReadStream,
     }
     srcStream.once("error", (srcError) => {
         // catch source errors
-        srcStream = undefined;
         if (debugLog) {
             debugLog(`source error ${srcError}`);
         }
-        setImmediate(() => {
-            if (dstStream) {
-                dstStream.emit("error", srcError);
-            }
-        });
+        srcStream = undefined;
         errPassed = true;
+        if (dstStream) {
+            dstStream.emit("error", srcError);
+        }
     });
     destFile = destFile || file;
     dstStream = await dest.createWriteStream(destFile);
@@ -47,34 +45,31 @@ export async function PipeFile(source: ICanCreateReadStream,
         if (debugLog) {
             debugLog(errorStr);
         }
-        setImmediate(() => {
-            if (srcStream) {
-                srcStream.emit("error", new Error(errorStr));
-            }
-        });
+        if (srcStream) {
+            srcStream.emit("error", new Error(errorStr));
+        }
         return false;
     }
+    const done = new Lock(true);
     dstStream.once("error", (dstError) => {
         // catch destination errors
-        dstStream = undefined;
         if (debugLog) {
             debugLog(`dest error ${dstError}`);
         }
-        setImmediate(() => {
-            if (srcStream) {
-                srcStream.emit("error", dstError);
-            }
-        });
+        dstStream = undefined;
         errPassed = true;
+        if (srcStream) {
+            srcStream.emit("error", dstError);
+        }
+        done.release(); // release on dest error
     });
     if (srcStream) {
-        const done = new Lock(true);
         srcStream.pipe(dstStream);
-        dstStream.once("unpipe", async (src) => {
+        dstStream.once("finish", () => {
             if (debugLog) {
-                debugLog(`dest unpiped`);
+                debugLog(`dest finished`);
             }
-            done.release();
+            done.release(); // release on dest finished
         });
         await done.acquire();
         if (debugLog) {
@@ -87,11 +82,9 @@ export async function PipeFile(source: ICanCreateReadStream,
         if (debugLog) {
             debugLog(errorStr);
         }
-        setImmediate(() => {
-            if (dstStream) {
-                dstStream.emit("error", new Error(errorStr));
-            }
-        });
+        if (dstStream) {
+            dstStream.emit("error", new Error(errorStr));
+        }
         return false;
     }
 }

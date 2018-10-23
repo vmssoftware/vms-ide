@@ -37,11 +37,12 @@ export class Synchronizer {
     private resolver?: IConnectConfigResolver;
     private welcome?: IWelcomeParser;
     private prompter?: IPromptCatcher;
+    private remoteSftp?: SftpClient;
+    private remoteShell?: SshShell;
     private remoteSource?: ISource;
     private localSource?: ISource;
     private include?: string;
     private exclude?: string;
-    private disposables: IDispose[] = [];
     private connectionSection?: IConfigData;
     private projectSection?: IConfigData;
     private workspaceSection?: IConfigData;
@@ -91,6 +92,27 @@ export class Synchronizer {
         return { upload, download };
     }
 
+    public enableRemote() {
+        if (this.remoteSftp) {
+            this.remoteSftp.enabled = true;
+        }
+        if (this.remoteShell) {
+            this.remoteShell.enabled = true;
+        }
+    }
+
+    public disableRemote() {
+        if (this.debugLog) {
+            this.debugLog(`Disabling SFTP and SHELL`);
+        }
+        if (this.remoteSftp) {
+            this.remoteSftp.enabled = false;
+        }
+        if (this.remoteShell) {
+            this.remoteShell.enabled = false;
+        }
+    }
+
     public async syncronizeProject(config: IConfig) {
         if (this.inProgress) {
             ToOutputChannel(`Synchronization is in progress`);
@@ -111,6 +133,7 @@ export class Synchronizer {
             // clear password cache
             ConnectConfigResolverImpl.clearCache();
             // get lists
+            this.enableRemote();
             const [remoteList,
                    localList] = await Promise.all([this.remoteSource.findFiles(this.include, this.exclude),
                                                    this.localSource.findFiles(this.include, this.exclude)]);
@@ -140,7 +163,7 @@ export class Synchronizer {
                 // TODO: pipe to FakeStreams and create edits
             }
             // wait all operations are done
-            await Promise.all(waitAll);
+            const results = await Promise.all(waitAll);
             // end
             if (WorkspaceSection.is(this.workspaceSection) &&
                 this.workspaceSection.keepAlive) {
@@ -151,7 +174,13 @@ export class Synchronizer {
             } else {
                 this.dispose();
             }
-            retCode = true;
+            retCode = results.reduce((acc, result) => {
+                acc = acc && result;
+                return acc;
+            }, true);
+            if (this.debugLog) {
+                this.debugLog(`Synchronize retCode: ${retCode}`);
+            }
         } else {
             ToOutputChannel(`In first please edit settings`);
         }
@@ -163,10 +192,12 @@ export class Synchronizer {
         if (this.debugLog) {
             this.debugLog(`Disposing sources`);
         }
-        for (const disposable of this.disposables) {
-            disposable.dispose();
+        if (this.remoteSftp) {
+            this.remoteSftp.dispose();
         }
-        this.disposables = [];
+        if (this.remoteShell) {
+            this.remoteShell.dispose();
+        }
         this.remoteSource = undefined;
         this.localSource = undefined;
     }
@@ -257,11 +288,9 @@ export class Synchronizer {
                 if (this.debugLog) {
                     this.debugLog(`Create remote source`);
                 }
-                const remoteSftp = new SftpClient(this.connectionSection, this.resolver, this.debugLog);
-                this.disposables.push(remoteSftp);
-                const remoteShell = new SshShell(this.connectionSection, this.resolver, this.welcome, this.prompter, this.debugLog);
-                this.disposables.push(remoteShell);
-                this.remoteSource = new VmsSource(remoteSftp, remoteShell, this.projectSection.root, this.debugLog, this.workspaceSection.setTimeAttempts);
+                this.remoteSftp = new SftpClient(this.connectionSection, this.resolver, this.debugLog);
+                this.remoteShell = new SshShell(this.connectionSection, this.resolver, this.welcome, this.prompter, this.debugLog);
+                this.remoteSource = new VmsSource(this.remoteSftp, this.remoteShell, this.projectSection.root, this.debugLog, this.workspaceSection.setTimeAttempts);
             } else {
                 if (this.debugLog) {
                     this.debugLog(`Update remote source`);
@@ -294,6 +323,7 @@ export class Synchronizer {
         return PipeFile(from, to, file, file, this.debugLog)
             .then(async (ok) => {
                 if (ok) {
+                    // TODO: test anyhow that file is completely written before setting date
                     await Delay(500);
                     return to.setDate(file, date);
                 }
