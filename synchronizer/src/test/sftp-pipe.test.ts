@@ -5,7 +5,7 @@ import { LogType } from "../common/log-type";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 import { ConnectConfigResolverImpl, settingsCache } from "../config-resolve/connect-config-resolver-impl";
 import { FakeReadStream } from "../stream/fake-read-stream";
-import { FakeWriteStream } from "../stream/fake-write-stream";
+import { FakeWriteStreamCreator } from "../stream/fake-write-stream";
 import { PipeFile } from "../stream/pipe";
 import { SftpClient } from "../stream/sftp-client";
 import { TestConfiguration } from "./config/config";
@@ -97,7 +97,7 @@ suite("Pipe tests", function(this: Mocha.Suite) {
     ];
     const srcBadDestDatas = [
         Buffer.from("1234\r\n"),
-        FakeWriteStream.badChunk,
+        FakeWriteStreamCreator.badChunk,
         Buffer.from("last\r\n"),
     ];
 
@@ -289,7 +289,7 @@ suite("Pipe tests", function(this: Mocha.Suite) {
                                       debugLog?: LogType) {
 
         const src = new FakeReadStream(sourceArray, debugLog);
-        const dst = new FakeWriteStream(false, debugLog);
+        const dst = new FakeWriteStreamCreator(false, debugLog);
         const resultPipe = await PipeFile(src, dst, "in", "out", debugLog);
         assert.equal(resultPipe, expectedPipe, "pipe result unexpected");
         const sourceString = sourceArray.map((buffer) => {
@@ -318,7 +318,7 @@ suite("Pipe tests", function(this: Mocha.Suite) {
         const promises: Array<Promise<boolean>> = [];
         for (const fileData of fileDataArr) {
             promises.push(Promise.resolve().then(async () => {
-                const dst = new FakeWriteStream(false, debugLog);
+                const dst = new FakeWriteStreamCreator(false, debugLog);
                 const resultPipe = await PipeFile(src, dst, fileData.file, "", debugLog);
                 const sourceString = fileData.buffer.toString("utf8");
                 const destString = dst.chunks.map((buffer) => {

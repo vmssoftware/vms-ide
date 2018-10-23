@@ -4,12 +4,23 @@ import { PromptCatcherDefault } from "./prompt-catcher-default";
 
 export class PromptCatcherVms extends PromptCatcherDefault {
 
+    public get prompt() {
+        return "";
+    }
+
+    public set prompt(newPrompt: string) {
+        // do not accept any prompts
+        if (this.log) {
+            this.log(`vms shell need no prompt`);
+        }
+    }
+
     /**
      * Wait 0-symbol as prompt start
      * @param prompt unused
      * @param log log
      */
-    constructor(public prompt: string, public log?: LogType) {
+    constructor(prompt: string, public log?: LogType) {
         super(prompt, log);
     }
 

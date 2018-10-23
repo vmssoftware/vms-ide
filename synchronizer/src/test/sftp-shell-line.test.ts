@@ -1,5 +1,6 @@
 import { ConnectConfig } from "ssh2";
 import { ContextPasswordFiller } from "../common/context-password-filler";
+import { Lock } from "../common/lock";
 import { LogType } from "../common/log-type";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 import { ConnectConfigResolverImpl, settingsCache } from "../config-resolve/connect-config-resolver-impl";
@@ -9,10 +10,11 @@ import { IPromptCatcher } from "../stream/prompt-catcher";
 import { PromptCatcherDefault } from "../stream/prompt-catcher-default";
 import { PromptCatcherVms } from "../stream/prompt-catcher-vms";
 import { SshShell } from "../stream/ssh-shell";
+import { SshShellLine } from "../stream/ssh-shell-line";
 import { IWelcomeParser } from "../stream/welcome-parser";
 import { TestConfiguration } from "./config/config";
 
-suite("Shell tests", function(this: Mocha.Suite) {
+suite("Shell line tests", function(this: Mocha.Suite) {
 
     return;
 
@@ -66,42 +68,27 @@ suite("Shell tests", function(this: Mocha.Suite) {
         promptCatcherVms = new PromptCatcherVms("", debugLogFn);
     });
 
-    test("TestShell no password", async () => {
+    test("TestShellLine", async () => {
         settingsCache.clear();
-        return await TestShell(defaultCommands, configLocal, undefined, parser, promptCatcher, debugLogFn);
-    });
-
-    test("TestShell local +quit welcome-prompt prompt-catch", async () => {
-        settingsCache.clear();
-        const logoutInserted = defaultCommands.concat([defaultExitCommand], defaultCommands);
-        return await TestShell(logoutInserted, configLocal, resolver, parser, promptCatcher, debugLogFn);
-    });
-
-    test("TestShell vms +quit welcome-prompt prompt-catch", async () => {
-        settingsCache.clear();
-        const logoutInserted = vmsCommands.concat([vmsExitCommand], vmsCommands);
-        return await TestShell(logoutInserted, configVms, resolver, parser, promptCatcher, debugLogFn);
-    });
-
-    test("TestShell vms +quit welcome-vms vms-catch", async () => {
-        settingsCache.clear();
-        const logoutInserted = vmsCommands.concat([vmsExitCommand], vmsCommands);
-        return await TestShell(logoutInserted, configVms, resolver, parserVms, promptCatcherVms, debugLogFn);
-    });
-
-    test("TestShell local welcome-prompt prompt-catch", async () => {
-        settingsCache.clear();
-        return await TestShell(defaultCommands, configLocal, resolver, parser, promptCatcher, debugLogFn);
-    });
-
-    test("TestShell vms welcome-prompt prompt-catch", async () => {
-        settingsCache.clear();
-        return await TestShell(vmsCommands, configVms, resolver, parser, promptCatcher, debugLogFn);
-    });
-
-    test("TestShell vms welcome-vms vms-catch", async () => {
-        settingsCache.clear();
-        return await TestShell(vmsCommands, configVms, resolver, parserVms, promptCatcherVms, debugLogFn);
+        const shell = new SshShellLine(configVms, resolver, debugLogFn, "*");
+        const rl = await shell.acquireReadLine();
+        const done = new Lock(true);
+        if (rl) {
+            rl.on("line", (line) => {
+                if (debugLogFn) {
+                    debugLogFn(line);
+                }
+            });
+            rl.on("close", () => {
+                done.release();
+            });
+            if (shell.channel) {
+                shell.channel.write("dir\r\n");
+                shell.channel.write("exit\r\n");
+            }
+            await done.acquire();
+        }
+        shell.dispose();
     });
 
     async function TestShell(commands: string[],

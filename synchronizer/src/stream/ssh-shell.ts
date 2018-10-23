@@ -1,6 +1,7 @@
 import os from "os";
 
 import { ClientChannel, ConnectConfig } from "ssh2";
+import { Transform } from "stream";
 import { Lock } from "../common/lock";
 import { LogType } from "../common/log-type";
 import { IUnSubscribe, Subscribe } from "../common/subscribe";
@@ -20,6 +21,7 @@ export class SshShell extends SshClient {
     private shellClose?: IUnSubscribe;
     private shellExit?: IUnSubscribe;
     private waitOperation = new Lock(false, "waitOperation");
+    private userStream?: Transform;
 
     constructor(config: ConnectConfig,
                 resolver?: IConnectConfigResolver,
@@ -30,15 +32,38 @@ export class SshShell extends SshClient {
         super(config, resolver, debugLog, tag);
     }
 
-    public setParsers(welcome: IWelcomeParser, prompter: IPromptCatcher) {
-        this.welcomeParser = welcome;
-        this.promptCatcher = prompter;
+    public setParsers(welcome?: IWelcomeParser, prompter?: IPromptCatcher) {
+        this.welcomeParser = welcome || this.welcomeParser;
+        this.promptCatcher = prompter || this.promptCatcher;
     }
 
     public dispose() {
         this.waitOperation.release();
         super.dispose();
         this.cleanChannel();
+    }
+
+    public async attachUser(user: Transform) {
+        await this.waitOperation.acquire();
+        if (await this.ensureChannel()) {
+            if (this.channel &&
+                this.prompt) {  // just check if welcome banner parsed correctly
+                // no check prompt-catcher, it's user's issue now
+                this.userStream = user;
+                this.userStream.pipe(this.channel).pipe(this.userStream);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public async detachUser() {
+        if (this.userStream && this.channel) {
+            this.userStream.unpipe(this.channel);
+            this.channel.unpipe(this.userStream);
+        }
+        delete this.userStream;
+        this.waitOperation.release();
     }
 
     /**
@@ -48,16 +73,10 @@ export class SshShell extends SshClient {
     public async execCmd(command: string) {
         let contentRet: string | undefined;
         await this.waitOperation.acquire();
-        if (!this.welcomeParser) {
-            this.welcomeParser = new ParseWelcome(0, this.debugLog);
-        }
         if (await this.ensureChannel()) {
-            if (this.channel && this.prompt) {
-                if (!this.promptCatcher) {
-                    this.promptCatcher = new PromptCatcherDefault(this.prompt);
-                } else {
-                    this.promptCatcher.prompt = this.prompt;
-                }
+            if (this.channel &&
+                this.prompt &&
+                this.promptCatcher) {
                 const readyEvent = this.promptCatcher.readyEvent;
                 const promptCatchStream = await this.promptCatcher.createWriteStream();
                 if (promptCatchStream) {
@@ -78,6 +97,7 @@ export class SshShell extends SshClient {
                                 waitReady.release();
                             }
                         } else {
+                            // undefined content => stream error or finished stream
                             waitReady.release();
                         }
                     });
@@ -137,6 +157,11 @@ export class SshShell extends SshClient {
     }
 
     private cleanChannel() {
+        this.waitOperation.release();
+        // check and clean userStream
+        if (this.userStream) {
+            this.userStream.emit("error", new Error("Shell cleaned"));
+        }
         if (this.shellClose) {
             this.shellClose.unsubscribe();
             delete this.shellClose;
@@ -147,31 +172,55 @@ export class SshShell extends SshClient {
         }
         delete this.channel;
         delete this.prompt;
+        delete this.userStream;
     }
 
     private async ensureChannel() {
         if (!this.enabled) {
+            // disabled - not ok
             return false;
         }
         if (this.channel !== undefined) {
+            // channel exists - ok
             return true;
         }
         if (!await this.ensureClient()) {
+            // cannot ensure client - not ok
             return false;
         }
         if (!this.client) {
+            // has no client - not ok too
             return false;
         }
+        // prepare to shell connect
+        this.prompt = undefined;
+        if (!this.welcomeParser) {
+            this.welcomeParser = new ParseWelcome(0, this.debugLog);
+        }
         if (!await this.shellConnect()) {
+            // cannot connect - not ok
             return false;
         }
         if (!this.channel) {
+            // has no channel - not ok too
             return false;
         }
-        if (this.prompt === undefined &&
-            this.welcomeParser !== undefined) {
-            this.prompt = await this.welcomeParser.parseWelcome(this.channel);
+        // parse prompt
+        this.prompt = await this.welcomeParser.parseWelcome(this.channel);
+        if (this.prompt) {
+            if (!this.promptCatcher) {
+                if (this.debugLog) {
+                    this.debugLog(`shell${this.tag ? " " + this.tag : ""} create def prompt catcher`);
+                }
+                this.promptCatcher = new PromptCatcherDefault(this.prompt);
+            } else {
+                if (this.debugLog) {
+                    this.debugLog(`shell${this.tag ? " " + this.tag : ""} set prompt to catcher`);
+                }
+                this.promptCatcher.prompt = this.prompt;
+            }
+            return true;
         }
-        return !!this.prompt;
+        return false;   // no parsed prompt - no executed commands
     }
 }

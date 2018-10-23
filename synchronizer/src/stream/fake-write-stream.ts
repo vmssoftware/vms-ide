@@ -1,7 +1,7 @@
 import { Writable } from "stream";
 import { LogType } from "../common/log-type";
 
-export class FakeWriteStream {
+export class FakeWriteStreamCreator {
 
     // callback error if chunk is badChunk
     public static badChunk: Buffer = Buffer.from([0, 0, 0, 0]);
@@ -29,7 +29,7 @@ export class FakeWriteStream {
                     callback(new Error("Writing prohibited"));
                 } else {
                     if (Buffer.isBuffer(chunk)) {
-                        if (chunk.equals(FakeWriteStream.badChunk)) {
+                        if (chunk.equals(FakeWriteStreamCreator.badChunk)) {
                             callback(new Error("Bad chunk encountered"));
                         } else {
                             this.chunks.push(chunk);

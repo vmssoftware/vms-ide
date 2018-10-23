@@ -4,8 +4,8 @@ import { IPromptCatcher } from "./prompt-catcher";
 
 export class PromptCatcherDefault implements IPromptCatcher {
 
-    public readyEvent: symbol = Symbol("ready");
-    public content = "";    // The content that caught until prompt is encountered.
+    public readyEvent: symbol = Symbol("ready");    // Emitted also when "error" or "finished" events occurred (with undefined content).
+    public content = "";    // The content caught until prompt is encountered.
 
     /**
      * Note: only the last prompt will be caught properly.
@@ -37,15 +37,11 @@ export class PromptCatcherDefault implements IPromptCatcher {
             if (this.log) {
                 this.log(`PromptCatcher error: ${err}`);
             }
+            setImmediate(() => writeable.emit(this.readyEvent, undefined));
         });
-        writeable.on("close", () => {
+        writeable.on("finish", () => {
             if (this.log) {
-                this.log(`PromptCatcher closed`);
-            }
-        });
-        writeable.on("unpipe", () => {
-            if (this.log) {
-                this.log(`PromptCatcher unpiped`);
+                this.log(`PromptCatcher finished`);
             }
             setImmediate(() => writeable.emit(this.readyEvent, undefined));
         });

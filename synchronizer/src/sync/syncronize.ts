@@ -14,7 +14,7 @@ import { ProjectSection } from "../config/sections/project";
 import { DownloadAction, WorkspaceSection } from "../config/sections/workspace";
 import { EnsureSettings } from "../ensure-settings";
 import { ToOutputChannel } from "../output-channel";
-import { FakeWriteStream } from "../stream/fake-write-stream";
+import { FakeWriteStreamCreator } from "../stream/fake-write-stream";
 import { ParseWelcomeVms } from "../stream/parse-welcome-vms";
 import { PipeFile } from "../stream/pipe";
 import { IPromptCatcher } from "../stream/prompt-catcher";
@@ -343,7 +343,7 @@ export class Synchronizer {
     }
 
     private async editFile(source: ISource, file: string) {
-        const fake = new FakeWriteStream(false, this.debugLog);
+        const fake = new FakeWriteStreamCreator(false, this.debugLog);
         return PipeFile(source, fake, file, file, this.debugLog)
             .then((ok) => {
                 const content = Buffer.concat(fake.chunks).toString("utf8");
