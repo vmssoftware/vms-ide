@@ -76,7 +76,7 @@ export class Synchronizer {
     private projectSection?: IConfigData;
     private workspaceSection?: IConfigData;
     private downloadNewFiles: DownloadAction = "edit";
-    private onDidLoadDisposable?: vscode.Disposable;
+    private onDidLoad?: vscode.Disposable;
 
     constructor(public debugLog?: LogType) {
     }
@@ -206,8 +206,8 @@ export class Synchronizer {
             if (WorkspaceSection.is(this.workspaceSection) &&
                 this.workspaceSection.keepAlive) {
                 // test configuration watcher and create if need
-                if (!this.onDidLoadDisposable) {
-                    this.onDidLoadDisposable = config.onDidLoad(() => this.prepare(config));
+                if (!this.onDidLoad) {
+                    this.onDidLoad = config.onDidLoad(() => this.prepare(config));
                 }
             } else {
                 this.dispose();
@@ -248,7 +248,9 @@ export class Synchronizer {
      */
     private async prepare(config: IConfig) {
         // get current config
-        await EnsureSettings(config);
+        if (!await EnsureSettings(config)) {
+            return false;
+        }
         const [connectionSection,
                projectSection,
                workspaceSection] = await Promise.all(
@@ -266,8 +268,8 @@ export class Synchronizer {
             if (!workspaceSectionData.keepAlive) {
                 recreateRemote = true;
                 // test configuration watchers and delete if exist
-                if (this.onDidLoadDisposable) {
-                    this.onDidLoadDisposable.dispose();
+                if (this.onDidLoad) {
+                    this.onDidLoad.dispose();
                 }
             }
         }
@@ -367,7 +369,10 @@ export class Synchronizer {
                     return to.setDate(file, date);
                 }
                 return false;
-            }).catch(() => {
+            }).catch((err) => {
+                if (this.debugLog) {
+                    this.debugLog(err);
+                }
                 return false;
             });
     }
@@ -377,7 +382,7 @@ export class Synchronizer {
         let content: string | undefined;
         let localUri: vscode.Uri | undefined;
         return PipeFile(source, memoryStream, file, file, this.debugLog)
-            .then((ok) => {
+            .then(async (ok) => {
                 content = Buffer.concat(memoryStream.chunks).toString("utf8");
                 if (ok &&
                     vscode.workspace.workspaceFolders &&
@@ -394,7 +399,10 @@ export class Synchronizer {
                 } else {
                     return false;
                 }
-            }).catch(() => {
+            }).catch((errPipeOrAfter) => {
+                if (this.debugLog) {
+                    this.debugLog(errPipeOrAfter);
+                }
                 if (localUri && content) {
                     return createFile(localUri, content)
                         .then((ok) => {
@@ -404,10 +412,23 @@ export class Synchronizer {
                             } else {
                                 return false;
                             }
+                        }).catch((errCreateOrShow) => {
+                            if (this.debugLog) {
+                                this.debugLog(errCreateOrShow);
+                            }
+                            return false;
                         });
                 } else {
+                    if (this.debugLog) {
+                        this.debugLog(`Nothing to show`);
+                    }
                     return false;
                 }
-            }).catch(() => false);
+            }).catch((errLast) => {
+                if (this.debugLog) {
+                    this.debugLog(errLast);
+                }
+                return false;
+            });
     }
 }

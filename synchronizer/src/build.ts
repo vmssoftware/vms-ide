@@ -3,6 +3,7 @@ import util from "util";
 import { ExtensionContext, Uri, window, workspace } from "vscode";
 
 import { LogType } from "./common/log-type";
+import { printLike } from "./common/print-like";
 import { IConfig } from "./config/config";
 import { ProjectSection } from "./config/sections/project";
 import { EnsureSettings } from "./ensure-settings";
@@ -15,9 +16,13 @@ const fsReadFile = util.promisify(fs.readFile);
 
 const defMmsFileName = "res/default.mms";
 
+const mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_"}`; // when add this: /MACRO="DEBUG=1" ?
+
 export async function BuildProject(context: ExtensionContext, config: IConfig, debugLog?: LogType) {
     // get current config
-    await EnsureSettings(config);
+    if (!await EnsureSettings(config)) {
+        return false;
+    }
     const projectSection = await config.get(ProjectSection.section);
     // get current values
     const project = projectSection ? projectSection.store() : undefined;

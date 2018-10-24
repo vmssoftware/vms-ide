@@ -1,15 +1,14 @@
 
-import { commands, ExtensionContext, window } from "vscode";
+import { commands, ExtensionContext, window, workspace } from "vscode";
 import { LogType } from "./common/log-type";
 import { IConfigHelper } from "./config/config";
 import { GetConfigHelperFromApi } from "./config/get-config-helper";
-import { ToOutputChannel } from "./output-channel";
-import { Synchronizer } from "./sync/syncronize";
 
 import * as nls from "vscode-nls";
 import { BuildProject } from "./build";
 import { EnsureSettings } from "./ensure-settings";
 import { setStopCommand } from "./stop";
+import { StopSyncProject, SyncProject } from "./synchronize";
 
 const localize = nls.config()();
 
@@ -37,47 +36,68 @@ export async function activate(context: ExtensionContext) {
         }
     });
 
-    let synchronizer: Synchronizer | undefined;
     context.subscriptions.push( commands.registerCommand("VMS.syncProject", async () => {
         if (configHelper) {
-            if (!synchronizer) {
-                synchronizer = new Synchronizer(debugLogFn);
-                context.subscriptions.push(synchronizer);
-            }
-            if (synchronizer.isInProgress) {
-                window.showInformationMessage("Syncronization in progress");
-            } else {
-                setStopCommand(context, true);
-                synchronizer.syncronizeProject(configHelper.getConfig()).then((result) => {
-                    setStopCommand(context, false);
-                    ToOutputChannel(`Synchronization is done.`);
-                    if (result) {
-                        window.showInformationMessage(`Syncronization: ok`);
-                    } else {
-                        window.showErrorMessage(`Syncronization: some files failed to synchronize, see output`);
+            return SyncProject(context, configHelper.getConfig(), debugLogFn)
+                .catch((err) => {
+                    if (debugLogFn) {
+                        debugLogFn(err);
                     }
+                    return false;
                 });
-            }
         }
+        return false;
     }));
 
     context.subscriptions.push( commands.registerCommand("VMS.buildProject", async () => {
         if (configHelper) {
-            BuildProject(context, configHelper.getConfig(), debugLogFn);
+            const config = configHelper.getConfig();
+            return SyncProject(context, config, debugLogFn)
+                .then((ok) => {
+                    if (ok) {
+                        return BuildProject(context, config, debugLogFn);
+                    } else {
+                        return false;
+                    }
+                }).catch((err) => {
+                    if (debugLogFn) {
+                        debugLogFn(err);
+                    }
+                    return false;
+                });
+        } else {
+            return false;
         }
     }));
 
     context.subscriptions.push( commands.registerCommand("VMS.stopSync", async () => {
-        if (synchronizer) {
-            synchronizer.disableRemote();
-        }
+        return StopSyncProject()
+            .catch((err) => {
+                if (debugLogFn) {
+                    debugLogFn(err);
+                }
+                return false;
+        });
     }));
 
     context.subscriptions.push( commands.registerCommand("VMS.editProject", async () => {
         if (configHelper) {
-            await EnsureSettings(configHelper.getConfig());
-            const editor = configHelper.getEditor();
-            await editor.invoke();
+            return EnsureSettings(configHelper.getConfig())
+                .then((ok) => {
+                    if (ok && configHelper) {
+                        const editor = configHelper.getEditor();
+                        return editor.invoke();
+                    } else {
+                        return false;
+                    }
+                }).catch((err) => {
+                    if (debugLogFn) {
+                        debugLogFn(err);
+                    }
+                    return false;
+                });
+        } else {
+            return false;
         }
     }));
 }

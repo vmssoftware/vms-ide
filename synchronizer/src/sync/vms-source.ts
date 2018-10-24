@@ -2,6 +2,7 @@
 import { ftpPathSeparator } from "../common/find-files";
 import { Lock } from "../common/lock";
 import { LogType } from "../common/log-type";
+import { printLike } from "../common/print-like";
 import { ParseWelcomeVms } from "../stream/parse-welcome-vms";
 import { PromptCatcherVms } from "../stream/prompt-catcher-vms";
 import { SftpClient } from "../stream/sftp-client";
@@ -11,7 +12,9 @@ import { VmsPathConverter } from "../vms/vms-path-converter";
 import { SftpSource } from "./sftp-source";
 
 const cmdGetTimeOffset = `WRITE SYS$OUTPUT F$TRNLNM("SYS$TIMEZONE_DIFFERENTIAL")`;
-const errorResponse = `%SET-E-`;
+const setFileErrorResponse = `%SET-`;
+const setFileFormatSTM = "set file/attribute=RFM:STM ";
+const setFileDates = printLike`set file ${"_"} /attributes=(mod="${"_"}",att="${"_"}")`;
 
 export class VmsSource extends SftpSource {
 
@@ -37,22 +40,44 @@ export class VmsSource extends SftpSource {
             const converter = new VmsPathConverter(filename);
             const siteFileDate = new Date(date.valueOf() + this.timeOffsetInSeconds * 1000);
             const dateString = VmsAbsoluteDateString(siteFileDate);
-            const strCmd = `set file ${converter.fullPath} /attributes=(mod="${dateString}",att="${dateString}")`;
-            let attempts = this.attempts || 3;
-            do {
-                const result = await this.shell.execCmd(strCmd);
-                if (result) {
-                    const error = result.split("\n").map((s) => s.trim()).some((s) => s.startsWith(errorResponse));
-                    if (error && this.debugLog) {
-                        this.debugLog(`set date: ${result}`);
-                    } else {
-                        return true;    // good return here
-                    }
-                } else {
-                    break;
-                }
-            } while (--attempts);
+            const strCmd = setFileDates(converter.fullPath, dateString, dateString);
+            return this.tryExec(strCmd, setFileErrorResponse);
         }
+        return false;
+    }
+
+    /**
+     * Also change file record format when finished
+     * @param filename file
+     */
+    public createWriteStream(filename: string) {
+        const streamPromise = super.createWriteStream(filename);
+        streamPromise.then((stream) => {
+            if (stream) {
+                stream.once("finish", () => {
+                    const converter = new VmsPathConverter(this.root + ftpPathSeparator + filename);
+                    this.tryExec(setFileFormatSTM + converter.fullPath, setFileErrorResponse);
+                });
+            }
+        });
+        return streamPromise;
+    }
+
+    private async tryExec(command: string, errorResponse: string) {
+        let attempts = this.attempts || 3;
+        do {
+            const result = await this.shell.execCmd(command);
+            if (result) {
+                const error = result.split("\n").map((s) => s.trim()).some((s) => s.startsWith(errorResponse));
+                if (error && this.debugLog) {
+                    this.debugLog(`ERROR: ${command} => ${result}`);
+                } else {
+                    return true;    // good return here
+                }
+            } else {
+                break;
+            }
+        } while (--attempts);
         return false;
     }
 

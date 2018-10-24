@@ -22,6 +22,8 @@ export async function EnsureSettings(config: IConfig, debugLog?: LogType) {
         const testSection = await config.get(section.name());
         if (debugLog && typeof section !== typeof testSection) {
             debugLog(`Different types of sections ${section.name()}`);
+            return false;
         }
     }
+    return true;
 }
