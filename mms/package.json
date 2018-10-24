@@ -1,0 +1,26 @@
+{
+    "name": "mms",
+    "displayName": "mms",
+    "description": "mms language",
+    "version": "0.0.1",
+    "publisher": "vorfol",
+    "engines": {
+        "vscode": "^1.28.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "mms",
+            "aliases": ["MMS", "mms"],
+            "extensions": [".mms"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "mms",
+            "scopeName": "source.mms",
+            "path": "./syntaxes/mms.tmLanguage.json"
+        }]
+    }
+}

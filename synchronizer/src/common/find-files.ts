@@ -33,7 +33,12 @@ export async function findFiles(canReadDir: IReadDirectory,
                                 exclude?: string,
                                 debugLog?: LogType) {
     include = include || "*";
-    const options: Options = { basename: true, nocase: true };
+    const options: Options = {
+        basename: true,
+        nocase: true,
+        nodupes: true,
+        unixify: false,
+    };
     const unbraceInclude = micromatch.braces(include);
     const splitInclude = unbraceInclude.reduce(collectSplittedByCommas, []);
     if (exclude) {
@@ -43,11 +48,17 @@ export async function findFiles(canReadDir: IReadDirectory,
     }
     return walk(rootDir);
 
-    function separateFilesAndDirs(acc: ISepFileDir, fileEntry: IFileEntry): ISepFileDir {
+    function separateFilesAndDirsAndMatch(acc: ISepFileDir, fileEntry: IFileEntry): ISepFileDir {
         if (fileEntry.isDirectory) {
-            acc.dirs.push(fileEntry);
+            const list = micromatch([fileEntry.filename], "*", options);
+            if (list.length) {
+                acc.dirs.push(fileEntry);
+            }
         } else if (fileEntry.isFile) {
-            acc.files.push(fileEntry);
+            const list = micromatch([fileEntry.filename], splitInclude, options);
+            if (list.length) {
+                acc.files.push(fileEntry);
+            }
         }
         return acc;
     }
@@ -61,29 +72,12 @@ export async function findFiles(canReadDir: IReadDirectory,
         walkDir = walkDir.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
         const fileEntries = await canReadDir.readDirectory(walkDir);
         if (fileEntries) {
-            const fullNameList = fileEntries.map(addWalkDir);
-            const sep = fullNameList.reduce(separateFilesAndDirs, {files: [], dirs: []});
-            const matchedFiles = micromatch(sep.files.map(onlyFileName), splitInclude, options);
-            // find wich fileEntries were matched. suppose micromatch didn't break entries order
-            const retList: IFileEntry[] = [];
-            let matchedIdx = 0;
-            for (let readIdx = 0; readIdx < fileEntries.length && matchedIdx < matchedFiles.length; ++readIdx) {
-                if (fileEntries[readIdx].filename === matchedFiles[matchedIdx]) {
-                    retList.push(fileEntries[readIdx]);
-                    matchedIdx++;
-                }
+            const separated = fileEntries.map(addWalkDir).reduce(separateFilesAndDirsAndMatch, {files: [], dirs: []});
+            for (const dir of separated.dirs) {
+                const inside = await walk(dir.filename);
+                separated.files.push(...inside);
             }
-            if (debugLog) {
-                if (matchedIdx !== matchedFiles.length) {
-                    debugLog(`fileEntries were reordered`);
-                }
-            }
-            const matchedDirs = micromatch(sep.dirs.map(onlyFileName), "*", options);
-            for (const dir of matchedDirs) {
-                const inside = await walk(dir);
-                retList.push(...inside);
-            }
-            return retList;
+            return separated.files;
         }
         return [];
 
@@ -92,10 +86,6 @@ export async function findFiles(canReadDir: IReadDirectory,
                 fileEntry.filename = walkDir + ftpPathSeparator + fileEntry.filename;
             }
             return fileEntry;
-        }
-
-        function onlyFileName(fileEntry: IFileEntry) {
-            return fileEntry.filename;
         }
     }
 }

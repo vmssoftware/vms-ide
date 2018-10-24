@@ -1,12 +1,8 @@
-export function CrLfTrimmedEq(one: string, two: string): boolean {
+const regexpt = /[\x13\x10]/g;
+
+export function CrLfTrimmedEqIgnoreCase(one: string, two: string): boolean {
     if (one === two) {
         return true;
     }
-
-    const regexpt = /[\x13\x10]/g;
-
-    const oneLinesOnly = one.replace(regexpt, "");
-    const twoLinesOnly = two.replace(regexpt, "");
-
-    return oneLinesOnly === twoLinesOnly;
+    return one.replace(regexpt, "").trim().toUpperCase() === two.replace(regexpt, "").trim().toUpperCase();
 }

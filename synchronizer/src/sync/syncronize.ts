@@ -27,6 +27,35 @@ import { FsSource } from "./fs-source";
 import { ISource } from "./source";
 import { VmsSource } from "./vms-source";
 
+export async function createFile(fileUri: vscode.Uri, content: string) {
+    try {
+        let range: vscode.Range | undefined;
+        try {
+            const textDoc = await vscode.workspace.openTextDocument(fileUri);
+            range = textDoc.validateRange(new vscode.Range(0, 0, 32767, 32767));
+        } catch (err) {
+            range = undefined;
+        }
+        const we = new vscode.WorkspaceEdit();
+        if (!range) {
+            we.createFile(fileUri);
+            we.insert(fileUri, new vscode.Position(0, 0), content);
+        } else {
+            we.replace(fileUri, range, content);
+        }
+        const status = await vscode.workspace.applyEdit(we);
+        if (status) {
+            const textDoc = await vscode.workspace.openTextDocument(fileUri);
+            const saved = await textDoc.save();
+            return saved;
+        } else {
+            return false;
+        }
+    } catch (err) {
+        return false;
+    }
+}
+
 export class Synchronizer {
 
     public get isInProgress(): boolean {
@@ -260,6 +289,7 @@ export class Synchronizer {
                 this.projectSection.source,
                 this.projectSection.resource,
                 this.projectSection.headers,
+                this.projectSection.builders,
             ];
             this.include = includes.join(",");
             this.downloadNewFiles = this.workspaceSection.downloadNewFiles;
@@ -343,22 +373,41 @@ export class Synchronizer {
     }
 
     private async editFile(source: ISource, file: string) {
-        const fake = new FakeWriteStreamCreator(false, this.debugLog);
-        return PipeFile(source, fake, file, file, this.debugLog)
+        const memoryStream = new FakeWriteStreamCreator(false, this.debugLog);
+        let content: string | undefined;
+        let localUri: vscode.Uri | undefined;
+        return PipeFile(source, memoryStream, file, file, this.debugLog)
             .then((ok) => {
-                const content = Buffer.concat(fake.chunks).toString("utf8");
-                if (vscode.workspace.workspaceFolders &&
+                content = Buffer.concat(memoryStream.chunks).toString("utf8");
+                if (ok &&
+                    vscode.workspace.workspaceFolders &&
                     vscode.workspace.workspaceFolders.length > 0) {
-                    const rootUri = vscode.workspace.workspaceFolders[0].uri;
-                    const uri = vscode.Uri.file(path.join(rootUri.fsPath, file));
-                    return vscode.workspace.openTextDocument({content})
-                        .then((doc) => {
+                    const workspaceUri = vscode.workspace.workspaceFolders[0].uri;
+                    localUri = vscode.Uri.file(path.join(workspaceUri.fsPath, file));
+                    return vscode.workspace.openTextDocument(localUri)
+                        .then(async (localDoc) => {
+                            return [localDoc, await vscode.workspace.openTextDocument({content, language: "mms"})];
+                        }).then(([localDoc, remoteDoc]) => {
                             const title = `Remote ${file} <-> Local`;
-                            return vscode.commands.executeCommand("vscode.diff", doc.uri, uri, title, { preview: false });
-                        })
-                        .then(() => true);
+                            return vscode.commands.executeCommand("vscode.diff", remoteDoc.uri, localDoc.uri, title, { preview: false });
+                        }).then(() => true);
+                } else {
+                    return false;
                 }
-                return false;
+            }).catch(() => {
+                if (localUri && content) {
+                    return createFile(localUri, content)
+                        .then((ok) => {
+                            if (ok) {
+                                return vscode.window.showTextDocument(localUri!, { preview: false })
+                                    .then(() => true);
+                            } else {
+                                return false;
+                            }
+                        });
+                } else {
+                    return false;
+                }
             }).catch(() => false);
     }
 }

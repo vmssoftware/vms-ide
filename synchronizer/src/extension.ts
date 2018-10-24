@@ -7,6 +7,7 @@ import { ToOutputChannel } from "./output-channel";
 import { Synchronizer } from "./sync/syncronize";
 
 import * as nls from "vscode-nls";
+import { BuildProject } from "./build";
 import { EnsureSettings } from "./ensure-settings";
 import { setStopCommand } from "./stop";
 
@@ -62,7 +63,7 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push( commands.registerCommand("VMS.buildProject", async () => {
         if (configHelper) {
-            // BuildProject(configHelper);
+            BuildProject(context, configHelper.getConfig(), debugLogFn);
         }
     }));
 

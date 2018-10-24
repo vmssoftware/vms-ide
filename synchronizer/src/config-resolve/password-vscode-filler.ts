@@ -28,7 +28,7 @@ export class PasswordVscodeFiller implements ISettingsFiller {
         await this.lock.acquire();  // to prevent concurrent use of console
         settings.port = settings.port || 22;
         const prompt = `Password for ${settings.username}@${settings.host}:${settings.port} `;
-        settings.password = await window.showInputBox( { password: true, prompt });
+        settings.password = await window.showInputBox( { password: true, prompt, ignoreFocusOut: true });
         this.lock.release();
         return settings.password !== undefined;
     }
