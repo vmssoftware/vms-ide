@@ -5,7 +5,7 @@ import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext,
 
 import { ftpPathSeparator } from "./common/find-files";
 import { LogType } from "./common/log-type";
-import { parseOutput } from "./common/parse-output";
+import { parseCxxOutput } from "./common/parse-output";
 import { printLike } from "./common/print-like";
 import { ConnectConfigResolverImpl } from "./config-resolve/connect-config-resolver-impl";
 import { PasswordVscodeFiller } from "./config-resolve/password-vscode-filler";
@@ -61,7 +61,7 @@ export async function parseProblems(output: string) {
         cwd = shellRootConverter.initial + projectRoot + ftpPathSeparator;
         cwd = cwd.toUpperCase();
     }
-    const result = parseOutput(output);
+    const result = parseCxxOutput(output);
     if (!collection) {
         collection = languages.createDiagnosticCollection("open-vms.build");
     }

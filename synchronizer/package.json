@@ -23,7 +23,15 @@
             "commandPalette": [
                 {
                     "command": "VMS.stopSync",
-                    "when": "open-vms.stopSync:enabled"
+                    "when": "open-vms.isSync"
+                },
+                {
+                    "command": "VMS.buildProject",
+                    "when": "!open-vms.isSync && !open-vms.isBuld"
+                },
+                {
+                    "command": "VMS.syncProject",
+                    "when": "!open-vms.isSync && !open-vms.isBuld"
                 }
             ]
         },
@@ -52,11 +60,6 @@
         "configuration": {
             "title": "%configuration.title%",
             "properties": {
-                "open-vms.common.stopSyncEnable": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "%properties.common.stopSyncEnable.description%"
-                },
                 "open-vms.connection.host": {
                     "type": "string",
                     "default": "host",

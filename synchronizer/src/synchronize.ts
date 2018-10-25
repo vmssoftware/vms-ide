@@ -2,7 +2,6 @@ import { ExtensionContext, window, workspace } from "vscode";
 import { LogType } from "./common/log-type";
 import { IConfig } from "./config/config";
 import { ToOutputChannel } from "./output-channel";
-import { setStopCommand } from "./stop";
 import { Synchronizer } from "./sync/syncronizer";
 
 let synchronizer: Synchronizer | undefined;
@@ -27,10 +26,8 @@ export async function SyncProject(context: ExtensionContext, config: IConfig, de
                 window.showInformationMessage("Syncronization in progress");
                 return false;
             } else {
-                setStopCommand(true);
                 return synchronizer.syncronizeProject(config)
                     .then((result) => {
-                        setStopCommand(false);
                         if (result) {
                             window.showInformationMessage(`Syncronization: ok`);
                             ToOutputChannel(`Synchronization is done.`);

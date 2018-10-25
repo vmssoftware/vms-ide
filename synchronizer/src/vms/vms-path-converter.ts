@@ -31,10 +31,10 @@ export class VmsPathConverter {
             converter.vmsDir = match[3] || "";
             converter.vmsFile = match[10] || "";
             if (match[4]) {
-                if (match[5]) {
+                if (!match[5]) {
                     converter.fsPath = ftpPathSeparator;
                 }
-                converter.fsPath += match[4].split(".").join(ftpPathSeparator);
+                converter.fsPath += match[4].split(".").filter((s) => !!s).join(ftpPathSeparator);
                 converter.fsPath += ftpPathSeparator + converter.vmsFile;
             }
         }

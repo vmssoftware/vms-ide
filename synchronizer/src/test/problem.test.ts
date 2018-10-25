@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import { LogType } from "../common/log-type";
-import { parseOutput } from "../common/parse-output";
+import { parseCxxOutput } from "../common/parse-output";
+import { VmsPathConverter } from "../vms/vms-path-converter";
 
 suite("Source tests", function(this: Mocha.Suite) {
 
@@ -23,7 +24,9 @@ at line number 9 in file WORK:[VORFOLOMEEV.WORK]main.cpp;6
 
 `;
     test("Test p1", async () => {
-        const result = parseOutput(output);
+        const c1 = VmsPathConverter.fromVms("[.a.b]c.d");
+        const c2 = VmsPathConverter.fromVms("[a.b]c.d");
+        const result = parseCxxOutput(output);
         if (debugLogFn) {
             debugLogFn(result);
         }

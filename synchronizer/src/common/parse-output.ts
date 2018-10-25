@@ -15,7 +15,7 @@ interface IDiagnostics {
 
 type IPartialDiagnostics = Partial<IDiagnostics>;
 
-export function parseOutput(output: string) {
+export function parseCxxOutput(output: string) {
     const lines = output.split("\n").map((s) => s.trimRight());
     const result = lines.reduce((problems, line, idx) => {
         const matched = line.match(cxxMsg);
@@ -37,15 +37,22 @@ export function parseOutput(output: string) {
                     diagnostic.pos = prevMathed[0].length;
                 }
             }
-            if (idx + 1 < lines.length) {
-                const nextLine = lines[idx + 1];
+            let nextLineIdx = idx + 1;
+            while (nextLineIdx < lines.length) {
+                const nextLine = lines[nextLineIdx];
                 const nextLineMathed = nextLine.match(cxxPlace);
                 if (nextLineMathed) {
                     diagnostic.line = parseInt(nextLineMathed[1], 10);
                     diagnostic.file = nextLineMathed[2];
                     const converter = VmsPathConverter.fromVms(diagnostic.file);
                     diagnostic.file = converter.initial;
+                    break;
                 }
+                if (nextLine.startsWith("%")) { // another error line
+                    break;
+                }
+                diagnostic.message += " " + nextLine.trim();
+                ++nextLineIdx;
             }
             problems.push(diagnostic);
         }

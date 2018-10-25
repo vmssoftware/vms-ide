@@ -8,11 +8,10 @@ TARGET_NAME = project
 ! Debug or Release
 .IF DEBUG
 OUT_DIR = .$(OUT_NAME).debug
-CFLAGS = /DEBUG/NOOP/NOUSING_STD
+CFLAGS = /DEBUG/NOOP/LIST=$(MMS$TARGET_NAME)
 LINKFLAGS = /DEBUG/MAP=$(MMS$TARGET_NAME)
 .ELSE
 OUT_DIR = .$(OUT_NAME).release
-CFLAGS = /NOUSING_STD
 .ENDIF
 
 ! Object directory
@@ -23,11 +22,11 @@ OBJ_DIR = $(OUT_DIR).obj
 
 .CPP.OBJ
     pipe create/dir $(DIR $(MMS$TARGET)) | copy sys$input nl:
-    $(CXX) $(CFLAGS) $(MMS$SOURCE) /OBJECT=$(MMS$TARGET) /LIST=$(MMS$TARGET_NAME)
+    $(CXX) $(CFLAGS) $(MMS$SOURCE) /OBJECT=$(MMS$TARGET) 
 
 .C.OBJ
     pipe create/dir $(DIR $(MMS$TARGET)) | copy sys$input nl:
-    $(CXX) $(CFLAGS) $(MMS$SOURCE) /OBJECT=$(MMS$TARGET) /LIST=$(MMS$TARGET_NAME)
+    $(CXX) $(CFLAGS) $(MMS$SOURCE) /OBJECT=$(MMS$TARGET)
 
 .OBJ.EXE
     pipe create/dir $(DIR $(MMS$TARGET)) | copy sys$input nl:

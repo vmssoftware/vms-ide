@@ -1,9 +1,14 @@
 import { commands } from "vscode";
 
 export enum CommandContext {
-    stopEnabled = "open-vms.stopSync:enabled",
+    isSyncronizing = "open-vms.isSync",
+    isBuilding = "open-vms.isBuild",
 }
 
-export function setStopCommand(enable: boolean) {
-    commands.executeCommand("setContext", CommandContext.stopEnabled, enable);
+export function setSynchronizing(state: boolean) {
+    commands.executeCommand("setContext", CommandContext.isSyncronizing, state);
+}
+
+export function setBuilding(state: boolean) {
+    commands.executeCommand("setContext", CommandContext.isBuilding, state);
 }

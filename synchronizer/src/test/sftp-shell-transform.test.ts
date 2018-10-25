@@ -90,6 +90,7 @@ suite("Shell transform tests", function(this: Mocha.Suite) {
                     debugLogFn(`${content}`);
                 }
                 if (content.includes(myExit)) {
+                    user.push("logout");
                     setImmediate(() => user.end());
                 }
                 callback();

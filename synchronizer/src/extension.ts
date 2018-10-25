@@ -1,5 +1,5 @@
 
-import { commands, ExtensionContext, window, workspace } from "vscode";
+import { commands, ExtensionContext, TreeItem, window, workspace } from "vscode";
 import { LogType } from "./common/log-type";
 import { IConfigHelper } from "./config/config";
 import { GetConfigHelperFromApi } from "./config/get-config-helper";
@@ -7,6 +7,8 @@ import { GetConfigHelperFromApi } from "./config/get-config-helper";
 import * as nls from "vscode-nls";
 import { BuildProject } from "./build";
 import { EnsureSettings } from "./ensure-settings";
+import { ToOutputChannel } from "./output-channel";
+import { setBuilding, setSynchronizing } from "./stop";
 import { StopSyncProject, SyncProject } from "./synchronize";
 
 const localize = nls.config()();
@@ -36,12 +38,19 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push( commands.registerCommand("VMS.syncProject", async () => {
         if (configHelper) {
+            setSynchronizing(true);
+            const msg = window.setStatusBarMessage("Synchronizing...");
             return SyncProject(context, configHelper.getConfig(), debugLogFn)
                 .catch((err) => {
+                    setSynchronizing(false);
                     if (debugLogFn) {
                         debugLogFn(err);
                     }
                     return false;
+                }).then((result) => {
+                    msg.dispose();
+                    setSynchronizing(false);
+                    return result;
                 });
         }
         return false;
@@ -50,10 +59,25 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("VMS.buildProject", async () => {
         if (configHelper) {
             const config = configHelper.getConfig();
+            setBuilding(true);
+            setSynchronizing(true);
+            let msg = window.setStatusBarMessage("Synchronizing...");
             return SyncProject(context, config, debugLogFn)
                 .then((ok) => {
+                    msg.dispose();
                     if (ok) {
-                        return BuildProject(context, config, debugLogFn);
+                        msg = window.setStatusBarMessage("Building...");
+                        return BuildProject(context, config, debugLogFn)
+                            .then((result) => {
+                                if (result) {
+                                    window.showInformationMessage(`Build operation is done`);
+                                    ToOutputChannel(`Build operation is done.`);
+                                } else {
+                                    window.showErrorMessage(`Build operation is failed`);
+                                    ToOutputChannel(`Build operation is failed.`);
+                                }
+                                return result;
+                            });
                     } else {
                         return false;
                     }
@@ -62,6 +86,11 @@ export async function activate(context: ExtensionContext) {
                         debugLogFn(err);
                     }
                     return false;
+                }).then((result) => {
+                    msg.dispose();
+                    setSynchronizing(false);
+                    setBuilding(false);
+                    return result;
                 });
         } else {
             return false;
@@ -101,7 +130,6 @@ export async function activate(context: ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-// tslint:disable-next-line:no-empty
 export function deactivate() {
     if (debugLogFn) {
         debugLogFn(localize("extension.deactivated", "OpenVMS extension is deactivated"));
