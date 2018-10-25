@@ -13,7 +13,7 @@ export class ParseWelcomeVms implements IWelcomeParser {
             then:   "\x1B[?62;1c",
         }, {
             if:     Buffer.from([27, 91, 50, 53, 53, 59, 50, 53, 53, 72]),
-            then:   "\x1B[24;80R",
+            then:   "\x1B[24;200R",
         },
     ];
 

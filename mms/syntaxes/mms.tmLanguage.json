@@ -6,15 +6,49 @@
 			"include": "#keywords"
 		},
 		{
+			"include": "#comments"
+		},
+		{
+			"include": "#macros"
+		},
+		{
 			"include": "#strings"
 		}
 	],
 	"repository": {
 		"keywords": {
-			"patterns": [{
-				"name": "keyword.control.mms",
-				"match": "\\b(DEPENDS_ON)\\b"
-			}]
+			"patterns": [
+				{
+					"name": "keyword.control.mms",
+					"match": "(?i)\\bDEPENDS_ON\\b|\\.IF|\\.ELSE|\\.ENDIF|\\.SUFFIXES"
+				}
+			]
+		},
+		"macros": {
+			"patterns": [
+				{
+					"match": "^\\s*(\\S*)\\s*=",
+					"captures": {
+						"1": {
+							"name": "entity.name.class"
+						}
+					}
+				},
+				{
+					"match": "(\\$\\()(\\S*)(\\))",
+					"captures": {
+						"1": {
+							"name": "constant.regexp"
+						},
+						"2": {
+							"name": "entity.name.class"
+						},
+						"3": {
+							"name": "constant.regexp"
+						}
+					}
+				}
+			]
 		},
 		"strings": {
 			"name": "string.quoted.double.mms",
@@ -24,6 +58,20 @@
 				{
 					"name": "constant.character.escape.mms",
 					"match": "\\\\."
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"name": "comment.line.mms",
+					"begin": "!",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.mms"
+						}
+					},
+					"end": "(?=$)"
 				}
 			]
 		}

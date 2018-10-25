@@ -72,9 +72,9 @@ export class Synchronizer {
     private localSource?: ISource;
     private include?: string;
     private exclude?: string;
-    private connectionSection?: IConfigData;
-    private projectSection?: IConfigData;
-    private workspaceSection?: IConfigData;
+    private connectionSection?: IConfigSection;
+    private projectSection?: IConfigSection;
+    private workspaceSection?: IConfigSection;
     private downloadNewFiles: DownloadAction = "edit";
     private onDidLoad?: vscode.Disposable;
 
@@ -257,15 +257,11 @@ export class Synchronizer {
                    [config.get(ConnectionSection.section),
                     config.get(ProjectSection.section),
                     config.get(WorkspaceSection.section)]);
-        // get current values
-        const connectionSectionData = connectionSection ? connectionSection.store() : undefined;
-        const projectSectionData = projectSection ? projectSection.store() : undefined;
-        const workspaceSectionData = workspaceSection ? workspaceSection.store() : undefined;
         // test if different connection configuraion
-        let recreateRemote = !isSimplyEq(this.connectionSection, connectionSectionData);
+        let recreateRemote = !isSimplyEq(this.connectionSection, connectionSection);
         // test if the user won't keep them alive
-        if (WorkspaceSection.is(workspaceSectionData)) {
-            if (!workspaceSectionData.keepAlive) {
+        if (WorkspaceSection.is(workspaceSection)) {
+            if (!workspaceSection.keepAlive) {
                 recreateRemote = true;
                 // test configuration watchers and delete if exist
                 if (this.onDidLoad) {
@@ -277,9 +273,9 @@ export class Synchronizer {
             this.dispose();
         }
         // store current values
-        this.connectionSection = connectionSectionData;
-        this.projectSection = projectSectionData;
-        this.workspaceSection = workspaceSectionData;
+        this.connectionSection = connectionSection;
+        this.projectSection = projectSection;
+        this.workspaceSection = workspaceSection;
         // check if all are ready to create variables
         if (ConnectionSection.is(this.connectionSection) &&
             ProjectSection.is(this.projectSection) &&

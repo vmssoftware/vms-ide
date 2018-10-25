@@ -1,31 +1,12 @@
 import { ftpPathSeparator } from "../common/find-files";
 
+const splitter = new RegExp(ftpPathSeparator, "g");
+const vmsPathRgx = /((\w+):)?(\[((\.)?(\w+)(\.(\w+))*)\])?(((\w+)(\.(\w+)?))?(;(\d+))?)?/;
 /**
  * Uses path.sep to determine directory.
  * Do not use other path functions because it incorrect parses path without file (directory only, ends with path.sep)
  */
 export class VmsPathConverter {
-    private vmsDir: string = "";
-    private vmsFile: string = "";
-    private readonly splitter = new RegExp(ftpPathSeparator, "g");
-
-    constructor(private fsPath?: string) {
-        if (fsPath) {
-            const dirEnd = fsPath.lastIndexOf(ftpPathSeparator);
-            if (dirEnd === -1) {
-                this.vmsFile = fsPath;
-            } else {
-                this.vmsFile = fsPath.slice(dirEnd + 1);
-                this.vmsDir = fsPath.slice(0, dirEnd);
-                this.vmsDir = this.vmsDir.replace(this.splitter, ".");
-                this.vmsDir = "[." + this.vmsDir + "]";
-            }
-        }
-    }
-
-    public from(relPath: string): VmsPathConverter {
-        return new VmsPathConverter(relPath);
-    }
 
     public get fullPath(): string {
         return this.vmsDir + this.vmsFile;
@@ -41,5 +22,41 @@ export class VmsPathConverter {
 
     public get initial(): string {
         return this.fsPath || "";
+    }
+
+    public static fromVms(relPath: string): VmsPathConverter {
+        const converter = new VmsPathConverter();
+        const match = relPath.match(vmsPathRgx);
+        if (match) {
+            converter.vmsDir = match[3] || "";
+            converter.vmsFile = match[10] || "";
+            if (match[4]) {
+                if (match[5]) {
+                    converter.fsPath = ftpPathSeparator;
+                }
+                converter.fsPath += match[4].split(".").join(ftpPathSeparator);
+                converter.fsPath += ftpPathSeparator + converter.vmsFile;
+            }
+        }
+        return converter;
+    }
+
+    private vmsDir: string = "";
+    private vmsFile: string = "";
+
+    constructor(private fsPath?: string) {
+        if (fsPath) {
+            const dirEnd = fsPath.lastIndexOf(ftpPathSeparator);
+            if (dirEnd === -1) {
+                this.vmsFile = fsPath;
+            } else {
+                this.vmsFile = fsPath.slice(dirEnd + 1);
+                this.vmsDir = fsPath.slice(0, dirEnd);
+                this.vmsDir = this.vmsDir.replace(splitter, ".");
+                this.vmsDir = "[." + this.vmsDir + "]";
+            }
+        } else {
+            this.fsPath = "";
+        }
     }
 }

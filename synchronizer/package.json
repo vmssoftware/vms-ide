@@ -2,7 +2,7 @@
     "name": "vms",
     "displayName": "VMS",
     "description": "",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "publisher": "vorfol",
     "engines": {
         "vscode": "^1.28.0"
@@ -23,7 +23,7 @@
             "commandPalette": [
                 {
                     "command": "VMS.stopSync",
-                    "when": "config.open-vms.common.stopSyncEnable"
+                    "when": "open-vms.stopSync:enabled"
                 }
             ]
         },

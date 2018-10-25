@@ -1,5 +1,5 @@
 ! MMS - run with /EXTENDED_SYNTAX qualifier
-! .SILENT
+.SILENT
 
 ! Project constants
 OUT_NAME = out
@@ -8,10 +8,11 @@ TARGET_NAME = project
 ! Debug or Release
 .IF DEBUG
 OUT_DIR = .$(OUT_NAME).debug
-CFLAGS = /DEBUG/LIST/NOOP
-LINKFLAGS = /MAP/DEBUG
+CFLAGS = /DEBUG/NOOP/NOUSING_STD
+LINKFLAGS = /DEBUG/MAP=$(MMS$TARGET_NAME)
 .ELSE
 OUT_DIR = .$(OUT_NAME).release
+CFLAGS = /NOUSING_STD
 .ENDIF
 
 ! Object directory
@@ -21,15 +22,15 @@ OBJ_DIR = $(OUT_DIR).obj
 .SUFFIXES .EXE .OBJ .CPP .C
 
 .CPP.OBJ
-    create/dir $(DIR $(MMS$TARGET))
-    $(CXX) $(CFLAGS) $(MMS$SOURCE) /OBJECT=$(MMS$TARGET)
+    pipe create/dir $(DIR $(MMS$TARGET)) | copy sys$input nl:
+    $(CXX) $(CFLAGS) $(MMS$SOURCE) /OBJECT=$(MMS$TARGET) /LIST=$(MMS$TARGET_NAME)
 
 .C.OBJ
-    create/dir $(DIR $(MMS$TARGET))
-    $(CXX) $(CFLAGS) $(MMS$SOURCE) /OBJECT=$(MMS$TARGET)
+    pipe create/dir $(DIR $(MMS$TARGET)) | copy sys$input nl:
+    $(CXX) $(CFLAGS) $(MMS$SOURCE) /OBJECT=$(MMS$TARGET) /LIST=$(MMS$TARGET_NAME)
 
 .OBJ.EXE
-    create/dir $(DIR $(MMS$TARGET))
+    pipe create/dir $(DIR $(MMS$TARGET)) | copy sys$input nl:
     $(LINK) $(LINKFLAGS) $(MMS$SOURCE_LIST) /EXECUTABLE=$(MMS$TARGET)
 
 [$(OUT_DIR)]main.exe DEPENDS_ON [$(OBJ_DIR)]main.obj, [$(OBJ_DIR)]increment.obj
@@ -37,4 +38,4 @@ OBJ_DIR = $(OUT_DIR).obj
 [$(OBJ_DIR)]increment.obj DEPENDS_ON increment.cpp, [.include]increment.h
 
 CLEAN :
-    del/tree [$(OUT_DIR)...]*.*;*
+    pipe del/tree [$(OUT_DIR)...]*.*;* | copy sys$input nl:

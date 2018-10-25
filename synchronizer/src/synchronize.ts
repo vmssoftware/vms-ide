@@ -27,10 +27,10 @@ export async function SyncProject(context: ExtensionContext, config: IConfig, de
                 window.showInformationMessage("Syncronization in progress");
                 return false;
             } else {
-                setStopCommand(context, true);
+                setStopCommand(true);
                 return synchronizer.syncronizeProject(config)
                     .then((result) => {
-                        setStopCommand(context, false);
+                        setStopCommand(false);
                         if (result) {
                             window.showInformationMessage(`Syncronization: ok`);
                             ToOutputChannel(`Synchronization is done.`);

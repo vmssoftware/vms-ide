@@ -7,7 +7,6 @@ import { GetConfigHelperFromApi } from "./config/get-config-helper";
 import * as nls from "vscode-nls";
 import { BuildProject } from "./build";
 import { EnsureSettings } from "./ensure-settings";
-import { setStopCommand } from "./stop";
 import { StopSyncProject, SyncProject } from "./synchronize";
 
 const localize = nls.config()();
@@ -22,7 +21,6 @@ let contextSaved: ExtensionContext | undefined;
 export async function activate(context: ExtensionContext) {
 
     contextSaved = context;
-    setStopCommand(context, false);
 
     if (debugLogFn) {
         debugLogFn(localize("extension.activated", "OpenVMS extension is activated"));
@@ -105,9 +103,6 @@ export async function activate(context: ExtensionContext) {
 // this method is called when your extension is deactivated
 // tslint:disable-next-line:no-empty
 export function deactivate() {
-    if (contextSaved) {
-        setStopCommand(contextSaved, false);
-    }
     if (debugLogFn) {
         debugLogFn(localize("extension.deactivated", "OpenVMS extension is deactivated"));
     }
