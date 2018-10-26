@@ -3,7 +3,7 @@
   "displayName": "VMS: config-helper",
   "version": "0.1.6",
   "description": "Config helper",
-  "publisher": "vorfol",
+  "publisher": "vmssoftware",
   "engines": {
     "vscode": "^1.27.0"
   },

@@ -24,9 +24,15 @@ import { VmsPathConverter } from "./vms/vms-path-converter";
 const createNewMmsString = "Create new MMS";  // TODO: localize
 const fsReadFile = util.promisify(fs.readFile);
 const defMmsFileName = "res/default.mms";
-const mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_"}`; // when add this: /MACRO="DEBUG=1" ?
+const mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"default.mms"}` +
+                        `/MACRO=(` +
+                        `"DEBUG=${"1 or empty"}",` +
+                        `"INCLUDES=${"include files comma-separated list"}",` +
+                        `"SOURCES=${"source files comma-separated list"}",` +
+                        `"OUT_NAME=${"executable name without extension"}")`;
 const mmsExt = ".mms";
 const comExt = ".com";
+const defRange = new Range(0, 0, 0, 0);
 
 let projectRoot: string | undefined;
 let shellRootConverter: VmsPathConverter | undefined;
@@ -67,12 +73,13 @@ export async function parseProblems(output: string) {
     }
     collection.clear();
     for (const entry of result) {
-        if (entry.file &&
-            entry.line &&
-            entry.pos &&
-            entry.message) {
-            const range = new Range(entry.line - 1, entry.pos - 1, entry.line - 1, entry.pos);
-            const diagnostic = new Diagnostic(range, entry.message);
+        if (entry.message) {
+            const diagnostic = new Diagnostic(defRange, entry.message);
+            if (entry.file &&
+                entry.line &&
+                entry.pos) {
+                diagnostic.range = new Range(entry.line - 1, entry.pos - 1, entry.line - 1, entry.pos);
+            }
             switch (entry.severity) {
                 case "error":
                     diagnostic.severity = DiagnosticSeverity.Error;
@@ -82,10 +89,13 @@ export async function parseProblems(output: string) {
                     diagnostic.severity = DiagnosticSeverity.Information;
                     break;
             }
-            if (cwd && entry.file.toUpperCase().startsWith(cwd)) {
-                entry.file = entry.file.slice(cwd.length);
+            let uri = workspace.workspaceFolders![0].uri;
+            if (entry.file) {
+                if (cwd && entry.file.toUpperCase().startsWith(cwd)) {
+                    entry.file = entry.file.slice(cwd.length);
+                }
+                uri = Uri.file(path.join(workspace.workspaceFolders![0].uri.fsPath, entry.file));
             }
-            const uri = Uri.file(path.join(workspace.workspaceFolders![0].uri.fsPath, entry.file));
             let diagArr = collection.get(uri);
             diagArr = diagArr || [] as Diagnostic[];
             diagArr.push(diagnostic);
@@ -108,7 +118,7 @@ export async function runRemoteBuild(config: IConfig, file: string, debugLog?: L
         await shell.execCmd(cd);    // TODO: check response errors
         // decide how to run
         if (file.toLowerCase().endsWith(mmsExt)) {
-            command = mmsCmd(converter.file);
+            // command = mmsCmd(converter.file, "1", );  // debug = 1
         } else if (file.toLowerCase().endsWith(comExt)) {
             command = "@" + converter.file;
         } else {

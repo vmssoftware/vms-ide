@@ -1,40 +1,65 @@
 ! MMS - run with /EXTENDED_SYNTAX qualifier
-.SILENT
+! .SILENT
+.DEFAULT 
+    ! action: $(MMS$SOURCE) to $(MMS$TARGET) 
 
 ! Project constants
-OUT_NAME = out
-TARGET_NAME = project
+OUTDIR = out
+NAME = project
 
 ! Debug or Release
 .IF DEBUG
-OUT_DIR = .$(OUT_NAME).debug
-CFLAGS = /DEBUG/NOOP/LIST=$(MMS$TARGET_NAME)
-LINKFLAGS = /DEBUG/MAP=$(MMS$TARGET_NAME)
+OUT_DIR = .$(OUTDIR).debug
+CXXFLAGS = /DEBUG/NOOP/LIST=$(MMS$TARGET_NAME)/OBJECT=$(MMS$TARGET) 
+CCFLAGS = /DEBUG/NOOP/LIST=$(MMS$TARGET_NAME)/OBJECT=$(MMS$TARGET) 
+LINKFLAGS = /DEBUG/MAP=$(MMS$TARGET_NAME)/EXECUTABLE=$(MMS$TARGET)
 .ELSE
-OUT_DIR = .$(OUT_NAME).release
+OUT_DIR = .$(OUTDIR).release
+CXXFLAGS = /OBJECT=$(MMS$TARGET) 
+CCFLAGS = /OBJECT=$(MMS$TARGET) 
+LINKFLAGS = /EXECUTABLE=$(MMS$TARGET)
 .ENDIF
 
 ! Object directory
 OBJ_DIR = $(OUT_DIR).obj
 
+! Files
+INCLUDES =  - 
+    , [.include]increment.h -
+    , [.include]decrement.h
+
+SOURCES = -
+    , main.cpp -
+    , increment.cpp -
+    , decrement.c
+
+OBJECTS = -
+    , [$(OBJ_DIR)]main.obj -
+    , [$(OBJ_DIR)]increment.obj -
+    , [$(OBJ_DIR)]decrement.obj
+
 .SUFFIXES
 .SUFFIXES .EXE .OBJ .CPP .C
 
 .CPP.OBJ
-    pipe create/dir $(DIR $(MMS$TARGET)) | copy sys$input nl:
-    $(CXX) $(CFLAGS) $(MMS$SOURCE) /OBJECT=$(MMS$TARGET) 
+    $(CXX) $(CXXFLAGS) $(MMS$SOURCE)
 
 .C.OBJ
-    pipe create/dir $(DIR $(MMS$TARGET)) | copy sys$input nl:
-    $(CXX) $(CFLAGS) $(MMS$SOURCE) /OBJECT=$(MMS$TARGET)
+    $(CC) $(CCFLAGS) $(MMS$SOURCE)
 
-.OBJ.EXE
-    pipe create/dir $(DIR $(MMS$TARGET)) | copy sys$input nl:
-    $(LINK) $(LINKFLAGS) $(MMS$SOURCE_LIST) /EXECUTABLE=$(MMS$TARGET)
+[$(OUT_DIR)]$(NAME).exe DEPENDS_ON $(OBJECTS)
+    $(LINK) $(LINKFLAGS) $(MMS$SOURCE_LIST)
 
-[$(OUT_DIR)]main.exe DEPENDS_ON [$(OBJ_DIR)]main.obj, [$(OBJ_DIR)]increment.obj
-[$(OBJ_DIR)]main.obj DEPENDS_ON main.cpp, [.include]increment.h
-[$(OBJ_DIR)]increment.obj DEPENDS_ON increment.cpp, [.include]increment.h
+$(OBJECTS) DEPENDS_ON $(SOURCES) $(INCLUDES)
 
 CLEAN :
-    pipe del/tree [$(OUT_DIR)...]*.*;* | copy sys$input nl:
+    @ FILE = F$SEARCH("[$(OUT_DIR)]*.*")
+    @ IF FILE .NES. "" THEN - 
+        del/tree [$(OUT_DIR)...]*.*;*
+
+.FIRST
+    @ VAR = "$(MMS$TARGET)"
+    @ IF VAR .NES. "CLEAN" THEN - 
+        VAR = F$SEARCH("[$(OUT_DIR)]obj.dir")
+    @ IF VAR .EQS. "" THEN  - 
+        create/dir [$(OBJ_DIR)]

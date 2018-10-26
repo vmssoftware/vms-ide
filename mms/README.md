@@ -1,5 +1,5 @@
 # mms README
 
-The extension "mms" provides VMS MMS file suppert.
+The extension "mms" provides the VMS MMS language support.
 
 -----------------------------------------------------------------------------------------------------------
