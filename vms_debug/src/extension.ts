@@ -44,8 +44,8 @@ export function activate(context: vscode.ExtensionContext)
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.compile', () =>
 	{
 		let osCmd = new OsCommands();
-		shell.SendCommandToQueue(osCmd.cleanMMS("comp.mms"));
-		shell.SendCommandToQueue(osCmd.runMMS("comp.mms"));
+		shell.SendCommandToQueue(osCmd.cleanMMS("[.demos]comp.mms"));
+		shell.SendCommandToQueue(osCmd.runMMS("[.demos]comp.mms"));
 
 		const message = localize('extention.compile', "Compile program");
 		vscode.window.showInformationMessage(message);
@@ -61,7 +61,7 @@ export function activate(context: vscode.ExtensionContext)
 
 			if (value)
 			{
-				shell.SendCommandToQueue(osCmd.runProgram(value));
+				shell.SendCommandToQueue(osCmd.runProgram("[.demos]" + value));
 				const message = localize('extention.run', "Run program");
 				vscode.window.showInformationMessage(message);
 			}
@@ -130,8 +130,7 @@ let DataCb = function(data: string, mode: ModeWork) : void
 
 let ReadyCb = function() : void
 {
-	shell.SendCommandToQueue("cd [.demos]");
-	console.log("ready");
+	//console.log("ready");
 
 	serverIsConnect = true;
 

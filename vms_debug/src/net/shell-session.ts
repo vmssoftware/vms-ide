@@ -2,7 +2,7 @@ import {ToOutputChannel} from '../io/output-channel';
 import { SSHClient } from './ssh-client';
 import { Client, ClientChannel, SFTPWrapper, ClientErrorExtensions } from 'ssh2';
 import { Queue } from '../queue/queues';
-import { DebugCmdVMS } from '../command/debug_commands';
+import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
 
 export enum ModeWork
 {
@@ -21,9 +21,9 @@ export class ShellSession
     private resultData : string;
     private funcData : Function;
     private funcReady : Function;
-    private queueCmd = new Queue<string>();
+    private queueCmd = new Queue<CommandMessage>();
     private readyCmd : boolean;
-    private currentCmd : string;
+    private currentCmd : CommandMessage;
     private stepSetupTerminal : number;
 
 
@@ -34,9 +34,9 @@ export class ShellSession
         this.funcData = DataCb;
         this.funcReady = ReadyCb;
         this.readyCmd = false;
-        this.currentCmd = "";
         this.mode = ModeWork.shell;
         this.stepSetupTerminal = 0;
+        this.currentCmd = new CommandMessage("", "");
 
         this.ShellInitialise();
     }
@@ -100,8 +100,7 @@ export class ShellSession
                         break;
 
                     case 2:
-                        this.stepSetupTerminal++;
-                        //this.stream.write("\x1B[0;0R");//answer on <esc>[62"p<esc> F
+                        this.stepSetupTerminal++;//<esc>[62"p<esc> F
                         break;
 
                     case 3:
@@ -114,7 +113,7 @@ export class ShellSession
                 }
             }
         }
-        else if(data.includes(this.enterCmd) || data.includes("DBG> "))
+        else if(data.includes("\x00") && (data.includes(this.enterCmd) || data.includes("DBG> ")))
         {
             if(data.includes("DBG> "))
             {
@@ -146,11 +145,12 @@ export class ShellSession
         else
         {
             this.resultData += data;
+            let cmd = this.currentCmd.getBody();
 
-            if(this.currentCmd.includes(DebugCmdVMS.dbgGo) ||
-                this.currentCmd.includes(DebugCmdVMS.dbgStep) ||
-                this.currentCmd.includes(DebugCmdVMS.dbgStepIn) ||
-                this.currentCmd.includes(DebugCmdVMS.dbgStepReturn))
+            if(cmd.includes(DebugCmdVMS.dbgGo) ||
+                cmd.includes(DebugCmdVMS.dbgStep) ||
+                cmd.includes(DebugCmdVMS.dbgStepIn) ||
+                cmd.includes(DebugCmdVMS.dbgStepReturn))
             {
                 if(this.resultData !== "")
                 {
@@ -183,25 +183,25 @@ export class ShellSession
         }
     }
 
-    public getCurrentCommand() : string
+    public getCurrentCommand() : CommandMessage
     {
         return this.currentCmd;
     }
 
-    public SendCommand(command : string) : boolean
+    public SendCommand(command : CommandMessage) : boolean
     {
         let result = false;
 
         if(this.stream)
         {
             this.currentCmd = command;
-            result = this.stream.write(command + '\r\n');
+            result = this.stream.write(command.getCommand() + '\r\n');
         }
 
         return result;
     }
 
-    public SendCommandToQueue(command : string) : void
+    public SendCommandToQueue(command : CommandMessage) : void
     {
         if(this.readyCmd === true)
         {
@@ -210,7 +210,7 @@ export class ShellSession
                 let result : boolean;
 
                 this.currentCmd = command;
-                result = this.stream.write(command + '\r\n');
+                result = this.stream.write(command.getCommand() + '\r\n');
 
                 if(!result)
                 {

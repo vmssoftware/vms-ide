@@ -177,7 +177,7 @@ export class VMSDebugSession extends LoggingDebugSession
 
 		// start the program in the runtime
 		//this._runtime.start(args.program, !!args.stopOnEntry);
-		this._runtime.start("hello", "c");
+		this._runtime.start("[.demos]hello", "c");
 
 		this.sendResponse(response);
 	}

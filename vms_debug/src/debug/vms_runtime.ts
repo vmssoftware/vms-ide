@@ -76,7 +76,7 @@ export class VMSRuntime extends EventEmitter
 		this.buttonPressd = DebugButtonEvent.btnNoEvent;
 		this.osCmd = new OsCommands();
 		this.dbgCmd = new DebugCommands();
-		this.dbgParser = new DebugParser(this.dbgCmd);
+		this.dbgParser = new DebugParser();
 		this.debugRun = false;
 	}
 
@@ -93,7 +93,11 @@ export class VMSRuntime extends EventEmitter
 
 		//run debuger
 		this.shell.SendCommandToQueue(this.osCmd.runDebug());
-		//this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
+		this.shell.SendCommandToQueue(this.dbgCmd.setDisplay("dbge", "q1", "output"));
+		this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("error", "dbge"));
+		//this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("input", "out"));
+		this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
+		this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
 		this.shell.SendCommandToQueue(this.dbgCmd.modeNoWait());
 		this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
 
@@ -507,7 +511,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			this.debugRun = true;
 
-			this.dbgParser.parseDebugData(data, this.sourcePaths, this.lisPaths);
+			this.dbgParser.parseDebugData(this.shell.getCurrentCommand(), data, this.sourcePaths, this.lisPaths);
 
 			let messageCommand = this.dbgParser.getCommandMessage();
 			let messageDebug = this.dbgParser.getDebugMessage();
@@ -538,7 +542,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				ToOutputChannel(messageDebug);
 
-				if(messageDebug.includes("is '%SYSTEM-S-NORMAL, normal successful completion"))
+				if(messageDebug.includes("%SYSTEM-S-NORMAL, normal successful completion"))
 				{
 					this.sendEvent('end');
 				}
@@ -573,6 +577,7 @@ export class VMSRuntime extends EventEmitter
 						break;
 
 					case DebugButtonEvent.btnPause:
+					console.log("stop");
 						this.sendEvent('stopOnStep');
 						this.buttonPressd = 0;
 						break;

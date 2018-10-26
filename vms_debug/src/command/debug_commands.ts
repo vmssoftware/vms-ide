@@ -1,5 +1,3 @@
-import { Queue } from "../queue/queues";
-
 export enum DebugCmdVMS
 {
 	dbgRunExe = "run",
@@ -30,218 +28,193 @@ export enum DebugCmdVMS
 
 	dbgSetModeNoWait = "set mode nowait",
 	dbgSetModeScreen = "set mode screen",
+	dbgSelect = "select",
+	dbgSetDisplay = "display",
+}
+
+export class CommandMessage
+{
+	private body : string;
+	private params: string;
+	private command: string;
+
+	constructor(body : string, params: string)
+	{
+		this.body = body;
+		this.params = params;
+
+		if(params === "")
+		{
+			this.command = this.body;
+		}
+		else
+		{
+			this.command = this.body + " " + this.params;
+		}
+	}
+
+	public getBody() : string
+	{
+		return this.body;
+	}
+
+	public getCommand() : string
+	{
+		return this.command;
+	}
 }
 
 
 export class DebugCommands
 {
-	private queueCmd = new Queue<string>();
-
-
-	public getCurrentCommand() : string
-	{
-		let command : string = "";
-
-		if(this.queueCmd.size() > 0)
-		{
-			command = this.queueCmd.pop();
-		}
-
-		return command;
-	}
-
-
 	//general
-	public run(fileName : string) : string
+	public run(fileName : string) : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgRunExe);
-
-		return DebugCmdVMS.dbgRunExe + " " + fileName;
+		return new CommandMessage(DebugCmdVMS.dbgRunExe, fileName);
 	}
 
-	public rerun() : string
+	public rerun() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgRerunExe);
 
-		return DebugCmdVMS.dbgRerunExe;
+		return new CommandMessage(DebugCmdVMS.dbgRerunExe, "");
 	}
 
-	public showCurrentLine() : string//show current line
+	public showCurrentLine() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgCurrentLine);
-
-		return DebugCmdVMS.dbgCurrentLine;
+		return new CommandMessage(DebugCmdVMS.dbgCurrentLine, "");
 	}
 
-	public stop() : string
+	public stop() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgStop);
-
-		return DebugCmdVMS.dbgStop;
+		return new CommandMessage(DebugCmdVMS.dbgStop, "");
 	}
 
-	public exit() : string
+	public exit() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgExit);
-
-		return DebugCmdVMS.dbgExit;
+		return new CommandMessage(DebugCmdVMS.dbgExit, "");
 	}
 
-	public go() : string
+	public go() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgGo);
-
-		return DebugCmdVMS.dbgGo;
+		return new CommandMessage(DebugCmdVMS.dbgGo, "");
 	}
-	public step() : string
+	public step() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgStep);
-
-		return DebugCmdVMS.dbgStep;
+		return new CommandMessage(DebugCmdVMS.dbgStep, "");
 	}
-	public stepIn() : string
+	public stepIn() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgStepIn);
-
-		return DebugCmdVMS.dbgStepIn;
+		return new CommandMessage(DebugCmdVMS.dbgStepIn, "");
 	}
-	public stepReturn() : string
+	public stepReturn() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgStepReturn);
-
-		return DebugCmdVMS.dbgStepReturn;
+		return new CommandMessage(DebugCmdVMS.dbgStepReturn, "");
 	}
 
 	//break points
-	public breakPointSet(fileName : string, numberLine : number) : string
+	public breakPointSet(fileName : string, numberLine : number) : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgBreakPointSet);
-
-		return DebugCmdVMS.dbgBreakPointSet + " " + fileName.toUpperCase()  + "\\%line " + numberLine.toString();
+		return new CommandMessage(DebugCmdVMS.dbgBreakPointSet, fileName.toUpperCase()  + "\\%line " + numberLine.toString());
 	}
-	public breakPointRemove(fileName : string, numberLine : number) : string
+	public breakPointRemove(fileName : string, numberLine : number) : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgBreakPointRemove);
-
-		return DebugCmdVMS.dbgBreakPointRemove + " " + fileName.toUpperCase()  + "\\%line " + numberLine.toString();
+		return new CommandMessage(DebugCmdVMS.dbgBreakPointRemove, fileName.toUpperCase()  + "\\%line " + numberLine.toString());
 	}
-	public breakPointsRemove() : string
+	public breakPointsRemove() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgBreakPointRemove);
-
-		return DebugCmdVMS.dbgBreakPointRemove + " /all";
+		return new CommandMessage(DebugCmdVMS.dbgBreakPointRemove, "/all");
 	}
-	public breakPointShow() : string
+	public breakPointShow() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgBreakPointShow);
-
-		return DebugCmdVMS.dbgBreakPointShow;
+		return new CommandMessage(DebugCmdVMS.dbgBreakPointShow, "");
 	}
-	public breakPointsActivate() : string
+	public breakPointsActivate() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgBreakPointActivate);
-
-		return DebugCmdVMS.dbgBreakPointActivate  + " /all";
+		return new CommandMessage(DebugCmdVMS.dbgBreakPointActivate, "/all");
 	}
-	public breakPointActivate(fileName : string, numberLine : number) : string
+	public breakPointActivate(fileName : string, numberLine : number) : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgBreakPointActivate);
-
-		return DebugCmdVMS.dbgBreakPointActivate + " " + fileName.toUpperCase()  + "\\%line " + numberLine.toString();
+		return new CommandMessage(DebugCmdVMS.dbgBreakPointActivate, fileName.toUpperCase()  + "\\%line " + numberLine.toString());
 	}
-	public breakPointsDeactivate() : string
+	public breakPointsDeactivate() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgBreakPointDeactivate);
-
-		return DebugCmdVMS.dbgBreakPointDeactivate  + " /all";
+		return new CommandMessage(DebugCmdVMS.dbgBreakPointDeactivate, "/all");
 	}
-	public breakPointDeactivate(fileName : string, numberLine : number) : string
+	public breakPointDeactivate(fileName : string, numberLine : number) : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgBreakPointDeactivate);
-
-		return DebugCmdVMS.dbgBreakPointDeactivate + " " + fileName.toUpperCase()  + "\\%line " + numberLine.toString();
+		return new CommandMessage(DebugCmdVMS.dbgBreakPointDeactivate, fileName.toUpperCase()  + "\\%line " + numberLine.toString());
 	}
 
 
 	//get value of variable by name
 	//(show format) (file\locateFunc\nameVar:       value) - local variable
 	//(show format) (file\nameVar:       value) - global variable
-	public examine(nameVar : string) : string
+	public examine(nameVar : string) : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgExamine);
-
-		return DebugCmdVMS.dbgExamine + " " + nameVar;
+		return new CommandMessage(DebugCmdVMS.dbgExamine, nameVar);
 	}
 	//get value of variable by name (don't for array)
-	public evaluate(nameVar : string) : string
+	public evaluate(nameVar : string) : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgEvaluate);
-
-		return DebugCmdVMS.dbgEvaluate + " " + nameVar;
+		return new CommandMessage(DebugCmdVMS.dbgEvaluate, nameVar);
 	}
 
 	//set value of variable by name
-	public deposit(nameVar : string, value : number) : string
+	public deposit(nameVar : string, value : number) : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgDeposit);
-
-		return DebugCmdVMS.dbgDeposit + " " + nameVar + "=" + value.toString();
+		return new CommandMessage(DebugCmdVMS.dbgDeposit, nameVar + "=" + value.toString());
 	}
 
 	//show call stack
-	public callStack() : string
+	public callStack() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgCallStack);
-
-		return DebugCmdVMS.dbgCallStack;
+		return new CommandMessage(DebugCmdVMS.dbgCallStack, "");
 	}
 	//show stack
-	public stack() : string
+	public stack() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgStack);
-
-		return DebugCmdVMS.dbgStack;
+		return new CommandMessage(DebugCmdVMS.dbgStack, "");
 	}
 
 	//dump
-	public dump(nameVar : string) : string
+	public dump(nameVar : string) : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgDump);
-
-		return DebugCmdVMS.dbgDump + " " + nameVar;
+		return new CommandMessage(DebugCmdVMS.dbgDump, nameVar);
 	}
-	public dumpAddress(addressStart : string, addressStop : string) : string
+	public dumpAddress(addressStart : string, addressStop : string) : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgDump);
-
-		return DebugCmdVMS.dbgDump + " " + addressStart + ":" + addressStop;
+		return new CommandMessage(DebugCmdVMS.dbgDump, addressStart + ":" + addressStop);
 	}
-	public dumpHex(nameVar : string) : string
+	public dumpHex(nameVar : string) : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgDump);
-
-		return DebugCmdVMS.dbgDump + "/hex" + " " + nameVar;
+		return new CommandMessage(DebugCmdVMS.dbgDump, "/hex" + " " + nameVar);
 	}
-	public dumpAddressHex(addressStart : string, addressStop : string) : string
+	public dumpAddressHex(addressStart : string, addressStop : string) : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgDump);
-
-		return DebugCmdVMS.dbgDump + "/hex" + " " + addressStart + ":" + addressStop;
+		return new CommandMessage(DebugCmdVMS.dbgDump, "/hex" + " " + addressStart + ":" + addressStop);
 	}
 
 	//trace
 	//watch
 
-	public modeNoWait() : string
+	public modeNoWait() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgSetModeNoWait);
-
-		return DebugCmdVMS.dbgSetModeNoWait;
+		return new CommandMessage(DebugCmdVMS.dbgSetModeNoWait, "");
 	}
-	public modeScreen() : string
+	public modeScreen() : CommandMessage
 	{
-		this.queueCmd.push(DebugCmdVMS.dbgSetModeScreen);
-
-		return DebugCmdVMS.dbgSetModeScreen;
+		return new CommandMessage(DebugCmdVMS.dbgSetModeScreen, "");
+	}
+	public redirectDataToDisplay(dataName : string, displayName : string) : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgSelect, "/" + dataName + " " + displayName);
+	}
+	public setDisplay(displayName : string, positionName : string, dataType : string) : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgSetDisplay, displayName + " AT " + positionName + " " + dataType);
+	}
+	public removeDisplay(displayName : string) : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgSetDisplay, "/remove " + displayName);
 	}
 }
