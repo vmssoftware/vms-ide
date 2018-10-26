@@ -1,3 +1,5 @@
+import { CommandMessage } from "./debug_commands";
+
 export enum OsCmdVMS
 {
 	osLs = "dir",
@@ -15,54 +17,54 @@ export enum OsCmdVMS
 
 export class OsCommands
 {
-	public ls() : string
+	public ls() : CommandMessage
 	{
-		return OsCmdVMS.osLs;
+		return new CommandMessage(OsCmdVMS.osLs, "");
 	}
 
-	public cd(directory : string) : string
+	public cd(directory : string) : CommandMessage
 	{
-		return OsCmdVMS.osCd + " [" + directory + "]";
+		return new CommandMessage(OsCmdVMS.osCd, "[" + directory + "]");
 	}
 
-	public home() : string
+	public home() : CommandMessage
 	{
-		return OsCmdVMS.osHomeDir;
+		return new CommandMessage(OsCmdVMS.osHomeDir, "");
 	}
 
-	public exit() : string
+	public exit() : CommandMessage
 	{
-		return OsCmdVMS.osExit;
+		return new CommandMessage(OsCmdVMS.osExit, "");
 	}
 
 
-	public runProgram(programName : string) : string
+	public runProgram(programName : string) : CommandMessage
 	{
-		return OsCmdVMS.dbgRunProgram + " " + programName;
+		return new CommandMessage(OsCmdVMS.dbgRunProgram, programName);
 	}
 
-	public runDebug() : string
+	public runDebug() : CommandMessage
 	{
-		return OsCmdVMS.dbgRunDbg;
+		return new CommandMessage(OsCmdVMS.dbgRunDbg, "");
 	}
 
-	public runCC() : string
+	public runCC() : CommandMessage
 	{
-		return OsCmdVMS.dbgRunCC;
+		return new CommandMessage(OsCmdVMS.dbgRunCC, "");
 	}
 
-	public runCOM(fileName : string) : string
+	public runCOM(fileName : string) : CommandMessage
 	{
-		return OsCmdVMS.dbgRunCOM + fileName;
+		return new CommandMessage(OsCmdVMS.dbgRunCOM, fileName);
 	}
 
-	public runMMS(fileName : string) : string
+	public runMMS(fileName : string) : CommandMessage
 	{
-		return OsCmdVMS.dbgRunMMS + fileName;
+		return new CommandMessage(OsCmdVMS.dbgRunMMS, fileName);
 	}
 
-	public cleanMMS(fileName : string) : string
+	public cleanMMS(fileName : string) : CommandMessage
 	{
-		return OsCmdVMS.dbgRunMMS + fileName + " clean";
+		return new CommandMessage(OsCmdVMS.dbgRunMMS, fileName + " clean");
 	}
 }

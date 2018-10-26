@@ -1,6 +1,6 @@
 import { HolderDebugFileInfo, DebugFileInfo } from './debug_file_info';
 import { readFileSync } from 'fs';
-import { DebugCmdVMS, DebugCommands } from '../command/debug_commands';
+import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
 import { Queue } from '../queue/queues';
 
 
@@ -32,60 +32,28 @@ export class DebugParser
 	private queueMsgCommand = new Queue<string>();
 	private queueMsgData = new Queue<string>();
 	private fleInfo : HolderDebugFileInfo;
-	private dbgCmd : DebugCommands;
-	private stateParseLine;
-	private fileNameFind : string;
-	private command : string;
 	private commandDone : boolean;
+	private topicNumberString : Array<number> = new Array<number>();
+	private displayDataString : string[] = ["", "", ""];
 
 
-	constructor(commands : DebugCommands)
+	constructor()
 	{
 		this.currentName = "";
 		this.fleInfo = new HolderDebugFileInfo();
-		this.dbgCmd = commands;
-		this.stateParseLine = 0;
-		this.fileNameFind = "";
-		this.command = "";
 		this.commandDone = false;
 	}
 
 
-	public parseDebugData(data : string, sourcePaths: string[], lisPaths: string[])
+	public parseDebugData(command : CommandMessage, data : string, sourcePaths: string[], lisPaths: string[])
 	{
-		let msgLines = data.split("\n");
+		let cmd = command.getBody();
 
-		if(this.command === "")
-		{
-			this.command = this.dbgCmd.getCurrentCommand();
-		}
+		this.splitData(command, data);
 
-		if(this.command !== "")
-		{
-			for(let line of msgLines)
-			{
-				line = line.trim();
+		let msgLines = this.displayDataString[1].split("\n");//debugger data
 
-				if(line !== "")
-				{
-					if(line.includes(this.command))
-					{
-						this.queueMsgCommand.push(MessagePrompt.prmtCMD + line);
-						break;
-					}
-					else
-					{
-						if(line.includes(DebugCmdVMS.dbgStop))//???
-						{
-							this.command = this.dbgCmd.getCurrentCommand();
-							this.queueMsgCommand.push(MessagePrompt.prmtCMD + this.command);
-						}
-					}
-				}
-			}
-		}
-
-		switch(this.command)
+		switch(cmd)
 		{
 			case DebugCmdVMS.dbgRunExe:
 			case DebugCmdVMS.dbgRerunExe:
@@ -94,7 +62,6 @@ export class DebugParser
 				this.commandDone = true;
 				break;
 
-			case "":
 			case DebugCmdVMS.dbgGo:
 			case DebugCmdVMS.dbgStep:
 			case DebugCmdVMS.dbgStepIn:
@@ -103,7 +70,7 @@ export class DebugParser
 				{
 					if(item !== "")
 					{
-						if(this.command === "" || !item.includes(this.command))
+						if(!item.includes(cmd))
 						{
 							this.parseLineMsg(item, sourcePaths, lisPaths);
 						}
@@ -130,74 +97,187 @@ export class DebugParser
 				{
 					if(item !== "")
 					{
-						if(!item.includes(this.command))
+						if(!item.includes(cmd))
 						{
 							this.queueMsgData.push(item);
+							this.commandDone = true;
 						}
 					}
 				}
-				this.commandDone = true;
 				break;
 
 			default:
-				this.commandDone = true;
 				break;
-		}
-
-		if(this.commandDone)
-		{
-			this.command = "";
 		}
 	}
 
 
-	private parseLineMsg(msgLine: string, sourcePaths: string[], lisPaths: string[])
+	private splitData(command : CommandMessage, data : string)
 	{
-		switch(this.stateParseLine)
+		let positionOld : number = 0;
+		let escapes = data.split("\x1B");
+		let dataPrompt = escapes.shift();
+
+		this.displayDataString[0] = "";
+		this.displayDataString[1] = "";
+		this.displayDataString[2] = "";
+
+		if(dataPrompt)//prompt data (coommand and user data)
 		{
-			case 0:
-				if(msgLine.includes(MessageDebuger.msgStepped) ||
-					msgLine.includes(MessageDebuger.msgBreak) ||
-					msgLine.includes(MessageDebuger.msgSteppedReturn) ||
-					msgLine.includes(MessageDebuger.msgException))
+			dataPrompt = dataPrompt.trim();
+
+			if(dataPrompt !== "")
+			{
+				if(dataPrompt.includes(command.getCommand()))
 				{
-					//this.fileNameFind = this.findFileName(msgLine);
-					this.stateParseLine = 1;
-				}
-				else if(msgLine.includes(MessageDebuger.msgKeyDbg) ||
-						msgLine.includes(MessageDebuger.msgKeySys) ||
-						msgLine.includes(MessageDebuger.msgKeyDcl))//debug message
-				{
-					this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLine);
-					this.stateParseLine = 0;
-				}
-				else//user message
-				{
-					if(msgLine.trim() !== "")
+					if(dataPrompt.includes(DebugCmdVMS.dbgStop))
 					{
-						this.queueMsgUser.push(MessagePrompt.prmtUSER + msgLine);
+						dataPrompt = dataPrompt.replace(DebugCmdVMS.dbgStop, "");
+						this.queueMsgCommand.push(MessagePrompt.prmtCMD + command.getCommand());
+
+						if(dataPrompt !== "")
+						{
+							this.queueMsgUser.push(MessagePrompt.prmtUSER + dataPrompt);
+						}
 					}
-
-					this.stateParseLine = 0;
-				}
-				break;
-
-			case 1:
-				if(msgLine.includes(MessageDebuger.msgKeyDbg) ||
-					msgLine.includes(MessageDebuger.msgKeySys))//debug message
-				{
-					this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLine);
+					else
+					{
+						this.queueMsgCommand.push(MessagePrompt.prmtCMD + dataPrompt);
+					}
 				}
 				else
 				{
-					//this.parseNumberLineCodeMsg(this.fileNameFind, msgLine, sourcePaths, lisPaths);
-					this.commandDone = true;
-					this.stateParseLine = 0;
+					this.queueMsgUser.push(MessagePrompt.prmtUSER + dataPrompt);
 				}
-				break;
+			}
+		}
 
-			default:
-				break;
+		for (let item of escapes)//windows data (debug, error)
+		{
+			item = item.trim();
+
+			if(item !== "")
+			{
+				if(item.charAt(0) === "[")
+				{
+					let position : number[] = [0, 0];
+					let index : number = 0;
+
+					for(let i = 1; i < item.length; i++)
+					{
+						if(item.charAt(i) === "H")
+						{
+							let positionLine = item.substr(1, i-1).split(";");
+
+							if(positionLine.length === 2)
+							{
+								if(positionLine[0] !== "")
+								{
+									position[0] = parseInt(positionLine[0], 10);
+									position[1] = parseInt(positionLine[1], 10);
+
+									if((i + 1) < item.length)
+									{
+										index = i + 1;
+									}
+									else
+									{
+										positionOld = position[0];
+									}
+								}
+							}
+
+							break;
+						}
+					}
+
+					if(index > 0)
+					{
+						if(item.charAt(index) === "\x0E")//topic of display
+						{
+							if(item.charAt(index+2) === "\x0F")
+							{
+								this.topicNumberString.push(position[0]);
+							}
+						}
+						else//data of display
+						{
+							for(let i = this.topicNumberString.length-1; i >= 0; i--)
+							{
+								if(position[0] > this.topicNumberString[i])
+								{
+									if(positionOld === position[0])
+									{
+										this.displayDataString[i] += " " + item.substr(index, item.length);
+									}
+									else
+									{
+										if(this.displayDataString[i] === "")
+										{
+											this.displayDataString[i] = item.substr(index, item.length);
+										}
+										else
+										{
+											this.displayDataString[i] += "\n" + item.substr(index, item.length);
+										}
+									}
+
+									positionOld = position[0];
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if(this.displayDataString[0] !== "")
+		{
+			this.queueMsgDebug.push(MessagePrompt.prmtDBG + this.displayDataString[0]);
+		}
+		if(this.displayDataString[2] !== "")
+		{
+			//this.queueMsgDebug.push(MessagePrompt.prmtUSER + this.displayDataString[2]);
+
+			if(this.displayDataString[2].includes(command.getCommand()))
+			{
+				if(this.displayDataString[2].includes(DebugCmdVMS.dbgStop))
+				{
+					this.displayDataString[2] = this.displayDataString[2].replace(DebugCmdVMS.dbgStop, "");
+					this.queueMsgCommand.push(MessagePrompt.prmtCMD + command.getCommand());
+
+					if(this.displayDataString[2] !== "")
+					{
+						this.queueMsgUser.push(MessagePrompt.prmtUSER + this.displayDataString[2]);
+					}
+				}
+				else
+				{
+					this.queueMsgCommand.push(MessagePrompt.prmtCMD + this.displayDataString[2]);
+				}
+			}
+			else
+			{
+				this.queueMsgUser.push(MessagePrompt.prmtUSER + this.displayDataString[2]);
+			}
+		}
+	}
+
+	private parseLineMsg(msgLine: string, sourcePaths: string[], lisPaths: string[])
+	{
+		if(msgLine.includes(MessageDebuger.msgStepped) ||
+			msgLine.includes(MessageDebuger.msgBreak) ||
+			msgLine.includes(MessageDebuger.msgSteppedReturn) ||
+			msgLine.includes(MessageDebuger.msgException))
+		{
+			this.commandDone = true;
+		}
+		else if(msgLine.includes(MessageDebuger.msgKeyDbg) ||
+				msgLine.includes(MessageDebuger.msgKeySys) ||
+				msgLine.includes(MessageDebuger.msgKeyDcl))//debug message
+		{
+			this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLine);
 		}
 	}
 
@@ -412,7 +492,7 @@ export class DebugParser
 	{
 		let name : string = "";
 		let findItem : string = "";
-		let array = line.split(" ");
+		let array = line.split(/\s+/);
 
 		for (let item of array)//search the last item
 		{
