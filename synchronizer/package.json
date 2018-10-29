@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.0.4",
+    "version": "0.0.6",
     "publisher": "vmssoftware",
     "engines": {
         "vscode": "^1.28.0"
@@ -11,48 +11,48 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:VMS.buildProject",
-        "onCommand:VMS.syncProject",
-        "onCommand:VMS.stopSync",
-        "onCommand:VMS.downloadProject",
-        "onCommand:VMS.editProject"
+        "onCommand:vmssoftware.synchronizer.buildProject",
+        "onCommand:vmssoftware.synchronizer.syncProject",
+        "onCommand:vmssoftware.synchronizer.stopSync",
+        "onCommand:vmssoftware.synchronizer.downloadProject",
+        "onCommand:vmssoftware.synchronizer.editProject"
     ],
     "main": "./out/extension",
     "contributes": {
         "menus": {
             "commandPalette": [
                 {
-                    "command": "VMS.stopSync",
-                    "when": "open-vms.isSync"
+                    "command": "vmssoftware.synchronizer.stopSync",
+                    "when": "vmssoftware.synchronizer.isSync"
                 },
                 {
-                    "command": "VMS.buildProject",
-                    "when": "!open-vms.isSync && !open-vms.isBuld"
+                    "command": "vmssoftware.synchronizer.buildProject",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 },
                 {
-                    "command": "VMS.syncProject",
-                    "when": "!open-vms.isSync && !open-vms.isBuld"
+                    "command": "vmssoftware.synchronizer.syncProject",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 }
             ]
         },
         "commands": [
             {
-                "command": "VMS.buildProject",
+                "command": "vmssoftware.synchronizer.buildProject",
                 "title": "%command.buildProject.title%",
                 "category": "%command.category%"
             },
             {
-                "command": "VMS.syncProject",
+                "command": "vmssoftware.synchronizer.syncProject",
                 "title": "%command.syncProject.title%",
                 "category": "%command.category%"
             },
             {
-                "command": "VMS.stopSync",
+                "command": "vmssoftware.synchronizer.stopSync",
                 "title": "%command.stopSync.title%",
                 "category": "%command.category%"
             },
             {
-                "command": "VMS.editProject",
+                "command": "vmssoftware.synchronizer.editProject",
                 "title": "%command.editProject.title%",
                 "category": "%command.category%"
             }
@@ -60,62 +60,37 @@
         "configuration": {
             "title": "%configuration.title%",
             "properties": {
-                "open-vms.connection.host": {
-                    "type": "string",
-                    "default": "host",
-                    "description": "%properties.connection.host.description%"
-                },
-                "open-vms.connection.port": {
-                    "type": "number",
-                    "default": 22,
-                    "description": "%properties.connection.port.description%"
-                },
-                "open-vms.connection.username": {
-                    "type": "string",
-                    "default": "",
-                    "description": "%properties.connection.username.description%"
-                },
-                "open-vms.connection.password": {
-                    "type": "string",
-                    "default": "",
-                    "description": "%properties.connection.password.description%"
-                },
-                "open-vms.project.builders": {
+                "vmssoftware.synchronizer.project.builders": {
                     "type": "string",
                     "default": "*.{mms,com}",
                     "description": "Builders"
                 },
-                "open-vms.project.exclude": {
+                "vmssoftware.synchronizer.project.exclude": {
                     "type": "string",
                     "default": "**/{.vscode,node-modules}",
                     "description": "%properties.project.exclude.description%"
                 },
-                "open-vms.project.headers": {
+                "vmssoftware.synchronizer.project.headers": {
                     "type": "string",
                     "default": "*.{h,hpp}",
                     "description": "%properties.project.headers.description%"
                 },
-                "open-vms.project.source": {
+                "vmssoftware.synchronizer.project.source": {
                     "type": "string",
                     "default": "*.{c,cpp}",
                     "description": "%properties.project.source.description%"
                 },
-                "open-vms.project.resource": {
+                "vmssoftware.synchronizer.project.resource": {
                     "type": "string",
                     "default": "**/resource/**/*.*",
                     "description": "%properties.project.resource.description%"
                 },
-                "open-vms.project.root": {
+                "vmssoftware.synchronizer.project.root": {
                     "type": "string",
                     "default": "project",
                     "description": "%properties.project.root.description%"
                 },
-                "open-vms.workspace.cmdTimeout": {
-                    "type": "number",
-                    "default": 0,
-                    "description": "%properties.workspace.cmdTimeout.description%"
-                },
-                "open-vms.workspace.downloadNewFiles": {
+                "vmssoftware.synchronizer.workspace.downloadNewFiles": {
                     "type": "string",
                     "enum": [
                         "overwrite",
@@ -130,25 +105,15 @@
                     "default": "edit",
                     "description": "%properties.workspace.downloadNewFiles.description%"
                 },
-                "open-vms.workspace.feedbackTimeout": {
-                    "type": "number",
-                    "default": 0,
-                    "description": "%properties.workspace.feedbackTimeout.description%"
-                },
-                "open-vms.workspace.keepAlive": {
+                "vmssoftware.synchronizer.workspace.keepAlive": {
                     "type": "boolean",
                     "default": false,
                     "description": "%properties.workspace.keepAlive.description%"
                 },
-                "open-vms.workspace.setTimeAttempts": {
+                "vmssoftware.synchronizer.workspace.setTimeAttempts": {
                     "type": "number",
                     "default": 3,
                     "description": "%properties.workspace.setTimeAttempts.description%"
-                },
-                "open-vms.workspace.welcomeTimeout": {
-                    "type": "number",
-                    "default": 0,
-                    "description": "%properties.workspace.welcomeTimeout.description%"
                 }
             }
         }
@@ -157,19 +122,20 @@
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+        "test": "npm run compile && node ./node_modules/vscode/bin/test",
+        "get-ssh-helper-api": "PowerShell copy -Path ..\\ssh-helper\\out\\api.d.ts, ..\\ssh-helper\\out\\ssh-helper.d.ts -Destination src\\ssh",
+        "dir": "dir ..\\ssh-helper\\out"
     },
     "dependencies": {
+        "@vorfol/common": "^0.0.11",
         "fs": "0.0.1-security",
         "micromatch": "^3.1.10",
-        "ssh2": "^0.6.1",
         "vscode-nls": "^4.0.0"
     },
     "devDependencies": {
         "@types/micromatch": "^3.1.0",
         "@types/mocha": "^5.2.5",
         "@types/node": "^8.1.0",
-        "@types/ssh2": "^0.5.36",
         "tslint": "^5.11.0",
         "typescript": "^3.1.3",
         "vscode": "^1.1.21"

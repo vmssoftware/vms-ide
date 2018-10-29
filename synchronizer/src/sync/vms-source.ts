@@ -1,12 +1,10 @@
 
-import { ftpPathSeparator } from "../common/find-files";
-import { Lock } from "../common/lock";
-import { LogType } from "../common/log-type";
-import { printLike } from "../common/print-like";
-import { ParseWelcomeVms } from "../stream/parse-welcome-vms";
-import { PromptCatcherVms } from "../stream/prompt-catcher-vms";
-import { SftpClient } from "../stream/sftp-client";
-import { SshShell } from "../stream/ssh-shell";
+import { Lock } from "@vorfol/common";
+import { LogType } from "@vorfol/common";
+import { printLike } from "@vorfol/common";
+import { ftpPathSeparator } from "@vorfol/common";
+
+import { ISftpClient, ISshShell } from "../ssh/api";
 import { VmsAbsoluteDateString } from "../vms/vms-absolute-date-string";
 import { VmsPathConverter } from "../vms/vms-path-converter";
 import { SftpSource } from "./sftp-source";
@@ -21,8 +19,8 @@ export class VmsSource extends SftpSource {
     private timeOffsetInSeconds?: number;
     private timeOffetLock = new Lock();
 
-    constructor(sftp: SftpClient,
-                protected shell: SshShell,
+    constructor(sftp: ISftpClient,
+                protected shell: ISshShell,
                 root?: string,
                 debugLog?: LogType,
                 attempts?: number) {

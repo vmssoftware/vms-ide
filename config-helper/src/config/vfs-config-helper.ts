@@ -1,4 +1,5 @@
 import { Uri } from "vscode";
+
 import { FSConfigHelper } from "./fs-config-helper";
 import { VFSConfigStorage } from "./vfs-storage";
 

@@ -1,6 +1,8 @@
-import { Debouncer } from "@vorfol/debouncer";
 import { Disposable, workspace } from "vscode";
-import { IConfig, IConfigEditor, IConfigHelper, IConfigStorage } from "./config";
+
+import { Debouncer } from "@vorfol/common";
+
+import { ConfigHelper, IConfig, IConfigEditor, IConfigStorage } from "./config";
 import { ConfigPool } from "./config-pool";
 import { VSCWorkspaceConfigEditor } from "./vsc-editor";
 import { VSCConfigStorage } from "./vsc-storage";
@@ -13,7 +15,7 @@ logFn = () => {};
 /**
  * ConfigHelper implementation
  */
-export class VSCConfigHelper implements IConfigHelper {
+export class VSCConfigHelper implements ConfigHelper {
 
     public static getConfigHelper(section: string): VSCConfigHelper {
         if (VSCConfigHelper.instances.get(section) === undefined) {

@@ -1,25 +1,46 @@
-import { LogType } from "./common/log-type";
-import { IConfig, IConfigSection } from "./config/config";
-import { ConnectionSection } from "./config/sections/connection";
+import { IConfig, IConfigHelper, IConfigSection } from "./config/config";
+
+import { LogType } from "@vorfol/common";
+
+import { GetConfigHelperFromApi } from "./config/get-config-helper";
 import { ProjectSection } from "./config/sections/project";
-import { WorkspaceSection } from "./config/sections/workspace";
+import { SynchronizeSection } from "./config/sections/synchronize";
 
-const sections: IConfigSection[] = [];
+export const sections: IConfigSection[] = [];
 sections.push(new ProjectSection());
-sections.push(new ConnectionSection());
-sections.push(new WorkspaceSection());
+sections.push(new SynchronizeSection());
 
-export async function EnsureSettings(config: IConfig, debugLog?: LogType) {
+export let settingsEnsured: boolean | undefined;
+export let configHelper: IConfigHelper | undefined;
+export let synchronizerConfig: IConfig | undefined;
+
+const sectionName = "vmssoftware.synchronizer";
+
+export async function EnsureSettings(debugLog?: LogType) {
+    if (settingsEnsured !== undefined) {
+        return settingsEnsured;
+    }
+    if (!synchronizerConfig) {
+        const api = await GetConfigHelperFromApi();
+        if (api) {
+            configHelper = api.getConfigHelper(sectionName);
+            synchronizerConfig = configHelper.getConfig();
+        }
+    }
+    if (!synchronizerConfig) {
+        settingsEnsured = false;
+        return false;
+    }
     // in first add missed
     for (const section of sections) {
-        const testSection = await config.get(section.name());
+        const testSection = await synchronizerConfig.get(section.name());
         if (!testSection) {
-            config.add(section);
+            synchronizerConfig.add(section);
         }
     }
     // then ensure all are loaded
     for (const section of sections) {
-        const testSection = await config.get(section.name());
+        const testSection = await synchronizerConfig.get(section.name());
         if (debugLog && typeof section !== typeof testSection) {
             debugLog(`Different types of sections ${section.name()}`);
             return false;

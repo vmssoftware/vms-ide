@@ -3,21 +3,21 @@ import path from "path";
 import util from "util";
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, Range, Uri, window, workspace } from "vscode";
 
-import { ftpPathSeparator } from "./common/find-files";
-import { LogType } from "./common/log-type";
-import { parseCxxOutput } from "./common/parse-output";
-import { printLike } from "./common/print-like";
-import { ConnectConfigResolverImpl } from "./config-resolve/connect-config-resolver-impl";
-import { PasswordVscodeFiller } from "./config-resolve/password-vscode-filler";
 import { IConfig } from "./config/config";
-import { ConnectionSection } from "./config/sections/connection";
+
+import { LogType } from "@vorfol/common";
+import { printLike } from "@vorfol/common";
+import { ftpPathSeparator } from "@vorfol/common";
+
 import { ProjectSection } from "./config/sections/project";
-import { WorkspaceSection } from "./config/sections/workspace";
-import { EnsureSettings } from "./ensure-settings";
+import { SynchronizeSection } from "./config/sections/synchronize";
+
+import { ISshShell } from "./ssh/api";
+
+import { parseVmsOutput } from "./common/parse-output";
+import { GetSshHelperFromApi } from "./config/get-ssh-helper";
+import { EnsureSettings, synchronizerConfig } from "./ensure-settings";
 import { ToOutputChannel } from "./output-channel";
-import { ParseWelcomeVms } from "./stream/parse-welcome-vms";
-import { PromptCatcherVms } from "./stream/prompt-catcher-vms";
-import { SshShell } from "./stream/ssh-shell";
 import { FsSource } from "./sync/fs-source";
 import { VmsPathConverter } from "./vms/vms-path-converter";
 
@@ -38,7 +38,7 @@ let projectRoot: string | undefined;
 let shellRootConverter: VmsPathConverter | undefined;
 let collection: DiagnosticCollection | undefined;
 
-export async function getShellRoot(shell: SshShell, debugLog?: LogType) {
+export async function getShellRoot(shell: ISshShell, debugLog?: LogType) {
     if (shell) {
         const answer = await shell.execCmd(`WRITE SYS$OUTPUT F$TRNLNM("SYS$LOGIN")`);
         if (answer) {
@@ -67,16 +67,12 @@ export async function parseProblems(output: string) {
         cwd = shellRootConverter.initial + projectRoot + ftpPathSeparator;
         cwd = cwd.toUpperCase();
     }
-    const result = parseCxxOutput(output);
-    if (!collection) {
-        collection = languages.createDiagnosticCollection("open-vms.build");
-    }
-    collection.clear();
+    const result = parseVmsOutput(output);
+    const errMap = new Map<string, Diagnostic[]>();
     for (const entry of result) {
         if (entry.message) {
             const diagnostic = new Diagnostic(defRange, entry.message);
-            if (entry.file &&
-                entry.line &&
+            if (entry.line &&
                 entry.pos) {
                 diagnostic.range = new Range(entry.line - 1, entry.pos - 1, entry.line - 1, entry.pos);
             }
@@ -89,26 +85,36 @@ export async function parseProblems(output: string) {
                     diagnostic.severity = DiagnosticSeverity.Information;
                     break;
             }
-            let uri = workspace.workspaceFolders![0].uri;
-            if (entry.file) {
-                if (cwd && entry.file.toUpperCase().startsWith(cwd)) {
-                    entry.file = entry.file.slice(cwd.length);
-                }
-                uri = Uri.file(path.join(workspace.workspaceFolders![0].uri.fsPath, entry.file));
-            }
-            let diagArr = collection.get(uri);
-            diagArr = diagArr || [] as Diagnostic[];
+            let diagArr = errMap.get(String(entry.file));
+            diagArr = diagArr || [];
             diagArr.push(diagnostic);
-            collection.set(uri, diagArr);
+            errMap.set(String(entry.file), diagArr);
         }
+    }
+    if (!collection) {
+        collection = languages.createDiagnosticCollection("open-vms.build");
+    }
+    collection.clear();
+    for (const [file, arrDiag] of errMap) {
+        let uri = Uri.file(file);
+        if (file !== String(undefined) &&
+            workspace.workspaceFolders) {
+            const converter = VmsPathConverter.fromVms(file);
+            let localFile = converter.initial;
+            if (cwd && localFile.toUpperCase().startsWith(cwd)) {
+                localFile = localFile.slice(cwd.length);
+            }
+            uri = Uri.file(path.join(workspace.workspaceFolders[0].uri.fsPath, localFile));
+        }
+        collection.set(uri, arrDiag);
     }
     return true;
 }
 
-export async function runRemoteBuild(config: IConfig, file: string, debugLog?: LogType) {
+export async function runRemoteBuild(file: string, debugLog?: LogType) {
     let command: string | undefined;
     let output: string | undefined;
-    let shell: SshShell | undefined;
+    let shell: ISshShell | undefined;
     if (await prepare() && shell) {
         // get shell root
         await getShellRoot(shell, debugLog);
@@ -140,37 +146,39 @@ export async function runRemoteBuild(config: IConfig, file: string, debugLog?: L
 
     async function prepare() {
         // get current config
-        if (!await EnsureSettings(config)) {
+        if (!await EnsureSettings() ||
+            !synchronizerConfig) {
             return false;
         }
-        const [connectionSection,
-               projectSection,
-               workspaceSection] = await Promise.all(
-                   [config.get(ConnectionSection.section),
-                    config.get(ProjectSection.section),
-                    config.get(WorkspaceSection.section)]);
+        const sshHelperType = await GetSshHelperFromApi();
+        if (!sshHelperType) {
+            if (debugLog) {
+                debugLog(`Cannot get ssh-helper api`);
+            }
+            return false;
+        }
+        const sshHelper = new sshHelperType(debugLog);
+        const [projectSection,
+               synchronizeSection] = await Promise.all(
+                   [synchronizerConfig.get(ProjectSection.section),
+                    synchronizerConfig.get(SynchronizeSection.section)]);
         // check if all are ready to create variables
-        if (ConnectionSection.is(connectionSection) &&
-            ProjectSection.is(projectSection) &&
-            WorkspaceSection.is(workspaceSection)) {
+        if (ProjectSection.is(projectSection) &&
+            SynchronizeSection.is(synchronizeSection)) {
             projectRoot = projectSection.root;
-            const fillers = [new PasswordVscodeFiller()];
-            const resolver = new ConnectConfigResolverImpl(fillers, workspaceSection.feedbackTimeout, debugLog);
-            const welcome = new ParseWelcomeVms(workspaceSection.welcomeTimeout, debugLog);
-            const prompter = new PromptCatcherVms("", debugLog);
-            shell = new SshShell(connectionSection, resolver, welcome, prompter, debugLog);
+            shell = await sshHelper.getDefaultVmsShell();
             return true;
         }
         return false;
     }
 }
 
-export async function BuildProject(context: ExtensionContext, config: IConfig, debugLog?: LogType) {
+export async function BuildProject(context: ExtensionContext, debugLog?: LogType) {
     // get current config
-    if (!await EnsureSettings(config)) {
+    if (!await EnsureSettings() || !synchronizerConfig) {
         return false;
     }
-    const projectSection = await config.get(ProjectSection.section);
+    const projectSection = await synchronizerConfig.get(ProjectSection.section);
     // get current values
     const project = projectSection ? projectSection.store() : undefined;
     if (ProjectSection.is(project) &&
@@ -195,7 +203,7 @@ export async function BuildProject(context: ExtensionContext, config: IConfig, d
         }
         // run and parse output
         if (buildSelection) {
-            return runRemoteBuild(config, buildSelection, debugLog);
+            return runRemoteBuild(buildSelection, debugLog);
         } else {
             return false;
         }

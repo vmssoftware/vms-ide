@@ -1,9 +1,9 @@
-import micromatch, { Options } from "micromatch";
+import micromatch from "micromatch";
 
-import { IFileEntry, IReadDirectory } from "../stream/read-directory";
-import { LogType } from "./log-type";
+import { LogType } from "@vorfol/common";
 
-export const ftpPathSeparator = "/";
+import { ftpPathSeparator, IFileEntry, IReadDirectory } from "@vorfol/common";
+
 export const leadingSepRg = /^[/\\]+/g;
 export const middleSepRg = /[/\\]+/g;
 export const trailingSepRg = /[/\\]+$/g;
@@ -33,7 +33,7 @@ export async function findFiles(canReadDir: IReadDirectory,
                                 exclude?: string,
                                 debugLog?: LogType) {
     include = include || "*";
-    const options: Options = {
+    const options: micromatch.Options = {
         basename: true,
         nocase: true,
         nodupes: true,

@@ -1,12 +1,13 @@
-import { InputAttributes } from "ssh2-streams";
-import { findFiles, ftpPathSeparator, leadingSepRg, middleSepRg, trailingSepRg } from "../common/find-files";
-import { LogType } from "../common/log-type";
-import { IFileEntry } from "../stream/read-directory";
-import { SftpClient } from "../stream/sftp-client";
+
+import { ftpPathSeparator, LogType } from "@vorfol/common";
+import { IFileEntry } from "@vorfol/common";
+
+import { findFiles, leadingSepRg, middleSepRg, trailingSepRg } from "../common/find-files";
+import { IInputAttributes, ISftpClient } from "./../ssh/api";
 import { ISource } from "./source";
 
 export class SftpSource implements ISource {
-    constructor(protected sftp: SftpClient, public root?: string, public debugLog?: LogType, public attempts?: number) {
+    constructor(protected sftp: ISftpClient, public root?: string, public debugLog?: LogType, public attempts?: number) {
         root = root || "";
         this.root = root.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
     }
@@ -36,7 +37,7 @@ export class SftpSource implements ISource {
     }
 
     public async setDate(filename: string, date: Date): Promise<boolean> {
-        const newTime: InputAttributes = {
+        const newTime: IInputAttributes = {
             atime: date,
             mtime: date,
         };

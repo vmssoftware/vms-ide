@@ -1,0 +1,91 @@
+{
+    "name": "ssh-helper",
+    "displayName": "ssh-helper",
+    "description": "ssh-helper",
+    "version": "0.0.8",
+    "publisher": "vmssoftware",
+    "engines": {
+        "vscode": "^1.28.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:vmssoftware.ssh-helper.editSettings"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "vmssoftware.ssh-helper.editSettings"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "vmssoftware.ssh-helper.editSettings",
+                "title": "Edit ssh-helper settings"
+            }
+        ],
+        "configuration": {
+            "title": "SSH helper",
+            "properties": {
+                "vmssoftware.ssh-helper.connection.host": {
+                    "type": "string",
+                    "default": "host",
+                    "description": "Host"
+                },
+                "vmssoftware.ssh-helper.connection.port": {
+                    "type": "number",
+                    "default": 22,
+                    "description": "Port"
+                },
+                "vmssoftware.ssh-helper.connection.username": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Username"
+                },
+                "vmssoftware.ssh-helper.connection.password": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Password, may be omitted"
+                },
+                "vmssoftware.ssh-helper.workspace.cmdTimeout": {
+                    "type": "number",
+                    "default": 0,
+                    "description": "Time out for command answer"
+                },
+                "vmssoftware.ssh-helper.workspace.feedbackTimeout": {
+                    "type": "number",
+                    "default": 0,
+                    "description": "Feedback timeout"
+                },
+                "vmssoftware.ssh-helper.workspace.welcomeTimeout": {
+                    "type": "number",
+                    "default": 0,
+                    "description": "Timeout for welcome parser"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "compile": "tsc",
+        "package": "vsce package",
+        "watch": "tsc -watch",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "@types/mocha": "^5.2.5",
+        "@types/node": "^8.10.25",
+        "tslint": "^5.11.0",
+        "typescript": "^3.x.x",
+        "vscode": "^1.1.21"
+    },
+    "dependencies": {
+        "@types/ssh2": "^0.5.36",
+        "@vorfol/common": "^0.0.11",
+        "ssh2": "^0.6.1"
+    }
+}

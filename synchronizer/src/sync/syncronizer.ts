@@ -1,28 +1,23 @@
 import path from "path";
 import vscode from "vscode";
 
-import { Delay } from "../common/delay";
-import { ftpPathSeparator } from "../common/find-files";
-import { LogType } from "../common/log-type";
-import { isSimplyEq } from "../common/simply-compare";
-import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
-import { ConnectConfigResolverImpl } from "../config-resolve/connect-config-resolver-impl";
-import { PasswordVscodeFiller } from "../config-resolve/password-vscode-filler";
-import { IConfig, IConfigData, IConfigSection } from "../config/config";
-import { ConnectionSection } from "../config/sections/connection";
+import { GetSshHelperFromApi } from "../config/get-ssh-helper";
 import { ProjectSection } from "../config/sections/project";
-import { DownloadAction, WorkspaceSection } from "../config/sections/workspace";
-import { EnsureSettings } from "../ensure-settings";
+import { DownloadAction, SynchronizeSection } from "../config/sections/synchronize";
+import { IConfig, IConfigSection } from "./../config/config";
+
+import { Delay } from "@vorfol/common";
+import { LogType } from "@vorfol/common";
+import { ftpPathSeparator } from "@vorfol/common";
+import { IFileEntry } from "@vorfol/common";
+import { MemoryWriteStream } from "@vorfol/common";
+
+import { ISftpClient } from "../ssh/api";
+import { ISshShell } from "../ssh/api";
+import { SshHelper } from "../ssh/ssh-helper";
+
+import { EnsureSettings, synchronizerConfig } from "../ensure-settings";
 import { ToOutputChannel } from "../output-channel";
-import { FakeWriteStreamCreator } from "../stream/fake-write-stream";
-import { ParseWelcomeVms } from "../stream/parse-welcome-vms";
-import { PipeFile } from "../stream/pipe";
-import { IPromptCatcher } from "../stream/prompt-catcher";
-import { PromptCatcherVms } from "../stream/prompt-catcher-vms";
-import { IFileEntry } from "../stream/read-directory";
-import { SftpClient } from "../stream/sftp-client";
-import { SshShell } from "../stream/ssh-shell";
-import { IWelcomeParser } from "../stream/welcome-parser";
 import { FsSource } from "./fs-source";
 import { ISource } from "./source";
 import { VmsSource } from "./vms-source";
@@ -63,20 +58,17 @@ export class Synchronizer {
     }
 
     private inProgress = false;
-    private resolver?: IConnectConfigResolver;
-    private welcome?: IWelcomeParser;
-    private prompter?: IPromptCatcher;
-    private remoteSftp?: SftpClient;
-    private remoteShell?: SshShell;
+    private remoteSftp?: ISftpClient;
+    private remoteShell?: ISshShell;
     private remoteSource?: ISource;
     private localSource?: ISource;
     private include?: string;
     private exclude?: string;
-    private connectionSection?: IConfigSection;
     private projectSection?: IConfigSection;
-    private workspaceSection?: IConfigSection;
+    private synchronizeSection?: IConfigSection;
     private downloadNewFiles: DownloadAction = "edit";
     private onDidLoad?: vscode.Disposable;
+    private sshHelper?: SshHelper;
 
     constructor(public debugLog?: LogType) {
     }
@@ -142,7 +134,7 @@ export class Synchronizer {
         }
     }
 
-    public async syncronizeProject(config: IConfig) {
+    public async syncronizeProject() {
         if (this.inProgress) {
             ToOutputChannel(`Synchronization is in progress`);
             return false;
@@ -153,14 +145,15 @@ export class Synchronizer {
             return false;
         }
         this.inProgress = true;
-        let retCode = await this.prepare(config);
+        let retCode = await this.prepare();
         if (retCode &&
             this.localSource &&
             this.remoteSource &&
             this.include &&
-            this.exclude) {
+            this.exclude &&
+            this.sshHelper) {
             // clear password cache
-            ConnectConfigResolverImpl.clearCache();
+            this.sshHelper.clearPasswordCashe();
             // get lists
             this.enableRemote();
             const [remoteList,
@@ -203,11 +196,11 @@ export class Synchronizer {
             // wait all operations are done
             const results = await Promise.all(waitAll);
             // end
-            if (WorkspaceSection.is(this.workspaceSection) &&
-                this.workspaceSection.keepAlive) {
+            if (!SynchronizeSection.is(this.synchronizeSection) ||
+                this.synchronizeSection.keepAlive) {
                 // test configuration watcher and create if need
-                if (!this.onDidLoad) {
-                    this.onDidLoad = config.onDidLoad(() => this.prepare(config));
+                if (!this.onDidLoad && synchronizerConfig) {
+                    this.onDidLoad = synchronizerConfig.onDidLoad(() => this.prepare());
                 }
             } else {
                 this.dispose();
@@ -246,22 +239,27 @@ export class Synchronizer {
      * Note: no real connections are creating in constructors
      * @param config config
      */
-    private async prepare(config: IConfig) {
+    private async prepare() {
         // get current config
-        if (!await EnsureSettings(config)) {
+        if (!await EnsureSettings() || !synchronizerConfig) {
             return false;
         }
-        const [connectionSection,
-               projectSection,
-               workspaceSection] = await Promise.all(
-                   [config.get(ConnectionSection.section),
-                    config.get(ProjectSection.section),
-                    config.get(WorkspaceSection.section)]);
-        // test if different connection configuraion
-        let recreateRemote = !isSimplyEq(this.connectionSection, connectionSection);
+        const sshHelperType = await GetSshHelperFromApi();
+        if (!sshHelperType) {
+            if (this.debugLog) {
+                this.debugLog(`Cannot get ssh-helper api`);
+            }
+            return false;
+        }
+        this.sshHelper = new sshHelperType(this.debugLog);
+        const [projectSection,
+               synchronizeSection] = await Promise.all(
+                   [synchronizerConfig.get(ProjectSection.section),
+                    synchronizerConfig.get(SynchronizeSection.section)]);
         // test if the user won't keep them alive
-        if (WorkspaceSection.is(workspaceSection)) {
-            if (!workspaceSection.keepAlive) {
+        let recreateRemote = false;
+        if (SynchronizeSection.is(synchronizeSection)) {
+            if (!synchronizeSection.keepAlive) {
                 recreateRemote = true;
                 // test configuration watchers and delete if exist
                 if (this.onDidLoad) {
@@ -273,13 +271,11 @@ export class Synchronizer {
             this.dispose();
         }
         // store current values
-        this.connectionSection = connectionSection;
         this.projectSection = projectSection;
-        this.workspaceSection = workspaceSection;
+        this.synchronizeSection = synchronizeSection;
         // check if all are ready to create variables
-        if (ConnectionSection.is(this.connectionSection) &&
-            ProjectSection.is(this.projectSection) &&
-            WorkspaceSection.is(this.workspaceSection) &&
+        if (ProjectSection.is(this.projectSection) &&
+            SynchronizeSection.is(this.synchronizeSection) &&
             vscode.workspace.workspaceFolders &&
             vscode.workspace.workspaceFolders.length > 0) {
             // reparse includes
@@ -290,50 +286,27 @@ export class Synchronizer {
                 this.projectSection.builders,
             ];
             this.include = includes.join(",");
-            this.downloadNewFiles = this.workspaceSection.downloadNewFiles;
+            this.downloadNewFiles = this.synchronizeSection.downloadNewFiles;
             this.exclude = this.projectSection.exclude;
-            if (!this.resolver) {
-                if (this.debugLog) {
-                    this.debugLog(`Create password filler`);
-                }
-                const fillers = [new PasswordVscodeFiller()];
-                this.resolver = new ConnectConfigResolverImpl(fillers, this.workspaceSection.feedbackTimeout, this.debugLog);
-            } else {
-                if (this.debugLog) {
-                    this.debugLog(`Update password filler`);
-                }
-                this.resolver.timeout = this.workspaceSection.feedbackTimeout;
-            }
-            if (!this.welcome) {
-                if (this.debugLog) {
-                    this.debugLog(`Create welcome parser`);
-                }
-                this.welcome = new ParseWelcomeVms(this.workspaceSection.welcomeTimeout, this.debugLog);
-            } else {
-                if (this.debugLog) {
-                    this.debugLog(`Update welcome parser`);
-                }
-                this.welcome.timeout = this.workspaceSection.welcomeTimeout;
-            }
-            if (!this.prompter) {
-                if (this.debugLog) {
-                    this.debugLog(`Create VMS prompt catcher`);
-                }
-                this.prompter = new PromptCatcherVms("", this.debugLog);
-            }
             if (!this.remoteSource) {
                 if (this.debugLog) {
                     this.debugLog(`Create remote source`);
                 }
-                this.remoteSftp = new SftpClient(this.connectionSection, this.resolver, this.debugLog);
-                this.remoteShell = new SshShell(this.connectionSection, this.resolver, this.welcome, this.prompter, this.debugLog);
-                this.remoteSource = new VmsSource(this.remoteSftp, this.remoteShell, this.projectSection.root, this.debugLog, this.workspaceSection.setTimeAttempts);
+                const [sftp, shell] = await Promise.all([
+                        this.sshHelper.getDefaultSftp(),
+                        this.sshHelper.getDefaultVmsShell(),
+                    ]);
+                if (sftp && shell) {
+                    this.remoteSftp = sftp;
+                    this.remoteShell = shell;
+                    this.remoteSource = new VmsSource(sftp, shell, this.projectSection.root, this.debugLog, this.synchronizeSection.setTimeAttempts);
+                }
             } else {
                 if (this.debugLog) {
                     this.debugLog(`Update remote source`);
                 }
                 this.remoteSource.root = this.projectSection.root;
-                this.remoteSource.attempts = this.workspaceSection.setTimeAttempts;
+                this.remoteSource.attempts = this.synchronizeSection.setTimeAttempts;
             }
             if (!this.localSource) {
                 if (this.debugLog) {
@@ -357,7 +330,7 @@ export class Synchronizer {
             const dir = file.slice(0, dirEnd);
             await to.ensureDirectory(dir);
         }
-        return PipeFile(from, to, file, file, this.debugLog)
+        return this.sshHelper!.pipeFile(from, to, file, file, this.debugLog)
             .then(async (ok) => {
                 if (ok) {
                     // TODO: test anyhow that file is completely written before setting date
@@ -374,15 +347,13 @@ export class Synchronizer {
     }
 
     private async editFile(source: ISource, file: string) {
-        const memoryStream = new FakeWriteStreamCreator(false, this.debugLog);
+        const memoryStream = this.sshHelper!.memStream();
         let content: string | undefined;
         let localUri: vscode.Uri | undefined;
-        return PipeFile(source, memoryStream, file, file, this.debugLog)
+        return this.sshHelper!.pipeFile(source, memoryStream, file, "", this.debugLog)
             .then(async (ok) => {
-                content = Buffer.concat(memoryStream.chunks).toString("utf8");
-                if (ok &&
-                    vscode.workspace.workspaceFolders &&
-                    vscode.workspace.workspaceFolders.length > 0) {
+                if (ok && memoryStream.writeStream && vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+                    content = Buffer.concat(memoryStream.writeStream.chunks).toString("utf8");
                     const workspaceUri = vscode.workspace.workspaceFolders[0].uri;
                     localUri = vscode.Uri.file(path.join(workspaceUri.fsPath, file));
                     return vscode.workspace.openTextDocument(localUri)

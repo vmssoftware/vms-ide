@@ -10,11 +10,28 @@
             "option": "watch",
             "problemMatcher": [
                 "$tsc-watch"
+            ]
+        },
+        {
+            "type": "npm",
+            "script": "compile",
+            "problemMatcher": [
+                "$tsc"
             ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "npm",
+            "script": "dir",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "get-ssh-helper-api",
+            "problemMatcher": []
         }
     ]
 }

@@ -10,17 +10,29 @@
     "categories": [
         "Programming Languages"
     ],
+    "scripts": {
+        "package": "vsce package"
+    },
     "contributes": {
-        "languages": [{
-            "id": "mms",
-            "aliases": ["MMS", "mms"],
-            "extensions": [".mms"],
-            "configuration": "./language-configuration.json"
-        }],
-        "grammars": [{
-            "language": "mms",
-            "scopeName": "source.mms",
-            "path": "./syntaxes/mms.tmLanguage.json"
-        }]
+        "languages": [
+            {
+                "id": "mms",
+                "aliases": [
+                    "MMS",
+                    "mms"
+                ],
+                "extensions": [
+                    ".mms"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "mms",
+                "scopeName": "source.mms",
+                "path": "./syntaxes/mms.tmLanguage.json"
+            }
+        ]
     }
 }

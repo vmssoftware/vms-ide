@@ -1,4 +1,4 @@
-import { ftpPathSeparator } from "../common/find-files";
+import { ftpPathSeparator } from "@vorfol/common";
 
 const splitter = new RegExp(ftpPathSeparator, "g");
 const vmsPathRgx = /((\w+):)?(\[((\.)?(\w+)(\.(\w+))*)\])?(((\w+)(\.(\w+)?))?(;(\d+))?)?/;

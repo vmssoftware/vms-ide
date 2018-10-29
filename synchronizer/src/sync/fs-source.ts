@@ -1,10 +1,11 @@
-import { findFiles, ftpPathSeparator, leadingSepRg, middleSepRg, trailingSepRg } from "../common/find-files";
-import { LogType } from "../common/log-type";
-import { IFileEntry, IReadDirectory } from "../stream/read-directory";
-import { ISource } from "./source";
+import * as fs from "fs";
+import * as util from "util";
 
-import fs from "fs";
-import util from "util";
+import { ftpPathSeparator, IFileEntry, IReadDirectory } from "@vorfol/common";
+import { LogType } from "@vorfol/common";
+
+import { findFiles, leadingSepRg, middleSepRg, trailingSepRg } from "../common/find-files";
+import { ISource } from "./source";
 
 const fsGetStat = util.promisify(fs.stat);
 const fsSetDate = util.promisify(fs.utimes);
@@ -108,7 +109,7 @@ export class FsSource implements ISource, IReadDirectory {
      * No holds, ho events attaches
      * @param filename file name
      */
-    public createReadStream(filename: string) {
+    public async createReadStream(filename: string) {
         filename = this.root + ftpPathSeparator + filename;
         return fs.createReadStream(filename);
     }
@@ -117,7 +118,7 @@ export class FsSource implements ISource, IReadDirectory {
      * No holds, no event attaches
      * @param filename file name
      */
-    public createWriteStream(filename: string) {
+    public async createWriteStream(filename: string) {
         filename = this.root + ftpPathSeparator + filename;
         return fs.createWriteStream(filename);
     }

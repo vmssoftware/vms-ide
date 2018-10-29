@@ -1,10 +1,18 @@
-import * as fs from "fs";
+import fs, { exists } from "fs";
+import path from "path";
+import util from "util";
+
 import { CSAResult, IConfigData, IConfigStorage } from "./config";
 
 // tslint:disable-next-line:no-console
 export let logFn = console.log;
 // tslint:disable-next-line:no-empty
 logFn = () => {};
+
+const fsExist = util.promisify(fs.exists);
+const fsReadFile = util.promisify(fs.readFile);
+const fsWriteFile = util.promisify(fs.writeFile);
+const fsMkDir = util.promisify(fs.mkdir);
 
 /**
  * FSConfigStorage
@@ -21,23 +29,19 @@ export class FSConfigStorage implements IConfigStorage {
     public fillStart(): Promise<CSAResult> {
         logFn("fillStart =");
         if (!this.fillStartPromise) {
-            this.fillStartPromise = new Promise<CSAResult>(async (resolve) => {
-                fs.readFile(this.fileName, (err, data) => {
-                    if (err) {
-                        resolve(CSAResult.prepare_failed);
-                    } else {
-                        const content = data.toString("utf8");
-                        try {
-                            this.jsonData = JSON.parse(content);
-                            resolve(CSAResult.ok);
-                            logFn("fillStart => ok");
-                        } catch (error) {
-                            resolve(CSAResult.prepare_failed);
-                            logFn("fillStart => fail");
-                        }
-                    }
-                    this.fillStartPromise = undefined;
+            this.fillStartPromise = new Promise<CSAResult>((resolve) => {
+                fsReadFile(this.fileName).then((data) => {
+                    const content = data.toString("utf8");
+                    this.jsonData = JSON.parse(content);
                     logFn("fillStart => clear");
+                    logFn("fillStart => ok");
+                    return CSAResult.ok;
+                }).catch((err) => {
+                    logFn(`${err}`);
+                    return CSAResult.prepare_failed;
+                }).then((result) => {
+                    this.fillStartPromise = undefined;
+                    resolve(result);
                 });
             });
         }
@@ -83,15 +87,22 @@ export class FSConfigStorage implements IConfigStorage {
         logFn("storeEnd =");
         if (!this.storePromise) {
             this.storePromise = new Promise<CSAResult>((resolve) => {
-                fs.writeFile(this.fileName, JSON.stringify(this.jsonData, null, 4), (err) => {
-                    this.jsonData = {};
-                    if (err) {
-                        logFn("storeEnd => fail");
-                        resolve(CSAResult.end_failed);
-                    } else {
-                        logFn("storeEnd => ok");
-                        resolve(CSAResult.ok);
+                const dir = path.dirname(this.fileName);
+                fsExist(dir).then((ok) => {
+                    if (!ok) {
+                        return fsMkDir(dir);
                     }
+                }).then(() => {
+                    return fsWriteFile(this.fileName, JSON.stringify(this.jsonData, null, 4))
+                        .then(() => {
+                            this.jsonData = {};
+                            logFn("storeEnd => ok");
+                            resolve(CSAResult.ok);
+                        });
+                }).catch((err) => {
+                    logFn(`storeEnd => fail ${err}`);
+                    resolve(CSAResult.end_failed);
+                }).then(() => {
                     this.storePromise = undefined;
                 });
             });

@@ -1,28 +1,76 @@
 {
-  "name": "@vorfol/config-helper",
-  "displayName": "VMS: config-helper",
-  "version": "0.1.6",
-  "description": "Config helper",
-  "publisher": "vmssoftware",
-  "engines": {
-    "vscode": "^1.27.0"
-  },
-  "main": "out/main",
-  "scripts": {
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "tslint": "tslint ./**/*.ts"
-  },
-  "author": "vorfol",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/node": "^10.11.2",
-    "@vorfol/debouncer": "0.0.3",
-    "tslint": "^5.11.0",
-    "typescript": "^3.1.1"
-  },
-  "dependencies": {
-    "vscode-nls": "^4.0.0",
-    "vscode": "^1.1.21"
-  }
+    "name": "config-helper",
+    "displayName": "config-helper",
+    "description": "Config helper",
+    "version": "0.1.14",
+    "publisher": "vmssoftware",
+    "engines": {
+        "vscode": "^1.27.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:vmssoftware.config-helper.test"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "vmssoftware.config-helper.test",
+                    "when": "vmssoftware.config-helper.test:enabled"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "vmssoftware.config-helper.test",
+                "title": "Test command",
+                "category": "Config helper"
+            }
+        ],
+        "configuration": {
+            "title": "Config helper",
+            "properties": {
+                "vmssoftware.config-helper.using": {
+                    "type": "string",
+                    "enum": [
+                        "VSC",
+                        "FS",
+                        "VFS"
+                    ],
+                    "enumDescriptions": [
+                        "Use VS Code configuration",
+                        "Use File System",
+                        "Use VS Code virtual File System"
+                    ],
+                    "default": "FS",
+                    "description": "Type of config"
+                },
+                "vmssoftware.config-helper.test": {
+                    "type": "string",
+                    "default": "test",
+                    "description": "Test"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "package": "vsce package",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "devDependencies": {
+        "@types/mocha": "^5.x.x",
+        "@types/node": "^8.10.25",
+        "tslint": "^5.11.0",
+        "typescript": "^3.x.x",
+        "vscode": "^1.1.21"
+    },
+    "dependencies": {
+        "@vorfol/common": "^0.0.5",
+        "vscode-nls": "^4.0.0"
+    }
 }

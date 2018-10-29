@@ -1,5 +1,6 @@
 
 import { workspace, WorkspaceConfiguration } from "vscode";
+
 import { CSAResult, IConfigData, IConfigStorage, ValueData } from "./config";
 
 // tslint:disable-next-line:no-console
@@ -44,7 +45,10 @@ export class VSCConfigStorage implements IConfigStorage {
     }
 
     public storeData(section: string, data: IConfigData): Promise<CSAResult> {
-        return new Promise(async (resolve) => {
+        if (this.storePromise) {
+            return this.storePromise;
+        }
+        this.storePromise = new Promise(async (resolve) => {
             let retCode = CSAResult.ok;
             const configuration = workspace.getConfiguration(this.section);
             // tslint:disable-next-line:forin
@@ -63,7 +67,9 @@ export class VSCConfigStorage implements IConfigStorage {
             }
             logFn("storeData " + section);
             resolve(retCode);
+            this.storePromise = undefined;
         });
+        return this.storePromise;
     }
 
     public storeEnd(): Promise<CSAResult> {

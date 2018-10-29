@@ -1,8 +1,7 @@
-import { VmsPathConverter } from "../vms/vms-path-converter";
 
 const rgxCrLF = /([\r\n]*)/g;
 const rgxMsgPos = /^(\.*)\^/;
-const rgxMsg = /^(%(\S+)-(\S)-(\S*)),\s(.*)$/;
+const rgxMsg = /^((%|-)(\S+)-(\S)-(\S*)),\s(.*)$/;
 const rgxPlace = /^at line number (\d.*) in file (.*)$/;
 
 interface IDiagnostics {
@@ -16,13 +15,13 @@ interface IDiagnostics {
 
 type IPartialDiagnostics = Partial<IDiagnostics>;
 
-export function parseCxxOutput(output: string) {
+export function parseVmsOutput(output: string) {
     const lines = output.split("\n").map((s) => s.replace(rgxCrLF, ""));
     const result = lines.reduce((problems, line, idx) => {
         const matched = line.match(rgxMsg);
         if (matched) {
             const diagnostic: IPartialDiagnostics = {};
-            switch (matched[3]) {
+            switch (matched[4]) {
                 case "F":
                 case "E":
                     diagnostic.severity = "error";
@@ -30,8 +29,8 @@ export function parseCxxOutput(output: string) {
                 default:
                     diagnostic.severity = "information";
             }
-            diagnostic.type = matched[4];
-            diagnostic.message = matched[5];
+            diagnostic.type = matched[5];
+            diagnostic.message = matched[6];
             if (idx > 0) {
                 const prevLine = lines[idx - 1];
                 const prevMathed = prevLine.match(rgxMsgPos);
@@ -46,11 +45,9 @@ export function parseCxxOutput(output: string) {
                 if (nextLineMathed) {
                     diagnostic.line = parseInt(nextLineMathed[1], 10);
                     diagnostic.file = nextLineMathed[2];
-                    const converter = VmsPathConverter.fromVms(diagnostic.file);
-                    diagnostic.file = converter.initial;
                     break;
                 }
-                if (nextLine.startsWith("%")) { // another error line
+                if (nextLine.match(rgxMsg)) { // another error line
                     break;
                 }
                 diagnostic.message += " " + nextLine.trim();

@@ -1,4 +1,5 @@
 import { Position, Range, Uri, workspace, WorkspaceEdit } from "vscode";
+
 import { CSAResult } from "./config";
 import { FSConfigStorage } from "./fs-storage";
 
@@ -68,6 +69,7 @@ export class VFSConfigStorage extends FSConfigStorage {
                 } catch (err) {
                     resolve(CSAResult.end_failed);
                 }
+                this.storePromise = undefined;
             });
         }
         return this.storePromise;

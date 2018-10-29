@@ -5,7 +5,7 @@ import { Event } from "vscode";
  * Base types and interfaces
  */
 
-export type SimplyData = string | number | boolean | null;
+export type SimplyData = string | number | boolean | null | undefined;
 export type ValueData = SimplyData | IConfigData[];
 
 /**
@@ -103,4 +103,14 @@ export interface IConfigHelper extends Disposable {
 
     getEditor(): IConfigEditor;
 
+}
+
+/**
+ * ConfigHelper
+ */
+export declare class ConfigHelper implements IConfigHelper {
+    public static getConfigHelper(section: string): IConfigHelper;
+    public getConfig(): IConfig;
+    public getEditor(): IConfigEditor;
+    public dispose(): void;
 }

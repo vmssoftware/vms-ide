@@ -1,7 +1,9 @@
-import { Debouncer } from "@vorfol/debouncer";
 import * as path from "path";
 import { Disposable, FileSystemWatcher, Uri, workspace } from "vscode";
-import { IConfig, IConfigEditor, IConfigHelper, IConfigStorage } from "./config";
+
+import { Debouncer } from "@vorfol/common";
+
+import { ConfigHelper, IConfig, IConfigEditor, IConfigStorage } from "./config";
 import { ConfigPool } from "./config-pool";
 import { DummyEditor } from "./dummy-editor";
 import { DummyStorage } from "./dummy-storage";
@@ -16,11 +18,11 @@ logFn = () => {};
 /**
  * ConfigHelper implementation
  */
-export class FSConfigHelper implements IConfigHelper {
+export class FSConfigHelper implements ConfigHelper {
 
     public static getConfigHelper(section: string): FSConfigHelper {
         if (FSConfigHelper.instances.get(section) === undefined) {
-            const relativeFileName = path.join(FSConfigHelper.folder, section, FSConfigHelper.suffix);
+            const relativeFileName = path.join(FSConfigHelper.folder, section + FSConfigHelper.suffix);
             FSConfigHelper.instances.set(section, new FSConfigHelper(relativeFileName));
         }
         return FSConfigHelper.instances.get(section)!;

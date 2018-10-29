@@ -1,5 +1,6 @@
 import { Event, EventEmitter } from "vscode";
 import * as nls from "vscode-nls";
+
 import { CSAResult, IConfig, IConfigSection, IConfigStorage } from "./config";
 
 const localize = nls.loadMessageBundle();

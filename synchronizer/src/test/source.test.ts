@@ -1,25 +1,17 @@
 import * as assert from "assert";
-import { ConnectConfig } from "ssh2";
-import { ContextPasswordFiller } from "../common/context-password-filler";
-import { LogType } from "../common/log-type";
-import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
-import { ConnectConfigResolverImpl, settingsCache } from "../config-resolve/connect-config-resolver-impl";
-import { FakeWriteStreamCreator } from "../stream/fake-write-stream";
-import { ParseWelcomeVms } from "../stream/parse-welcome-vms";
-import { PipeFile } from "../stream/pipe";
-import { PromptCatcherDefault } from "../stream/prompt-catcher-default";
-import { PromptCatcherVms } from "../stream/prompt-catcher-vms";
-import { SftpClient } from "../stream/sftp-client";
-import { SshShell } from "../stream/ssh-shell";
+
+import { LogType, MemoryWriteStream } from "@vorfol/common";
+import { GetSshHelperFromApi } from "../config/get-ssh-helper";
+import { SshHelper } from "../ssh/ssh-helper";
 import { FsSource } from "../sync/fs-source";
 import { SftpSource } from "../sync/sftp-source";
 import { ISource } from "../sync/source";
 import { VmsSource } from "../sync/vms-source";
-import { TestConfiguration } from "./config/config";
+import { Vms } from "./config/vms";
 
 suite("Source tests", function(this: Mocha.Suite) {
 
-    return;
+    // return;
 
     this.timeout(0);
 
@@ -27,58 +19,34 @@ suite("Source tests", function(this: Mocha.Suite) {
     debugLogFn = undefined;
     // tslint:disable-next-line:no-console
     debugLogFn = console.log;
-    let configLocal: ConnectConfig;
-    let configVms: ConnectConfig;
-    let filler: ContextPasswordFiller;
-    let resolver: IConnectConfigResolver;
+
     const include = "**/*.{c,cpp,h},**/resource/**,**/*.mms";
     const exclude = "**/{out,bin},**/.vscode*";
 
+    let sshHelper: SshHelper;
+
     // prepare resolver
     this.beforeAll(async () => {
-        // get configs with passwords
-        configLocal = await TestConfiguration(true);
-        configVms = await TestConfiguration(false);
-        // prepare filler based on passwords from configs
-        filler = new ContextPasswordFiller([
-            {
-                host: configLocal.host,
-                password: configLocal.password,
-            },
-            {
-                host: configVms.host,
-                password: configVms.password,
-            },
-        ], 0);
-        // remove passwords
-        delete configLocal.password;
-        delete configVms.password;
-        resolver = new ConnectConfigResolverImpl([filler]);
+        const sshHelperType = await GetSshHelperFromApi();
+        assert.notEqual(sshHelperType, undefined, `Cannot get ssh-helper api`);
+        sshHelper = new sshHelperType!(debugLogFn);
     });
 
     test("Walk files SFTP VMS", async () => {
-        const sftp = new SftpClient(configVms, resolver, debugLogFn, "*src*");
-        const promptCatcher = new PromptCatcherVms("", debugLogFn);
-        const parserVms = new ParseWelcomeVms(undefined, debugLogFn);
-        const shell = new SshShell(configVms, resolver, parserVms, promptCatcher, debugLogFn, "*src*");
-        const source: ISource = new VmsSource(sftp, shell, "wrk", debugLogFn);
+        const sftp = await sshHelper.getTestSftp(Vms.host, Vms.port, Vms.username, Vms.password);
+        assert.notEqual(sftp, undefined, `Cannot get sftp`);
+        const shell = await sshHelper.getTestShell(Vms.host, Vms.port, Vms.username, Vms.password, true);
+        assert.notEqual(shell, undefined, `Cannot get shell`);
+        const source: ISource = new VmsSource(sftp!, shell!, "wrk", debugLogFn);
         await WalkFiles(source, debugLogFn);
-        sftp.dispose();
-        shell.dispose();
+        sftp!.dispose();
+        shell!.dispose();
         assert.ok(true, "must be true");
     });
 
     test("Walk files FS", async () => {
         const source: ISource = new FsSource("c:/ftp_root/wrk", debugLogFn);
         await WalkFiles(source, debugLogFn);
-        assert.ok(true, "must be true");
-    });
-
-    test("Walk files SFTP local", async () => {
-        const sftp = new SftpClient(configLocal, resolver, debugLogFn, "*src*");
-        const source: ISource = new SftpSource(sftp, "wrk", debugLogFn);
-        await WalkFiles(source, debugLogFn);
-        sftp.dispose();
         assert.ok(true, "must be true");
     });
 
@@ -107,8 +75,8 @@ suite("Source tests", function(this: Mocha.Suite) {
                             `New date must be almost equal previous ${newGotDate} <> ${newDate} ${file.filename}`);
                     }
                 }
-                const fake = new FakeWriteStreamCreator(false, debugLogFn);
-                const result = await PipeFile(source, fake, file.filename, "*", debugLogFn);
+                const memoryStream = sshHelper.memStream();
+                const result = await sshHelper.pipeFile(source, memoryStream, file.filename, "", debugLogFn);
                 assert.equal(result, true, "Must be pipeable");
             }));
         }

@@ -1,6 +1,7 @@
 import { ExtensionContext, window, workspace } from "vscode";
-import { LogType } from "./common/log-type";
-import { IConfig } from "./config/config";
+
+import { LogType } from "@vorfol/common";
+
 import { ToOutputChannel } from "./output-channel";
 import { Synchronizer } from "./sync/syncronizer";
 
@@ -14,10 +15,9 @@ export async function StopSyncProject() {
     return false;
 }
 
-export async function SyncProject(context: ExtensionContext, config: IConfig, debugLog?: LogType) {
+export async function SyncProject(context: ExtensionContext, debugLog?: LogType) {
     return workspace.saveAll(false).then((ok) => {
-        if (ok &&
-            config) {
+        if (ok) {
             if (!synchronizer) {
                 synchronizer = new Synchronizer(debugLog);
                 context.subscriptions.push(synchronizer);
@@ -26,7 +26,7 @@ export async function SyncProject(context: ExtensionContext, config: IConfig, de
                 window.showInformationMessage("Syncronization in progress");
                 return false;
             } else {
-                return synchronizer.syncronizeProject(config)
+                return synchronizer.syncronizeProject()
                     .then((result) => {
                         if (result) {
                             window.showInformationMessage(`Syncronization: ok`);

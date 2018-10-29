@@ -1,5 +1,6 @@
 
 import { Uri, window } from "vscode";
+
 import { IConfig, IConfigEditor } from "./config";
 
 export class UriEditor implements IConfigEditor {

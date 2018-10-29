@@ -1,12 +1,11 @@
 
 import { commands, ExtensionContext, TreeItem, window, workspace } from "vscode";
-import { LogType } from "./common/log-type";
-import { IConfigHelper } from "./config/config";
-import { GetConfigHelperFromApi } from "./config/get-config-helper";
-
 import * as nls from "vscode-nls";
+
+import { LogType } from "@vorfol/common";
+
 import { BuildProject } from "./build";
-import { EnsureSettings } from "./ensure-settings";
+import { configHelper, EnsureSettings } from "./ensure-settings";
 import { ToOutputChannel } from "./output-channel";
 import { setBuilding, setSynchronizing } from "./stop";
 import { StopSyncProject, SyncProject } from "./synchronize";
@@ -28,19 +27,11 @@ export async function activate(context: ExtensionContext) {
         debugLogFn(localize("extension.activated", "OpenVMS extension is activated"));
     }
 
-    let configHelper: IConfigHelper | undefined;
-    GetConfigHelperFromApi().then((helperApi) => {
-        if (helperApi) {
-            configHelper = helperApi.getConfigHelper("open-vms");
-            context.subscriptions.push(configHelper);
-        }
-    });
-
     context.subscriptions.push( commands.registerCommand("VMS.syncProject", async () => {
-        if (configHelper) {
+        if (EnsureSettings(debugLogFn) && configHelper) {
             setSynchronizing(true);
             const msg = window.setStatusBarMessage("Synchronizing...");
-            return SyncProject(context, configHelper.getConfig(), debugLogFn)
+            return SyncProject(context, debugLogFn)
                 .catch((err) => {
                     setSynchronizing(false);
                     if (debugLogFn) {
@@ -57,17 +48,16 @@ export async function activate(context: ExtensionContext) {
     }));
 
     context.subscriptions.push( commands.registerCommand("VMS.buildProject", async () => {
-        if (configHelper) {
-            const config = configHelper.getConfig();
+        if (EnsureSettings(debugLogFn) && configHelper) {
             setBuilding(true);
             setSynchronizing(true);
             let msg = window.setStatusBarMessage("Synchronizing...");
-            return SyncProject(context, config, debugLogFn)
+            return SyncProject(context, debugLogFn)
                 .then((ok) => {
                     msg.dispose();
                     if (ok) {
                         msg = window.setStatusBarMessage("Building...");
-                        return BuildProject(context, config, debugLogFn)
+                        return BuildProject(context, debugLogFn)
                             .then((result) => {
                                 if (result) {
                                     window.showInformationMessage(`Build operation is done`);
@@ -109,7 +99,7 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push( commands.registerCommand("VMS.editProject", async () => {
         if (configHelper) {
-            return EnsureSettings(configHelper.getConfig())
+            return EnsureSettings()
                 .then((ok) => {
                     if (ok && configHelper) {
                         const editor = configHelper.getEditor();
