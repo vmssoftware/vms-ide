@@ -2,7 +2,7 @@
     "name": "config-helper",
     "displayName": "config-helper",
     "description": "Config helper",
-    "version": "0.1.14",
+    "version": "0.1.15",
     "publisher": "vmssoftware",
     "engines": {
         "vscode": "^1.27.0"

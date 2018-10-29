@@ -67,10 +67,32 @@ export class Synchronizer {
     private projectSection?: IConfigSection;
     private synchronizeSection?: IConfigSection;
     private downloadNewFiles: DownloadAction = "edit";
-    private onDidLoad?: vscode.Disposable;
+    private onDidLoadConfig?: vscode.Disposable;  // dispose listener
+    private onDidLoadSSHConfig?: vscode.Disposable;  // dispose listener
     private sshHelper?: SshHelper;
 
     constructor(public debugLog?: LogType) {
+    }
+
+    public get lastErrors() {
+        const errors: Error[] = [];
+        if (this.remoteShell) {
+            if (this.remoteShell.lastShellError) {
+                errors.push(this.remoteShell.lastShellError);
+            }
+            if (this.remoteShell.lastClientError) {
+                errors.push(this.remoteShell.lastClientError);
+            }
+        }
+        if (this.remoteSftp) {
+            if (this.remoteSftp.lastSftpError) {
+                errors.push(this.remoteSftp.lastSftpError);
+            }
+            if (this.remoteSftp.lastClientError) {
+                errors.push(this.remoteSftp.lastClientError);
+            }
+        }
+        return errors;
     }
 
     public compareLists(localList: IFileEntry[], remoteList: IFileEntry[]) {
@@ -199,8 +221,15 @@ export class Synchronizer {
             if (!SynchronizeSection.is(this.synchronizeSection) ||
                 this.synchronizeSection.keepAlive) {
                 // test configuration watcher and create if need
-                if (!this.onDidLoad && synchronizerConfig) {
-                    this.onDidLoad = synchronizerConfig.onDidLoad(() => this.prepare());
+                if (this.onDidLoadConfig === undefined &&
+                    synchronizerConfig) {
+                    this.onDidLoadConfig = synchronizerConfig.onDidLoad(() => this.prepare());
+                }
+                if (this.onDidLoadSSHConfig === undefined &&
+                    this.sshHelper.onDidLoadConfig !== undefined) {
+                    this.onDidLoadSSHConfig = this.sshHelper.onDidLoadConfig(() => {
+                        this.dispose();
+                    });
                 }
             } else {
                 this.dispose();
@@ -244,14 +273,16 @@ export class Synchronizer {
         if (!await EnsureSettings() || !synchronizerConfig) {
             return false;
         }
-        const sshHelperType = await GetSshHelperFromApi();
-        if (!sshHelperType) {
-            if (this.debugLog) {
-                this.debugLog(`Cannot get ssh-helper api`);
+        if (!this.sshHelper) {
+            const sshHelperType = await GetSshHelperFromApi();
+            if (!sshHelperType) {
+                if (this.debugLog) {
+                    this.debugLog(`Cannot get ssh-helper api`);
+                }
+                return false;
             }
-            return false;
+            this.sshHelper = new sshHelperType(this.debugLog);
         }
-        this.sshHelper = new sshHelperType(this.debugLog);
         const [projectSection,
                synchronizeSection] = await Promise.all(
                    [synchronizerConfig.get(ProjectSection.section),
@@ -262,8 +293,13 @@ export class Synchronizer {
             if (!synchronizeSection.keepAlive) {
                 recreateRemote = true;
                 // test configuration watchers and delete if exist
-                if (this.onDidLoad) {
-                    this.onDidLoad.dispose();
+                if (this.onDidLoadConfig) {
+                    this.onDidLoadConfig.dispose();
+                    this.onDidLoadConfig = undefined;
+                }
+                if (this.onDidLoadSSHConfig) {
+                    this.onDidLoadSSHConfig.dispose();
+                    this.onDidLoadSSHConfig = undefined;
                 }
             }
         }

@@ -27,7 +27,7 @@ export async function activate(context: ExtensionContext) {
         debugLogFn(localize("extension.activated", "OpenVMS extension is activated"));
     }
 
-    context.subscriptions.push( commands.registerCommand("VMS.syncProject", async () => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async () => {
         if (EnsureSettings(debugLogFn) && configHelper) {
             setSynchronizing(true);
             const msg = window.setStatusBarMessage("Synchronizing...");
@@ -47,7 +47,7 @@ export async function activate(context: ExtensionContext) {
         return false;
     }));
 
-    context.subscriptions.push( commands.registerCommand("VMS.buildProject", async () => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async () => {
         if (EnsureSettings(debugLogFn) && configHelper) {
             setBuilding(true);
             setSynchronizing(true);
@@ -87,7 +87,7 @@ export async function activate(context: ExtensionContext) {
         }
     }));
 
-    context.subscriptions.push( commands.registerCommand("VMS.stopSync", async () => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopSync", async () => {
         return StopSyncProject()
             .catch((err) => {
                 if (debugLogFn) {
@@ -97,25 +97,21 @@ export async function activate(context: ExtensionContext) {
         });
     }));
 
-    context.subscriptions.push( commands.registerCommand("VMS.editProject", async () => {
-        if (configHelper) {
-            return EnsureSettings()
-                .then((ok) => {
-                    if (ok && configHelper) {
-                        const editor = configHelper.getEditor();
-                        return editor.invoke();
-                    } else {
-                        return false;
-                    }
-                }).catch((err) => {
-                    if (debugLogFn) {
-                        debugLogFn(err);
-                    }
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async () => {
+        return EnsureSettings()
+            .then((ok) => {
+                if (ok && configHelper) {
+                    const editor = configHelper.getEditor();
+                    return editor.invoke();
+                } else {
                     return false;
-                });
-        } else {
-            return false;
-        }
+                }
+            }).catch((err) => {
+                if (debugLogFn) {
+                    debugLogFn(err);
+                }
+                return false;
+            });
     }));
 }
 

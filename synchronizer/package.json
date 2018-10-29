@@ -11,10 +11,9 @@
         "Other"
     ],
     "activationEvents": [
+        "onCommand:vmssoftware.synchronizer.stopSync",
         "onCommand:vmssoftware.synchronizer.buildProject",
         "onCommand:vmssoftware.synchronizer.syncProject",
-        "onCommand:vmssoftware.synchronizer.stopSync",
-        "onCommand:vmssoftware.synchronizer.downloadProject",
         "onCommand:vmssoftware.synchronizer.editProject"
     ],
     "main": "./out/extension",
@@ -37,6 +36,11 @@
         },
         "commands": [
             {
+                "command": "vmssoftware.synchronizer.stopSync",
+                "title": "%command.stopSync.title%",
+                "category": "%command.category%"
+            },
+            {
                 "command": "vmssoftware.synchronizer.buildProject",
                 "title": "%command.buildProject.title%",
                 "category": "%command.category%"
@@ -44,11 +48,6 @@
             {
                 "command": "vmssoftware.synchronizer.syncProject",
                 "title": "%command.syncProject.title%",
-                "category": "%command.category%"
-            },
-            {
-                "command": "vmssoftware.synchronizer.stopSync",
-                "title": "%command.stopSync.title%",
                 "category": "%command.category%"
             },
             {
@@ -90,7 +89,7 @@
                     "default": "project",
                     "description": "%properties.project.root.description%"
                 },
-                "vmssoftware.synchronizer.workspace.downloadNewFiles": {
+                "vmssoftware.synchronizer.synchronize.downloadNewFiles": {
                     "type": "string",
                     "enum": [
                         "overwrite",
@@ -103,17 +102,17 @@
                         "Download and edit"
                     ],
                     "default": "edit",
-                    "description": "%properties.workspace.downloadNewFiles.description%"
+                    "description": "%properties.synchronize.downloadNewFiles.description%"
                 },
-                "vmssoftware.synchronizer.workspace.keepAlive": {
+                "vmssoftware.synchronizer.synchronize.keepAlive": {
                     "type": "boolean",
                     "default": false,
-                    "description": "%properties.workspace.keepAlive.description%"
+                    "description": "%properties.synchronize.keepAlive.description%"
                 },
-                "vmssoftware.synchronizer.workspace.setTimeAttempts": {
+                "vmssoftware.synchronizer.synchronize.setTimeAttempts": {
                     "type": "number",
                     "default": 3,
-                    "description": "%properties.workspace.setTimeAttempts.description%"
+                    "description": "%properties.synchronize.setTimeAttempts.description%"
                 }
             }
         }

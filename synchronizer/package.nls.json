@@ -1,6 +1,6 @@
 {
-    "configuration.title": "OpenVMS synchronization settings",
-    "command.category": "OpenVMS synchronization",
+    "configuration.title": "OpenVMS sync",
+    "command.category": "OpenVMS sync",
     "command.buildProject.title": "Build on VMS",
     "command.editProject.title": "Edit OpenVMS project settings",
     "command.syncProject.title": "Syncronize project files with VMS",
@@ -11,7 +11,7 @@
     "properties.project.source.description": "Source pattern",
     "properties.project.resource.description": "Resource pattern",
     "properties.project.root.description": "VMS root",
-    "properties.workspace.downloadNewFiles.description": "Download action",
-    "properties.workspace.keepAlive.description": "Keep alive",
-    "properties.workspace.setTimeAttempts.description": "Set time attempts"
+    "properties.synchronize.downloadNewFiles.description": "Download action",
+    "properties.synchronize.keepAlive.description": "Keep alive",
+    "properties.synchronize.setTimeAttempts.description": "Set time attempts"
 }

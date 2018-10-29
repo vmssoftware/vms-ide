@@ -79,7 +79,7 @@ export class VSCConfigStorage implements IConfigStorage {
 
     protected setCfgValue<T extends ValueData>(value: T, cfgKey: string, configuration: WorkspaceConfiguration): T {
         const tmp = configuration.get<T>(cfgKey);
-        if (tmp) {
+        if (tmp !== undefined) {
             value = tmp;
         }
         return value;

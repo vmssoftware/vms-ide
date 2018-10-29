@@ -1,4 +1,4 @@
-# vms README
+# OpenVMS synchronizer
 
 This is the README for extension "OpenVms synchronizer".
 
@@ -6,52 +6,36 @@ This is the README for extension "OpenVms synchronizer".
 
 Use command palette to launch **OpenVMS** synchronizer commands:
 
-- OpenVMS settings
-    - To fill all suitable [settings](#Extension-Settings). Unfortunately, user must open **Extensions\OpenVMS settings** himself. Or type "VMS" in the search line and select **OpenVMS settings** in results.
+- OpenVMS Synchronizer settings
+    - To fill all suitable [settings](#Sync-Extension-Settings). Unfortunately, user must open **Extensions\OpenVMS synchronize** himself. Or type "VMS" in the search line and select **OpenVMS synchronize** in results.
 - Syncronize project files with VMS
-    - To syncronize project files with VMS. If password in [settings](#Extension-Settings) isn't present, the **enter password** dialog will be shown. 
+    - To syncronize project files with VMS. If password in OpenVMS SSH settings isn't present, the **enter password** dialog will be shown. 
+- Build project files on VMS
+    - To buil project files on VMS. If password in OpenVMS SSH settings isn't present, the **enter password** dialog will be shown. 
 
 ## Requirements
 
-Latest *config-helper* extension is required.
+Latest "**vmssoftware.config-helper**" and "**vmssoftware.ssh-helper**" extensions are required. Also "**@vorfol/common**" NPM nodule is required.
 
-## Extension Settings
-
-This extension contributes the following settings:
-
-### Common settings
-| Section | Type | Name | Description |
-| --- | --- | --- | --- |
-| `open-vms.common.stopSyncEnable` | `boolean` | Stop Sync Enable | Internal settings, do not change. |
-
-### Connection settings
-| Section | Type | Name | Description |
-| --- | --- | --- | --- |
-| `open-vms.connection.host` | `string` | Host | OpenVMS host. |
-| `open-vms.connection.port` | `number` | Port | SSH port. |
-| `open-vms.connection.username` | `string` | Username | User name. |
-| `open-vms.connection.password` | `string` | Password | Password, can be omitted. |
+## Sync Extension settings
 
 ### Project settings
 *Glob* - a glob patterns separated by commas.
 | Section | Type | Name | Description |
 | --- | --- | --- | --- |
-| `open-vms.project.root` | `string` | Root | Project root folder on the VMS host. |
-| `open-vms.project.exclude` | `string` | Exclude | Glob, files or folder to skip. |
-| `open-vms.project.builders` | `string` | Builders | Glob, files needed to build project on VMS host. |
-| `open-vms.project.headers` | `string` | Headers | Glob, header files.|
-| `open-vms.project.source` | `string` | Source | Glob, source files.|
-| `open-vms.project.resource` | `string` | Resource | Glob, any resource files.|
+| `vmssoftware.synchronizer.project.root` | `string` | Root | Project root folder on the VMS host. |
+| `vmssoftware.synchronizer.project.exclude` | `string` | Exclude | Glob, files or folder to skip. |
+| `vmssoftware.synchronizer.project.builders` | `string` | Builders | Glob, files needed to build project on VMS host. |
+| `vmssoftware.synchronizer.project.headers` | `string` | Headers | Glob, header files.|
+| `vmssoftware.synchronizer.project.source` | `string` | Source | Glob, source files.|
+| `vmssoftware.synchronizer.project.resource` | `string` | Resource | Glob, any resource files.|
 
-### Workspace settings
+### Synchronizer settings
 | Section | Type | Name | Description |
 | --- | --- | --- | --- |
-| `open-vms.workspace.cmdTimeout` | `number` | Cmd Timeout | Timeout for shell commands answer (not implemented yet). |
-| `open-vms.workspace.feedbackTimeout` | `number` | Feedback Timeout | Timeout for connection feedback. If connection doesn't feedback in this period, connection settings will be refused. |
-| `open-vms.workspace.welcomeTimeout` | `number` | Welcome Timeout | Timeout for shell welcome banner parsing. |
-| `open-vms.workspace.setTimeAttempts` | `number` | Set Time Attempts | Number of unsuccessful set file date attempts before return error.|
-| `open-vms.workspace.keepAlive` | `boolean` | Keep Alive | Do or don't dispose connection after synchronization.|
-| `open-vms.workspace.downloadNewFiles` | `enum` | Download New Files | Action if remote file is newer, see [download action](#download-actions). |
+| `vmssoftware.synchronizer.synchronize.setTimeAttempts` | `number` | Set Time Attempts | Number of unsuccessful set file date attempts before return error.|
+| `vmssoftware.synchronizer.synchronize.keepAlive` | `boolean` | Keep Alive | Do or don't dispose connection after synchronization.|
+| `vmssoftware.synchronizer.synchronize.downloadNewFiles` | `enum` | Download New Files | Action if remote file is newer, see [download action](#download-actions). |
 **Note:** zero timeout means an infinite waiting.
 ### Download actions
 

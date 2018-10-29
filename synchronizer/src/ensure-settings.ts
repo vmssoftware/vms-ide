@@ -25,11 +25,14 @@ export async function EnsureSettings(debugLog?: LogType) {
         if (api) {
             configHelper = api.getConfigHelper(sectionName);
             synchronizerConfig = configHelper.getConfig();
+        } else {
+            settingsEnsured = false;
+            return settingsEnsured;
         }
     }
     if (!synchronizerConfig) {
         settingsEnsured = false;
-        return false;
+        return settingsEnsured;
     }
     // in first add missed
     for (const section of sections) {
@@ -43,8 +46,10 @@ export async function EnsureSettings(debugLog?: LogType) {
         const testSection = await synchronizerConfig.get(section.name());
         if (debugLog && typeof section !== typeof testSection) {
             debugLog(`Different types of sections ${section.name()}`);
-            return false;
+            settingsEnsured = false;
+            return settingsEnsured;
         }
     }
-    return true;
+    settingsEnsured = true;
+    return settingsEnsured;
 }

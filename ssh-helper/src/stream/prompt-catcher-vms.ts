@@ -16,8 +16,11 @@ export class PromptCatcherVms extends ShellParser implements IPromptCatcher {
     public _transform(chunk: any, encoding: string, callback: Function) {
         super._transform(chunk, encoding, callback);
         if (Buffer.isBuffer(chunk)) {
-            const promptIdx = chunk.indexOf(0);
-            if (promptIdx >= 0) {
+            if (chunk.includes(0)) {
+                const promptIdx = this.content.indexOf(String.fromCharCode(0));
+                if (promptIdx >= 0) {
+                    this.content = this.content.slice(0, promptIdx);
+                }
                 this.setReady();
             }
         }

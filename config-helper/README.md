@@ -1,39 +1,24 @@
-# common-test README
+# Config-helper README
 
 Extension "config-helper".
 
 ## Features
 
-No.
+Provides easy way to keep settings in different places, such as:
+- local file system
+- visual studio code configuration
+- visual studio code virtual file system
 
 ## Requirements
 
-No.
+Lates "**@vorfol/common**" NPM module.
 
 ## Extension Settings
 
-To:
+To choose where keep the settings, select one of:
 
-* `config-helper.using`: "FS" | "VSC" | "VFS"
+* `vmssoftware.config-helper.using`: "FS" | "VSC" | "VFS"
 
-## Known Issues
-
-No.
-
-## Release Notes
-
-Do not use it. It's mine.
-
-### 0.0.1
-
-Initial release.
-
-### 0.0.4
-
-Remove legacy code.
-
-### 0.1.0
-
-Add config helpers.
+*Note*: one should reload "VS Code" to take the changes in action.
 
 -----------------------------------------------------------------------------------------------------------
