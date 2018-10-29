@@ -13,8 +13,8 @@
 		"does not multi-root ready"
 	],
 	"engines": {
-		"vscode": "^1.27.0",
-		"node": "^10.0.0"
+		"vscode": "^1.28.0",
+		"node": "^8.x.x"
 	},
 	"icon": "images/mock-debug-icon.png",
 	"categories": [

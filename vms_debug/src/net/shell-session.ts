@@ -1,8 +1,11 @@
 import {ToOutputChannel} from '../io/output-channel';
-import { SSHClient } from './ssh-client';
-import { Client, ClientChannel, ClientErrorExtensions } from 'ssh2';
 import { Queue } from '../queue/queues';
 import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
+import { SshHelper } from '../ext-api/ssh-helper';
+import { LogType } from '@vorfol/common';
+import { GetSshHelperFromApi } from '../ext-api/get-ssh-helper';
+import { ISshShell } from '../ext-api/api';
+import { ShellParser } from './shell-parser';
 
 export enum ModeWork
 {
@@ -12,32 +15,32 @@ export enum ModeWork
 
 export class ShellSession
 {
-    private userPrompt : string = "$$$> ";
-    private sshClient : Client | undefined;
-    private stream : ClientChannel | undefined;
     private enterCmd : string;
     private mode : ModeWork;
     private resultData : string;
-    private funcData : Function;
-    private funcReady : Function;
+    private extensionDataCb : Function;
+    private extensionReadyCb : Function;
     private queueCmd = new Queue<CommandMessage>();
     private readyCmd : boolean;
     private receiveCmd : boolean;
     private currentCmd : CommandMessage;
-    private stepSetupTerminal : number;
 
+    private sshHelper?: SshHelper;
+    private sshShell?: ISshShell;
 
-    constructor( DataCb: (data: string, mode: ModeWork) => void, ReadyCb: () => void)
+    private shellParser: ShellParser;
+
+    constructor( ExtensionDataCb: (data: string, mode: ModeWork) => void, ExtensionReadyCb: () => void, public debugLog?: LogType)
     {
         this.enterCmd = "";
         this.resultData = "";
-        this.funcData = DataCb;
-        this.funcReady = ReadyCb;
+        this.extensionDataCb = ExtensionDataCb;
+        this.extensionReadyCb = ExtensionReadyCb;
         this.readyCmd = false;
         this.receiveCmd = false;
         this.mode = ModeWork.shell;
-        this.stepSetupTerminal = 0;
         this.currentCmd = new CommandMessage("", "");
+        this.shellParser = new ShellParser(this.DataCb, this.CloseCb, this.ClientErrorCb, this.debugLog);
 
         this.ShellInitialise();
     }
@@ -47,12 +50,23 @@ export class ShellSession
     {
         try
         {
-            this.stepSetupTerminal = 0;
-
-            let conn = await new SSHClient();
-
-            this.sshClient = await conn.CreateClientSSH(this.ClientErrorCb);
-            this.stream = await conn.GetStreamSSH(this.sshClient, this.DataCb, this.CloseCb);
+            if (!this.sshHelper) {
+                const sshHelperType = await GetSshHelperFromApi();
+                if (!sshHelperType) {
+                    if (this.debugLog) {
+                        this.debugLog(`Cannot get ssh-helper api`);
+                    }
+                    return false;
+                }
+                this.sshHelper = new sshHelperType(this.debugLog);
+            }
+            if (this.sshHelper) {
+                this.sshShell = await this.sshHelper.getDefaultVmsShell();
+                if (this.sshShell) {
+                    this.sshShell.attachUser(this.shellParser);
+                    this.shellParser.push("\r\n");
+                }
+            }
         }
         catch(error)
         {
@@ -60,15 +74,18 @@ export class ShellSession
             {
                 ToOutputChannel(error.message);
 
-                if(this.sshClient)
+                if(this.sshShell)
                 {
-                    this.sshClient.end();
+                    this.sshShell.dispose();
+                    this.sshShell = undefined;
                 }
                 //this.ShellInitialise();
             }
             else
             {
-                console.log(error);
+                if (this.debugLog) {
+                    this.debugLog(error);
+                }
             }
         }
     }
@@ -77,41 +94,9 @@ export class ShellSession
     {
         if(this.enterCmd === "")
         {
-            if(data.includes(this.userPrompt))
-            {
-                this.enterCmd = this.userPrompt;//set prompt
-                this.readyCmd = true;
-                this.funcReady();
-            }
-            else
-            {
-                //setup terminal on connecting
-                switch(this.stepSetupTerminal)
-                {
-                    case 0:
-                        this.stepSetupTerminal++;
-                        this.stream.write("\x1B[?62;1c");//answer on <esc>[c
-                        break;
-
-                    case 1:
-                        this.stepSetupTerminal++;
-                        this.stream.write("\x1B[24;132R");//answer on <esc>7<esc>[255;255H<esc>[6n<esc>8
-                        this.stream.write("\x1B[0;0R");
-                        break;
-
-                    case 2:
-                        this.stepSetupTerminal++;//<esc>[62"p<esc> F
-                        break;
-
-                    case 3:
-                        this.stepSetupTerminal++;
-                        this.stream.write("set prompt =\"" + this.userPrompt + "\"" + '\r\n');//setup prompt >
-                        break;
-
-                    default:
-                        break;
-                }
-            }
+            this.enterCmd = this.sshShell!.prompt!;//set prompt
+            this.readyCmd = true;
+            this.extensionReadyCb();
         }
         else if(data.includes("\x00") && (data.includes(this.enterCmd) || data.includes("DBG> ")))
         {
@@ -131,7 +116,7 @@ export class ShellSession
 
             if(this.resultData !== "")
             {
-                this.funcData(this.resultData, this.mode);
+                this.extensionDataCb(this.resultData, this.mode);
                 this.resultData = "";
             }
 
@@ -160,7 +145,7 @@ export class ShellSession
                 if(this.resultData.includes(this.currentCmd.getCommand()))
                 {
                     this.resultData = "C:" + this.resultData;
-                    this.funcData(this.resultData, this.mode);
+                    this.extensionDataCb(this.resultData, this.mode);
                     this.resultData = "";
                     this.receiveCmd = true;
                 }
@@ -172,7 +157,7 @@ export class ShellSession
             {
                 if(this.resultData !== "")
                 {
-                    this.funcData(this.resultData, this.mode);
+                    this.extensionDataCb(this.resultData, this.mode);
                     this.resultData = "";
 
                     if(this.readyCmd)
@@ -187,26 +172,21 @@ export class ShellSession
         }
     }
 
-    private CloseCb = (code : any, signal : any) : void =>
+    private CloseCb = (code?: any, signal?: any) : void =>
     {
-        if(this.sshClient)
+        if(this.sshShell)
         {
-            this.sshClient.end();
+            this.sshShell.dispose();
+            this.sshShell = undefined;
         }
-        console.log("Connection was closed");
+        if (this.debugLog) {
+            this.debugLog("Connection was closed");
+        }
     }
 
-    private ClientErrorCb = (err: Error & ClientErrorExtensions) : void =>
+    private ClientErrorCb = (err) : void =>
     {
-        if (err instanceof Error)
-        {
-            ToOutputChannel(err.message);
-           // this.ShellInitialise();
-        }
-        else
-        {
-            console.log(err);
-        }
+        ToOutputChannel(`${err}`);
     }
 
     public getCurrentCommand() : CommandMessage
@@ -218,11 +198,11 @@ export class ShellSession
     {
         let result = false;
 
-        if(this.stream)
+        if(this.sshShell)
         {
             this.currentCmd = command;
             this.receiveCmd = false;
-            result = this.stream.write(command.getCommand() + '\r\n');
+            result = this.shellParser.push(command.getCommand() + '\r\n');
         }
 
         return result;
@@ -232,13 +212,13 @@ export class ShellSession
     {
         if(this.readyCmd === true)
         {
-            if(this.stream)
+            if(this.sshShell)
             {
                 let result : boolean;
 
                 this.currentCmd = command;
                 this.receiveCmd = false;
-                result = this.stream.write(command.getCommand() + '\r\n');
+                result = this.shellParser.push(command.getCommand() + '\r\n');
 
                 if(!result)
                 {
@@ -261,17 +241,12 @@ export class ShellSession
         }
     }
 
-
-    public GetStream() : ClientChannel
-    {
-        return this.stream!;
-    }
-
     public DisconectSession()
     {
-        if(this.stream)
+        if(this.sshShell)
         {
-            this.stream.end("logoff\r\n");
+            this.sshShell.dispose();
+            this.sshShell = undefined;
         }
     }
 }

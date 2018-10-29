@@ -11,13 +11,16 @@ import { IConnectConfigResolver } from "../config-resolve/connect-config-resolve
 import { SshClient } from "./ssh-client";
 import { ParseWelcome } from "./parse-welcome";
 import { PromptCatcher } from "./prompt-catcher";
-import { IParseWelcome, IPromptCatcher } from "../api";
+import { IParseWelcome, IPromptCatcher, ISshShell } from "../api";
 
-export class SshShell extends SshClient {
+export class SshShell extends SshClient implements ISshShell {
 
     public lastShellError?: Error;
+    public get prompt() {
+        return this.promptGiven;
+    }
 
-    private prompt?: string;             // given prompt from other side
+    private promptGiven?: string;             // given prompt from other side
     private channel?: ClientChannel;
     private shellClose?: IUnSubscribe;
     private shellExit?: IUnSubscribe;
@@ -48,7 +51,7 @@ export class SshShell extends SshClient {
         await this.waitOperation.acquire();
         if (await this.ensureChannel()) {
             if (this.channel &&
-                this.prompt) {  // just check if welcome banner parsed correctly
+                this.promptGiven) {  // just check if welcome banner parsed correctly
                 // no check prompt-catcher, it's user's issue now
                 this.userStream = user;
                 this.userStream.pipe(this.channel).pipe(this.userStream);
@@ -76,7 +79,7 @@ export class SshShell extends SshClient {
         await this.waitOperation.acquire();
         if (await this.ensureChannel()) {
             if (this.channel &&
-                this.prompt &&
+                this.promptGiven &&
                 this.promptCatcher) {
                 const waitReady = new Lock(true);
                 const trimmedCommand = command.trim();
@@ -213,7 +216,7 @@ export class SshShell extends SshClient {
             delete this.shellExit;
         }
         delete this.channel;
-        delete this.prompt;
+        delete this.promptGiven;
         delete this.userStream;
     }
 
@@ -247,7 +250,7 @@ export class SshShell extends SshClient {
     }
 
     protected async parseWelcome() {
-        this.prompt = undefined;
+        this.promptGiven = undefined;
         if (!this.welcomeParser) {
             if (this.debugLog) {
                 this.debugLog(`shell${this.tag ? " " + this.tag : ""} create def welcome parser`);
@@ -269,18 +272,18 @@ export class SshShell extends SshClient {
         this.channel.unpipe(this.welcomeParser);
         this.welcomeParser.unpipe(this.channel);
         unsubscribeWelcome.unsubscribe();
-        this.prompt = this.welcomeParser.prompt;
-        if (this.prompt) {
+        this.promptGiven = this.welcomeParser.prompt;
+        if (this.promptGiven) {
             if (!this.promptCatcher) {
                 if (this.debugLog) {
                     this.debugLog(`shell${this.tag ? " " + this.tag : ""} create def prompt catcher`);
                 }
-                this.promptCatcher = new PromptCatcher(this.prompt, 0, this.debugLog, "catcher");
+                this.promptCatcher = new PromptCatcher(this.promptGiven, 0, this.debugLog, "catcher");
             } else {
                 if (this.debugLog) {
                     this.debugLog(`shell${this.tag ? " " + this.tag : ""} set prompt to catcher`);
                 }
-                this.promptCatcher.prompt = this.prompt;
+                this.promptCatcher.prompt = this.promptGiven;
                 this.promptCatcher.content = "";
             }
             return true;

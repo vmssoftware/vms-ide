@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext)
 {
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.connect', () =>
 	{
-		shell = new ShellSession(DataCb, ReadyCb);
+		shell = new ShellSession(ExtensionDataCb, ExtensionReadyCb, console.log);
 
 		const message = localize('extention.conecting', "Connecting to the server");
 		vscode.window.showInformationMessage(message);
@@ -93,7 +93,7 @@ export function deactivate()
 	shell.DisconectSession();
 }
 
-let DataCb = function(data: string, mode: ModeWork) : void
+let ExtensionDataCb = function(data: string, mode: ModeWork) : void
 {
 	//console.log(data);
 
@@ -103,7 +103,7 @@ let DataCb = function(data: string, mode: ModeWork) : void
 	}
 };
 
-let ReadyCb = function() : void
+let ExtensionReadyCb = function() : void
 {
 	//console.log("ready");
 

@@ -23,7 +23,7 @@ import { PromptCatcher } from "./stream/prompt-catcher";
 
 export class SshHelper {
 
-    readonly section = "vmssoftware.ssh-helper";
+    readonly section: string;
     
     private settingsEnsured?: boolean;
     private sections: IConfigSection[] = [];
@@ -33,6 +33,7 @@ export class SshHelper {
     public onDidLoadConfig?: Event<null>;
 
     constructor(public debugLog?: LogType) {
+        this.section = "vmssoftware.ssh-helper";
         this.sections.push(new ConnectionSection());
         this.sections.push(new TimeoutsSection());
     }
