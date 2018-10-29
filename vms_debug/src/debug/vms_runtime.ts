@@ -8,7 +8,7 @@ import { EventEmitter } from 'events';
 import { ShellSession, ModeWork } from '../net/shell-session';
 import { OsCommands } from '../command/os_commands';
 import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
-import { DebugParser } from '../parsers/debug_parser';
+import { DebugParser, MessageDebuger } from '../parsers/debug_parser';
 import { workspace, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import {ToOutputChannel} from '../io/output-channel';
@@ -135,7 +135,7 @@ export class VMSRuntime extends EventEmitter
 	public stop()
 	{
 		this.buttonPressd = DebugButtonEvent.btnPause;
-		this.shell.SendCommand(this.dbgCmd.stop());
+		this.shell.SendCommandToQueue(this.dbgCmd.stop());
 	}
 
 	public exit()
@@ -516,22 +516,28 @@ export class VMSRuntime extends EventEmitter
 			let messageCommand = this.dbgParser.getCommandMessage();
 			let messageDebug = this.dbgParser.getDebugMessage();
 			let messageUser = this.dbgParser.getUserMessage();
+			let messageData = this.dbgParser.getDataMessage();
+
 
 			if(messageCommand !== "")
 			{
 				ToOutputChannel(messageCommand);
-
-				if(messageCommand.includes(DebugCmdVMS.dbgExamine))//show selected variable
+			}
+			if(messageData !== "")
+			{
+				switch(this.shell.getCurrentCommand().getBody())
 				{
-					let messageData = this.dbgParser.getDataMessage();
-					this.sendEvent(DebugCmdVMS.dbgExamine, messageData);
-				}
-				else if(messageCommand.includes(DebugCmdVMS.dbgCallStack))//show call stack
-				{
-					let messageData = this.dbgParser.getDataMessage();
+					case DebugCmdVMS.dbgExamine:
+						this.sendEvent(DebugCmdVMS.dbgExamine, messageData);
+						break;
 
-					let stack = this.dbgParser.parseCallStackMsg(messageData, this.sourcePaths, this.lisPaths, this.stackStartFrame, this.stackEndFrame);
-					this.sendEvent(DebugCmdVMS.dbgStack, stack);
+					case DebugCmdVMS.dbgCallStack:
+						let stack = this.dbgParser.parseCallStackMsg(messageData, this.sourcePaths, this.lisPaths, this.stackStartFrame, this.stackEndFrame);
+						this.sendEvent(DebugCmdVMS.dbgStack, stack);
+						break;
+
+					default:
+						break;
 				}
 			}
 			if(messageUser !== "")
@@ -542,7 +548,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				ToOutputChannel(messageDebug);
 
-				if(messageDebug.includes("%SYSTEM-S-NORMAL, normal successful completion"))
+				if(messageDebug.includes(MessageDebuger.msgEnd))
 				{
 					this.sendEvent('end');
 				}
@@ -577,7 +583,6 @@ export class VMSRuntime extends EventEmitter
 						break;
 
 					case DebugButtonEvent.btnPause:
-					console.log("stop");
 						this.sendEvent('stopOnStep');
 						this.buttonPressd = 0;
 						break;

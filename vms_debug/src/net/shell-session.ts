@@ -22,6 +22,7 @@ export class ShellSession
     private funcReady : Function;
     private queueCmd = new Queue<CommandMessage>();
     private readyCmd : boolean;
+    private receiveCmd : boolean;
     private currentCmd : CommandMessage;
     private stepSetupTerminal : number;
 
@@ -33,6 +34,7 @@ export class ShellSession
         this.funcData = DataCb;
         this.funcReady = ReadyCb;
         this.readyCmd = false;
+        this.receiveCmd = false;
         this.mode = ModeWork.shell;
         this.stepSetupTerminal = 0;
         this.currentCmd = new CommandMessage("", "");
@@ -142,10 +144,28 @@ export class ShellSession
         }
         else
         {
+            if(this.receiveCmd)
+            {
+                if(this.resultData === "")
+                {
+                    this.resultData = "D:";
+                }
+            }
+
             this.resultData += data;
             let cmd = this.currentCmd.getBody();
 
-            if(cmd.includes(DebugCmdVMS.dbgGo) ||
+            if(!this.receiveCmd)
+            {
+                if(this.resultData.includes(this.currentCmd.getCommand()))
+                {
+                    this.resultData = "C:" + this.resultData;
+                    this.funcData(this.resultData, this.mode);
+                    this.resultData = "";
+                    this.receiveCmd = true;
+                }
+            }
+            else if(cmd.includes(DebugCmdVMS.dbgGo) ||
                 cmd.includes(DebugCmdVMS.dbgStep) ||
                 cmd.includes(DebugCmdVMS.dbgStepIn) ||
                 cmd.includes(DebugCmdVMS.dbgStepReturn))
@@ -154,6 +174,14 @@ export class ShellSession
                 {
                     this.funcData(this.resultData, this.mode);
                     this.resultData = "";
+
+                    if(this.readyCmd)
+                    {
+                        if(this.queueCmd.size() > 0)
+                        {
+                            this.SendCommandToQueue(this.queueCmd.pop());
+                        }
+                    }
                 }
             }
         }
@@ -193,6 +221,7 @@ export class ShellSession
         if(this.stream)
         {
             this.currentCmd = command;
+            this.receiveCmd = false;
             result = this.stream.write(command.getCommand() + '\r\n');
         }
 
@@ -208,6 +237,7 @@ export class ShellSession
                 let result : boolean;
 
                 this.currentCmd = command;
+                this.receiveCmd = false;
                 result = this.stream.write(command.getCommand() + '\r\n');
 
                 if(!result)

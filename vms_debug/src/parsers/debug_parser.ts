@@ -114,13 +114,36 @@ export class DebugParser
 
 	private splitData(command : CommandMessage, data : string)
 	{
-		let positionOld : number = 0;
-		let escapes = data.split("\x1B");
-		let dataPrompt = escapes.shift();
+		let typeData = data.substr(0, 2);
+		let dataMsg = data.substr(2);
 
+		//clean the old data
 		this.displayDataString[0] = "";
 		this.displayDataString[1] = "";
 		this.displayDataString[2] = "";
+
+
+		if(typeData === "C:")//command
+		{
+			let userData = dataMsg.replace(command.getCommand(), "");
+			this.queueMsgCommand.push(MessagePrompt.prmtCMD + command.getCommand());
+
+			if(userData !== "")//data
+			{
+				this.parseEscSequence(userData);
+			}
+		}
+		else//data
+		{
+			this.parseEscSequence(dataMsg);
+		}
+	}
+
+	private parseEscSequence(data : string)
+	{
+		let positionOld : number = 0;
+		let escapes = data.split("\x1B");
+		let dataPrompt = escapes.shift();
 
 		if(dataPrompt)//prompt data (coommand and user data)
 		{
@@ -128,27 +151,7 @@ export class DebugParser
 
 			if(dataPrompt !== "")
 			{
-				if(dataPrompt.includes(command.getCommand()))
-				{
-					if(dataPrompt.includes(DebugCmdVMS.dbgStop))
-					{
-						dataPrompt = dataPrompt.replace(DebugCmdVMS.dbgStop, "");
-						this.queueMsgCommand.push(MessagePrompt.prmtCMD + command.getCommand());
-
-						if(dataPrompt !== "")
-						{
-							this.queueMsgUser.push(MessagePrompt.prmtUSER + dataPrompt);
-						}
-					}
-					else
-					{
-						this.queueMsgCommand.push(MessagePrompt.prmtCMD + dataPrompt);
-					}
-				}
-				else
-				{
-					this.queueMsgUser.push(MessagePrompt.prmtUSER + dataPrompt);
-				}
+				this.queueMsgUser.push(MessagePrompt.prmtUSER + dataPrompt);
 			}
 		}
 
@@ -238,29 +241,7 @@ export class DebugParser
 		}
 		if(this.displayDataString[2] !== "")
 		{
-			//this.queueMsgDebug.push(MessagePrompt.prmtUSER + this.displayDataString[2]);
-
-			if(this.displayDataString[2].includes(command.getCommand()))
-			{
-				if(this.displayDataString[2].includes(DebugCmdVMS.dbgStop))
-				{
-					this.displayDataString[2] = this.displayDataString[2].replace(DebugCmdVMS.dbgStop, "");
-					this.queueMsgCommand.push(MessagePrompt.prmtCMD + command.getCommand());
-
-					if(this.displayDataString[2] !== "")
-					{
-						this.queueMsgUser.push(MessagePrompt.prmtUSER + this.displayDataString[2]);
-					}
-				}
-				else
-				{
-					this.queueMsgCommand.push(MessagePrompt.prmtCMD + this.displayDataString[2]);
-				}
-			}
-			else
-			{
-				this.queueMsgUser.push(MessagePrompt.prmtUSER + this.displayDataString[2]);
-			}
+			this.queueMsgDebug.push(MessagePrompt.prmtUSER + this.displayDataString[2]);
 		}
 	}
 
