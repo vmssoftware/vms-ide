@@ -3,7 +3,7 @@ import { Event } from "vscode";
 /**
  * Base types and interfaces
  */
-export declare type SimplyData = string | number | boolean | null;
+export declare type SimplyData = string | number | boolean | null | undefined;
 export declare type ValueData = SimplyData | IConfigData[];
 /**
  * ConfigData

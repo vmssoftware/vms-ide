@@ -11,13 +11,10 @@ import { ShellSession, ModeWork } from './net/shell-session';
 import * as Net from 'net';
 import * as nls from 'vscode-nls';
 import { OsCommands } from './command/os_commands';
-import { IConfigHelper } from './ext-api/config';
-import { getConfigHelperFromApi } from './ext-api/get';
-import { InitCfg as SSHInitCfg } from './net/ssh-client';
 import {ToOutputChannel} from './io/output-channel';
 
-
-const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();//nls.config({ locale: 'ru',  cacheLanguageResolution: true, messageFormat : nls.MessageFormat.both})();
+const locale = vscode.env.language ;
+const localize = nls.config({ locale })();
 //const localize = nls.loadMessageBundle();
 
 /*
@@ -88,28 +85,6 @@ export function activate(context: vscode.ExtensionContext)
 	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('vms_dbg', provider));
 	context.subscriptions.push(provider);
 
-    let helper: IConfigHelper | undefined = undefined;
-    getConfigHelperFromApi().then((helperApi) => {
-        if (helperApi) {
-
-            helper = helperApi.getConfigHelper('open-vms');
-
-            //test full path to Config object
-            SSHInitCfg(helper).then(() => {
-                console.log('ConnectionInitCfg configured');
-            });
-
-            context.subscriptions.push(helper);
-        }
-	});
-
-	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.edit_settings', () =>
-	{
-        if (helper) {
-            let _editor = helper.getEditor();
-            _editor.invoke();
-        }
-	}));
 }
 
 export function deactivate()

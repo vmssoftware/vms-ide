@@ -1,7 +1,7 @@
 {
 	"name": "vms-debug",
 	"displayName": "VMS C Debug",
-	"version": "0.27.1",
+	"version": "0.27.2",
 	"publisher": "vmssoftware",
 	"description": "The extension for developing debug adapters for VS Code.",
 	"author": {
@@ -30,6 +30,7 @@
 		"url": "https://host/project/issues"
 	},
 	"scripts": {
+		"get-ext-api": "PowerShell copy -Path ..\\ssh-helper\\out\\api.d.ts, ..\\ssh-helper\\out\\ssh-helper.d.ts, ..\\config-helper\\out\\config\\config.d.ts -Destination src\\ext-api",
 		"prepublish": "tsc -p ./",
 		"compile": "tsc -p ./",
 		"tslint": "tslint ./**/*.ts",
@@ -40,44 +41,37 @@
 		"publish": "vsce publish"
 	},
 	"devDependencies": {
-		"typescript": "^3.0.0",
-		"vscode": "^1.1.21",
+		"@types/mocha": "^5.x.x",
+		"@types/node": "^8.10.36",
 		"tslint": "^5.11.0",
-		"@types/node": "^10.0.0",
-		"@types/mocha": "^5.0.0"
+		"typescript": "^3.x.x",
+		"vscode": "^1.1.21"
 	},
 	"dependencies": {
+		"@vorfol/common": "0.0.11",
 		"await-notify": "^1.0.1",
 		"del": "^3.0.0",
 		"gulp": "^3.9.1",
 		"gulp-typescript": "^5.0.0-alpha.3",
+		"net": "^1.0.2",
 		"run-sequence": "^2.2.1",
 		"ssh2": "^0.6.1",
-		"vsce": "^1.49.1",
-		"vscode-debugadapter": "^1.31.0",
+		"vsce": "^1.52.0",
+		"vscode-debugadapter": "^1.32.1",
 		"vscode-debugadapter-testsupport": "1.27.0",
 		"vscode-nls": "^4.0.0",
 		"vscode-nls-dev": "^3.2.0"
 	},
-    "extensionDependencies": [
-        "vorfol.config-helper"
-    ],
 	"main": "./out/extension",
 	"activationEvents": [
 		"onDebug",
 		"onCommand:extension.vms-debug.connect",
 		"onCommand:extension.vms-debug.compile",
 		"onCommand:extension.vms-debug.run",
-		"onCommand:extension.vms-debug.getProgramName",
-		"onCommand:extension.vms-debug.edit_settings"
+		"onCommand:extension.vms-debug.getProgramName"
 	],
 	"contributes": {
 		"commands": [
-			{
-				"command": "extension.vms-debug.edit_settings",
-				"title": "%extension.edit_settings%",
-				"category": "%command.category%"
-			},
 			{
 				"command": "extension.vms-debug.connect",
 				"title": "%extension.vms_connect%",
@@ -158,62 +152,6 @@
 					"AskForProgramName": "extension.vms-debug.getProgramName"
 				}
 			}
-		],
-		"configuration": {
-            "title": "%configuration.title%",
-            "properties": {
-                "open-vms.common.build-enabled": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "%properties.common.build-enabled.description%"
-                },
-                "open-vms.connection.host": {
-                    "type": "string",
-                    "default": "host",
-                    "description": "%properties.connection.host.description%"
-                },
-                "open-vms.connection.port": {
-                    "type": "number",
-                    "default": 22,
-                    "description": "%properties.connection.port.description%"
-                },
-                "open-vms.connection.username": {
-                    "type": "string",
-                    "default": "",
-                    "description": "%properties.connection.username.description%"
-                },
-                "open-vms.connection.password": {
-                    "type": "string",
-                    "default": "",
-                    "description": "%properties.connection.password.description%"
-                },
-                "open-vms.filter.include": {
-                    "type": "string",
-                    "default": "**/*.*",
-                    "description": "%properties.filter.include.description%"
-                },
-                "open-vms.filter.exclude": {
-                    "type": "string",
-                    "default": "**/{.vscode,node-modules}/*.*",
-                    "description": "%properties.filter.exclude.description%"
-                },
-                "open-vms.host_collection.default": {
-                    "type": "string",
-                    "default": "default",
-                    "description": "default host in collection"
-                },
-                "open-vms.host_collection.hosts": {
-                    "type": "array",
-                    "default": [
-                        {
-                            "host": "",
-                            "port": 0,
-                            "username": ""
-                        }
-                    ],
-                    "description": "array of hosts"
-                }
-            }
-		}
+		]
 	}
 }

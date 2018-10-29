@@ -1,6 +1,6 @@
 import {ToOutputChannel} from '../io/output-channel';
 import { SSHClient } from './ssh-client';
-import { Client, ClientChannel, SFTPWrapper, ClientErrorExtensions } from 'ssh2';
+import { Client, ClientChannel, ClientErrorExtensions } from 'ssh2';
 import { Queue } from '../queue/queues';
 import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
 
@@ -15,7 +15,6 @@ export class ShellSession
     private userPrompt : string = "$$$> ";
     private sshClient : Client | undefined;
     private stream : ClientChannel | undefined;
-    private sftp : SFTPWrapper | undefined;
     private enterCmd : string;
     private mode : ModeWork;
     private resultData : string;
@@ -51,7 +50,6 @@ export class ShellSession
             let conn = await new SSHClient();
 
             this.sshClient = await conn.CreateClientSSH(this.ClientErrorCb);
-            this.sftp = await conn.CreateClientSFTP(this.sshClient);
             this.stream = await conn.GetStreamSSH(this.sshClient, this.DataCb, this.CloseCb);
         }
         catch(error)
@@ -237,11 +235,6 @@ export class ShellSession
     public GetStream() : ClientChannel
     {
         return this.stream!;
-    }
-
-    public GetSftp() : SFTPWrapper
-    {
-        return this.sftp!;
     }
 
     public DisconectSession()

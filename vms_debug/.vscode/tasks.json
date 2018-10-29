@@ -25,6 +25,18 @@
 			"problemMatcher": [
 				"$tsc"
 			]
+		},
+		{
+			"type": "npm",
+			"script": "get-ext-api",
+			"problemMatcher": []
+		},
+		{
+			"type": "npm",
+			"script": "compile",
+			"problemMatcher": [
+				"$tsc"
+			]
 		}
 	]
 }

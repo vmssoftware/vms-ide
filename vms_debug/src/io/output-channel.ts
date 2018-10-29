@@ -7,7 +7,7 @@ let _channel: OutputChannel;
 
 /** Channel name
  */
-const _outputChannelName = 'VMS Build';
+const _outputChannelName = 'VMS Debug';
 
 /** Get or create new output channel named [`VMS Build`](#_outputChannelName)
  */
@@ -19,7 +19,7 @@ function GetOutputChannel(): OutputChannel {
 }
 
 /** Puts string to output channel and focuses on it
- * 
+ *
  */
 export function ToOutputChannel( outStr : string, endl : boolean = true) : void {
     if (endl) {
