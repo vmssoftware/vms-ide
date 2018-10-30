@@ -5,6 +5,9 @@ import { Lock } from "@vorfol/common";
 
 import { ISettingsFiller } from "./settings-filler";
 
+import * as nls from "vscode-nls";
+const localize = nls.loadMessageBundle();
+
 export class PasswordConsoleFiller implements ISettingsFiller {
 
     private lock = new Lock();
@@ -36,7 +39,7 @@ export class PasswordConsoleFiller implements ISettingsFiller {
 
         settings.port = settings.port || 22;
         const readLineInterface = readline.createInterface(process.stdin, process.stdout);
-        const prompt = `Password for ${settings.username}@${settings.host}:${settings.port} `;
+        const prompt = localize("query.password", "Password for {0}@{1}:{2} ", settings.username, settings.host, settings.port);
         // TODO: how to use * instead of symbols?
         readLineInterface.question(prompt, (answer) => {
             readLineInterface.close();

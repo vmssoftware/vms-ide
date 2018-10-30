@@ -3,6 +3,9 @@ import { LogType } from "@vorfol/common";
 import { ShellParser } from "./shell-parser";
 import { IParseWelcome } from "../api";
 
+import * as nls from "vscode-nls";
+const localize = nls.loadMessageBundle();
+
 export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
 
     public prompt?: string;
@@ -17,8 +20,11 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
         },
     ];
 
-    constructor(timeout?: number, debugLog?: LogType, tag?: string) {
+    constructor(timeout?: number, debugLog?: LogType, tag?: string, width?: number) {
         super(timeout, debugLog, tag);
+        if (width !== undefined && width > 80 && width < 255) {
+            this.ttCmd[1].then = `\x1B[24;${width}R`;
+        }
     }
 
     /**
@@ -32,7 +38,7 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
             if (promptIdx >= 0) {
                 this.prompt = chunk.slice(promptIdx + 1).toString("utf8");
                 if (this.debugLog) { 
-                    this.debugLog(`vms parse: found prompt "${this.prompt}"`); 
+                    this.debugLog(localize("debug.prompt", "vms parse: found prompt '{0}'", this.prompt)); 
                 }
                 this.setReady();
             }
@@ -40,7 +46,7 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
             this.ttCmd.some((tt, idx) => {
                 if (chunk.includes(tt.if)) {
                     if (this.debugLog) { 
-                        this.debugLog(`vms parse: found tt ${idx}`); 
+                        this.debugLog(localize("debug.tt", "vms parse: found tt {0}", idx)); 
                     }
                     this.push(tt.then);
                     return true;

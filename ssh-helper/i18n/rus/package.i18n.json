@@ -1,0 +1,12 @@
+{
+    "command.category": "OpenVMS",
+    "command.edit.title": "Редактировать настройки ssh-helper",
+    "configuration.title": "OpevVMS",
+    "configuration.host": "Удалённый узел",
+    "configuration.port": "Порт",
+    "configuration.username": "Имя пользователя",
+    "configuration.password": "Пароль, можно пропустить",
+    "configuration.timeouts.command": "Time out for command answer",
+    "configuration.timeouts.feedback": "Feedback timeout",
+    "configuration.timeouts.welcome": "Timeout for welcome parser"
+}

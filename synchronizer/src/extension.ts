@@ -1,6 +1,5 @@
 
-import { commands, ExtensionContext, TreeItem, window, workspace } from "vscode";
-import * as nls from "vscode-nls";
+import { commands, env, ExtensionContext, window } from "vscode";
 
 import { LogType } from "@vorfol/common";
 
@@ -10,7 +9,9 @@ import { ToOutputChannel } from "./output-channel";
 import { setBuilding, setSynchronizing } from "./stop";
 import { StopSyncProject, SyncProject } from "./synchronize";
 
-const localize = nls.config()();
+const locale = env.language ;
+import * as nls from "vscode-nls";
+const localize = nls.config({ locale })();
 
 let debugLogFn: LogType | undefined;
 debugLogFn = undefined;
@@ -24,7 +25,7 @@ export async function activate(context: ExtensionContext) {
     contextSaved = context;
 
     if (debugLogFn) {
-        debugLogFn(localize("extension.activated", "OpenVMS extension is activated"));
+        debugLogFn(localize("debug.activated", "OpenVMS extension is activated"));
     }
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async () => {
@@ -32,7 +33,7 @@ export async function activate(context: ExtensionContext) {
             .then((ok) => {
                 if (ok && configHelper) {
                     setSynchronizing(true);
-                    const msg = window.setStatusBarMessage("Synchronizing...");
+                    const msg = window.setStatusBarMessage(localize("message.synchronizing", "Synchronizing..."));
                     return SyncProject(context, debugLogFn)
                         .catch((err) => {
                             if (debugLogFn) {
@@ -55,7 +56,7 @@ export async function activate(context: ExtensionContext) {
             .then((ok) => {
                 if (ok && configHelper) {
                     setSynchronizing(true);
-                    let msg = window.setStatusBarMessage("Synchronizing...");
+                    let msg = window.setStatusBarMessage(localize("message.synchronizing", "Synchronizing..."));
                     return SyncProject(context, debugLogFn)
                         .catch((err) => {
                             if (debugLogFn) {
@@ -67,7 +68,7 @@ export async function activate(context: ExtensionContext) {
                             msg.dispose();
                             if (syncResult) {
                                 setBuilding(true);
-                                msg = window.setStatusBarMessage("Building...");
+                                msg = window.setStatusBarMessage(localize("message.building", "Building..."));
                                 return BuildProject(context, debugLogFn)
                                     .catch((err) => {
                                         if (debugLogFn) {
@@ -119,6 +120,6 @@ export async function activate(context: ExtensionContext) {
 // this method is called when your extension is deactivated
 export function deactivate() {
     if (debugLogFn) {
-        debugLogFn(localize("extension.deactivated", "OpenVMS extension is deactivated"));
+        debugLogFn(localize("debug.deactivated", "OpenVMS extension is deactivated"));
     }
 }

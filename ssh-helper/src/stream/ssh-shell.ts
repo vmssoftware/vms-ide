@@ -13,6 +13,9 @@ import { ParseWelcome } from "./parse-welcome";
 import { PromptCatcher } from "./prompt-catcher";
 import { IParseWelcome, IPromptCatcher, ISshShell } from "../api";
 
+import * as nls from "vscode-nls";
+const localize = nls.loadMessageBundle();
+
 export class SshShell extends SshClient implements ISshShell {
 
     public lastShellError?: Error;
@@ -86,7 +89,7 @@ export class SshShell extends SshClient implements ISshShell {
                 const onReady = Subscribe(this.promptCatcher, this.promptCatcher.readyEvent, (content) => {
                     if (this.promptCatcher && this.promptCatcher.lastError) {
                         if (this.debugLog) {
-                            this.debugLog(`shell${this.tag ? " " + this.tag : ""} command error: ${this.promptCatcher.lastError}`);
+                            this.debugLog(localize("debug.cmd.error", "shell{1} command error: {0}", this.promptCatcher.lastError, this.tag ? " " + this.tag : ""));
                         }
                         contentRet = typeof content === "string" ? content : contentRet;
                         contentRet = this.promptCatcher? this.promptCatcher.content : contentRet;
@@ -94,19 +97,19 @@ export class SshShell extends SshClient implements ISshShell {
                     } else {
                         if (typeof content === "string") {
                             if (this.debugLog) {
-                                this.debugLog(`shell${this.tag ? " " + this.tag : ""} command raw output: ${content}`);
+                                this.debugLog(localize("debug.cmd.raw", "shell{1} command raw output: {0}", content, this.tag ? " " + this.tag : ""));
                             }
                             // try to skip garbage from previuos commands
                             const tstContent = content.replace(/\r?\n|\r/g, "").trim();
                             if (tstContent.startsWith(trimmedCommand)) {
                                 if (this.debugLog) {
-                                    this.debugLog(`shell${this.tag ? " " + this.tag : ""} command output found`);
+                                    this.debugLog(localize("debug.cmd.out", "shell{0} command output found", this.tag ? " " + this.tag : ""));
                                 }
                                 contentRet = content;
                                 commandEnded.call(this);
                             } else {
                                 if (this.debugLog) {
-                                    this.debugLog(`shell${this.tag ? " " + this.tag : ""} garbage output found`);
+                                    this.debugLog(localize("debug.garbage", "shell{0} garbage output found", this.tag ? " " + this.tag : ""));
                                 }
                             }
                         } else {
@@ -119,20 +122,20 @@ export class SshShell extends SshClient implements ISshShell {
                     contentRet = contentRet? contentRet : this.promptCatcher? this.promptCatcher.content : contentRet;
                     commandEnded.call(this);
                     if (this.debugLog) {
-                        this.debugLog(`shell${this.tag ? " " + this.tag : ""} channel suddenly closed`);
+                        this.debugLog(localize("debug.closed", "shell{0} channel suddenly closed", this.tag ? " " + this.tag : ""));
                     }
                 });
                 const onExit = Subscribe(this.channel, "exit", (exitCode) => {
                     contentRet = contentRet? contentRet : this.promptCatcher? this.promptCatcher.content : contentRet;
                     commandEnded.call(this);
                     if (this.debugLog) {
-                        this.debugLog(`shell${this.tag ? " " + this.tag : ""} channel suddenly exited`);
+                        this.debugLog(localize("debug.channel.exit", "shell{0} channel suddenly exited", this.tag ? " " + this.tag : ""));
                     }
                 });
                 this.promptCatcher.prepare();
                 this.channel.write(trimmedCommand + os.EOL);
                 if (this.debugLog) {
-                    this.debugLog(`shell${this.tag ? " " + this.tag : ""} command written: ${trimmedCommand}`);
+                    this.debugLog(localize("debug.written", "shell{1} command written: {0}", trimmedCommand, this.tag ? " " + this.tag : ""));
                 }
                 this.channel.pipe(this.promptCatcher);
                 await waitReady.acquire();
@@ -144,12 +147,12 @@ export class SshShell extends SshClient implements ISshShell {
                     waitReady.release();
                     if (this.channel) {
                         if (this.debugLog) {
-                            this.debugLog(`shell${this.tag ? " " + this.tag : ""} prompt catcher unpiped`);
+                            this.debugLog(localize("debug.unpiped", "shell{0} prompt catcher unpiped", this.tag ? " " + this.tag : ""));
                         }
                         this.channel.unpipe(this.promptCatcher);
                     } else {
                         if (this.debugLog) {
-                            this.debugLog(`shell${this.tag ? " " + this.tag : ""} channel undefined when trying to unpipe`);
+                            this.debugLog(localize("debug.undef", "shell{0} channel undefined when trying to unpipe", this.tag ? " " + this.tag : ""));
                         }
                     }
                     if (this.promptCatcher) {
@@ -165,7 +168,7 @@ export class SshShell extends SshClient implements ISshShell {
 
     private async shellConnect() {
         if (this.client) {
-            const opName = `create shell${this.tag ? " " + this.tag : ""}`;
+            const opName = localize("operation.connect", "create shell{0}", this.tag ? " " + this.tag : "");
             await WaitableOperation(opName, this.client, "continue", this.client, "error", (complete) => {
                 if (!this.client) {
                     return false;
@@ -173,23 +176,23 @@ export class SshShell extends SshClient implements ISshShell {
                 return !this.client.shell((clientError, channelGot) => {
                     if (clientError) {
                         if (this.debugLog) {
-                            this.debugLog(`${opName} error: ${clientError}`);
+                            this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, clientError));
                         }
                         this.lastShellError = clientError;
                     } else {
                         if (this.debugLog) {
-                            this.debugLog(`shell${this.tag ? " " + this.tag : ""} ready`);
+                            this.debugLog(localize("debug.ready", "shell{0} ready", this.tag ? " " + this.tag : ""));
                         }
                         this.channel = channelGot;
                         this.shellClose = Subscribe(this.channel, "close", () => {
                             if (this.debugLog) {
-                                this.debugLog(`shell${this.tag ? " " + this.tag : ""} close`);
+                                this.debugLog(localize("debug.close", "shell{0} close", this.tag ? " " + this.tag : ""));
                             }
                             setImmediate(() => this.cleanChannel());
                         });
                         this.shellExit = Subscribe(this.channel, "exit", (exitCode) => {
                             if (this.debugLog) {
-                                this.debugLog(`shell${this.tag ? " " + this.tag : ""} exit ${exitCode}`);
+                                this.debugLog(localize("debug.exit", "shell{1} exit {0}", exitCode, this.tag ? " " + this.tag : ""));
                             }
                             setImmediate(() => this.cleanChannel());
                         });
@@ -205,7 +208,7 @@ export class SshShell extends SshClient implements ISshShell {
         this.waitOperation.release();
         // check and clean userStream
         if (this.userStream) {
-            this.userStream.emit("error", new Error("Shell cleaned"));
+            this.userStream.emit("error", new Error(localize("debug.cleaned", "Shell{0} cleaned", this.tag ? " " + this.tag : "")));
         }
         if (this.shellClose) {
             this.shellClose.unsubscribe();
@@ -253,7 +256,7 @@ export class SshShell extends SshClient implements ISshShell {
         this.promptGiven = undefined;
         if (!this.welcomeParser) {
             if (this.debugLog) {
-                this.debugLog(`shell${this.tag ? " " + this.tag : ""} create def welcome parser`);
+                this.debugLog(localize("debug.welcome", "shell{0} create def welcome parser", this.tag ? " " + this.tag : ""));
             }
             this.welcomeParser = new ParseWelcome(0, this.debugLog, "welcome");
         } else {
@@ -276,12 +279,12 @@ export class SshShell extends SshClient implements ISshShell {
         if (this.promptGiven) {
             if (!this.promptCatcher) {
                 if (this.debugLog) {
-                    this.debugLog(`shell${this.tag ? " " + this.tag : ""} create def prompt catcher`);
+                    this.debugLog(localize("debug.prompt", "shell{0} create def prompt catcher", this.tag ? " " + this.tag : ""));
                 }
                 this.promptCatcher = new PromptCatcher(this.promptGiven, 0, this.debugLog, "catcher");
             } else {
                 if (this.debugLog) {
-                    this.debugLog(`shell${this.tag ? " " + this.tag : ""} set prompt to catcher`);
+                    this.debugLog(localize("debug.prompt.set", "shell{1} set prompt '{0}' to catcher", this.prompt, this.tag ? " " + this.tag : ""));
                 }
                 this.promptCatcher.prompt = this.promptGiven;
                 this.promptCatcher.content = "";

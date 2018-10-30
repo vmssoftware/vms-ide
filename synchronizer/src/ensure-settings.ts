@@ -16,6 +16,9 @@ export let synchronizerConfig: IConfig | undefined;
 
 const sectionName = "vmssoftware.synchronizer";
 
+import * as nls from "vscode-nls";
+const localize = nls.loadMessageBundle();
+
 export async function EnsureSettings(debugLog?: LogType) {
     if (settingsEnsured !== undefined) {
         return settingsEnsured;
@@ -45,7 +48,7 @@ export async function EnsureSettings(debugLog?: LogType) {
     for (const section of sections) {
         const testSection = await synchronizerConfig.get(section.name());
         if (debugLog && typeof section !== typeof testSection) {
-            debugLog(`Different types of sections ${section.name()}`);
+            debugLog(localize("debug.different_types", "Different types of sections ${0}", section.name()));
             settingsEnsured = false;
             return settingsEnsured;
         }

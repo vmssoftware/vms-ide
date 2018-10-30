@@ -5,6 +5,9 @@ import { LogType } from "@vorfol/common";
 import { Builder } from "./build/builder";
 import { ToOutputChannel } from "./output-channel";
 
+import * as nls from "vscode-nls";
+const localize = nls.loadMessageBundle();
+
 export let builder: Builder | undefined;
 
 export async function BuildProject(context: ExtensionContext, debugLog?: LogType) {
@@ -17,11 +20,11 @@ export async function BuildProject(context: ExtensionContext, debugLog?: LogType
             return builder.buildProject()
                 .then((result) => {
                     if (result) {
-                        window.showInformationMessage(`Build: ok`);
-                        ToOutputChannel(`Build process is done.`);
+                        window.showInformationMessage(localize("message.build.ok", "Build: ok"));
+                        ToOutputChannel(localize("output.build.done", "Build process is done"));
                     } else {
-                        window.showErrorMessage(`Build: something is wrong, see output`);
-                        ToOutputChannel(`Build process failed.`);
+                        window.showErrorMessage(localize("message.build.wrong", "Build: something is wrong, see output"));
+                        ToOutputChannel(localize("output.build.failed", "Build process failed"));
                         for (const err of builder!.lastErrors) {
                             ToOutputChannel(`${err}`);
                         }

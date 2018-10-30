@@ -13,6 +13,9 @@ import { IConnectConfigResolver } from "../config-resolve/connect-config-resolve
 import { SshClient } from "./ssh-client";
 import { IStats, IInputAttributes } from "../api";
 
+import * as nls from "vscode-nls";
+const localize = nls.loadMessageBundle();
+
 export class SftpClient extends SshClient {
 
     public lastSftpError?: Error;
@@ -43,7 +46,7 @@ export class SftpClient extends SshClient {
         if (readStream) {
             readStream.on("error", (err) => {
                 if (this.debugLog) {
-                    this.debugLog(`read stream${this.tag ? " " + this.tag : ""} error: ${err}`);
+                    this.debugLog(localize("debug.read.err", "read stream{0} error: {1}", this.tag ? " " + this.tag : "", err));
                 }
             });
         }
@@ -62,7 +65,7 @@ export class SftpClient extends SshClient {
         if (writeStream) {
             writeStream.on("error", (err) => {
                 if (this.debugLog) {
-                    this.debugLog(`write stream${this.tag ? " " + this.tag : ""} error: ${err}`);
+                    this.debugLog(localize("debug.write.err", "write stream{0} error: {1}", this.tag ? " " + this.tag : "", err));
                 }
             });
         }
@@ -74,7 +77,7 @@ export class SftpClient extends SshClient {
         let statRet: IStats | undefined;
         if (await this.ensureSftp()) {
             if (this.sftp) {
-                const opName = `get stat ${file} via sftp${this.tag ? " " + this.tag : ""}`;
+                const opName = localize("operation.getstat", "get stat {0} via sftp{1}", file, this.tag ? " " + this.tag : "");
                 await WaitableOperation(opName, this.sftp, "continue", this.sftp, "error", (complete) => {
                     if (!this.sftp) {
                         return false;
@@ -82,7 +85,7 @@ export class SftpClient extends SshClient {
                     return !this.sftp.stat(file, (err, stat) => {
                         if (err) {
                             if (this.debugLog) {
-                                this.debugLog(`${opName} error: ${err}`);
+                                this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, err));
                             }
                         } else {
                             statRet = stat;
@@ -100,7 +103,7 @@ export class SftpClient extends SshClient {
         await this.waitOperation.acquire();
         if (await this.ensureSftp()) {
             if (this.sftp) {
-                const opName = `set stat ${file} via sftp${this.tag ? " " + this.tag : ""}`;
+                const opName = localize("operation.setstat", "set stat {0} via sftp{1}", file, this.tag ? " " + this.tag : "");
                 await WaitableOperation(opName, this.sftp, "continue", this.sftp, "error", (complete) => {
                     if (!this.sftp) {
                         return false;
@@ -108,7 +111,7 @@ export class SftpClient extends SshClient {
                     return !this.sftp.setstat(file, stat, (err) => {
                         if (err) {
                             if (this.debugLog) {
-                                this.debugLog(`${opName} error: ${err}`);
+                                this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, err));
                             }
                         }
                         complete.release();
@@ -125,7 +128,7 @@ export class SftpClient extends SshClient {
         let files: FileEntry[] | undefined;
         if (await this.ensureSftp()) {
             if (this.sftp) {
-                const opName = `read directory ${directory} via sftp${this.tag ? " " + this.tag : ""}`;
+                const opName = localize("operation.readdir", "read directory {0} via sftp{1}", directory, this.tag ? " " + this.tag : "");
                 await WaitableOperation(opName, this.sftp, "continue", this.sftp, "error", (complete) => {
                     if (!this.sftp) {
                         return false;
@@ -133,7 +136,7 @@ export class SftpClient extends SshClient {
                     return !this.sftp.readdir(directory, (err, list) => {
                         if (err) {
                             if (this.debugLog) {
-                                this.debugLog(`${opName} error: ${err}`);
+                                this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, err));
                             }
                         } else {
                             files = list;
@@ -172,7 +175,7 @@ export class SftpClient extends SshClient {
                 const stat = await this.getStat(directory);
                 await this.waitOperation.acquire();
                 if (!stat && this.enabled) {
-                    const opName = `create directory ${directory} via sftp${this.tag ? " " + this.tag : ""}`;
+                    const opName = localize("operation.createdir", "create directory {0} via sftp{1}", directory, this.tag ? " " + this.tag : "");
                     await WaitableOperation(opName, this.sftp, "continue", this.sftp, "error", (complete) => {
                         if (!this.sftp) {
                             return false;
@@ -180,7 +183,7 @@ export class SftpClient extends SshClient {
                         return !this.sftp.mkdir(directory, (err) => {
                             if (err) {
                                 if (this.debugLog) {
-                                    this.debugLog(`${opName} error: ${err}`);
+                                    this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, err));
                                 }
                             } else {
                                 retCode = true;
@@ -222,7 +225,7 @@ export class SftpClient extends SshClient {
 
     private async sftpConnect() {
         if (this.client) {
-            const opName = `create sftp${this.tag ? " " + this.tag : ""}`;
+            const opName = localize("operation.sftp", "create sftp{0}", this.tag ? " " + this.tag : "");
             await WaitableOperation(opName, this.client, "continue", this.client, "error", (complete) => {
                 if (!this.client) {
                     return false;
@@ -230,29 +233,29 @@ export class SftpClient extends SshClient {
                 return !this.client.sftp((err, sftpGot) => {
                     if (err) {
                         if (this.debugLog) {
-                            this.debugLog(`${opName} error: ${err}`);
+                            this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, err));
                         }
                     } else {
                         if (this.debugLog) {
-                            this.debugLog(`sftp${this.tag ? " " + this.tag : ""} ready`);
+                            this.debugLog(localize("debug.sftp.ready", "sftp{0} ready", this.tag ? " " + this.tag : ""));
                         }
                         this.sftp = sftpGot;
                         this.sftpEnd = Subscribe(this.sftp, "end", () => {
                             if (this.debugLog) {
-                                this.debugLog(`sftp${this.tag ? " " + this.tag : ""} end`);
+                                this.debugLog(localize("debug.sftp.end", "sftp{0} end", this.tag ? " " + this.tag : ""));
                             }
                             this.cleanSftp();
                         });
                         this.sftpError = Subscribe(this.sftp, "error", (sftpError) => {
                             if (this.debugLog) {
-                                this.debugLog(`sftp${this.tag ? " " + this.tag : ""} error: ${sftpError}`);
+                                this.debugLog(localize("debug.sftp.error", "sftp{0} error: {1}", this.tag ? " " + this.tag : "", sftpError));
                             }
                             this.lastSftpError = sftpError;
                             this.cleanSftp();
                         });
                         this.sftpClose = Subscribe(this.sftp, "close", () => {
                             if (this.debugLog) {
-                                this.debugLog(`sftp${this.tag ? " " + this.tag : ""} close`);
+                                this.debugLog(localize("debug.sftp.close", "sftp{0} close", this.tag ? " " + this.tag : ""));
                             }
                             this.cleanSftp();
                         });

@@ -13,6 +13,10 @@ debugLogFn = undefined;
 // tslint:disable-next-line:no-console
 debugLogFn = console.log;
 
+const locale = vscode.env.language ;
+import * as nls from "vscode-nls";
+const localize = nls.config({ locale })();
+
 export function activate(context: vscode.ExtensionContext) {
 
     // uncomment next line to test configuration helper. also add "*" in activation events
@@ -25,19 +29,19 @@ export function activate(context: vscode.ExtensionContext) {
         case "FS":
             configHelperType = FSConfigHelper;
             if (debugLogFn) {
-                debugLogFn("FS created");
+                debugLogFn(localize("message.created", "{0} created", "FS"));
             }
             break;
         case "VFS":
             configHelperType = VFSConfigHelper;
             if (debugLogFn) {
-                debugLogFn("VFS created");
+                debugLogFn(localize("message.created", "{0} created", "VFS"));
             }
             break;
         default:
             configHelperType = VSCConfigHelper;
             if (debugLogFn) {
-                debugLogFn("VSC created");
+                debugLogFn(localize("message.created", "{0} created", "VSC"));
             }
             break;
     }

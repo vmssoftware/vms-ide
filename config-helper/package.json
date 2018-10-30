@@ -2,7 +2,7 @@
     "name": "config-helper",
     "displayName": "config-helper",
     "description": "Config helper",
-    "version": "0.1.16",
+    "version": "0.1.18",
     "publisher": "vmssoftware",
     "engines": {
         "vscode": "^1.27.0"
@@ -72,6 +72,12 @@
     },
     "dependencies": {
         "@vorfol/common": "^0.0.5",
+        "del": "^3.0.0",
+        "event-stream": "^4.0.1",
+        "gulp": "^3.9.1",
+        "gulp-typescript": "^5.0.0-alpha.3",
+        "run-sequence": "^2.2.1",
+        "vsce": "^1.52.0",
         "vscode-nls": "^2.0.2"
     }
 }

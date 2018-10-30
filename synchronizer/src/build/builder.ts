@@ -22,9 +22,12 @@ import { VmsPathConverter } from "../vms/vms-path-converter";
 
 const fsReadFile = util.promisify(fs.readFile);
 
+import * as nls from "vscode-nls";
+const localize = nls.loadMessageBundle();
+
 export class Builder {
 
-    public static readonly createNewMmsString = "Create new MMS";
+    public static readonly createNewMmsString = localize("const.create_mms", "Create new MMS");
     public static readonly defMmsFileName = "res/default.mms";
     public static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"default.mms"}`;
                         // + `/MACRO=(`
@@ -160,7 +163,7 @@ export class Builder {
                             return parseResults;
                         });
                 } else {
-                    ToOutputChannel(`Cannot execute > ${command}`);
+                    ToOutputChannel(localize("output.cannot_exec", "Cannot execute > {0}", command));
                     return false;
                 }
             }
@@ -176,8 +179,9 @@ export class Builder {
             const sshHelperType = await GetSshHelperFromApi();
             if (!sshHelperType) {
                 if (this.debugLog) {
-                    this.debugLog(`Cannot get ssh-helper api`);
+                    this.debugLog(localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
                 }
+                ToOutputChannel(localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
                 return false;
             }
             const sshHelper = new sshHelperType(this.debugLog);
@@ -231,7 +235,7 @@ export class Builder {
                 return false;
             }
         } else {
-            ToOutputChannel(`Cannot resolve configuration or current workspace folder`);
+            ToOutputChannel(localize("output.not_resolved", "Cannot resolve configuration or current workspace folder"));
             return false;
         }
     }

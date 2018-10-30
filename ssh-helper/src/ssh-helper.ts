@@ -18,8 +18,9 @@ import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IM
 import { PipeFile } from "./stream/pipe";
 import { MemoryStreamCreator } from "./stream/stream-creators";
 import { ConstPasswordFiller } from "./config-resolve/password-filler";
-import { ParseWelcome } from "./stream/parse-welcome";
-import { PromptCatcher } from "./stream/prompt-catcher";
+
+import * as nls from "vscode-nls";
+const localize = nls.loadMessageBundle();
 
 export class SshHelper {
 
@@ -136,7 +137,7 @@ export class SshHelper {
         for (const section of this.sections) {
             const testSection = await this.config.get(section.name());
             if (this.debugLog && typeof section !== typeof testSection) {
-                this.debugLog(`Different types of sections ${section.name()}`);
+                this.debugLog(localize("debug.diff", "Different types of sections {0}", section.name()));
                 return false;
             }
         }

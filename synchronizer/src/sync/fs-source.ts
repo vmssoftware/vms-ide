@@ -13,6 +13,9 @@ const fsReadDir = util.promisify(fs.readdir);
 const fsMkDir = util.promisify(fs.mkdir);
 const fsExist = util.promisify(fs.exists);
 
+import * as nls from "vscode-nls";
+const localize = nls.loadMessageBundle();
+
 export class FsSource implements ISource, IReadDirectory {
 
     constructor(public root?: string, public debugLog?: LogType, public attempts?: number) {
@@ -50,7 +53,7 @@ export class FsSource implements ISource, IReadDirectory {
                 retList.push(entry);
             } else {
                 if (this.debugLog) {
-                    this.debugLog(`No date for ${file}`);
+                    this.debugLog(localize("debug.no_date", "No date for {0}", file));
                 }
             }
         }
