@@ -6,7 +6,7 @@
 	"configuration.port": "Порт",
 	"configuration.username": "Имя пользователя",
 	"configuration.password": "Пароль, можно пропустить",
-	"configuration.timeouts.command": "Time out for command answer",
-	"configuration.timeouts.feedback": "Feedback timeout",
-	"configuration.timeouts.welcome": "Timeout for welcome parser"
+	"configuration.timeouts.command": "Таймаут команды",
+	"configuration.timeouts.feedback": "Таймаут ответа сервера",
+	"configuration.timeouts.welcome": "Таймаут парсера приветствия"
 }

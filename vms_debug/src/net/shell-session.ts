@@ -61,6 +61,7 @@ export class ShellSession
                 this.sshHelper = new sshHelperType(this.debugLog);
             }
             if (this.sshHelper) {
+                this.sshHelper.clearPasswordCashe();
                 this.sshShell = await this.sshHelper.getDefaultVmsShell();
                 if (this.sshShell) {
                     this.sshShell.attachUser(this.shellParser);

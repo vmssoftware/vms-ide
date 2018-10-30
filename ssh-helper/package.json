@@ -2,7 +2,7 @@
     "name": "ssh-helper",
     "displayName": "ssh-helper",
     "description": "ssh-helper",
-    "version": "0.0.14",
+    "version": "0.0.15",
     "publisher": "vmssoftware",
     "engines": {
         "vscode": "^1.28.0"
@@ -50,7 +50,7 @@
                 "vmssoftware.ssh-helper.connection.password": {
                     "type": "string",
                     "default": "",
-                    "description": "Password, may be omitted"
+                    "description": "%configuration.password%"
                 },
                 "vmssoftware.ssh-helper.timeouts.cmdTimeout": {
                     "type": "number",
