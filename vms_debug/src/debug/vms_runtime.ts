@@ -341,7 +341,7 @@ export class VMSRuntime extends EventEmitter
 	private async loadSourcePathList(extensionFile : string) : Promise<string[]>
 	{
 		let list : string[] = [];
-		const mask = "**/*." + extensionFile;
+		const mask = `**/*.{${extensionFile.toLowerCase()},${extensionFile.toUpperCase()}}`;
 		let uris : Uri[] = await workspace.findFiles(mask);
 
 		for(let item of uris)
