@@ -28,63 +28,64 @@ export async function activate(context: ExtensionContext) {
     }
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async () => {
-        if (EnsureSettings(debugLogFn) && configHelper) {
-            setSynchronizing(true);
-            const msg = window.setStatusBarMessage("Synchronizing...");
-            return SyncProject(context, debugLogFn)
-                .catch((err) => {
-                    setSynchronizing(false);
-                    if (debugLogFn) {
-                        debugLogFn(err);
-                    }
+        return EnsureSettings(debugLogFn)
+            .then((ok) => {
+                if (ok && configHelper) {
+                    setSynchronizing(true);
+                    const msg = window.setStatusBarMessage("Synchronizing...");
+                    return SyncProject(context, debugLogFn)
+                        .catch((err) => {
+                            if (debugLogFn) {
+                                debugLogFn(err);
+                            }
+                            return false;
+                        }).then((result) => {
+                            setSynchronizing(false);
+                            msg.dispose();
+                            return result;
+                        });
+                } else {
                     return false;
-                }).then((result) => {
-                    msg.dispose();
-                    setSynchronizing(false);
-                    return result;
-                });
-        }
-        return false;
+                }
+            });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async () => {
-        if (EnsureSettings(debugLogFn) && configHelper) {
-            setBuilding(true);
-            setSynchronizing(true);
-            let msg = window.setStatusBarMessage("Synchronizing...");
-            return SyncProject(context, debugLogFn)
-                .then((ok) => {
-                    msg.dispose();
-                    if (ok) {
-                        msg = window.setStatusBarMessage("Building...");
-                        return BuildProject(context, debugLogFn)
-                            .then((result) => {
-                                if (result) {
-                                    window.showInformationMessage(`Build operation is done`);
-                                    ToOutputChannel(`Build operation is done.`);
-                                } else {
-                                    window.showErrorMessage(`Build operation is failed`);
-                                    ToOutputChannel(`Build operation is failed.`);
-                                }
-                                return result;
-                            });
-                    } else {
-                        return false;
-                    }
-                }).catch((err) => {
-                    if (debugLogFn) {
-                        debugLogFn(err);
-                    }
+        return EnsureSettings(debugLogFn)
+            .then((ok) => {
+                if (ok && configHelper) {
+                    setSynchronizing(true);
+                    let msg = window.setStatusBarMessage("Synchronizing...");
+                    return SyncProject(context, debugLogFn)
+                        .catch((err) => {
+                            if (debugLogFn) {
+                                debugLogFn(err);
+                            }
+                            return false;
+                        }).then((syncResult) => {
+                            setSynchronizing(false);
+                            msg.dispose();
+                            if (syncResult) {
+                                setBuilding(true);
+                                msg = window.setStatusBarMessage("Building...");
+                                return BuildProject(context, debugLogFn)
+                                    .catch((err) => {
+                                        if (debugLogFn) {
+                                            debugLogFn(err);
+                                        }
+                                        return false;
+                                    }).then((buildResult) => {
+                                        setBuilding(false);
+                                        msg.dispose();
+                                        return buildResult;
+                                    });
+                            }
+                            return syncResult;
+                        });
+                } else {
                     return false;
-                }).then((result) => {
-                    msg.dispose();
-                    setSynchronizing(false);
-                    setBuilding(false);
-                    return result;
-                });
-        } else {
-            return false;
-        }
+                }
+            });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopSync", async () => {

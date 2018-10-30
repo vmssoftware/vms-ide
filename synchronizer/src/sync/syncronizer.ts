@@ -2,7 +2,7 @@ import path from "path";
 import vscode from "vscode";
 
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
-import { ProjectSection } from "../config/sections/project";
+import { KindOfFiles, ProjectSection } from "../config/sections/project";
 import { DownloadAction, SynchronizeSection } from "../config/sections/synchronize";
 import { IConfig, IConfigSection } from "./../config/config";
 
@@ -10,7 +10,6 @@ import { Delay } from "@vorfol/common";
 import { LogType } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
 import { IFileEntry } from "@vorfol/common";
-import { MemoryWriteStream } from "@vorfol/common";
 
 import { ISftpClient } from "../ssh/api";
 import { ISshShell } from "../ssh/api";
@@ -218,22 +217,7 @@ export class Synchronizer {
             // wait all operations are done
             const results = await Promise.all(waitAll);
             // end
-            if (!SynchronizeSection.is(this.synchronizeSection) ||
-                this.synchronizeSection.keepAlive) {
-                // test configuration watcher and create if need
-                if (this.onDidLoadConfig === undefined &&
-                    synchronizerConfig) {
-                    this.onDidLoadConfig = synchronizerConfig.onDidLoad(() => this.prepare());
-                }
-                if (this.onDidLoadSSHConfig === undefined &&
-                    this.sshHelper.onDidLoadConfig !== undefined) {
-                    this.onDidLoadSSHConfig = this.sshHelper.onDidLoadConfig(() => {
-                        this.dispose();
-                    });
-                }
-            } else {
-                this.dispose();
-            }
+            this.decideIfDispose();
             retCode = results.reduce((acc, result) => {
                 acc = acc && result;
                 return acc;
@@ -243,6 +227,77 @@ export class Synchronizer {
             }
         } else {
             ToOutputChannel(`In first please edit settings`);
+        }
+        this.inProgress = false;
+        return retCode;
+    }
+
+    public decideIfDispose() {
+        if (!SynchronizeSection.is(this.synchronizeSection) ||
+            this.synchronizeSection.keepAlive) {
+            // test configuration watcher and create if need
+            if (this.onDidLoadConfig === undefined &&
+                synchronizerConfig) {
+                this.onDidLoadConfig = synchronizerConfig.onDidLoad(() => this.prepare());
+            }
+            if (this.onDidLoadSSHConfig === undefined &&
+                this.sshHelper &&
+                this.sshHelper.onDidLoadConfig !== undefined) {
+                this.onDidLoadSSHConfig = this.sshHelper.onDidLoadConfig(() => {
+                    this.dispose();
+                });
+            }
+        } else {
+            this.dispose();
+        }
+    }
+
+    public async downloadListings() {
+        if (this.inProgress) {
+            ToOutputChannel(`Synchronization is in progress`);
+            return false;
+        }
+        if (!vscode.workspace.workspaceFolders ||
+            vscode.workspace.workspaceFolders.length < 1) {
+            ToOutputChannel(`There is no workspace to synchronize`);
+            return false;
+        }
+        this.inProgress = true;
+        let retCode = await this.prepare(KindOfFiles.listing);
+        if (retCode &&
+            this.localSource &&
+            this.remoteSource &&
+            this.include &&
+            this.exclude &&
+            this.sshHelper) {
+            // clear password cache
+            this.sshHelper.clearPasswordCashe();
+            // get lists
+            // this.enableRemote();
+            const remoteList = await this.remoteSource.findFiles(this.include, this.exclude);
+            // download
+            const waitAll = [];
+            for (const downloadFile of remoteList) {
+                waitAll.push(
+                    this.transferFile(this.remoteSource, this.localSource, downloadFile.filename, downloadFile.date)
+                        .then((ok) => {
+                            ToOutputChannel(`${downloadFile.filename} is ${ok ? "downloaded" : "failed to download"}`);
+                            return ok;
+                        }).catch(() => false));
+            }
+            // wait all operations are done
+            const results = await Promise.all(waitAll);
+            // end
+            this.decideIfDispose();
+            retCode = results.reduce((acc, result) => {
+                acc = acc && result;
+                return acc;
+            }, true);
+            if (this.debugLog) {
+                this.debugLog(`Download listing retCode: ${retCode}`);
+            }
+        } else {
+            ToOutputChannel(`Please edit settings before`);
         }
         this.inProgress = false;
         return retCode;
@@ -268,7 +323,7 @@ export class Synchronizer {
      * Note: no real connections are creating in constructors
      * @param config config
      */
-    private async prepare() {
+    private async prepare(kind?: KindOfFiles) {
         // get current config
         if (!await EnsureSettings() || !synchronizerConfig) {
             return false;
@@ -279,6 +334,7 @@ export class Synchronizer {
                 if (this.debugLog) {
                     this.debugLog(`Cannot get ssh-helper api`);
                 }
+                ToOutputChannel(`Please, install "vmssoftware.ssh-helper" first`);
                 return false;
             }
             this.sshHelper = new sshHelperType(this.debugLog);
@@ -315,12 +371,35 @@ export class Synchronizer {
             vscode.workspace.workspaceFolders &&
             vscode.workspace.workspaceFolders.length > 0) {
             // reparse includes
-            const includes = [
-                this.projectSection.source,
-                this.projectSection.resource,
-                this.projectSection.headers,
-                this.projectSection.builders,
-            ];
+            const includes: string[] = [];
+            if (kind) {
+                // tslint:disable-next-line:no-bitwise
+                if (kind & KindOfFiles.source) {
+                    includes.push(this.projectSection.source);
+                }
+                // tslint:disable-next-line:no-bitwise
+                if (kind & KindOfFiles.resource) {
+                    includes.push(this.projectSection.resource);
+                }
+                // tslint:disable-next-line:no-bitwise
+                if (kind & KindOfFiles.listing) {
+                    includes.push(this.projectSection.listing);
+                }
+                // tslint:disable-next-line:no-bitwise
+                if (kind & KindOfFiles.headers) {
+                    includes.push(this.projectSection.headers);
+                }
+                // tslint:disable-next-line:no-bitwise
+                if (kind & KindOfFiles.builders) {
+                    includes.push(this.projectSection.builders);
+                }
+            } else {
+                includes.push(this.projectSection.source);
+                includes.push(this.projectSection.resource);
+                includes.push(this.projectSection.listing);
+                includes.push(this.projectSection.headers);
+                includes.push(this.projectSection.builders);
+            }
             this.include = includes.join(",");
             this.downloadNewFiles = this.synchronizeSection.downloadNewFiles;
             this.exclude = this.projectSection.exclude;

@@ -1,12 +1,11 @@
 
 import { workspace, WorkspaceConfiguration } from "vscode";
 
+import { LogType } from "@vorfol/common";
 import { CSAResult, IConfigData, IConfigStorage, ValueData } from "./config";
 
-// tslint:disable-next-line:no-console
-export let logFn = console.log;
-// tslint:disable-next-line:no-empty
-logFn = () => {};
+// import * as nls from "vscode-nls";
+// const localize = nls.loadMessageBundle();
 
 /**
  * VSCConfigStorage
@@ -15,12 +14,12 @@ export class VSCConfigStorage implements IConfigStorage {
 
     protected storePromise: Promise<CSAResult> | undefined;
 
-    constructor(protected section: string) {
+    constructor(protected section: string, public debugLog?: LogType) {
 
     }
 
     public fillStart(): Promise<CSAResult> {
-        logFn("fillStart =");
+        if (this.debugLog) { this.debugLog("fillStart ="); }
         return Promise.resolve(CSAResult.ok);
     }
 
@@ -30,17 +29,17 @@ export class VSCConfigStorage implements IConfigStorage {
         for (const key in data) {
             data[key] = this.setCfgValue(data[key], `${section}.${key}`, configuration);
         }
-        logFn("fillData => ok " + section);
+        if (this.debugLog) { this.debugLog("fillData => ok " + section); }
         return Promise.resolve(CSAResult.ok);
     }
 
     public fillEnd(): Promise<CSAResult> {
-        logFn("fillEnd");
+        if (this.debugLog) { this.debugLog("fillEnd"); }
         return Promise.resolve(CSAResult.ok);
     }
 
     public storeStart(): Promise<CSAResult> {
-        logFn("storeStart");
+        if (this.debugLog) { this.debugLog("storeStart"); }
         return Promise.resolve(CSAResult.ok);
     }
 
@@ -57,15 +56,15 @@ export class VSCConfigStorage implements IConfigStorage {
                 try {
                     await configuration.update(cfgKey, data[key]);
                 } catch (err) {
-                    logFn("update failed: " + cfgKey);
+                    if (this.debugLog) { this.debugLog("update failed: " + cfgKey); }
                     if (err instanceof Error) {
-                        logFn(err.message);
+                        if (this.debugLog) { this.debugLog(err.message); }
                     }
                     // tslint:disable-next-line:no-bitwise
                     retCode |= CSAResult.some_data_failed;
                 }
             }
-            logFn("storeData " + section);
+            if (this.debugLog) { this.debugLog("storeData " + section); }
             resolve(retCode);
             this.storePromise = undefined;
         });
@@ -73,7 +72,7 @@ export class VSCConfigStorage implements IConfigStorage {
     }
 
     public storeEnd(): Promise<CSAResult> {
-        logFn("storeEnd =");
+        if (this.debugLog) { this.debugLog("storeEnd ="); }
         return Promise.resolve(CSAResult.ok);
     }
 

@@ -1,24 +1,23 @@
 import { Position, Range, Uri, workspace, WorkspaceEdit } from "vscode";
 
+import { LogType } from "@vorfol/common";
 import { CSAResult } from "./config";
 import { FSConfigStorage } from "./fs-storage";
 
-// tslint:disable-next-line:no-console
-export let logFn = console.log;
-// tslint:disable-next-line:no-empty
-logFn = () => {};
+// import * as nls from "vscode-nls";
+// const localize = nls.loadMessageBundle();
 
 /**
  * Such as FS_ConfigStorage, but using VS Code provided read/write functions
  */
 export class VFSConfigStorage extends FSConfigStorage {
 
-    constructor(protected fileUri: Uri) {
+    constructor(protected fileUri: Uri, public debugLog?: LogType) {
         super(fileUri.fsPath);
     }
 
     public fillStart(): Promise<CSAResult> {
-        logFn("fillStart =");
+        if (this.debugLog) { this.debugLog("fillStart ="); }
         if (!this.fillStartPromise) {
             this.fillStartPromise = new Promise<CSAResult>(async (resolve) => {
                 try {
@@ -26,20 +25,20 @@ export class VFSConfigStorage extends FSConfigStorage {
                     const content = textDoc.getText();
                     this.jsonData = JSON.parse(content);
                     resolve(CSAResult.ok);
-                    logFn("fillStart => ok");
+                    if (this.debugLog) { this.debugLog("fillStart => ok"); }
                 } catch (error) {
                     resolve(CSAResult.prepare_failed);
-                    logFn("fillStart => fail");
+                    if (this.debugLog) { this.debugLog("fillStart => fail"); }
                 }
                 this.fillStartPromise = undefined;
-                logFn("fillStart => clear");
+                if (this.debugLog) { this.debugLog("fillStart => clear"); }
             });
         }
         return this.fillStartPromise;
     }
 
     public storeEnd(): Promise<CSAResult> {
-        logFn("storeEnd =");
+        if (this.debugLog) { this.debugLog("storeEnd ="); }
         if (!this.storePromise) {
             this.storePromise = new Promise<CSAResult>(async (resolve) => {
                 try {

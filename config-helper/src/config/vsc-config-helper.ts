@@ -1,25 +1,23 @@
 import { Disposable, workspace } from "vscode";
 
-import { Debouncer } from "@vorfol/common";
+import { Debouncer, LogType } from "@vorfol/common";
 
 import { ConfigHelper, IConfig, IConfigEditor, IConfigStorage } from "./config";
 import { ConfigPool } from "./config-pool";
 import { VSCWorkspaceConfigEditor } from "./vsc-editor";
 import { VSCConfigStorage } from "./vsc-storage";
 
-// tslint:disable-next-line:no-console
-export let logFn = console.log;
-// tslint:disable-next-line:no-empty
-logFn = () => {};
+// import * as nls from "vscode-nls";
+// const localize = nls.loadMessageBundle();
 
 /**
  * ConfigHelper implementation
  */
 export class VSCConfigHelper implements ConfigHelper {
 
-    public static getConfigHelper(section: string): VSCConfigHelper {
+    public static getConfigHelper(section: string, debugLog?: LogType): VSCConfigHelper {
         if (VSCConfigHelper.instances.get(section) === undefined) {
-            VSCConfigHelper.instances.set(section, new VSCConfigHelper(section));
+            VSCConfigHelper.instances.set(section, new VSCConfigHelper(section, debugLog));
         }
         return VSCConfigHelper.instances.get(section)!;
     }
@@ -30,16 +28,16 @@ export class VSCConfigHelper implements ConfigHelper {
     protected storage: IConfigStorage;
     protected editor: IConfigEditor;
     protected debouncer = new Debouncer(3000);
-    protected disposeables: Disposable[] = [];
+    protected disposables: Disposable[] = [];
 
-    protected constructor(protected section: string) {
-        this.storage = new VSCConfigStorage(this.section);
-        this.config = new ConfigPool(this.storage);
-        this.editor = new VSCWorkspaceConfigEditor(this.config);
-        this.disposeables.push( workspace.onDidChangeConfiguration((e) => {
+    protected constructor(protected section: string, public debugLog?: LogType) {
+        this.storage = new VSCConfigStorage(this.section, debugLog);
+        this.config = new ConfigPool(this.storage, debugLog);
+        this.editor = new VSCWorkspaceConfigEditor(this.config, debugLog);
+        this.disposables.push( workspace.onDidChangeConfiguration((e) => {
             if (e.affectsConfiguration(this.section)) {
                 this.config.freeze();
-                logFn("onDidChangeConfiguration");
+                if (this.debugLog) { this.debugLog("onDidChangeConfiguration"); }
                 this.debouncer.debounce().then(async () => {
                     await this.config.load();
                     this.config.unfreeze();
@@ -49,10 +47,10 @@ export class VSCConfigHelper implements ConfigHelper {
     }
 
     public dispose() {
-        for (const disp of this.disposeables) {
+        for (const disp of this.disposables) {
             disp.dispose();
         }
-        this.disposeables = [];
+        this.disposables = [];
     }
 
     public getConfig(): IConfig {

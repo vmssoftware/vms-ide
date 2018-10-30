@@ -74,6 +74,11 @@
                     "default": "*.{h,hpp}",
                     "description": "%properties.project.headers.description%"
                 },
+                "vmssoftware.synchronizer.project.listing": {
+                    "type": "string",
+                    "default": "*.{lis}",
+                    "description": "%properties.project.listing.description%"
+                },
                 "vmssoftware.synchronizer.project.source": {
                     "type": "string",
                     "default": "*.{c,cpp}",

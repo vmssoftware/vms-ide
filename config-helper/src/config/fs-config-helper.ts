@@ -1,7 +1,7 @@
 import * as path from "path";
 import { Disposable, FileSystemWatcher, Uri, workspace } from "vscode";
 
-import { Debouncer } from "@vorfol/common";
+import { Debouncer, LogType } from "@vorfol/common";
 
 import { ConfigHelper, IConfig, IConfigEditor, IConfigStorage } from "./config";
 import { ConfigPool } from "./config-pool";
@@ -10,22 +10,21 @@ import { DummyStorage } from "./dummy-storage";
 import { FSConfigStorage } from "./fs-storage";
 import { UriEditor } from "./uri-editor";
 
-// tslint:disable-next-line:no-console
-export let logFn = console.log;
-// tslint:disable-next-line:no-empty
-logFn = () => {};
+// import * as nls from "vscode-nls";
+// const localize = nls.loadMessageBundle();
 
 /**
  * ConfigHelper implementation
  */
 export class FSConfigHelper implements ConfigHelper {
 
-    public static getConfigHelper(section: string): FSConfigHelper {
+    public static getConfigHelper(section: string, debugLog?: LogType): FSConfigHelper {
         if (FSConfigHelper.instances.get(section) === undefined) {
             const relativeFileName = path.join(FSConfigHelper.folder, section + FSConfigHelper.suffix);
-            FSConfigHelper.instances.set(section, new FSConfigHelper(relativeFileName));
+            FSConfigHelper.instances.set(section, new FSConfigHelper(relativeFileName, debugLog));
         }
-        return FSConfigHelper.instances.get(section)!;
+        const retInstance = FSConfigHelper.instances.get(section)!;
+        return retInstance;
     }
 
     private static readonly folder = ".vscode";
@@ -46,12 +45,12 @@ export class FSConfigHelper implements ConfigHelper {
     protected debouncer = new Debouncer(1000);
     protected watcher: FileSystemWatcher | undefined = undefined;
 
-    protected constructor(protected relativeFileName: string) {
+    protected constructor(protected relativeFileName: string, public debugLog?: LogType) {
         this.storage = new DummyStorage();
-        this.config = new ConfigPool(this.storage);
+        this.config = new ConfigPool(this.storage, debugLog);
         this.editor = new DummyEditor();
         this.disposables.push( workspace.onDidChangeWorkspaceFolders(() => {
-            logFn("onDidChangeWorkspaceFolders");
+            if (this.debugLog) { this.debugLog("onDidChangeWorkspaceFolders"); }
             this.updateConfigStorage();
         }));
         this.updateConfigStorage();
@@ -81,12 +80,12 @@ export class FSConfigHelper implements ConfigHelper {
      * Test workspace folders and create appropriate _storage
      */
     protected updateConfigStorage() {
-        logFn("updateConfigStorage start: ", this.storage);
+        if (this.debugLog) { this.debugLog("updateConfigStorage start: ", this.storage); }
         if (this.storage instanceof DummyStorage) {
             if (workspace.workspaceFolders) {
                 // allocate storage in first workspace
                 this.createFS_Storage(workspace.workspaceFolders[0].uri);
-                this.editor = new UriEditor(this.fileUri, this.config);
+                this.editor = new UriEditor(this.fileUri, this.config, this.debugLog);
                 this.config.setStorage(this.storage);
             }
         } else if (this.storage instanceof FSConfigStorage) {
@@ -100,14 +99,14 @@ export class FSConfigHelper implements ConfigHelper {
                 this.updateConfigStorage();
             }
         }
-        logFn("updateConfigStorage end: ", this.storage);
+        if (this.debugLog) { this.debugLog("updateConfigStorage end: ", this.storage); }
     }
 
     /**
      * Doesn't real allocate storage file, just prepare to and watch after the changes
      */
     protected createFS_Storage(rootUri: Uri): void {
-        logFn("createFS_Storage");
+        if (this.debugLog) { this.debugLog("createFS_Storage"); }
         this.fileUri = Uri.file(path.join(rootUri.fsPath, this.relativeFileName));
 
         this.storage = this.createConcreteFS_Storage(this.fileUri);
@@ -115,18 +114,18 @@ export class FSConfigHelper implements ConfigHelper {
         this.watcher = workspace.createFileSystemWatcher(this.fileUri.fsPath);
         this.watcher.onDidCreate(async (uri) => {
             this.config.freeze();
-            logFn("onDidCreate: " + uri);
+            if (this.debugLog) { this.debugLog("onDidCreate: " + uri); }
             this.debouncer.debounce().then(async () => {
-                logFn("load on create");
+                if (this.debugLog) { this.debugLog("load on create"); }
                 await this.config.load();
                 this.config.unfreeze();
             });
         });
         this.watcher.onDidChange(async (uri) => {
             this.config.freeze();
-            logFn("onDidChange: " + uri);
+            if (this.debugLog) { this.debugLog("onDidChange: " + uri); }
             this.debouncer.debounce().then(async () => {
-                logFn("load on change");
+                if (this.debugLog) { this.debugLog("load on change"); }
                 await this.config.load();
                 this.config.unfreeze();
             });
@@ -135,7 +134,7 @@ export class FSConfigHelper implements ConfigHelper {
 
     protected createConcreteFS_Storage(uri: Uri) {
         // TODO: test URI and return appropriate FS
-        return new FSConfigStorage(uri.fsPath);
+        return new FSConfigStorage(uri.fsPath, this.debugLog);
     }
 
 }
