@@ -265,7 +265,7 @@ export class DebugParser
 	//examples debug lines
 	//1629:   int count = 5;
 	//1631:   for(int i = 1; i < 3; i++)
-	private parseNumberLineCodeMsg(fileName : string, msgLine: string, sourcePaths: string[], lisPaths: string[]) : DebugFileInfo | undefined
+	public parseNumberLineCodeMsg(fileName : string, msgLine: string, sourcePaths: string[], lisPaths: string[]) : DebugFileInfo | undefined
 	{
 		let debugFileInfo : DebugFileInfo | undefined;
 
@@ -469,7 +469,7 @@ export class DebugParser
 	//examples a lines
 	//stepped to HELLO\main\%LINE 1631
 	//break at routine HELLO\main
-	private findFileName(line : string) : string
+	public findFileName(line : string) : string
 	{
 		let name : string = "";
 		let findItem : string = "";

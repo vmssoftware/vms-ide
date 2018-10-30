@@ -177,7 +177,7 @@ export class VMSDebugSession extends LoggingDebugSession
 
 		// start the program in the runtime
 		//this._runtime.start(args.program, !!args.stopOnEntry);
-		this._runtime.start("[.demos]hello", "c");
+		this._runtime.start(args.program, "c");
 
 		this.sendResponse(response);
 	}
@@ -322,5 +322,10 @@ export class VMSDebugSession extends LoggingDebugSession
 	public receiveDataShell(data: string, mode: ModeWork)
 	{
 		this._runtime.receiveData(data, mode);
+	}
+
+	public closeDebugSession()
+	{
+		this.sendEvent(new TerminatedEvent());
 	}
 }

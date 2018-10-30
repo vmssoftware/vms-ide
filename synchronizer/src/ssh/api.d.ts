@@ -69,6 +69,7 @@ export interface ISshShell {
     lastShellError?: Error;
     lastClientError?: Error;
     enabled: boolean;
+    prompt?: string;
     setParsers(welcome?: IParseWelcome, prompter?: IPromptCatcher): void;
     dispose(): void;
     attachUser(user: Transform): Promise<boolean>;

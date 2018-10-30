@@ -3,7 +3,7 @@ import { LogType } from "@vorfol/common";
 import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator } from "./api";
 export declare class SshHelper {
     debugLog?: LogType | undefined;
-    readonly section = "vmssoftware.ssh-helper";
+    readonly section: string;
     private settingsEnsured?;
     private sections;
     private configHelper?;
