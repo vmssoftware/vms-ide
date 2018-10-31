@@ -1,8 +1,8 @@
 {
-    "extention.conecting": "Connecting to the server",
-    "extention.compile": "Compile program",
-    "extention.run": "Run program",
-    "extention.connected": "Connected to the server",
-    "extention.not_find_program": "Cannot find a program to debug",
-    "extention.not_connected": "Do not connected to the server"
+    "extention.conecting": "Соединение с сервером",
+    "extention.connected": "Соединён с сервером",
+    "extention.closed": "Соединение закрыто",
+    "extention.сustomize_configuration": "Править конфигурацию",
+    "extention.run": "Запуск программы",
+    "extention.not_connected": "Нет соединения с сервером"
 }

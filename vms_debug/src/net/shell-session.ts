@@ -6,6 +6,7 @@ import { LogType } from '@vorfol/common';
 import { GetSshHelperFromApi } from '../ext-api/get-ssh-helper';
 import { ISshShell } from '../ext-api/api';
 import { ShellParser } from './shell-parser';
+// import { runInThisContext } from 'vm';
 
 export enum ModeWork
 {
@@ -20,6 +21,7 @@ export class ShellSession
     private resultData : string;
     private extensionDataCb : Function;
     private extensionReadyCb : Function;
+    private extensionCloseCb : Function;
     private queueCmd = new Queue<CommandMessage>();
     private readyCmd : boolean;
     private receiveCmd : boolean;
@@ -30,17 +32,18 @@ export class ShellSession
 
     private shellParser: ShellParser;
 
-    constructor( ExtensionDataCb: (data: string, mode: ModeWork) => void, ExtensionReadyCb: () => void, public debugLog?: LogType)
+    constructor( ExtensionDataCb: (data: string, mode: ModeWork) => void, ExtensionReadyCb: () => void, ExtensionCloseCb: () => void, public debugLog?: LogType)
     {
         this.enterCmd = "";
         this.resultData = "";
         this.extensionDataCb = ExtensionDataCb;
         this.extensionReadyCb = ExtensionReadyCb;
+        this.extensionCloseCb = ExtensionCloseCb;
         this.readyCmd = false;
         this.receiveCmd = false;
         this.mode = ModeWork.shell;
         this.currentCmd = new CommandMessage("", "");
-        this.shellParser = new ShellParser(this.DataCb, this.CloseCb, this.ClientErrorCb, this.debugLog);
+        this.shellParser = new ShellParser(this.DataCb, this.CloseCb, this.ClientErrorCb, debugLog);
 
         this.ShellInitialise();
     }
@@ -50,22 +53,40 @@ export class ShellSession
     {
         try
         {
-            if (!this.sshHelper) {
+            if (!this.sshHelper)
+            {
                 const sshHelperType = await GetSshHelperFromApi();
-                if (!sshHelperType) {
-                    if (this.debugLog) {
+
+                if (!sshHelperType)
+                {
+                    if (this.debugLog)
+                    {
                         this.debugLog(`Cannot get ssh-helper api`);
                     }
+
                     return false;
                 }
                 this.sshHelper = new sshHelperType(this.debugLog);
             }
-            if (this.sshHelper) {
+
+            if (this.sshHelper)
+            {
                 this.sshHelper.clearPasswordCashe();
                 this.sshShell = await this.sshHelper.getDefaultVmsShell();
-                if (this.sshShell) {
-                    this.sshShell.attachUser(this.shellParser);
-                    this.shellParser.push("\r\n");
+
+                if (this.sshShell)
+                {
+                    const attached = await this.sshShell.attachUser(this.shellParser);
+
+                    if (!attached)
+                    {
+                        throw this.sshShell.lastClientError? this.sshShell.lastClientError :
+                            this.sshShell.lastShellError ? this.sshShell.lastShellError : new Error("error");
+                    }
+                    else
+                    {
+                        this.shellParser.push("\r\n");
+                    }
                 }
             }
         }
@@ -80,11 +101,11 @@ export class ShellSession
                     this.sshShell.dispose();
                     this.sshShell = undefined;
                 }
-                //this.ShellInitialise();
             }
             else
             {
-                if (this.debugLog) {
+                if (this.debugLog)
+                {
                     this.debugLog(error);
                 }
             }
@@ -180,14 +201,20 @@ export class ShellSession
             this.sshShell.dispose();
             this.sshShell = undefined;
         }
-        if (this.debugLog) {
+
+        if (this.debugLog)
+        {
             this.debugLog("Connection was closed");
         }
+
+        this.extensionCloseCb();
     }
 
     private ClientErrorCb = (err) : void =>
     {
         ToOutputChannel(`${err}`);
+
+        this.extensionCloseCb();
     }
 
     public getCurrentCommand() : CommandMessage
@@ -246,6 +273,7 @@ export class ShellSession
     {
         if(this.sshShell)
         {
+            this.sshShell.detachUser();
             this.sshShell.dispose();
             this.sshShell = undefined;
         }

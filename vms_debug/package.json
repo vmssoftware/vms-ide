@@ -1,7 +1,7 @@
 {
 	"name": "vms-debug",
 	"displayName": "VMS C Debug",
-	"version": "0.27.4",
+	"version": "0.27.5",
 	"publisher": "vmssoftware",
 	"description": "The extension for developing debug adapters for VS Code.",
 	"author": {
@@ -67,26 +67,13 @@
 	"main": "./out/extension",
 	"activationEvents": [
 		"onDebug",
-		"onCommand:extension.vms-debug.compile",
-		"onCommand:extension.vms-debug.connect",
-		"onCommand:extension.vms-debug.getProgramName",
-		"onCommand:extension.vms-debug.run"
+		"onCommand:extension.vms-debug.connect"
 	],
 	"contributes": {
 		"commands": [
 			{
 				"command": "extension.vms-debug.connect",
 				"title": "%extension.vms_connect%",
-				"category": "%command.category%"
-			},
-			{
-				"command": "extension.vms-debug.compile",
-				"title": "%extension.vms_compile%",
-				"category": "%command.category%"
-			},
-			{
-				"command": "extension.vms-debug.run",
-				"title": "%extension.vms_run%",
 				"category": "%command.category%"
 			}
 		],
@@ -112,8 +99,8 @@
 						"properties": {
 							"program": {
 								"type": "string",
-								"description": "Absolute path to a text file.",
-								"default": "${workspaceFolder}/${command:AskForProgramName}"
+								"description": "Absolute path to EXE file.",
+								"default": ""
 							},
 							"stopOnEntry": {
 								"type": "boolean",
@@ -124,6 +111,19 @@
 								"type": "boolean",
 								"description": "Enable logging of the Debug Adapter Protocol.",
 								"default": true
+							},
+							"typeRun": {
+								"type": "string",
+								"enum": [
+									"DEBUG",
+									"RUN"
+								],
+								"enumDescriptions": [
+									"Use for run Debuger",
+									"Use for run Program"
+								],
+								"default": "DEBUG",
+								"description": "Type of runing"
 							}
 						}
 					}
@@ -132,27 +132,33 @@
 					{
 						"type": "vms_dbg",
 						"request": "launch",
-						"name": "Ask for file name",
-						"program": "${workspaceFolder}/${command:AskForProgramName}",
-						"stopOnEntry": true
+						"name": "Settings Debug",
+						"program": "",
+						"stopOnEntry": true,
+						"typeRun" : "DEBUG"
+					},
+					{
+						"type": "vms_dbg",
+						"request": "launch",
+						"name": "Settings Run",
+						"program": "",
+						"typeRun" : "RUN"
 					}
 				],
 				"configurationSnippets": [
 					{
 						"label": "VMS C Debug: Launch",
-						"description": "A new configuration for 'debugging' a user selected markdown file.",
+						"description": "A new configuration for 'debugging'",
 						"body": {
 							"type": "vms_dbg",
 							"request": "launch",
-							"name": "Ask for file name",
-							"program": "^\"\\${workspaceFolder}/\\${command:AskForProgramName}\"",
-							"stopOnEntry": true
+							"name": "Settings Name",
+							"program": "",
+							"stopOnEntry": true,
+							"typeRun" : "DEBUG"
 						}
 					}
-				],
-				"variables": {
-					"AskForProgramName": "extension.vms-debug.getProgramName"
-				}
+				]
 			}
 		]
 	}

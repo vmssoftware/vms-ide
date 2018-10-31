@@ -1,5 +1,5 @@
 import { HolderDebugFileInfo } from './debug_file_info';
-// import { DebugFileInfo } from './debug_file_info';
+import { DebugFileInfo } from './debug_file_info';
 import { readFileSync } from 'fs';
 import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
 import { Queue } from '../queue/queues';
@@ -27,7 +27,7 @@ export enum MessagePrompt
 
 export class DebugParser
 {
-	// private currentName : string;
+	private currentName : string;
 	private queueMsgDebug = new Queue<string>();
 	private queueMsgUser = new Queue<string>();
 	private queueMsgCommand = new Queue<string>();
@@ -40,7 +40,7 @@ export class DebugParser
 
 	constructor()
 	{
-		// this.currentName = "";
+		this.currentName = "";
 		this.fleInfo = new HolderDebugFileInfo();
 		this.commandDone = false;
 	}
@@ -266,58 +266,58 @@ export class DebugParser
 	//examples debug lines
 	//1629:   int count = 5;
 	//1631:   for(int i = 1; i < 3; i++)
-	// private parseNumberLineCodeMsg(fileName : string, msgLine: string, sourcePaths: string[], lisPaths: string[]) : DebugFileInfo | undefined
-	// {
-	// 	let debugFileInfo : DebugFileInfo | undefined;
+	public parseNumberLineCodeMsg(fileName : string, msgLine: string, sourcePaths: string[], lisPaths: string[]) : DebugFileInfo | undefined
+	{
+		let debugFileInfo : DebugFileInfo | undefined;
 
-	// 	if(msgLine.includes(":"))
-	// 	{
-	// 		let lisLines : string[];
-	// 		let currentLineNumber : number = -1;
-	// 		//number: string of code; array[0]-number, array[1]-string of code
-	// 		let array = msgLine.split(":");
+		if(msgLine.includes(":"))
+		{
+			let lisLines : string[];
+			let currentLineNumber : number = -1;
+			//number: string of code; array[0]-number, array[1]-string of code
+			let array = msgLine.split(":");
 
-	// 		if(fileName === "")
-	// 		{
-	// 			fileName = this.currentName;
-	// 		}
-	// 		else
-	// 		{
-	// 			this.currentName = fileName;
-	// 		}
+			if(fileName === "")
+			{
+				fileName = this.currentName;
+			}
+			else
+			{
+				this.currentName = fileName;
+			}
 
-	// 		let shift = this.fleInfo.getShiftLine(fileName);
+			let shift = this.fleInfo.getShiftLine(fileName);
 
-	// 		if(shift === -1)
-	// 		{
-	// 			let pathFile = this.findPathFileByName(fileName, sourcePaths);
-	// 			let pathLisFile = this.findPathFileByName(fileName, lisPaths);
-	// 			lisLines = this.loadSource(pathLisFile);
+			if(shift === -1)
+			{
+				let pathFile = this.findPathFileByName(fileName, sourcePaths);
+				let pathLisFile = this.findPathFileByName(fileName, lisPaths);
+				lisLines = this.loadSource(pathLisFile);
 
-	// 			//calculate shift line
-	// 			shift = this.calculateShiftLine(msgLine, lisLines);
+				//calculate shift line
+				shift = this.calculateShiftLine(msgLine, lisLines);
 
-	// 			if(shift !== -1)//calculate successfull
-	// 			{
-	// 				currentLineNumber = parseInt(array[0], 10) - shift;
-	// 				this.fleInfo.setItem(pathFile, fileName, shift, currentLineNumber);
-	// 				debugFileInfo = this.fleInfo.getItem(fileName);
-	// 			}
-	// 		}
-	// 		else
-	// 		{
-	// 			currentLineNumber = parseInt(array[0], 10) - shift;
-	// 			debugFileInfo = this.fleInfo.getItem(fileName);
+				if(shift !== -1)//calculate successfull
+				{
+					currentLineNumber = parseInt(array[0], 10) - shift;
+					this.fleInfo.setItem(pathFile, fileName, shift, currentLineNumber);
+					debugFileInfo = this.fleInfo.getItem(fileName);
+				}
+			}
+			else
+			{
+				currentLineNumber = parseInt(array[0], 10) - shift;
+				debugFileInfo = this.fleInfo.getItem(fileName);
 
-	// 			if(debugFileInfo)
-	// 			{
-	// 				debugFileInfo.currLine = currentLineNumber;
-	// 			}
-	// 		}
-	// 	}
+				if(debugFileInfo)
+				{
+					debugFileInfo.currLine = currentLineNumber;
+				}
+			}
+		}
 
-	// 	return debugFileInfo;
-	// }
+		return debugFileInfo;
+	}
 
 	//examples a lines
 	// DBG> show calls
@@ -470,51 +470,51 @@ export class DebugParser
 	//examples a lines
 	//stepped to HELLO\main\%LINE 1631
 	//break at routine HELLO\main
-	// private findFileName(line : string) : string
-	// {
-	// 	let name : string = "";
-	// 	let findItem : string = "";
-	// 	let array = line.split(/\s+/);
+	public findFileName(line : string) : string
+	{
+		let name : string = "";
+		let findItem : string = "";
+		let array = line.split(/\s+/);
 
-	// 	for (let item of array)//search the last item
-	// 	{
-	// 		if(item.includes("\\"))
-	// 		{
-	// 			findItem = item;
-	// 		}
-	// 	}
+		for (let item of array)//search the last item
+		{
+			if(item.includes("\\"))
+			{
+				findItem = item;
+			}
+		}
 
-	// 	if(findItem !== "")
-	// 	{
-	// 		findItem = findItem.toLowerCase();
-	// 		let names = findItem.split("\\");
-	// 		name = names[0];
-	// 	}
+		if(findItem !== "")
+		{
+			findItem = findItem.toLowerCase();
+			let names = findItem.split("\\");
+			name = names[0];
+		}
 
-	// 	return  name;
-	// }
+		return  name;
+	}
 
 	//examples debug lines
 	//1629:   int count = 5;
 	//1631:   for(int i = 1; i < 3; i++)
-	// private calculateShiftLine(lineDbg : string, lisLines: string[]) : number
-	// {
-	// 	let shift : number = -1;
-	// 	let LineSourceCode : number = -1;
-	// 	let debugLine : number = -1;
-	// 	let array = lineDbg.split(":");
-	// 	let debugLineNumber = array[0].trim();
+	private calculateShiftLine(lineDbg : string, lisLines: string[]) : number
+	{
+		let shift : number = -1;
+		let LineSourceCode : number = -1;
+		let debugLine : number = -1;
+		let array = lineDbg.split(":");
+		let debugLineNumber = array[0].trim();
 
-	// 	LineSourceCode = this.getNumberLineSourceCode(debugLineNumber, lisLines);
+		LineSourceCode = this.getNumberLineSourceCode(debugLineNumber, lisLines);
 
-	// 	if(LineSourceCode > 0)
-	// 	{
-	// 		debugLine = parseInt(debugLineNumber, 10);
-	// 		shift = debugLine - LineSourceCode;
-	// 	}
+		if(LineSourceCode > 0)
+		{
+			debugLine = parseInt(debugLineNumber, 10);
+			shift = debugLine - LineSourceCode;
+		}
 
-	// 	return shift;
-	// }
+		return shift;
+	}
 	private getNumberLineSourceCode(debugLineNumber : string, lisLines: string[]) : number
 	{
 		let LineSourceCode : number = -1;

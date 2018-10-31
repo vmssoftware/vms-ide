@@ -1,18 +1,5 @@
 {
 	"extension.vms_c_debug": "VMS C Debug",
 	"extension.vms_connect": "Connect to server",
-	"extension.vms_compile": "Run compile",
-    "extension.vms_run": "Run program",
-    "extension.edit_settings": "Edit settings",
-    "configuration.title": "OpenVMS settings",
-    "command.category": "OpenVMS",
-    "command.buildProject.title": "Build on VMS",
-    "command.editProject.title": "Edit OpenVMS project settings",
-    "properties.common.build-enabled.description": "Enable build command",
-    "properties.connection.host.description": "OpenVMS host to build, run and debug current workspace",
-    "properties.connection.port.description": "OpenVMS ssh port",
-    "properties.connection.username.description": "Username",
-    "properties.connection.password.description": "Password",
-    "properties.filter.include.description": "Include files masks",
-    "properties.filter.exclude.description": "Exclude files masks"
+    "command.category": "OpenVMS"
 }
