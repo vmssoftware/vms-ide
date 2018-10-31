@@ -22,7 +22,7 @@ export enum TypeRunConfig
 }
 
 const locale = vscode.env.language ;
-const localize = nls.config({ locale: "ru", messageFormat: nls.MessageFormat.both })();
+const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 console.log(locale);
 //const localize = nls.loadMessageBundle();
 
@@ -39,7 +39,6 @@ export function activate(context: vscode.ExtensionContext)
 		shell = new ShellSession(ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, console.log);
 
 		const message = localize('extention.conecting', "Connecting to the server");
-		const message2 = localize('extention.conecting2', "Connecting to the server2");
 		vscode.window.showInformationMessage(message);
 	}));
 
