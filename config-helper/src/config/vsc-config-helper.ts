@@ -8,6 +8,7 @@ import { VSCWorkspaceConfigEditor } from "./vsc-editor";
 import { VSCConfigStorage } from "./vsc-storage";
 
 // import * as nls from "vscode-nls";
+// nls.config({messageFormat: nls.MessageFormat.both});
 // const localize = nls.loadMessageBundle();
 
 /**

@@ -8,6 +8,7 @@ import { IConnectConfigResolver } from "./connect-config-resolver";
 import { ISettingsFiller } from "./settings-filler";
 
 import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 class SettingsCacheNode {

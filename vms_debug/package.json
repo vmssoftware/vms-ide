@@ -1,7 +1,7 @@
 {
 	"name": "vms-debug",
 	"displayName": "VMS C Debug",
-	"version": "0.27.2",
+	"version": "0.27.4",
 	"publisher": "vmssoftware",
 	"description": "The extension for developing debug adapters for VS Code.",
 	"author": {
@@ -43,32 +43,34 @@
 	"devDependencies": {
 		"@types/mocha": "^5.x.x",
 		"@types/node": "^8.10.36",
-		"tslint": "^5.11.0",
-		"typescript": "^3.x.x",
-		"vscode": "^1.1.21"
+        "del": "^3.0.0",
+        "event-stream": "^4.0.1",
+        "fs-extra": "^7.0.0",
+        "gulp": "^3.9.1",
+        "gulp-sourcemaps": "^2.6.4",
+        "gulp-typescript": "^5.0.0-alpha.3",
+        "run-sequence": "^2.2.1",
+        "tslint": "^5.11.0",
+        "typescript": "^3.x.x",
+        "vsce": "^1.52.0",
+        "vscode": "^1.1.21",
+        "vscode-nls-dev": "github:vorfol/vscode-nls-dev"
 	},
 	"dependencies": {
 		"@vorfol/common": "0.0.11",
 		"await-notify": "^1.0.1",
-		"del": "^3.0.0",
-		"gulp": "^3.9.1",
-		"gulp-typescript": "^5.0.0-alpha.3",
 		"net": "^1.0.2",
-		"run-sequence": "^2.2.1",
-		"ssh2": "^0.6.1",
-		"vsce": "^1.52.0",
 		"vscode-debugadapter": "^1.32.1",
 		"vscode-debugadapter-testsupport": "1.27.0",
-		"vscode-nls": "^4.0.0",
-		"vscode-nls-dev": "^3.2.0"
+		"vscode-nls": "^4.0.0"
 	},
 	"main": "./out/extension",
 	"activationEvents": [
 		"onDebug",
-		"onCommand:extension.vms-debug.connect",
 		"onCommand:extension.vms-debug.compile",
-		"onCommand:extension.vms-debug.run",
-		"onCommand:extension.vms-debug.getProgramName"
+		"onCommand:extension.vms-debug.connect",
+		"onCommand:extension.vms-debug.getProgramName",
+		"onCommand:extension.vms-debug.run"
 	],
 	"contributes": {
 		"commands": [

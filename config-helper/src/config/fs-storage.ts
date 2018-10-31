@@ -11,6 +11,7 @@ const fsWriteFile = util.promisify(fs.writeFile);
 const fsMkDir = util.promisify(fs.mkdir);
 
 // import * as nls from "vscode-nls";
+// nls.config({messageFormat: nls.MessageFormat.both});
 // const localize = nls.loadMessageBundle();
 
 /**

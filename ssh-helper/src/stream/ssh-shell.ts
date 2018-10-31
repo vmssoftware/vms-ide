@@ -14,6 +14,7 @@ import { PromptCatcher } from "./prompt-catcher";
 import { IParseWelcome, IPromptCatcher, ISshShell } from "../api";
 
 import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export class SshShell extends SshClient implements ISshShell {
@@ -89,7 +90,7 @@ export class SshShell extends SshClient implements ISshShell {
                 const onReady = Subscribe(this.promptCatcher, this.promptCatcher.readyEvent, (content) => {
                     if (this.promptCatcher && this.promptCatcher.lastError) {
                         if (this.debugLog) {
-                            this.debugLog(localize("debug.cmd.error", "shell{1} command error: {0}", this.promptCatcher.lastError, this.tag ? " " + this.tag : ""));
+                            this.debugLog(localize("debug.cmd.error", "shell{1} command error: {0}", String(this.promptCatcher.lastError), this.tag ? " " + this.tag : ""));
                         }
                         contentRet = typeof content === "string" ? content : contentRet;
                         contentRet = this.promptCatcher? this.promptCatcher.content : contentRet;
@@ -176,7 +177,7 @@ export class SshShell extends SshClient implements ISshShell {
                 return !this.client.shell((clientError, channelGot) => {
                     if (clientError) {
                         if (this.debugLog) {
-                            this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, clientError));
+                            this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, String(clientError)));
                         }
                         this.lastShellError = clientError;
                     } else {

@@ -44,6 +44,21 @@
             "type": "gulp",
             "task": "compile",
             "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "internal-nls-compile",
+            "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "build",
+            "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "add-i18n",
+            "problemMatcher": []
         }
     ]
 }

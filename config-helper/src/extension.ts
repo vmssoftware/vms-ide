@@ -15,12 +15,9 @@ debugLogFn = console.log;
 
 const locale = vscode.env.language ;
 import * as nls from "vscode-nls";
-const localize = nls.config({ locale })();
+const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
 export function activate(context: vscode.ExtensionContext) {
-
-    // uncomment next line to test configuration helper. also add "*" in activation events
-    // vscode.commands.executeCommand("setContext", "vmssoftware.config-helper.test:enabled", true);
 
     const config = vscode.workspace.getConfiguration("vmssoftware.config-helper");
     const using = config.get<string>("using");

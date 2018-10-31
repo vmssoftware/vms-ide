@@ -1,0 +1,8 @@
+{
+    "extention.conecting": "Connecting to the server",
+    "extention.compile": "Compile program",
+    "extention.run": "Run program",
+    "extention.connected": "Connected to the server",
+    "extention.not_find_program": "Cannot find a program to debug",
+    "extention.not_connected": "Do not connected to the server"
+}

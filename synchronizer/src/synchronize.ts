@@ -3,7 +3,7 @@ import { ExtensionContext, window, workspace } from "vscode";
 import { LogType } from "@vorfol/common";
 
 import { ToOutputChannel } from "./output-channel";
-import { Synchronizer } from "./sync/syncronizer";
+import { Synchronizer } from "./sync/synchronizer";
 
 export let synchronizer: Synchronizer | undefined;
 
@@ -16,6 +16,7 @@ export async function StopSyncProject() {
 }
 
 import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export async function SyncProject(context: ExtensionContext, debugLog?: LogType) {

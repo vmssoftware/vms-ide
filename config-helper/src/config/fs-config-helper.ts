@@ -11,6 +11,7 @@ import { FSConfigStorage } from "./fs-storage";
 import { UriEditor } from "./uri-editor";
 
 // import * as nls from "vscode-nls";
+// nls.config({messageFormat: nls.MessageFormat.both});
 // const localize = nls.loadMessageBundle();
 
 /**

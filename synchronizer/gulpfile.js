@@ -22,7 +22,7 @@ const inlineSource = false;
 const outDest = 'out';
 
 // If all VS Code langaues are support you can use nls.coreLanguages
-const languages = ['rus'];
+const languages = [{id: 'ru'}];
 
 gulp.task('default', function(callback) {
 	runSequence('build', callback);
@@ -53,9 +53,11 @@ gulp.task('clean', function() {
 function compile(buildNls) {
 	var r = tsProject.src()
 		.pipe(sourcemaps.init())
-		.pipe(tsProject()).js
+		.pipe(tsProject());
+	r.dts.pipe(gulp.dest(outDest));
+	r = r.js
 		.pipe(buildNls ? nls.rewriteLocalizeCalls() : es.through())
-		.pipe(buildNls ? nls.createAdditionalLanguageFiles(languages, 'i18n', 'out') : es.through());
+		.pipe(buildNls ? nls.createAdditionalLanguageFiles(languages, 'i18n') : es.through());
 
 	if (inlineMap && inlineSource) {
 		r = r.pipe(sourcemaps.write());

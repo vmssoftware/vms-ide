@@ -14,6 +14,7 @@ import { SshClient } from "./ssh-client";
 import { IStats, IInputAttributes } from "../api";
 
 import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export class SftpClient extends SshClient {
@@ -46,7 +47,7 @@ export class SftpClient extends SshClient {
         if (readStream) {
             readStream.on("error", (err) => {
                 if (this.debugLog) {
-                    this.debugLog(localize("debug.read.err", "read stream{0} error: {1}", this.tag ? " " + this.tag : "", err));
+                    this.debugLog(localize("debug.read.err", "read stream{0} error: {1}", this.tag ? " " + this.tag : "", String(err)));
                 }
             });
         }
@@ -65,7 +66,7 @@ export class SftpClient extends SshClient {
         if (writeStream) {
             writeStream.on("error", (err) => {
                 if (this.debugLog) {
-                    this.debugLog(localize("debug.write.err", "write stream{0} error: {1}", this.tag ? " " + this.tag : "", err));
+                    this.debugLog(localize("debug.write.err", "write stream{0} error: {1}", this.tag ? " " + this.tag : "", String(err)));
                 }
             });
         }
@@ -233,7 +234,7 @@ export class SftpClient extends SshClient {
                 return !this.client.sftp((err, sftpGot) => {
                     if (err) {
                         if (this.debugLog) {
-                            this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, err));
+                            this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, String(err)));
                         }
                     } else {
                         if (this.debugLog) {

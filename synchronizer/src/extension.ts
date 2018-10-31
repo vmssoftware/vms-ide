@@ -9,20 +9,27 @@ import { ToOutputChannel } from "./output-channel";
 import { setBuilding, setSynchronizing } from "./stop";
 import { StopSyncProject, SyncProject } from "./synchronize";
 
-const locale = env.language ;
-import * as nls from "vscode-nls";
-const localize = nls.config({ locale })();
-
 let debugLogFn: LogType | undefined;
 debugLogFn = undefined;
 // tslint:disable-next-line:no-console
 debugLogFn = console.log;
+
+const locale = env.language ;
+import * as nls from "vscode-nls";
+const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
+
+if (debugLogFn) {
+    debugLogFn(`Loaded NLS for: ${env.language}`);
+}
 
 let contextSaved: ExtensionContext | undefined;
 
 export async function activate(context: ExtensionContext) {
 
     contextSaved = context;
+
+    const syncMessage = localize("message.synchronizing", "Synchronizing...");
+    const buildMessage = localize("message.building", "Building...");
 
     if (debugLogFn) {
         debugLogFn(localize("debug.activated", "OpenVMS extension is activated"));
@@ -33,7 +40,7 @@ export async function activate(context: ExtensionContext) {
             .then((ok) => {
                 if (ok && configHelper) {
                     setSynchronizing(true);
-                    const msg = window.setStatusBarMessage(localize("message.synchronizing", "Synchronizing..."));
+                    const msg = window.setStatusBarMessage(syncMessage);
                     return SyncProject(context, debugLogFn)
                         .catch((err) => {
                             if (debugLogFn) {
@@ -56,7 +63,7 @@ export async function activate(context: ExtensionContext) {
             .then((ok) => {
                 if (ok && configHelper) {
                     setSynchronizing(true);
-                    let msg = window.setStatusBarMessage(localize("message.synchronizing", "Synchronizing..."));
+                    let msg = window.setStatusBarMessage(syncMessage);
                     return SyncProject(context, debugLogFn)
                         .catch((err) => {
                             if (debugLogFn) {
@@ -68,7 +75,7 @@ export async function activate(context: ExtensionContext) {
                             msg.dispose();
                             if (syncResult) {
                                 setBuilding(true);
-                                msg = window.setStatusBarMessage(localize("message.building", "Building..."));
+                                msg = window.setStatusBarMessage(buildMessage);
                                 return BuildProject(context, debugLogFn)
                                     .catch((err) => {
                                         if (debugLogFn) {

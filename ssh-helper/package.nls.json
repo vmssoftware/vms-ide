@@ -1,7 +1,7 @@
 {
-    "command.category": "OpenVMS",
+    "command.category": "OpenVMS ssh",
     "command.edit.title": "Edit ssh-helper settings",
-    "configuration.title": "OpevVMS",
+    "configuration.title": "OpevVMS ssh",
     "configuration.host": "Host",
     "configuration.port": "Port",
     "configuration.username": "User name",

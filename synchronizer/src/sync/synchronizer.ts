@@ -1,10 +1,10 @@
 import path from "path";
 import vscode from "vscode";
 
+import { IConfig, IConfigSection } from "../config/config";
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
 import { KindOfFiles, ProjectSection } from "../config/sections/project";
 import { DownloadAction, SynchronizeSection } from "../config/sections/synchronize";
-import { IConfig, IConfigSection } from "./../config/config";
 
 import { Delay } from "@vorfol/common";
 import { LogType } from "@vorfol/common";
@@ -22,6 +22,7 @@ import { ISource } from "./source";
 import { VmsSource } from "./vms-source";
 
 import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export async function createFile(fileUri: vscode.Uri, content: string) {
@@ -72,6 +73,10 @@ export class Synchronizer {
     private onDidLoadConfig?: vscode.Disposable;  // dispose listener
     private onDidLoadSSHConfig?: vscode.Disposable;  // dispose listener
     private sshHelper?: SshHelper;
+
+    private outSync = localize("output.sync_in_progress", "Synchronization is in progress");
+    private outNoWs = localize("output.no_workspace", "There is no workspace to synchronize");
+    private outEditSett = localize("output.edit_settings", "In first please edit settings");
 
     constructor(public debugLog?: LogType) {
     }
@@ -160,12 +165,12 @@ export class Synchronizer {
 
     public async syncronizeProject() {
         if (this.inProgress) {
-            ToOutputChannel(localize("output.sync_in_progress", "Synchronization is in progress"));
+            ToOutputChannel(this.outSync);
             return false;
         }
         if (!vscode.workspace.workspaceFolders ||
             vscode.workspace.workspaceFolders.length < 1) {
-            ToOutputChannel(localize("output.no_workspace", "There is no workspace to synchronize"));
+            ToOutputChannel(this.outNoWs);
             return false;
         }
         this.inProgress = true;
@@ -237,7 +242,7 @@ export class Synchronizer {
                 this.debugLog(localize("debug.retcode", "Synchronize retCode: {0}", retCode));
             }
         } else {
-            ToOutputChannel(localize("output.edit_settings", "In first please edit settings"));
+            ToOutputChannel(this.outEditSett);
         }
         this.inProgress = false;
         return retCode;
@@ -265,12 +270,12 @@ export class Synchronizer {
 
     public async downloadListings() {
         if (this.inProgress) {
-            ToOutputChannel(localize("output.sync_in_progress", "Synchronization is in progress"));
+            ToOutputChannel(this.outSync);
             return false;
         }
         if (!vscode.workspace.workspaceFolders ||
             vscode.workspace.workspaceFolders.length < 1) {
-            ToOutputChannel(localize("output.no_workspace", "There is no workspace to synchronize"));
+            ToOutputChannel(this.outNoWs);
             return false;
         }
         this.inProgress = true;
@@ -293,9 +298,9 @@ export class Synchronizer {
                     this.transferFile(this.remoteSource, this.localSource, downloadFile.filename, downloadFile.date)
                         .then((ok) => {
                             if (ok) {
-                                ToOutputChannel(localize("output.downloaded", "{0} is downloaded", downloadFile.filename));
+                                ToOutputChannel(localize("output.downloaded.list", "{0} is downloaded", downloadFile.filename));
                             } else {
-                                ToOutputChannel(localize("output.download_failed", "{0} is failed to download", downloadFile.filename));
+                                ToOutputChannel(localize("output.download_failed.list", "{0} is failed to download", downloadFile.filename));
                             }
                             return ok;
                         }).catch(() => false));
@@ -312,7 +317,7 @@ export class Synchronizer {
                 this.debugLog(localize("debug.retcode_list", "Download listing retCode: {0}", retCode));
             }
         } else {
-            ToOutputChannel(localize("output.edit_settings", "In first please edit settings"));
+            ToOutputChannel(this.outEditSett);
         }
         this.inProgress = false;
         return retCode;

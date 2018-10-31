@@ -6,6 +6,7 @@ import { Builder } from "./build/builder";
 import { ToOutputChannel } from "./output-channel";
 
 import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export let builder: Builder | undefined;

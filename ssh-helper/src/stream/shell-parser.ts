@@ -4,6 +4,7 @@ import { LogType } from "@vorfol/common";
 import { IShellParser } from "../api";
 
 import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export class ShellParser extends Transform implements IShellParser {
@@ -25,7 +26,7 @@ export class ShellParser extends Transform implements IShellParser {
         this.on("error", (err) => {
             this.lastError = err;
             if (this.debugLog) { 
-                this.debugLog(localize("debug.error", "ShellParser{1}: error {0}", err, this.tag ? " " + this.tag : ""));
+                this.debugLog(localize("debug.error", "ShellParser{1}: error {0}", String(err), this.tag ? " " + this.tag : ""));
             }
             this.setReady();
         });

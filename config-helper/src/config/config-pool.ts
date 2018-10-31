@@ -4,6 +4,7 @@ import { LogType } from "@vorfol/common";
 import { CSAResult, IConfig, IConfigSection, IConfigStorage } from "./config";
 
 import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 /**

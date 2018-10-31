@@ -20,6 +20,7 @@ import { MemoryStreamCreator } from "./stream/stream-creators";
 import { ConstPasswordFiller } from "./config-resolve/password-filler";
 
 import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export class SshHelper {

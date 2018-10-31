@@ -5,6 +5,7 @@ import { LogType } from "@vorfol/common";
 import { ICanCreateReadStream, ICanCreateWriteStream } from "../api";
 
 import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 /**
@@ -35,7 +36,7 @@ export async function PipeFile(
     srcStream.once("error", (srcError) => {
         // catch source errors
         if (debugLog) {
-            debugLog(localize("debug.source_error", "source error {0}", srcError));
+            debugLog(localize("debug.source_error", "source error {0}", String(srcError)));
         }
         srcStream = undefined;
         errPassed = true;
@@ -59,7 +60,7 @@ export async function PipeFile(
     dstStream.once("error", (dstError) => {
         // catch destination errors
         if (debugLog) {
-            debugLog(localize("debug.dest_error", "dest error {0}", dstError));
+            debugLog(localize("debug.dest_error", "dest error {0}", String(dstError)));
         }
         dstStream = undefined;
         errPassed = true;

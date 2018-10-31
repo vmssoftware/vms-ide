@@ -1,0 +1,7 @@
+{
+    "const.create_mms": "Новый MMS файл",
+    "output.cannot_exec": "Не удалось запустить {0}",
+    "debug.cannot_get_ssh_helper": "Не удалось загрузить ssh-helper API",
+    "output.not_resolved": "Не удалось получить конфигурацию или текущую рабочую папку",
+    "output.install_ssh": "Установите плагин 'vmssoftware.ssh-helper'"
+}

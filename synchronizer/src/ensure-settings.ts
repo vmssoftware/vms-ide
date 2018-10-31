@@ -17,6 +17,7 @@ export let synchronizerConfig: IConfig | undefined;
 const sectionName = "vmssoftware.synchronizer";
 
 import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export async function EnsureSettings(debugLog?: LogType) {

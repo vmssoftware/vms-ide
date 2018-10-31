@@ -7,6 +7,7 @@ import { IUnSubscribe, Subscribe } from "@vorfol/common";
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 
 import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export class SshClient {

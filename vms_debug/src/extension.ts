@@ -14,7 +14,7 @@ import { OsCommands } from './command/os_commands';
 import {ToOutputChannel} from './io/output-channel';
 
 const locale = vscode.env.language ;
-const localize = nls.config({ locale })();
+const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 //const localize = nls.loadMessageBundle();
 
 /*

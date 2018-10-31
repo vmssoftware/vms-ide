@@ -5,6 +5,7 @@ import { CSAResult } from "./config";
 import { FSConfigStorage } from "./fs-storage";
 
 // import * as nls from "vscode-nls";
+// nls.config({messageFormat: nls.MessageFormat.both});
 // const localize = nls.loadMessageBundle();
 
 /**

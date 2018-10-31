@@ -5,6 +5,7 @@ import { FSConfigHelper } from "./fs-config-helper";
 import { VFSConfigStorage } from "./vfs-storage";
 
 // import * as nls from "vscode-nls";
+// nls.config({messageFormat: nls.MessageFormat.both});
 // const localize = nls.loadMessageBundle();
 
 /**

@@ -14,6 +14,7 @@ const fsMkDir = util.promisify(fs.mkdir);
 const fsExist = util.promisify(fs.exists);
 
 import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export class FsSource implements ISource, IReadDirectory {
