@@ -269,8 +269,26 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void
 	{
-		this._runtime.variableValue(args.expression);
-		this.responseEvaluate = response;
+		if(args.context === "hover")//request value of selected a variable
+		{
+			this._runtime.variableValue(args.expression);
+			this.responseEvaluate = response;
+		}
+		else if(args.context === "repl")//data from debug console
+		{
+			this._runtime.sendDataToProgram(args.expression);
+
+			response.body =
+			{
+				result: "\r",
+				variablesReference: 0
+			};
+			this.sendResponse(response);
+		}
+		else
+		{
+			this.sendResponse(response);
+		}
 	}
 
 

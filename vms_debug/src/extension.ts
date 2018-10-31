@@ -5,7 +5,7 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken, DebugConsole } from 'vscode';
+import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
 import { VMSDebugSession } from './debug/vms_debug';
 import { ShellSession, ModeWork } from './net/shell-session';
 import * as Net from 'net';
@@ -25,11 +25,11 @@ const locale = vscode.env.language ;
 const localize = nls.config({ locale })();
 //const localize = nls.loadMessageBundle();
 
-
 let shell : ShellSession;
 let session : VMSDebugSession | undefined;
 let serverIsConnect : boolean = false;
 let typeRunConfig : TypeRunConfig = TypeRunConfig.TypeRunNone;
+
 
 export function activate(context: vscode.ExtensionContext)
 {
@@ -65,7 +65,6 @@ let ExtensionDataCb = function(data: string, mode: ModeWork) : void
 	}
 	else if(typeRunConfig === TypeRunConfig.TypeRunRun)
 	{
-		ToOutputChannel(data);
 		vscode.debug.activeDebugConsole.append(data);
 	}
 };

@@ -28,5 +28,5 @@ export function ToOutputChannel( outStr : string, endl : boolean = true) : void 
     else {
         GetOutputChannel().append(outStr);
     }
-    GetOutputChannel().show();
+    //GetOutputChannel().show();
 }

@@ -2,6 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as vscode from 'vscode';
 import { readFileSync } from 'fs';
 import * as Path from 'path';
 import { EventEmitter } from 'events';
@@ -184,6 +185,11 @@ export class VMSRuntime extends EventEmitter
 		}
 
 		return variables;
+	}
+
+	public sendDataToProgram(data : string)
+	{
+		this.shell.SendData(data);
 	}
 
 	public getSourceFile() : string
@@ -541,18 +547,19 @@ export class VMSRuntime extends EventEmitter
 						break;
 				}
 			}
-			if(messageUser !== "")
-			{
-				ToOutputChannel(messageUser);
-			}
 			if(messageDebug !== "")
 			{
 				ToOutputChannel(messageDebug);
+				vscode.debug.activeDebugConsole.append(messageDebug);
 
 				if(messageDebug.includes(MessageDebuger.msgEnd))
 				{
 					this.sendEvent('end');
 				}
+			}
+			if(messageUser !== "")
+			{
+				vscode.debug.activeDebugConsole.append(messageUser);
 			}
 
 			if(this.dbgParser.getCommandStatus())

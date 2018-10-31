@@ -151,7 +151,7 @@ export class DebugParser
 
 			if(dataPrompt !== "")
 			{
-				this.queueMsgUser.push(MessagePrompt.prmtUSER + dataPrompt);
+				this.queueMsgUser.push(/*MessagePrompt.prmtUSER +*/ dataPrompt);
 			}
 		}
 
@@ -241,7 +241,7 @@ export class DebugParser
 		}
 		if(this.displayDataString[2] !== "")
 		{
-			this.queueMsgDebug.push(MessagePrompt.prmtUSER + this.displayDataString[2]);
+			this.queueMsgDebug.push(/*MessagePrompt.prmtUSER +*/ this.displayDataString[2]);
 		}
 	}
 

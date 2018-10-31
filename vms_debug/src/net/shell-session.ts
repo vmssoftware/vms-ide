@@ -6,7 +6,7 @@ import { LogType } from '@vorfol/common';
 import { GetSshHelperFromApi } from '../ext-api/get-ssh-helper';
 import { ISshShell } from '../ext-api/api';
 import { ShellParser } from './shell-parser';
-import { runInThisContext } from 'vm';
+
 
 export enum ModeWork
 {
@@ -43,7 +43,7 @@ export class ShellSession
         this.receiveCmd = false;
         this.mode = ModeWork.shell;
         this.currentCmd = new CommandMessage("", "");
-        this.shellParser = new ShellParser(this.DataCb, this.CloseCb, this.ClientErrorCb, debugLog);
+        this.shellParser = new ShellParser(this.DataCb, this.CloseCb, this.ClientErrorCb/*, debugLog*/);
 
         this.ShellInitialise();
     }
@@ -220,6 +220,18 @@ export class ShellSession
     public getCurrentCommand() : CommandMessage
     {
         return this.currentCmd;
+    }
+
+    public SendData(data : string) : boolean
+    {
+        let result = false;
+
+        if(this.sshShell)
+        {
+            result = this.shellParser.push(data + '\r\n');
+        }
+
+        return result;
     }
 
     public SendCommand(command : CommandMessage) : boolean
