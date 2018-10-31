@@ -6,6 +6,10 @@ import { IUnSubscribe, Subscribe } from "@vorfol/common";
 
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 
+import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
+
 export class SshClient {
     public lastClientError?: Error;
     public enabled: boolean;
@@ -68,14 +72,14 @@ export class SshClient {
         const client = new Client();
         this.clientReady = Subscribe(client, "ready", () => {
             if (this.debugLog) {
-                this.debugLog(`client${this.tag ? " " + this.tag : ""} ready`);
+                this.debugLog(localize("debug.ready", "client{0} ready", this.tag ? " " + this.tag : ""));
             }
             waitClient.release();
             this.client = client;
             // subscribe "end" only here
             this.clientEnd = Subscribe(client, "end", () => {
                 if (this.debugLog) {
-                    this.debugLog(`client${this.tag ? " " + this.tag : ""} end`);
+                    this.debugLog(localize("debug.end", "client{0} end", this.tag ? " " + this.tag : ""));
                 }
                 this.cleanClient();
             });
@@ -83,7 +87,7 @@ export class SshClient {
         this.clientError = Subscribe(client, "error", (err) => {
             this.lastClientError = err;
             if (this.debugLog) {
-                this.debugLog(`client${this.tag ? " " + this.tag : ""} error: ${err}`);
+                this.debugLog(localize("debug.error", "client{1} error: {0}", err, this.tag ? " " + this.tag : ""));
             }
             if (!this.client) {
                 waitClient.release();
@@ -96,7 +100,7 @@ export class SshClient {
                 client.connect(configResolved);
             } else {
                 if (this.debugLog) {
-                    this.debugLog(`no config resolved`);
+                    this.debugLog(localize("debug.resolver", "no config resolved {0}", this.tag ? " " + this.tag : ""));
                 }
                 waitClient.release();
             }

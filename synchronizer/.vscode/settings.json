@@ -7,5 +7,16 @@
         "out": true // set this to false to include "out" folder in search results
     },
     // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
-    "typescript.tsc.autoDetect": "on"
+    "typescript.tsc.autoDetect": "on",
+    "vmssoftware.config-helper.using": "VSC",
+    "vmssoftware.synchronizer.project.builders": "*.{mms,com}",
+    "vmssoftware.synchronizer.project.exclude": "**/{.vscode,node-modules}",
+    "vmssoftware.synchronizer.project.headers": "*.{h,hpp}",
+    "vmssoftware.synchronizer.project.listing": "*.{lis}",
+    "vmssoftware.synchronizer.project.resource": "**/resource/**/*.*",
+    "vmssoftware.synchronizer.project.root": "project",
+    "vmssoftware.synchronizer.project.source": "*.{c,cpp}",
+    "vmssoftware.synchronizer.synchronize.downloadNewFiles": "edit",
+    "vmssoftware.synchronizer.synchronize.keepAlive": false,
+    "vmssoftware.synchronizer.synchronize.setTimeAttempts": 3
 }

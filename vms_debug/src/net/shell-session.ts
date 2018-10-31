@@ -7,7 +7,6 @@ import { GetSshHelperFromApi } from '../ext-api/get-ssh-helper';
 import { ISshShell } from '../ext-api/api';
 import { ShellParser } from './shell-parser';
 
-
 export enum ModeWork
 {
     shell = 1,

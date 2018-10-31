@@ -1,16 +1,15 @@
 import path from "path";
 import vscode from "vscode";
 
+import { IConfig, IConfigSection } from "../config/config";
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
-import { ProjectSection } from "../config/sections/project";
+import { KindOfFiles, ProjectSection } from "../config/sections/project";
 import { DownloadAction, SynchronizeSection } from "../config/sections/synchronize";
-import { IConfig, IConfigSection } from "./../config/config";
 
 import { Delay } from "@vorfol/common";
 import { LogType } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
 import { IFileEntry } from "@vorfol/common";
-import { MemoryWriteStream } from "@vorfol/common";
 
 import { ISftpClient } from "../ssh/api";
 import { ISshShell } from "../ssh/api";
@@ -21,6 +20,10 @@ import { ToOutputChannel } from "../output-channel";
 import { FsSource } from "./fs-source";
 import { ISource } from "./source";
 import { VmsSource } from "./vms-source";
+
+import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
 
 export async function createFile(fileUri: vscode.Uri, content: string) {
     try {
@@ -71,6 +74,10 @@ export class Synchronizer {
     private onDidLoadSSHConfig?: vscode.Disposable;  // dispose listener
     private sshHelper?: SshHelper;
 
+    private outSync = localize("output.sync_in_progress", "Synchronization is in progress");
+    private outNoWs = localize("output.no_workspace", "There is no workspace to synchronize");
+    private outEditSett = localize("output.edit_settings", "In first please edit settings");
+
     constructor(public debugLog?: LogType) {
     }
 
@@ -105,30 +112,30 @@ export class Synchronizer {
             });
             if (remoteFileIdx === -1) {
                 if (this.debugLog) {
-                    this.debugLog(`No remote ${localFile.filename} => upload`);
+                    this.debugLog(localize("debug.no_remote", "No remote {0} => upload", localFile.filename));
                 }
                 upload.push(localFile);
             } else {
                 const diff = (remoteLeft[remoteFileIdx].date.valueOf() - localFile.date.valueOf()) / 1000;
                 if (diff < -1) {
                     if (this.debugLog) {
-                        this.debugLog(`Local ${localFile.filename} is newer by ${diff} => upload`);
+                        this.debugLog(localize("debug.local_is_newer", "Local {0} is newer by {diff} => upload", localFile.filename));
                     }
                     upload.push(localFile);
                 } else if (diff > 1) {
                     if (this.debugLog) {
-                        this.debugLog(`Remote ${localFile.filename} is newer by ${diff} => download`);
+                        this.debugLog(localize("debug.remote_is_newer", "Remote {0} is newer by {1} => download", localFile.filename, diff));
                     }
                     download.push(remoteLeft[remoteFileIdx]);
                 } else if (this.debugLog) {
-                    this.debugLog(`${localFile.filename} are the same`);
+                    this.debugLog(localize("debug.the_same", "{0} are the same", localFile.filename));
                 }
                 remoteLeft.splice(remoteFileIdx, 1);
             }
         }
         if (this.debugLog) {
             for (const file of remoteLeft) {
-                this.debugLog(`No local ${file.filename} => download`);
+                this.debugLog(localize("debug.no_local", "No local {0} => download", file.filename));
             }
         }
         download.push(...remoteLeft);
@@ -146,7 +153,7 @@ export class Synchronizer {
 
     public disableRemote() {
         if (this.debugLog) {
-            this.debugLog(`Disabling SFTP and SHELL`);
+            this.debugLog(localize("debug.dissblig", "Disabling SFTP and SHELL"));
         }
         if (this.remoteSftp) {
             this.remoteSftp.enabled = false;
@@ -158,12 +165,12 @@ export class Synchronizer {
 
     public async syncronizeProject() {
         if (this.inProgress) {
-            ToOutputChannel(`Synchronization is in progress`);
+            ToOutputChannel(this.outSync);
             return false;
         }
         if (!vscode.workspace.workspaceFolders ||
             vscode.workspace.workspaceFolders.length < 1) {
-            ToOutputChannel(`There is no workspace to synchronize`);
+            ToOutputChannel(this.outNoWs);
             return false;
         }
         this.inProgress = true;
@@ -189,7 +196,11 @@ export class Synchronizer {
                 waitAll.push(
                     this.transferFile(this.localSource, this.remoteSource, uploadFile.filename, uploadFile.date)
                         .then((ok) => {
-                            ToOutputChannel(`${uploadFile.filename} is ${ok ? "uploaded" : "failed to upload"}`);
+                            if (ok) {
+                                ToOutputChannel(localize("output.uploaded", "{0} is uploaded", uploadFile.filename));
+                            } else {
+                                ToOutputChannel(localize("output.upload_failed", "{0} is failed to upload", uploadFile.filename));
+                            }
                             return ok;
                         }).catch(() => false));
             }
@@ -199,50 +210,114 @@ export class Synchronizer {
                     waitAll.push(
                         this.transferFile(this.remoteSource, this.localSource, downloadFile.filename, downloadFile.date)
                             .then((ok) => {
-                                ToOutputChannel(`${downloadFile.filename} is ${ok ? "downloaded" : "failed to download"}`);
+                                if (ok) {
+                                    ToOutputChannel(localize("output.downloaded", "{0} is downloaded", downloadFile.filename));
+                                } else {
+                                    ToOutputChannel(localize("output.download_failed", "{0} is failed to download", downloadFile.filename));
+                                }
                                 return ok;
                             }).catch(() => false));
                 }
             } else if (this.downloadNewFiles === "skip") {
                 for (const downloadFile of compareResult.download) {
-                    ToOutputChannel(`Remote ${downloadFile.filename} is newer, please check and download it manually`);
+                    ToOutputChannel(localize("output.download_manually", "Remote {0} is newer, please check and download it manually", downloadFile.filename));
                 }
             } else if (this.downloadNewFiles === "edit") {
                 for (const downloadFile of compareResult.download) {
                     waitAll.push(this.editFile(this.remoteSource, downloadFile.filename));
                 }
                 if (compareResult.download.length > 0) {
-                    ToOutputChannel(`Please edit and save ${compareResult.download.length} files manually`);
+                    ToOutputChannel(localize("output.edit_count", "Please edit and save {0} files manually", compareResult.download.length));
                 }
             }
             // wait all operations are done
             const results = await Promise.all(waitAll);
             // end
-            if (!SynchronizeSection.is(this.synchronizeSection) ||
-                this.synchronizeSection.keepAlive) {
-                // test configuration watcher and create if need
-                if (this.onDidLoadConfig === undefined &&
-                    synchronizerConfig) {
-                    this.onDidLoadConfig = synchronizerConfig.onDidLoad(() => this.prepare());
-                }
-                if (this.onDidLoadSSHConfig === undefined &&
-                    this.sshHelper.onDidLoadConfig !== undefined) {
-                    this.onDidLoadSSHConfig = this.sshHelper.onDidLoadConfig(() => {
-                        this.dispose();
-                    });
-                }
-            } else {
-                this.dispose();
-            }
+            this.decideIfDispose();
             retCode = results.reduce((acc, result) => {
                 acc = acc && result;
                 return acc;
             }, true);
             if (this.debugLog) {
-                this.debugLog(`Synchronize retCode: ${retCode}`);
+                this.debugLog(localize("debug.retcode", "Synchronize retCode: {0}", retCode));
             }
         } else {
-            ToOutputChannel(`In first please edit settings`);
+            ToOutputChannel(this.outEditSett);
+        }
+        this.inProgress = false;
+        return retCode;
+    }
+
+    public decideIfDispose() {
+        if (!SynchronizeSection.is(this.synchronizeSection) ||
+            this.synchronizeSection.keepAlive) {
+            // test configuration watcher and create if need
+            if (this.onDidLoadConfig === undefined &&
+                synchronizerConfig) {
+                this.onDidLoadConfig = synchronizerConfig.onDidLoad(() => this.prepare());
+            }
+            if (this.onDidLoadSSHConfig === undefined &&
+                this.sshHelper &&
+                this.sshHelper.onDidLoadConfig !== undefined) {
+                this.onDidLoadSSHConfig = this.sshHelper.onDidLoadConfig(() => {
+                    this.dispose();
+                });
+            }
+        } else {
+            this.dispose();
+        }
+    }
+
+    public async downloadListings() {
+        if (this.inProgress) {
+            ToOutputChannel(this.outSync);
+            return false;
+        }
+        if (!vscode.workspace.workspaceFolders ||
+            vscode.workspace.workspaceFolders.length < 1) {
+            ToOutputChannel(this.outNoWs);
+            return false;
+        }
+        this.inProgress = true;
+        let retCode = await this.prepare(KindOfFiles.listing);
+        if (retCode &&
+            this.localSource &&
+            this.remoteSource &&
+            this.include &&
+            this.exclude &&
+            this.sshHelper) {
+            // clear password cache
+            this.sshHelper.clearPasswordCashe();
+            // get lists
+            // this.enableRemote();
+            const remoteList = await this.remoteSource.findFiles(this.include, this.exclude);
+            // download
+            const waitAll = [];
+            for (const downloadFile of remoteList) {
+                waitAll.push(
+                    this.transferFile(this.remoteSource, this.localSource, downloadFile.filename, downloadFile.date)
+                        .then((ok) => {
+                            if (ok) {
+                                ToOutputChannel(localize("output.downloaded.list", "{0} is downloaded", downloadFile.filename));
+                            } else {
+                                ToOutputChannel(localize("output.download_failed.list", "{0} is failed to download", downloadFile.filename));
+                            }
+                            return ok;
+                        }).catch(() => false));
+            }
+            // wait all operations are done
+            const results = await Promise.all(waitAll);
+            // end
+            this.decideIfDispose();
+            retCode = results.reduce((acc, result) => {
+                acc = acc && result;
+                return acc;
+            }, true);
+            if (this.debugLog) {
+                this.debugLog(localize("debug.retcode_list", "Download listing retCode: {0}", retCode));
+            }
+        } else {
+            ToOutputChannel(this.outEditSett);
         }
         this.inProgress = false;
         return retCode;
@@ -250,7 +325,7 @@ export class Synchronizer {
 
     public dispose() {
         if (this.debugLog) {
-            this.debugLog(`Disposing sources`);
+            this.debugLog(localize("debug.disposing", "Disposing sources"));
         }
         if (this.remoteSftp) {
             this.remoteSftp.dispose();
@@ -268,7 +343,7 @@ export class Synchronizer {
      * Note: no real connections are creating in constructors
      * @param config config
      */
-    private async prepare() {
+    private async prepare(kind?: KindOfFiles) {
         // get current config
         if (!await EnsureSettings() || !synchronizerConfig) {
             return false;
@@ -277,8 +352,9 @@ export class Synchronizer {
             const sshHelperType = await GetSshHelperFromApi();
             if (!sshHelperType) {
                 if (this.debugLog) {
-                    this.debugLog(`Cannot get ssh-helper api`);
+                    this.debugLog(localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
                 }
+                ToOutputChannel(localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
                 return false;
             }
             this.sshHelper = new sshHelperType(this.debugLog);
@@ -315,18 +391,41 @@ export class Synchronizer {
             vscode.workspace.workspaceFolders &&
             vscode.workspace.workspaceFolders.length > 0) {
             // reparse includes
-            const includes = [
-                this.projectSection.source,
-                this.projectSection.resource,
-                this.projectSection.headers,
-                this.projectSection.builders,
-            ];
+            const includes: string[] = [];
+            if (kind) {
+                // tslint:disable-next-line:no-bitwise
+                if (kind & KindOfFiles.source) {
+                    includes.push(this.projectSection.source);
+                }
+                // tslint:disable-next-line:no-bitwise
+                if (kind & KindOfFiles.resource) {
+                    includes.push(this.projectSection.resource);
+                }
+                // tslint:disable-next-line:no-bitwise
+                if (kind & KindOfFiles.listing) {
+                    includes.push(this.projectSection.listing);
+                }
+                // tslint:disable-next-line:no-bitwise
+                if (kind & KindOfFiles.headers) {
+                    includes.push(this.projectSection.headers);
+                }
+                // tslint:disable-next-line:no-bitwise
+                if (kind & KindOfFiles.builders) {
+                    includes.push(this.projectSection.builders);
+                }
+            } else {
+                includes.push(this.projectSection.source);
+                includes.push(this.projectSection.resource);
+                includes.push(this.projectSection.listing);
+                includes.push(this.projectSection.headers);
+                includes.push(this.projectSection.builders);
+            }
             this.include = includes.join(",");
             this.downloadNewFiles = this.synchronizeSection.downloadNewFiles;
             this.exclude = this.projectSection.exclude;
             if (!this.remoteSource) {
                 if (this.debugLog) {
-                    this.debugLog(`Create remote source`);
+                    this.debugLog(localize("debug.create_remote", "Creating remote source"));
                 }
                 const [sftp, shell] = await Promise.all([
                         this.sshHelper.getDefaultSftp(),
@@ -339,19 +438,19 @@ export class Synchronizer {
                 }
             } else {
                 if (this.debugLog) {
-                    this.debugLog(`Update remote source`);
+                    this.debugLog(localize("debug.update_remote", "Update remote source"));
                 }
                 this.remoteSource.root = this.projectSection.root;
                 this.remoteSource.attempts = this.synchronizeSection.setTimeAttempts;
             }
             if (!this.localSource) {
                 if (this.debugLog) {
-                    this.debugLog(`Create local source`);
+                    this.debugLog(localize("debug.create_local", "Creating local source"));
                 }
                 this.localSource = new FsSource(vscode.workspace.workspaceFolders[0].uri.fsPath, this.debugLog);
             } else {
                 if (this.debugLog) {
-                    this.debugLog(`Update local source`);
+                    this.debugLog(localize("debug.update_local", "Update local source"));
                 }
                 this.localSource.root = vscode.workspace.workspaceFolders[0].uri.fsPath;
             }
@@ -396,7 +495,7 @@ export class Synchronizer {
                         .then(async (localDoc) => {
                             return [localDoc, await vscode.workspace.openTextDocument({content, language: "mms"})];
                         }).then(([localDoc, remoteDoc]) => {
-                            const title = `Remote ${file} <-> Local`;
+                            const title = localize("title.rem_loc", "Remote {0} <-> Local", file);
                             return vscode.commands.executeCommand("vscode.diff", remoteDoc.uri, localDoc.uri, title, { preview: false });
                         }).then(() => true);
                 } else {
@@ -423,7 +522,7 @@ export class Synchronizer {
                         });
                 } else {
                     if (this.debugLog) {
-                        this.debugLog(`Nothing to show`);
+                        this.debugLog(localize("debug.nothing", "Nothing to show"));
                     }
                     return false;
                 }

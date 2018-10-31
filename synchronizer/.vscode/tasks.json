@@ -32,6 +32,16 @@
             "type": "npm",
             "script": "get-ssh-helper-api",
             "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "package",
+            "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "build",
+            "problemMatcher": []
         }
     ]
 }

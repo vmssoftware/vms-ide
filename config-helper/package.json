@@ -2,7 +2,7 @@
     "name": "config-helper",
     "displayName": "config-helper",
     "description": "Config helper",
-    "version": "0.1.15",
+    "version": "0.1.24",
     "publisher": "vmssoftware",
     "engines": {
         "vscode": "^1.27.0"
@@ -26,12 +26,12 @@
         "commands": [
             {
                 "command": "vmssoftware.config-helper.test",
-                "title": "Test command",
-                "category": "Config helper"
+                "title": "%command.test.title%",
+                "category": "%command.category%"
             }
         ],
         "configuration": {
-            "title": "Config helper",
+            "title": "%configuration.title%",
             "properties": {
                 "vmssoftware.config-helper.using": {
                     "type": "string",
@@ -41,17 +41,17 @@
                         "VFS"
                     ],
                     "enumDescriptions": [
-                        "Use VS Code configuration",
-                        "Use File System",
-                        "Use VS Code virtual File System"
+                        "%configuration.vsc.description%",
+                        "%configuration.fs.description%",
+                        "%configuration.vfs.description%"
                     ],
                     "default": "FS",
-                    "description": "Type of config"
+                    "description": "%configuration.type.description%"
                 },
                 "vmssoftware.config-helper.test": {
                     "type": "string",
                     "default": "test",
-                    "description": "Test"
+                    "description": "%configuration.test.description%"
                 }
             }
         }
@@ -65,12 +65,21 @@
     "devDependencies": {
         "@types/mocha": "^5.x.x",
         "@types/node": "^8.10.25",
+        "del": "^3.0.0",
+        "event-stream": "^4.0.1",
+        "fs-extra": "^7.0.0",
+        "gulp": "^3.9.1",
+        "gulp-sourcemaps": "^2.6.4",
+        "gulp-typescript": "^5.0.0-alpha.3",
+        "run-sequence": "^2.2.1",
         "tslint": "^5.11.0",
         "typescript": "^3.x.x",
-        "vscode": "^1.1.21"
+        "vsce": "^1.52.0",
+        "vscode": "^1.1.21",
+        "vscode-nls-dev": "github:vorfol/vscode-nls-dev"
     },
     "dependencies": {
-        "@vorfol/common": "^0.0.5",
+        "@vorfol/common": "^0.0.11",
         "vscode-nls": "^4.0.0"
     }
 }

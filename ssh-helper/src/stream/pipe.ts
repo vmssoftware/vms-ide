@@ -4,6 +4,10 @@ import { Lock } from "@vorfol/common";
 import { LogType } from "@vorfol/common";
 import { ICanCreateReadStream, ICanCreateWriteStream } from "../api";
 
+import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
+
 /**
  * Pipe
  * @param source source
@@ -25,14 +29,14 @@ export async function PipeFile(
     srcStream = await source.createReadStream(file);
     if (!srcStream) {
         if (debugLog) {
-            debugLog("can't create source");
+            debugLog(localize("debug.source_fail", "can't create source {0}", file));
         }
         return false;
     }
     srcStream.once("error", (srcError) => {
         // catch source errors
         if (debugLog) {
-            debugLog(`source error ${srcError}`);
+            debugLog(localize("debug.source_error", "source error {0}", String(srcError)));
         }
         srcStream = undefined;
         errPassed = true;
@@ -43,7 +47,7 @@ export async function PipeFile(
     destFile = destFile || file;
     dstStream = await dest.createWriteStream(destFile);
     if (!dstStream) {
-        const errorStr = "can't create destination";
+        const errorStr = localize("debug.dest_fail", "can't create destination {0}", destFile);
         if (debugLog) {
             debugLog(errorStr);
         }
@@ -56,7 +60,7 @@ export async function PipeFile(
     dstStream.once("error", (dstError) => {
         // catch destination errors
         if (debugLog) {
-            debugLog(`dest error ${dstError}`);
+            debugLog(localize("debug.dest_error", "dest error {0}", String(dstError)));
         }
         dstStream = undefined;
         errPassed = true;
@@ -69,18 +73,18 @@ export async function PipeFile(
         srcStream.pipe(dstStream);
         dstStream.once("finish", () => {
             if (debugLog) {
-                debugLog(`dest finished`);
+                debugLog(localize("debug.dest_finished", "dest finished"));
             }
             done.release(); // release on dest finished
         });
         await done.acquire();
         if (debugLog) {
-            debugLog(`done${errPassed ? " with error" : ""}`);
+            debugLog(localize("debug.done", "done {0}", !errPassed));
         }
         return !errPassed;
     } else {
         // source disappeared suddenly (on error) while awaiting destination
-        const errorStr = `source disappeared`;
+        const errorStr = localize("debug.source_lost", "source disappeared");
         if (debugLog) {
             debugLog(errorStr);
         }

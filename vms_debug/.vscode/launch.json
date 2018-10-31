@@ -5,7 +5,7 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"name": "Extension",
-			"preLaunchTask": "npm",
+			"preLaunchTask": "gulp: build",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}"

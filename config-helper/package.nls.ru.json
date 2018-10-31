@@ -1,0 +1,10 @@
+{
+	"command.category": "OpenVMS конфигуратор",
+	"command.test.title": "Тест",
+	"configuration.title": "OpenVMS конфигуратор",
+	"configuration.vsc.description": "Использовать настройки в VS Code",
+	"configuration.fs.description": "Использовать файловую систему",
+	"configuration.vfs.description": "Использовать виртуальную файловую систему VS Code",
+	"configuration.type.description": "Место хранения конфигурации",
+	"configuration.test.description": "Тест"
+}

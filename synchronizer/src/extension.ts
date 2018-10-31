@@ -1,6 +1,5 @@
 
-import { commands, ExtensionContext, TreeItem, window, workspace } from "vscode";
-import * as nls from "vscode-nls";
+import { commands, env, ExtensionContext, window } from "vscode";
 
 import { LogType } from "@vorfol/common";
 
@@ -10,12 +9,18 @@ import { ToOutputChannel } from "./output-channel";
 import { setBuilding, setSynchronizing } from "./stop";
 import { StopSyncProject, SyncProject } from "./synchronize";
 
-const localize = nls.config()();
-
 let debugLogFn: LogType | undefined;
 debugLogFn = undefined;
 // tslint:disable-next-line:no-console
 debugLogFn = console.log;
+
+const locale = env.language ;
+import * as nls from "vscode-nls";
+const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
+
+if (debugLogFn) {
+    debugLogFn(`Loaded NLS for: ${env.language}`);
+}
 
 let contextSaved: ExtensionContext | undefined;
 
@@ -23,68 +28,72 @@ export async function activate(context: ExtensionContext) {
 
     contextSaved = context;
 
+    const syncMessage = localize("message.synchronizing", "Synchronizing...");
+    const buildMessage = localize("message.building", "Building...");
+
     if (debugLogFn) {
-        debugLogFn(localize("extension.activated", "OpenVMS extension is activated"));
+        debugLogFn(localize("debug.activated", "OpenVMS extension is activated"));
     }
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async () => {
-        if (EnsureSettings(debugLogFn) && configHelper) {
-            setSynchronizing(true);
-            const msg = window.setStatusBarMessage("Synchronizing...");
-            return SyncProject(context, debugLogFn)
-                .catch((err) => {
-                    setSynchronizing(false);
-                    if (debugLogFn) {
-                        debugLogFn(err);
-                    }
+        return EnsureSettings(debugLogFn)
+            .then((ok) => {
+                if (ok && configHelper) {
+                    setSynchronizing(true);
+                    const msg = window.setStatusBarMessage(syncMessage);
+                    return SyncProject(context, debugLogFn)
+                        .catch((err) => {
+                            if (debugLogFn) {
+                                debugLogFn(err);
+                            }
+                            return false;
+                        }).then((result) => {
+                            setSynchronizing(false);
+                            msg.dispose();
+                            return result;
+                        });
+                } else {
                     return false;
-                }).then((result) => {
-                    msg.dispose();
-                    setSynchronizing(false);
-                    return result;
-                });
-        }
-        return false;
+                }
+            });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async () => {
-        if (EnsureSettings(debugLogFn) && configHelper) {
-            setBuilding(true);
-            setSynchronizing(true);
-            let msg = window.setStatusBarMessage("Synchronizing...");
-            return SyncProject(context, debugLogFn)
-                .then((ok) => {
-                    msg.dispose();
-                    if (ok) {
-                        msg = window.setStatusBarMessage("Building...");
-                        return BuildProject(context, debugLogFn)
-                            .then((result) => {
-                                if (result) {
-                                    window.showInformationMessage(`Build operation is done`);
-                                    ToOutputChannel(`Build operation is done.`);
-                                } else {
-                                    window.showErrorMessage(`Build operation is failed`);
-                                    ToOutputChannel(`Build operation is failed.`);
-                                }
-                                return result;
-                            });
-                    } else {
-                        return false;
-                    }
-                }).catch((err) => {
-                    if (debugLogFn) {
-                        debugLogFn(err);
-                    }
+        return EnsureSettings(debugLogFn)
+            .then((ok) => {
+                if (ok && configHelper) {
+                    setSynchronizing(true);
+                    let msg = window.setStatusBarMessage(syncMessage);
+                    return SyncProject(context, debugLogFn)
+                        .catch((err) => {
+                            if (debugLogFn) {
+                                debugLogFn(err);
+                            }
+                            return false;
+                        }).then((syncResult) => {
+                            setSynchronizing(false);
+                            msg.dispose();
+                            if (syncResult) {
+                                setBuilding(true);
+                                msg = window.setStatusBarMessage(buildMessage);
+                                return BuildProject(context, debugLogFn)
+                                    .catch((err) => {
+                                        if (debugLogFn) {
+                                            debugLogFn(err);
+                                        }
+                                        return false;
+                                    }).then((buildResult) => {
+                                        setBuilding(false);
+                                        msg.dispose();
+                                        return buildResult;
+                                    });
+                            }
+                            return syncResult;
+                        });
+                } else {
                     return false;
-                }).then((result) => {
-                    msg.dispose();
-                    setSynchronizing(false);
-                    setBuilding(false);
-                    return result;
-                });
-        } else {
-            return false;
-        }
+                }
+            });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopSync", async () => {
@@ -118,6 +127,6 @@ export async function activate(context: ExtensionContext) {
 // this method is called when your extension is deactivated
 export function deactivate() {
     if (debugLogFn) {
-        debugLogFn(localize("extension.deactivated", "OpenVMS extension is deactivated"));
+        debugLogFn(localize("debug.deactivated", "OpenVMS extension is deactivated"));
     }
 }

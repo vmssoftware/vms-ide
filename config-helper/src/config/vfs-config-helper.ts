@@ -1,20 +1,20 @@
 import { Uri } from "vscode";
 
+import { LogType } from "@vorfol/common";
 import { FSConfigHelper } from "./fs-config-helper";
 import { VFSConfigStorage } from "./vfs-storage";
 
-// tslint:disable-next-line:no-console
-export let logFn = console.log;
-// tslint:disable-next-line:no-empty
-logFn = () => {};
+// import * as nls from "vscode-nls";
+// nls.config({messageFormat: nls.MessageFormat.both});
+// const localize = nls.loadMessageBundle();
 
 /**
  * ConfigHelper implementation
  */
 export class VFSConfigHelper extends FSConfigHelper {
 
-    protected createConcreteFS_Storage(uri: Uri) {
+    protected createConcreteFS_Storage(uri: Uri, debugLog?: LogType) {
         // TODO: test URI and return appropriate FS
-        return new VFSConfigStorage(uri);
+        return new VFSConfigStorage(uri, debugLog);
     }
 }

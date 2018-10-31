@@ -1,11 +1,16 @@
 
 import { Uri, window } from "vscode";
 
+import { LogType } from "@vorfol/common";
 import { IConfig, IConfigEditor } from "./config";
+
+// import * as nls from "vscode-nls";
+// nls.config({messageFormat: nls.MessageFormat.both});
+// const localize = nls.loadMessageBundle();
 
 export class UriEditor implements IConfigEditor {
 
-    constructor(protected uri: Uri, protected cfg: IConfig) {
+    constructor(protected uri: Uri, protected cfg: IConfig, public debugLog?: LogType) {
 
     }
 

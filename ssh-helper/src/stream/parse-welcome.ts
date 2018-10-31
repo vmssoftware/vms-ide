@@ -2,6 +2,10 @@ import { LogType } from "@vorfol/common";
 import { IParseWelcome } from "../api";
 import { ShellParser } from "./shell-parser";
 
+import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
+
 export class ParseWelcome extends ShellParser implements IParseWelcome {
     
     public static eol = "\r\n";
@@ -33,7 +37,7 @@ export class ParseWelcome extends ShellParser implements IParseWelcome {
                     if (lines[lines.length - 1] === lines[lines.length - 2]) {
                         this.prompt = lines[lines.length - 1];
                         if (this.debugLog) { 
-                            this.debugLog(`parse: found prompt "${this.prompt}"`); 
+                            this.debugLog(localize("debug.prompt", "parse: found prompt '{0}'", this.prompt)); 
                         }
                         this.setReady();
                     }

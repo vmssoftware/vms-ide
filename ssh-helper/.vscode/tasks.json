@@ -25,6 +25,31 @@
             "type": "npm",
             "script": "package",
             "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "vsce:package",
+            "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "clean",
+            "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "package",
+            "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "build",
+            "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "publish",
+            "problemMatcher": []
         }
     ]
 }

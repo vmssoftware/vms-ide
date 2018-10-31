@@ -1,4 +1,5 @@
-import { HolderDebugFileInfo, DebugFileInfo } from './debug_file_info';
+import { HolderDebugFileInfo } from './debug_file_info';
+import { DebugFileInfo } from './debug_file_info';
 import { readFileSync } from 'fs';
 import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
 import { Queue } from '../queue/queues';

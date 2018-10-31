@@ -1,0 +1,16 @@
+{
+    "project": {
+        "builders": "*.{mms,com}",
+        "exclude": "**/{node_modules,.vscode}/**",
+        "headers": "*.h",
+        "listing": "*.lis",
+        "resource": "**/resource/**",
+        "root": "project",
+        "source": "*.{cpp,c}"
+    },
+    "synchronize": {
+        "downloadNewFiles": "edit",
+        "keepAlive": false,
+        "setTimeAttempts": 3
+    }
+}

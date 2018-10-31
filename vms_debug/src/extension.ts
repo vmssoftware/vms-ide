@@ -22,7 +22,8 @@ export enum TypeRunConfig
 }
 
 const locale = vscode.env.language ;
-const localize = nls.config({ locale })();
+const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
+console.log(locale);
 //const localize = nls.loadMessageBundle();
 
 let shell : ShellSession;

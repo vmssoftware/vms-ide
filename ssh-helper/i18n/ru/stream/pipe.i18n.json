@@ -1,0 +1,9 @@
+{
+    "debug.source_fail": "не удалось создать источник {0}",
+    "debug.source_error": "ошибка источника {0}",
+    "debug.dest_fail": "не удалось создать приёмник {0}",
+    "debug.dest_error": "ошибка приёмника {0}",
+    "debug.dest_finished": "приёмник завершён",
+    "debug.done": "завершено {0}",
+    "debug.source_lost": "источник исчез"
+}

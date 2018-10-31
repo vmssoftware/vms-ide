@@ -2,7 +2,7 @@
     "name": "ssh-helper",
     "displayName": "ssh-helper",
     "description": "ssh-helper",
-    "version": "0.0.13",
+    "version": "0.1.1",
     "publisher": "vmssoftware",
     "engines": {
         "vscode": "^1.28.0"
@@ -25,47 +25,47 @@
         "commands": [
             {
                 "command": "vmssoftware.ssh-helper.editSettings",
-                "title": "Edit ssh-helper settings",
-                "category": "OpevVMS SSH"
+                "title": "%command.edit.title%",
+                "category": "%command.category%"
             }
         ],
         "configuration": {
-            "title": "OpevVMS SSH",
+            "title": "%configuration.title%",
             "properties": {
                 "vmssoftware.ssh-helper.connection.host": {
                     "type": "string",
                     "default": "host",
-                    "description": "Host"
+                    "description": "%configuration.host%"
                 },
                 "vmssoftware.ssh-helper.connection.port": {
                     "type": "number",
                     "default": 22,
-                    "description": "Port"
+                    "description": "%configuration.port%"
                 },
                 "vmssoftware.ssh-helper.connection.username": {
                     "type": "string",
                     "default": "",
-                    "description": "Username"
+                    "description": "%configuration.username%"
                 },
                 "vmssoftware.ssh-helper.connection.password": {
                     "type": "string",
                     "default": "",
-                    "description": "Password, may be omitted"
+                    "description": "%configuration.password%"
                 },
                 "vmssoftware.ssh-helper.timeouts.cmdTimeout": {
                     "type": "number",
                     "default": 0,
-                    "description": "Time out for command answer"
+                    "description": "%configuration.timeouts.command%"
                 },
                 "vmssoftware.ssh-helper.timeouts.feedbackTimeout": {
                     "type": "number",
                     "default": 0,
-                    "description": "Feedback timeout"
+                    "description": "%configuration.timeouts.feedback%"
                 },
                 "vmssoftware.ssh-helper.timeouts.welcomeTimeout": {
                     "type": "number",
                     "default": 0,
-                    "description": "Timeout for welcome parser"
+                    "description": "%configuration.timeouts.welcome%"
                 }
             }
         }
@@ -80,13 +80,23 @@
     "devDependencies": {
         "@types/mocha": "^5.2.5",
         "@types/node": "^8.10.25",
+        "del": "^3.0.0",
+        "event-stream": "^4.0.1",
+        "fs-extra": "^7.0.0",
+        "gulp": "^3.9.1",
+        "gulp-sourcemaps": "^2.6.4",
+        "gulp-typescript": "^5.0.0-alpha.3",
+        "run-sequence": "^2.2.1",
         "tslint": "^5.11.0",
         "typescript": "^3.x.x",
-        "vscode": "^1.1.21"
+        "vsce": "^1.52.0",
+        "vscode": "^1.1.21",
+        "vscode-nls-dev": "github:vorfol/vscode-nls-dev"
     },
     "dependencies": {
         "@types/ssh2": "^0.5.36",
         "@vorfol/common": "^0.0.11",
-        "ssh2": "^0.6.1"
+        "ssh2": "^0.6.1",
+        "vscode-nls": "^4.0.0"
     }
 }

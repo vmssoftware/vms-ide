@@ -3,9 +3,9 @@ import { ExtensionContext, window, workspace } from "vscode";
 import { LogType } from "@vorfol/common";
 
 import { ToOutputChannel } from "./output-channel";
-import { Synchronizer } from "./sync/syncronizer";
+import { Synchronizer } from "./sync/synchronizer";
 
-let synchronizer: Synchronizer | undefined;
+export let synchronizer: Synchronizer | undefined;
 
 export async function StopSyncProject() {
     if (synchronizer) {
@@ -15,6 +15,10 @@ export async function StopSyncProject() {
     return false;
 }
 
+import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
+
 export async function SyncProject(context: ExtensionContext, debugLog?: LogType) {
     return workspace.saveAll(false).then((ok) => {
         if (ok) {
@@ -23,23 +27,22 @@ export async function SyncProject(context: ExtensionContext, debugLog?: LogType)
                 context.subscriptions.push(synchronizer);
             }
             if (synchronizer.isInProgress) {
-                window.showInformationMessage("Syncronization in progress");
+                window.showInformationMessage(localize("message.sync_in_progress", "Syncronization in progress"));
                 return false;
             } else {
                 return synchronizer.syncronizeProject()
                     .then((result) => {
                         if (result) {
-                            window.showInformationMessage(`Syncronization: ok`);
-                            ToOutputChannel(`Synchronization is done.`);
+                            window.showInformationMessage(localize("message.sync.ok", "Syncronization: ok"));
+                            ToOutputChannel(localize("output.sync.done", "Synchronization is done."));
                         } else {
-                            window.showErrorMessage(`Syncronization: some files failed to synchronize, see output`);
-                            ToOutputChannel(`Synchronization is failed.`);
-                            ToOutputChannel(`Synchronizingn is failed.`);
+                            window.showErrorMessage(localize("message.sync.wrong", "Syncronization: some files failed to synchronize, see output"));
+                            ToOutputChannel(localize("output.sync.failed", "Synchronization is failed"));
                             for (const err of synchronizer!.lastErrors) {
                                 ToOutputChannel(`${err}`);
                             }
-                            return result;
                         }
+                        return result;
                     }).catch((err) => {
                         if (debugLog) {
                             debugLog(err);

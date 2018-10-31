@@ -5,6 +5,10 @@ import { Lock } from "@vorfol/common";
 
 import { ISettingsFiller } from "./settings-filler";
 
+import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
+
 export class PasswordVscodeFiller implements ISettingsFiller {
 
     private lock = new Lock();
@@ -29,7 +33,7 @@ export class PasswordVscodeFiller implements ISettingsFiller {
         }
         await this.lock.acquire();  // to prevent concurrent use of console
         settings.port = settings.port || 22;
-        const prompt = `Password for ${settings.username}@${settings.host}:${settings.port} `;
+        const prompt = localize("query.password", "Password for {0}@{1}:{2} ", settings.username, settings.host, settings.port);
         settings.password = await window.showInputBox( { password: true, prompt, ignoreFocusOut: true });
         this.lock.release();
         return settings.password !== undefined;

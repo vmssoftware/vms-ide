@@ -1,0 +1,12 @@
+{
+    "command.category": "OpenVMS ssh",
+    "command.edit.title": "Edit ssh-helper settings",
+    "configuration.title": "OpevVMS ssh",
+    "configuration.host": "Host",
+    "configuration.port": "Port",
+    "configuration.username": "User name",
+    "configuration.password": "Password, may be omitted",
+    "configuration.timeouts.command": "Time out for command answer",
+    "configuration.timeouts.feedback": "Feedback timeout",
+    "configuration.timeouts.welcome": "Timeout for welcome parser"
+}
