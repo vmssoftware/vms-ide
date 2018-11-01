@@ -2,8 +2,12 @@
     "name": "config-helper",
     "displayName": "config-helper",
     "description": "Config helper",
-    "version": "0.1.24",
+    "version": "0.1.25",
     "publisher": "vmssoftware",
+    "repository": {
+        "type": "git",
+        "url": "git:"
+    },
     "engines": {
         "vscode": "^1.27.0"
     },

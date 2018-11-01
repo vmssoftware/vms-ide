@@ -9,9 +9,9 @@ import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export class PasswordVscodeFiller implements ISettingsFiller {
+const lock = new Lock();
 
-    private lock = new Lock();
+export class PasswordVscodeFiller implements ISettingsFiller {
 
     /**
      * True it settings has unempty host and username
@@ -31,11 +31,11 @@ export class PasswordVscodeFiller implements ISettingsFiller {
             // ok, already has
             return true;
         }
-        await this.lock.acquire();  // to prevent concurrent use of console
+        await lock.acquire();  // to prevent concurrent using
         settings.port = settings.port || 22;
         const prompt = localize("query.password", "Password for {0}@{1}:{2} ", settings.username, settings.host, settings.port);
         settings.password = await window.showInputBox( { password: true, prompt, ignoreFocusOut: true });
-        this.lock.release();
+        lock.release();
         return settings.password !== undefined;
     }
 

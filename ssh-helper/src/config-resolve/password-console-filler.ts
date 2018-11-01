@@ -9,9 +9,9 @@ import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export class PasswordConsoleFiller implements ISettingsFiller {
+const lock = new Lock();
 
-    private lock = new Lock();
+export class PasswordConsoleFiller implements ISettingsFiller {
 
     /**
      * True it settings has unempty host and username
@@ -33,7 +33,7 @@ export class PasswordConsoleFiller implements ISettingsFiller {
             return true;
         }
 
-        await this.lock.acquire();  // to prevent concurrent use of console
+        await lock.acquire();  // to prevent concurrent use of console
 
         let retCode = false;
         const waitUser = new Lock(true);    // to wait user input
@@ -53,7 +53,7 @@ export class PasswordConsoleFiller implements ISettingsFiller {
 
         await waitUser.acquire();   // do not pass until password entered
 
-        this.lock.release();
+        lock.release();
         return retCode;
     }
 
