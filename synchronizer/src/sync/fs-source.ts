@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import * as fs from "fs-extra";
 import * as util from "util";
 
 import { ftpPathSeparator, IFileEntry, IReadDirectory } from "@vorfol/common";
@@ -7,21 +7,25 @@ import { LogType } from "@vorfol/common";
 import { findFiles, leadingSepRg, middleSepRg, trailingSepRg } from "../common/find-files";
 import { ISource } from "./source";
 
-const fsGetStat = util.promisify(fs.stat);
-const fsSetDate = util.promisify(fs.utimes);
-const fsReadDir = util.promisify(fs.readdir);
-const fsMkDir = util.promisify(fs.mkdir);
-const fsExist = util.promisify(fs.exists);
-
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export class FsSource implements ISource, IReadDirectory {
 
-    constructor(public root?: string, public debugLog?: LogType, public attempts?: number) {
-        root = root || "";
-        this.root = root.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
+    private ftpLikeRoot = "";
+
+    public get root() {
+        return this.ftpLikeRoot;
+    }
+
+    public set root(anyRoot: string | undefined) {
+        anyRoot = anyRoot || "";
+        this.ftpLikeRoot = anyRoot.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
+    }
+
+    constructor(root?: string, public debugLog?: LogType, public attempts?: number) {
+        this.root = root;
     }
 
     /**
@@ -30,7 +34,7 @@ export class FsSource implements ISource, IReadDirectory {
      */
     public async readDirectory(directory: string): Promise<IFileEntry[] | undefined> {
         directory = this.root + ftpPathSeparator + directory;
-        const list = await fsReadDir(directory).catch((err) => {
+        const list = await fs.readdir(directory).catch((err) => {
             if (this.debugLog) {
                 this.debugLog(`${err}`);
             }
@@ -38,7 +42,7 @@ export class FsSource implements ISource, IReadDirectory {
         });
         const retList: IFileEntry[] = [];
         for (const file of list) {
-            const stat = await fsGetStat(directory + ftpPathSeparator + file).catch((err) => {
+            const stat = await fs.stat(directory + ftpPathSeparator + file).catch((err) => {
                 if (this.debugLog) {
                     this.debugLog(`${err}`);
                 }
@@ -68,7 +72,7 @@ export class FsSource implements ISource, IReadDirectory {
 
     public async getDate(filename: string): Promise<Date | undefined> {
         filename = this.root + ftpPathSeparator + filename;
-        const stat = await fsGetStat(filename).catch((err) => {
+        const stat = await fs.stat(filename).catch((err) => {
             if (this.debugLog) {
                 this.debugLog(`${err}`);
             }
@@ -83,7 +87,7 @@ export class FsSource implements ISource, IReadDirectory {
 
     public async setDate(filename: string, date: Date): Promise<boolean> {
         filename = this.root + ftpPathSeparator + filename;
-        const result = await fsSetDate(filename, date, date).then(() => {
+        const result = await fs.utimes(filename, date, date).then(() => {
             return true;
         }).catch((err) => {
             // TODO: try this.attempts times
@@ -97,16 +101,8 @@ export class FsSource implements ISource, IReadDirectory {
 
     public ensureDirectory(directory: string): Promise<boolean> {
         directory = this.root + ftpPathSeparator + directory;
-        return fsExist(directory).then((ok) => {
-            if (!ok) {
-                return fsMkDir(directory).then(() => {
-                    return true;
-                });
-            }
-            return true;
-        }).catch(() => {
-            return false;
-        });
+        return fs.ensureDir(directory).then(() => true)
+            .catch(() => false);
     }
 
     /**

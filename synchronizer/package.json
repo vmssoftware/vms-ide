@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "publisher": "vmssoftware",
     "engines": {
         "vscode": "^1.28.0"

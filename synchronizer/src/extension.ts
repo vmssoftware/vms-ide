@@ -1,5 +1,5 @@
 
-import { commands, env, ExtensionContext, window } from "vscode";
+import { commands, Disposable, env, ExtensionContext, InputBox, window } from "vscode";
 
 import { LogType } from "@vorfol/common";
 
@@ -106,7 +106,31 @@ export async function activate(context: ExtensionContext) {
         });
     }));
 
+    // const inputBox = window.createInputBox();
+    // inputBox.ignoreFocusOut = true;
+    // let onHide: Disposable | undefined = inputBox.onDidHide(() => inputBox.show());
+    // inputBox.prompt = "> ";
+    // inputBox.title = "Enter command";
+    // inputBox.onDidAccept(() => {
+    //     if (inputBox.value === "quit") {
+    //         if (onHide) {
+    //             onHide.dispose();
+    //             onHide = undefined;
+    //         }
+    //         inputBox.hide();
+    //     }
+    //     ToOutputChannel(inputBox.value);
+    //     inputBox.value = "";
+    // });
+    // inputBox.show();
+
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async () => {
+
+        // if (onHide === undefined) {
+        //     onHide = inputBox.onDidHide(() => inputBox.show());
+        //     inputBox.show();
+        // }
+
         return EnsureSettings()
             .then((ok) => {
                 if (ok && configHelper) {

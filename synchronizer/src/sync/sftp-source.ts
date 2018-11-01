@@ -7,9 +7,20 @@ import { IInputAttributes, ISftpClient } from "./../ssh/api";
 import { ISource } from "./source";
 
 export class SftpSource implements ISource {
-    constructor(protected sftp: ISftpClient, public root?: string, public debugLog?: LogType, public attempts?: number) {
-        root = root || "";
-        this.root = root.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
+
+    private ftpLikeRoot = "";
+
+    public get root() {
+        return this.ftpLikeRoot;
+    }
+
+    public set root(anyRoot: string | undefined) {
+        anyRoot = anyRoot || "";
+        this.ftpLikeRoot = anyRoot.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
+    }
+
+    constructor(protected sftp: ISftpClient, root?: string, public debugLog?: LogType, public attempts?: number) {
+        this.root = root;
     }
 
     public findFiles(include: string, exclude: string): Promise<IFileEntry[]> {

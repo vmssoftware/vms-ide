@@ -179,7 +179,6 @@ export class Synchronizer {
             this.localSource &&
             this.remoteSource &&
             this.include &&
-            this.exclude &&
             this.sshHelper) {
             // clear password cache
             this.sshHelper.clearPasswordCashe();
@@ -284,7 +283,6 @@ export class Synchronizer {
             this.localSource &&
             this.remoteSource &&
             this.include &&
-            this.exclude &&
             this.sshHelper) {
             // clear password cache
             this.sshHelper.clearPasswordCashe();

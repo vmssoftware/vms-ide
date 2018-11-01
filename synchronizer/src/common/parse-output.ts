@@ -2,6 +2,9 @@
 const rgxCrLF = /([\r\n]*)/g;
 const rgxMsgPos = /^(\.*)\^/;
 const rgxMsg = /^((%|-)(\S+)-(\S)-(\S*)),\s(.*)$/;
+const rgxMsgCXX = /^((%|-)(CXX)-(\S)-(\S*)),\s(.*)$/;
+const rgxMsgCC = /^((%|-)(CC)-(\S)-(\S*)),\s(.*)$/;
+const rgxMsgMMS = /^((%|-)(MMS)-(\S)-(\S*)),\s(.*)$/;
 const rgxPlace = /^at line number (\d.*) in file (.*)$/;
 
 interface IDiagnostics {
@@ -50,7 +53,7 @@ export function parseVmsOutput(output: string) {
                 if (nextLine.match(rgxMsg)) { // another error line
                     break;
                 }
-                diagnostic.message += " " + nextLine.trim();
+                diagnostic.message += nextLine;
                 ++nextLineIdx;
             }
             problems.push(diagnostic);
