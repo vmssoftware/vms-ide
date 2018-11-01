@@ -102,6 +102,11 @@
 								"description": "Absolute path to EXE file.",
 								"default": ""
 							},
+							"extensionFile": {
+								"type": "string",
+								"description": "Extension files of sourse code.",
+								"default": "c"
+							},
 							"stopOnEntry": {
 								"type": "boolean",
 								"description": "Automatically stop after launch.",
@@ -134,6 +139,7 @@
 						"request": "launch",
 						"name": "Settings Debug",
 						"program": "",
+						"extensionFile": "c",
 						"stopOnEntry": true,
 						"typeRun": "DEBUG"
 					},
@@ -153,7 +159,8 @@
 							"type": "vms_dbg",
 							"request": "launch",
 							"name": "Settings Name",
-							"program": "",
+							"program": "[.path]name",
+							"extensionFile": "c",
 							"stopOnEntry": true,
 							"typeRun": "DEBUG"
 						}

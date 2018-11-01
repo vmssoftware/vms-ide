@@ -1,5 +1,5 @@
 /*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
+ * Copyright (C) VMS Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -92,6 +92,7 @@ export class VMSRuntime extends EventEmitter
 			this.workspaceFolder = workspace.workspaceFolders[0].uri.fsPath;
 		}
 
+		this.shell.resetParameters();
 		//run debuger
 		this.shell.SendCommandToQueue(this.osCmd.runDebug());
 		this.shell.SendCommandToQueue(this.dbgCmd.setDisplay("dbge", "q1", "output"));
@@ -187,9 +188,17 @@ export class VMSRuntime extends EventEmitter
 		return variables;
 	}
 
-	public sendDataToProgram(data : string)
+	public sendDataToProgram(data : string) : boolean
 	{
-		this.shell.SendData(data);
+		let result = false;
+
+		if(!this.shell.getStatusCommand())
+		{
+			this.shell.SendData(data);
+			result = true;
+		}
+
+		return result;
 	}
 
 	public getSourceFile() : string

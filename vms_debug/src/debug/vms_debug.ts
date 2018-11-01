@@ -1,5 +1,5 @@
 /*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
+ * Copyright (C) VMS Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
 import {
@@ -27,6 +27,7 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments
 {
 	/** An absolute path to the "program" to debug. */
 	program: string;
+	extensionFile: string;
 	/** Automatically stop target after launch. If not specified, target does not stop. */
 	stopOnEntry?: boolean;
 	/** enable logging the Debug Adapter Protocol */
@@ -176,8 +177,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		await this._configurationDone.wait(1000);
 
 		// start the program in the runtime
-		//this._runtime.start(args.program, !!args.stopOnEntry);
-		this._runtime.start(args.program, "c");
+		this._runtime.start(args.program, args.extensionFile);//???
 
 		this.sendResponse(response);
 	}
@@ -276,13 +276,23 @@ export class VMSDebugSession extends LoggingDebugSession
 		}
 		else if(args.context === "repl")//data from debug console
 		{
-			this._runtime.sendDataToProgram(args.expression);
-
-			response.body =
+			if(this._runtime.sendDataToProgram(args.expression))
 			{
-				result: "\r",
-				variablesReference: 0
-			};
+				response.body =
+				{
+					result: "\r",
+					variablesReference: 0
+				};
+			}
+			else
+			{
+				response.body =
+				{
+					result: "",
+					variablesReference: 0
+				};
+			}
+
 			this.sendResponse(response);
 		}
 		else

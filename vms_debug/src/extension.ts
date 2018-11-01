@@ -1,5 +1,5 @@
 /*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
+ * Copyright (C) VMS Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
 'use strict';
@@ -10,8 +10,8 @@ import { VMSDebugSession } from './debug/vms_debug';
 import { ShellSession, ModeWork } from './net/shell-session';
 import * as Net from 'net';
 import * as nls from 'vscode-nls';
-import { OsCommands } from './command/os_commands';
 import {ToOutputChannel} from './io/output-channel';
+import { VMSNoDebugSession } from './debug/vms_debug_run';
 
 
 export enum TypeRunConfig
@@ -21,13 +21,12 @@ export enum TypeRunConfig
 	TypeRunRun = "RUN"
 }
 
-const locale = vscode.env.language ;
+const locale = vscode.env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
-console.log(locale);
-//const localize = nls.loadMessageBundle();
 
 let shell : ShellSession;
 let session : VMSDebugSession | undefined;
+let sessionRun : VMSNoDebugSession | undefined;
 let serverIsConnect : boolean = false;
 let typeRunConfig : TypeRunConfig = TypeRunConfig.TypeRunNone;
 
@@ -66,7 +65,10 @@ let ExtensionDataCb = function(data: string, mode: ModeWork) : void
 	}
 	else if(typeRunConfig === TypeRunConfig.TypeRunRun)
 	{
-		vscode.debug.activeDebugConsole.append(data);
+		if(sessionRun)
+		{
+			sessionRun.receiveDataShell(data, mode);
+		}
 	}
 };
 
@@ -116,7 +118,13 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 			{
 				typeRunConfig = TypeRunConfig.TypeRunDebug;
 				// start port listener on launch of first debug session
-				if (!this._server)
+
+				if (this._server)
+				{
+					this._server.close();
+				}
+
+				//if (!this._server)
 				{
 					// start listening on a random port
 					this._server = Net.createServer(socket =>
@@ -132,14 +140,28 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 			}
 			else if(config.typeRun === "RUN")
 			{
+				config.noDebug = true;
 				typeRunConfig = TypeRunConfig.TypeRunRun;
-				let osCmd = new OsCommands();
+				// start port listener on launch of first debug session
 
-				shell.SendCommandToQueue(osCmd.runProgram(config.program));
-				const message = localize('extention.run', "Run program");
-				vscode.window.showInformationMessage(message);
+				if (this._server)
+				{
+					this._server.close();
+				}
 
-				return undefined;
+				//if (!this._server)
+				{
+					// start listening on a random port
+					this._server = Net.createServer(socket =>
+					{
+						sessionRun = new VMSNoDebugSession(shell);
+						sessionRun.setRunAsServer(true);
+						sessionRun.start(<NodeJS.ReadableStream>socket, socket);
+					}).listen(0);
+				}
+
+				// make VS Code connect to debug server instead of launching debug adapter
+				config.debugServer = this._server.address().port;
 			}
 			else
 			{

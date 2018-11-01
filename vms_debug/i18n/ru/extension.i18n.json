@@ -1,6 +1,7 @@
 {
     "extention.conecting": "Соединение с сервером ...",
     "extention.connected": "Соединение с сервером установлено",
-    "extention.not_connected": "Нет соединения с сервером",
-    "extention.сustomize_configuration": "Настройте конфигурацию"
+    "extention.closed": "Connection is closed",
+    "extention.сustomize_configuration": "Настройте конфигурацию",
+    "extention.not_connected": "Нет соединения с сервером"
 }
