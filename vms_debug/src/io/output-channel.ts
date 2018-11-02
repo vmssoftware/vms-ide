@@ -11,7 +11,7 @@ const _outputChannelName = 'VMS Debug';
 
 /** Get or create new output channel named [`VMS Build`](#_outputChannelName)
  */
-function GetOutputChannel(): OutputChannel {
+export function GetOutputChannel(): OutputChannel {
 	if (!_channel) {
 		_channel = window.createOutputChannel(_outputChannelName);
 	}

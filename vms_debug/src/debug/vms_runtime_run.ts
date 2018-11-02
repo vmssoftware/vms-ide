@@ -3,10 +3,15 @@
  *--------------------------------------------------------*/
 
 import * as vscode from 'vscode';
+import * as nls from 'vscode-nls';
 import { EventEmitter } from 'events';
 import { ShellSession, ModeWork } from '../net/shell-session';
 import { OsCommands } from '../command/os_commands';
 import { ToOutputChannel } from '../io/output-channel';
+import { MessagePrompt } from '../parsers/debug_parser';
+
+nls.config({ messageFormat: nls.MessageFormat.both });
+const localize = nls.loadMessageBundle();
 
 
 // VMS runtime with minimal debugger functionality.
@@ -67,7 +72,7 @@ export class VMSRuntimeRun extends EventEmitter
 
 			if(typeData === "C:")//command
 			{
-				ToOutputChannel(dataMsg);
+				ToOutputChannel(MessagePrompt.prmtCMD + dataMsg);
 			}
 			else if(typeData === "D:")
 			{
@@ -81,7 +86,8 @@ export class VMSRuntimeRun extends EventEmitter
 				{
 					this.statusProgram = false;
 					this.sendEvent('end');
-					vscode.debug.activeDebugConsole.append("\r\nEnd Program!\n\n");
+					const message = localize('runtime.program_end', "Program complete!");
+					vscode.debug.activeDebugConsole.append(message + "\n\n");
 				}
 			}
 		}
