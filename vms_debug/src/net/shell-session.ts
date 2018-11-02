@@ -134,9 +134,13 @@ export class ShellSession
                     data = data.substr(0, indexEnd-1);
                     data = data.trim();
 
-                    if(this.resultData === "" && data !== "")
+                    if(data !== "")
                     {
-                        this.resultData = "D:";
+                        if(this.resultData === "")
+                        {
+                            this.resultData = "D:";
+                        }
+
                         this.resultData += data;
                     }
                 }
@@ -145,10 +149,10 @@ export class ShellSession
             }
             else
             {
-                let addData = data.replace(this.promptCmd, ">>>");
-                addData = addData.replace(this.promptCmd, "");
+                let indexEnd = data.indexOf("\x00");
+                data = data.substr(0, indexEnd-1);
 
-                this.resultData += addData;
+                this.resultData += data + "> ";
 
                 this. mode = ModeWork.shell;
             }

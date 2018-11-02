@@ -10,7 +10,7 @@ import { VMSDebugSession } from './debug/vms_debug';
 import { ShellSession, ModeWork } from './net/shell-session';
 import * as Net from 'net';
 import * as nls from 'vscode-nls';
-import {ToOutputChannel} from './io/output-channel';
+import {ToOutputChannel, GetOutputChannel} from './io/output-channel';
 import { VMSNoDebugSession } from './debug/vms_debug_run';
 
 
@@ -79,6 +79,7 @@ let ExtensionReadyCb = function() : void
 	const message = localize('extention.connected', "Connected to the server");
 	vscode.window.showInformationMessage(message);
 	ToOutputChannel(message);
+	GetOutputChannel().show();
 };
 
 let ExtensionCloseCb = function() : void
@@ -88,6 +89,7 @@ let ExtensionCloseCb = function() : void
 	const message = localize('extention.closed', "Connection is closed");
 	vscode.window.showInformationMessage(message);
 	ToOutputChannel(message);
+	GetOutputChannel().show();
 
 	if(session)
 	{
@@ -98,7 +100,8 @@ let ExtensionCloseCb = function() : void
 
 class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 {
-	private _server?: Net.Server;
+	private serverDbg?: Net.Server;
+	private serverNoDbg?: Net.Server;
 
 	//Massage a debug configuration just before a debug session is being launched,
 	//e.g. add all missing attributes to the debug configuration.
@@ -114,20 +117,22 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 
 		if(serverIsConnect === true)
 		{
+			if(config.noDebug)//if user hit Ctrl+F5
+			{
+				if(config.noDebug === true)//start without debugging
+				{
+					config.typeRun = "RUN";
+				}
+			}
+
 			if(config.typeRun === "DEBUG")
 			{
 				typeRunConfig = TypeRunConfig.TypeRunDebug;
 				// start port listener on launch of first debug session
-
-				if (this._server)
-				{
-					this._server.close();
-				}
-
-				//if (!this._server)
+				if (!this.serverDbg)
 				{
 					// start listening on a random port
-					this._server = Net.createServer(socket =>
+					this.serverDbg = Net.createServer(socket =>
 					{
 						session = new VMSDebugSession(shell);
 						session.setRunAsServer(true);
@@ -136,23 +141,17 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 				}
 
 				// make VS Code connect to debug server instead of launching debug adapter
-				config.debugServer = this._server.address().port;
+				config.debugServer = this.serverDbg.address().port;
 			}
 			else if(config.typeRun === "RUN")
 			{
 				config.noDebug = true;
 				typeRunConfig = TypeRunConfig.TypeRunRun;
 				// start port listener on launch of first debug session
-
-				if (this._server)
-				{
-					this._server.close();
-				}
-
-				//if (!this._server)
+				if (!this.serverNoDbg)
 				{
 					// start listening on a random port
-					this._server = Net.createServer(socket =>
+					this.serverNoDbg = Net.createServer(socket =>
 					{
 						sessionRun = new VMSNoDebugSession(shell);
 						sessionRun.setRunAsServer(true);
@@ -161,7 +160,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 				}
 
 				// make VS Code connect to debug server instead of launching debug adapter
-				config.debugServer = this._server.address().port;
+				config.debugServer = this.serverNoDbg.address().port;
 			}
 			else
 			{
@@ -183,9 +182,14 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 
 	dispose()
 	{
-		if (this._server)
+		if (this.serverDbg)
 		{
-			this._server.close();
+			this.serverDbg.close();
+		}
+
+		if (this.serverNoDbg)
+		{
+			this.serverNoDbg.close();
 		}
 	}
 }

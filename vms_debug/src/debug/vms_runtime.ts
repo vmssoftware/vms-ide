@@ -568,6 +568,7 @@ export class VMSRuntime extends EventEmitter
 			}
 			if(messageUser !== "")
 			{
+				ToOutputChannel(messageUser);
 				vscode.debug.activeDebugConsole.append(messageUser);
 			}
 

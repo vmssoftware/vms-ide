@@ -177,7 +177,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		await this._configurationDone.wait(1000);
 
 		// start the program in the runtime
-		this._runtime.start(args.program, args.extensionFile);//???
+		this._runtime.start(args.program, args.extensionFile);
 
 		this.sendResponse(response);
 	}
