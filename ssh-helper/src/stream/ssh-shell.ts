@@ -24,12 +24,25 @@ export class SshShell extends SshClient implements ISshShell {
         return this.promptGiven;
     }
 
+    public get width() {
+        return this._width;
+    }
+    public set width(w: number) {
+        if (w > 16 && w < 255) {
+            this._width = w;
+            if (this.welcomeParser) {
+                this.welcomeParser.width = w;
+            }
+        }
+    }
+
     private promptGiven?: string;             // given prompt from other side
     private channel?: ClientChannel;
     private shellClose?: IUnSubscribe;
     private shellExit?: IUnSubscribe;
     private waitOperation = new Lock(false, "waitOperation");
     private userStream?: Transform;
+    private _width = 132;
 
     constructor(config: ConnectConfig,
                 resolver?: IConnectConfigResolver,

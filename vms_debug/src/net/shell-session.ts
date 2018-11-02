@@ -13,6 +13,10 @@ export enum ModeWork
     debug,
 }
 
+import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
+
 export class ShellSession
 {
     private enterCmd : string;
@@ -80,7 +84,7 @@ export class ShellSession
                     if (!attached)
                     {
                         throw this.sshShell.lastClientError? this.sshShell.lastClientError :
-                            this.sshShell.lastShellError ? this.sshShell.lastShellError : new Error("error");
+                            this.sshShell.lastShellError ? this.sshShell.lastShellError : new Error(localize("output.cannot_attach", "Cannot connect"));
                     }
                     else
                     {

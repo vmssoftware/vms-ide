@@ -60,6 +60,7 @@ export interface IPromptCatcher extends IShellParser {
 
 export interface IParseWelcome extends IShellParser {
     prompt?: string;
+    width?: number;
 }
 
 export interface ISftpClient {
@@ -80,6 +81,7 @@ export interface ISshShell {
     lastClientError?: Error;
     enabled: boolean;
     prompt?: string;
+    width?: number;
     setParsers(welcome?: IParseWelcome, prompter?: IPromptCatcher): void;
     dispose(): void;
     attachUser(user: Transform): Promise<boolean>;

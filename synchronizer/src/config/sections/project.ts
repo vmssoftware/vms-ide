@@ -1,4 +1,4 @@
-import { IConfigData, IConfigSection } from "../config";
+import { IConfigData, IConfigSection } from "../../ext-api/config";
 
 export interface IProjectSection {
     builders: string;
