@@ -35,13 +35,6 @@
 			],
 			"outFiles": [ "${workspaceFolder}/out/src/**/*.js" ],
 			"internalConsoleOptions": "openOnSessionStart"
-		},
-		{
-			"type": "vms_dbg",
-			"request": "launch",
-			"name": "VMS C Debug",
-			"program": "${workspaceFolder}/${command:AskForProgramName}",
-			"stopOnEntry": true
 		}
 	],
 	"compounds": [

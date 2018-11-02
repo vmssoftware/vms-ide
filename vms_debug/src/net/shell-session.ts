@@ -6,6 +6,7 @@ import { LogType } from '@vorfol/common';
 import { GetSshHelperFromApi } from '../ext-api/get-ssh-helper';
 import { ISshShell } from '../ext-api/api';
 import { ShellParser } from './shell-parser';
+import { OsCmdVMS } from '../command/os_commands';
 
 export enum ModeWork
 {
@@ -19,7 +20,7 @@ const localize = nls.loadMessageBundle();
 
 export class ShellSession
 {
-    private enterCmd : string;
+    private promptCmd : string;
     private mode : ModeWork;
     private resultData : string;
     private extensionDataCb : Function;
@@ -37,17 +38,13 @@ export class ShellSession
 
     constructor( ExtensionDataCb: (data: string, mode: ModeWork) => void, ExtensionReadyCb: () => void, ExtensionCloseCb: () => void, public debugLog?: LogType)
     {
-        this.enterCmd = "";
-        this.resultData = "";
+        this.promptCmd = "";
         this.extensionDataCb = ExtensionDataCb;
         this.extensionReadyCb = ExtensionReadyCb;
         this.extensionCloseCb = ExtensionCloseCb;
-        this.readyCmd = false;
-        this.receiveCmd = false;
-        this.mode = ModeWork.shell;
-        this.currentCmd = new CommandMessage("", "");
         this.shellParser = new ShellParser(this.DataCb, this.CloseCb, this.ClientErrorCb/*, debugLog*/);
 
+        this.resetParameters();
         this.ShellInitialise();
     }
 
@@ -117,13 +114,13 @@ export class ShellSession
 
     private DataCb = (data: string) : void =>
     {
-        if(this.enterCmd === "")
+        if(this.promptCmd === "")
         {
-            this.enterCmd = this.sshShell!.prompt!;//set prompt
+            this.promptCmd = this.sshShell!.prompt!;//set prompt
             this.readyCmd = true;
             this.extensionReadyCb();
         }
-        else if(data.includes("\x00") && (data.includes(this.enterCmd) || data.includes("DBG> ")))
+        else if(data.includes("\x00") && (data.includes(this.promptCmd) || data.includes("DBG> ")))
         {
             if(data.includes("DBG> "))
             {
@@ -131,21 +128,38 @@ export class ShellSession
                 {
                     this.resultData = "";
                 }
+                else
+                {
+                    let indexEnd = data.indexOf("\x00");
+                    data = data.substr(0, indexEnd-1);
+                    data = data.trim();
+
+                    if(this.resultData === "" && data !== "")
+                    {
+                        this.resultData = "D:";
+                        this.resultData += data;
+                    }
+                }
 
                 this.mode = ModeWork.debug;
             }
             else
             {
+                let addData = data.replace(this.promptCmd, ">>>");
+                addData = addData.replace(this.promptCmd, "");
+
+                this.resultData += addData;
+
                 this. mode = ModeWork.shell;
             }
+
+            this.readyCmd = true;
 
             if(this.resultData !== "")
             {
                 this.extensionDataCb(this.resultData, this.mode);
                 this.resultData = "";
             }
-
-            this.readyCmd = true;
 
             if(this.queueCmd.size() > 0)
             {
@@ -178,7 +192,8 @@ export class ShellSession
             else if(cmd.includes(DebugCmdVMS.dbgGo) ||
                 cmd.includes(DebugCmdVMS.dbgStep) ||
                 cmd.includes(DebugCmdVMS.dbgStepIn) ||
-                cmd.includes(DebugCmdVMS.dbgStepReturn))
+                cmd.includes(DebugCmdVMS.dbgStepReturn) ||
+                cmd.includes(OsCmdVMS.osRunProgram))
             {
                 if(this.resultData !== "")
                 {
@@ -218,6 +233,21 @@ export class ShellSession
         ToOutputChannel(`${err}`);
 
         this.extensionCloseCb();
+    }
+
+
+    public resetParameters()
+    {
+        this.resultData = "";
+        this.readyCmd = true;
+        this.receiveCmd = false;
+        this.mode = ModeWork.shell;
+        this.currentCmd = new CommandMessage("", "");
+    }
+
+    public getStatusCommand() : boolean
+    {
+        return this.readyCmd;
     }
 
     public getCurrentCommand() : CommandMessage

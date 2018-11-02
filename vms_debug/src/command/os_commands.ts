@@ -6,12 +6,13 @@ export enum OsCmdVMS
 	osCd = "set def",
 	osHomeDir = "set def sys$login",
 	osExit = "logout",
+	osKillProgram = "\x03",
 
-	dbgRunProgram = "run /nodebug",
-	dbgRunDbg = "debug /keep",
-	dbgRunCC = "cc",
-	dbgRunCOM = "@",
-	dbgRunMMS = "mms/description=",
+	osRunProgram = "run /nodebug",
+	osRunDbg = "debug /keep",
+	osRunCC = "cc",
+	osRunCOM = "@",
+	osRunMMS = "mms/description=",
 }
 
 
@@ -37,34 +38,39 @@ export class OsCommands
 		return new CommandMessage(OsCmdVMS.osExit, "");
 	}
 
+	public killProgram() : CommandMessage
+	{
+		return new CommandMessage(OsCmdVMS.osKillProgram, "");
+	}
+
 
 	public runProgram(programName : string) : CommandMessage
 	{
-		return new CommandMessage(OsCmdVMS.dbgRunProgram, programName);
+		return new CommandMessage(OsCmdVMS.osRunProgram, programName);
 	}
 
 	public runDebug() : CommandMessage
 	{
-		return new CommandMessage(OsCmdVMS.dbgRunDbg, "");
+		return new CommandMessage(OsCmdVMS.osRunDbg, "");
 	}
 
 	public runCC() : CommandMessage
 	{
-		return new CommandMessage(OsCmdVMS.dbgRunCC, "");
+		return new CommandMessage(OsCmdVMS.osRunCC, "");
 	}
 
 	public runCOM(fileName : string) : CommandMessage
 	{
-		return new CommandMessage(OsCmdVMS.dbgRunCOM, fileName);
+		return new CommandMessage(OsCmdVMS.osRunCOM, fileName);
 	}
 
 	public runMMS(fileName : string) : CommandMessage
 	{
-		return new CommandMessage(OsCmdVMS.dbgRunMMS, fileName);
+		return new CommandMessage(OsCmdVMS.osRunMMS, fileName);
 	}
 
 	public cleanMMS(fileName : string) : CommandMessage
 	{
-		return new CommandMessage(OsCmdVMS.dbgRunMMS, fileName + " clean");
+		return new CommandMessage(OsCmdVMS.osRunMMS, fileName + " clean");
 	}
 }
