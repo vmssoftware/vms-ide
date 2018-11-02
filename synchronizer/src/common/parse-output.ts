@@ -9,6 +9,7 @@ enum VmsSeverity {
 }
 
 interface IDiagnostics {
+    facility: string;
     file: string;
     line: number;
     pos: number;
@@ -63,6 +64,7 @@ export function parseVmsOutput(output: string, shellWidth?: number) {
         const matched = line.match(rgxMsgCXX);
         if (matched) {
             const diagnostic: IPartialDiagnostics = {
+                facility: matched[3],
                 severity: VmsSeverity.information,
             };
             const trySeverity = matched[4];
@@ -99,6 +101,7 @@ export function parseVmsOutput(output: string, shellWidth?: number) {
         const matched = line.match(rgxMsgMMS);
         if (matched) {
             const diagnostic: IPartialDiagnostics = {
+                facility: matched[3],
                 severity: VmsSeverity.information,
             };
             const trySeverity = matched[4];
@@ -107,18 +110,19 @@ export function parseVmsOutput(output: string, shellWidth?: number) {
             }
             diagnostic.type = matched[5];
             diagnostic.message = matched[6];
-            let matchFile = diagnostic.message.match(rgxMsgFileSintax);
+            const matchFile = diagnostic.message.match(rgxMsgFileSintax);
             if (matchFile) {
                 diagnostic.file = matchFile[2];
                 diagnostic.message = matchFile[1];
             }
-            if (diagnostic.file === undefined) {
-                matchFile = diagnostic.message.match(rgxMsgFileAbort);
-                if (matchFile) {
-                    diagnostic.file = matchFile[1];
-                    diagnostic.message = matchFile[2];
-                }
-            }
+            // we don't need file from such messages
+            // if (diagnostic.file === undefined) {
+            //     matchFile = diagnostic.message.match(rgxMsgFileAbort);
+            //     if (matchFile) {
+            //         diagnostic.file = matchFile[1];
+            //         diagnostic.message = matchFile[2];
+            //     }
+            // }
             if (diagnostic.file) {
                 const converter = VmsPathConverter.fromVms(diagnostic.file);
                 if (converter.file.includes(".")) {

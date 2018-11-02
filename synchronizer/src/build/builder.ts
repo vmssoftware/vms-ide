@@ -1,98 +1,304 @@
-import fs from "fs";
+import fs from "fs-extra";
 import micromatch from "micromatch";
 import path from "path";
-import util from "util";
-import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, Range, Uri, window, workspace } from "vscode";
+
+import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, QuickPickItem, Range, Uri, window, workspace } from "vscode";
 
 import { LogType } from "@vorfol/common";
 import { printLike } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
 
-import { ProjectSection } from "../config/sections/project";
-import { SynchronizeSection } from "../config/sections/synchronize";
+import { IProjectSection, ProjectSection } from "../config/sections/project";
 
 import { ISshShell } from "../ext-api/api";
+import { SshHelper } from "../ext-api/ssh-helper";
 
 import { parseVmsOutput } from "../common/parse-output";
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
 import { EnsureSettings, synchronizerConfig } from "../ensure-settings";
-import { ToOutputChannel } from "../output-channel";
 import { FsSource } from "../sync/fs-source";
 import { synchronizer } from "../synchronize";
-import { VmsPathConverter, vmsPathRgx } from "../vms/vms-path-converter";
-
-const fsReadFile = util.promisify(fs.readFile);
+import { VmsPathConverter } from "../vms/vms-path-converter";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
+interface IBuildQuickPickItem extends QuickPickItem {
+    type: "user" | "debug" | "release";
+}
+
 export class Builder {
 
-    public static readonly createNewMmsString = localize("const.create_mms", "Create new MMS");
-    public static readonly defMmsFileName = "res/default.mms";
-    public static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"default.mms"}`;
-                        // + `/MACRO=(`
-                        // + `"DEBUG=${"1 or empty"}",`
-                        // + `"INCLUDES=${"include files comma-separated list"}",`
-                        // + `"SOURCES=${"source files comma-separated list"}",`
-                        // + `"OUT_NAME=${"executable name without extension"}")`;
-    public static readonly mmsExt = ".mms";
-    public static readonly comExt = ".com";
-    public static readonly defRange = new Range(0, 0, 0, 0);
+    private static readonly createNewMmsString = localize("const.create_mms", "Create new MMS");
+    private static readonly defMmsFileName = "res/default.mms";
+    private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"default.mms"}`;
+    // + `/MACRO=(`
+    // + `"DEBUG=${"1 or empty"}",`
+    // + `"INCLUDES=${"include files comma-separated list"}",`
+    // + `"SOURCES=${"source files comma-separated list"}",`
+    // + `"OUT_NAME=${"executable name without extension"}")`;
+    private static readonly mmsExt = ".mms";
+    private static readonly macroExt = ".mac";
+    private static readonly defRange = new Range(0, 0, 0, 0);
 
-    public projectRoot?: string;
-    public shellRootConverter?: VmsPathConverter;
-    public collection?: DiagnosticCollection;
+    public messages: string[] = [];
 
-    public get lastErrors() {
-        return [] as Error[];
-    }
+    private collection?: DiagnosticCollection;
+    private projectSection?: IProjectSection;
+    private workspaceUri?: Uri;
+    private shellRootConverter?: VmsPathConverter;
+    private shell?: ISshShell;
+    private sshHelper?: SshHelper;
 
+    // all files in case-sensitive form (because Uri is case-sensitive, but we can get case-insensitive file name from build process)
     private allLocalFiles?: string[];
 
     constructor(public context: ExtensionContext, public debugLog?: LogType) {
 
     }
 
+    /**
+     * Also save shell errors
+     */
     public dispose() {
-        // TODO: dispose shell if we decide to keep it alive
+        // dispose shell if we don't decide to keep it alive
+        if (this.shell) {
+            if (this.shell.lastClientError) {
+                this.messages.push(this.shell.lastClientError.message);
+            }
+            if (this.shell.lastShellError) {
+                this.messages.push(this.shell.lastShellError.message);
+            }
+            this.shell.dispose();
+            this.shell = undefined;
+            this.shellRootConverter = undefined;
+        }
     }
 
-    public async getShellRoot(shell: ISshShell) {
-        if (shell) {
-            const answer = await shell.execCmd(`WRITE SYS$OUTPUT F$TRNLNM("SYS$LOGIN")`);
+    public async buildProject() {
+        // clear errors
+        this.messages = [];
+        // get current settings
+        if (!await this.ensureSettings()) {
+            return false;
+        }
+        if (this.projectSection && this.workspaceUri) {
+            // create local source
+            const localSource = new FsSource(this.workspaceUri.fsPath, this.debugLog);
+            // get full list of project files. do not wait, we will need it later
+            localSource.findFiles("*", this.projectSection.exclude)
+                .then((list) => {
+                    if (list) {
+                        this.allLocalFiles = list.map((f) => f.filename);
+                    }
+                });
+            // get list of builders
+            const items = await localSource.findFiles(this.projectSection.builders, this.projectSection.exclude);
+            // build selection list, excluding own mms
+            const selectItems = items.filter((file) => file.filename.toUpperCase() !== (this.projectSection!.projectName + Builder.mmsExt).toUpperCase())
+                .map((file) => {
+                    const ret: IBuildQuickPickItem = {
+                        description: localize("quick.build.file", "Build using {0}", file.filename),
+                        label: file.filename,
+                        type: "user",
+                    };
+                    return ret;
+                });
+            selectItems.unshift({
+                    description: localize("quick.build.release", "Build release version"),
+                    label: "RELEASE",
+                    type: "release",
+                });
+            selectItems.unshift({
+                description: localize("quick.build.debug", "Build debug version"),
+                label: "DEBUG",
+                type: "debug",
+            });
+            // select one
+            const buildSelection = await window.showQuickPick(selectItems, { ignoreFocusOut: true, canPickMany: false});
+            if (buildSelection !== undefined) {
+                return this.ensureMmsCreated(buildSelection)
+                    .then((ok) => {
+                        if (ok) {
+                            return this.runRemoteBuild(buildSelection)
+                                .then((result) => {
+                                    // TODO: deside if we want to keep it alive
+                                    this.dispose();
+                                    return result;
+                                });
+                        }
+                        return ok;
+                    });
+            } else {
+                return false;
+            }
+        } else {
+            this.messages.push(localize("output.not_resolved", "Cannot resolve configuration or current workspace folder"));
+            return false;
+        }
+    }
+
+    private async ensureSettings() {
+        if (!await EnsureSettings() || !synchronizerConfig) {
+            this.messages.push(localize("error.no_settings", "Cannot get settings"));
+            return false;
+        }
+        const projectSection = await synchronizerConfig.get(ProjectSection.section);
+        // get current values
+        const project = projectSection ? projectSection.store() : undefined;
+        if (ProjectSection.is(project) &&
+            workspace.workspaceFolders &&
+            workspace.workspaceFolders.length > 0) {
+            // hold
+            this.projectSection = project;
+            this.workspaceUri = workspace.workspaceFolders[0].uri;
+            return true;
+        } else {
+            this.messages.push(localize("error.bad_settings", "Inconsistent settings or workspace is empty"));
+            return false;
+        }
+    }
+
+    private async ensureMmsCreated(selection: IBuildQuickPickItem) {
+        if (selection.type === "user") {
+            return true;
+        }
+        if (this.projectSection
+            && this.allLocalFiles
+            && this.workspaceUri) {
+            const all = [];
+            const localMmsFile = this.projectSection.projectName + Builder.mmsExt;
+            const foundMms = micromatch(this.allLocalFiles, localMmsFile, { nocase: true });
+            if (foundMms.length === 0) {
+                const defMmsPath = this.context.asAbsolutePath(Builder.defMmsFileName);
+                all.push(fs.copy(defMmsPath, this.workspaceUri.fsPath + ftpPathSeparator + localMmsFile)
+                            .then(() => {
+                                return localMmsFile;
+                            }).catch((err) => {
+                                this.messages.push(err);
+                                return undefined;
+                            }));
+            }
+            const localMacroFile = this.projectSection.projectName + Builder.macroExt;
+            const foundMacro = micromatch(this.allLocalFiles, localMacroFile, { nocase: true });
+            if (foundMacro.length === 0) {
+                // TODO: provide content of macros
+                const content = "DEBUG=1";
+                all.push(fs.writeFile(this.workspaceUri.fsPath + ftpPathSeparator + localMacroFile, content)
+                            .then(() => {
+                                return localMacroFile;
+                            }).catch((err) => {
+                                this.messages.push(err);
+                                return undefined;
+                            }));
+            }
+            const files = await Promise.all(all);
+            if (synchronizer) {
+                const filesToUpload: string[] = [];
+                for (const file of files) {
+                    if (file !== undefined) {
+                        filesToUpload.push(file);
+                    }
+                }
+                return synchronizer.uploadFiles(filesToUpload);
+            }
+        }
+        return false;
+    }
+
+    private async runRemoteBuild(selection: IBuildQuickPickItem) {
+        let command: string | undefined;
+        let output: string | undefined;
+        if (await this.prepareShell() && this.shell && this.projectSection) {
+            // get shell root
+            if (!await this.ensureShellRoot()) {
+                this.dispose();
+                return false;
+            }
+            // set default directory
+            const converter = new VmsPathConverter(this.projectSection.root + ftpPathSeparator);
+            if (!await this.setShellProjectDirectory(converter.directory)) {
+                this.dispose();
+                return false;
+            }
+            // decide how to run
+            switch (selection.type) {
+                case "user":
+                    command = "@" + selection.label;
+                    break;
+                default:
+                    command = Builder.mmsCmd(this.projectSection.projectName + Builder.mmsExt);
+                    break;
+            }
+            // run if decided
+            if (command) {
+                output = await this.shell.execCmd(command);
+                if (output) {
+                    // parse
+                    return this.parseProblems(output, selection)
+                        .then((parseResults) => {
+                            if (synchronizer) {
+                                return synchronizer.downloadListings();
+                            } else {
+                                return parseResults;
+                            }
+                        });
+                } else {
+                    this.messages.push(localize("output.cannot_exec", "Cannot execute > {0}", command));
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    private async ensureShellRoot() {
+        if (!this.shellRootConverter && this.shell) {
+            const answer = await this.shell.execCmd(`WRITE SYS$OUTPUT F$TRNLNM("SYS$LOGIN")`);
             if (answer) {
                 const result = answer.split("\r\n").filter((s) => s.trim() !== "").map((s) => s.trim());
                 if (result.length > 1) {
                     this.shellRootConverter = VmsPathConverter.fromVms(result[result.length - 1]);
                 }
-                if (this.debugLog) {
-                    this.debugLog(this.shellRootConverter);
-                }
             }
         }
-    }
-
-    public async createDefMms() {
-        const defMmsPath = this.context.asAbsolutePath(Builder.defMmsFileName);
-        const content = await fsReadFile(defMmsPath)
-            .then((buff) => buff.toString("utf8"))
-            .catch(() => "! new MMS");
-        return workspace.openTextDocument({language: "mms",  content})
-            .then((doc) => {
-                return window.showTextDocument(doc)
-                    .then(() => true);
-            });
-    }
-
-    public async parseProblems(output: string, shellWidth?: number) {
-        let cwd = "";
-        if (this.shellRootConverter && this.projectRoot) {
-            cwd = this.shellRootConverter.initial + this.projectRoot + ftpPathSeparator;
-            cwd = cwd.toUpperCase();
+        if (this.shellRootConverter && this.shellRootConverter.fullPath) {
+            if (this.debugLog) {
+                this.debugLog(`shell root: ${this.shellRootConverter.fullPath}`);
+            }
+            return true;
+         } else {
+            if (this.debugLog) {
+                this.debugLog(`shell root: unresolved`);
+            }
+            this.shellRootConverter = undefined;
+            return false;
         }
-        const result = parseVmsOutput(output, shellWidth);
+    }
+
+    private async setShellProjectDirectory(directory: string) {
+        if (this.shell) {
+            const cd = `set def ${directory}`;
+            const answer = await this.shell.execCmd(cd);    // TODO: check response errors, also check - is DIR working without errors?
+            if (answer) {
+                const result = answer.split("\r\n").filter((s) => s.trim() !== "").map((s) => s.trim());
+                if (this.debugLog) {
+                    this.debugLog(result);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private async parseProblems(output: string, selection: IBuildQuickPickItem) {
+        if (!this.shellRootConverter ||
+            !this.projectSection ||
+            !this.shell) {
+            return false;
+        }
+        const result = parseVmsOutput(output, this.shell.width);
         const errMap = new Map<string, Diagnostic[]>();
         for (const entry of result) {
             if (entry.message) {
@@ -117,6 +323,15 @@ export class Builder {
                 let diagArr = errMap.get(String(entry.file));
                 diagArr = diagArr || [];
                 diagArr.push(diagnostic);
+                if (!entry.file) {
+                    if (entry.facility && entry.facility.toUpperCase() === "MMS") {
+                        if (selection.type === "user") {
+                            entry.file = selection.label;
+                        } else {
+                            entry.file = this.projectSection.projectName + Builder.mmsExt;
+                        }
+                    }
+                }
                 errMap.set(String(entry.file), diagArr);
             }
         }
@@ -124,6 +339,9 @@ export class Builder {
             this.collection = languages.createDiagnosticCollection("open-vms.build");
         }
         this.collection.clear();
+        let cwd = "";
+        cwd = this.shellRootConverter.initial + this.projectSection.root + ftpPathSeparator;
+        cwd = cwd.toUpperCase();
         for (const [file, arrDiag] of errMap) {
             let uri = Uri.file(file);
             if (file !== String(undefined) &&
@@ -147,123 +365,28 @@ export class Builder {
         return true;
     }
 
-    public async runRemoteBuild(file: string) {
-        let command: string | undefined;
-        let output: string | undefined;
-        let shell: ISshShell | undefined;
-        if (await prepare.call(this) && shell) {
-            // get shell root
-            await this.getShellRoot(shell);
-            // set default directory
-            const converter = new VmsPathConverter(this.projectRoot + ftpPathSeparator + file);
-            const cd = `set def ${converter.directory}`;
-            await shell.execCmd(cd);    // TODO: check response errors
-            // decide how to run
-            if (file.toLowerCase().endsWith(Builder.mmsExt)) {
-                command = Builder.mmsCmd(file);
-            } else if (file.toLowerCase().endsWith(Builder.comExt)) {
-                command = "@" + converter.file;
-            } else {
-                command = converter.file;
-            }
-            // run if decided
-            if (command) {
-                output = await shell.execCmd(command);
-                if (output) {
-                    // parse
-                    return this.parseProblems(output, shell.width)
-                        .then((parseResults) => {
-                            if (synchronizer) {
-                                return synchronizer.downloadListings();
-                            } else {
-                                return parseResults;
-                            }
-                        });
-                } else {
-                    ToOutputChannel(localize("output.cannot_exec", "Cannot execute > {0}", command));
-                    return false;
-                }
-            }
+    private async prepareShell() {
+        if (this.shell) {
+            this.dispose();
         }
-        return false;
-
-        async function prepare(this: Builder) {
-            // get current config
-            if (!await EnsureSettings() ||
-                !synchronizerConfig) {
-                return false;
-            }
+        if (!this.sshHelper) {
             const sshHelperType = await GetSshHelperFromApi();
             if (!sshHelperType) {
                 if (this.debugLog) {
                     this.debugLog(localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
                 }
-                ToOutputChannel(localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
+                this.messages.push(localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
                 return false;
             }
-            const sshHelper = new sshHelperType(this.debugLog);
-            const [projectSection,
-                synchronizeSection] = await Promise.all(
-                    [synchronizerConfig.get(ProjectSection.section),
-                        synchronizerConfig.get(SynchronizeSection.section)]);
-            // check if all are ready to create variables
-            if (ProjectSection.is(projectSection) &&
-                SynchronizeSection.is(synchronizeSection)) {
-                this.projectRoot = projectSection.root;
-                shell = await sshHelper.getDefaultVmsShell();
-                if (shell) {
-                    shell.width = 32;
-                }
-                return true;
-            }
-            return false;
+            this.sshHelper = new sshHelperType(this.debugLog);
         }
-    }
-
-    public async buildProject() {
-        // get current config
-        if (!await EnsureSettings() || !synchronizerConfig) {
-            return false;
+        if (this.sshHelper) {
+            this.shell = await this.sshHelper.getDefaultVmsShell();
         }
-        const projectSection = await synchronizerConfig.get(ProjectSection.section);
-        // get current values
-        const project = projectSection ? projectSection.store() : undefined;
-        if (ProjectSection.is(project) &&
-            workspace.workspaceFolders &&
-            workspace.workspaceFolders.length > 0) {
-            // get list of builders
-            const localSource = new FsSource(workspace.workspaceFolders[0].uri.fsPath, this.debugLog);
-            localSource.findFiles("*", project.exclude)
-                .then((list) => {
-                    if (list) {
-                        this.allLocalFiles = list.map((f) => f.filename);
-                    }
-                });
-            const items = await localSource.findFiles(project.builders, project.exclude);
-            const selectItems = items.map((file) => file.filename);
-            selectItems.push(Builder.createNewMmsString);
-            // select one
-            const buildSelection = await window.showQuickPick(selectItems, { ignoreFocusOut: true, canPickMany: false});
-            // create one if selected
-            if (buildSelection === Builder.createNewMmsString) {
-                return this.createDefMms()
-                    .catch((err) => {
-                        if (this.debugLog) {
-                            this.debugLog(err);
-                        }
-                        return false;
-                    });
-            }
-            // run and parse output
-            if (buildSelection) {
-                return this.runRemoteBuild(buildSelection);
-            } else {
-                return false;
-            }
-        } else {
-            ToOutputChannel(localize("output.not_resolved", "Cannot resolve configuration or current workspace folder"));
-            return false;
+        if (this.shell) {
+            this.shell.width = 32;  // DEBUG PURPOSE ONLY
         }
+        return true;
     }
 
 }

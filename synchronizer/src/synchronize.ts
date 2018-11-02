@@ -38,7 +38,7 @@ export async function SyncProject(context: ExtensionContext, debugLog?: LogType)
                         } else {
                             window.showErrorMessage(localize("message.sync.wrong", "Syncronization: some files failed to synchronize, see output"));
                             ToOutputChannel(localize("output.sync.failed", "Synchronization is failed"));
-                            for (const err of synchronizer!.lastErrors) {
+                            for (const err of synchronizer!.messages) {
                                 ToOutputChannel(`${err}`);
                             }
                         }

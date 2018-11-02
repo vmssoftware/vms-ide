@@ -1,7 +1,12 @@
 {
-    "const.create_mms": "Новый MMS файл",
+    "quick.build.file": "Компиляция с использованием {0}",
+    "quick.build.release": "Построить release версию",
+    "quick.build.debug": "Построить debug версию",
+    "output.not_resolved": "Не удалось получить конфигурацию или текущую рабочую папку",
+    "error.no_settings": "Не удалось получить настройки",
+    "error.bad_settings": "Неподходящие настройки или папки проекта нет",
     "output.cannot_exec": "Не удалось запустить {0}",
     "debug.cannot_get_ssh_helper": "Не удалось загрузить ssh-helper API",
-    "output.not_resolved": "Не удалось получить конфигурацию или текущую рабочую папку",
-    "output.install_ssh": "Установите плагин 'vmssoftware.ssh-helper'"
+    "output.install_ssh": "Установите плагин 'vmssoftware.ssh-helper'",
+    "const.create_mms": "Новый MMS файл"
 }

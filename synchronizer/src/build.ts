@@ -26,7 +26,7 @@ export async function BuildProject(context: ExtensionContext, debugLog?: LogType
                     } else {
                         window.showErrorMessage(localize("message.build.wrong", "Build: something is wrong, see output"));
                         ToOutputChannel(localize("output.build.failed", "Build process failed"));
-                        for (const err of builder!.lastErrors) {
+                        for (const err of builder!.messages) {
                             ToOutputChannel(`${err}`);
                         }
                         return result;
