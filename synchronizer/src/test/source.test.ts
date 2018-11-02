@@ -2,7 +2,7 @@ import * as assert from "assert";
 
 import { LogType, MemoryWriteStream } from "@vorfol/common";
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
-import { SshHelper } from "../ssh/ssh-helper";
+import { SshHelper } from "../ext-api/ssh-helper";
 import { FsSource } from "../sync/fs-source";
 import { SftpSource } from "../sync/sftp-source";
 import { ISource } from "../sync/source";

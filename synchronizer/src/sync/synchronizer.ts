@@ -1,19 +1,19 @@
 import path from "path";
 import vscode from "vscode";
 
-import { IConfig, IConfigSection } from "../config/config";
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
 import { KindOfFiles, ProjectSection } from "../config/sections/project";
 import { DownloadAction, SynchronizeSection } from "../config/sections/synchronize";
+import { IConfig, IConfigSection } from "../ext-api/config";
 
 import { Delay } from "@vorfol/common";
 import { LogType } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
 import { IFileEntry } from "@vorfol/common";
 
-import { ISftpClient } from "../ssh/api";
-import { ISshShell } from "../ssh/api";
-import { SshHelper } from "../ssh/ssh-helper";
+import { ISftpClient } from "../ext-api/api";
+import { ISshShell } from "../ext-api/api";
+import { SshHelper } from "../ext-api/ssh-helper";
 
 import { EnsureSettings, synchronizerConfig } from "../ensure-settings";
 import { ToOutputChannel } from "../output-channel";
@@ -284,11 +284,8 @@ export class Synchronizer {
             this.remoteSource &&
             this.include &&
             this.sshHelper) {
-            // clear password cache
-            this.sshHelper.clearPasswordCashe();
-            // get lists
-            // this.enableRemote();
-            const remoteList = await this.remoteSource.findFiles(this.include, this.exclude);
+            // do not exclude anything
+            const remoteList = await this.remoteSource.findFiles(this.include);
             // download
             const waitAll = [];
             for (const downloadFile of remoteList) {

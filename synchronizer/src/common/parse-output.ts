@@ -1,64 +1,134 @@
+import { VmsPathConverter } from "../vms/vms-path-converter";
 
-const rgxCrLF = /([\r\n]*)/g;
-const rgxMsgPos = /^(\.*)\^/;
-const rgxMsg = /^((%|-)(\S+)-(\S)-(\S*)),\s(.*)$/;
-const rgxMsgCXX = /^((%|-)(CXX)-(\S)-(\S*)),\s(.*)$/;
-const rgxMsgCC = /^((%|-)(CC)-(\S)-(\S*)),\s(.*)$/;
-const rgxMsgMMS = /^((%|-)(MMS)-(\S)-(\S*)),\s(.*)$/;
-const rgxPlace = /^at line number (\d.*) in file (.*)$/;
+enum VmsSeverity {
+    fatal = "F",
+    error = "E",
+    warning = "W",
+    information = "I",
+    success = "S",
+}
 
 interface IDiagnostics {
     file: string;
     line: number;
     pos: number;
-    severity: "error" | "information";
+    severity: VmsSeverity;
     message: string;
     type: string;
 }
 
 type IPartialDiagnostics = Partial<IDiagnostics>;
 
-export function parseVmsOutput(output: string) {
-    const lines = output.split("\n").map((s) => s.replace(rgxCrLF, ""));
-    const result = lines.reduce((problems, line, idx) => {
-        const matched = line.match(rgxMsg);
+const rgxMsg = /^((%|-)(\S+)-(\S)-(\S*)),\s(.*)$/;
+
+const rgxMsgCXX = /^((%|-)(CXX|CC)-(\S)-(\S*)),\s(.*)$/;
+const rgxPlaceCXX = /^at line number (\d.*) in file (.*)$/;
+const rgxMsgPosCXX = /^(\.*)\^/;
+
+const rgxMsgMMS = /^((%|-)(MMS)-(\S)-(\S*)),\s(.*)$/;
+const rgxMsgFileSintax = /(.*) in file (.*)$/;
+const rgxMsgFileAbort = /For target (.*), (.*)$/;
+const mmsExt = ".MMS";
+
+export function consolidateOutputLines(output: string, shellWidth?: number) {
+    const lines = output.split("\r\n");
+    const retLines = lines.reduce((acc, line, idx, source) => {
+        if (line.match(rgxMsg)) {
+            acc.push(line);
+            return acc;
+        }
+        if (idx > 0 && source[idx - 1].length === shellWidth) {
+            acc[acc.length - 1] += line;
+            return acc;
+        }
+        acc.push(line);
+        return acc;
+    }, [] as string[]);
+    return retLines;
+}
+
+export function parseVmsOutput(output: string, shellWidth?: number) {
+    const lines = consolidateOutputLines(output, shellWidth);
+    const result: IPartialDiagnostics[] = [];
+    lines.reduce(findCxxErrors, result);
+    lines.reduce(findMmsErrors, result);
+
+    return result;
+
+    function isVmsSeverity(o: any): o is VmsSeverity {
+        return Object.values(VmsSeverity).includes(o);
+    }
+
+    function findCxxErrors(problems: IPartialDiagnostics[], line: string, idx: number) {
+        const matched = line.match(rgxMsgCXX);
         if (matched) {
-            const diagnostic: IPartialDiagnostics = {};
-            switch (matched[4]) {
-                case "F":
-                case "E":
-                    diagnostic.severity = "error";
-                    break;
-                default:
-                    diagnostic.severity = "information";
+            const diagnostic: IPartialDiagnostics = {
+                severity: VmsSeverity.information,
+            };
+            const trySeverity = matched[4];
+            if (isVmsSeverity(trySeverity)) {
+                diagnostic.severity = trySeverity;
             }
             diagnostic.type = matched[5];
             diagnostic.message = matched[6];
+            // get position from previous line, as "..............^"
             if (idx > 0) {
                 const prevLine = lines[idx - 1];
-                const prevMathed = prevLine.match(rgxMsgPos);
+                const prevMathed = prevLine.match(rgxMsgPosCXX);
                 if (prevMathed) {
                     diagnostic.pos = prevMathed[0].length;
                 }
             }
-            let nextLineIdx = idx + 1;
-            while (nextLineIdx < lines.length) {
-                const nextLine = lines[nextLineIdx];
-                const nextLineMathed = nextLine.match(rgxPlace);
+            // get file and line
+            if (idx + 1 < lines.length) {
+                const nextLine = lines[idx + 1];
+                const nextLineMathed = nextLine.match(rgxPlaceCXX);
                 if (nextLineMathed) {
                     diagnostic.line = parseInt(nextLineMathed[1], 10);
                     diagnostic.file = nextLineMathed[2];
-                    break;
+                    const converter = VmsPathConverter.fromVms(diagnostic.file);
+                    diagnostic.file = converter.initial;
                 }
-                if (nextLine.match(rgxMsg)) { // another error line
-                    break;
-                }
-                diagnostic.message += nextLine;
-                ++nextLineIdx;
             }
             problems.push(diagnostic);
         }
         return problems;
-    }, [] as IPartialDiagnostics[]);
-    return result;
+    }
+
+    function findMmsErrors(problems: IPartialDiagnostics[], line: string, idx: number) {
+        const matched = line.match(rgxMsgMMS);
+        if (matched) {
+            const diagnostic: IPartialDiagnostics = {
+                severity: VmsSeverity.information,
+            };
+            const trySeverity = matched[4];
+            if (isVmsSeverity(trySeverity)) {
+                diagnostic.severity = trySeverity;
+            }
+            diagnostic.type = matched[5];
+            diagnostic.message = matched[6];
+            let matchFile = diagnostic.message.match(rgxMsgFileSintax);
+            if (matchFile) {
+                diagnostic.file = matchFile[2];
+                diagnostic.message = matchFile[1];
+            }
+            if (diagnostic.file === undefined) {
+                matchFile = diagnostic.message.match(rgxMsgFileAbort);
+                if (matchFile) {
+                    diagnostic.file = matchFile[1];
+                    diagnostic.message = matchFile[2];
+                }
+            }
+            if (diagnostic.file) {
+                const converter = VmsPathConverter.fromVms(diagnostic.file);
+                if (converter.file.includes(".")) {
+                    diagnostic.file = converter.initial;
+                } else {
+                    diagnostic.file = converter.initial + mmsExt;
+                }
+            }
+            problems.push(diagnostic);
+        }
+        return problems;
+    }
 }

@@ -18,7 +18,8 @@
         "onCommand:vmssoftware.synchronizer.stopSync",
         "onCommand:vmssoftware.synchronizer.buildProject",
         "onCommand:vmssoftware.synchronizer.syncProject",
-        "onCommand:vmssoftware.synchronizer.editProject"
+        "onCommand:vmssoftware.synchronizer.editProject",
+        "onUri"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -131,7 +132,7 @@
         "watch": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run compile && node ./node_modules/vscode/bin/test",
-        "get-ssh-helper-api": "PowerShell copy -Path ..\\ssh-helper\\out\\api.d.ts, ..\\ssh-helper\\out\\ssh-helper.d.ts -Destination src\\ssh",
+        "get-ext-api": "PowerShell copy -Path ..\\ssh-helper\\out\\api.d.ts, ..\\ssh-helper\\out\\ssh-helper.d.ts, ..\\config-helper\\out\\config\\config.d.ts -Destination src\\ext-api\\",
         "dir": "dir ..\\ssh-helper\\out"
     },
     "dependencies": {

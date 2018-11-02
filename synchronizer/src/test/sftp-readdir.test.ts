@@ -1,7 +1,7 @@
 import * as assert from "assert";
 
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
-import { SshHelper } from "../ssh/ssh-helper";
+import { SshHelper } from "../ext-api/ssh-helper";
 
 import { LogType } from "@vorfol/common";
 

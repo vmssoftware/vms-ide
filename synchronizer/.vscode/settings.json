@@ -18,5 +18,6 @@
     "vmssoftware.synchronizer.project.source": "*.{c,cpp}",
     "vmssoftware.synchronizer.synchronize.downloadNewFiles": "edit",
     "vmssoftware.synchronizer.synchronize.keepAlive": false,
-    "vmssoftware.synchronizer.synchronize.setTimeAttempts": 3
+    "vmssoftware.synchronizer.synchronize.setTimeAttempts": 3,
+    "files.eol": "\n"
 }

@@ -21,3 +21,4 @@ export declare class SshHelper {
     getTestSftp(host: string, port: number, username: string, password: string): Promise<ISftpClient>;
     getTestShell(host: string, port: number, username: string, password: string, isVms: boolean): Promise<ISshShell>;
 }
+//# sourceMappingURL=ssh-helper.d.ts.map

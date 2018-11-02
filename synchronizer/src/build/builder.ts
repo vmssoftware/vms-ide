@@ -1,4 +1,5 @@
 import fs from "fs";
+import micromatch from "micromatch";
 import path from "path";
 import util from "util";
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, Range, Uri, window, workspace } from "vscode";
@@ -10,7 +11,7 @@ import { ftpPathSeparator } from "@vorfol/common";
 import { ProjectSection } from "../config/sections/project";
 import { SynchronizeSection } from "../config/sections/synchronize";
 
-import { ISshShell } from "../ssh/api";
+import { ISshShell } from "../ext-api/api";
 
 import { parseVmsOutput } from "../common/parse-output";
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
@@ -18,7 +19,7 @@ import { EnsureSettings, synchronizerConfig } from "../ensure-settings";
 import { ToOutputChannel } from "../output-channel";
 import { FsSource } from "../sync/fs-source";
 import { synchronizer } from "../synchronize";
-import { VmsPathConverter } from "../vms/vms-path-converter";
+import { VmsPathConverter, vmsPathRgx } from "../vms/vms-path-converter";
 
 const fsReadFile = util.promisify(fs.readFile);
 
@@ -48,6 +49,8 @@ export class Builder {
         return [] as Error[];
     }
 
+    private allLocalFiles?: string[];
+
     constructor(public context: ExtensionContext, public debugLog?: LogType) {
 
     }
@@ -60,10 +63,12 @@ export class Builder {
         if (shell) {
             const answer = await shell.execCmd(`WRITE SYS$OUTPUT F$TRNLNM("SYS$LOGIN")`);
             if (answer) {
-                const converter = VmsPathConverter.fromVms(answer.split("\n")[1].trim());
-                this.shellRootConverter = converter;
+                const result = answer.split("\r\n").filter((s) => s.trim() !== "").map((s) => s.trim());
+                if (result.length > 1) {
+                    this.shellRootConverter = VmsPathConverter.fromVms(result[result.length - 1]);
+                }
                 if (this.debugLog) {
-                    this.debugLog(this.shellRootConverter.initial);
+                    this.debugLog(this.shellRootConverter);
                 }
             }
         }
@@ -81,13 +86,13 @@ export class Builder {
             });
     }
 
-    public async parseProblems(output: string) {
+    public async parseProblems(output: string, shellWidth?: number) {
         let cwd = "";
         if (this.shellRootConverter && this.projectRoot) {
             cwd = this.shellRootConverter.initial + this.projectRoot + ftpPathSeparator;
             cwd = cwd.toUpperCase();
         }
-        const result = parseVmsOutput(output);
+        const result = parseVmsOutput(output, shellWidth);
         const errMap = new Map<string, Diagnostic[]>();
         for (const entry of result) {
             if (entry.message) {
@@ -97,10 +102,14 @@ export class Builder {
                     diagnostic.range = new Range(entry.line - 1, entry.pos - 1, entry.line - 1, entry.pos);
                 }
                 switch (entry.severity) {
-                    case "error":
+                    case "E":
+                    case "F":
                         diagnostic.severity = DiagnosticSeverity.Error;
                         break;
-                    case "information":
+                    case "W":
+                        diagnostic.severity = DiagnosticSeverity.Warning;
+                        break;
+                    case "I":
                     default:
                         diagnostic.severity = DiagnosticSeverity.Information;
                         break;
@@ -119,10 +128,17 @@ export class Builder {
             let uri = Uri.file(file);
             if (file !== String(undefined) &&
                 workspace.workspaceFolders) {
-                const converter = VmsPathConverter.fromVms(file);
-                let localFile = converter.initial;
-                if (cwd && localFile.toUpperCase().startsWith(cwd)) {
-                    localFile = localFile.slice(cwd.length);
+                let localFile = file;
+                // cut cwd
+                if (cwd && file.toUpperCase().startsWith(cwd)) {
+                    localFile = file.slice(cwd.length);
+                }
+                // find case-insensitive
+                if (this.allLocalFiles) {
+                    const found = micromatch(this.allLocalFiles, localFile, { nocase: true });
+                    if (found.length === 1) {
+                        localFile = found[0];
+                    }
                 }
                 uri = Uri.file(path.join(workspace.workspaceFolders[0].uri.fsPath, localFile));
             }
@@ -155,13 +171,13 @@ export class Builder {
                 output = await shell.execCmd(command);
                 if (output) {
                     // parse
-                    return this.parseProblems(output)
+                    return this.parseProblems(output, shell.width)
                         .then((parseResults) => {
-                            // TODO: download listing
                             if (synchronizer) {
-                                synchronizer.downloadListings();
+                                return synchronizer.downloadListings();
+                            } else {
+                                return parseResults;
                             }
-                            return parseResults;
                         });
                 } else {
                     ToOutputChannel(localize("output.cannot_exec", "Cannot execute > {0}", command));
@@ -195,6 +211,9 @@ export class Builder {
                 SynchronizeSection.is(synchronizeSection)) {
                 this.projectRoot = projectSection.root;
                 shell = await sshHelper.getDefaultVmsShell();
+                if (shell) {
+                    shell.width = 32;
+                }
                 return true;
             }
             return false;
@@ -214,6 +233,12 @@ export class Builder {
             workspace.workspaceFolders.length > 0) {
             // get list of builders
             const localSource = new FsSource(workspace.workspaceFolders[0].uri.fsPath, this.debugLog);
+            localSource.findFiles("*", project.exclude)
+                .then((list) => {
+                    if (list) {
+                        this.allLocalFiles = list.map((f) => f.filename);
+                    }
+                });
             const items = await localSource.findFiles(project.builders, project.exclude);
             const selectItems = items.map((file) => file.filename);
             selectItems.push(Builder.createNewMmsString);

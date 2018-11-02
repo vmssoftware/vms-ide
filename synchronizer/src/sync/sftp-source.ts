@@ -3,7 +3,7 @@ import { ftpPathSeparator, LogType } from "@vorfol/common";
 import { IFileEntry } from "@vorfol/common";
 
 import { findFiles, leadingSepRg, middleSepRg, trailingSepRg } from "../common/find-files";
-import { IInputAttributes, ISftpClient } from "./../ssh/api";
+import { IInputAttributes, ISftpClient } from "./../ext-api/api";
 import { ISource } from "./source";
 
 export class SftpSource implements ISource {

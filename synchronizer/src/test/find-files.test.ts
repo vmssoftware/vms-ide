@@ -1,13 +1,13 @@
 import * as assert from "assert";
 
-import { IInputAttributes } from "../ssh/api";
-import { ISftpClient } from "../ssh/api";
+import { IInputAttributes } from "../ext-api/api";
+import { ISftpClient } from "../ext-api/api";
 
 import { LogType } from "@vorfol/common";
 
 import { findFiles } from "../common/find-files";
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
-import { SshHelper } from "../ssh/ssh-helper";
+import { SshHelper } from "../ext-api/ssh-helper";
 import { Vms } from "./config/vms";
 
 suite("SFTP directory tests", function(this: Mocha.Suite) {

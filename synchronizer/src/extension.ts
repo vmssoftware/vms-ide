@@ -35,6 +35,15 @@ export async function activate(context: ExtensionContext) {
         debugLogFn(localize("debug.activated", "OpenVMS extension is activated"));
     }
 
+    context.subscriptions.push( window.registerUriHandler({
+        handleUri(uri) {
+            if (debugLogFn) {
+                debugLogFn(`command: ${uri.path}`);
+                debugLogFn(`query: ${uri.query}`);
+                debugLogFn(`fragment: ${uri.fragment}`);
+            }
+        }}));
+
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async () => {
         return EnsureSettings(debugLogFn)
             .then((ok) => {

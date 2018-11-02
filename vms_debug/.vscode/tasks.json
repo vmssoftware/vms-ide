@@ -37,6 +37,11 @@
 			"problemMatcher": [
 				"$tsc"
 			]
+		},
+		{
+			"type": "gulp",
+			"task": "package",
+			"problemMatcher": []
 		}
 	]
 }

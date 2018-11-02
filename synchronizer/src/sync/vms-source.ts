@@ -4,7 +4,7 @@ import { LogType } from "@vorfol/common";
 import { printLike } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
 
-import { ISftpClient, ISshShell } from "../ssh/api";
+import { ISftpClient, ISshShell } from "../ext-api/api";
 import { VmsAbsoluteDateString } from "../vms/vms-absolute-date-string";
 import { VmsPathConverter } from "../vms/vms-path-converter";
 import { SftpSource } from "./sftp-source";
@@ -50,14 +50,14 @@ export class VmsSource extends SftpSource {
      */
     public createWriteStream(filename: string) {
         const streamPromise = super.createWriteStream(filename);
-        streamPromise.then((stream) => {
-            if (stream) {
-                stream.once("finish", () => {
-                    const converter = new VmsPathConverter(this.root + ftpPathSeparator + filename);
-                    this.tryExec(setFileFormatSTM + converter.fullPath, setFileErrorResponse);
-                });
-            }
-        });
+        // streamPromise.then((stream) => {
+        //     if (stream) {
+        //         stream.once("finish", () => {
+        //             const converter = new VmsPathConverter(this.root + ftpPathSeparator + filename);
+        //             this.tryExec(setFileFormatSTM + converter.fullPath, setFileErrorResponse);
+        //         });
+        //     }
+        // });
         return streamPromise;
     }
 

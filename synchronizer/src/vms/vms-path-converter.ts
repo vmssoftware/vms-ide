@@ -1,7 +1,7 @@
 import { ftpPathSeparator } from "@vorfol/common";
 
-const splitter = new RegExp(ftpPathSeparator, "g");
-const vmsPathRgx = /((\w+):)?(\[((\.)?(\w+)(\.(\w+))*)\])?(((\w+)(\.(\w+)?))?(;(\d+))?)?/;
+export const splitter = new RegExp(ftpPathSeparator, "g");
+export const vmsPathRgx = /((\w+):)?(\[((\.)?(\w+)(\.(\w+))*)\])?(((\w+)(\.(\w+)?)?)?(;(\d+))?)?/;
 /**
  * Uses path.sep to determine directory.
  * Do not use other path functions because it incorrect parses path without file (directory only, ends with path.sep)

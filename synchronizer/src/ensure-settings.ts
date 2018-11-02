@@ -1,4 +1,4 @@
-import { IConfig, IConfigHelper, IConfigSection } from "./config/config";
+import { IConfig, IConfigHelper, IConfigSection } from "./ext-api/config";
 
 import { LogType } from "@vorfol/common";
 

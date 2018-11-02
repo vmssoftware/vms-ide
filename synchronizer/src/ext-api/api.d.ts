@@ -52,6 +52,7 @@ export interface IPromptCatcher extends IShellParser {
 }
 export interface IParseWelcome extends IShellParser {
     prompt?: string;
+    width?: number;
 }
 export interface ISftpClient {
     lastSftpError?: Error | undefined;
@@ -70,9 +71,11 @@ export interface ISshShell {
     lastClientError?: Error;
     enabled: boolean;
     prompt?: string;
+    width?: number;
     setParsers(welcome?: IParseWelcome, prompter?: IPromptCatcher): void;
     dispose(): void;
     attachUser(user: Transform): Promise<boolean>;
     detachUser(): Promise<void>;
     execCmd(command: string): Promise<string | undefined>;
 }
+//# sourceMappingURL=api.d.ts.map
