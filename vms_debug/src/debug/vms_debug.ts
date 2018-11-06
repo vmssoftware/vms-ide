@@ -14,6 +14,7 @@ import { VMSRuntime, VMSBreakpoint } from './vms_runtime';
 import { ShellSession, ModeWork } from '../net/shell-session';
 import { DebugCmdVMS } from '../command/debug_commands';
 import { Queue } from '../queue/queues';
+import { LogFunction } from '@vorfol/common';
 const { Subject } = require('await-notify');
 
 
@@ -53,7 +54,7 @@ export class VMSDebugSession extends LoggingDebugSession
 	 * Creates a new debug adapter that is used for one debug session.
 	 * We configure the default implementation of a debug adapter here.
 	 */
-	public constructor(shell : ShellSession)
+	public constructor(shell : ShellSession, public logFn?: LogFunction)
 	{
 		super("vms-debug.txt");
 
@@ -61,7 +62,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.setDebuggerLinesStartAt1(false);
 		this.setDebuggerColumnsStartAt1(false);
 
-		this._runtime = new VMSRuntime(shell);
+		this._runtime = new VMSRuntime(shell, logFn);
 
 		// response event handlers
 		this._runtime.on(DebugCmdVMS.dbgExamine, (data : string) =>

@@ -1,15 +1,15 @@
 import { Readable } from "stream";
-import { LogType } from "./log-type";
+import { LogFunction, LogType } from "./log-type";
 
 export class MemoryReadStream extends Readable {
 
     public pos = 0;
 
-    constructor(public chunks?: Array<Buffer|null>, public debugLog?: LogType) {
+    constructor(public chunks?: Array<Buffer|null>, public debugLog?: LogFunction) {
         super();
         this.on("error", (err) => {
             if (this.debugLog) {
-                this.debugLog(`memstream error: ${err}`);
+                this.debugLog(LogType.error, () => `memstream error: ${err}`);
             }
         });
     }

@@ -1,4 +1,4 @@
-import { LogType, printLike } from "@vorfol/common";
+import { LogFunction, LogType, printLike } from "@vorfol/common";
 
 import { ShellParser } from "./shell-parser";
 import { IParseWelcome } from "../api";
@@ -15,7 +15,7 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
     }
     public set width(w: number | undefined) {
         if (w !== undefined &&
-            w > 16 && w < 255) {
+            w >= 16 && w <= 255) {
             this._width = w;
             this.ttCmd[1].then = this._setWidth(this._width);
         }
@@ -35,8 +35,8 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
     private _width = 132;
     private _setWidth = printLike`\x1B[24;${this._width}R`;
 
-    constructor(timeout?: number, debugLog?: LogType, tag?: string, width?: number) {
-        super(timeout, debugLog, tag);
+    constructor(timeout?: number, logFn?: LogFunction, tag?: string, width?: number) {
+        super(timeout, logFn, tag);
         this.width = width;
     }
 
@@ -50,16 +50,16 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
             const promptIdx = chunk.indexOf(0);
             if (promptIdx >= 0) {
                 this.prompt = chunk.slice(promptIdx + 1).toString("utf8");
-                if (this.debugLog) { 
-                    this.debugLog(localize("debug.prompt", "vms parse: found prompt '{0}'", this.prompt)); 
+                if (this.logFn) { 
+                    this.logFn(LogType.debug, () => localize("debug.prompt", "vms parse: found prompt '{0}'", this.prompt)); 
                 }
                 this.setReady();
             }
             // speed up shell :)
             this.ttCmd.some((tt, idx) => {
                 if (chunk.includes(tt.if)) {
-                    if (this.debugLog) { 
-                        this.debugLog(localize("debug.tt", "vms parse: found tt {0}", idx)); 
+                    if (this.logFn) { 
+                        this.logFn(LogType.debug, () => localize("debug.tt", "vms parse: found tt {0}", idx)); 
                     }
                     this.push(tt.then);
                     return true;

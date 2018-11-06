@@ -1,7 +1,7 @@
 
 import { Uri, window } from "vscode";
 
-import { LogType } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 import { IConfig, IConfigEditor } from "./config";
 
 // import * as nls from "vscode-nls";
@@ -10,7 +10,7 @@ import { IConfig, IConfigEditor } from "./config";
 
 export class UriEditor implements IConfigEditor {
 
-    constructor(protected uri: Uri, protected cfg: IConfig, public debugLog?: LogType) {
+    constructor(protected uri: Uri, protected cfg: IConfig, public logFn?: LogFunction) {
 
     }
 

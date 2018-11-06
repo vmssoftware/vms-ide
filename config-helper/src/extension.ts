@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { LogType } from "@vorfol/common";
+import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
 
 import { IConfigHelper } from "./config/config";
 import { FSConfigHelper } from "./config/fs-config-helper";
@@ -8,14 +8,11 @@ import { TestSection } from "./config/test-section";
 import { VFSConfigHelper } from "./config/vfs-config-helper";
 import { VSCConfigHelper } from "./config/vsc-config-helper";
 
-let debugLogFn: LogType | undefined;
-debugLogFn = undefined;
-// tslint:disable-next-line:no-console
-debugLogFn = console.log;
-
 const locale = vscode.env.language ;
 import * as nls from "vscode-nls";
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
+
+const logFn = logConsoleFn;
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -25,27 +22,21 @@ export function activate(context: vscode.ExtensionContext) {
     switch (using) {
         case "FS":
             configHelperType = FSConfigHelper;
-            if (debugLogFn) {
-                debugLogFn(localize("message.created", "{0} created", "FS"));
-            }
+            logFn(LogType.informtion, () => localize("message.created", "{0} created", "FS"));
             break;
         case "VFS":
             configHelperType = VFSConfigHelper;
-            if (debugLogFn) {
-                debugLogFn(localize("message.created", "{0} created", "VFS"));
-            }
+            logFn(LogType.informtion, () => localize("message.created", "{0} created", "VFS"));
             break;
         default:
             configHelperType = VSCConfigHelper;
-            if (debugLogFn) {
-                debugLogFn(localize("message.created", "{0} created", "VSC"));
-            }
+            logFn(LogType.informtion, () => localize("message.created", "{0} created", "VSC"));
             break;
     }
 
     context.subscriptions.push( vscode.commands.registerCommand("vmssoftware.config-helper.test", async () => {
         //
-        const configHelper: IConfigHelper = configHelperType.getConfigHelper("vmssoftware");
+        const configHelper: IConfigHelper = configHelperType.getConfigHelper("vmssoftware", logFn);
         let test = await configHelper.getConfig().get(TestSection.section);
         if (!TestSection.is(test)) {
             configHelper.getConfig().add(new TestSection());

@@ -5,6 +5,7 @@ export * from "./delay";
 export * from "./directory";
 export * from "./lock";
 export * from "./log-type";
+export * from "./log";
 export * from "./mem-writer";
 export * from "./mem-reader";
 export * from "./print-like";

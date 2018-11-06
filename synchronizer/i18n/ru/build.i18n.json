@@ -1,6 +1,7 @@
 {
     "message.build.ok": "Построение успешно",
     "output.build.done": "Построение завершено",
+    "error.build_result": "Build returns false",
     "message.build.wrong": "Построение неуспешно, смотрите окно вывода сообщений",
     "output.build.failed": "Построение неуспешно"
 }

@@ -1,11 +1,11 @@
 ! MMS - run with /EXTENDED_SYNTAX qualifier
-! .SILENT
-.DEFAULT 
-    ! action: $(MMS$SOURCE) to $(MMS$TARGET) 
+.SILENT
 
-! Project constants
-OUTDIR = out
-NAME = project
+! Project constants, files must be defined as VMS paths
+! OUTDIR
+! NAME
+! INCLUDES
+! SOURCES
 
 ! Debug or Release
 .IF DEBUG
@@ -23,28 +23,17 @@ LINKFLAGS = /EXECUTABLE=$(MMS$TARGET)
 ! Object directory
 OBJ_DIR = $(OUT_DIR).obj
 
-! Files
-INCLUDES =  - 
-    , [.include]increment.h -
-    , [.include]decrement.h
-
-SOURCES = -
-    , main.cpp -
-    , increment.cpp -
-    , decrement.c
-
-OBJECTS = -
-    , [$(OBJ_DIR)]main.obj -
-    , [$(OBJ_DIR)]increment.obj -
-    , [$(OBJ_DIR)]decrement.obj
+OBJECTS = $(JOIN $(PATSUBST *,[*],$(PATSUBST *[*],**,$(SUBST [],,$(ADDPREFIX $(OBJ_DIR),$(DIR $(SOURCES)))))),$(ADDSUFFIX .OBJ, $(NOTDIR $(BASENAME $(SOURCES)))))
 
 .SUFFIXES
 .SUFFIXES .EXE .OBJ .CPP .C
 
 .CPP.OBJ
+    @- pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:
     $(CXX) $(CXXFLAGS) $(MMS$SOURCE)
 
 .C.OBJ
+    @- pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:
     $(CC) $(CCFLAGS) $(MMS$SOURCE)
 
 [$(OUT_DIR)]$(NAME).exe DEPENDS_ON $(OBJECTS)
@@ -53,13 +42,5 @@ OBJECTS = -
 $(OBJECTS) DEPENDS_ON $(SOURCES) $(INCLUDES)
 
 CLEAN :
-    @ FILE = F$SEARCH("[$(OUT_DIR)]*.*")
-    @ IF FILE .NES. "" THEN - 
-        del/tree [$(OUT_DIR)...]*.*;*
-
-.FIRST
-    @ VAR = "$(MMS$TARGET)"
-    @ IF VAR .NES. "CLEAN" THEN - 
-        VAR = F$SEARCH("[$(OUT_DIR)]obj.dir")
-    @ IF VAR .EQS. "" THEN  - 
-        create/dir [$(OBJ_DIR)]
+    pipe del/tree [$(OUT_DIR)...]*.*;* | copy SYS$INPUT nl:
+        

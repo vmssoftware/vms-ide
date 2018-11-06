@@ -1,4 +1,4 @@
-import { LogType } from "./log-type";
+import { LogFunction, LogType } from "./log-type";
 
 /**
  * Collects all calls and fire only one if during _msec were no more calls
@@ -9,30 +9,30 @@ export class Debouncer {
 
     protected timer: NodeJS.Timer | undefined = undefined;
 
-    constructor(protected msec: number, public debugLog?: LogType) {
+    constructor(protected msec: number, public debugLog?: LogFunction) {
 
     }
 
     public async debounce() {
         if (this.debugLog) {
-            this.debugLog("debounce: start");
+            this.debugLog(LogType.debug, () => "debounce: start");
         }
         if (this.timer) {
             if (this.debugLog) {
-                this.debugLog("debounce: timer exists - clear timer");
+                this.debugLog(LogType.debug, () => "debounce: timer exists - clear timer");
             }
             clearTimeout(this.timer);
         }
         if (this.debugLog) {
-            this.debugLog("debounce: creating promise");
+            this.debugLog(LogType.debug, () => "debounce: creating promise");
         }
         return new Promise((resolve) => {
             if (this.debugLog) {
-                this.debugLog("debounce: creating timer");
+                this.debugLog(LogType.debug, () => "debounce: creating timer");
             }
             this.timer = setTimeout(() => {
                 if (this.debugLog) {
-                    this.debugLog("debounce: timer fired");
+                    this.debugLog(LogType.debug, () => "debounce: timer fired");
                 }
                 this.timer = undefined;
                 resolve();

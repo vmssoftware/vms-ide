@@ -3,7 +3,7 @@ import { Event } from "vscode";
 import { SftpClient } from "./stream/sftp-client";
 import { SshShell } from "./stream/ssh-shell";
 
-import { LogType, IFileEntry } from "@vorfol/common";
+import { LogType, IFileEntry, LogFunction } from "@vorfol/common";
 
 import { IConfig, IConfigSection, IConfigHelper } from "./config/config";
 import { GetConfigHelperFromApi } from "./config/get-config-helper";
@@ -34,7 +34,7 @@ export class SshHelper {
 
     public onDidLoadConfig?: Event<null>;
 
-    constructor(public debugLog?: LogType) {
+    constructor(public logFn?: LogFunction) {
         this.section = "vmssoftware.ssh-helper";
         this.sections.push(new ConnectionSection());
         this.sections.push(new TimeoutsSection());
@@ -53,8 +53,8 @@ export class SshHelper {
             dest: ICanCreateWriteStream,
             file: string,
             destFile?: string,
-            debugLog?: LogType) {
-        return PipeFile(source, dest, file, destFile, debugLog);
+            logFn?: LogFunction) {
+        return PipeFile(source, dest, file, destFile, logFn);
     }
 
     public memStream(): IMemoryStreamCreator {
@@ -83,8 +83,8 @@ export class SshHelper {
         if (ConnectionSection.is(connectionSection) &&
             TimeoutsSection.is(timeoutSection)) {
             const fillers = [new PasswordVscodeFiller()];
-            const resolver = new ConnectConfigResolverImpl(fillers, timeoutSection.feedbackTimeout, this.debugLog);
-            const sftp = new SftpClient(connectionSection, resolver, this.debugLog);
+            const resolver = new ConnectConfigResolverImpl(fillers, timeoutSection.feedbackTimeout, this.logFn);
+            const sftp = new SftpClient(connectionSection, resolver, this.logFn);
             return sftp as ISftpClient;
         }
         return undefined;
@@ -103,10 +103,10 @@ export class SshHelper {
         if (ConnectionSection.is(connectionSection) &&
             TimeoutsSection.is(timeoutSection)) {
             const fillers = [new PasswordVscodeFiller()];
-            const resolver = new ConnectConfigResolverImpl(fillers, timeoutSection.feedbackTimeout, this.debugLog);
-            const welcome = new ParseWelcomeVms(timeoutSection.welcomeTimeout, this.debugLog);
-            const prompter = new PromptCatcherVms("", timeoutSection.cmdTimeout, this.debugLog);
-            const shell = new SshShell(connectionSection, resolver, welcome, prompter, this.debugLog);
+            const resolver = new ConnectConfigResolverImpl(fillers, timeoutSection.feedbackTimeout, this.logFn);
+            const welcome = new ParseWelcomeVms(timeoutSection.welcomeTimeout, this.logFn);
+            const prompter = new PromptCatcherVms("", timeoutSection.cmdTimeout, this.logFn);
+            const shell = new SshShell(connectionSection, resolver, welcome, prompter, this.logFn);
             return shell as ISshShell;
         }
         return undefined;
@@ -137,8 +137,8 @@ export class SshHelper {
         // then ensure all are loaded
         for (const section of this.sections) {
             const testSection = await this.config.get(section.name());
-            if (this.debugLog && typeof section !== typeof testSection) {
-                this.debugLog(localize("debug.diff", "Different types of sections {0}", section.name()));
+            if (this.logFn && typeof section !== typeof testSection) {
+                this.logFn(LogType.debug, () => localize("debug.diff", "Different types of sections {0}", section.name()));
                 return false;
             }
         }
@@ -148,17 +148,17 @@ export class SshHelper {
     
     public async getTestSftp(host: string, port: number, username: string, password: string) {
         const fillers = [new ConstPasswordFiller(password)];
-        const resolver = new ConnectConfigResolverImpl(fillers, 0, this.debugLog);
-        const sftp = new SftpClient({host, port, username}, resolver, this.debugLog);
+        const resolver = new ConnectConfigResolverImpl(fillers, 0, this.logFn);
+        const sftp = new SftpClient({host, port, username}, resolver, this.logFn);
         return sftp as ISftpClient;
     }
 
     public async getTestShell(host: string, port: number, username: string, password: string, isVms: boolean) {
         const fillers = [new ConstPasswordFiller(password)];
-        const resolver = new ConnectConfigResolverImpl(fillers, 0, this.debugLog);
-        const welcome = isVms ? new ParseWelcomeVms(0, this.debugLog) : undefined;
-        const prompter = isVms ? new PromptCatcherVms("", 0, this.debugLog) : undefined;
-        const sftp = new SshShell({host, port, username}, resolver, welcome, prompter, this.debugLog);
+        const resolver = new ConnectConfigResolverImpl(fillers, 0, this.logFn);
+        const welcome = isVms ? new ParseWelcomeVms(0, this.logFn) : undefined;
+        const prompter = isVms ? new PromptCatcherVms("", 0, this.logFn) : undefined;
+        const sftp = new SshShell({host, port, username}, resolver, welcome, prompter, this.logFn);
         return sftp as ISshShell;
     }
 

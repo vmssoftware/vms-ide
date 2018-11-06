@@ -1,5 +1,5 @@
 
-import { Lock } from "@vorfol/common";
+import { Lock, LogFunction } from "@vorfol/common";
 import { LogType } from "@vorfol/common";
 import { printLike } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
@@ -22,7 +22,7 @@ export class VmsSource extends SftpSource {
     constructor(sftp: ISftpClient,
                 protected shell: ISshShell,
                 root?: string,
-                debugLog?: LogType,
+                debugLog?: LogFunction,
                 attempts?: number) {
         super(sftp, root, debugLog, attempts);
     }
@@ -66,9 +66,9 @@ export class VmsSource extends SftpSource {
         do {
             const result = await this.shell.execCmd(command);
             if (result) {
-                const error = result.split("\n").map((s) => s.trim()).some((s) => s.startsWith(errorResponse));
+                const error = result.some((s) => s.startsWith(errorResponse));
                 if (error && this.debugLog) {
-                    this.debugLog(`ERROR: ${command} => ${result}`);
+                    this.debugLog(LogType.debug, () => `ERROR: ${command} => ${result}`);
                 } else {
                     return true;    // good return here
                 }
@@ -90,7 +90,7 @@ export class VmsSource extends SftpSource {
             this.timeOffetLock.release();
             return false;
         }
-        result.split("\n").some((line) => {
+        result.some((line) => {
             const time = Number.parseInt(line, 10);
             if (typeof time === "number" &&
                 Number.isInteger(time)) {

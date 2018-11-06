@@ -1,6 +1,4 @@
 {
     "debug.activated": "Расширение 'OpenVMS синхронизация' активировано",
-    "message.synchronizing": "Синхронизация...",
-    "message.building": "Построение...",
     "debug.deactivated": "Расширение 'OpenVMS синхронизация' выгружено"
 }

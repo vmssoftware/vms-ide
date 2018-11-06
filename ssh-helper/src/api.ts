@@ -1,5 +1,5 @@
 import { Readable, Writable, Transform } from "stream";
-import { IFileEntry, LogType, MemoryReadStream, MemoryWriteStream } from "@vorfol/common";
+import { IFileEntry, LogType, MemoryReadStream, MemoryWriteStream, LogFunction } from "@vorfol/common";
 
 export interface ICanCreateReadStream {
     createReadStream(file: string): Promise<Readable | undefined>;
@@ -12,7 +12,7 @@ export interface ICanCreateWriteStream {
 export interface IMemoryStreamCreator extends ICanCreateReadStream, ICanCreateWriteStream {
     chunks?: (Buffer | null)[] | undefined;
     emulateError?: boolean | undefined;
-    debugLog?: LogType | undefined;
+    logFn?: LogFunction | undefined;
     readStream?: MemoryReadStream;
     writeStream?: MemoryWriteStream;
     createReadStream(file: string): Promise<Readable>;
@@ -64,8 +64,6 @@ export interface IParseWelcome extends IShellParser {
 }
 
 export interface ISftpClient {
-    lastSftpError?: Error | undefined;    
-    lastClientError?: Error | undefined;
     enabled: boolean;
     createReadStream(file: string): Promise<Readable | undefined>;
     createWriteStream(file: string): Promise<Writable | undefined>;
@@ -77,8 +75,6 @@ export interface ISftpClient {
 }
 
 export interface ISshShell {
-    lastShellError?: Error;    
-    lastClientError?: Error;
     enabled: boolean;
     prompt?: string;
     width?: number;
@@ -86,6 +82,6 @@ export interface ISshShell {
     dispose(): void;
     attachUser(user: Transform): Promise<boolean>;
     detachUser(): Promise<void>;
-    execCmd(command: string): Promise<string | undefined>;
+    execCmd(command: string): Promise<string[] | undefined>;
 }
 

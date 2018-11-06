@@ -5,6 +5,7 @@
     "tasks": [
         {
             "type": "typescript",
+            "label": "tsc: build",
             "tsconfig": "tsconfig.json",
             "problemMatcher": [
                 "$tsc"
@@ -13,6 +14,11 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "npm",
+            "script": "publishing",
+            "problemMatcher": []
         }
     ]
 }

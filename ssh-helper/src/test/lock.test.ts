@@ -1,6 +1,6 @@
 import * as assert from "assert";
 
-import { Delay } from "@vorfol/common";
+import { Delay, LogFunction } from "@vorfol/common";
 import { LogType } from "@vorfol/common";
 import { Lock } from "@vorfol/common";
 
@@ -10,7 +10,7 @@ suite("Lock tests", function(this: Mocha.Suite) {
 
     this.timeout(0);
 
-    let debugLogFn: LogType | undefined;
+    let debugLogFn: LogFunction | undefined;
     debugLogFn = undefined;
     // tslint:disable-next-line:no-console
     // debugLogFn = console.log;
@@ -64,15 +64,15 @@ suite("Lock tests", function(this: Mocha.Suite) {
         assert.ok( true, "must be true");
     });
 
-    async function TestLock(num: number, debugLog?: LogType)  {
-        const lock = new Lock(false); // , "test", debugLog);
+    async function TestLock(num: number, logFn?: LogFunction)  {
+        const lock = new Lock(false); // , "test", logFn);
         assert.equal(lock.isLocked, false, "Must be Unlocked");
         const all = [];
         let resource = true;
         for (let i = 0; i < num; ++i) {
             all.push(Promise.resolve().then(async () => {
                 if (debugLogFn) {
-                    debugLogFn(`enter ${i}`);
+                    debugLogFn(LogType.debug, () => `enter ${i}`);
                 }
                 await lock.acquire();
                 assert.equal(resource, true, `Resource must be TRUE ${i}`);
@@ -82,7 +82,7 @@ suite("Lock tests", function(this: Mocha.Suite) {
                 resource = true;
                 lock.release();
                 if (debugLogFn) {
-                    debugLogFn(`exit ${i}`);
+                    debugLogFn(LogType.debug, () => `exit ${i}`);
                 }
             }));
         }

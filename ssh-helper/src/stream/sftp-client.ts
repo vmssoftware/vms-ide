@@ -2,7 +2,7 @@ import { ConnectConfig, SFTPWrapper } from "ssh2";
 import { FileEntry } from "ssh2-streams";
 import stream = require("stream");
 
-import { Lock }                     from "@vorfol/common";
+import { Lock, LogFunction }                     from "@vorfol/common";
 import { LogType }                  from "@vorfol/common";
 import { IUnSubscribe, Subscribe }  from "@vorfol/common";
 import { WaitableOperation }        from "@vorfol/common";
@@ -19,8 +19,6 @@ const localize = nls.loadMessageBundle();
 
 export class SftpClient extends SshClient {
 
-    public lastSftpError?: Error;
-
     protected sftp?: SFTPWrapper;
     protected waitOperation = new Lock(undefined, "waitOperation");
 
@@ -30,9 +28,9 @@ export class SftpClient extends SshClient {
 
     constructor(public config: ConnectConfig,
                 resolver?: IConnectConfigResolver,
-                debugLog?: LogType,
+                logFn?: LogFunction,
                 tag?: string) {
-        super(config, resolver, debugLog, tag);
+        super(config, resolver, logFn, tag);
     }
 
     public async createReadStream(file: string) {
@@ -46,8 +44,8 @@ export class SftpClient extends SshClient {
         this.waitOperation.release();
         if (readStream) {
             readStream.on("error", (err) => {
-                if (this.debugLog) {
-                    this.debugLog(localize("debug.read.err", "read stream{0} error: {1}", this.tag ? " " + this.tag : "", String(err)));
+                if (this.logFn) {
+                    this.logFn(LogType.debug, () => localize("debug.read.err", "read stream{0} error: {1}", this.tag ? " " + this.tag : "", err.message));
                 }
             });
         }
@@ -65,8 +63,8 @@ export class SftpClient extends SshClient {
         this.waitOperation.release();
         if (writeStream) {
             writeStream.on("error", (err) => {
-                if (this.debugLog) {
-                    this.debugLog(localize("debug.write.err", "write stream{0} error: {1}", this.tag ? " " + this.tag : "", String(err)));
+                if (this.logFn) {
+                    this.logFn(LogType.debug, () => localize("debug.write.err", "write stream{0} error: {1}", this.tag ? " " + this.tag : "", err.message));
                 }
             });
         }
@@ -85,15 +83,15 @@ export class SftpClient extends SshClient {
                     }
                     return !this.sftp.stat(file, (err, stat) => {
                         if (err) {
-                            if (this.debugLog) {
-                                this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, err));
+                            if (this.logFn) {
+                                this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
                             }
                         } else {
                             statRet = stat;
                         }
                         complete.release();
                     });
-                }, this.debugLog);
+                }, this.logFn);
             }
         }
         this.waitOperation.release();
@@ -111,13 +109,13 @@ export class SftpClient extends SshClient {
                     }
                     return !this.sftp.setstat(file, stat, (err) => {
                         if (err) {
-                            if (this.debugLog) {
-                                this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, err));
+                            if (this.logFn) {
+                                this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
                             }
                         }
                         complete.release();
                     });
-                }, this.debugLog);
+                }, this.logFn);
             }
         }
         this.waitOperation.release();
@@ -136,15 +134,15 @@ export class SftpClient extends SshClient {
                     }
                     return !this.sftp.readdir(directory, (err, list) => {
                         if (err) {
-                            if (this.debugLog) {
-                                this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, err));
+                            if (this.logFn) {
+                                this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
                             }
                         } else {
                             files = list;
                         }
                         complete.release();
                     });
-                }, this.debugLog);
+                }, this.logFn);
             }
         }
         this.waitOperation.release();
@@ -183,15 +181,15 @@ export class SftpClient extends SshClient {
                         }
                         return !this.sftp.mkdir(directory, (err) => {
                             if (err) {
-                                if (this.debugLog) {
-                                    this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, err));
+                                if (this.logFn) {
+                                    this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
                                 }
                             } else {
                                 retCode = true;
                             }
                             complete.release();
                         });
-                    }, this.debugLog);
+                    }, this.logFn);
                 }
             }
         }
@@ -233,37 +231,36 @@ export class SftpClient extends SshClient {
                 }
                 return !this.client.sftp((err, sftpGot) => {
                     if (err) {
-                        if (this.debugLog) {
-                            this.debugLog(localize("debug.operation.error", "{0} error: {1}", opName, String(err)));
+                        if (this.logFn) {
+                            this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
                         }
                     } else {
-                        if (this.debugLog) {
-                            this.debugLog(localize("debug.sftp.ready", "sftp{0} ready", this.tag ? " " + this.tag : ""));
+                        if (this.logFn) {
+                            this.logFn(LogType.debug, () => localize("debug.sftp.ready", "sftp{0} ready", this.tag ? " " + this.tag : ""));
                         }
                         this.sftp = sftpGot;
                         this.sftpEnd = Subscribe(this.sftp, "end", () => {
-                            if (this.debugLog) {
-                                this.debugLog(localize("debug.sftp.end", "sftp{0} end", this.tag ? " " + this.tag : ""));
+                            if (this.logFn) {
+                                this.logFn(LogType.debug, () => localize("debug.sftp.end", "sftp{0} end", this.tag ? " " + this.tag : ""));
                             }
                             this.cleanSftp();
                         });
                         this.sftpError = Subscribe(this.sftp, "error", (sftpError) => {
-                            if (this.debugLog) {
-                                this.debugLog(localize("debug.sftp.error", "sftp{0} error: {1}", this.tag ? " " + this.tag : "", sftpError));
+                            if (this.logFn) {
+                                this.logFn(LogType.error, () => localize("debug.sftp.error", "sftp{0} error: {1}", this.tag ? " " + this.tag : "", String(sftpError)));
                             }
-                            this.lastSftpError = sftpError;
                             this.cleanSftp();
                         });
                         this.sftpClose = Subscribe(this.sftp, "close", () => {
-                            if (this.debugLog) {
-                                this.debugLog(localize("debug.sftp.close", "sftp{0} close", this.tag ? " " + this.tag : ""));
+                            if (this.logFn) {
+                                this.logFn(LogType.debug, () => localize("debug.sftp.close", "sftp{0} close", this.tag ? " " + this.tag : ""));
                             }
                             this.cleanSftp();
                         });
                     }
                     complete.release();
                 });
-            }, this.debugLog);
+            }, this.logFn);
         }
         return this.sftp !== undefined;
     }

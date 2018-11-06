@@ -3,7 +3,7 @@ import * as assert from "assert";
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
 import { SshHelper } from "../ext-api/ssh-helper";
 
-import { LogType } from "@vorfol/common";
+import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
 
 suite("Directory tests", function(this: Mocha.Suite) {
 
@@ -11,10 +11,8 @@ suite("Directory tests", function(this: Mocha.Suite) {
 
     this.timeout(0);
 
-    let debugLogFn: LogType | undefined;
-    debugLogFn = undefined;
-    // tslint:disable-next-line:no-console
-    debugLogFn = console.log;
+    let debugLogFn: LogFunction | undefined;
+    debugLogFn = logConsoleFn;
 
     let sshHelper: SshHelper;
 

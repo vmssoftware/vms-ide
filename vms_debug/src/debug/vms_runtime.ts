@@ -12,7 +12,7 @@ import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
 import { DebugParser, MessageDebuger } from '../parsers/debug_parser';
 import { workspace, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import {ToOutputChannel} from '../io/output-channel';
+import { LogFunction, LogType } from '@vorfol/common';
 
 
 export interface VMSBreakpoint
@@ -69,7 +69,7 @@ export class VMSRuntime extends EventEmitter
 	private breakpointId = 1;
 
 
-	constructor(shell : ShellSession)
+	constructor(shell : ShellSession, public logFn?: LogFunction)
 	{
 		super();
 
@@ -537,7 +537,10 @@ export class VMSRuntime extends EventEmitter
 
 			if(messageCommand !== "")
 			{
-				ToOutputChannel(messageCommand);
+				if (this.logFn)
+				{
+					this.logFn(LogType.informtion, () => messageCommand);
+				}
 			}
 			if(messageData !== "")
 			{
@@ -558,7 +561,10 @@ export class VMSRuntime extends EventEmitter
 			}
 			if(messageDebug !== "")
 			{
-				ToOutputChannel(messageDebug);
+				if (this.logFn)
+				{
+					this.logFn(LogType.informtion, () => messageDebug);
+				}
 				vscode.debug.activeDebugConsole.append(messageDebug);
 
 				if(messageDebug.includes(MessageDebuger.msgEnd))
@@ -568,7 +574,10 @@ export class VMSRuntime extends EventEmitter
 			}
 			if(messageUser !== "")
 			{
-				ToOutputChannel(messageUser);
+				if (this.logFn)
+				{
+					this.logFn(LogType.informtion, () => messageUser);
+				}
 				vscode.debug.activeDebugConsole.append(messageUser);
 			}
 

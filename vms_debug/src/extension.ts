@@ -10,8 +10,9 @@ import { VMSDebugSession } from './debug/vms_debug';
 import { ShellSession, ModeWork } from './net/shell-session';
 import * as Net from 'net';
 import * as nls from 'vscode-nls';
-import {ToOutputChannel, GetOutputChannel} from './io/output-channel';
 import { VMSNoDebugSession } from './debug/vms_debug_run';
+import { createLogFunction } from './log';
+import { LogType } from '@vorfol/common';
 
 
 export enum TypeRunConfig
@@ -30,12 +31,13 @@ let sessionRun : VMSNoDebugSession | undefined;
 let serverIsConnect : boolean = false;
 let typeRunConfig : TypeRunConfig = TypeRunConfig.TypeRunNone;
 
+const logFn = createLogFunction("VMS Debug");
 
 export function activate(context: vscode.ExtensionContext)
 {
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.connect', () =>
 	{
-		shell = new ShellSession(ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, console.log);
+		shell = new ShellSession(ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, logFn);
 
 		const message = localize('extention.conecting', "Connecting to the server");
 		vscode.window.showInformationMessage(message);
@@ -78,8 +80,7 @@ let ExtensionReadyCb = function() : void
 
 	const message = localize('extention.connected', "Connected to the server");
 	vscode.window.showInformationMessage(message);
-	ToOutputChannel(message);
-	GetOutputChannel().show();
+	logFn(LogType.informtion, () => message);
 };
 
 let ExtensionCloseCb = function() : void
@@ -88,8 +89,7 @@ let ExtensionCloseCb = function() : void
 
 	const message = localize('extention.closed', "Connection is closed");
 	vscode.window.showInformationMessage(message);
-	ToOutputChannel(message);
-	GetOutputChannel().show();
+	logFn(LogType.informtion, () => message);
 
 	if(session)
 	{
@@ -134,7 +134,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 					// start listening on a random port
 					this.serverDbg = Net.createServer(socket =>
 					{
-						session = new VMSDebugSession(shell);
+						session = new VMSDebugSession(shell, logFn);
 						session.setRunAsServer(true);
 						session.start(<NodeJS.ReadableStream>socket, socket);
 					}).listen(0);
@@ -153,7 +153,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 					// start listening on a random port
 					this.serverNoDbg = Net.createServer(socket =>
 					{
-						sessionRun = new VMSNoDebugSession(shell);
+						sessionRun = new VMSNoDebugSession(shell, logFn);
 						sessionRun.setRunAsServer(true);
 						sessionRun.start(<NodeJS.ReadableStream>socket, socket);
 					}).listen(0);

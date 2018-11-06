@@ -1,7 +1,7 @@
 
 import { workspace, WorkspaceConfiguration } from "vscode";
 
-import { LogType } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 import { CSAResult, IConfigData, IConfigStorage, ValueData } from "./config";
 
 // import * as nls from "vscode-nls";
@@ -15,12 +15,14 @@ export class VSCConfigStorage implements IConfigStorage {
 
     protected storePromise: Promise<CSAResult> | undefined;
 
-    constructor(protected section: string, public debugLog?: LogType) {
+    constructor(protected section: string, public logFn?: LogFunction) {
 
     }
 
     public fillStart(): Promise<CSAResult> {
-        if (this.debugLog) { this.debugLog("fillStart ="); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "fillStart =");
+        }
         return Promise.resolve(CSAResult.ok);
     }
 
@@ -30,17 +32,23 @@ export class VSCConfigStorage implements IConfigStorage {
         for (const key in data) {
             data[key] = this.setCfgValue(data[key], `${section}.${key}`, configuration);
         }
-        if (this.debugLog) { this.debugLog("fillData => ok " + section); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "fillData => ok " + section);
+        }
         return Promise.resolve(CSAResult.ok);
     }
 
     public fillEnd(): Promise<CSAResult> {
-        if (this.debugLog) { this.debugLog("fillEnd"); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "fillEnd");
+        }
         return Promise.resolve(CSAResult.ok);
     }
 
     public storeStart(): Promise<CSAResult> {
-        if (this.debugLog) { this.debugLog("storeStart"); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "storeStart");
+        }
         return Promise.resolve(CSAResult.ok);
     }
 
@@ -57,15 +65,21 @@ export class VSCConfigStorage implements IConfigStorage {
                 try {
                     await configuration.update(cfgKey, data[key]);
                 } catch (err) {
-                    if (this.debugLog) { this.debugLog("update failed: " + cfgKey); }
+                    if (this.logFn) {
+                        this.logFn(LogType.debug, () => "update failed: " + cfgKey);
+                    }
                     if (err instanceof Error) {
-                        if (this.debugLog) { this.debugLog(err.message); }
+                        if (this.logFn) {
+                            this.logFn(LogType.debug, () => err.message);
+                        }
                     }
                     // tslint:disable-next-line:no-bitwise
                     retCode |= CSAResult.some_data_failed;
                 }
             }
-            if (this.debugLog) { this.debugLog("storeData " + section); }
+            if (this.logFn) {
+                this.logFn(LogType.debug, () => "storeData " + section);
+            }
             resolve(retCode);
             this.storePromise = undefined;
         });
@@ -73,7 +87,9 @@ export class VSCConfigStorage implements IConfigStorage {
     }
 
     public storeEnd(): Promise<CSAResult> {
-        if (this.debugLog) { this.debugLog("storeEnd ="); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "storeEnd =");
+        }
         return Promise.resolve(CSAResult.ok);
     }
 

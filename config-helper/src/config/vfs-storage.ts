@@ -1,6 +1,6 @@
 import { Position, Range, Uri, workspace, WorkspaceEdit } from "vscode";
 
-import { LogType } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 import { CSAResult } from "./config";
 import { FSConfigStorage } from "./fs-storage";
 
@@ -13,12 +13,14 @@ import { FSConfigStorage } from "./fs-storage";
  */
 export class VFSConfigStorage extends FSConfigStorage {
 
-    constructor(protected fileUri: Uri, public debugLog?: LogType) {
+    constructor(protected fileUri: Uri, public logFn?: LogFunction) {
         super(fileUri.fsPath);
     }
 
     public fillStart(): Promise<CSAResult> {
-        if (this.debugLog) { this.debugLog("fillStart ="); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "fillStart =");
+        }
         if (!this.fillStartPromise) {
             this.fillStartPromise = new Promise<CSAResult>(async (resolve) => {
                 try {
@@ -26,20 +28,28 @@ export class VFSConfigStorage extends FSConfigStorage {
                     const content = textDoc.getText();
                     this.jsonData = JSON.parse(content);
                     resolve(CSAResult.ok);
-                    if (this.debugLog) { this.debugLog("fillStart => ok"); }
+                    if (this.logFn) {
+                        this.logFn(LogType.debug, () => "fillStart => ok");
+                    }
                 } catch (error) {
                     resolve(CSAResult.prepare_failed);
-                    if (this.debugLog) { this.debugLog("fillStart => fail"); }
+                    if (this.logFn) {
+                        this.logFn(LogType.debug, () => "fillStart => fail");
+                    }
                 }
                 this.fillStartPromise = undefined;
-                if (this.debugLog) { this.debugLog("fillStart => clear"); }
+                if (this.logFn) {
+                    this.logFn(LogType.debug, () => "fillStart => clear");
+                }
             });
         }
         return this.fillStartPromise;
     }
 
     public storeEnd(): Promise<CSAResult> {
-        if (this.debugLog) { this.debugLog("storeEnd ="); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "storeEnd =");
+        }
         if (!this.storePromise) {
             this.storePromise = new Promise<CSAResult>(async (resolve) => {
                 try {

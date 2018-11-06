@@ -1,6 +1,6 @@
 import { Event, EventEmitter } from "vscode";
 
-import { LogType } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 import { CSAResult, IConfig, IConfigSection, IConfigStorage } from "./config";
 
 import * as nls from "vscode-nls";
@@ -22,12 +22,14 @@ export class ConfigPool implements IConfig {
     protected freezePromise: Promise<boolean> | undefined = undefined;
     protected freezeResolve: ((value?: boolean | PromiseLike<boolean> | undefined) => void) | undefined = undefined;
 
-    constructor(protected storage: IConfigStorage, public debugLog?: LogType) {
+    constructor(protected storage: IConfigStorage, public logFn?: LogFunction) {
         this.onDidLoad = this.changeEmitter.event;
     }
 
     public setStorage(storage: IConfigStorage) {
-        if (this.debugLog) { this.debugLog("setStorage"); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "setStorage");
+        }
         this.storage = storage;
         this.load();
     }
@@ -36,7 +38,9 @@ export class ConfigPool implements IConfig {
      * Add ConfigSection to pool. ConfigPool will keep it up to date.
      */
     public add(cfg: IConfigSection): boolean {
-        if (this.debugLog) { this.debugLog("add " + cfg.name()); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "add " + cfg.name());
+        }
         this.pool.set(cfg.name(), cfg);
         this.load();
         return true;
@@ -47,7 +51,9 @@ export class ConfigPool implements IConfig {
      * Note - unstackable! Onle the last freeze/unfreeze is taking effect.
      */
     public freeze(): void {
-        if (this.debugLog) { this.debugLog("freeze"); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "freeze");
+        }
         if (!this.freezePromise) {
             this.freezePromise = new Promise<boolean>((resolve) => {
                 this.freezeResolve = resolve;
@@ -56,7 +62,9 @@ export class ConfigPool implements IConfig {
     }
 
     public unfreeze(): void {
-        if (this.debugLog) { this.debugLog("unfreeze"); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "unfreeze");
+        }
         if (this.freezeResolve) {
             this.freezeResolve(true);
         }
@@ -68,7 +76,9 @@ export class ConfigPool implements IConfig {
      * Get kept ConfigSection.
      */
     public get(section: string): Promise<IConfigSection|undefined> {
-        if (this.debugLog) { this.debugLog("get = " + section); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "get = " + section);
+        }
         return new Promise<IConfigSection>(async (resolve) => {
             const promises: any[] = [];
             if (this.loadPromise) {
@@ -81,12 +91,16 @@ export class ConfigPool implements IConfig {
                 await Promise.all(promises);
             }
             resolve(this.pool.get(section));
-            if (this.debugLog) { this.debugLog("get => ok " + section); }
+            if (this.logFn) {
+                this.logFn(LogType.debug, () => "get => ok " + section);
+            }
         });
     }
 
     public load(): Promise<CSAResult> {
-        if (this.debugLog) { this.debugLog("load ="); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "load =");
+        }
         if (!this.loadPromise) {
             this.loadPromise = new Promise<CSAResult>(async (resolve) => {
                 // do load
@@ -106,9 +120,12 @@ export class ConfigPool implements IConfig {
                                         retCode |= r;
                                     }
                                 } catch (err) {
-                                    if (this.debugLog) { this.debugLog( localize("config.filldata.failed", "filling data('{0}') failed", sectionName ));
+                                    if (this.logFn) {
+                                        this.logFn(LogType.debug, () => localize("config.filldata.failed", "filling data('{0}') failed", sectionName));
                                     }
-                                    if (this.debugLog) { this.debugLog(err); }
+                                    if (this.logFn) {
+                                        this.logFn(LogType.error, () => String(err));
+                                    }
                                     // tslint:disable-next-line:no-bitwise
                                     retCode |= CSAResult.some_data_failed;
                                 }
@@ -121,14 +138,20 @@ export class ConfigPool implements IConfig {
                             // tslint:disable-next-line:no-bitwise
                             retCode |= ended;
                             resolve(retCode);
-                            if (this.debugLog) { this.debugLog("load => " + (retCode ? "fail" : "ok")); }
+                            if (this.logFn) {
+                                this.logFn(LogType.debug, () => "load => " + (retCode ? "fail" : "ok"));
+                            }
                         });
                     } else {
                         resolve(started);   // didn't start
-                        if (this.debugLog) { this.debugLog("load => fail"); }
+                        if (this.logFn) {
+                            this.logFn(LogType.debug, () => "load => fail");
+                        }
                     }
                     this.loadPromise = undefined;
-                    if (this.debugLog) { this.debugLog("load => clear"); }
+                    if (this.logFn) {
+                        this.logFn(LogType.debug, () => "load => clear");
+                    }
                 });
             });
         }
@@ -136,7 +159,9 @@ export class ConfigPool implements IConfig {
     }
 
     public save(): Promise<CSAResult> {
-        if (this.debugLog) { this.debugLog("save ="); }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => "save =");
+        }
         if (!this.savePromise) {
             this.savePromise = new Promise<CSAResult>(async (resolve) => {
                 // do save
@@ -150,9 +175,12 @@ export class ConfigPool implements IConfig {
                                     // tslint:disable-next-line:no-bitwise
                                     retCode |= await this.storage.storeData(sectionName, data);
                                 } catch (err) {
-                                    if (this.debugLog) { this.debugLog( localize("config.storedata.failed", "storing data('{0}') failed", sectionName ));
+                                    if (this.logFn) {
+                                        this.logFn(LogType.debug, () => localize("config.storedata.failed", "storing data('{0}') failed", sectionName));
                                     }
-                                    if (this.debugLog) { this.debugLog(err); }
+                                    if (this.logFn) {
+                                        this.logFn(LogType.error, () => String(err));
+                                    }
                                     // tslint:disable-next-line:no-bitwise
                                     retCode |= CSAResult.some_data_failed;
                                 }
@@ -163,12 +191,16 @@ export class ConfigPool implements IConfig {
                             retCode |= ended;
                             resolve(retCode);
                             this.savePromise = undefined;
-                            if (this.debugLog) { this.debugLog("save => " + (retCode ? "fail" : "ok")); }
+                            if (this.logFn) {
+                                this.logFn(LogType.debug, () => "save => " + (retCode ? "fail" : "ok"));
+                            }
                         });
                     } else {
                         resolve(started);   // didn't start
                         this.savePromise = undefined;
-                        if (this.debugLog) { this.debugLog("save => fail"); }
+                        if (this.logFn) {
+                            this.logFn(LogType.debug, () => "save => fail");
+                        }
                     }
                 });
             });

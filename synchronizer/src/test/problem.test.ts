@@ -1,7 +1,8 @@
 import * as assert from "assert";
 
-import { LogType } from "@vorfol/common";
+import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
 
+import { inspect } from "util";
 import { parseVmsOutput } from "../common/parse-output";
 import { VmsPathConverter } from "../vms/vms-path-converter";
 
@@ -11,10 +12,8 @@ suite("Source tests", function(this: Mocha.Suite) {
 
     this.timeout(0);
 
-    let debugLogFn: LogType | undefined;
-    debugLogFn = undefined;
-    // tslint:disable-next-line:no-console
-    debugLogFn = console.log;
+    let debugLogFn: LogFunction | undefined;
+    debugLogFn = logConsoleFn;
 
     const output =
 `
@@ -30,9 +29,9 @@ at line number 9 in file WORK:[VORFOLOMEEV.WORK]main.cpp;6
     test("Test p1", async () => {
         const c1 = VmsPathConverter.fromVms("[.a.b]c.d");
         const c2 = VmsPathConverter.fromVms("[a.b]c.d");
-        const result = parseVmsOutput(output);
+        const result = parseVmsOutput(output.split(/[\r?|\r\n]/));
         if (debugLogFn) {
-            debugLogFn(result);
+            debugLogFn(LogType.debug, () => inspect(result));
         }
         assert.ok(true, "ok");
     });

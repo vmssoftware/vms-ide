@@ -1,10 +1,11 @@
 {
   "name": "@vorfol/common",
-  "version": "0.0.11",
+  "version": "0.0.17",
   "description": "Common",
   "main": "out/main",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "publishing": "npm publish --access public"
   },
   "keywords": [
     "common"

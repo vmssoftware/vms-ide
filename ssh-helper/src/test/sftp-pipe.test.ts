@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import { ConnectConfig } from "ssh2";
 
-import { LogType } from "@vorfol/common";
+import { LogType, LogFunction } from "@vorfol/common";
 import { MemoryReadStream, MemoryWriteStream } from "@vorfol/common";
 
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
@@ -18,7 +18,7 @@ suite("Pipe tests", function(this: Mocha.Suite) {
 
     this.timeout(0);
 
-    let debugLogFn: LogType | undefined;
+    let debugLogFn: LogFunction | undefined;
     debugLogFn = undefined;
     // tslint:disable-next-line:no-console
     // debugLogFn = console.log;
@@ -283,15 +283,15 @@ suite("Pipe tests", function(this: Mocha.Suite) {
     /**
      * Try different data
      * @param sourceArray data
-     * @param debugLog log
+     * @param logFn log
      */
     async function TestPipeFakeToFake(sourceArray: Array<Buffer|null>,
                                       expectedPipe: boolean,
                                       expectCompare: boolean,
-                                      debugLog?: LogType) {
+                                      logFn?: LogFunction) {
 
-        const mem = new MemoryStreamCreator(sourceArray, false, debugLog);
-        const resultPipe = await PipeFile(mem, mem, "", "", debugLog);
+        const mem = new MemoryStreamCreator(sourceArray, false, logFn);
+        const resultPipe = await PipeFile(mem, mem, "", "", logFn);
         assert.equal(resultPipe, expectedPipe, "pipe result unexpected");
         const sourceString = sourceArray.map((buffer) => {
             if (Buffer.isBuffer(buffer)) {
@@ -314,14 +314,14 @@ suite("Pipe tests", function(this: Mocha.Suite) {
     async function TestPipeRealToFakeParr(config: ConnectConfig,
                                           fileDataArr: IFileTestData[],
                                           configResolver?: IConnectConfigResolver,
-                                          debugLog?: LogType) {
-        const src = new SftpClient(config, configResolver, debugLog, "*");
+                                          logFn?: LogFunction) {
+        const src = new SftpClient(config, configResolver, logFn, "*");
         const results: ITestResult[] = [];
         const promises: Array<Promise<boolean>> = [];
         for (const fileData of fileDataArr) {
             promises.push(Promise.resolve().then(async () => {
-                const mem = new MemoryStreamCreator(undefined, false, debugLog);
-                const resultPipe = await PipeFile(src, mem, fileData.file, "", debugLog);
+                const mem = new MemoryStreamCreator(undefined, false, logFn);
+                const resultPipe = await PipeFile(src, mem, fileData.file, "", logFn);
                 if (fileData.expectPipe) {
                     const sourceString = fileData.buffer.toString("utf8");
                     assert.notEqual(mem.writeStream, undefined, `No write stream`);
@@ -358,19 +358,19 @@ suite("Pipe tests", function(this: Mocha.Suite) {
      * @param config config
      * @param configResolver resolver
      * @param fileDataArr datas
-     * @param debugLog log
+     * @param logFn log
      */
     async function TestPipeFakeToRealParrWithTest(config: ConnectConfig,
                                                   fileDataArr: IFileTestData[],
                                                   configResolver?: IConnectConfigResolver,
-                                                  debugLog?: LogType) {
-        const dst = new SftpClient(config, configResolver, debugLog, "*");
+                                                  logFn?: LogFunction) {
+        const dst = new SftpClient(config, configResolver, logFn, "*");
         const results: ITestResult[] = [];
         const promises: Array<Promise<boolean>> = [];
         for (const fileData of fileDataArr) {
             promises.push(Promise.resolve().then(async () => {
-                const mem = new MemoryStreamCreator([fileData.buffer], false, debugLog);
-                const resultPipe = await PipeFile(mem, dst, "", fileData.file, debugLog);
+                const mem = new MemoryStreamCreator([fileData.buffer], false, logFn);
+                const resultPipe = await PipeFile(mem, dst, "", fileData.file, logFn);
                 return { fileData, resultPipe, resultCompare: false };
             }).then((result) => {
                 results.push(result);
@@ -387,21 +387,21 @@ suite("Pipe tests", function(this: Mocha.Suite) {
         const filesToCheck = fileDataArr.filter((fileData) => {
             return fileData.expectPipe; // don't do read-back test for expected to be failed
         });
-        return TestPipeRealToFakeParr(config, filesToCheck, configResolver, debugLog);
+        return TestPipeRealToFakeParr(config, filesToCheck, configResolver, logFn);
     }
 
     async function TestPipeRealToRealParrWithTest(configSrc: ConnectConfig,
                                                   configDst: ConnectConfig,
                                                   fileDataArr: IFileTestData[],
                                                   configResolver?: IConnectConfigResolver,
-                                                  debugLog?: LogType) {
-        const src = new SftpClient(configSrc, configResolver, debugLog, "*src*");
-        const dst = new SftpClient(configDst, configResolver, debugLog, "*dst*");
+                                                  logFn?: LogFunction) {
+        const src = new SftpClient(configSrc, configResolver, logFn, "*src*");
+        const dst = new SftpClient(configDst, configResolver, logFn, "*dst*");
         const results: ITestResult[] = [];
         const promises: Array<Promise<boolean>> = [];
         for (const fileData of fileDataArr) {
             promises.push(Promise.resolve().then(async () => {
-                const resultPipe = await PipeFile(src, dst, fileData.file, fileData.fileDest, debugLog);
+                const resultPipe = await PipeFile(src, dst, fileData.file, fileData.fileDest, logFn);
                 return { fileData, resultPipe, resultCompare: false };
             }).then((result) => {
                 results.push(result);
@@ -424,19 +424,19 @@ suite("Pipe tests", function(this: Mocha.Suite) {
             newFileData.fileDest = fileData.file;
             return newFileData;
         });
-        return TestPipeRealToFakeParr(configDst, filesToCheck, configResolver, debugLog);
+        return TestPipeRealToFakeParr(configDst, filesToCheck, configResolver, logFn);
     }
 
     async function TestPipeRealToSameRealParrWithTest(configSrc: ConnectConfig,
                                                       fileDataArr: IFileTestData[],
                                                       configResolver?: IConnectConfigResolver,
-                                                      debugLog?: LogType) {
-        const src = new SftpClient(configSrc, configResolver, debugLog, "*");
+                                                      logFn?: LogFunction) {
+        const src = new SftpClient(configSrc, configResolver, logFn, "*");
         const results: ITestResult[] = [];
         const promises: Array<Promise<boolean>> = [];
         for (const fileData of fileDataArr) {
             promises.push(Promise.resolve().then(async () => {
-                const resultPipe = await PipeFile(src, src, fileData.file, fileData.fileDest, debugLog);
+                const resultPipe = await PipeFile(src, src, fileData.file, fileData.fileDest, logFn);
                 return { fileData, resultPipe, resultCompare: false };
             }).then((result) => {
                 results.push(result);
@@ -458,7 +458,7 @@ suite("Pipe tests", function(this: Mocha.Suite) {
             newFileData.fileDest = fileData.file;
             return newFileData;
         });
-        return TestPipeRealToFakeParr(configSrc, filesToCheck, configResolver, debugLog);
+        return TestPipeRealToFakeParr(configSrc, filesToCheck, configResolver, logFn);
     }
 
 });

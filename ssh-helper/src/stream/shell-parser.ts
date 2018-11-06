@@ -1,5 +1,5 @@
 import { Transform } from "stream";
-import { LogType } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 
 import { IShellParser } from "../api";
 
@@ -15,18 +15,18 @@ export class ShellParser extends Transform implements IShellParser {
 
     protected timer?: NodeJS.Timer;
     
-    constructor(public timeout?: number, public debugLog?: LogType, public tag?: string) {
+    constructor(public timeout?: number, public logFn?: LogFunction, public tag?: string) {
         super();
         this.on("close", () => {
-            if (this.debugLog) { 
-                this.debugLog(localize("debug.closed", "ShellParser{0}: closed", this.tag ? " " + this.tag : ""));
+            if (this.logFn) { 
+                this.logFn(LogType.debug, () => localize("debug.closed", "ShellParser{0}: closed", this.tag ? " " + this.tag : ""));
             }
             this.setReady();
         });
         this.on("error", (err) => {
             this.lastError = err;
-            if (this.debugLog) { 
-                this.debugLog(localize("debug.error", "ShellParser{1}: error {0}", String(err), this.tag ? " " + this.tag : ""));
+            if (this.logFn) { 
+                this.logFn(LogType.debug, () => localize("debug.error", "ShellParser{1}: error {0}", err.message, this.tag ? " " + this.tag : ""));
             }
             this.setReady();
         });
@@ -45,18 +45,18 @@ export class ShellParser extends Transform implements IShellParser {
      * @param callback callback
      */
     public _transform(chunk: any, encoding: string, callback: Function) {
-        if (this.debugLog) { 
-            this.debugLog(localize("debug.chunk", "ShellParser{0}: got chunk", this.tag ? " " + this.tag : ""));
+        if (this.logFn) { 
+            this.logFn(LogType.debug, () => localize("debug.chunk", "ShellParser{0}: got chunk", this.tag ? " " + this.tag : ""));
         }
         if (Buffer.isBuffer(chunk)) {
             const strData = chunk.toString("utf8");
-            if (this.debugLog) { 
-                this.debugLog(`${strData}`); 
+            if (this.logFn) { 
+                this.logFn(LogType.debug, () => `${strData}`); 
             }
             this.content += strData;
         } else {
-            if (this.debugLog) { 
-                this.debugLog(localize("debug.nobuf", "ShellParser{0}: chunk is not Buffer", this.tag ? " " + this.tag : ""));
+            if (this.logFn) { 
+                this.logFn(LogType.debug, () => localize("debug.nobuf", "ShellParser{0}: chunk is not Buffer", this.tag ? " " + this.tag : ""));
             }
         }
         this.setupTimer();
@@ -71,8 +71,8 @@ export class ShellParser extends Transform implements IShellParser {
             clearTimeout(this.timer);
             this.timer = undefined;
         }
-        if (this.debugLog) {
-            this.debugLog(localize("debug.ready", "ShellParser{0}: set ready", this.tag ? " " + this.tag : ""));
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => localize("debug.ready", "ShellParser{0}: set ready", this.tag ? " " + this.tag : ""));
         }
     }
 
@@ -83,8 +83,8 @@ export class ShellParser extends Transform implements IShellParser {
         }
         if (this.timeout) {
             this.timer = setTimeout(() => {
-                if (this.debugLog) { 
-                    this.debugLog(localize("debug.timeout", "ShellParser{0}: timeout", this.tag ? " " + this.tag : ""));
+                if (this.logFn) { 
+                    this.logFn(LogType.debug, () => localize("debug.timeout", "ShellParser{0}: timeout", this.tag ? " " + this.tag : ""));
                 }
                 this.timer = undefined;
                 this.setReady();

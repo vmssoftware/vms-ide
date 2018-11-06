@@ -1,57 +1,25 @@
-import { ExtensionContext, window, workspace } from "vscode";
 
-import { LogType } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 
-import { ToOutputChannel } from "./output-channel";
+import { EnsureSettings } from "./ensure-settings";
+import { Perform } from "./performer";
 import { Synchronizer } from "./sync/synchronizer";
-
-export let synchronizer: Synchronizer | undefined;
-
-export async function StopSyncProject() {
-    if (synchronizer) {
-        synchronizer.disableRemote();
-        return true;
-    }
-    return false;
-}
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export async function SyncProject(context: ExtensionContext, debugLog?: LogType) {
-    return workspace.saveAll(false).then((ok) => {
-        if (ok) {
-            if (!synchronizer) {
-                synchronizer = new Synchronizer(debugLog);
-                context.subscriptions.push(synchronizer);
-            }
-            if (synchronizer.isInProgress) {
-                window.showInformationMessage(localize("message.sync_in_progress", "Syncronization in progress"));
-                return false;
-            } else {
-                return synchronizer.syncronizeProject()
-                    .then((result) => {
-                        if (result) {
-                            window.showInformationMessage(localize("message.sync.ok", "Syncronization: ok"));
-                            ToOutputChannel(localize("output.sync.done", "Synchronization is done."));
-                        } else {
-                            window.showErrorMessage(localize("message.sync.wrong", "Syncronization: some files failed to synchronize, see output"));
-                            ToOutputChannel(localize("output.sync.failed", "Synchronization is failed"));
-                            for (const err of synchronizer!.lastErrors) {
-                                ToOutputChannel(`${err}`);
-                            }
-                        }
-                        return result;
-                    }).catch((err) => {
-                        if (debugLog) {
-                            debugLog(err);
-                        }
-                        return false;
-                    });
+export async function StopSyncProject() {
+    Synchronizer.acquire().disableRemote();
+    return true;
+}
+
+export async function SyncProject(logFn?: LogFunction) {
+    return Perform("save.all", logFn)
+            .then((saved) => {
+                if (saved) {
+                    return Perform("syncronize", logFn);
                 }
-        } else {
-            return false;
-        }
-    });
+                return saved;
+            });
 }
