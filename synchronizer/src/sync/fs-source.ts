@@ -1,5 +1,4 @@
 import * as fs from "fs-extra";
-import * as util from "util";
 
 import { ftpPathSeparator, IFileEntry, IReadDirectory } from "@vorfol/common";
 import { LogFunction, LogType } from "@vorfol/common";

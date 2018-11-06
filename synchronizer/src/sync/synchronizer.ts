@@ -77,6 +77,12 @@ export class Synchronizer {
         }
     }
 
+    public async requestSources() {
+        if (!await this.prepareSources()) {
+            return undefined;
+        }
+    }
+
     public async syncronizeProject() {
         if (!await this.prepareSources()) {
             return false;
