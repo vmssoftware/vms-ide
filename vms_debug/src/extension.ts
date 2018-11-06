@@ -80,7 +80,7 @@ let ExtensionReadyCb = function() : void
 
 	const message = localize('extention.connected', "Connected to the server");
 	vscode.window.showInformationMessage(message);
-	logFn(LogType.informtion, () => message);
+	logFn(LogType.informtion, () => message, true);
 };
 
 let ExtensionCloseCb = function() : void
@@ -89,7 +89,7 @@ let ExtensionCloseCb = function() : void
 
 	const message = localize('extention.closed', "Connection is closed");
 	vscode.window.showInformationMessage(message);
-	logFn(LogType.informtion, () => message);
+	logFn(LogType.informtion, () => message, true);
 
 	if(session)
 	{

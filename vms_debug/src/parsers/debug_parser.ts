@@ -523,17 +523,25 @@ export class DebugParser
 	}
 	private getNumberLineSourceCode(debugLineNumber : string, lisLines: string[]) : number
 	{
+		let indexLine : number = 0;
+		let shiftHeader : number = 3;
 		let LineSourceCode : number = -1;
 
-		for(let i = 3; i < lisLines.length; i++)
+		for(let i = shiftHeader; i < lisLines.length; i++)
 		{
 			let items = lisLines[i].trim().split(/\s+/);
-			let lisLineNumber = items[1];
 
-			if(debugLineNumber === lisLineNumber)
+			if(!Number.isNaN(parseInt(items[0], 10)))
 			{
-				LineSourceCode = i - 3;
-				break;
+				let lisLineNumber = items[1];
+
+				if(debugLineNumber === lisLineNumber)
+				{
+					LineSourceCode = indexLine;
+					break;
+				}
+
+				indexLine++;
 			}
 		}
 
@@ -552,14 +560,28 @@ export class DebugParser
 	// 1    1637   int del = 0;
 	public findeBreakPointNumberLine(currentNumberLine : number, sourceLisLines: string[]) : number
 	{
+		let indexLine : number = 0;
+		let shiftHeader : number = 3;
 		let number : number = NaN;
 
-		let line = sourceLisLines[currentNumberLine - 1 + 4].trim();
-		let array = line.split(/\s+/);
-
-		if(!Number.isNaN(parseInt(array[0], 10)))
+		for(let i = shiftHeader; i < sourceLisLines.length; i++)
 		{
-			number = parseInt(array[1], 10);
+			let line = sourceLisLines[i].trim();
+			let items = line.split(/\s+/);
+
+			if(!Number.isNaN(parseInt(items[0], 10)))
+			{
+				if(indexLine === currentNumberLine)
+				{
+					if(!Number.isNaN(parseInt(items[0], 10)))
+					{
+						number = parseInt(items[1], 10);
+					}
+					break;
+				}
+
+				indexLine++;
+			}
 		}
 
 		return number;
