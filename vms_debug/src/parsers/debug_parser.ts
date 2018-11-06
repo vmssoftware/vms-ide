@@ -529,19 +529,25 @@ export class DebugParser
 
 		for(let i = shiftHeader; i < lisLines.length; i++)
 		{
-			let items = lisLines[i].trim().split(/\s+/);
+			//let items = lisLines[i].trim().split(/\s+/);
+			let line = lisLines[i];
+			const matcher = /^\s*\d*\t\s*(\d+)/;
+			const matches = line.match(matcher);
 
-			if(!Number.isNaN(parseInt(items[0], 10)))
+			if(matches && matches.length === 2)
 			{
-				let lisLineNumber = items[1];
-
-				if(debugLineNumber === lisLineNumber)
+				if(!Number.isNaN(parseInt(matches[1], 10)))
 				{
-					LineSourceCode = indexLine;
-					break;
-				}
+					let lisLineNumber = matches[1];
 
-				indexLine++;
+					if(debugLineNumber === lisLineNumber)
+					{
+						LineSourceCode = indexLine;
+						break;
+					}
+
+					indexLine++;
+				}
 			}
 		}
 
@@ -566,21 +572,23 @@ export class DebugParser
 
 		for(let i = shiftHeader; i < sourceLisLines.length; i++)
 		{
-			let line = sourceLisLines[i].trim();
-			let items = line.split(/\s+/);
+			let line = sourceLisLines[i];//.trim();
+			//let items = line.split(/\s+/);
+			const matcher = /^\s*\d*\t\s*(\d+)/;
+			const matches = line.match(matcher);
 
-			if(!Number.isNaN(parseInt(items[0], 10)))
+			if(matches && matches.length === 2)
 			{
-				if(indexLine === currentNumberLine)
+				if(!Number.isNaN(parseInt(matches[1], 10)))
 				{
-					if(!Number.isNaN(parseInt(items[0], 10)))
+					if(indexLine === currentNumberLine)
 					{
-						number = parseInt(items[1], 10);
+						number = parseInt(matches[1], 10);
+						break;
 					}
-					break;
-				}
 
-				indexLine++;
+					indexLine++;
+				}
 			}
 		}
 
