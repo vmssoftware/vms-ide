@@ -14,13 +14,14 @@ import { ISftpClient } from "../ext-api/api";
 import { ISshShell } from "../ext-api/api";
 import { SshHelper } from "../ext-api/ssh-helper";
 
+import { ISources } from "../api";
+import { createFile } from "../common/create-file";
 import { EnsureSettings, synchronizerConfig } from "../ensure-settings";
 import { FsSource } from "./fs-source";
 import { ISource } from "./source";
 import { VmsSource } from "./vms-source";
 
 import * as nls from "vscode-nls";
-import { createFile } from "../common/create-file";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
@@ -77,10 +78,19 @@ export class Synchronizer {
         }
     }
 
-    public async requestSources() {
+    /**
+     * User have to dispose remote source self
+     */
+    public async requestSources(): Promise<ISources | undefined> {
         if (!await this.prepareSources()) {
             return undefined;
         }
+        const ret = {local: this.localSource, remote: this.remoteSource };
+        this.localSource = undefined;
+        this.remoteSource = undefined;
+        this.remoteSftp = undefined;
+        this.remoteShell = undefined;
+        return ret;
     }
 
     public async syncronizeProject() {

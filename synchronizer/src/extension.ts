@@ -1,9 +1,11 @@
 
 import { commands, Disposable, env, ExtensionContext, InputBox, window } from "vscode";
 
+import { Api } from "./api";
 import { setExtensionContext } from "./context";
 import { configHelper, EnsureSettings } from "./ensure-settings";
 import { createLogFunction } from "./log";
+import { Perform } from "./performer";
 import { StopSyncProject, SyncProject } from "./synchronize";
 
 import { LogType } from "@vorfol/common";
@@ -13,7 +15,6 @@ const buildLog = createLogFunction("OpenVMS builder");
 
 const locale = env.language ;
 import * as nls from "vscode-nls";
-import { Perform } from "./performer";
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
 export async function activate(context: ExtensionContext) {
@@ -65,6 +66,8 @@ export async function activate(context: ExtensionContext) {
                 return false;
             });
     }));
+
+    return new Api();
 }
 
 // this method is called when your extension is deactivated

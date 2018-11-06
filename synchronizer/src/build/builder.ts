@@ -469,9 +469,9 @@ export class Builder {
         if (this.sshHelper) {
             this.shell = await this.sshHelper.getDefaultVmsShell();
         }
-        if (this.shell) {
-            this.shell.width = 32;  // DEBUG PURPOSE ONLY
-        }
+        // if (this.shell) {
+        //     this.shell.width = 32;  // DEBUG PURPOSE ONLY
+        // }
         return true;
     }
 
