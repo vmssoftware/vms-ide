@@ -392,14 +392,16 @@ export class VMSRuntime extends EventEmitter
 
 			for(let item of this.lisPaths)
 			{
-				if(item.includes(file))
+				let itemNoCase = item.toLowerCase();
+				file = file.toLowerCase();
+
+				if(itemNoCase.includes(file))
 				{
 					file = item;
+					this.lisLines = readFileSync(file).toString().split('\n');
 					break;
 				}
 			}
-
-			this.lisLines = readFileSync(file).toString().split('\n');
 		}
 	}
 

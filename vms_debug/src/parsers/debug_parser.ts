@@ -523,17 +523,31 @@ export class DebugParser
 	}
 	private getNumberLineSourceCode(debugLineNumber : string, lisLines: string[]) : number
 	{
+		let indexLine : number = 0;
+		let shiftHeader : number = 3;
 		let LineSourceCode : number = -1;
 
-		for(let i = 3; i < lisLines.length; i++)
+		for(let i = shiftHeader; i < lisLines.length; i++)
 		{
-			let items = lisLines[i].trim().split(/\s+/);
-			let lisLineNumber = items[1];
+			//let items = lisLines[i].trim().split(/\s+/);
+			let line = lisLines[i];
+			const matcher = /^\s*\d*\t\s*(\d+)/;
+			const matches = line.match(matcher);
 
-			if(debugLineNumber === lisLineNumber)
+			if(matches && matches.length === 2)
 			{
-				LineSourceCode = i - 3;
-				break;
+				if(!Number.isNaN(parseInt(matches[1], 10)))
+				{
+					let lisLineNumber = matches[1];
+
+					if(debugLineNumber === lisLineNumber)
+					{
+						LineSourceCode = indexLine;
+						break;
+					}
+
+					indexLine++;
+				}
 			}
 		}
 
@@ -552,14 +566,30 @@ export class DebugParser
 	// 1    1637   int del = 0;
 	public findeBreakPointNumberLine(currentNumberLine : number, sourceLisLines: string[]) : number
 	{
+		let indexLine : number = 0;
+		let shiftHeader : number = 3;
 		let number : number = NaN;
 
-		let line = sourceLisLines[currentNumberLine - 1 + 4].trim();
-		let array = line.split(/\s+/);
-
-		if(!Number.isNaN(parseInt(array[0], 10)))
+		for(let i = shiftHeader; i < sourceLisLines.length; i++)
 		{
-			number = parseInt(array[1], 10);
+			let line = sourceLisLines[i];//.trim();
+			//let items = line.split(/\s+/);
+			const matcher = /^\s*\d*\t\s*(\d+)/;
+			const matches = line.match(matcher);
+
+			if(matches && matches.length === 2)
+			{
+				if(!Number.isNaN(parseInt(matches[1], 10)))
+				{
+					if(indexLine === currentNumberLine)
+					{
+						number = parseInt(matches[1], 10);
+						break;
+					}
+
+					indexLine++;
+				}
+			}
 		}
 
 		return number;
