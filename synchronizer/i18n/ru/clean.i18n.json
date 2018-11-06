@@ -1,7 +1,7 @@
 {
-    "message.clean.ok": "Clean: ok",
-    "output.clean.done": "Clean process is done",
-    "error.clean_result": "Clean returns false",
-    "message.clean.wrong": "Clean: something is wrong, see output",
-    "output.clean.failed": "Clean process failed"
+    "message.clean.ok": "Очистка: удачно",
+    "output.clean.done": "Очистка завершена",
+    "error.clean_result": "Очистка неудачна",
+    "message.clean.wrong": "Очистка: неудачно, см. окно вывода",
+    "output.clean.failed": "Очистка неудачна"
 }

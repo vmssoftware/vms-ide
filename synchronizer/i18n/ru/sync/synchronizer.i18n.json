@@ -14,10 +14,10 @@
     "debug.no_local": "Нет локального файла {0} => загрузить",
     "debug.create_remote": "Создание удалённого источника",
     "debug.create_local": "Создание локального источника",
-    "error.no_settings": "Cannot get settings",
-    "error.bad_settings": "Inconsistent settings or workspace is empty",
+    "error.no_settings": "Невозможно получить настройки",
+    "error.bad_settings": "Настройки не совпадают или рабочая область отсутствует",
     "debug.cannot_get_ssh_helper": "Не удалось загрузить ssh-helper API",
     "output.install_ssh": "Установите плагин 'vmssoftware.ssh-helper'",
-    "message.action_success": "{0} success: {1}",
-    "message.action_failed": "{0} is failed: {1}"
+    "message.action_success": "{0} удачно: {1}",
+    "message.action_failed": "{0} ошибка: {1}"
 }
