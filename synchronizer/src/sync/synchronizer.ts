@@ -26,18 +26,17 @@ const localize = nls.loadMessageBundle();
 
 export class Synchronizer {
 
-    public static acquire(debugLog?: LogFunction) {
+    public static acquire(logFn?: LogFunction) {
         if (!Synchronizer.instance) {
-            Synchronizer.instance = new Synchronizer(debugLog);
-        } else if (debugLog !== undefined) {
-            Synchronizer.instance.logFn = debugLog;
+            Synchronizer.instance = new Synchronizer(logFn);
+        } else if (logFn !== undefined) {
+            Synchronizer.instance.logFn = logFn;
         }
         return Synchronizer.instance;
     }
 
     private static instance?: Synchronizer;
 
-    public messages: string[] = [];
     public inProgress = false;
 
     private sshHelper?: SshHelper;
@@ -79,7 +78,6 @@ export class Synchronizer {
     }
 
     public async syncronizeProject() {
-        this.messages = [];
         if (!await this.prepareSources()) {
             return false;
         }
@@ -115,7 +113,9 @@ export class Synchronizer {
                     break;
                 case "skip":
                     for (const downloadFile of compareResult.download) {
-                        this.messages.push(localize("output.download_manually", "Remote {0} is newer, please check and download it manually", downloadFile.filename));
+                        if (this.logFn) {
+                            this.logFn(LogType.information, () => localize("output.download_manually", "Remote {0} is newer, please check and download it manually", downloadFile.filename));
+                        }
                     }
                     break;
                 case "edit":
@@ -123,7 +123,9 @@ export class Synchronizer {
                         waitAll.push(this.editFile(this.remoteSource, downloadFile.filename));
                     }
                     if (compareResult.download.length > 0) {
-                        this.messages.push(localize("output.edit_count", "Please edit and save {0} files manually", compareResult.download.length));
+                        if (this.logFn) {
+                            this.logFn(LogType.information, () => localize("output.edit_count", "Please edit and save {0} files manually", compareResult.download.length));
+                        }
                     }
                     break;
             }
@@ -141,7 +143,9 @@ export class Synchronizer {
             }
             return retCode;
         } else {
-            this.messages.push(localize("output.edit_settings", "In first please edit settings"));
+            if (this.logFn) {
+                this.logFn(LogType.error, () => localize("output.edit_settings", "In first please edit settings"));
+            }
         }
         return false;
     }
@@ -150,7 +154,6 @@ export class Synchronizer {
      * Download listing files, all (without "exculde")
      */
     public async downloadListings() {
-        this.messages = [];
         if (!this.prepareSources()) {
             return false;
         }
@@ -172,7 +175,6 @@ export class Synchronizer {
      * @param files files
      */
     public async downloadFiles(files: string[] | IFileEntry[]) {
-        this.messages = [];
         if (!this.prepareSources()) {
             return false;
         }
@@ -189,7 +191,6 @@ export class Synchronizer {
      * @param files files
      */
     public async uploadFiles(files: string[] | IFileEntry[]) {
-        this.messages = [];
         if (!this.prepareSources()) {
             return false;
         }
@@ -315,7 +316,7 @@ export class Synchronizer {
                 }
             }).catch((errPipeOrAfter) => {
                 if (this.logFn) {
-                    this.logFn(LogType.debug, () => errPipeOrAfter);
+                    this.logFn(LogType.error, () => errPipeOrAfter);
                 }
                 if (localUri && content) {
                     return createFile(localUri, content)
@@ -328,7 +329,7 @@ export class Synchronizer {
                             }
                         }).catch((errCreateOrShow) => {
                             if (this.logFn) {
-                                this.logFn(LogType.debug, () => errCreateOrShow);
+                                this.logFn(LogType.error, () => errCreateOrShow);
                             }
                             return false;
                         });
@@ -340,7 +341,7 @@ export class Synchronizer {
                 }
             }).catch((errLast) => {
                 if (this.logFn) {
-                    this.logFn(LogType.debug, () => errLast);
+                    this.logFn(LogType.error, () => errLast);
                 }
                 return false;
             });
@@ -441,7 +442,9 @@ export class Synchronizer {
      */
     private async ensureSettings() {
         if (!await EnsureSettings() || !synchronizerConfig) {
-            this.messages.push(localize("error.no_settings", "Cannot get settings"));
+            if (this.logFn) {
+                this.logFn(LogType.error, () => localize("error.no_settings", "Cannot get settings"));
+            }
             return false;
         }
         const [projectSection, synchronizeSection] = await Promise.all([
@@ -460,7 +463,9 @@ export class Synchronizer {
             this.workspaceUri = vscode.workspace.workspaceFolders[0].uri;
             return true;
         } else {
-            this.messages.push(localize("error.bad_settings", "Inconsistent settings or workspace is empty"));
+            if (this.logFn) {
+                this.logFn(LogType.error, () => localize("error.bad_settings", "Inconsistent settings or workspace is empty"));
+            }
             return false;
         }
     }
@@ -474,8 +479,8 @@ export class Synchronizer {
             if (!sshHelperType) {
                 if (this.logFn) {
                     this.logFn(LogType.debug, () => localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
+                    this.logFn(LogType.error, () => localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
                 }
-                this.messages.push(localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
                 return false;
             }
             this.sshHelper = new sshHelperType(this.logFn);
@@ -507,15 +512,19 @@ export class Synchronizer {
             const to = action === "download" ? this.localSource : this.remoteSource;
             waitAll.push(this.transferFile(from, to, filename, filedate)
                                 .then((ok) => {
-                                    if (ok) {
-                                        this.messages.push(localize("message.action_success", "{0} success: {1}", action, filename));
-                                    } else {
-                                        this.messages.push(localize("message.action_failed", "{0} is failed: {1}", action, filename));
+                                    if (this.logFn) {
+                                        if (ok) {
+                                            this.logFn(LogType.information, () => localize("message.action_success", "{0} success: {1}", action, filename));
+                                        } else {
+                                            this.logFn(LogType.error, () => localize("message.action_failed", "{0} is failed: {1}", action, filename));
+                                        }
                                     }
                                     return ok;
                                 })
                                 .catch((err) => {
-                                    this.messages.push(err.message);
+                                    if (this.logFn) {
+                                        this.logFn(LogType.error, () => err.message);
+                                    }
                                     return false;
                                 }));
         }

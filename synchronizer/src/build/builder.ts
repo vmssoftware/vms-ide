@@ -315,7 +315,7 @@ export class Builder {
                     if (selection.type === "user") {
                         if (this.logFn) {
                             for (const line of output) {
-                                this.logFn(LogType.informtion, () => line);
+                                this.logFn(LogType.information, () => line);
                             }
                         }
                         return true;

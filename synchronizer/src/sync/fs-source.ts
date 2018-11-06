@@ -34,20 +34,22 @@ export class FsSource implements ISource, IReadDirectory {
      */
     public async readDirectory(directory: string): Promise<IFileEntry[] | undefined> {
         directory = this.root + ftpPathSeparator + directory;
-        const list = await fs.readdir(directory).catch((err) => {
-            if (this.debugLog) {
-                this.debugLog(LogType.debug, () => `${err}`);
-            }
-            return [];
-        });
-        const retList: IFileEntry[] = [];
-        for (const file of list) {
-            const stat = await fs.stat(directory + ftpPathSeparator + file).catch((err) => {
+        const list = await fs.readdir(directory)
+            .catch((err) => {
                 if (this.debugLog) {
                     this.debugLog(LogType.debug, () => `${err}`);
                 }
-                return undefined;
+                return [];
             });
+        const retList: IFileEntry[] = [];
+        for (const file of list) {
+            const stat = await fs.stat(directory + ftpPathSeparator + file)
+                .catch((err) => {
+                    if (this.debugLog) {
+                        this.debugLog(LogType.debug, () => `${err}`);
+                    }
+                    return undefined;
+                });
             if (stat) {
                 const entry: IFileEntry = {
                     date: stat.mtime,

@@ -61,7 +61,7 @@ export async function activate(context: ExtensionContext) {
                     return false;
                 }
             }).catch((err) => {
-                syncLog(LogType.debug, () => String(err));
+                syncLog(LogType.error, () => String(err));
                 return false;
             });
     }));

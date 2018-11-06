@@ -85,7 +85,7 @@ export async function Perform(actionName: ActionType, logFn?: LogFunction) {
                 return actionToDo.actionFunc(logFn)
                     .catch((err) => {
                         if (logFn) {
-                            logFn(LogType.debug, () => err);
+                            logFn(LogType.error, () => err);
                         }
                         return false;
                     }).then((result) => {
@@ -94,12 +94,12 @@ export async function Perform(actionName: ActionType, logFn?: LogFunction) {
                         if (result) {
                             window.showInformationMessage(actionToDo.success);
                             if (logFn) {
-                                logFn(LogType.informtion, () => actionToDo.success);
+                                logFn(LogType.information, () => actionToDo.success, true);
                             }
                         } else {
                             window.showInformationMessage(actionToDo.fail);
                             if (logFn) {
-                                logFn(LogType.informtion, () => actionToDo.fail);
+                                logFn(LogType.error, () => actionToDo.fail, true);
                             }
                         }
                         return result;
