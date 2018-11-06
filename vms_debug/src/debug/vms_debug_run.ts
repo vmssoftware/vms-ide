@@ -11,6 +11,7 @@ import {
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { VMSRuntimeRun } from './vms_runtime_run';
 import { ShellSession, ModeWork } from '../net/shell-session';
+import { LogFunction } from '@vorfol/common';
 const { Subject } = require('await-notify');
 
 
@@ -34,7 +35,7 @@ export class VMSNoDebugSession extends LoggingDebugSession
 
 	// Creates a new debug adapter that is used for one debug session.
 	// We configure the default implementation of a debug adapter here.
-	public constructor(shell : ShellSession)
+	public constructor(shell : ShellSession, public logFn?: LogFunction)
 	{
 		super("vms-nodebug.txt");
 
@@ -42,7 +43,7 @@ export class VMSNoDebugSession extends LoggingDebugSession
 		this.setDebuggerLinesStartAt1(false);
 		this.setDebuggerColumnsStartAt1(false);
 
-		this._runtime = new VMSRuntimeRun(shell);
+		this._runtime = new VMSRuntimeRun(shell, logFn);
 
 		// setup event handlers
 		this._runtime.on('stopOnException', () =>

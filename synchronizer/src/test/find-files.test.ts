@@ -3,8 +3,9 @@ import * as assert from "assert";
 import { IInputAttributes } from "../ext-api/api";
 import { ISftpClient } from "../ext-api/api";
 
-import { LogType } from "@vorfol/common";
+import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
 
+import { inspect } from "util";
 import { findFiles } from "../common/find-files";
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
 import { SshHelper } from "../ext-api/ssh-helper";
@@ -16,10 +17,9 @@ suite("SFTP directory tests", function(this: Mocha.Suite) {
 
     this.timeout(0);
 
-    let debugLogFn: LogType | undefined;
-    debugLogFn = undefined;
-    // tslint:disable-next-line:no-console
-    debugLogFn = console.log;
+    let debugLogFn: LogFunction | undefined;
+    debugLogFn = logConsoleFn;
+
     interface IFileTestData {
         file: string;
         fileDest: string;
@@ -58,8 +58,8 @@ suite("SFTP directory tests", function(this: Mocha.Suite) {
         assert.notEqual(src, undefined, `Cannot get sftp`);
         const stat = await src!.getStat("DENIED.TXT");
         if (debugLogFn && stat) {
-            debugLogFn(stat);
-            debugLogFn(new Date(stat.mtime * 1000));
+            debugLogFn(LogType.debug, () => inspect(stat));
+            debugLogFn(LogType.debug, () => String(new Date(stat.mtime * 1000)));
         }
         src!.dispose();
         assert.ok(true, "ok");
@@ -73,17 +73,17 @@ suite("SFTP directory tests", function(this: Mocha.Suite) {
         const all = [];
         all.push(findFiles(src!, "", include, exclude, debugLogFn).then((list) => {
             if (debugLogFn) {
-                debugLogFn(list);
+                debugLogFn(LogType.debug, () => inspect(list));
             }
         }));
         all.push(findFiles(src!, "wrk", include, exclude, debugLogFn).then((list) => {
             if (debugLogFn) {
-                debugLogFn(list);
+                debugLogFn(LogType.debug, () => inspect(list));
             }
         }));
         all.push(findFiles(src!, "invalid", include, exclude, debugLogFn).then((list) => {
             if (debugLogFn) {
-                debugLogFn(list);
+                debugLogFn(LogType.debug, () => inspect(list));
             }
         }));
         await Promise.all(all);
@@ -114,8 +114,8 @@ suite("SFTP directory tests", function(this: Mocha.Suite) {
         assert.notEqual(src, undefined, `Cannot get sftp`);
         const stat = await src!.getStat("DENIED.TXT");
         if (debugLogFn && stat) {
-            debugLogFn(stat);
-            debugLogFn(new Date(stat.mtime * 1000));
+            debugLogFn(LogType.debug, () => inspect(stat));
+            debugLogFn(LogType.debug, () => String(new Date(stat.mtime * 1000)));
         }
         src!.dispose();
         assert.ok(true, "ok");
@@ -129,17 +129,17 @@ suite("SFTP directory tests", function(this: Mocha.Suite) {
         const all = [];
         all.push(findFiles(src!, "", include, exclude, debugLogFn).then((list) => {
             if (debugLogFn) {
-                debugLogFn(list);
+                debugLogFn(LogType.debug, () => inspect(list));
             }
         }));
         all.push(findFiles(src!, "wrk", include, exclude, debugLogFn).then((list) => {
             if (debugLogFn) {
-                debugLogFn(list);
+                debugLogFn(LogType.debug, () => inspect(list));
             }
         }));
         all.push(findFiles(src!, "invalid", include, exclude, debugLogFn).then((list) => {
             if (debugLogFn) {
-                debugLogFn(list);
+                debugLogFn(LogType.debug, () => inspect(list));
             }
         }));
         await Promise.all(all);

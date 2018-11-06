@@ -1,5 +1,5 @@
 
-import { LogType } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 import { commands } from "vscode";
 import { IConfig, IConfigEditor } from "./config";
 
@@ -11,7 +11,7 @@ export class VSCWorkspaceConfigEditor implements IConfigEditor {
 
     private readonly command = "workbench.action.openWorkspaceSettings";
 
-    constructor(private cfg: IConfig, public debugLog?: LogType) {
+    constructor(private cfg: IConfig, public logFn?: LogFunction) {
 
     }
 

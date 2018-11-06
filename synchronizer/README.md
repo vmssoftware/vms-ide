@@ -21,6 +21,7 @@ Latest "**vmssoftware.config-helper**" and "**vmssoftware.ssh-helper**" extensio
 
 ### Project settings
 *Glob* - a glob patterns separated by commas.
+
 | Section | Type | Name | Description |
 | --- | --- | --- | --- |
 | `vmssoftware.synchronizer.project.root` | `string` | Root | Project root folder on the VMS host. |
@@ -31,11 +32,13 @@ Latest "**vmssoftware.config-helper**" and "**vmssoftware.ssh-helper**" extensio
 | `vmssoftware.synchronizer.project.resource` | `string` | Resource | Glob, any resource files.|
 
 ### Synchronizer settings
+
 | Section | Type | Name | Description |
 | --- | --- | --- | --- |
 | `vmssoftware.synchronizer.synchronize.setTimeAttempts` | `number` | Set Time Attempts | Number of unsuccessful set file date attempts before return error.|
 | `vmssoftware.synchronizer.synchronize.keepAlive` | `boolean` | Keep Alive | Do or don't dispose connection after synchronization.|
 | `vmssoftware.synchronizer.synchronize.downloadNewFiles` | `enum` | Download New Files | Action if remote file is newer, see [download action](#download-actions). |
+
 **Note:** zero timeout means an infinite waiting.
 ### Download actions
 
@@ -44,4 +47,5 @@ Latest "**vmssoftware.config-helper**" and "**vmssoftware.ssh-helper**" extensio
 | overwrite | Overwrite local files. |
 | skip | Skip such files but produse some useful output. |
 | edit | Download remote file in memory and open edit-merge window. User have to save merged file himself. |
+
 -----------------------------------------------------------------------------------------------------------

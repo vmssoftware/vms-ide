@@ -1,6 +1,6 @@
 import { Uri } from "vscode";
 
-import { LogType } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 import { FSConfigHelper } from "./fs-config-helper";
 import { VFSConfigStorage } from "./vfs-storage";
 
@@ -13,8 +13,8 @@ import { VFSConfigStorage } from "./vfs-storage";
  */
 export class VFSConfigHelper extends FSConfigHelper {
 
-    protected createConcreteFS_Storage(uri: Uri, debugLog?: LogType) {
+    protected createConcreteFS_Storage(uri: Uri, logFn?: LogFunction) {
         // TODO: test URI and return appropriate FS
-        return new VFSConfigStorage(uri, debugLog);
+        return new VFSConfigStorage(uri, logFn);
     }
 }

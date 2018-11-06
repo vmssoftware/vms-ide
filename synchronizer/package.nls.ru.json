@@ -2,6 +2,7 @@
 	"configuration.title": "OpenVMS синхронизация",
 	"command.category": "OpenVMS",
 	"command.buildProject.title": "Компилировать на VMS",
+	"command.cleanProject.title": "Clean project",
 	"command.editProject.title": "Редактировать настройки OpenVMS проекта",
 	"command.syncProject.title": "Синхронизировать проект с VMS",
 	"command.stopSync.title": "Остановить синхронизацию",

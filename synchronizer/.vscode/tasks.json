@@ -29,11 +29,6 @@
             "problemMatcher": []
         },
         {
-            "type": "npm",
-            "script": "get-ssh-helper-api",
-            "problemMatcher": []
-        },
-        {
             "type": "gulp",
             "task": "package",
             "problemMatcher": []

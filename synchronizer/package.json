@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.7",
+    "version": "0.1.11",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -17,6 +17,7 @@
     "activationEvents": [
         "onCommand:vmssoftware.synchronizer.stopSync",
         "onCommand:vmssoftware.synchronizer.buildProject",
+        "onCommand:vmssoftware.synchronizer.cleanProject",
         "onCommand:vmssoftware.synchronizer.syncProject",
         "onCommand:vmssoftware.synchronizer.editProject",
         "onUri"
@@ -34,6 +35,10 @@
                     "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 },
                 {
+                    "command": "vmssoftware.synchronizer.cleanProject",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
                     "command": "vmssoftware.synchronizer.syncProject",
                     "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 }
@@ -48,6 +53,11 @@
             {
                 "command": "vmssoftware.synchronizer.buildProject",
                 "title": "%command.buildProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.cleanProject",
+                "title": "%command.cleanProject.title%",
                 "category": "%command.category%"
             },
             {
@@ -141,8 +151,8 @@
         "dir": "dir ..\\ssh-helper\\out"
     },
     "dependencies": {
-        "@vorfol/common": "^0.0.11",
-        "fs": "0.0.1-security",
+        "@vorfol/common": "0.0.17",
+        "fs-extra": "^7.0.0",
         "micromatch": "^3.1.10",
         "vscode-nls": "^4.0.0"
     },
@@ -152,7 +162,6 @@
         "@types/node": "^8.1.0",
         "del": "^3.0.0",
         "event-stream": "^4.0.1",
-        "fs-extra": "^7.0.0",
         "gulp": "^3.9.1",
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^5.0.0-alpha.3",

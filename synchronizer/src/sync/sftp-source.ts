@@ -1,5 +1,5 @@
 
-import { ftpPathSeparator, LogType } from "@vorfol/common";
+import { ftpPathSeparator, LogFunction, LogType } from "@vorfol/common";
 import { IFileEntry } from "@vorfol/common";
 
 import { findFiles, leadingSepRg, middleSepRg, trailingSepRg } from "../common/find-files";
@@ -19,7 +19,7 @@ export class SftpSource implements ISource {
         this.ftpLikeRoot = anyRoot.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
     }
 
-    constructor(protected sftp: ISftpClient, root?: string, public debugLog?: LogType, public attempts?: number) {
+    constructor(protected sftp: ISftpClient, root?: string, public debugLog?: LogFunction, public attempts?: number) {
         this.root = root;
     }
 

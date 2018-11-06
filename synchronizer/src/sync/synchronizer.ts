@@ -6,7 +6,7 @@ import { IProjectSection, ProjectSection } from "../config/sections/project";
 import { ISynchronizeSection, SynchronizeSection } from "../config/sections/synchronize";
 
 import { Delay } from "@vorfol/common";
-import { LogType } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
 import { IFileEntry } from "@vorfol/common";
 
@@ -15,7 +15,6 @@ import { ISshShell } from "../ext-api/api";
 import { SshHelper } from "../ext-api/ssh-helper";
 
 import { EnsureSettings, synchronizerConfig } from "../ensure-settings";
-import { ToOutputChannel } from "../output-channel";
 import { FsSource } from "./fs-source";
 import { ISource } from "./source";
 import { VmsSource } from "./vms-source";
@@ -27,13 +26,19 @@ const localize = nls.loadMessageBundle();
 
 export class Synchronizer {
 
-    public get isInProgress(): boolean {
-        return this.inProgress;
+    public static acquire(debugLog?: LogFunction) {
+        if (!Synchronizer.instance) {
+            Synchronizer.instance = new Synchronizer(debugLog);
+        } else if (debugLog !== undefined) {
+            Synchronizer.instance.logFn = debugLog;
+        }
+        return Synchronizer.instance;
     }
 
-    public messages: string[] = [];
+    private static instance?: Synchronizer;
 
-    private inProgress = false;
+    public messages: string[] = [];
+    public inProgress = false;
 
     private sshHelper?: SshHelper;
     private remoteSftp?: ISftpClient;
@@ -49,7 +54,7 @@ export class Synchronizer {
     private onDidLoadConfig?: vscode.Disposable;  // dispose listener
     private onDidLoadSSHConfig?: vscode.Disposable;  // dispose listener
 
-    constructor(public debugLog?: LogType) {
+    private constructor(public logFn?: LogFunction) {
     }
 
     public enableRemote() {
@@ -62,8 +67,8 @@ export class Synchronizer {
     }
 
     public disableRemote() {
-        if (this.debugLog) {
-            this.debugLog(localize("debug.dissblig", "Disabling SFTP and SHELL"));
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => localize("debug.dissblig", "Disabling SFTP and SHELL"));
         }
         if (this.remoteSftp) {
             this.remoteSftp.enabled = false;
@@ -75,10 +80,6 @@ export class Synchronizer {
 
     public async syncronizeProject() {
         this.messages = [];
-        if (this.inProgress) {
-            this.messages.push(localize("error.sync_in_progress", "Synchronization is in progress"));
-            return false;
-        }
         if (!await this.prepareSources()) {
             return false;
         }
@@ -87,7 +88,6 @@ export class Synchronizer {
             && this.projectSection
             && this.synchronizeSection
             && this.sshHelper) {
-            this.inProgress = true;
             // enable
             this.enableRemote();
             // clear password cache
@@ -136,10 +136,9 @@ export class Synchronizer {
                     acc = acc && result;
                     return acc;
                 }, true);
-            if (this.debugLog) {
-                this.debugLog(localize("debug.retcode", "Synchronize retCode: {0}", retCode));
+            if (this.logFn) {
+                this.logFn(LogType.debug, () => localize("debug.retcode", "Synchronize retCode: {0}", retCode));
             }
-            this.inProgress = false;
             return retCode;
         } else {
             this.messages.push(localize("output.edit_settings", "In first please edit settings"));
@@ -155,9 +154,9 @@ export class Synchronizer {
         if (!this.prepareSources()) {
             return false;
         }
-        if (this.localSource &&
+        if (this.remoteSource &&
             this.projectSection) {
-            const list = await this.localSource.findFiles(this.projectSection.listing);
+            const list = await this.remoteSource.findFiles(this.projectSection.listing);
             return this.executeAction(list, "download")
                 .then((done) => {
                     this.collectSourceErrors();
@@ -172,7 +171,7 @@ export class Synchronizer {
      * Download files without comparing
      * @param files files
      */
-    public async downloadFiles(files: string[]) {
+    public async downloadFiles(files: string[] | IFileEntry[]) {
         this.messages = [];
         if (!this.prepareSources()) {
             return false;
@@ -189,7 +188,7 @@ export class Synchronizer {
      * Upload files, without comparing
      * @param files files
      */
-    public async uploadFiles(files: string[]) {
+    public async uploadFiles(files: string[] | IFileEntry[]) {
         this.messages = [];
         if (!this.prepareSources()) {
             return false;
@@ -206,8 +205,8 @@ export class Synchronizer {
      * Dispose all sources and watchers
      */
     public dispose() {
-        if (this.debugLog) {
-            this.debugLog(localize("debug.disposing", "Disposing sources"));
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => localize("debug.disposing", "Disposing sources"));
         }
         // sources
         if (this.remoteSftp) {
@@ -235,22 +234,22 @@ export class Synchronizer {
      * Just keep in messages
      */
     private collectSourceErrors() {
-        if (this.remoteSftp) {
-            if (this.remoteSftp.lastSftpError) {
-                this.messages.push(this.remoteSftp.lastSftpError.message);
-            }
-            if (this.remoteSftp.lastClientError) {
-                this.messages.push(this.remoteSftp.lastClientError.message);
-            }
-        }
-        if (this.remoteShell) {
-            if (this.remoteShell.lastShellError) {
-                this.messages.push(this.remoteShell.lastShellError.message);
-            }
-            if (this.remoteShell.lastClientError) {
-                this.messages.push(this.remoteShell.lastClientError.message);
-            }
-        }
+        // if (this.remoteSftp) {
+        //     if (this.remoteSftp.lastSftpError) {
+        //         this.messages.push(this.remoteSftp.lastSftpError.message);
+        //     }
+        //     if (this.remoteSftp.lastClientError) {
+        //         this.messages.push(this.remoteSftp.lastClientError.message);
+        //     }
+        // }
+        // if (this.remoteShell) {
+        //     if (this.remoteShell.lastShellError) {
+        //         this.messages.push(this.remoteShell.lastShellError.message);
+        //     }
+        //     if (this.remoteShell.lastClientError) {
+        //         this.messages.push(this.remoteShell.lastClientError.message);
+        //     }
+        // }
     }
 
     /**
@@ -298,7 +297,7 @@ export class Synchronizer {
         const memoryStream = this.sshHelper!.memStream();
         let content: string | undefined;
         let localUri: vscode.Uri | undefined;
-        return this.sshHelper!.pipeFile(source, memoryStream, file, "", this.debugLog)
+        return this.sshHelper!.pipeFile(source, memoryStream, file, "", this.logFn)
             .then(async (ok) => {
                 if (ok && memoryStream.writeStream && vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
                     content = Buffer.concat(memoryStream.writeStream.chunks).toString("utf8");
@@ -315,8 +314,8 @@ export class Synchronizer {
                     return false;
                 }
             }).catch((errPipeOrAfter) => {
-                if (this.debugLog) {
-                    this.debugLog(errPipeOrAfter);
+                if (this.logFn) {
+                    this.logFn(LogType.debug, () => errPipeOrAfter);
                 }
                 if (localUri && content) {
                     return createFile(localUri, content)
@@ -328,20 +327,20 @@ export class Synchronizer {
                                 return false;
                             }
                         }).catch((errCreateOrShow) => {
-                            if (this.debugLog) {
-                                this.debugLog(errCreateOrShow);
+                            if (this.logFn) {
+                                this.logFn(LogType.debug, () => errCreateOrShow);
                             }
                             return false;
                         });
                 } else {
-                    if (this.debugLog) {
-                        this.debugLog(localize("debug.nothing", "Nothing to show"));
+                    if (this.logFn) {
+                        this.logFn(LogType.debug, () => localize("debug.nothing", "Nothing to show"));
                     }
                     return false;
                 }
             }).catch((errLast) => {
-                if (this.debugLog) {
-                    this.debugLog(errLast);
+                if (this.logFn) {
+                    this.logFn(LogType.debug, () => errLast);
                 }
                 return false;
             });
@@ -361,31 +360,31 @@ export class Synchronizer {
                 return tstRemoteFile.filename.toUpperCase() === localFile.filename.toLocaleUpperCase();
             });
             if (remoteFileIdx === -1) {
-                if (this.debugLog) {
-                    this.debugLog(localize("debug.no_remote", "No remote {0} => upload", localFile.filename));
+                if (this.logFn) {
+                    this.logFn(LogType.debug, () => localize("debug.no_remote", "No remote {0} => upload", localFile.filename));
                 }
                 upload.push(localFile);
             } else {
                 const diff = (remoteLeft[remoteFileIdx].date.valueOf() - localFile.date.valueOf()) / 1000;
                 if (diff < -1) {
-                    if (this.debugLog) {
-                        this.debugLog(localize("debug.local_is_newer", "Local {0} is newer by {diff} => upload", localFile.filename));
+                    if (this.logFn) {
+                        this.logFn(LogType.debug, () => localize("debug.local_is_newer", "Local {0} is newer by {1} => upload", localFile.filename, diff));
                     }
                     upload.push(localFile);
                 } else if (diff > 1) {
-                    if (this.debugLog) {
-                        this.debugLog(localize("debug.remote_is_newer", "Remote {0} is newer by {1} => download", localFile.filename, diff));
+                    if (this.logFn) {
+                        this.logFn(LogType.debug, () => localize("debug.remote_is_newer", "Remote {0} is newer by {1} => download", localFile.filename, diff));
                     }
                     download.push(remoteLeft[remoteFileIdx]);
-                } else if (this.debugLog) {
-                    this.debugLog(localize("debug.the_same", "{0} are the same", localFile.filename));
+                } else if (this.logFn) {
+                    this.logFn(LogType.debug, () => localize("debug.the_same", "{0} are the same", localFile.filename));
                 }
                 remoteLeft.splice(remoteFileIdx, 1);
             }
         }
-        if (this.debugLog) {
+        if (this.logFn) {
             for (const file of remoteLeft) {
-                this.debugLog(localize("debug.no_local", "No local {0} => download", file.filename));
+                this.logFn(LogType.debug, () => localize("debug.no_local", "No local {0} => download", file.filename));
             }
         }
         download.push(...remoteLeft);
@@ -413,8 +412,8 @@ export class Synchronizer {
             && this.workspaceUri
             && this.sshHelper) {
             if (!this.remoteSource) {
-                if (this.debugLog) {
-                    this.debugLog(localize("debug.create_remote", "Creating remote source"));
+                if (this.logFn) {
+                    this.logFn(LogType.debug, () => localize("debug.create_remote", "Creating remote source"));
                 }
                 const [sftp, shell] = await Promise.all([
                         this.sshHelper.getDefaultSftp(),
@@ -423,14 +422,14 @@ export class Synchronizer {
                 if (sftp && shell) {
                     this.remoteSftp = sftp;
                     this.remoteShell = shell;
-                    this.remoteSource = new VmsSource(sftp, shell, this.projectSection.root, this.debugLog, this.synchronizeSection.setTimeAttempts);
+                    this.remoteSource = new VmsSource(sftp, shell, this.projectSection.root, this.logFn, this.synchronizeSection.setTimeAttempts);
                 }
             }
             if (!this.localSource) {
-                if (this.debugLog) {
-                    this.debugLog(localize("debug.create_local", "Creating local source"));
+                if (this.logFn) {
+                    this.logFn(LogType.debug, () => localize("debug.create_local", "Creating local source"));
                 }
-                this.localSource = new FsSource(this.workspaceUri.fsPath, this.debugLog);
+                this.localSource = new FsSource(this.workspaceUri.fsPath, this.logFn);
             }
             return true;
         }
@@ -473,13 +472,13 @@ export class Synchronizer {
         if (!this.sshHelper) {
             const sshHelperType = await GetSshHelperFromApi();
             if (!sshHelperType) {
-                if (this.debugLog) {
-                    this.debugLog(localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
+                if (this.logFn) {
+                    this.logFn(LogType.debug, () => localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
                 }
                 this.messages.push(localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
                 return false;
             }
-            this.sshHelper = new sshHelperType(this.debugLog);
+            this.sshHelper = new sshHelperType(this.logFn);
         }
         return true;
     }
@@ -542,7 +541,7 @@ export class Synchronizer {
             const dir = file.slice(0, dirEnd);
             await to.ensureDirectory(dir);
         }
-        return this.sshHelper!.pipeFile(from, to, file, file, this.debugLog)
+        return this.sshHelper!.pipeFile(from, to, file, file, this.logFn)
             .then(async (ok) => {
                 if (ok) {
                     // TODO: test anyhow that file is completely written before setting date

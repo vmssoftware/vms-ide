@@ -1,5 +1,5 @@
 import { Writable } from "stream";
-import { LogType } from "./log-type";
+import { LogFunction, LogType } from "./log-type";
 
 export class MemoryWriteStream extends Writable {
 
@@ -7,11 +7,11 @@ export class MemoryWriteStream extends Writable {
 
     public chunks: Buffer[] = [];
 
-    constructor(public debugLog?: LogType, public emulateError?: boolean) {
+    constructor(public debugLog?: LogFunction, public emulateError?: boolean) {
         super();
         this.on("error", (err) => {
             if (this.debugLog) {
-                this.debugLog(`memstream error: ${err}`);
+                this.debugLog(LogType.error, () => `memstream error: ${err}`);
             }
         });
     }

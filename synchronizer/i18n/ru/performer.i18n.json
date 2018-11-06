@@ -1,0 +1,15 @@
+{
+    "saving.fail": "Saving failed",
+    "saving.status": "Saving...",
+    "saving.success": "Saving ok",
+    "synchronizing.fail": "Synchronizing failed",
+    "synchronizing.status": "Synchronizing...",
+    "synchronizing.success": "Synchronizing ok",
+    "building.fail": "Building failed",
+    "building.status": "Building...",
+    "buiding.success": "Building ok",
+    "clean.fail": "Clean failed",
+    "clean.status": "Clean...",
+    "clean.success": "Clean ok",
+    "error.no_action": "Cannot find action: {0}"
+}

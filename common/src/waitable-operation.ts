@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 
 import { Lock } from "./lock";
-import { LogType } from "./log-type";
+import { LogFunction, LogType } from "./log-type";
 
 /**
  * Waitable operation executor
@@ -21,14 +21,16 @@ export async function WaitableOperation(operationName: string,
                                         failEmitter: EventEmitter,
                                         failEvent: string | symbol,
                                         operation: (complete: Lock) => boolean,
-                                        logFn?: LogType) {
+                                        logFn?: LogFunction) {
 
     let shouldWait = false;
     const operationDone = new Lock(true);
     const mayContinue = new Lock(true);
 
     const onFailed = () => {
-        if (logFn) { logFn(`${operationName} failed`); }
+        if (logFn) {
+            logFn(LogType.debug, () => `${operationName} failed`);
+        }
         // release all locks
         mayContinue.release();
         operationDone.release();
@@ -38,7 +40,9 @@ export async function WaitableOperation(operationName: string,
 
     const onContinue = () => {
         // tslint:disable-next-line:no-unused-expression
-        if (logFn) { logFn(`${operationName} may continue`); }
+        if (logFn) {
+            logFn(LogType.debug, () => `${operationName} may continue`);
+        }
         mayContinue.release();
     };
 
@@ -48,7 +52,9 @@ export async function WaitableOperation(operationName: string,
         shouldWait = operation(operationDone);
         if (shouldWait) {
             // tslint:disable-next-line:no-unused-expression
-            if (logFn) { logFn(`${operationName} should wait`); }
+            if (logFn) {
+                logFn(LogType.debug, () => `${operationName} should wait`);
+            }
             continueEmitter.on(continueEvent, onContinue);
             await mayContinue.acquire();   // wait until "continue" or failed
             continueEmitter.removeListener(continueEvent, onContinue);

@@ -1,6 +1,6 @@
 import { IConfig, IConfigHelper, IConfigSection } from "./ext-api/config";
 
-import { LogType } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 
 import { GetConfigHelperFromApi } from "./config/get-config-helper";
 import { ProjectSection } from "./config/sections/project";
@@ -20,7 +20,7 @@ import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export async function EnsureSettings(debugLog?: LogType) {
+export async function EnsureSettings(debugLog?: LogFunction) {
     if (settingsEnsured !== undefined) {
         return settingsEnsured;
     }
@@ -49,7 +49,7 @@ export async function EnsureSettings(debugLog?: LogType) {
     for (const section of sections) {
         const testSection = await synchronizerConfig.get(section.name());
         if (debugLog && typeof section !== typeof testSection) {
-            debugLog(localize("debug.different_types", "Different types of sections ${0}", section.name()));
+            debugLog(LogType.debug, () => localize("debug.different_types", "Different types of sections ${0}", section.name()));
             settingsEnsured = false;
             return settingsEnsured;
         }

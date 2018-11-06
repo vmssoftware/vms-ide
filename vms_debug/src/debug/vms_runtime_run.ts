@@ -7,8 +7,8 @@ import * as nls from 'vscode-nls';
 import { EventEmitter } from 'events';
 import { ShellSession, ModeWork } from '../net/shell-session';
 import { OsCommands } from '../command/os_commands';
-import { ToOutputChannel } from '../io/output-channel';
 import { MessagePrompt } from '../parsers/debug_parser';
+import { LogFunction, LogType } from '@vorfol/common';
 
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
@@ -23,7 +23,7 @@ export class VMSRuntimeRun extends EventEmitter
 	private statusProgram : boolean;
 
 
-	constructor(shell : ShellSession)
+	constructor(shell : ShellSession, public logFn?: LogFunction)
 	{
 		super();
 
@@ -72,7 +72,10 @@ export class VMSRuntimeRun extends EventEmitter
 
 			if(typeData === "C:")//command
 			{
-				ToOutputChannel(MessagePrompt.prmtCMD + dataMsg);
+				if (this.logFn)
+				{
+					this.logFn(LogType.informtion, () => MessagePrompt.prmtCMD + dataMsg);
+				}
 			}
 			else if(typeData === "D:")
 			{

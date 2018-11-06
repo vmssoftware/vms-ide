@@ -1,6 +1,5 @@
 {
     "debug.dissblig": "Блокирование SFTP и SHELL",
-    "error.sync_in_progress": "Synchronization is in progress",
     "output.download_manually": "Удалённый файл {0} новее, проверьте и загрузите его самостоятельно",
     "output.edit_count": "Отредактируйте и сохраните {0} файл(ов) самостоятельно",
     "debug.retcode": "Синхронизация вернула: {0}",

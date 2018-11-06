@@ -1,6 +1,6 @@
 import { Disposable, workspace } from "vscode";
 
-import { Debouncer, LogType } from "@vorfol/common";
+import { Debouncer, LogFunction, LogType } from "@vorfol/common";
 
 import { ConfigHelper, IConfig, IConfigEditor, IConfigStorage } from "./config";
 import { ConfigPool } from "./config-pool";
@@ -16,9 +16,9 @@ import { VSCConfigStorage } from "./vsc-storage";
  */
 export class VSCConfigHelper implements ConfigHelper {
 
-    public static getConfigHelper(section: string, debugLog?: LogType): VSCConfigHelper {
+    public static getConfigHelper(section: string, logFn?: LogFunction): VSCConfigHelper {
         if (VSCConfigHelper.instances.get(section) === undefined) {
-            VSCConfigHelper.instances.set(section, new VSCConfigHelper(section, debugLog));
+            VSCConfigHelper.instances.set(section, new VSCConfigHelper(section, logFn));
         }
         return VSCConfigHelper.instances.get(section)!;
     }
@@ -31,14 +31,16 @@ export class VSCConfigHelper implements ConfigHelper {
     protected debouncer = new Debouncer(3000);
     protected disposables: Disposable[] = [];
 
-    protected constructor(protected section: string, public debugLog?: LogType) {
-        this.storage = new VSCConfigStorage(this.section, debugLog);
-        this.config = new ConfigPool(this.storage, debugLog);
-        this.editor = new VSCWorkspaceConfigEditor(this.config, debugLog);
+    protected constructor(protected section: string, public logFn?: LogFunction) {
+        this.storage = new VSCConfigStorage(this.section, logFn);
+        this.config = new ConfigPool(this.storage, logFn);
+        this.editor = new VSCWorkspaceConfigEditor(this.config, logFn);
         this.disposables.push( workspace.onDidChangeConfiguration((e) => {
             if (e.affectsConfiguration(this.section)) {
                 this.config.freeze();
-                if (this.debugLog) { this.debugLog("onDidChangeConfiguration"); }
+                if (this.logFn) {
+                    this.logFn(LogType.debug, () => "onDidChangeConfiguration");
+                }
                 this.debouncer.debounce().then(async () => {
                     await this.config.load();
                     this.config.unfreeze();

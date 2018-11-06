@@ -1,6 +1,6 @@
 import micromatch from "micromatch";
 
-import { LogType } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 
 import { ftpPathSeparator, IFileEntry, IReadDirectory } from "@vorfol/common";
 
@@ -31,7 +31,7 @@ export async function findFiles(canReadDir: IReadDirectory,
                                 rootDir: string,
                                 include?: string,
                                 exclude?: string,
-                                debugLog?: LogType) {
+                                debugLog?: LogFunction) {
     include = include || "*";
     const options: micromatch.Options = {
         basename: true,

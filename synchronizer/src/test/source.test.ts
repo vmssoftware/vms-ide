@@ -1,6 +1,6 @@
 import * as assert from "assert";
 
-import { LogType, MemoryWriteStream } from "@vorfol/common";
+import { logConsoleFn, LogFunction, LogType, MemoryWriteStream } from "@vorfol/common";
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
 import { SshHelper } from "../ext-api/ssh-helper";
 import { FsSource } from "../sync/fs-source";
@@ -15,10 +15,8 @@ suite("Source tests", function(this: Mocha.Suite) {
 
     this.timeout(0);
 
-    let debugLogFn: LogType | undefined;
-    debugLogFn = undefined;
-    // tslint:disable-next-line:no-console
-    debugLogFn = console.log;
+    let debugLogFn: LogFunction | undefined;
+    debugLogFn = logConsoleFn;
 
     const include = "**/*.{c,cpp,h},**/resource/**,**/*.mms";
     const exclude = "**/{out,bin},**/.vscode*";
@@ -50,13 +48,13 @@ suite("Source tests", function(this: Mocha.Suite) {
         assert.ok(true, "must be true");
     });
 
-    async function WalkFiles(source: ISource, debugLog?: LogType) {
+    async function WalkFiles(source: ISource, debugLog?: LogFunction) {
         const list = await source.findFiles(include, exclude);
         const all = [];
         for (const file of list) {
             all.push(Promise.resolve().then(async () => {
                 if (debugLogFn) {
-                    debugLogFn(`${file.filename} ${file.date}`);
+                    debugLogFn(LogType.debug, () => `${file.filename} ${file.date}`);
                 }
                 assert.equal(file.isDirectory, false, `No directories allowed ${file.filename}`);
                 const date = await source.getDate(file.filename);

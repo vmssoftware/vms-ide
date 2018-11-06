@@ -1,6 +1,6 @@
 import { ConnectConfig } from "ssh2";
 
-import { LogType } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 import { ConnectConfigResolverImpl, settingsCache } from "../config-resolve/connect-config-resolver-impl";
@@ -16,12 +16,12 @@ import { TestConfiguration } from "./config/config";
 
 suite("Shell tests", function(this: Mocha.Suite) {
 
-    return;
+    // return;
 
     this.timeout(0);
 
     // const debugLogFn = undefined;
-    let debugLogFn: LogType | undefined;
+    let debugLogFn: LogFunction | undefined;
     debugLogFn = undefined;
     // tslint:disable-next-line:no-console
     // debugLogFn = console.log;
@@ -40,8 +40,8 @@ suite("Shell tests", function(this: Mocha.Suite) {
     ];
     const vmsExitCommand = "logout";
     const vmsCommands = [
-        "dir",
-        "sh time",
+        "cd project",
+        "mms/descr=project/ext",
     ];
 
     this.beforeAll(async () => {
@@ -68,6 +68,14 @@ suite("Shell tests", function(this: Mocha.Suite) {
         promptCatcherVms = new PromptCatcherVms("", 0, debugLogFn, "prom vms");
     });
 
+    test("TestShell vms +quit welcome-vms vms-catch", async () => {
+        settingsCache.clear();
+        const logoutInserted = vmsCommands.concat([vmsExitCommand], vmsCommands);
+        return await TestShell(logoutInserted, configVms, resolver, parserVms, promptCatcherVms, debugLogFn);
+    });
+
+    return;
+
     test("TestShell no password", async () => {
         settingsCache.clear();
         return await TestShell(defaultCommands, configLocal, undefined, parser, promptCatcher, debugLogFn);
@@ -83,12 +91,6 @@ suite("Shell tests", function(this: Mocha.Suite) {
         settingsCache.clear();
         const logoutInserted = vmsCommands.concat([vmsExitCommand], vmsCommands);
         return await TestShell(logoutInserted, configVms, resolver, parser, promptCatcher, debugLogFn);
-    });
-
-    test("TestShell vms +quit welcome-vms vms-catch", async () => {
-        settingsCache.clear();
-        const logoutInserted = vmsCommands.concat([vmsExitCommand], vmsCommands);
-        return await TestShell(logoutInserted, configVms, resolver, parserVms, promptCatcherVms, debugLogFn);
     });
 
     test("TestShell local welcome-prompt prompt-catch", async () => {
@@ -111,19 +113,20 @@ suite("Shell tests", function(this: Mocha.Suite) {
                              configResolver?: IConnectConfigResolver,
                              welcomeParser?: IParseWelcome,
                              catcher?: IPromptCatcher,
-                             debugLog?: LogType) {
-        const shell = new SshShell(config, configResolver, welcomeParser, catcher, debugLog, "*");
+                             logFn?: LogFunction) {
+        const shell = new SshShell(config, configResolver, welcomeParser, catcher, logFn, "*");
+        shell.width = 16;
         for (const command of commands) {
-            if (debugLog) {
-                debugLog(`start exec command: ${command}`);
+            if (logFn) {
+                logFn(LogType.debug, () => `start exec command: ${command}`);
             }
             const content = await shell.execCmd(command);
-            if (debugLog) {
+            if (logFn) {
                 if (content) {
-                    const lines = "> " + content.split("\n").map((s) => s.trim()).filter((s) => s).join("\r\n> ");
-                    debugLog(`end command: ${command}\r\ncontent:${lines}`);
+                    //const lines = "> " + content.split("\n").map((s) => s.trim()).filter((s) => s).join("\r\n> ");
+                    logFn(LogType.debug, () => `end command: ${command}\r\ncontent:${content}`);
                 } else {
-                    debugLog(`end command: ${command}\r\n>=> content undefined`);
+                    logFn(LogType.debug, () => `end command: ${command}\r\n>=> content undefined`);
                 }
             }
         }

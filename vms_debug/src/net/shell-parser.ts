@@ -1,5 +1,5 @@
 import { Transform } from "stream";
-import { LogType } from "@vorfol/common";
+import { LogType, LogFunction } from "@vorfol/common";
 
 export class ShellParser extends Transform {
 
@@ -18,7 +18,7 @@ export class ShellParser extends Transform {
 	constructor(public dataCb?: (data: string) => void,
 				public closeCb?: (code?: any, signal?: any) => void,
 				public errorCb?: (err) => void,
-				public debugLog?: LogType, public tag?: string) {
+				public debugLog?: LogFunction, public tag?: string) {
         super();
         this.on("close", () => {
 			setImmediate(() => {
@@ -27,7 +27,7 @@ export class ShellParser extends Transform {
 				}
 			});
             if (this.debugLog) {
-                this.debugLog(`ShellParser${this.tag ? " " + this.tag : ""}: closed`);
+                this.debugLog(LogType.debug, () => `ShellParser${this.tag ? " " + this.tag : ""}: closed`);
             }
             this.setReady();
         });
@@ -39,7 +39,7 @@ export class ShellParser extends Transform {
 			});
             this.lastError = err;
             if (this.debugLog) {
-                this.debugLog(`ShellParser${this.tag ? " " + this.tag : ""}: error ${err}`);
+                this.debugLog(LogType.debug, () => `ShellParser${this.tag ? " " + this.tag : ""}: error ${err}`);
             }
             this.setReady();
         });
@@ -57,12 +57,12 @@ export class ShellParser extends Transform {
      */
     public _transform(chunk: any, encoding: string, callback: Function) {
         if (this.debugLog) {
-            this.debugLog(`ShellParser${this.tag ? " " + this.tag : ""}: got chunk`);
+            this.debugLog(LogType.debug, () => `ShellParser${this.tag ? " " + this.tag : ""}: got chunk`);
         }
         if (Buffer.isBuffer(chunk)) {
             const strData = chunk.toString("utf8");
             if (this.debugLog) {
-                this.debugLog(`${strData}`);
+                this.debugLog(LogType.debug, () => `${strData}`);
             }
             setImmediate(() => {
                 if (this.dataCb) {
@@ -71,7 +71,7 @@ export class ShellParser extends Transform {
             });
         } else {
             if (this.debugLog) {
-                this.debugLog(`ShellParser${this.tag ? " " + this.tag : ""}: chunk is not Buffer`);
+                this.debugLog(LogType.debug, () => `ShellParser${this.tag ? " " + this.tag : ""}: chunk is not Buffer`);
             }
         }
         callback();
@@ -80,7 +80,7 @@ export class ShellParser extends Transform {
     protected setReady() {
         setImmediate(() => this.emit(this.readyEvent));
         if (this.debugLog) {
-            this.debugLog(`ShellParser${this.tag ? " " + this.tag : ""}: set ready`);
+            this.debugLog(LogType.debug, () => `ShellParser${this.tag ? " " + this.tag : ""}: set ready`);
         }
     }
 }

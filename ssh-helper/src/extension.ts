@@ -2,7 +2,9 @@
 import * as vscode from 'vscode';
 import { SshHelper } from './ssh-helper';
 
-const sshHelper = new SshHelper(console.log);
+import { logConsoleFn } from '@vorfol/common';
+
+const sshHelper = new SshHelper(undefined);
 
 const locale = vscode.env.language ;
 import * as nls from "vscode-nls";

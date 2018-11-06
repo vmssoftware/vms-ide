@@ -2,7 +2,7 @@ import * as fs from "fs-extra";
 import * as util from "util";
 
 import { ftpPathSeparator, IFileEntry, IReadDirectory } from "@vorfol/common";
-import { LogType } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 
 import { findFiles, leadingSepRg, middleSepRg, trailingSepRg } from "../common/find-files";
 import { ISource } from "./source";
@@ -24,7 +24,7 @@ export class FsSource implements ISource, IReadDirectory {
         this.ftpLikeRoot = anyRoot.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
     }
 
-    constructor(root?: string, public debugLog?: LogType, public attempts?: number) {
+    constructor(root?: string, public debugLog?: LogFunction, public attempts?: number) {
         this.root = root;
     }
 
@@ -36,7 +36,7 @@ export class FsSource implements ISource, IReadDirectory {
         directory = this.root + ftpPathSeparator + directory;
         const list = await fs.readdir(directory).catch((err) => {
             if (this.debugLog) {
-                this.debugLog(`${err}`);
+                this.debugLog(LogType.debug, () => `${err}`);
             }
             return [];
         });
@@ -44,7 +44,7 @@ export class FsSource implements ISource, IReadDirectory {
         for (const file of list) {
             const stat = await fs.stat(directory + ftpPathSeparator + file).catch((err) => {
                 if (this.debugLog) {
-                    this.debugLog(`${err}`);
+                    this.debugLog(LogType.debug, () => `${err}`);
                 }
                 return undefined;
             });
@@ -58,7 +58,7 @@ export class FsSource implements ISource, IReadDirectory {
                 retList.push(entry);
             } else {
                 if (this.debugLog) {
-                    this.debugLog(localize("debug.no_date", "No date for {0}", file));
+                    this.debugLog(LogType.debug, () => localize("debug.no_date", "No date for {0}", file));
                 }
             }
         }
@@ -74,7 +74,7 @@ export class FsSource implements ISource, IReadDirectory {
         filename = this.root + ftpPathSeparator + filename;
         const stat = await fs.stat(filename).catch((err) => {
             if (this.debugLog) {
-                this.debugLog(`${err}`);
+                this.debugLog(LogType.debug, () => `${err}`);
             }
             return undefined;
         });
@@ -92,7 +92,7 @@ export class FsSource implements ISource, IReadDirectory {
         }).catch((err) => {
             // TODO: try this.attempts times
             if (this.debugLog) {
-                this.debugLog(`${err}`);
+                this.debugLog(LogType.debug, () => `${err}`);
             }
             return false;
         });

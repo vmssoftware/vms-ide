@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { LogType } from "./log-type";
+import { LogFunction } from "./log-type";
 import { Subscribe } from "./subscribe";
 
 /**
@@ -12,7 +12,7 @@ export class WaitFireEventEmitter<T> {
     private emitter = new EventEmitter();
     private event = Symbol();
 
-    constructor(private waitMsec: number, public debugLog?: LogType) {
+    constructor(private waitMsec: number, public debugLog?: LogFunction) {
     }
 
     public fire(data?: T) {

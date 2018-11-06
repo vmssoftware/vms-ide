@@ -50,6 +50,11 @@
             "type": "gulp",
             "task": "publish",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "get-ext-api",
+            "problemMatcher": []
         }
     ]
 }

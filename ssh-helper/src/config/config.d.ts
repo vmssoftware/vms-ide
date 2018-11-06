@@ -87,3 +87,4 @@ export declare class ConfigHelper implements IConfigHelper {
     getEditor(): IConfigEditor;
     dispose(): void;
 }
+//# sourceMappingURL=config.d.ts.map

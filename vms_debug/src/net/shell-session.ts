@@ -1,8 +1,8 @@
-import {ToOutputChannel} from '../io/output-channel';
+
 import { Queue } from '../queue/queues';
 import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
 import { SshHelper } from '../ext-api/ssh-helper';
-import { LogType } from '@vorfol/common';
+import { LogType, LogFunction } from '@vorfol/common';
 import { GetSshHelperFromApi } from '../ext-api/get-ssh-helper';
 import { ISshShell } from '../ext-api/api';
 import { ShellParser } from './shell-parser';
@@ -36,13 +36,13 @@ export class ShellSession
 
     private shellParser: ShellParser;
 
-    constructor( ExtensionDataCb: (data: string, mode: ModeWork) => void, ExtensionReadyCb: () => void, ExtensionCloseCb: () => void, public debugLog?: LogType)
+    constructor( ExtensionDataCb: (data: string, mode: ModeWork) => void, ExtensionReadyCb: () => void, ExtensionCloseCb: () => void, public logFn?: LogFunction)
     {
         this.promptCmd = "";
         this.extensionDataCb = ExtensionDataCb;
         this.extensionReadyCb = ExtensionReadyCb;
         this.extensionCloseCb = ExtensionCloseCb;
-        this.shellParser = new ShellParser(this.DataCb, this.CloseCb, this.ClientErrorCb/*, debugLog*/);
+        this.shellParser = new ShellParser(this.DataCb, this.CloseCb, this.ClientErrorCb, logFn);
 
         this.resetParameters();
         this.ShellInitialise();
@@ -59,14 +59,14 @@ export class ShellSession
 
                 if (!sshHelperType)
                 {
-                    if (this.debugLog)
+                    if (this.logFn)
                     {
-                        this.debugLog(`Cannot get ssh-helper api`);
+                        this.logFn(LogType.error, () => `Cannot get ssh-helper api`);
                     }
 
                     return false;
                 }
-                this.sshHelper = new sshHelperType(this.debugLog);
+                this.sshHelper = new sshHelperType(this.logFn);
             }
 
             if (this.sshHelper)
@@ -80,8 +80,7 @@ export class ShellSession
 
                     if (!attached)
                     {
-                        throw this.sshShell.lastClientError? this.sshShell.lastClientError :
-                            this.sshShell.lastShellError ? this.sshShell.lastShellError : new Error(localize("output.cannot_attach", "Cannot connect"));
+                        throw new Error(localize("output.cannot_attach", "Cannot connect"));
                     }
                     else
                     {
@@ -94,8 +93,10 @@ export class ShellSession
         {
             if (error instanceof Error)
             {
-                ToOutputChannel(error.message);
-
+                if (this.logFn)
+                {
+                    this.logFn(LogType.error, () => error.message);
+                }
                 if(this.sshShell)
                 {
                     this.sshShell.dispose();
@@ -104,9 +105,9 @@ export class ShellSession
             }
             else
             {
-                if (this.debugLog)
+                if (this.logFn)
                 {
-                    this.debugLog(error);
+                    this.logFn(LogType.debug, () => String(error));
                 }
             }
         }
@@ -224,9 +225,9 @@ export class ShellSession
             this.sshShell = undefined;
         }
 
-        if (this.debugLog)
+        if (this.logFn)
         {
-            this.debugLog("Connection was closed");
+            this.logFn(LogType.debug, () => "Connection was closed");
         }
 
         this.extensionCloseCb();
@@ -234,7 +235,10 @@ export class ShellSession
 
     private ClientErrorCb = (err) : void =>
     {
-        ToOutputChannel(`${err}`);
+        if (this.logFn)
+        {
+            this.logFn(LogType.error, () => String(err));
+        }
 
         this.extensionCloseCb();
     }

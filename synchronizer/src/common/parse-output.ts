@@ -31,10 +31,19 @@ const rgxMsgFileSintax = /(.*) in file (.*)$/;
 const rgxMsgFileAbort = /For target (.*), (.*)$/;
 const mmsExt = ".MMS";
 
-export function consolidateOutputLines(output: string, shellWidth?: number) {
-    const lines = output.split("\r\n");
+const lineStartRgx = [
+    rgxMsg,
+    rgxPlaceCXX,
+    rgxMsgCXX,
+    rgxMsgMMS,
+];
+
+export function consolidateOutputLines(output: string[], shellWidth?: number) {
+    const lines = output.filter((s) => !!s);
     const retLines = lines.reduce((acc, line, idx, source) => {
-        if (line.match(rgxMsg)) {
+        if (lineStartRgx.some((rgx) => {
+            return rgx.test(line);
+            }))  {
             acc.push(line);
             return acc;
         }
@@ -48,7 +57,7 @@ export function consolidateOutputLines(output: string, shellWidth?: number) {
     return retLines;
 }
 
-export function parseVmsOutput(output: string, shellWidth?: number) {
+export function parseVmsOutput(output: string[], shellWidth?: number) {
     const lines = consolidateOutputLines(output, shellWidth);
     const result: IPartialDiagnostics[] = [];
     lines.reduce(findCxxErrors, result);
@@ -70,6 +79,10 @@ export function parseVmsOutput(output: string, shellWidth?: number) {
             const trySeverity = matched[4];
             if (isVmsSeverity(trySeverity)) {
                 diagnostic.severity = trySeverity;
+            }
+            if (diagnostic.severity === VmsSeverity.information ||
+                diagnostic.severity === VmsSeverity.success) {
+                    return problems;
             }
             diagnostic.type = matched[5];
             diagnostic.message = matched[6];

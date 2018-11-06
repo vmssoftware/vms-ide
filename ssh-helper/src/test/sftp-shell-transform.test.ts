@@ -1,7 +1,7 @@
 import { ConnectConfig } from "ssh2";
 import { Transform } from "stream";
 
-import { Lock } from "@vorfol/common";
+import { Lock, LogFunction } from "@vorfol/common";
 import { LogType } from "@vorfol/common";
 
 import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
@@ -23,7 +23,7 @@ suite("Shell transform tests", function(this: Mocha.Suite) {
     this.timeout(0);
 
     // const debugLogFn = undefined;
-    let debugLogFn: LogType | undefined;
+    let debugLogFn: LogFunction | undefined;
     debugLogFn = undefined;
     // tslint:disable-next-line:no-console
     debugLogFn = console.log;
@@ -90,7 +90,7 @@ suite("Shell transform tests", function(this: Mocha.Suite) {
                 content = content.trim();
                 if (content && debugLogFn) {
                     const lines = "> " + content.split("\n").map((s) => s.trim()).filter((s) => s).join("\r\n> ");
-                    debugLogFn(`${lines}`);
+                    debugLogFn(LogType.debug, () => `${lines}`);
                 }
                 if (content.includes(myExit)) {
                     user.push("logout");
@@ -101,21 +101,21 @@ suite("Shell transform tests", function(this: Mocha.Suite) {
         } );
         user.on("end", () => {
             if (debugLogFn) {
-                debugLogFn(`end ok`);
+                debugLogFn(LogType.debug, () => `end ok`);
             }
             done.release();
         });
         user.on("error", (err) => {
             if (debugLogFn) {
-                debugLogFn(`error: ${err}`);
+                debugLogFn(LogType.debug, () => `error: ${err}`);
             }
             done.release();
         });
         await shell.attachUser(user);
         for (const cmd of vmsCommands) {
-            user.push(`${cmd}\r\n`);
+            user.push(`${cmd}${SshShell.eol}`);
         }
-        user.push(`${myExit}\r\n`);
+        user.push(`${myExit}${SshShell.eol}`);
         await done.acquire();
         shell.detachUser();
         shell.dispose();
