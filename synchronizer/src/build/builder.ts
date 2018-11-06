@@ -223,7 +223,7 @@ export class Builder {
                     fs.readFile(defMmsPath, "utf8"),
                     this.localSource.findFiles(this.projectSection.headers, this.projectSection.exclude),
                     this.localSource.findFiles(this.projectSection.source, this.projectSection.exclude)]);
-                const newContent = `OUTDIR=OUT\n`
+                const newContent = `OUTDIR=${this.projectSection.outdir}\n`
                               + `NAME=${this.projectSection.projectName}\n`
                               + `INCLUDES=${headres.map(iFileEntryToVmsPath).join(" -\n")}\n`
                               + `SOURCES=${sources.map(iFileEntryToVmsPath).join(" -\n")}\n`
@@ -255,13 +255,13 @@ export class Builder {
             // decide what to clean
             switch (selection.type) {
                 case "both":
-                    command = `del/tree [.${"OUT"}...]*.*;*`;           // TODO: keep OUT dir in project section
+                    command = `del/tree [.${this.projectSection.outdir}...]*.*;*`;
                     break;
                 case "debug":
-                    command = `del/tree [.${"OUT"}.DEBUG...]*.*;*`;     // TODO: keep OUT dir in project section
+                    command = `del/tree [.${this.projectSection.outdir}.DEBUG...]*.*;*`;
                     break;
                 case "release":
-                    command = `del/tree [.${"OUT"}.RELEASE...]*.*;*`;   // TODO: keep OUT dir in project section
+                    command = `del/tree [.${this.projectSection.outdir}.RELEASE...]*.*;*`;
                     break;
             }
             // run if decided
