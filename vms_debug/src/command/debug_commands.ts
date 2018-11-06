@@ -75,7 +75,6 @@ export class DebugCommands
 
 	public rerun() : CommandMessage
 	{
-
 		return new CommandMessage(DebugCmdVMS.dbgRerunExe, "");
 	}
 
