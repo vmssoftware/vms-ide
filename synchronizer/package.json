@@ -91,8 +91,13 @@
                 },
                 "vmssoftware.synchronizer.project.listing": {
                     "type": "string",
-                    "default": "*.{lis}",
+                    "default": "*.lis",
                     "description": "%properties.project.listing.description%"
+                },
+                "vmssoftware.synchronizer.project.outdir": {
+                    "type": "string",
+                    "default": "out",
+                    "description": "%properties.project.outdir.description%"
                 },
                 "vmssoftware.synchronizer.project.projectName": {
                     "type": "string",

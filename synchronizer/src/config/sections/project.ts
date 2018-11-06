@@ -5,6 +5,7 @@ export interface IProjectSection {
     exclude: string;
     headers: string;
     listing: string;
+    outdir: string;
     projectName: string;
     resource: string;
     root: string;
@@ -29,6 +30,7 @@ export class ProjectSection implements IProjectSection, IConfigSection {
         typeof candidate.exclude === "string" &&
         typeof candidate.headers === "string" &&
         typeof candidate.listing === "string" &&
+        typeof candidate.outdir === "string" &&
         typeof candidate.projectName === "string" &&
         typeof candidate.resource === "string" &&
         typeof candidate.root === "string" &&
@@ -39,6 +41,7 @@ export class ProjectSection implements IProjectSection, IConfigSection {
     public exclude: string = "**/{node_modules,.vscode}/**";
     public headers: string = "*.h";
     public listing: string = "*.lis";
+    public outdir: string = "out";
     public projectName: string = "project";
     public resource: string = "**/resource/**";
     public root: string = "project";
@@ -58,6 +61,7 @@ export class ProjectSection implements IProjectSection, IConfigSection {
             exclude: this.exclude,
             headers: this.headers,
             listing: this.listing,
+            outdir: this.outdir,
             projectName: this.projectName,
             resource: this.resource,
             root: this.root,
@@ -70,6 +74,7 @@ export class ProjectSection implements IProjectSection, IConfigSection {
             this.exclude = data.exclude;
             this.headers = data.headers;
             this.listing = data.listing;
+            this.outdir = data.outdir;
             this.projectName = data.projectName;
             this.resource = data.resource;
             this.root = data.root;
