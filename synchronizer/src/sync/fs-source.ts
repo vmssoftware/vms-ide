@@ -27,6 +27,18 @@ export class FsSource implements ISource, IReadDirectory {
         this.root = root;
     }
 
+    public dispose() {
+        //
+    }
+
+    public get enabled() {
+        return true;
+    }
+
+    public set enabled(action: boolean) {
+        //
+    }
+
     /**
      * Read directory adding root, member of IReadDirectory
      * @param directory directory

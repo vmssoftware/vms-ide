@@ -1,13 +1,11 @@
 import * as assert from "assert";
-
-import { IInputAttributes } from "../ext-api/api";
-import { ISftpClient } from "../ext-api/api";
+import { inspect } from "util";
 
 import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
 
-import { inspect } from "util";
 import { findFiles } from "../common/find-files";
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
+import { IInputAttributes } from "../ext-api/api";
 import { SshHelper } from "../ext-api/ssh-helper";
 import { Vms } from "./config/vms";
 

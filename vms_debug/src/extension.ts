@@ -13,8 +13,7 @@ import * as nls from 'vscode-nls';
 import { VMSNoDebugSession } from './debug/vms_debug_run';
 import { createLogFunction } from './log';
 import { LogType } from '@vorfol/common';
-import { GetConfigHelperFromApi } from './ext-api/get-config-helper';
-import { ProjectSection, IProjectSection } from './ext-api/sections/project';
+import { ensureProjectSettings, projectSection } from './ext-api/ensure-project';
 
 
 export enum TypeRunConfig
@@ -104,7 +103,6 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 {
 	private serverDbg?: Net.Server;
 	private serverNoDbg?: Net.Server;
-	private projectSection?: IProjectSection;
 
 	//Massage a debug configuration just before a debug session is being launched,
 	//e.g. add all missing attributes to the debug configuration.
@@ -180,31 +178,9 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 
 			if (!config.program)
 			{
-				if (!this.projectSection) {
-					// get config-helper API
-					const api = await GetConfigHelperFromApi();
-					if (api) {
-						// request configuration "vmssoftware.synchronizer"
-						const configHelper = api.getConfigHelper("vmssoftware.synchronizer");
-						const synchronizerConfig = configHelper.getConfig();
-						if (synchronizerConfig) {
-							// request section "project"
-							let projectSection = await synchronizerConfig.get(ProjectSection.section);
-							if (!projectSection) {
-								// if hasn't filled yet, add it and request to fill
-								synchronizerConfig.add(new ProjectSection());
-								projectSection = await synchronizerConfig.get(ProjectSection.section);
-							}
-							if (ProjectSection.is(projectSection)) {
-								// that is it
-								this.projectSection = projectSection;
-							}
-						}
-					}
-				}
-				if (this.projectSection) {
+				if (await ensureProjectSettings() && projectSection) {
 					const buildType = config.typeRun === "DEBUG" ? "debug" : "release";
-					const pathToExecutable = `[.${this.projectSection.root}.${this.projectSection.outdir}.${buildType}]${this.projectSection.projectName}.exe`;
+					const pathToExecutable = `[.${projectSection.root}.${projectSection.outdir}.${buildType}]${projectSection.projectName}.exe`;
 					config.program = pathToExecutable;
 				}
 			}

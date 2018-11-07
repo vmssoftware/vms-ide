@@ -10,9 +10,12 @@ import { ShellSession, ModeWork } from '../net/shell-session';
 import { OsCommands } from '../command/os_commands';
 import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
 import { DebugParser, MessageDebuger } from '../parsers/debug_parser';
-import { workspace, Uri } from 'vscode';
+import { workspace } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { LogFunction, LogType } from '@vorfol/common';
+import { LogFunction, LogType, IFileEntry } from '@vorfol/common';
+import { ISource } from '../ext-api/source';
+import { GetSourceHelperFromApi } from '../ext-api/get-source-helper';
+import { ensureProjectSettings, projectSection } from '../ext-api/ensure-project';
 
 
 export interface VMSBreakpoint
@@ -53,6 +56,8 @@ export class VMSRuntime extends EventEmitter
 	private stackStartFrame: number;
 	private stackEndFrame: number;
 
+	private localSource?: ISource;
+
 	// the contents (= lines) of the one and only file
 	private sourceLines: string[];
 	private sourcePaths: string[];
@@ -82,10 +87,14 @@ export class VMSRuntime extends EventEmitter
 	}
 
 	// Start executing the given program.
-	public async start(programName: string, languageExt: string)
+	public async start(programName: string)
 	{
-		this.sourcePaths = await this.loadSourcePathList(languageExt);
-		this.lisPaths = await this.loadSourcePathList("lis");
+		if (!await ensureProjectSettings() || !projectSection ) {
+			return;
+		}
+
+		this.sourcePaths = await this.loadSourcePathList(projectSection.source);
+		this.lisPaths = await this.loadSourcePathList(projectSection.listing);
 
 		if(workspace.workspaceFolders)
 		{
@@ -353,15 +362,28 @@ export class VMSRuntime extends EventEmitter
 		return fileName;
 	}
 
-	private async loadSourcePathList(extensionFile : string) : Promise<string[]>
-	{
-		let list : string[] = [];
-		const mask = `**/*.{${extensionFile.toLowerCase()},${extensionFile.toUpperCase()}}`;
-		let uris : Uri[] = await workspace.findFiles(mask);
+	private async ensureLocalSource() {
+		if (!this.localSource) {
+			const sourceHelper = await GetSourceHelperFromApi();
+			if (sourceHelper) {
+				this.localSource = await sourceHelper.getSource("local");
+			}
+		}
+		return this.localSource !== undefined;
+	}
 
-		for(let item of uris)
+	private async loadSourcePathList(pattern : string) : Promise<string[]>
+	{
+		if (!await this.ensureLocalSource()) {
+			return [];
+		}
+
+		let list : string[] = [];
+		let entries : IFileEntry[] = await this.localSource!.findFiles(pattern);
+
+		for(let item of entries)
 		{
-			list.push(item.fsPath);
+			list.push(item.filename);
 		}
 
 		return list;

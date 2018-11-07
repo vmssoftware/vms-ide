@@ -19,6 +19,7 @@
 		"text-functions": {
 			"patterns": [
 				{
+					"comment": "text functions",
 					"name": "entity.name.tag",
 					"match": "ADDPREFIX|ADDSUFFIX|FILTER-OUT|FILTER|FINDSTRING|FIRSTWORD|FOREACH|JOIN|PATSUBST|SORT|STRIP|SUBST|WORD|WORDS"
 				}
@@ -27,6 +28,7 @@
 		"file-functions": {
 			"patterns": [
 				{
+					"comment": "functions to work with files",
 					"name": "entity.name.tag",
 					"match": "BASENAME|DIR|FILETYPE|FILEVERSION|NOTDIR|WILDCARD"
 				}
@@ -35,6 +37,7 @@
 		"other-functions": {
 			"patterns": [
 				{
+					"comment": "special function",
 					"name": "entity.name.tag",
 					"match": "ORIGIN"
 				}
@@ -43,6 +46,7 @@
 		"directives": {
 			"patterns": [
 				{
+					"comment": "MMS directives",
 					"name": "keyword.control.mms",
 					"match": "ACTION_STATUS|DEFAULT|ELSE|ELSIF|ENDIF|FIRST|IF|IFDEF|IGNORE|INCLUDE|LAST|SILENT|SUFFIXES|SUFFIXES_DELETE|SUFFIXES_AFTER|SUFFIXES_BEFORE"
 				}
@@ -51,8 +55,9 @@
 		"keywords": {
 			"patterns": [
 				{
+					"comment": "TARGET : SOURCE",
 					"name": "keyword.control.mms",
-					"match": "(?i)\\bDEPENDS_ON\\b|\\s:\\s"
+					"match": "(?i)\\bDEPENDS_ON\\b|\\bADDITIONALLY_DEPENDS_ON\\b|\\s:\\s|\\s::\\s"
 				},
 				{
 					"begin": "^\\.",

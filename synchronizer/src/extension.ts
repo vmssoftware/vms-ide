@@ -1,11 +1,11 @@
 
-import { commands, Disposable, env, ExtensionContext, InputBox, window } from "vscode";
+import { commands, env, ExtensionContext, window } from "vscode";
 
-import { Api } from "./api";
 import { setExtensionContext } from "./context";
 import { configHelper, EnsureSettings } from "./ensure-settings";
 import { createLogFunction } from "./log";
 import { Perform } from "./performer";
+import { SourceHelper } from "./sync/get-source";
 import { StopSyncProject, SyncProject } from "./synchronize";
 
 import { LogType } from "@vorfol/common";
@@ -67,7 +67,7 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
-    return new Api();
+    return new SourceHelper();
 }
 
 // this method is called when your extension is deactivated

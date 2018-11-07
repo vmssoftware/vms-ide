@@ -1,5 +1,4 @@
 import fs from "fs-extra";
-import micromatch from "micromatch";
 import path from "path";
 
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, QuickPickItem, Range, Uri, window, workspace } from "vscode";
@@ -8,20 +7,19 @@ import { IFileEntry, LogFunction, LogType } from "@vorfol/common";
 import { printLike } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
 
-import { ISshShell } from "../ext-api/api";
-import { SshHelper } from "../ext-api/ssh-helper";
-
 import { parseVmsOutput } from "../common/parse-output";
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
 import { IProjectSection, ProjectSection } from "../config/sections/project";
 import { EnsureSettings, synchronizerConfig } from "../ensure-settings";
+import { ISshShell } from "../ext-api/api";
+import { SshHelper } from "../ext-api/ssh-helper";
 import { FsSource } from "../sync/fs-source";
 import { ISource } from "../sync/source";
 import { Synchronizer } from "../sync/synchronizer";
 import { VmsPathConverter } from "../vms/vms-path-converter";
+import { contextSaved } from "./../context";
 
 import * as nls from "vscode-nls";
-import { contextSaved } from "../context";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
