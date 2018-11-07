@@ -10,42 +10,37 @@ import { LogFunction, LogType } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
 import { IFileEntry } from "@vorfol/common";
 
-import { ISftpClient } from "../ext-api/api";
-import { ISshShell } from "../ext-api/api";
 import { SshHelper } from "../ext-api/ssh-helper";
 
+import { createFile } from "../common/create-file";
 import { EnsureSettings, synchronizerConfig } from "../ensure-settings";
 import { FsSource } from "./fs-source";
 import { ISource } from "./source";
 import { VmsSource } from "./vms-source";
 
 import * as nls from "vscode-nls";
-import { createFile } from "../common/create-file";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export class Synchronizer {
 
-    public static acquire(debugLog?: LogFunction) {
+    public static acquire(logFn?: LogFunction) {
         if (!Synchronizer.instance) {
-            Synchronizer.instance = new Synchronizer(debugLog);
-        } else if (debugLog !== undefined) {
-            Synchronizer.instance.logFn = debugLog;
+            Synchronizer.instance = new Synchronizer(logFn);
+        } else if (logFn !== undefined) {
+            Synchronizer.instance.logFn = logFn;
         }
         return Synchronizer.instance;
     }
 
     private static instance?: Synchronizer;
 
-    public messages: string[] = [];
     public inProgress = false;
 
     private sshHelper?: SshHelper;
-    private remoteSftp?: ISftpClient;
-    private remoteShell?: ISshShell;
-
     private remoteSource?: ISource;
     private localSource?: ISource;
+    // private acquires = 0;
 
     private projectSection?: IProjectSection;
     private synchronizeSection?: ISynchronizeSection;
@@ -58,11 +53,8 @@ export class Synchronizer {
     }
 
     public enableRemote() {
-        if (this.remoteSftp) {
-            this.remoteSftp.enabled = true;
-        }
-        if (this.remoteShell) {
-            this.remoteShell.enabled = true;
+        if (this.remoteSource) {
+            this.remoteSource.enabled = true;
         }
     }
 
@@ -70,16 +62,45 @@ export class Synchronizer {
         if (this.logFn) {
             this.logFn(LogType.debug, () => localize("debug.dissblig", "Disabling SFTP and SHELL"));
         }
-        if (this.remoteSftp) {
-            this.remoteSftp.enabled = false;
-        }
-        if (this.remoteShell) {
-            this.remoteShell.enabled = false;
+        if (this.remoteSource) {
+            this.remoteSource.enabled = false;
         }
     }
 
+    /**
+     * User have to dispose the source
+     */
+    public async requestSource(type: "local" | "remote"): Promise<ISource | undefined> {
+        // get current config
+        if (!await this.ensureSettings()) {
+            return undefined;
+        }
+        if (type === "local") {
+            if (this.workspaceUri) {
+                return new FsSource(this.workspaceUri.fsPath, this.logFn);
+            }
+            return undefined;
+        }
+        // get ssh helper
+        if (!await this.ensureSshHelper()) {
+            return undefined;
+        }
+        // check if all are ready to create sources
+        if (this.projectSection
+            && this.synchronizeSection
+            && this.sshHelper) {
+            const [sftp, shell] = await Promise.all([
+                    this.sshHelper.getDefaultSftp(),
+                    this.sshHelper.getDefaultVmsShell(),
+                ]);
+            if (sftp && shell) {
+                return new VmsSource(sftp, shell, this.projectSection.root, this.logFn, this.synchronizeSection.setTimeAttempts);
+            }
+        }
+        return undefined;
+    }
+
     public async syncronizeProject() {
-        this.messages = [];
         if (!await this.prepareSources()) {
             return false;
         }
@@ -115,7 +136,9 @@ export class Synchronizer {
                     break;
                 case "skip":
                     for (const downloadFile of compareResult.download) {
-                        this.messages.push(localize("output.download_manually", "Remote {0} is newer, please check and download it manually", downloadFile.filename));
+                        if (this.logFn) {
+                            this.logFn(LogType.information, () => localize("output.download_manually", "Remote {0} is newer, please check and download it manually", downloadFile.filename));
+                        }
                     }
                     break;
                 case "edit":
@@ -123,14 +146,15 @@ export class Synchronizer {
                         waitAll.push(this.editFile(this.remoteSource, downloadFile.filename));
                     }
                     if (compareResult.download.length > 0) {
-                        this.messages.push(localize("output.edit_count", "Please edit and save {0} files manually", compareResult.download.length));
+                        if (this.logFn) {
+                            this.logFn(LogType.information, () => localize("output.edit_count", "Please edit and save {0} files manually", compareResult.download.length));
+                        }
                     }
                     break;
             }
             // wait all operations are done
             const results = await Promise.all(waitAll);
             // end
-            this.collectSourceErrors();
             this.decideDispose();
             const retCode = results.reduce((acc, result) => {
                     acc = acc && result;
@@ -141,7 +165,9 @@ export class Synchronizer {
             }
             return retCode;
         } else {
-            this.messages.push(localize("output.edit_settings", "In first please edit settings"));
+            if (this.logFn) {
+                this.logFn(LogType.error, () => localize("output.edit_settings", "In first please edit settings"));
+            }
         }
         return false;
     }
@@ -150,8 +176,7 @@ export class Synchronizer {
      * Download listing files, all (without "exculde")
      */
     public async downloadListings() {
-        this.messages = [];
-        if (!this.prepareSources()) {
+        if (!await this.prepareSources()) {
             return false;
         }
         if (this.remoteSource &&
@@ -159,7 +184,6 @@ export class Synchronizer {
             const list = await this.remoteSource.findFiles(this.projectSection.listing);
             return this.executeAction(list, "download")
                 .then((done) => {
-                    this.collectSourceErrors();
                     this.decideDispose();
                     return done;
                 });
@@ -172,13 +196,11 @@ export class Synchronizer {
      * @param files files
      */
     public async downloadFiles(files: string[] | IFileEntry[]) {
-        this.messages = [];
-        if (!this.prepareSources()) {
+        if (!await this.prepareSources()) {
             return false;
         }
         return this.executeAction(files, "download")
             .then((done) => {
-                this.collectSourceErrors();
                 this.decideDispose();
                 return done;
             });
@@ -189,13 +211,11 @@ export class Synchronizer {
      * @param files files
      */
     public async uploadFiles(files: string[] | IFileEntry[]) {
-        this.messages = [];
-        if (!this.prepareSources()) {
+        if (!await this.prepareSources()) {
             return false;
         }
         return this.executeAction(files, "upload")
             .then((done) => {
-                this.collectSourceErrors();
                 this.decideDispose();
                 return done;
             });
@@ -209,16 +229,14 @@ export class Synchronizer {
             this.logFn(LogType.debug, () => localize("debug.disposing", "Disposing sources"));
         }
         // sources
-        if (this.remoteSftp) {
-            this.remoteSftp.dispose();
-            this.remoteSftp = undefined;
+        if (this.remoteSource) {
+            this.remoteSource.dispose();
+            this.remoteSource = undefined;
         }
-        if (this.remoteShell) {
-            this.remoteShell.dispose();
-            this.remoteShell = undefined;
+        if (this.localSource) {
+            this.localSource.dispose();
+            this.localSource = undefined;
         }
-        this.remoteSource = undefined;
-        this.localSource = undefined;
         // watchers
         if (this.onDidLoadConfig) {
             this.onDidLoadConfig.dispose();
@@ -231,31 +249,14 @@ export class Synchronizer {
     }
 
     /**
-     * Just keep in messages
-     */
-    private collectSourceErrors() {
-        // if (this.remoteSftp) {
-        //     if (this.remoteSftp.lastSftpError) {
-        //         this.messages.push(this.remoteSftp.lastSftpError.message);
-        //     }
-        //     if (this.remoteSftp.lastClientError) {
-        //         this.messages.push(this.remoteSftp.lastClientError.message);
-        //     }
-        // }
-        // if (this.remoteShell) {
-        //     if (this.remoteShell.lastShellError) {
-        //         this.messages.push(this.remoteShell.lastShellError.message);
-        //     }
-        //     if (this.remoteShell.lastClientError) {
-        //         this.messages.push(this.remoteShell.lastClientError.message);
-        //     }
-        // }
-    }
-
-    /**
      * Dispose or setup watchers besides on "keep alive" flag
      */
     private decideDispose() {
+        // this.acquires--;
+        // if (this.acquires > 0) {
+        //     return;
+        // }
+        // this.acquires = 0;  // to prevent under zero values
         if (synchronizerConfig
             && this.synchronizeSection
             && this.synchronizeSection.keepAlive) {
@@ -340,7 +341,7 @@ export class Synchronizer {
                 }
             }).catch((errLast) => {
                 if (this.logFn) {
-                    this.logFn(LogType.debug, () => errLast);
+                    this.logFn(LogType.error, () => errLast);
                 }
                 return false;
             });
@@ -396,6 +397,7 @@ export class Synchronizer {
      */
     private async prepareSources() {
         if (this.remoteSource && this.localSource) {
+            // this.acquires++;
             return true;
         }
         // get current config
@@ -411,6 +413,7 @@ export class Synchronizer {
             && this.synchronizeSection
             && this.workspaceUri
             && this.sshHelper) {
+            // this.acquires ++;
             if (!this.remoteSource) {
                 if (this.logFn) {
                     this.logFn(LogType.debug, () => localize("debug.create_remote", "Creating remote source"));
@@ -420,8 +423,6 @@ export class Synchronizer {
                         this.sshHelper.getDefaultVmsShell(),
                     ]);
                 if (sftp && shell) {
-                    this.remoteSftp = sftp;
-                    this.remoteShell = shell;
                     this.remoteSource = new VmsSource(sftp, shell, this.projectSection.root, this.logFn, this.synchronizeSection.setTimeAttempts);
                 }
             }
@@ -441,7 +442,9 @@ export class Synchronizer {
      */
     private async ensureSettings() {
         if (!await EnsureSettings() || !synchronizerConfig) {
-            this.messages.push(localize("error.no_settings", "Cannot get settings"));
+            if (this.logFn) {
+                this.logFn(LogType.error, () => localize("error.no_settings", "Cannot get settings"));
+            }
             return false;
         }
         const [projectSection, synchronizeSection] = await Promise.all([
@@ -460,7 +463,9 @@ export class Synchronizer {
             this.workspaceUri = vscode.workspace.workspaceFolders[0].uri;
             return true;
         } else {
-            this.messages.push(localize("error.bad_settings", "Inconsistent settings or workspace is empty"));
+            if (this.logFn) {
+                this.logFn(LogType.error, () => localize("error.bad_settings", "Inconsistent settings or workspace is empty"));
+            }
             return false;
         }
     }
@@ -474,8 +479,8 @@ export class Synchronizer {
             if (!sshHelperType) {
                 if (this.logFn) {
                     this.logFn(LogType.debug, () => localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
+                    this.logFn(LogType.error, () => localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
                 }
-                this.messages.push(localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
                 return false;
             }
             this.sshHelper = new sshHelperType(this.logFn);
@@ -507,15 +512,19 @@ export class Synchronizer {
             const to = action === "download" ? this.localSource : this.remoteSource;
             waitAll.push(this.transferFile(from, to, filename, filedate)
                                 .then((ok) => {
-                                    if (ok) {
-                                        this.messages.push(localize("message.action_success", "{0} success: {1}", action, filename));
-                                    } else {
-                                        this.messages.push(localize("message.action_failed", "{0} is failed: {1}", action, filename));
+                                    if (this.logFn) {
+                                        if (ok) {
+                                            this.logFn(LogType.information, () => localize("message.action_success", "{0} success: {1}", action, filename));
+                                        } else {
+                                            this.logFn(LogType.error, () => localize("message.action_failed", "{0} is failed: {1}", action, filename));
+                                        }
                                     }
                                     return ok;
                                 })
                                 .catch((err) => {
-                                    this.messages.push(err.message);
+                                    if (this.logFn) {
+                                        this.logFn(LogType.error, () => err.message);
+                                    }
                                     return false;
                                 }));
         }

@@ -28,7 +28,6 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments
 {
 	/** An absolute path to the "program" to debug. */
 	program: string;
-	extensionFile: string;
 	/** Automatically stop target after launch. If not specified, target does not stop. */
 	stopOnEntry?: boolean;
 	/** enable logging the Debug Adapter Protocol */
@@ -178,7 +177,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		await this._configurationDone.wait(1000);
 
 		// start the program in the runtime
-		this._runtime.start(args.program, args.extensionFile);
+		this._runtime.start(args.program);
 
 		this.sendResponse(response);
 	}

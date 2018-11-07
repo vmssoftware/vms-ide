@@ -3,7 +3,7 @@ import { ftpPathSeparator, LogFunction, LogType } from "@vorfol/common";
 import { IFileEntry } from "@vorfol/common";
 
 import { findFiles, leadingSepRg, middleSepRg, trailingSepRg } from "../common/find-files";
-import { IInputAttributes, ISftpClient } from "./../ext-api/api";
+import { IInputAttributes, ISftpClient } from "../ext-api/api";
 import { ISource } from "./source";
 
 export class SftpSource implements ISource {
@@ -21,6 +21,18 @@ export class SftpSource implements ISource {
 
     constructor(protected sftp: ISftpClient, root?: string, public debugLog?: LogFunction, public attempts?: number) {
         this.root = root;
+    }
+
+    public dispose() {
+        this.sftp.dispose();
+    }
+
+    public get enabled() {
+        return this.sftp.enabled;
+    }
+
+    public set enabled(action: boolean) {
+        this.sftp.enabled = action;
     }
 
     public findFiles(include: string, exclude: string): Promise<IFileEntry[]> {

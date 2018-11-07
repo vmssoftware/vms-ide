@@ -1,5 +1,4 @@
 import * as fs from "fs-extra";
-import * as util from "util";
 
 import { ftpPathSeparator, IFileEntry, IReadDirectory } from "@vorfol/common";
 import { LogFunction, LogType } from "@vorfol/common";
@@ -28,26 +27,40 @@ export class FsSource implements ISource, IReadDirectory {
         this.root = root;
     }
 
+    public dispose() {
+        //
+    }
+
+    public get enabled() {
+        return true;
+    }
+
+    public set enabled(action: boolean) {
+        //
+    }
+
     /**
      * Read directory adding root, member of IReadDirectory
      * @param directory directory
      */
     public async readDirectory(directory: string): Promise<IFileEntry[] | undefined> {
         directory = this.root + ftpPathSeparator + directory;
-        const list = await fs.readdir(directory).catch((err) => {
-            if (this.debugLog) {
-                this.debugLog(LogType.debug, () => `${err}`);
-            }
-            return [];
-        });
-        const retList: IFileEntry[] = [];
-        for (const file of list) {
-            const stat = await fs.stat(directory + ftpPathSeparator + file).catch((err) => {
+        const list = await fs.readdir(directory)
+            .catch((err) => {
                 if (this.debugLog) {
                     this.debugLog(LogType.debug, () => `${err}`);
                 }
-                return undefined;
+                return [];
             });
+        const retList: IFileEntry[] = [];
+        for (const file of list) {
+            const stat = await fs.stat(directory + ftpPathSeparator + file)
+                .catch((err) => {
+                    if (this.debugLog) {
+                        this.debugLog(LogType.debug, () => `${err}`);
+                    }
+                    return undefined;
+                });
             if (stat) {
                 const entry: IFileEntry = {
                     date: stat.mtime,

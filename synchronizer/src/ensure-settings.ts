@@ -29,6 +29,11 @@ export async function EnsureSettings(debugLog?: LogFunction) {
         if (api) {
             configHelper = api.getConfigHelper(sectionName);
             synchronizerConfig = configHelper.getConfig();
+            synchronizerConfig.onDidLoad(() => {
+                if (debugLog) {
+                    debugLog( LogType.debug, () => localize("debug.did_load_config", "Configuration did load"));
+                }
+            });
         } else {
             settingsEnsured = false;
             return settingsEnsured;

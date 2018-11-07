@@ -4,7 +4,6 @@ import { logConsoleFn, LogFunction, LogType, MemoryWriteStream } from "@vorfol/c
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
 import { SshHelper } from "../ext-api/ssh-helper";
 import { FsSource } from "../sync/fs-source";
-import { SftpSource } from "../sync/sftp-source";
 import { ISource } from "../sync/source";
 import { VmsSource } from "../sync/vms-source";
 import { Vms } from "./config/vms";

@@ -10,7 +10,7 @@ export function logConsoleFn(type: LogType, message: LogResult) {
             // tslint:disable-next-line:no-console
             console.warn(message());
             break;
-        case LogType.informtion:
+        case LogType.information:
             // tslint:disable-next-line:no-console
             console.info(message());
             break;

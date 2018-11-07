@@ -1,15 +1,15 @@
 {
-    "saving.fail": "Saving failed",
-    "saving.status": "Saving...",
-    "saving.success": "Saving ok",
-    "synchronizing.fail": "Synchronizing failed",
-    "synchronizing.status": "Synchronizing...",
-    "synchronizing.success": "Synchronizing ok",
-    "building.fail": "Building failed",
-    "building.status": "Building...",
-    "buiding.success": "Building ok",
-    "clean.fail": "Clean failed",
-    "clean.status": "Clean...",
-    "clean.success": "Clean ok",
-    "error.no_action": "Cannot find action: {0}"
+    "saving.fail": "Сохранение неудачно",
+    "saving.status": "Сохранение...",
+    "saving.success": "Сохранение удачно",
+    "synchronizing.fail": "Синхронизация неудачна",
+    "synchronizing.status": "Синхронизация...",
+    "synchronizing.success": "Синхронизация удачна",
+    "building.fail": "Построение неудачно",
+    "building.status": "Построение...",
+    "buiding.success": "Построение удачно",
+    "clean.fail": "Очистка неудачна",
+    "clean.status": "Очистка...",
+    "clean.success": "Очистка удачна",
+    "error.no_action": "Отсутсвует действие: {0}"
 }

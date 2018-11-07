@@ -1,9 +1,9 @@
 import * as assert from "assert";
 
-import { GetSshHelperFromApi } from "../config/get-ssh-helper";
 import { SshHelper } from "../ext-api/ssh-helper";
 
 import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
+import { GetSshHelperFromApi } from "../config/get-ssh-helper";
 
 suite("Directory tests", function(this: Mocha.Suite) {
 

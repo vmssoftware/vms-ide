@@ -1,9 +1,9 @@
-import { LogResult, LogType } from "@vorfol/common";
+import { LogFunction, LogResult, LogType } from "@vorfol/common";
 import { window } from "vscode";
 
-export function createLogFunction(channelName: string) {
+export function createLogFunction(channelName: string): LogFunction {
     const channel = window.createOutputChannel(channelName);
-    return function logVsCode(type: LogType, message: LogResult ) {
+    return function logVsCode(type: LogType, message: LogResult, show?: boolean ) {
         switch (type) {
             case LogType.debug:
                 // tslint:disable-next-line:no-console
@@ -11,7 +11,9 @@ export function createLogFunction(channelName: string) {
                 break;
             default:
                 channel.appendLine(message());
-                channel.show();
+                if (show) {
+                    channel.show();
+                }
                 break;
         }
     };
