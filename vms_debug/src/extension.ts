@@ -15,6 +15,7 @@ import { createLogFunction } from './log';
 import { LogType } from '@vorfol/common';
 import { GetConfigHelperFromApi } from './ext-api/get-config-helper';
 import { ProjectSection, IProjectSection } from './ext-api/sections/project';
+import { StatusBarDebug } from './ui/StatusBar';
 
 
 export enum TypeRunConfig
@@ -26,23 +27,34 @@ export enum TypeRunConfig
 
 const locale = vscode.env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
+const logFn = createLogFunction("VMS Debug");
 
 let shell : ShellSession;
 let session : VMSDebugSession | undefined;
 let sessionRun : VMSNoDebugSession | undefined;
 let serverIsConnect : boolean = false;
 let typeRunConfig : TypeRunConfig = TypeRunConfig.TypeRunNone;
+let statusConn : StatusBarDebug = new StatusBarDebug();
 
-const logFn = createLogFunction("VMS Debug");
 
 export function activate(context: vscode.ExtensionContext)
 {
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.connect', () =>
 	{
-		shell = new ShellSession(ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, logFn);
+		if(serverIsConnect === false)
+		{
+			shell = new ShellSession(ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, logFn);
 
-		const message = localize('extention.conecting', "Connecting to the server");
-		vscode.window.showInformationMessage(message);
+			const message = localize('extention.conecting', "Connecting to the server ...");
+			const messageBar = localize('extention.bar.conecting', "Connecting ...");
+			vscode.window.showInformationMessage(message);
+			statusConn.setMessage(messageBar);
+		}
+		else
+		{
+			const message = localize('extention.connected', "Connected to the server");
+			vscode.window.showInformationMessage(message);
+		}
 	}));
 
 	// register a configuration provider for 'vms' debug type
@@ -81,7 +93,10 @@ let ExtensionReadyCb = function() : void
 	serverIsConnect = true;
 
 	const message = localize('extention.connected', "Connected to the server");
+	const messageBar = localize('extention.bar.connected', "Connected");
 	vscode.window.showInformationMessage(message);
+	statusConn.setMessage(messageBar);
+
 	logFn(LogType.informtion, () => message, true);
 };
 
@@ -90,7 +105,10 @@ let ExtensionCloseCb = function() : void
 	serverIsConnect = false;
 
 	const message = localize('extention.closed', "Connection is closed");
+	const messageBar = localize('extention.bar.disconnected', "Disconnected");
 	vscode.window.showInformationMessage(message);
+	statusConn.setMessage(messageBar);
+
 	logFn(LogType.informtion, () => message, true);
 
 	if(session)
@@ -111,6 +129,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 	resolveDebugConfiguration(folder: WorkspaceFolder | undefined, config: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration>
 	{
 		return new Promise<DebugConfiguration|null|undefined>(async (resolve) => {
+
 			if(serverIsConnect === true)
 			{
 				if(config.noDebug)//if user hit Ctrl+F5
@@ -180,35 +199,48 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 
 			if (!config.program)
 			{
-				if (!this.projectSection) {
+				if (!this.projectSection)
+				{
 					// get config-helper API
 					const api = await GetConfigHelperFromApi();
-					if (api) {
+
+					if (api)
+					{
 						// request configuration "vmssoftware.synchronizer"
 						const configHelper = api.getConfigHelper("vmssoftware.synchronizer");
 						const synchronizerConfig = configHelper.getConfig();
-						if (synchronizerConfig) {
+
+						if (synchronizerConfig)
+						{
 							// request section "project"
 							let projectSection = await synchronizerConfig.get(ProjectSection.section);
-							if (!projectSection) {
+
+							if (!projectSection)
+							{
 								// if hasn't filled yet, add it and request to fill
 								synchronizerConfig.add(new ProjectSection());
 								projectSection = await synchronizerConfig.get(ProjectSection.section);
 							}
-							if (ProjectSection.is(projectSection)) {
+
+							if (ProjectSection.is(projectSection))
+							{
 								// that is it
 								this.projectSection = projectSection;
 							}
 						}
 					}
 				}
-				if (this.projectSection) {
+
+				if (this.projectSection)
+				{
 					const buildType = config.typeRun === "DEBUG" ? "debug" : "release";
 					const pathToExecutable = `[.${this.projectSection.root}.${this.projectSection.outdir}.${buildType}]${this.projectSection.projectName}.exe`;
 					config.program = pathToExecutable;
 				}
 			}
-			if (!config.program) {
+
+			if (!config.program)
+			{
 				const message = localize('extention.сustomize_configuration', "Customize configuration");
 				vscode.window.showInformationMessage(message);
 

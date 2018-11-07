@@ -529,7 +529,6 @@ export class DebugParser
 
 		for(let i = shiftHeader; i < lisLines.length; i++)
 		{
-			//let items = lisLines[i].trim().split(/\s+/);
 			let line = lisLines[i];
 			const matcher = /^\s*\d*\t\s*(\d+)/;
 			const matches = line.match(matcher);
@@ -572,8 +571,7 @@ export class DebugParser
 
 		for(let i = shiftHeader; i < sourceLisLines.length; i++)
 		{
-			let line = sourceLisLines[i];//.trim();
-			//let items = line.split(/\s+/);
+			let line = sourceLisLines[i];
 			const matcher = /^\s*\d*\t\s*(\d+)/;
 			const matches = line.match(matcher);
 

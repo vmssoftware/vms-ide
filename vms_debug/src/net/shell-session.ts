@@ -18,6 +18,7 @@ import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
+
 export class ShellSession
 {
     private promptCmd : string;
