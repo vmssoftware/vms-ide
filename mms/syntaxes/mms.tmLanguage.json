@@ -3,19 +3,43 @@
 	"name": "MMS",
 	"patterns": [
 		{
-			"include": "#keywords"
-		},
-		{
-			"include": "#comments"
-		},
-		{
-			"include": "#macros"
-		},
-		{
-			"include": "#strings"
+			"include": "#line"
 		}
 	],
 	"repository": {
+		"line": {
+			"patterns": [
+				{
+					"name" : "constant.character.escape",
+					"begin": "^.*-$",
+					"end": "^.*[^-]$",
+					"patterns": [
+						{
+							"include": "#strings"
+						}
+					]
+				},
+				{
+					"include": "#all"
+				}
+			]
+		},
+		"all" : {
+			"patterns": [
+				{
+					"include": "#keywords"
+				},
+				{
+					"include": "#comments"
+				},
+				{
+					"include": "#macros"
+				},
+				{
+					"include": "#strings"
+				}
+			]		
+		},
 		"text-functions": {
 			"patterns": [
 				{

@@ -42,7 +42,7 @@ export class VMSRuntime extends EventEmitter
 {
 	// the initial (and one and only) file we are 'debugging'
 	private sourceFile: string;
-	private lisFile: string;
+	//private lisFile: string;
 	private buttonPressd : DebugButtonEvent;
 	private shell : ShellSession;
 	private osCmd : OsCommands;
@@ -58,7 +58,7 @@ export class VMSRuntime extends EventEmitter
 	// the contents (= lines) of the one and only file
 	private sourceLines: string[];
 	private sourcePaths: string[];
-	private lisLines: string[];
+	// private lisLines: string[];
 	private lisPaths: string[];
 
 	// maps from sourceFile to array of VMS breakpoints
@@ -218,6 +218,8 @@ export class VMSRuntime extends EventEmitter
 		if (!await this.ensureLocalSource() || !this.localSource) {
 			return;
 		}
+
+		path = path.replace(/\\/g, ftpPathSeparator);
 		path = path.slice(this.localSource.root!.length + 1);	// to relative path
 
 		let fileName = this.getNameFromPath(path);
@@ -425,10 +427,7 @@ export class VMSRuntime extends EventEmitter
 	private async loadSourceLis(file: string)
 	{
 		const lisFile = this.findPathFileByName(file, this.lisPaths);
-		if (this.lisFile !== lisFile) {
-			this.lisFile = lisFile;
-			this.lisLines = await this.loadSource(this.lisFile);
-		}
+		return this.loadSource(lisFile);
 	}
 
 	private async verifyBreakpoints(path: string) // : void
@@ -488,16 +487,18 @@ export class VMSRuntime extends EventEmitter
 		let setBps = this.breakPointsSet.get(key);
 		let remBps = this.breakPointsRem.get(key);
 
+		let lisLines: string[] | undefined;
+
 		if (remBps)
 		{
 			if(remBps.length > 0)
 			{
-				await this.loadSourceLis(path);
+				lisLines = await this.loadSourceLis(path);
 
 				remBps.forEach(bp =>
 				{
 					//finde number of line
-					let numberLine = this.dbgParser.findeBreakPointNumberLine(bp.line,  this.lisLines);
+					let numberLine = this.dbgParser.findeBreakPointNumberLine(bp.line,  lisLines!);
 
 					if(!Number.isNaN(numberLine))
 					{
@@ -516,12 +517,12 @@ export class VMSRuntime extends EventEmitter
 		{
 			if(setBps.length > 0)
 			{
-				await this.loadSourceLis(path);
+				lisLines = lisLines || await this.loadSourceLis(path);
 
 				setBps.forEach(bp =>
 				{
 					//finde number of line
-					let numberLine = this.dbgParser.findeBreakPointNumberLine(bp.line,  this.lisLines);
+					let numberLine = this.dbgParser.findeBreakPointNumberLine(bp.line,  lisLines!);
 
 					if(!Number.isNaN(numberLine))
 					{
