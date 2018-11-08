@@ -96,7 +96,7 @@ let ExtensionReadyCb = function() : void
 	vscode.window.showInformationMessage(message);
 	statusConn.setMessage(messageBar);
 
-	logFn(LogType.informtion, () => message, true);
+	logFn(LogType.information, () => message, true);
 };
 
 let ExtensionCloseCb = function() : void
@@ -108,7 +108,7 @@ let ExtensionCloseCb = function() : void
 	vscode.window.showInformationMessage(message);
 	statusConn.setMessage(messageBar);
 
-	logFn(LogType.informtion, () => message, true);
+	logFn(LogType.information, () => message, true);
 
 	if(session)
 	{

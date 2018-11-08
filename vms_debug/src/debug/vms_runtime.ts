@@ -567,7 +567,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				if (this.logFn)
 				{
-					this.logFn(LogType.informtion, () => messageCommand);
+					this.logFn(LogType.information, () => messageCommand);
 				}
 			}
 			if(messageData !== "")
@@ -592,7 +592,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				if (this.logFn)
 				{
-					this.logFn(LogType.informtion, () => messageDebug);
+					this.logFn(LogType.information, () => messageDebug);
 				}
 				vscode.debug.activeDebugConsole.append(messageDebug);
 
@@ -605,7 +605,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				if (this.logFn)
 				{
-					this.logFn(LogType.informtion, () => messageUser);
+					this.logFn(LogType.information, () => messageUser);
 				}
 				vscode.debug.activeDebugConsole.append(messageUser);
 			}

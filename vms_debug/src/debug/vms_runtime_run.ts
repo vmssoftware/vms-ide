@@ -74,7 +74,7 @@ export class VMSRuntimeRun extends EventEmitter
 			{
 				if (this.logFn)
 				{
-					this.logFn(LogType.informtion, () => MessagePrompt.prmtCMD + dataMsg);
+					this.logFn(LogType.information, () => MessagePrompt.prmtCMD + dataMsg);
 				}
 			}
 			else if(typeData === "D:")
