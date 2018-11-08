@@ -7,7 +7,7 @@ export function createLogFunction(channelName: string) {
         switch (type) {
             case LogType.debug:
                 // tslint:disable-next-line:no-console
-                // console.log(message());
+                console.log(message());
                 break;
             default:
                 channel.appendLine(message());

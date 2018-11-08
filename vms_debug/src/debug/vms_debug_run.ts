@@ -95,7 +95,7 @@ export class VMSNoDebugSession extends LoggingDebugSession
 		await this._configurationDone.wait(1000);
 
 		// start the program in the runtime
-		this._runtime.start(args.program);
+		await this._runtime.start(args.program);
 
 		this.sendResponse(response);
 	}

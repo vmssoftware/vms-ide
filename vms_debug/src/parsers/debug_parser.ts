@@ -1,8 +1,11 @@
 import { HolderDebugFileInfo } from './debug_file_info';
 import { DebugFileInfo } from './debug_file_info';
-import { readFileSync } from 'fs';
+import * as readline from 'readline';
 import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
 import { Queue } from '../queue/queues';
+import { ftpPathSeparator, Lock } from '@vorfol/common';
+import { ISource } from '../ext-api/source';
+import { GetSourceHelperFromApi } from '../ext-api/get-source-helper';
 
 
 export enum MessageDebuger
@@ -36,7 +39,7 @@ export class DebugParser
 	private commandDone : boolean;
 	private topicNumberString : Array<number> = new Array<number>();
 	private displayDataString : string[] = ["", "", ""];
-
+	private localSource?: ISource;
 
 	constructor()
 	{
@@ -272,7 +275,7 @@ export class DebugParser
 	//examples debug lines
 	//1629:   int count = 5;
 	//1631:   for(int i = 1; i < 3; i++)
-	public parseNumberLineCodeMsg(fileName : string, msgLine: string, sourcePaths: string[], lisPaths: string[]) : DebugFileInfo | undefined
+	public async parseNumberLineCodeMsg(fileName : string, msgLine: string, sourcePaths: string[], lisPaths: string[]) // : DebugFileInfo | undefined
 	{
 		let debugFileInfo : DebugFileInfo | undefined;
 
@@ -298,7 +301,7 @@ export class DebugParser
 			{
 				let pathFile = this.findPathFileByName(fileName, sourcePaths);
 				let pathLisFile = this.findPathFileByName(fileName, lisPaths);
-				lisLines = this.loadSource(pathLisFile);
+				lisLines = await this.loadSource(pathLisFile);
 
 				//calculate shift line
 				shift = this.calculateShiftLine(msgLine, lisLines);
@@ -332,7 +335,7 @@ export class DebugParser
 	// *HELLO          main             1648       0000000000000360 0000000000020360
 	// *HELLO          __main           1634       00000000000000E0 00000000000200E0
 	// 											   FFFFFFFF80A3CF10 FFFFFFFF80A3CF10
-	public parseCallStackMsg(data : string, sourcePaths: string[], lisPaths: string[], startFrame: number, endFrame: number) : any
+	public async parseCallStackMsg(data : string, sourcePaths: string[], lisPaths: string[], startFrame: number, endFrame: number) // : any
 	{
 		let numberLine : number = -1;
 		const frames = new Array<any>();
@@ -355,7 +358,7 @@ export class DebugParser
 				{
 					if(shift === -1)
 					{
-						let lisLines = this.loadSource(pathLisFile);
+						let lisLines = await this.loadSource(pathLisFile);
 						//get source line
 						numberLine = this.getNumberLineSourceCode(numberLineDebug, lisLines);
 						//save file info
@@ -370,7 +373,7 @@ export class DebugParser
 					frames.push({
 						index: startFrame,
 						name: `${routineName}(${startFrame})`,
-						file: pathFile,
+						file: this.localSource!.root + ftpPathSeparator + pathFile,
 						line: numberLine
 					});
 
@@ -456,14 +459,17 @@ export class DebugParser
 
 		for(let item of paths)
 		{
-			let folders = item.split("\\");
+			let namePos = item.lastIndexOf(ftpPathSeparator) + 1;	// if no path -> from start (-1 + 1 = 0 ;)
+			let extPos = item.lastIndexOf(".");
+			if (extPos === -1) {
+				// if no ext -> to the end
+				extPos = item.length;
+			}
 
-			for(let folder of folders)
-			{
-				folder = folder.toLowerCase();
-
-				if(folder.includes(fileName))
-				{
+			if (0 <= namePos && namePos < extPos) {
+				// check name
+				const name = item.slice(namePos, extPos).toLowerCase();
+				if (name === fileName) {
 					pathFile = item;
 					break;
 				}
@@ -553,9 +559,35 @@ export class DebugParser
 		return LineSourceCode;
 	}
 
-	private loadSource(file: string): string[]
+	private async ensureLocalSource() {
+		if (!this.localSource) {
+			const sourceHelper = await GetSourceHelperFromApi();
+			if (sourceHelper) {
+				this.localSource = await sourceHelper.getSource("local");
+			}
+		}
+		return this.localSource !== undefined;
+	}
+
+	private async loadSource(file: string)
 	{
-		return readFileSync(file).toString().split('\n');
+		if (await this.ensureLocalSource()) {
+			const stream = await this.localSource!.createReadStream(file);
+			if (stream) {
+				const ret: string[] = [];
+				const lock = new Lock(true);
+				const rl = readline.createInterface(stream);
+				rl.on("close", () => {
+					lock.release();
+				});
+				rl.on("line", (line) => {
+					ret.push(line);
+				});
+				await lock.acquire();
+				return ret;
+			}
+		}
+		return [] as string[];
 	}
 
 	//examples a lines of lis file
