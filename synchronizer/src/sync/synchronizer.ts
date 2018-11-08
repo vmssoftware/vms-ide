@@ -171,15 +171,31 @@ export class Synchronizer {
         if (!await this.prepareSources()) {
             return false;
         }
-        if (this.remoteSource &&
-            this.projectSection) {
-            const onlyOutFind = [this.projectSection.root, this.projectSection.outdir, "**", this.projectSection.listing].join(ftpPathSeparator);
-            const list = await this.remoteSource.findFiles(onlyOutFind);
-            return this.executeAction(list, "download")
-                .then((done) => {
-                    this.decideDispose();
-                    return done;
-                });
+        if (this.remoteSource
+            && this.localSource
+            && this.projectSection) {
+                // const onlyOutFind = [this.projectSection.root, this.projectSection.outdir, "**", this.projectSection.listing].join(ftpPathSeparator);
+                const outdir = this.projectSection.outdir;
+                this.remoteSource.root += ftpPathSeparator + outdir;    // find only in output directory
+                const list = await this.remoteSource.findFiles(this.projectSection.listing);
+                // do not add outdir to the files in list! because remoteSource already has root pointed to outdir
+                const localRoot = this.localSource.root;
+                this.localSource.root += ftpPathSeparator + outdir;     // download exactly in output directory
+                return this.executeAction(list, "download")
+                    .catch((err) => {
+                        this.logFn(LogType.debug, () => localize("debug.download_listing.error", "Error while download listings {0}", String(err)));
+                        return false;
+                    })
+                    .then((done) => {
+                        if (this.remoteSource
+                            && this.localSource
+                            && this.projectSection) {
+                                this.localSource.root = localRoot;
+                                this.remoteSource.root = this.projectSection.root;
+                            }
+                        this.decideDispose();
+                        return done;
+                    });
         }
         return false;
     }
@@ -193,6 +209,10 @@ export class Synchronizer {
             return false;
         }
         return this.executeAction(files, "download")
+            .catch((err) => {
+                this.logFn(LogType.debug, () => localize("debug.download.error", "Error while download {0}", String(err)));
+                return false;
+            })
             .then((done) => {
                 this.decideDispose();
                 return done;
@@ -208,11 +228,15 @@ export class Synchronizer {
             return false;
         }
         return this.executeAction(files, "upload")
+            .catch((err) => {
+                this.logFn(LogType.debug, () => localize("debug.upload.error", "Error while upload {0}", String(err)));
+                return false;
+            })
             .then((done) => {
                 this.decideDispose();
                 return done;
             });
-    }
+}
 
     /**
      * Dispose all sources and watchers
