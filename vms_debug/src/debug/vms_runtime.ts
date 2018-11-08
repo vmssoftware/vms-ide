@@ -12,7 +12,7 @@ import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
 import { DebugParser, MessageDebuger } from '../parsers/debug_parser';
 import { workspace } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { LogFunction, LogType, IFileEntry } from '@vorfol/common';
+import { LogFunction, LogType, IFileEntry, ftpPathSeparator } from '@vorfol/common';
 import { ISource } from '../ext-api/source';
 import { GetSourceHelperFromApi } from '../ext-api/get-source-helper';
 import { ensureProjectSettings, projectSection } from '../ext-api/ensure-project';
@@ -383,7 +383,7 @@ export class VMSRuntime extends EventEmitter
 
 		for(let item of entries)
 		{
-			list.push(item.filename);
+			list.push(this.localSource!.root! + ftpPathSeparator + item.filename);
 		}
 
 		return list;
