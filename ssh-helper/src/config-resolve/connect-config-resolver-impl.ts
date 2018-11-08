@@ -95,12 +95,16 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
         }
     }
 
+    public logFn: LogFunction;
+
     /**
      * PasswordResolver
      * @param settingsFillers fillers
      * @param timeout timeout for feedback, in ms. else lock will be released and accepted set to false
      */
-    constructor(public settingsFillers?: ISettingsFiller[], public timeout?: number, public logFn?: LogFunction) {
+    constructor(public settingsFillers?: ISettingsFiller[], public timeout?: number, logFn?: LogFunction) {
+        // tslint:disable-next-line:no-empty
+        this.logFn = logFn || (() => {});
     }
 
     public clearCache(): boolean {
@@ -122,27 +126,19 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
         let retConfig: ConnectConfig | undefined;
 
         const cacheStr = ConnectConfigResolverImpl.buildCacheString(settings);
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => localize("debug.resolve.start", "resolveConnectConfig: try {0}", cacheStr));
-        }
+        this.logFn(LogType.debug, () => localize("debug.resolve.start", "resolveConnectConfig: try {0}", cacheStr));
         let node = settingsCache.get(cacheStr);
         if (!node) {
-            if (this.logFn) {
-                this.logFn(LogType.debug, () => localize("debug.resolve.create_node", "resolveConnectConfig: create node {0}", cacheStr));
-            }
+            this.logFn(LogType.debug, () => localize("debug.resolve.create_node", "resolveConnectConfig: create node {0}", cacheStr));
             node = new SettingsCacheNode();
             settingsCache.set(cacheStr, node);
         }
         // acquire lock before testing accepted or not
         await node.lock.acquire();
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => localize("debug.resolve.lock", "resolveConnectConfig: lock acquired {0}", cacheStr));
-        }
+        this.logFn(LogType.debug, () => localize("debug.resolve.lock", "resolveConnectConfig: lock acquired {0}", cacheStr));
         if (node.accepted === undefined) {
             // no one has resolved before
-            if (this.logFn) {
-                this.logFn(LogType.debug, () => localize("debug.resolve.first", "resolveConnectConfig: first call {0}", cacheStr));
-            }
+            this.logFn(LogType.debug, () => localize("debug.resolve.first", "resolveConnectConfig: first call {0}", cacheStr));
             node.settings = Object.assign({}, settings);
             if (this.settingsFillers) {
                 for (const filler of this.settingsFillers) {
@@ -152,19 +148,13 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
                     }
                     const filled = await filler.fillSetting(node.settings);
                     if (filled) {
-                        if (this.logFn) {
-                            this.logFn(LogType.debug, () => localize("debug.resolve.filled", "resolveConnectConfig: filled ok {0}", cacheStr));
-                        }
+                        this.logFn(LogType.debug, () => localize("debug.resolve.filled", "resolveConnectConfig: filled ok {0}", cacheStr));
                         retConfig = node.settings;
                     } else {
                         // mark unaccepted, no feedback needed
-                        if (this.logFn) {
-                            this.logFn(LogType.debug, () => localize("debug.resolve.didnt", "resolveConnectConfig: didn't filled {0}", cacheStr));
-                        }
+                        this.logFn(LogType.debug, () => localize("debug.resolve.didnt", "resolveConnectConfig: didn't filled {0}", cacheStr));
                         node.accepted = false;
-                        if (this.logFn) {
-                            this.logFn(LogType.debug, () => localize("debug.resolve.unlock", "resolveConnectConfig: lock released (no feedback needed) {0}", cacheStr));
-                        }
+                        this.logFn(LogType.debug, () => localize("debug.resolve.unlock", "resolveConnectConfig: lock released (no feedback needed) {0}", cacheStr));
                         node.lock.release();
                     }
                     break;
@@ -178,9 +168,7 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
                 // setup timer before return settings to the fisrt callee
                 node.timer = setTimeout(() => {
                     if (node) {
-                        if (this.logFn) {
-                            this.logFn(LogType.debug, () => localize("debug.resolve.timeout", "resolveConnectConfig: lock released by timeout {0}", cacheStr));
-                        }
+                        this.logFn(LogType.debug, () => localize("debug.resolve.timeout", "resolveConnectConfig: lock released by timeout {0}", cacheStr));
                         node.lock.release();
                         node.accepted = false;
                         delete node.timer;
@@ -189,25 +177,19 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
             }
         } else {
             // non-first call, test if settings was accepted or not in first call
-            if (this.logFn) {
-                const accepted = node.accepted;
-                this.logFn(LogType.debug, () => localize("debug.resolve.second", "resolveConnectConfig: second and other calls {0}", cacheStr));
-                this.logFn(LogType.debug, () => localize("debug.resolve.state", "resolveConnectConfig: acc={0} {1}", accepted, cacheStr));
-            }
+            const accepted = node.accepted;
+            this.logFn(LogType.debug, () => localize("debug.resolve.second", "resolveConnectConfig: second and other calls {0}", cacheStr));
+            this.logFn(LogType.debug, () => localize("debug.resolve.state", "resolveConnectConfig: acc={0} {1}", accepted, cacheStr));
             if (node.accepted) {
                 retConfig = node.settings;
             }
             // release lock, feedback already provided
-            if (this.logFn) {
-                this.logFn(LogType.debug, () => localize("debug.resolve.unlock", "resolveConnectConfig: lock released {0}", cacheStr));
-            }
+            this.logFn(LogType.debug, () => localize("debug.resolve.unlock", "resolveConnectConfig: lock released {0}", cacheStr));
             node.lock.release();
         }
 
         // return config
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => localize("debug.resolve.ret", "resolveConnectConfig: config returned {0}", cacheStr));
-        }
+        this.logFn(LogType.debug, () => localize("debug.resolve.ret", "resolveConnectConfig: config returned {0}", cacheStr));
         return retConfig;
     }
 

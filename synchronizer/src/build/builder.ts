@@ -52,6 +52,8 @@ export class Builder {
 
     private static instance?: Builder;
 
+    public logFn: LogFunction;
+
     private collection?: DiagnosticCollection;
     private projectSection?: IProjectSection;
     private workspaceUri?: Uri;
@@ -65,7 +67,9 @@ export class Builder {
      * @param context vscode context
      * @param logFn log
      */
-    private constructor(public logFn?: LogFunction) {
+    private constructor(logFn?: LogFunction) {
+        // tslint:disable-next-line:no-empty
+        this.logFn = logFn || (() => {});
     }
 
     /**
@@ -131,9 +135,7 @@ export class Builder {
                 return false;
             }
         } else {
-            if (this.logFn) {
-                this.logFn(LogType.error, () => localize("output.not_resolved", "Cannot resolve configuration or current workspace folder"));
-            }
+            this.logFn(LogType.error, () => localize("output.not_resolved", "Cannot resolve configuration or current workspace folder"));
             return false;
         }
     }
@@ -174,18 +176,14 @@ export class Builder {
                 return false;
             }
         } else {
-            if (this.logFn) {
-                this.logFn(LogType.error, () => localize("output.not_resolved", "Cannot resolve configuration or current workspace folder"));
-            }
+            this.logFn(LogType.error, () => localize("output.not_resolved", "Cannot resolve configuration or current workspace folder"));
             return false;
         }
     }
 
     private async ensureSettings() {
         if (!await EnsureSettings() || !synchronizerConfig) {
-            if (this.logFn) {
-                this.logFn(LogType.error, () => localize("error.no_settings", "Cannot get settings"));
-            }
+            this.logFn(LogType.error, () => localize("error.no_settings", "Cannot get settings"));
             return false;
         }
         const projectSection = await synchronizerConfig.get(ProjectSection.section);
@@ -199,9 +197,7 @@ export class Builder {
             this.workspaceUri = workspace.workspaceFolders[0].uri;
             return true;
         } else {
-            if (this.logFn) {
-                this.logFn(LogType.error, () => localize("error.bad_settings", "Inconsistent settings or workspace is empty"));
-            }
+            this.logFn(LogType.error, () => localize("error.bad_settings", "Inconsistent settings or workspace is empty"));
             return false;
         }
     }
@@ -269,9 +265,7 @@ export class Builder {
                     // parse?
                     return true;
                 } else {
-                    if (this.logFn) {
-                        this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute > {0}", command));
-                    }
+                    this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute > {0}", command));
                     return false;
                 }
             }
@@ -311,10 +305,8 @@ export class Builder {
                 output = await this.shell.execCmd(command);
                 if (output) {
                     if (selection.type === "user") {
-                        if (this.logFn) {
-                            for (const line of output) {
-                                this.logFn(LogType.information, () => line);
-                            }
+                        for (const line of output) {
+                            this.logFn(LogType.information, () => line);
                         }
                         return true;
                     } else {
@@ -328,9 +320,7 @@ export class Builder {
                             });
                     }
                 } else {
-                    if (this.logFn) {
-                        this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute > {0}", command));
-                    }
+                    this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute > {0}", command));
                     return false;
                 }
             }
@@ -348,15 +338,11 @@ export class Builder {
             }
         }
         if (this.shellRootConverter && this.shellRootConverter.fullPath) {
-            if (this.logFn) {
-                const msg = this.shellRootConverter.fullPath;
-                this.logFn(LogType.debug, () => `shell root: ${msg}`);
-            }
+            const msg = this.shellRootConverter.fullPath;
+            this.logFn(LogType.debug, () => `shell root: ${msg}`);
             return true;
          } else {
-            if (this.logFn) {
-                this.logFn(LogType.debug, () => `shell root: unresolved`);
-            }
+            this.logFn(LogType.debug, () => `shell root: unresolved`);
             this.shellRootConverter = undefined;
             return false;
         }
@@ -367,9 +353,7 @@ export class Builder {
             const cd = `set def ${directory}`;
             const answer = await this.shell.execCmd(cd);    // TODO: check response errors, also check - is DIR working without errors?
             if (answer) {
-                if (this.logFn) {
-                    this.logFn(LogType.debug, () => answer.join("\r\n"));
-                }
+                this.logFn(LogType.debug, () => answer.join("\r\n"));
                 return true;
             }
         }
@@ -456,10 +440,8 @@ export class Builder {
         if (!this.sshHelper) {
             const sshHelperType = await GetSshHelperFromApi();
             if (!sshHelperType) {
-                if (this.logFn) {
-                    this.logFn(LogType.debug, () => localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
-                    this.logFn(LogType.error, () => localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
-                }
+                this.logFn(LogType.debug, () => localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
+                this.logFn(LogType.error, () => localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
                 return false;
             }
             this.sshHelper = new sshHelperType(this.logFn);

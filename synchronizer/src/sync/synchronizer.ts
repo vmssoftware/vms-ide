@@ -35,7 +35,7 @@ export class Synchronizer {
 
     private static instance?: Synchronizer;
 
-    public inProgress = false;
+    public logFn: LogFunction;
 
     private sshHelper?: SshHelper;
     private remoteSource?: ISource;
@@ -49,7 +49,9 @@ export class Synchronizer {
     private onDidLoadConfig?: vscode.Disposable;  // dispose listener
     private onDidLoadSSHConfig?: vscode.Disposable;  // dispose listener
 
-    private constructor(public logFn?: LogFunction) {
+    private constructor(logFn?: LogFunction) {
+        // tslint:disable-next-line:no-empty
+        this.logFn = logFn || (() => {});
     }
 
     public enableRemote() {
@@ -59,9 +61,7 @@ export class Synchronizer {
     }
 
     public disableRemote() {
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => localize("debug.dissblig", "Disabling SFTP and SHELL"));
-        }
+        this.logFn(LogType.debug, () => localize("debug.dissblig", "Disabling SFTP and SHELL"));
         if (this.remoteSource) {
             this.remoteSource.enabled = false;
         }
@@ -136,9 +136,7 @@ export class Synchronizer {
                     break;
                 case "skip":
                     for (const downloadFile of compareResult.download) {
-                        if (this.logFn) {
-                            this.logFn(LogType.information, () => localize("output.download_manually", "Remote {0} is newer, please check and download it manually", downloadFile.filename));
-                        }
+                        this.logFn(LogType.information, () => localize("output.download_manually", "Remote {0} is newer, please check and download it manually", downloadFile.filename));
                     }
                     break;
                 case "edit":
@@ -146,9 +144,7 @@ export class Synchronizer {
                         waitAll.push(this.editFile(this.remoteSource, downloadFile.filename));
                     }
                     if (compareResult.download.length > 0) {
-                        if (this.logFn) {
-                            this.logFn(LogType.information, () => localize("output.edit_count", "Please edit and save {0} files manually", compareResult.download.length));
-                        }
+                        this.logFn(LogType.information, () => localize("output.edit_count", "Please edit and save {0} files manually", compareResult.download.length));
                     }
                     break;
             }
@@ -160,14 +156,10 @@ export class Synchronizer {
                     acc = acc && result;
                     return acc;
                 }, true);
-            if (this.logFn) {
-                this.logFn(LogType.debug, () => localize("debug.retcode", "Synchronize retCode: {0}", retCode));
-            }
+            this.logFn(LogType.debug, () => localize("debug.retcode", "Synchronize retCode: {0}", retCode));
             return retCode;
         } else {
-            if (this.logFn) {
-                this.logFn(LogType.error, () => localize("output.edit_settings", "In first please edit settings"));
-            }
+            this.logFn(LogType.error, () => localize("output.edit_settings", "In first please edit settings"));
         }
         return false;
     }
@@ -225,9 +217,7 @@ export class Synchronizer {
      * Dispose all sources and watchers
      */
     public dispose() {
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => localize("debug.disposing", "Disposing sources"));
-        }
+        this.logFn(LogType.debug, () => localize("debug.disposing", "Disposing sources"));
         // sources
         if (this.remoteSource) {
             this.remoteSource.dispose();
@@ -315,9 +305,7 @@ export class Synchronizer {
                     return false;
                 }
             }).catch((errPipeOrAfter) => {
-                if (this.logFn) {
-                    this.logFn(LogType.debug, () => errPipeOrAfter);
-                }
+                this.logFn(LogType.debug, () => errPipeOrAfter);
                 if (localUri && content) {
                     return createFile(localUri, content)
                         .then((ok) => {
@@ -328,21 +316,15 @@ export class Synchronizer {
                                 return false;
                             }
                         }).catch((errCreateOrShow) => {
-                            if (this.logFn) {
-                                this.logFn(LogType.debug, () => errCreateOrShow);
-                            }
+                            this.logFn(LogType.debug, () => errCreateOrShow);
                             return false;
                         });
                 } else {
-                    if (this.logFn) {
-                        this.logFn(LogType.debug, () => localize("debug.nothing", "Nothing to show"));
-                    }
+                    this.logFn(LogType.debug, () => localize("debug.nothing", "Nothing to show"));
                     return false;
                 }
             }).catch((errLast) => {
-                if (this.logFn) {
-                    this.logFn(LogType.error, () => errLast);
-                }
+                this.logFn(LogType.error, () => errLast);
                 return false;
             });
     }
@@ -361,32 +343,24 @@ export class Synchronizer {
                 return tstRemoteFile.filename.toUpperCase() === localFile.filename.toLocaleUpperCase();
             });
             if (remoteFileIdx === -1) {
-                if (this.logFn) {
-                    this.logFn(LogType.debug, () => localize("debug.no_remote", "No remote {0} => upload", localFile.filename));
-                }
+                this.logFn(LogType.debug, () => localize("debug.no_remote", "No remote {0} => upload", localFile.filename));
                 upload.push(localFile);
             } else {
                 const diff = (remoteLeft[remoteFileIdx].date.valueOf() - localFile.date.valueOf()) / 1000;
                 if (diff < -1) {
-                    if (this.logFn) {
-                        this.logFn(LogType.debug, () => localize("debug.local_is_newer", "Local {0} is newer by {1} => upload", localFile.filename, diff));
-                    }
+                    this.logFn(LogType.debug, () => localize("debug.local_is_newer", "Local {0} is newer by {1} => upload", localFile.filename, diff));
                     upload.push(localFile);
                 } else if (diff > 1) {
-                    if (this.logFn) {
-                        this.logFn(LogType.debug, () => localize("debug.remote_is_newer", "Remote {0} is newer by {1} => download", localFile.filename, diff));
-                    }
+                    this.logFn(LogType.debug, () => localize("debug.remote_is_newer", "Remote {0} is newer by {1} => download", localFile.filename, diff));
                     download.push(remoteLeft[remoteFileIdx]);
-                } else if (this.logFn) {
+                } else {
                     this.logFn(LogType.debug, () => localize("debug.the_same", "{0} are the same", localFile.filename));
                 }
                 remoteLeft.splice(remoteFileIdx, 1);
             }
         }
-        if (this.logFn) {
-            for (const file of remoteLeft) {
-                this.logFn(LogType.debug, () => localize("debug.no_local", "No local {0} => download", file.filename));
-            }
+        for (const file of remoteLeft) {
+            this.logFn(LogType.debug, () => localize("debug.no_local", "No local {0} => download", file.filename));
         }
         download.push(...remoteLeft);
         return { upload, download };
@@ -415,9 +389,7 @@ export class Synchronizer {
             && this.sshHelper) {
             // this.acquires ++;
             if (!this.remoteSource) {
-                if (this.logFn) {
-                    this.logFn(LogType.debug, () => localize("debug.create_remote", "Creating remote source"));
-                }
+                this.logFn(LogType.debug, () => localize("debug.create_remote", "Creating remote source"));
                 const [sftp, shell] = await Promise.all([
                         this.sshHelper.getDefaultSftp(),
                         this.sshHelper.getDefaultVmsShell(),
@@ -427,9 +399,7 @@ export class Synchronizer {
                 }
             }
             if (!this.localSource) {
-                if (this.logFn) {
-                    this.logFn(LogType.debug, () => localize("debug.create_local", "Creating local source"));
-                }
+                this.logFn(LogType.debug, () => localize("debug.create_local", "Creating local source"));
                 this.localSource = new FsSource(this.workspaceUri.fsPath, this.logFn);
             }
             return true;
@@ -442,9 +412,7 @@ export class Synchronizer {
      */
     private async ensureSettings() {
         if (!await EnsureSettings() || !synchronizerConfig) {
-            if (this.logFn) {
-                this.logFn(LogType.error, () => localize("error.no_settings", "Cannot get settings"));
-            }
+            this.logFn(LogType.error, () => localize("error.no_settings", "Cannot get settings"));
             return false;
         }
         const [projectSection, synchronizeSection] = await Promise.all([
@@ -512,19 +480,15 @@ export class Synchronizer {
             const to = action === "download" ? this.localSource : this.remoteSource;
             waitAll.push(this.transferFile(from, to, filename, filedate)
                                 .then((ok) => {
-                                    if (this.logFn) {
-                                        if (ok) {
-                                            this.logFn(LogType.information, () => localize("message.action_success", "{0} success: {1}", action, filename));
-                                        } else {
-                                            this.logFn(LogType.error, () => localize("message.action_failed", "{0} is failed: {1}", action, filename));
-                                        }
+                                    if (ok) {
+                                        this.logFn(LogType.information, () => localize("message.action_success", "{0} success: {1}", action, filename));
+                                    } else {
+                                        this.logFn(LogType.error, () => localize("message.action_failed", "{0} is failed: {1}", action, filename));
                                     }
                                     return ok;
                                 })
                                 .catch((err) => {
-                                    if (this.logFn) {
-                                        this.logFn(LogType.error, () => err.message);
-                                    }
+                                    this.logFn(LogType.error, () => err.message);
                                     return false;
                                 }));
         }

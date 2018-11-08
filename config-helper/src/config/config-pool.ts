@@ -13,6 +13,7 @@ const localize = nls.loadMessageBundle();
 export class ConfigPool implements IConfig {
 
     public onDidLoad: Event<null>;
+    public logFn: LogFunction;
 
     protected pool: Map<string, IConfigSection> = new Map<string, IConfigSection>();
     protected loadPromise: Promise<CSAResult> | undefined = undefined;
@@ -22,14 +23,14 @@ export class ConfigPool implements IConfig {
     protected freezePromise: Promise<boolean> | undefined = undefined;
     protected freezeResolve: ((value?: boolean | PromiseLike<boolean> | undefined) => void) | undefined = undefined;
 
-    constructor(protected storage: IConfigStorage, public logFn?: LogFunction) {
+    constructor(protected storage: IConfigStorage, logFn?: LogFunction) {
+        // tslint:disable-next-line:no-empty
+        this.logFn = logFn || (() => {});
         this.onDidLoad = this.changeEmitter.event;
     }
 
     public setStorage(storage: IConfigStorage) {
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => "setStorage");
-        }
+        this.logFn(LogType.debug, () => "setStorage");
         this.storage = storage;
         this.load();
     }
@@ -38,9 +39,7 @@ export class ConfigPool implements IConfig {
      * Add ConfigSection to pool. ConfigPool will keep it up to date.
      */
     public add(cfg: IConfigSection): boolean {
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => "add " + cfg.name());
-        }
+        this.logFn(LogType.debug, () => "add " + cfg.name());
         this.pool.set(cfg.name(), cfg);
         this.load();
         return true;
@@ -51,9 +50,7 @@ export class ConfigPool implements IConfig {
      * Note - unstackable! Onle the last freeze/unfreeze is taking effect.
      */
     public freeze(): void {
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => "freeze");
-        }
+        this.logFn(LogType.debug, () => "freeze");
         if (!this.freezePromise) {
             this.freezePromise = new Promise<boolean>((resolve) => {
                 this.freezeResolve = resolve;
@@ -62,9 +59,7 @@ export class ConfigPool implements IConfig {
     }
 
     public unfreeze(): void {
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => "unfreeze");
-        }
+        this.logFn(LogType.debug, () => "unfreeze");
         if (this.freezeResolve) {
             this.freezeResolve(true);
         }
@@ -76,9 +71,7 @@ export class ConfigPool implements IConfig {
      * Get kept ConfigSection.
      */
     public get(section: string): Promise<IConfigSection|undefined> {
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => "get = " + section);
-        }
+        this.logFn(LogType.debug, () => "get = " + section);
         return new Promise<IConfigSection>(async (resolve) => {
             const promises: any[] = [];
             if (this.loadPromise) {
@@ -91,20 +84,16 @@ export class ConfigPool implements IConfig {
                 await Promise.all(promises);
             }
             resolve(this.pool.get(section));
-            if (this.logFn) {
-                this.logFn(LogType.debug, () => "get => ok " + section);
-            }
+            this.logFn(LogType.debug, () => "get => ok " + section);
         });
     }
 
     public load(): Promise<CSAResult> {
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => "load =");
-        }
+        this.logFn(LogType.debug, () => "load =");
         if (!this.loadPromise) {
+            let changed = false;
             this.loadPromise = new Promise<CSAResult>(async (resolve) => {
                 // do load
-                let changed = false;
                 this.storage.fillStart().then(async (started) => {
                     if (started === CSAResult.ok) {
                         let retCode = CSAResult.ok;
@@ -120,48 +109,38 @@ export class ConfigPool implements IConfig {
                                         retCode |= r;
                                     }
                                 } catch (err) {
-                                    if (this.logFn) {
-                                        this.logFn(LogType.debug, () => localize("config.filldata.failed", "filling data('{0}') failed", sectionName));
-                                    }
-                                    if (this.logFn) {
-                                        this.logFn(LogType.error, () => String(err));
-                                    }
+                                    this.logFn(LogType.debug, () => localize("config.filldata.failed", "filling data('{0}') failed", sectionName));
+                                    this.logFn(LogType.error, () => String(err));
                                     // tslint:disable-next-line:no-bitwise
                                     retCode |= CSAResult.some_data_failed;
                                 }
                             }
                         }
-                        if (changed) {
-                            this.fireChangeSoon();
-                        }
                         this.storage.fillEnd().then((ended) => {
                             // tslint:disable-next-line:no-bitwise
                             retCode |= ended;
                             resolve(retCode);
-                            if (this.logFn) {
-                                this.logFn(LogType.debug, () => "load => " + (retCode ? "fail" : "ok"));
-                            }
+                            this.logFn(LogType.debug, () => "load => " + (retCode ? "fail" : "ok"));
                         });
                     } else {
                         resolve(started);   // didn't start
-                        if (this.logFn) {
-                            this.logFn(LogType.debug, () => "load => fail");
-                        }
+                        this.logFn(LogType.debug, () => "load => fail");
                     }
                     this.loadPromise = undefined;
-                    if (this.logFn) {
-                        this.logFn(LogType.debug, () => "load => clear");
-                    }
+                    this.logFn(LogType.debug, () => "load => clear");
                 });
+            });
+            this.loadPromise.then(() => {
+                if (changed) {
+                    this.fireChangeSoon();
+                }
             });
         }
         return this.loadPromise;
     }
 
     public save(): Promise<CSAResult> {
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => "save =");
-        }
+        this.logFn(LogType.debug, () => "save =");
         if (!this.savePromise) {
             this.savePromise = new Promise<CSAResult>(async (resolve) => {
                 // do save
@@ -175,12 +154,8 @@ export class ConfigPool implements IConfig {
                                     // tslint:disable-next-line:no-bitwise
                                     retCode |= await this.storage.storeData(sectionName, data);
                                 } catch (err) {
-                                    if (this.logFn) {
-                                        this.logFn(LogType.debug, () => localize("config.storedata.failed", "storing data('{0}') failed", sectionName));
-                                    }
-                                    if (this.logFn) {
-                                        this.logFn(LogType.error, () => String(err));
-                                    }
+                                    this.logFn(LogType.debug, () => localize("config.storedata.failed", "storing data('{0}') failed", sectionName));
+                                    this.logFn(LogType.error, () => String(err));
                                     // tslint:disable-next-line:no-bitwise
                                     retCode |= CSAResult.some_data_failed;
                                 }
@@ -191,30 +166,21 @@ export class ConfigPool implements IConfig {
                             retCode |= ended;
                             resolve(retCode);
                             this.savePromise = undefined;
-                            if (this.logFn) {
-                                this.logFn(LogType.debug, () => "save => " + (retCode ? "fail" : "ok"));
-                            }
+                            this.logFn(LogType.debug, () => "save => " + (retCode ? "fail" : "ok"));
                         });
                     } else {
                         resolve(started);   // didn't start
                         this.savePromise = undefined;
-                        if (this.logFn) {
-                            this.logFn(LogType.debug, () => "save => fail");
-                        }
+                        this.logFn(LogType.debug, () => "save => fail");
                     }
                 });
             });
         }
         return this.savePromise;
     }
+
     protected fireChangeSoon(): void {
-        if (this.fireImmediate) {
-            clearImmediate(this.fireImmediate);
-        }
-        this.fireImmediate = setImmediate(() => {
-            this.fireImmediate = undefined;
-            this.changeEmitter.fire();
-        });
+        this.changeEmitter.fire();
     }
 
 }
