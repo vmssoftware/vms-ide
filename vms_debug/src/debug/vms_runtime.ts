@@ -2,7 +2,6 @@
  * Copyright (C) VMS Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as readline from 'readline';
 import * as vscode from 'vscode';
 import { EventEmitter } from 'events';
 import { ShellSession, ModeWork } from '../net/shell-session';
@@ -10,10 +9,8 @@ import { OsCommands } from '../command/os_commands';
 import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
 import { DebugParser, MessageDebuger } from '../parsers/debug_parser';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { LogFunction, LogType, IFileEntry, Lock, ftpPathSeparator } from '@vorfol/common';
-import { ISource } from '../ext-api/source';
-import { GetSourceHelperFromApi } from '../ext-api/get-source-helper';
-import { ensureProjectSettings, projectSection } from '../ext-api/ensure-project';
+import { LogFunction, LogType, ftpPathSeparator } from '@vorfol/common';
+import { FileManagerExt } from '../ext-api/file_manager';
 
 
 export interface VMSBreakpoint
@@ -48,17 +45,13 @@ export class VMSRuntime extends EventEmitter
 	private osCmd : OsCommands;
 	private dbgCmd : DebugCommands;
 	private dbgParser : DebugParser;
+	private fileManager : FileManagerExt;
 	private debugRun : boolean;
 
 	private stackStartFrame: number;
 	private stackEndFrame: number;
 
-	private localSource?: ISource;
-
-	// the contents (= lines) of the one and only file
-	private sourceLines: string[];
 	private sourcePaths: string[];
-	private lisLines: string[];
 	private lisPaths: string[];
 
 	// maps from sourceFile to array of VMS breakpoints
@@ -80,18 +73,22 @@ export class VMSRuntime extends EventEmitter
 		this.osCmd = new OsCommands();
 		this.dbgCmd = new DebugCommands();
 		this.dbgParser = new DebugParser();
+		this.fileManager = new FileManagerExt();
 		this.debugRun = false;
 	}
 
 	// Start executing the given program.
-	public async start(programName: string)
+	public async start(programName: string) : Promise<void>
 	{
-		if (!await ensureProjectSettings() || !projectSection ) {
+		let section = await this.fileManager.getProjectSection();
+
+		if (!section)
+		{
 			return;
 		}
 
-		this.sourcePaths = await this.loadSourcePathList(projectSection.source);
-		this.lisPaths = await this.loadSourcePathList(projectSection.listing);
+		this.sourcePaths = await this.fileManager.loadPathListFiles(section.source);
+		this.lisPaths = await this.fileManager.loadPathListFiles(section.listing);
 
 		this.shell.resetParameters();
 		//run debuger
@@ -209,21 +206,25 @@ export class VMSRuntime extends EventEmitter
 
 
 	// Set breakpoints in file.
-	public async setBreakPoints(path: string, lines: number[]) // : VMSBreakpoint[] | undefined
+	public async setBreakPoints(path: string, lines: number[]) : Promise<VMSBreakpoint[] | undefined>
 	{
 		let newBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 		let setBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 		let remBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 
-		if (!await this.ensureLocalSource() || !this.localSource) {
-			return;
+		let source = await this.fileManager.getLocalSource();
+
+		if (!source)
+		{
+			return undefined;
 		}
-		path = path.slice(this.localSource.root!.length + 1);	// to relative path
+
+		path = path.replace(/\\/g, ftpPathSeparator);
+		path = path.slice(source.root!.length + 1);// to relative path
 
 		let fileName = this.getNameFromPath(path);
-		let key = path; //.substring(2);
+		let key = path;
 		let currBps = this.breakPoints.get(key);
-
 
 		for(let line of lines)
 		{
@@ -296,11 +297,11 @@ export class VMSRuntime extends EventEmitter
 	}
 
 	// Set breakpoint in file with given line.
-	public async setBreakPoint(path: string, line: number) // : VMSBreakpoint
+	public async setBreakPoint(path: string, line: number) : Promise<VMSBreakpoint>
 	{
 		let fileName = this.getNameFromPath(path);
 		const bp = <VMSBreakpoint> { file: fileName, verified: false, line, id: this.breakpointId++ };
-		let key = path; //.substring(2);
+		let key = path;
 		let bps = this.breakPoints.get(key);
 
 		if (!bps)
@@ -318,7 +319,7 @@ export class VMSRuntime extends EventEmitter
 	// Clear breakpoint in file with given line.
 	public clearBreakPoint(path: string, line: number) : VMSBreakpoint | undefined
 	{
-		let key = path; //.substring(2);
+		let key = path;
 		let bps = this.breakPoints.get(key);
 
 		if (bps)
@@ -343,45 +344,21 @@ export class VMSRuntime extends EventEmitter
 
 	// private methods //
 
-	private async ensureLocalSource() {
-		if (!this.localSource) {
-			const sourceHelper = await GetSourceHelperFromApi();
-			if (sourceHelper) {
-				this.localSource = await sourceHelper.getSource("local");
-			}
-		}
-		return this.localSource !== undefined;
-	}
-
-	private async loadSourcePathList(pattern : string) : Promise<string[]>
+	private getNameFromPath(item: string) : string
 	{
-		if (!await this.ensureLocalSource()) {
-			return [] as string[];
-		}
-
-		let list : string[] = [];
-		let entries : IFileEntry[] = await this.localSource!.findFiles(pattern);
-
-		for(let item of entries)
-		{
-			// list.push(this.localSource!.root! + ftpPathSeparator + item.filename);
-			list.push(item.filename);
-		}
-
-		return list;
-	}
-
-	private getNameFromPath(item: string) {
-		let namePos = item.lastIndexOf(ftpPathSeparator) + 1;	// if no path -> from start (-1 + 1 = 0 ;)
+		let namePos = item.lastIndexOf(ftpPathSeparator) + 1;// if no path -> from start (-1 + 1 = 0 ;)
 		let extPos = item.lastIndexOf(".");
-		if (extPos === -1) {
-			// if no ext -> to the end
-			extPos = item.length;
+
+		if (extPos === -1)
+		{
+			extPos = item.length;// if no ext -> to the end
 		}
-		if (0 <= namePos && namePos < extPos) {
-			// check name
-			return item.slice(namePos, extPos).toLowerCase();
+
+		if (namePos >= 0 && namePos < extPos)
+		{
+			return item.slice(namePos, extPos).toLowerCase();// check name
 		}
+
 		return item;
 	}
 
@@ -393,7 +370,8 @@ export class VMSRuntime extends EventEmitter
 
 		for(let item of paths)
 		{
-			if (name === this.getNameFromPath(item)) {
+			if (name === this.getNameFromPath(item))
+			{
 				pathFile = item;
 				break;
 			}
@@ -401,62 +379,60 @@ export class VMSRuntime extends EventEmitter
 
 		return pathFile;
 	}
-	private async loadSource(file: string)
+
+	private async loadSourceLang(file: string) : Promise<string[]>
 	{
-		if (await this.ensureLocalSource()) {
-			const stream = await this.localSource!.createReadStream(file);
-			if (stream) {
-				const ret: string[] = [];
-				const lock = new Lock(true);
-				const rl = readline.createInterface(stream);
-				rl.on("close", () => {
-					lock.release();
-				});
-				rl.on("line", (line) => {
-					ret.push(line);
-				});
-				await lock.acquire();
-				return ret;
-			}
+		let sourceLines: string[] = [];
+
+		if (this.sourceFile !== file)
+		{
+			this.sourceFile = file;
+			sourceLines = await this.fileManager.loadContextFile(this.sourceFile);
 		}
-		return [] as string[];
+
+		return sourceLines;
 	}
 
-	private async loadSourceLis(file: string)
+	private async loadSourceLis(file: string) : Promise<string[]>
 	{
+		let lisLines: string[] = [];
 		const lisFile = this.findPathFileByName(file, this.lisPaths);
-		if (this.lisFile !== lisFile) {
+
+		if (this.lisFile !== lisFile)
+		{
 			this.lisFile = lisFile;
-			this.lisLines = await this.loadSource(this.lisFile);
+			lisLines = await this.fileManager.loadContextFile(this.lisFile);
 		}
+
+		return lisLines;
 	}
 
-	private async verifyBreakpoints(path: string) // : void
+	private async verifyBreakpoints(path: string) : Promise<void>
 	{
-		let key = path; //.substring(2);
+		let key = path;
 		let bps = this.breakPoints.get(key);
 
 		if (bps)
 		{
-			this.sourceLines = await this.loadSource(path);
+			let sourceLines = await this.loadSourceLang(path);
 
 			bps.forEach(bp =>
 			{
-				if (!bp.verified && bp.line < this.sourceLines.length)
+				if (!bp.verified && bp.line < sourceLines.length)
 				{
-					let srcLine = this.sourceLines[bp.line].trim();
+					let srcLine = sourceLines[bp.line].trim();
 
 					// if a line is empty or starts with '{' we don't allow to set a breakpoint but move the breakpoint down
-					while ((srcLine.length === 0 || srcLine.indexOf('{') === 0) && bp.line < this.sourceLines.length)
+					while ((srcLine.length === 0 || srcLine.indexOf('{') === 0) && bp.line < sourceLines.length)
 					{
 						bp.line++;
-						srcLine = this.sourceLines[bp.line].trim();
+						srcLine = sourceLines[bp.line].trim();
 					}
 					// if a line starts with '}' we don't allow to set a breakpoint but move the breakpoint up
-					while (srcLine.indexOf('}') === 0 && bp.line < this.sourceLines.length)
+					while (srcLine.indexOf('}') === 0 && bp.line < sourceLines.length)
 					{
 						bp.line--;
-						srcLine = this.sourceLines[bp.line].trim();
+						srcLine = sourceLines[bp.line].trim();
 					}
 
 					bp.verified = true;
@@ -466,7 +442,7 @@ export class VMSRuntime extends EventEmitter
 		}
 	}
 
-	private async setRemoteBreakpointsAll() // : void
+	private async setRemoteBreakpointsAll() : Promise<void>
 	{
 		for(let path of this.sourcePaths)
 		{
@@ -474,7 +450,7 @@ export class VMSRuntime extends EventEmitter
 		}
 	}
 
-	private async setRemoteBreakpointsPath(path: string) // : void
+	private async setRemoteBreakpointsPath(path: string) : Promise<void>
 	{
 		if(this.debugRun === true)
 		{
@@ -482,9 +458,9 @@ export class VMSRuntime extends EventEmitter
 		}
 	}
 
-	private async setRemoteBreakpoints(path: string) // : void
+	private async setRemoteBreakpoints(path: string) : Promise<void>
 	{
-		let key = path; //.substring(2);
+		let key = path;
 		let setBps = this.breakPointsSet.get(key);
 		let remBps = this.breakPointsRem.get(key);
 
@@ -492,12 +468,12 @@ export class VMSRuntime extends EventEmitter
 		{
 			if(remBps.length > 0)
 			{
-				await this.loadSourceLis(path);
+				let lisLines = await this.loadSourceLis(path);
 
 				remBps.forEach(bp =>
 				{
 					//finde number of line
-					let numberLine = this.dbgParser.findeBreakPointNumberLine(bp.line,  this.lisLines);
+					let numberLine = this.dbgParser.findeBreakPointNumberLine(bp.line,  lisLines);
 
 					if(!Number.isNaN(numberLine))
 					{
@@ -516,12 +492,12 @@ export class VMSRuntime extends EventEmitter
 		{
 			if(setBps.length > 0)
 			{
-				await this.loadSourceLis(path);
+				let lisLines = await this.loadSourceLis(path);
 
 				setBps.forEach(bp =>
 				{
 					//finde number of line
-					let numberLine = this.dbgParser.findeBreakPointNumberLine(bp.line,  this.lisLines);
+					let numberLine = this.dbgParser.findeBreakPointNumberLine(bp.line,  lisLines);
 
 					if(!Number.isNaN(numberLine))
 					{
@@ -545,7 +521,7 @@ export class VMSRuntime extends EventEmitter
 	}
 
 
-	public receiveData(data: string, mode: ModeWork)
+	public receiveData(data: string, mode: ModeWork) : void
 	{
 		if(mode === ModeWork.shell)
 		{
@@ -580,7 +556,8 @@ export class VMSRuntime extends EventEmitter
 
 					case DebugCmdVMS.dbgCallStack:
 						this.dbgParser.parseCallStackMsg(messageData, this.sourcePaths, this.lisPaths, this.stackStartFrame, this.stackEndFrame)
-							.then((stack) => {
+							.then((stack) =>
+							{
 								this.sendEvent(DebugCmdVMS.dbgStack, stack);
 							});
 						break;
@@ -594,6 +571,7 @@ export class VMSRuntime extends EventEmitter
 				{
 					this.logFn(LogType.informtion, () => messageDebug);
 				}
+
 				vscode.debug.activeDebugConsole.append(messageDebug);
 
 				if(messageDebug.includes(MessageDebuger.msgEnd))
@@ -607,6 +585,7 @@ export class VMSRuntime extends EventEmitter
 				{
 					this.logFn(LogType.informtion, () => messageUser);
 				}
+
 				vscode.debug.activeDebugConsole.append(messageUser);
 			}
 

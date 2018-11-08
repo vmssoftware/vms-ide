@@ -40,11 +40,11 @@ export class VMSDebugSession extends LoggingDebugSession
 	private static THREAD_ID = 1;
 
 	// a VMS runtime (or debugger)
-	private _runtime: VMSRuntime;
+	private runtime: VMSRuntime;
 
-	private _variableHandles = new Handles<string>();
+	private variableHandles = new Handles<string>();
 
-	private _configurationDone = new Subject();
+	private configurationDone = new Subject();
 
 	private responseEvaluate: DebugProtocol.EvaluateResponse;
 	private responseStackTrace =  new Queue<DebugProtocol.StackTraceResponse>();
@@ -61,10 +61,10 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.setDebuggerLinesStartAt1(false);
 		this.setDebuggerColumnsStartAt1(false);
 
-		this._runtime = new VMSRuntime(shell, logFn);
+		this.runtime = new VMSRuntime(shell, logFn);
 
 		// response event handlers
-		this._runtime.on(DebugCmdVMS.dbgExamine, (data : string) =>
+		this.runtime.on(DebugCmdVMS.dbgExamine, (data : string) =>
 		{
 			let reply: string | undefined = undefined;
 
@@ -75,7 +75,7 @@ export class VMSDebugSession extends LoggingDebugSession
 			};
 			this.sendResponse(this.responseEvaluate);
 		});
-		this._runtime.on(DebugCmdVMS.dbgStack, (stack : any) =>
+		this.runtime.on(DebugCmdVMS.dbgStack, (stack : any) =>
 		{
 			let response = this.responseStackTrace.pop();
 
@@ -87,23 +87,23 @@ export class VMSDebugSession extends LoggingDebugSession
 		});
 
 		// setup event handlers
-		this._runtime.on('stopOnEntry', () =>
+		this.runtime.on('stopOnEntry', () =>
 		{
 			this.sendEvent(new StoppedEvent('entry', VMSDebugSession.THREAD_ID));
 		});
-		this._runtime.on('stopOnStep', () =>
+		this.runtime.on('stopOnStep', () =>
 		{
 			this.sendEvent(new StoppedEvent('step', VMSDebugSession.THREAD_ID));
 		});
-		this._runtime.on('stopOnBreakpoint', () =>
+		this.runtime.on('stopOnBreakpoint', () =>
 		{
 			this.sendEvent(new StoppedEvent('breakpoint', VMSDebugSession.THREAD_ID));
 		});
-		this._runtime.on('stopOnException', () =>
+		this.runtime.on('stopOnException', () =>
 		{
 			this.sendEvent(new StoppedEvent('exception', VMSDebugSession.THREAD_ID));
 		});
-		this._runtime.on('output', (text, filePath, line, column) =>
+		this.runtime.on('output', (text, filePath, line, column) =>
 		{
 			const e: DebugProtocol.OutputEvent = new OutputEvent(`${text}\n`);
 			e.body.source = this.createSource(filePath);
@@ -111,17 +111,17 @@ export class VMSDebugSession extends LoggingDebugSession
 			e.body.column = this.convertDebuggerColumnToClient(column);
 			this.sendEvent(e);
 		});
-		this._runtime.on('end', () =>
+		this.runtime.on('end', () =>
 		{
 			this.sendEvent(new TerminatedEvent());
 		});
 
 		// breakpoints event handlers
-		this._runtime.on('breakpointValidated', (bp: VMSBreakpoint) =>
+		this.runtime.on('breakpointValidated', (bp: VMSBreakpoint) =>
 		{
 			this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ verified: bp.verified, id: bp.id }));
 		});
-		this._runtime.on('breakpointRemoved', (bp: VMSBreakpoint | undefined) =>
+		this.runtime.on('breakpointRemoved', (bp: VMSBreakpoint | undefined) =>
 		{
 			if (bp)
 			{
@@ -165,7 +165,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		super.configurationDoneRequest(response, args);
 
 		// notify the launchRequest that configuration has finished
-		this._configurationDone.notify();
+		this.configurationDone.notify();
 	}
 
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments)
@@ -174,15 +174,15 @@ export class VMSDebugSession extends LoggingDebugSession
 		logger.setup(args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false);
 
 		// wait until configuration has finished (and configurationDoneRequest has been called)
-		await this._configurationDone.wait(1000);
+		await this.configurationDone.wait(1000);
 
 		// start the program in the runtime
-		await this._runtime.start(args.program);
+		await this.runtime.start(args.program);
 
 		this.sendResponse(response);
 	}
 
-	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments) //: void
+	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments) : Promise<void>
 	{
 		const path = <string>args.source.path;
 		const clientLines = args.lines || [];
@@ -195,7 +195,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		}
 
 		// set and verify breakpoints locations
-		let bps = await this._runtime.setBreakPoints(path, debugLines);
+		let bps = await this.runtime.setBreakPoints(path, debugLines);
 
 		if(bps)
 		{
@@ -231,7 +231,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		const maxLevels = typeof args.levels === 'number' ? args.levels : 1000;
 		const endFrame = startFrame + maxLevels;
 
-		this._runtime.stack(startFrame, endFrame);
+		this.runtime.stack(startFrame, endFrame);
 		this.responseStackTrace.push(response);
 	}
 
@@ -239,8 +239,8 @@ export class VMSDebugSession extends LoggingDebugSession
 	{
 		const frameReference = args.frameId;
 		const scopes = new Array<Scope>();
-		scopes.push(new Scope("Local", this._variableHandles.create("local_" + frameReference), false));
-		scopes.push(new Scope("Global", this._variableHandles.create("global_" + frameReference), true));
+		scopes.push(new Scope("Local", this.variableHandles.create("local_" + frameReference), false));
+		scopes.push(new Scope("Global", this.variableHandles.create("global_" + frameReference), true));
 
 		response.body =
 		{
@@ -251,8 +251,8 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void//call 3
 	{
-		const id = this._variableHandles.get(args.variablesReference);
-		const variables = this._runtime.getVariables(id);
+		const id = this.variableHandles.get(args.variablesReference);
+		const variables = this.runtime.getVariables(id);
 
 		response.body =
 		{
@@ -271,12 +271,12 @@ export class VMSDebugSession extends LoggingDebugSession
 	{
 		if(args.context === "hover")//request value of selected a variable
 		{
-			this._runtime.variableValue(args.expression);
+			this.runtime.variableValue(args.expression);
 			this.responseEvaluate = response;
 		}
 		else if(args.context === "repl")//data from debug console
 		{
-			if(this._runtime.sendDataToProgram(args.expression))
+			if(this.runtime.sendDataToProgram(args.expression))
 			{
 				response.body =
 				{
@@ -306,37 +306,37 @@ export class VMSDebugSession extends LoggingDebugSession
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void
 	{
 		this.sendResponse(response);//first response
-		this._runtime.continue();//second command
+		this.runtime.continue();//second command
 	}
 
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void
 	{
 		this.sendResponse(response);
-		this._runtime.stepOver();
+		this.runtime.stepOver();
 	}
 
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void
 	{
 		this.sendResponse(response);
-		this._runtime.stepInto();
+		this.runtime.stepInto();
 	}
 
 	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void
 	{
 		this.sendResponse(response);
-		this._runtime.stepOut();
+		this.runtime.stepOut();
 	}
 
 	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments): void
 	{
 		this.sendResponse(response);
-		this._runtime.stop();
+		this.runtime.stop();
 	}
 
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void
 	{
 		this.sendResponse(response);//disconnect or restart event
-		this._runtime.exit();
+		this.runtime.exit();
 	}
 
 	//---- helpers
@@ -349,7 +349,7 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	public receiveDataShell(data: string, mode: ModeWork)
 	{
-		this._runtime.receiveData(data, mode);
+		this.runtime.receiveData(data, mode);
 	}
 
 	public closeDebugSession()

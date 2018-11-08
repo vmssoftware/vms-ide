@@ -33,7 +33,7 @@ export class VMSRuntimeRun extends EventEmitter
 	}
 
 	// Start executing the given program.
-	public async start(programName: string)
+	public start(programName: string)
 	{
 		this.shell.resetParameters();
 		this.shell.SendCommandToQueue(this.osCmd.runProgram(programName));

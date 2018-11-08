@@ -1,11 +1,9 @@
 import { HolderDebugFileInfo } from './debug_file_info';
 import { DebugFileInfo } from './debug_file_info';
-import * as readline from 'readline';
 import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
 import { Queue } from '../queue/queues';
-import { ftpPathSeparator, Lock } from '@vorfol/common';
-import { ISource } from '../ext-api/source';
-import { GetSourceHelperFromApi } from '../ext-api/get-source-helper';
+import { ftpPathSeparator } from '@vorfol/common';
+import { FileManagerExt } from '../ext-api/file_manager';
 
 
 export enum MessageDebuger
@@ -39,12 +37,13 @@ export class DebugParser
 	private commandDone : boolean;
 	private topicNumberString : Array<number> = new Array<number>();
 	private displayDataString : string[] = ["", "", ""];
-	private localSource?: ISource;
+	private fileManager : FileManagerExt;
 
 	constructor()
 	{
 		this.currentName = "";
 		this.fleInfo = new HolderDebugFileInfo();
+		this.fileManager = new FileManagerExt();
 		this.commandDone = false;
 	}
 
@@ -301,7 +300,7 @@ export class DebugParser
 			{
 				let pathFile = this.findPathFileByName(fileName, sourcePaths);
 				let pathLisFile = this.findPathFileByName(fileName, lisPaths);
-				lisLines = await this.loadSource(pathLisFile);
+				lisLines = await this.fileManager.loadContextFile(pathLisFile);
 
 				//calculate shift line
 				shift = this.calculateShiftLine(msgLine, lisLines);
@@ -335,7 +334,7 @@ export class DebugParser
 	// *HELLO          main             1648       0000000000000360 0000000000020360
 	// *HELLO          __main           1634       00000000000000E0 00000000000200E0
 	// 											   FFFFFFFF80A3CF10 FFFFFFFF80A3CF10
-	public async parseCallStackMsg(data : string, sourcePaths: string[], lisPaths: string[], startFrame: number, endFrame: number) // : any
+	public async parseCallStackMsg(data : string, sourcePaths: string[], lisPaths: string[], startFrame: number, endFrame: number) //: any
 	{
 		let numberLine : number = -1;
 		const frames = new Array<any>();
@@ -356,9 +355,11 @@ export class DebugParser
 
 				if(pathFile !== "" && pathLisFile !== "")
 				{
+					let localSource = await this.fileManager.getLocalSource();
+
 					if(shift === -1)
 					{
-						let lisLines = await this.loadSource(pathLisFile);
+						let lisLines = await this.fileManager.loadContextFile(pathLisFile);
 						//get source line
 						numberLine = this.getNumberLineSourceCode(numberLineDebug, lisLines);
 						//save file info
@@ -373,7 +374,7 @@ export class DebugParser
 					frames.push({
 						index: startFrame,
 						name: `${routineName}(${startFrame})`,
-						file: this.localSource!.root + ftpPathSeparator + pathFile,
+						file: localSource!.root + ftpPathSeparator + pathFile,
 						line: numberLine
 					});
 
@@ -459,17 +460,20 @@ export class DebugParser
 
 		for(let item of paths)
 		{
-			let namePos = item.lastIndexOf(ftpPathSeparator) + 1;	// if no path -> from start (-1 + 1 = 0 ;)
+			let namePos = item.lastIndexOf(ftpPathSeparator) + 1;// if no path -> from start (-1 + 1 = 0 ;)
 			let extPos = item.lastIndexOf(".");
-			if (extPos === -1) {
-				// if no ext -> to the end
-				extPos = item.length;
+
+			if (extPos === -1)
+			{
+				extPos = item.length;// if no ext -> to the end
 			}
 
-			if (0 <= namePos && namePos < extPos) {
-				// check name
-				const name = item.slice(namePos, extPos).toLowerCase();
-				if (name === fileName) {
+			if (namePos >= 0 && namePos < extPos)
+			{
+				const name = item.slice(namePos, extPos).toLowerCase();// check name
+
+				if (name === fileName)
+				{
 					pathFile = item;
 					break;
 				}
@@ -557,37 +561,6 @@ export class DebugParser
 		}
 
 		return LineSourceCode;
-	}
-
-	private async ensureLocalSource() {
-		if (!this.localSource) {
-			const sourceHelper = await GetSourceHelperFromApi();
-			if (sourceHelper) {
-				this.localSource = await sourceHelper.getSource("local");
-			}
-		}
-		return this.localSource !== undefined;
-	}
-
-	private async loadSource(file: string)
-	{
-		if (await this.ensureLocalSource()) {
-			const stream = await this.localSource!.createReadStream(file);
-			if (stream) {
-				const ret: string[] = [];
-				const lock = new Lock(true);
-				const rl = readline.createInterface(stream);
-				rl.on("close", () => {
-					lock.release();
-				});
-				rl.on("line", (line) => {
-					ret.push(line);
-				});
-				await lock.acquire();
-				return ret;
-			}
-		}
-		return [] as string[];
 	}
 
 	//examples a lines of lis file
