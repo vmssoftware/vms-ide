@@ -23,6 +23,8 @@ export class VSCConfigHelper implements ConfigHelper {
         return VSCConfigHelper.instances.get(section)!;
     }
 
+    public logFn: LogFunction;
+
     private static instances: Map<string, VSCConfigHelper> = new Map<string, VSCConfigHelper>();
 
     protected config: ConfigPool;
@@ -31,16 +33,16 @@ export class VSCConfigHelper implements ConfigHelper {
     protected debouncer = new Debouncer(3000);
     protected disposables: Disposable[] = [];
 
-    protected constructor(protected section: string, public logFn?: LogFunction) {
+    protected constructor(protected section: string, logFn?: LogFunction) {
+        // tslint:disable-next-line:no-empty
+        this.logFn = logFn || (() => {});
         this.storage = new VSCConfigStorage(this.section, logFn);
         this.config = new ConfigPool(this.storage, logFn);
         this.editor = new VSCWorkspaceConfigEditor(this.config, logFn);
         this.disposables.push( workspace.onDidChangeConfiguration((e) => {
             if (e.affectsConfiguration(this.section)) {
                 this.config.freeze();
-                if (this.logFn) {
-                    this.logFn(LogType.debug, () => "onDidChangeConfiguration");
-                }
+                this.logFn(LogType.debug, () => "onDidChangeConfiguration");
                 this.debouncer.debounce().then(async () => {
                     await this.config.load();
                     this.config.unfreeze();

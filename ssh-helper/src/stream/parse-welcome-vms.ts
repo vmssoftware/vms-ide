@@ -50,17 +50,13 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
             const promptIdx = chunk.indexOf(0);
             if (promptIdx >= 0) {
                 this.prompt = chunk.slice(promptIdx + 1).toString("utf8");
-                if (this.logFn) { 
-                    this.logFn(LogType.debug, () => localize("debug.prompt", "vms parse: found prompt '{0}'", this.prompt)); 
-                }
+                this.logFn(LogType.debug, () => localize("debug.prompt", "vms parse: found prompt '{0}'", this.prompt)); 
                 this.setReady();
             }
             // speed up shell :)
             this.ttCmd.some((tt, idx) => {
                 if (chunk.includes(tt.if)) {
-                    if (this.logFn) { 
-                        this.logFn(LogType.debug, () => localize("debug.tt", "vms parse: found tt {0}", idx)); 
-                    }
+                    this.logFn(LogType.debug, () => localize("debug.tt", "vms parse: found tt {0}", idx)); 
                     this.push(tt.then);
                     return true;
                 }

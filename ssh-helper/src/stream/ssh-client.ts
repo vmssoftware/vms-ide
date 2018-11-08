@@ -12,6 +12,7 @@ const localize = nls.loadMessageBundle();
 
 export class SshClient {
     public enabled: boolean;
+    public logFn: LogFunction;
 
     protected client?: Client;
 
@@ -28,8 +29,10 @@ export class SshClient {
      */
     constructor(public config: ConnectConfig,
                 public resolver?: IConnectConfigResolver,
-                public logFn?: LogFunction,
+                logFn?: LogFunction,
                 public tag?: string) {
+        // tslint:disable-next-line:no-empty
+        this.logFn = logFn || (() => {});
         this.enabled = true;
     }
 
@@ -70,23 +73,17 @@ export class SshClient {
         const waitClient = new Lock(true, "waitClient");
         const client = new Client();
         this.clientReady = Subscribe(client, "ready", () => {
-            if (this.logFn) {
-                this.logFn(LogType.debug, () => localize("debug.ready", "client{0} ready", this.tag ? " " + this.tag : ""));
-            }
+            this.logFn(LogType.debug, () => localize("debug.ready", "client{0} ready", this.tag ? " " + this.tag : ""));
             waitClient.release();
             this.client = client;
             // subscribe "end" only here
             this.clientEnd = Subscribe(client, "end", () => {
-                if (this.logFn) {
-                    this.logFn(LogType.debug, () => localize("debug.end", "client{0} end", this.tag ? " " + this.tag : ""));
-                }
+                this.logFn(LogType.debug, () => localize("debug.end", "client{0} end", this.tag ? " " + this.tag : ""));
                 this.cleanClient();
             });
         });
         this.clientError = Subscribe(client, "error", (err) => {
-            if (this.logFn) {
-                this.logFn(LogType.error, () => localize("debug.error", "client{1} error: {0}", String(err), this.tag ? " " + this.tag : ""));
-            }
+            this.logFn(LogType.error, () => localize("debug.error", "client{1} error: {0}", String(err), this.tag ? " " + this.tag : ""));
             if (!this.client) {
                 waitClient.release();
             }
@@ -97,9 +94,7 @@ export class SshClient {
             if (configResolved) {
                 client.connect(configResolved);
             } else {
-                if (this.logFn) {
-                    this.logFn(LogType.debug, () => localize("debug.resolver", "no config resolved {0}", this.tag ? " " + this.tag : ""));
-                }
+                this.logFn(LogType.debug, () => localize("debug.resolver", "no config resolved {0}", this.tag ? " " + this.tag : ""));
                 waitClient.release();
             }
         } else {

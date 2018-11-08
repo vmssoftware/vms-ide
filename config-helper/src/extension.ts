@@ -22,15 +22,15 @@ export function activate(context: vscode.ExtensionContext) {
     switch (using) {
         case "FS":
             configHelperType = FSConfigHelper;
-            logFn(LogType.informtion, () => localize("message.created", "{0} created", "FS"));
+            logFn(LogType.information, () => localize("message.created", "{0} created", "FS"));
             break;
         case "VFS":
             configHelperType = VFSConfigHelper;
-            logFn(LogType.informtion, () => localize("message.created", "{0} created", "VFS"));
+            logFn(LogType.information, () => localize("message.created", "{0} created", "VFS"));
             break;
         default:
             configHelperType = VSCConfigHelper;
-            logFn(LogType.informtion, () => localize("message.created", "{0} created", "VSC"));
+            logFn(LogType.information, () => localize("message.created", "{0} created", "VSC"));
             break;
     }
 

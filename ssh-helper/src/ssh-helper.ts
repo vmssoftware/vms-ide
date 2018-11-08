@@ -33,8 +33,11 @@ export class SshHelper {
     private config?: IConfig;
 
     public onDidLoadConfig?: Event<null>;
+    public logFn: LogFunction;
 
-    constructor(public logFn?: LogFunction) {
+    constructor(logFn?: LogFunction) {
+        // tslint:disable-next-line:no-empty
+        this.logFn = logFn || (() => {});
         this.section = "vmssoftware.ssh-helper";
         this.sections.push(new ConnectionSection());
         this.sections.push(new TimeoutsSection());
@@ -137,7 +140,7 @@ export class SshHelper {
         // then ensure all are loaded
         for (const section of this.sections) {
             const testSection = await this.config.get(section.name());
-            if (this.logFn && typeof section !== typeof testSection) {
+            if (typeof section !== typeof testSection) {
                 this.logFn(LogType.debug, () => localize("debug.diff", "Different types of sections {0}", section.name()));
                 return false;
             }

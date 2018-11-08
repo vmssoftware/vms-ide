@@ -13,14 +13,12 @@ import { FSConfigStorage } from "./fs-storage";
  */
 export class VFSConfigStorage extends FSConfigStorage {
 
-    constructor(protected fileUri: Uri, public logFn?: LogFunction) {
-        super(fileUri.fsPath);
+    constructor(protected fileUri: Uri, logFn?: LogFunction) {
+        super(fileUri.fsPath, logFn);
     }
 
     public fillStart(): Promise<CSAResult> {
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => "fillStart =");
-        }
+        this.logFn(LogType.debug, () => "fillStart =");
         if (!this.fillStartPromise) {
             this.fillStartPromise = new Promise<CSAResult>(async (resolve) => {
                 try {
@@ -28,28 +26,20 @@ export class VFSConfigStorage extends FSConfigStorage {
                     const content = textDoc.getText();
                     this.jsonData = JSON.parse(content);
                     resolve(CSAResult.ok);
-                    if (this.logFn) {
-                        this.logFn(LogType.debug, () => "fillStart => ok");
-                    }
+                    this.logFn(LogType.debug, () => "fillStart => ok");
                 } catch (error) {
                     resolve(CSAResult.prepare_failed);
-                    if (this.logFn) {
-                        this.logFn(LogType.debug, () => "fillStart => fail");
-                    }
+                    this.logFn(LogType.debug, () => "fillStart => fail");
                 }
                 this.fillStartPromise = undefined;
-                if (this.logFn) {
-                    this.logFn(LogType.debug, () => "fillStart => clear");
-                }
+                this.logFn(LogType.debug, () => "fillStart => clear");
             });
         }
         return this.fillStartPromise;
     }
 
     public storeEnd(): Promise<CSAResult> {
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => "storeEnd =");
-        }
+        this.logFn(LogType.debug, () => "storeEnd =");
         if (!this.storePromise) {
             this.storePromise = new Promise<CSAResult>(async (resolve) => {
                 try {

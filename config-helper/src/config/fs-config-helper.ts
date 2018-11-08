@@ -33,6 +33,8 @@ export class FSConfigHelper implements ConfigHelper {
     private static readonly suffix = "-settings.json";
     private static instances: Map<string, FSConfigHelper> = new Map<string, FSConfigHelper>();
 
+    public logFn: LogFunction;
+
     protected config: ConfigPool;
     protected storage: IConfigStorage;
     protected editor: IConfigEditor;
@@ -47,14 +49,14 @@ export class FSConfigHelper implements ConfigHelper {
     protected debouncer = new Debouncer(1000);
     protected watcher: FileSystemWatcher | undefined = undefined;
 
-    protected constructor(protected relativeFileName: string, public logFn?: LogFunction) {
+    protected constructor(protected relativeFileName: string, logFn?: LogFunction) {
+        // tslint:disable-next-line:no-empty
+        this.logFn = logFn || (() => {});
         this.storage = new DummyStorage();
         this.config = new ConfigPool(this.storage, logFn);
         this.editor = new DummyEditor();
         this.disposables.push( workspace.onDidChangeWorkspaceFolders(() => {
-            if (this.logFn) {
-                this.logFn(LogType.debug, () => "onDidChangeWorkspaceFolders");
-            }
+            this.logFn(LogType.debug, () => "onDidChangeWorkspaceFolders");
             this.updateConfigStorage();
         }));
         this.updateConfigStorage();
@@ -84,9 +86,7 @@ export class FSConfigHelper implements ConfigHelper {
      * Test workspace folders and create appropriate _storage
      */
     protected updateConfigStorage() {
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => "updateConfigStorage start: " + util.inspect(this.storage));
-        }
+        this.logFn(LogType.debug, () => "updateConfigStorage start: " + util.inspect(this.storage));
         if (this.storage instanceof DummyStorage) {
             if (workspace.workspaceFolders) {
                 // allocate storage in first workspace
@@ -105,18 +105,14 @@ export class FSConfigHelper implements ConfigHelper {
                 this.updateConfigStorage();
             }
         }
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => "updateConfigStorage end: " + util.inspect(this.storage));
-        }
+        this.logFn(LogType.debug, () => "updateConfigStorage end: " + util.inspect(this.storage));
     }
 
     /**
      * Doesn't real allocate storage file, just prepare to and watch after the changes
      */
     protected createFS_Storage(rootUri: Uri): void {
-        if (this.logFn) {
-            this.logFn(LogType.debug, () => "createFS_Storage");
-        }
+        this.logFn(LogType.debug, () => "createFS_Storage");
         this.fileUri = Uri.file(path.join(rootUri.fsPath, this.relativeFileName));
 
         this.storage = this.createConcreteFS_Storage(this.fileUri);
@@ -124,26 +120,18 @@ export class FSConfigHelper implements ConfigHelper {
         this.watcher = workspace.createFileSystemWatcher(this.fileUri.fsPath);
         this.watcher.onDidCreate(async (uri) => {
             this.config.freeze();
-            if (this.logFn) {
-                this.logFn(LogType.debug, () => "onDidCreate: " + uri.toString());
-            }
+            this.logFn(LogType.debug, () => "onDidCreate: " + uri.toString());
             this.debouncer.debounce().then(async () => {
-                if (this.logFn) {
-                    this.logFn(LogType.debug, () => "load on create");
-                }
+                this.logFn(LogType.debug, () => "load on create");
                 await this.config.load();
                 this.config.unfreeze();
             });
         });
         this.watcher.onDidChange(async (uri) => {
             this.config.freeze();
-            if (this.logFn) {
-                this.logFn(LogType.debug, () => "onDidChange: " + uri.toString());
-            }
+            this.logFn(LogType.debug, () => "onDidChange: " + uri.toString());
             this.debouncer.debounce().then(async () => {
-                if (this.logFn) {
-                    this.logFn(LogType.debug, () => "load on change");
-                }
+                this.logFn(LogType.debug, () => "load on change");
                 await this.config.load();
                 this.config.unfreeze();
             });
