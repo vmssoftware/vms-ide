@@ -30,8 +30,8 @@ export class VMSNoDebugSession extends LoggingDebugSession
 	private static THREAD_ID = 2;
 
 	// a VMS runtime (or debugger)
-	private _runtime: VMSRuntimeRun;
-	private _configurationDone = new Subject();
+	private runtime: VMSRuntimeRun;
+	private configurationDone = new Subject();
 
 	// Creates a new debug adapter that is used for one debug session.
 	// We configure the default implementation of a debug adapter here.
@@ -43,14 +43,14 @@ export class VMSNoDebugSession extends LoggingDebugSession
 		this.setDebuggerLinesStartAt1(false);
 		this.setDebuggerColumnsStartAt1(false);
 
-		this._runtime = new VMSRuntimeRun(shell, logFn);
+		this.runtime = new VMSRuntimeRun(shell, logFn);
 
 		// setup event handlers
-		this._runtime.on('stopOnException', () =>
+		this.runtime.on('stopOnException', () =>
 		{
 			this.sendEvent(new StoppedEvent('exception', VMSNoDebugSession.THREAD_ID));
 		});
-		this._runtime.on('end', () =>
+		this.runtime.on('end', () =>
 		{
 			this.sendEvent(new TerminatedEvent());
 		});
@@ -83,7 +83,7 @@ export class VMSNoDebugSession extends LoggingDebugSession
 		super.configurationDoneRequest(response, args);
 
 		// notify the launchRequest that configuration has finished
-		this._configurationDone.notify();
+		this.configurationDone.notify();
 	}
 
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments)
@@ -92,10 +92,10 @@ export class VMSNoDebugSession extends LoggingDebugSession
 		logger.setup(args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false);
 
 		// wait until configuration has finished (and configurationDoneRequest has been called)
-		await this._configurationDone.wait(1000);
+		await this.configurationDone.wait(1000);
 
 		// start the program in the runtime
-		await this._runtime.start(args.program);
+		this.runtime.start(args.program);
 
 		this.sendResponse(response);
 	}
@@ -115,7 +115,7 @@ export class VMSNoDebugSession extends LoggingDebugSession
 	{
 		if(args.context === "repl")//data from debug console
 		{
-			if(this._runtime.sendDataToProgram(args.expression))
+			if(this.runtime.sendDataToProgram(args.expression))
 			{
 				response.body =
 				{
@@ -144,14 +144,14 @@ export class VMSNoDebugSession extends LoggingDebugSession
 	//buttons events
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void
 	{
-		this._runtime.exit();
+		this.runtime.exit();
 		this.sendResponse(response);//disconnect or restart event
 	}
 
 	//---- helpers
 	public receiveDataShell(data: string, mode: ModeWork)
 	{
-		this._runtime.receiveData(data, mode);
+		this.runtime.receiveData(data, mode);
 	}
 
 	public closeDebugSession()

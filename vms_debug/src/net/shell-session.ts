@@ -46,11 +46,11 @@ export class ShellSession
         this.shellParser = new ShellParser(this.DataCb, this.CloseCb, this.ClientErrorCb, logFn);
 
         this.resetParameters();
-        this.ShellInitialise();
+        this.ShellInitialize();
     }
 
 
-    private async ShellInitialise()
+    private async ShellInitialize()
     {
         try
         {
