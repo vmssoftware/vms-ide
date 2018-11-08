@@ -173,7 +173,8 @@ export class Synchronizer {
         }
         if (this.remoteSource &&
             this.projectSection) {
-            const list = await this.remoteSource.findFiles(this.projectSection.listing);
+            const onlyOutFind = [this.projectSection.root, this.projectSection.outdir, "**", this.projectSection.listing].join(ftpPathSeparator);
+            const list = await this.remoteSource.findFiles(onlyOutFind);
             return this.executeAction(list, "download")
                 .then((done) => {
                     this.decideDispose();

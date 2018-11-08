@@ -3,15 +3,14 @@
 	"name": "MMS",
 	"patterns": [
 		{
-			"include": "#line"
+			"include": "#all"
 		}
 	],
 	"repository": {
 		"line": {
 			"patterns": [
 				{
-					"name" : "constant.character.escape",
-					"begin": "^.*-$",
+					"begin": "^.*[-]$",
 					"end": "^.*[^-]$",
 					"patterns": [
 						{
