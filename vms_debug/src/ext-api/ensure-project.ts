@@ -14,9 +14,6 @@ export async function ensureProjectSettings() {
 				// request configuration "vmssoftware.synchronizer"
 				const configHelper = api.getConfigHelper("vmssoftware.synchronizer");
 				synchronizerConfig = configHelper.getConfig();
-				synchronizerConfig.onDidLoad(() => {
-					projectSection = undefined;
-				});
 			}
 		}
 		if (synchronizerConfig) {

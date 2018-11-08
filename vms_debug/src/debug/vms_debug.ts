@@ -177,12 +177,12 @@ export class VMSDebugSession extends LoggingDebugSession
 		await this._configurationDone.wait(1000);
 
 		// start the program in the runtime
-		this._runtime.start(args.program);
+		await this._runtime.start(args.program);
 
 		this.sendResponse(response);
 	}
 
-	protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void
+	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments) //: void
 	{
 		const path = <string>args.source.path;
 		const clientLines = args.lines || [];
@@ -195,7 +195,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		}
 
 		// set and verify breakpoints locations
-		let bps = this._runtime.setBreakPoints(path, debugLines);
+		let bps = await this._runtime.setBreakPoints(path, debugLines);
 
 		if(bps)
 		{

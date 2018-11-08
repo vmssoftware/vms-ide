@@ -2,17 +2,15 @@
  * Copyright (C) VMS Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as readline from 'readline';
 import * as vscode from 'vscode';
-import { readFileSync } from 'fs';
-import * as Path from 'path';
 import { EventEmitter } from 'events';
 import { ShellSession, ModeWork } from '../net/shell-session';
 import { OsCommands } from '../command/os_commands';
 import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
 import { DebugParser, MessageDebuger } from '../parsers/debug_parser';
-import { workspace } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { LogFunction, LogType, IFileEntry, ftpPathSeparator } from '@vorfol/common';
+import { LogFunction, LogType, IFileEntry, Lock, ftpPathSeparator } from '@vorfol/common';
 import { ISource } from '../ext-api/source';
 import { GetSourceHelperFromApi } from '../ext-api/get-source-helper';
 import { ensureProjectSettings, projectSection } from '../ext-api/ensure-project';
@@ -44,7 +42,6 @@ export class VMSRuntime extends EventEmitter
 {
 	// the initial (and one and only) file we are 'debugging'
 	private sourceFile: string;
-	private workspaceFolder: string;
 	private lisFile: string;
 	private buttonPressd : DebugButtonEvent;
 	private shell : ShellSession;
@@ -96,11 +93,6 @@ export class VMSRuntime extends EventEmitter
 		this.sourcePaths = await this.loadSourcePathList(projectSection.source);
 		this.lisPaths = await this.loadSourcePathList(projectSection.listing);
 
-		if(workspace.workspaceFolders)
-		{
-			this.workspaceFolder = workspace.workspaceFolders[0].uri.fsPath;
-		}
-
 		this.shell.resetParameters();
 		//run debuger
 		this.shell.SendCommandToQueue(this.osCmd.runDebug());
@@ -112,7 +104,7 @@ export class VMSRuntime extends EventEmitter
 		this.shell.SendCommandToQueue(this.dbgCmd.modeNoWait());
 		this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
 
-		this.setRemoteBreakpointsAll();
+		await this.setRemoteBreakpointsAll();
 
 		this.continue();
 	}
@@ -217,14 +209,19 @@ export class VMSRuntime extends EventEmitter
 
 
 	// Set breakpoints in file.
-	public setBreakPoints(path: string, lines: number[]) : VMSBreakpoint[] | undefined
+	public async setBreakPoints(path: string, lines: number[]) // : VMSBreakpoint[] | undefined
 	{
 		let newBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 		let setBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 		let remBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 
-		let fileName = this.getFileNameFromPath(path);
-		let key = path.substring(2);
+		if (!await this.ensureLocalSource() || !this.localSource) {
+			return;
+		}
+		path = path.slice(this.localSource.root!.length + 1);	// to relative path
+
+		let fileName = this.getNameFromPath(path);
+		let key = path; //.substring(2);
 		let currBps = this.breakPoints.get(key);
 
 
@@ -291,19 +288,19 @@ export class VMSRuntime extends EventEmitter
 		this.breakPointsSet.set(key, setBps);
 		this.breakPointsRem.set(key, remBps);
 
-		this.verifyBreakpoints(path);
+		await this.verifyBreakpoints(path);
 		//set remote breakpoints
-		this.setRemoteBreakpointsPath(path);
+		await this.setRemoteBreakpointsPath(path);
 
 		return newBps;
 	}
 
 	// Set breakpoint in file with given line.
-	public setBreakPoint(path: string, line: number) : VMSBreakpoint
+	public async setBreakPoint(path: string, line: number) // : VMSBreakpoint
 	{
-		let fileName = this.getFileNameFromPath(path);
+		let fileName = this.getNameFromPath(path);
 		const bp = <VMSBreakpoint> { file: fileName, verified: false, line, id: this.breakpointId++ };
-		let key = path.substring(2);
+		let key = path; //.substring(2);
 		let bps = this.breakPoints.get(key);
 
 		if (!bps)
@@ -314,14 +311,14 @@ export class VMSRuntime extends EventEmitter
 
 		bps.push(bp);
 
-		this.verifyBreakpoints(path);
+		await this.verifyBreakpoints(path);
 
 		return bp;
 	}
 	// Clear breakpoint in file with given line.
 	public clearBreakPoint(path: string, line: number) : VMSBreakpoint | undefined
 	{
-		let key = path.substring(2);
+		let key = path; //.substring(2);
 		let bps = this.breakPoints.get(key);
 
 		if (bps)
@@ -346,22 +343,6 @@ export class VMSRuntime extends EventEmitter
 
 	// private methods //
 
-	private getFileNameFromPath(path: string) : string
-	{
-		let fileName : string = "";
-
-		let ext = Path.extname(path);
-
-		if (ext)
-		{
-			fileName = path.substr(0, path.length - ext.length);
-			let array = fileName.split("\\");
-			fileName = array[array.length-1];
-		}
-
-		return fileName;
-	}
-
 	private async ensureLocalSource() {
 		if (!this.localSource) {
 			const sourceHelper = await GetSourceHelperFromApi();
@@ -375,7 +356,7 @@ export class VMSRuntime extends EventEmitter
 	private async loadSourcePathList(pattern : string) : Promise<string[]>
 	{
 		if (!await this.ensureLocalSource()) {
-			return [];
+			return [] as string[];
 		}
 
 		let list : string[] = [];
@@ -383,58 +364,81 @@ export class VMSRuntime extends EventEmitter
 
 		for(let item of entries)
 		{
-			list.push(this.localSource!.root! + ftpPathSeparator + item.filename);
+			// list.push(this.localSource!.root! + ftpPathSeparator + item.filename);
+			list.push(item.filename);
 		}
 
 		return list;
 	}
 
-	private loadSource(file: string)
+	private getNameFromPath(item: string) {
+		let namePos = item.lastIndexOf(ftpPathSeparator) + 1;	// if no path -> from start (-1 + 1 = 0 ;)
+		let extPos = item.lastIndexOf(".");
+		if (extPos === -1) {
+			// if no ext -> to the end
+			extPos = item.length;
+		}
+		if (0 <= namePos && namePos < extPos) {
+			// check name
+			return item.slice(namePos, extPos).toLowerCase();
+		}
+		return item;
+	}
+
+	private findPathFileByName(fileName : string, paths : string[]) : string
 	{
-		if (this.sourceFile !== file)
+		let pathFile : string = "";
+
+		const name = this.getNameFromPath(fileName);
+
+		for(let item of paths)
 		{
-			this.sourceFile = file;
-			this.sourceLines = readFileSync(this.sourceFile).toString().split('\n');
+			if (name === this.getNameFromPath(item)) {
+				pathFile = item;
+				break;
+			}
+		}
+
+		return pathFile;
+	}
+	private async loadSource(file: string)
+	{
+		if (await this.ensureLocalSource()) {
+			const stream = await this.localSource!.createReadStream(file);
+			if (stream) {
+				const ret: string[] = [];
+				const lock = new Lock(true);
+				const rl = readline.createInterface(stream);
+				rl.on("close", () => {
+					lock.release();
+				});
+				rl.on("line", (line) => {
+					ret.push(line);
+				});
+				await lock.acquire();
+				return ret;
+			}
+		}
+		return [] as string[];
+	}
+
+	private async loadSourceLis(file: string)
+	{
+		const lisFile = this.findPathFileByName(file, this.lisPaths);
+		if (this.lisFile !== lisFile) {
+			this.lisFile = lisFile;
+			this.lisLines = await this.loadSource(this.lisFile);
 		}
 	}
 
-	private loadSourceLis(file: string)
+	private async verifyBreakpoints(path: string) // : void
 	{
-		if (this.lisFile !== file)
-		{
-			this.lisFile = file;
-			file = file.substr(this.workspaceFolder.length, file.length);
-
-			let ext = Path.extname(file);
-
-			if (ext)
-			{
-				file = file.substr(0, file.length - ext.length);
-			}
-
-			for(let item of this.lisPaths)
-			{
-				let itemNoCase = item.toLowerCase();
-				file = file.toLowerCase();
-
-				if(itemNoCase.includes(file))
-				{
-					file = item;
-					this.lisLines = readFileSync(file).toString().split('\n');
-					break;
-				}
-			}
-		}
-	}
-
-	private verifyBreakpoints(path: string) : void
-	{
-		let key = path.substring(2);
+		let key = path; //.substring(2);
 		let bps = this.breakPoints.get(key);
 
 		if (bps)
 		{
-			this.loadSource(path);
+			this.sourceLines = await this.loadSource(path);
 
 			bps.forEach(bp =>
 			{
@@ -462,25 +466,25 @@ export class VMSRuntime extends EventEmitter
 		}
 	}
 
-	private setRemoteBreakpointsAll() : void
+	private async setRemoteBreakpointsAll() // : void
 	{
 		for(let path of this.sourcePaths)
 		{
-			this.setRemoteBreakpoints(path);
+			await this.setRemoteBreakpoints(path);
 		}
 	}
 
-	private setRemoteBreakpointsPath(path: string) : void
+	private async setRemoteBreakpointsPath(path: string) // : void
 	{
 		if(this.debugRun === true)
 		{
-			this.setRemoteBreakpoints(path);
+			await this.setRemoteBreakpoints(path);
 		}
 	}
 
-	private setRemoteBreakpoints(path: string) : void
+	private async setRemoteBreakpoints(path: string) // : void
 	{
-		let key = path.substring(2);
+		let key = path; //.substring(2);
 		let setBps = this.breakPointsSet.get(key);
 		let remBps = this.breakPointsRem.get(key);
 
@@ -488,7 +492,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			if(remBps.length > 0)
 			{
-				this.loadSourceLis(path);
+				await this.loadSourceLis(path);
 
 				remBps.forEach(bp =>
 				{
@@ -512,7 +516,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			if(setBps.length > 0)
 			{
-				this.loadSourceLis(path);
+				await this.loadSourceLis(path);
 
 				setBps.forEach(bp =>
 				{
@@ -575,10 +579,11 @@ export class VMSRuntime extends EventEmitter
 						break;
 
 					case DebugCmdVMS.dbgCallStack:
-						let stack = this.dbgParser.parseCallStackMsg(messageData, this.sourcePaths, this.lisPaths, this.stackStartFrame, this.stackEndFrame);
-						this.sendEvent(DebugCmdVMS.dbgStack, stack);
+						this.dbgParser.parseCallStackMsg(messageData, this.sourcePaths, this.lisPaths, this.stackStartFrame, this.stackEndFrame)
+							.then((stack) => {
+								this.sendEvent(DebugCmdVMS.dbgStack, stack);
+							});
 						break;
-
 					default:
 						break;
 				}
