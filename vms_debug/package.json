@@ -1,7 +1,12 @@
 {
 	"name": "vms-debug",
+<<<<<<< HEAD
 	"displayName": "VMS Debugger",
 	"version": "0.28.0",
+=======
+	"displayName": "VMS C Debug",
+	"version": "0.27.11",
+>>>>>>> 906c2dca957b322421df3a9982b3e91f3f8124d7
 	"publisher": "vmssoftware",
 	"description": "The extension for developing debug adapters for VS Code.",
 	"author": {
@@ -42,22 +47,22 @@
 	},
 	"devDependencies": {
 		"@types/mocha": "^5.x.x",
-		"@types/node": "^8.10.36",
+		"@types/node": "^8.10.37",
 		"del": "^3.0.0",
 		"event-stream": "^4.0.1",
-		"fs-extra": "^7.0.0",
+		"fs-extra": "^7.0.1",
 		"gulp": "^3.9.1",
 		"gulp-sourcemaps": "^2.6.4",
 		"gulp-typescript": "^5.0.0-alpha.3",
 		"run-sequence": "^2.2.1",
 		"tslint": "^5.11.0",
-		"typescript": "^3.x.x",
-		"vsce": "^1.52.0",
+		"typescript": "^3.1.6",
+		"vsce": "^1.53.0",
 		"vscode": "^1.1.21",
 		"vscode-nls-dev": "github:vorfol/vscode-nls-dev"
 	},
 	"dependencies": {
-		"@vorfol/common": "0.0.17",
+		"@vorfol/common": "^0.0.18",
 		"await-notify": "^1.0.1",
 		"net": "^1.0.2",
 		"vscode-debugadapter": "^1.32.1",

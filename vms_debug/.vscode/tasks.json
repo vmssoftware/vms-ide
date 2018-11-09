@@ -19,11 +19,7 @@
 			"task": "build",
 			"problemMatcher": [
 				"$tsc"
-			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			}
+			]
 		},
 		{
 			"type": "npm",
@@ -35,7 +31,11 @@
 			"script": "compile",
 			"problemMatcher": [
 				"$tsc"
-			]
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
 		},
 		{
 			"type": "gulp",

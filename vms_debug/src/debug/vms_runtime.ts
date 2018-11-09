@@ -39,7 +39,7 @@ export class VMSRuntime extends EventEmitter
 {
 	// the initial (and one and only) file we are 'debugging'
 	private sourceFile: string;
-	private lisFile: string;
+	//private lisFile: string;
 	private buttonPressd : DebugButtonEvent;
 	private shell : ShellSession;
 	private osCmd : OsCommands;
@@ -395,16 +395,7 @@ export class VMSRuntime extends EventEmitter
 
 	private async loadSourceLis(file: string) : Promise<string[]>
 	{
-		let lisLines: string[] = [];
-		const lisFile = this.findPathFileByName(file, this.lisPaths);
-
-		if (this.lisFile !== lisFile)
-		{
-			this.lisFile = lisFile;
-			lisLines = await this.fileManager.loadContextFile(this.lisFile);
-		}
-
-		return lisLines;
+		return this.fileManager.loadContextFile(this.findPathFileByName(file, this.lisPaths));
 	}
 
 	private async verifyBreakpoints(path: string) : Promise<void>
@@ -543,7 +534,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				if (this.logFn)
 				{
-					this.logFn(LogType.informtion, () => messageCommand);
+					this.logFn(LogType.information, () => messageCommand);
 				}
 			}
 			if(messageData !== "")
@@ -569,7 +560,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				if (this.logFn)
 				{
-					this.logFn(LogType.informtion, () => messageDebug);
+					this.logFn(LogType.information, () => messageDebug);
 				}
 
 				vscode.debug.activeDebugConsole.append(messageDebug);
@@ -583,7 +574,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				if (this.logFn)
 				{
-					this.logFn(LogType.informtion, () => messageUser);
+					this.logFn(LogType.information, () => messageUser);
 				}
 
 				vscode.debug.activeDebugConsole.append(messageUser);

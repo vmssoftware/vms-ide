@@ -31,7 +31,7 @@ export const actions: IPerform[] = [
         actionName: "save.all",
         context: CommandContext.isSaving,
         fail: localize("saving.fail", "Saving failed"),
-        status: localize("saving.status", "Saving..."),
+        status: localize("saving.status", "$(check) Saving..."),
         success: localize("saving.success", "Saving ok"),
     },
     {
@@ -42,7 +42,7 @@ export const actions: IPerform[] = [
         actionName: "syncronize",
         context: CommandContext.isSyncronizing,
         fail: localize("synchronizing.fail", "Synchronizing failed"),
-        status: localize("synchronizing.status", "Synchronizing..."),
+        status: localize("synchronizing.status", "$(sync) Synchronizing..."),
         success: localize("synchronizing.success", "Synchronizing ok"),
     },
     {
@@ -53,7 +53,7 @@ export const actions: IPerform[] = [
         actionName: "build",
         context: CommandContext.isBuilding,
         fail: localize("building.fail", "Building failed"),
-        status: localize("building.status", "Building..."),
+        status: localize("building.status", "$(file-binary) Building..."),
         success: localize("buiding.success", "Building ok"),
     },
     {
@@ -64,7 +64,7 @@ export const actions: IPerform[] = [
         actionName: "clean",
         context: CommandContext.isBuilding,
         fail: localize("clean.fail", "Clean failed"),
-        status: localize("clean.status", "Clean..."),
+        status: localize("clean.status", "$(trashcan) Clean..."),
         success: localize("clean.success", "Clean ok"),
     },
 ];

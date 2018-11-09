@@ -19,5 +19,11 @@
     "vmssoftware.synchronizer.synchronize.downloadNewFiles": "edit",
     "vmssoftware.synchronizer.synchronize.keepAlive": false,
     "vmssoftware.synchronizer.synchronize.setTimeAttempts": 3,
-    "files.eol": "\n"
+    "files.eol": "\n",
+    "vmssoftware.ssh-helper.connection.host": "host",
+    "vmssoftware.ssh-helper.connection.port": 22,
+    "vmssoftware.ssh-helper.connection.username": "",
+    "vmssoftware.ssh-helper.timeouts.cmdTimeout": 0,
+    "vmssoftware.ssh-helper.timeouts.feedbackTimeout": 0,
+    "vmssoftware.ssh-helper.timeouts.welcomeTimeout": 0
 }

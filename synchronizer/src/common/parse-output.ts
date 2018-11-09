@@ -29,6 +29,7 @@ const rgxMsgPosCXX = /^(\.*)\^/;
 const rgxMsgMMS = /^((%|-)(MMS)-(\S)-(\S*)),\s(.*)$/;
 const rgxMsgFileSintax = /(.*) in file (.*)$/;
 const rgxMsgFileAbort = /For target (.*), (.*)$/;
+const rgxMsgInfo = /\d+ error(s?) detected in the compilation of/;
 const mmsExt = ".MMS";
 
 const lineStartRgx = [
@@ -72,6 +73,10 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
     function findCxxErrors(problems: IPartialDiagnostics[], line: string, idx: number) {
         const matched = line.match(rgxMsgCXX);
         if (matched) {
+            if (matched[6].match(rgxMsgInfo)) {
+                // skip summary information
+                return problems;
+            }
             const diagnostic: IPartialDiagnostics = {
                 facility: matched[3],
                 severity: VmsSeverity.information,
@@ -80,7 +85,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
             if (isVmsSeverity(trySeverity)) {
                 diagnostic.severity = trySeverity;
             }
-            if (diagnostic.severity === VmsSeverity.information ||
+            if (// diagnostic.severity === VmsSeverity.information ||
                 diagnostic.severity === VmsSeverity.success) {
                     return problems;
             }
@@ -95,14 +100,19 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                 }
             }
             // get file and line
-            if (idx + 1 < lines.length) {
-                const nextLine = lines[idx + 1];
+            let posNext = idx + 1;
+            while (posNext < lines.length) {
+                const nextLine = lines[posNext];
                 const nextLineMathed = nextLine.match(rgxPlaceCXX);
                 if (nextLineMathed) {
                     diagnostic.line = parseInt(nextLineMathed[1], 10);
                     diagnostic.file = nextLineMathed[2];
                     const converter = VmsPathConverter.fromVms(diagnostic.file);
                     diagnostic.file = converter.initial;
+                    break;
+                } else {
+                    diagnostic.message += nextLine;
+                    posNext ++;
                 }
             }
             problems.push(diagnostic);
