@@ -1,12 +1,7 @@
 {
 	"name": "vms-debug",
-<<<<<<< HEAD
 	"displayName": "VMS Debugger",
 	"version": "0.28.0",
-=======
-	"displayName": "VMS C Debug",
-	"version": "0.27.11",
->>>>>>> 906c2dca957b322421df3a9982b3e91f3f8124d7
 	"publisher": "vmssoftware",
 	"description": "The extension for developing debug adapters for VS Code.",
 	"author": {
