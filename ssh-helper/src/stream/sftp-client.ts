@@ -1,4 +1,4 @@
-import { ConnectConfig, SFTPWrapper } from "ssh2";
+import { SFTPWrapper } from "ssh2";
 import { FileEntry } from "ssh2-streams";
 import stream = require("stream");
 
@@ -9,9 +9,9 @@ import { WaitableOperation }        from "@vorfol/common";
 import { ftpPathSeparator }         from "@vorfol/common";
 import { IFileEntry }               from "@vorfol/common";
 
-import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
 import { SshClient } from "./ssh-client";
-import { IStats, IInputAttributes } from "../api";
+import { IStats, IInputAttributes, IConnectConfigResolver } from "../api";
+import { IConnectConfig } from "../api";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -26,8 +26,8 @@ export class SftpClient extends SshClient {
     private sftpError?: IUnSubscribe;
     private sftpEnd?: IUnSubscribe;
 
-    constructor(public config: ConnectConfig,
-                resolver?: IConnectConfigResolver,
+    constructor(public config: IConnectConfig,
+                resolver?: IConnectConfigResolver<IConnectConfig>,
                 logFn?: LogFunction,
                 tag?: string) {
         super(config, resolver, logFn, tag);

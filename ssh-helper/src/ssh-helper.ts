@@ -14,7 +14,7 @@ import { PasswordVscodeFiller } from "./config-resolve/password-vscode-filler";
 import { ConnectConfigResolverImpl } from "./config-resolve/connect-config-resolver-impl";
 import { ParseWelcomeVms } from "./stream/parse-welcome-vms";
 import { PromptCatcherVms } from "./stream/prompt-catcher-vms";
-import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator } from "./api";
+import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator, IConnectionSection, ITimeoutsSection, IConnectConfigResolver } from "./api";
 import { PipeFile } from "./stream/pipe";
 import { MemoryStreamCreator } from "./stream/stream-creators";
 import { ConstPasswordFiller } from "./config-resolve/password-filler";
@@ -27,20 +27,20 @@ export class SshHelper {
 
     readonly section: string;
     
-    private settingsEnsured?: boolean;
-    private sections: IConfigSection[] = [];
     private configHelper?: IConfigHelper;
     private config?: IConfig;
 
     public onDidLoadConfig?: Event<null>;
     public logFn: LogFunction;
 
+    public connectionSection?: IConnectionSection;
+    public timeoutSection?: ITimeoutsSection;
+    public connectConfigResolver?: IConnectConfigResolver<IConnectionSection>;
+
     constructor(logFn?: LogFunction) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
         this.section = "vmssoftware.ssh-helper";
-        this.sections.push(new ConnectionSection());
-        this.sections.push(new TimeoutsSection());
     }
 
     public dispose() {
@@ -76,48 +76,34 @@ export class SshHelper {
     public async getDefaultSftp() {
         // get current config
         if (!await this.ensureSettings() ||
-            !this.config) {
+            !this.connectionSection ||
+            !this.timeoutSection ||
+            !this.connectConfigResolver) {
             return undefined;
         }
-        const [connectionSection,
-               timeoutSection] = await Promise.all(
-                [this.config.get(ConnectionSection.section),
-                 this.config.get(TimeoutsSection.section)]);
-        if (ConnectionSection.is(connectionSection) &&
-            TimeoutsSection.is(timeoutSection)) {
-            const fillers = [new PasswordVscodeFiller()];
-            const resolver = new ConnectConfigResolverImpl(fillers, timeoutSection.feedbackTimeout, this.logFn);
-            const sftp = new SftpClient(connectionSection, resolver, this.logFn);
-            return sftp as ISftpClient;
-        }
-        return undefined;
+        const sftp = new SftpClient(this.connectionSection, this.connectConfigResolver, this.logFn);
+        return sftp as ISftpClient;
     }
 
     public async getDefaultVmsShell() {
         // get current config
         if (!await this.ensureSettings() ||
-            !this.config) {
+            !this.connectionSection ||
+            !this.timeoutSection ||
+            !this.connectConfigResolver) {
             return undefined;
         }
-        const [connectionSection,
-               timeoutSection] = await Promise.all(
-                [this.config.get(ConnectionSection.section),
-                 this.config.get(TimeoutsSection.section)]);
-        if (ConnectionSection.is(connectionSection) &&
-            TimeoutsSection.is(timeoutSection)) {
-            const fillers = [new PasswordVscodeFiller()];
-            const resolver = new ConnectConfigResolverImpl(fillers, timeoutSection.feedbackTimeout, this.logFn);
-            const welcome = new ParseWelcomeVms(timeoutSection.welcomeTimeout, this.logFn);
-            const prompter = new PromptCatcherVms("", timeoutSection.cmdTimeout, this.logFn);
-            const shell = new SshShell(connectionSection, resolver, welcome, prompter, this.logFn);
-            return shell as ISshShell;
-        }
-        return undefined;
+        const welcome = new ParseWelcomeVms(this.timeoutSection.welcomeTimeout, this.logFn);
+        const prompter = new PromptCatcherVms("", this.timeoutSection.cmdTimeout, this.logFn);
+        const shell = new SshShell(this.connectionSection, this.connectConfigResolver, welcome, prompter, this.logFn);
+        return shell as ISshShell;
     }
 
     public async ensureSettings() {
-        if (this.settingsEnsured !== undefined) {
-            return this.settingsEnsured;
+        if (this.connectionSection && 
+            this.timeoutSection &&
+            this.connectConfigResolver) {
+            return true;
         }
         if (!this.config) {
             const api = await GetConfigHelperFromApi();
@@ -128,25 +114,39 @@ export class SshHelper {
             }
         }
         if (!this.config) {
-            this.settingsEnsured = false;
             return false;
         }
-        for (const section of this.sections) {
-            const testSection = await this.config.get(section.name());
-            if (!testSection) {
-                this.config.add(section);
-            }
+        // first try
+        let [connectionSection, timeoutSection] = 
+            await Promise.all(
+                [this.config.get(ConnectionSection.section),
+                this.config.get(TimeoutsSection.section)]);
+        // test and add if missed
+        if (!connectionSection) {
+            this.config.add(new ConnectionSection());
         }
+        if (!timeoutSection) {
+            this.config.add(new TimeoutsSection());
+        }
+        // senond try
+        [connectionSection, timeoutSection] = 
+            await Promise.all(
+                [this.config.get(ConnectionSection.section),
+                this.config.get(TimeoutsSection.section)]);
         // then ensure all are loaded
-        for (const section of this.sections) {
-            const testSection = await this.config.get(section.name());
-            if (typeof section !== typeof testSection) {
-                this.logFn(LogType.debug, () => localize("debug.diff", "Different types of sections {0}", section.name()));
-                return false;
-            }
+        if (ConnectionSection.is(connectionSection)) {
+            this.connectionSection = connectionSection;
         }
-        this.settingsEnsured = true;
-        return true;
+        if (TimeoutsSection.is(timeoutSection)) {
+            this.timeoutSection = timeoutSection;
+        }
+        if (!this.connectConfigResolver && this.timeoutSection) {
+            const fillers = [new PasswordVscodeFiller()];
+            this.connectConfigResolver = new ConnectConfigResolverImpl(fillers, this.timeoutSection.feedbackTimeout, this.logFn);
+        }
+        return this.connectionSection !== undefined && 
+            this.timeoutSection !== undefined &&
+            this.connectConfigResolver !== undefined;
     }
     
     public async getTestSftp(host: string, port: number, username: string, password: string) {

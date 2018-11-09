@@ -1,10 +1,10 @@
-import { Client, ConnectConfig } from "ssh2";
+import { Client } from "ssh2";
 
 import { Lock } from "@vorfol/common";
 import { LogFunction, LogType } from "@vorfol/common";
 import { IUnSubscribe, Subscribe } from "@vorfol/common";
 
-import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
+import { IConnectConfigResolver, IConnectConfig } from "../api";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -27,8 +27,8 @@ export class SshClient {
      * @param logFn like console.log
      * @param tag for logging usage
      */
-    constructor(public config: ConnectConfig,
-                public resolver?: IConnectConfigResolver,
+    constructor(public config: IConnectConfig,
+                public resolver?: IConnectConfigResolver<IConnectConfig>,
                 logFn?: LogFunction,
                 public tag?: string) {
         // tslint:disable-next-line:no-empty

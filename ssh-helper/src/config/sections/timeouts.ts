@@ -1,10 +1,5 @@
 import { IConfigData, IConfigSection } from "../config";
-
-export interface ITimeoutsSection  {
-    cmdTimeout: number;
-    feedbackTimeout: number;
-    welcomeTimeout: number;
-}
+import { ITimeoutsSection } from "../../api";
 
 export class TimeoutsSection implements ITimeoutsSection, IConfigSection {
 

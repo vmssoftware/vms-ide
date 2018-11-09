@@ -85,3 +85,25 @@ export interface ISshShell {
     execCmd(command: string): Promise<string[] | undefined>;
 }
 
+export interface IConnectionSection {
+    host: string;
+    port: number;
+    username: string;
+    password?: string;
+}
+
+export interface ITimeoutsSection  {
+    cmdTimeout: number;
+    feedbackTimeout: number;
+    welcomeTimeout: number;
+}
+
+export interface IConnectConfigResolver<T extends any> {
+    timeout?: number;
+    resolveConnectConfig(settings: T): Promise<T | undefined>;
+    feedBack(settings: T, accepted: boolean): void;
+    clearCache(): boolean;
+}
+
+export interface IConnectConfig extends IConnectionSection {
+}
