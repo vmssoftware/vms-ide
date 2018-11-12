@@ -14,7 +14,8 @@ import { VMSNoDebugSession } from './debug/vms_debug_run';
 import { createLogFunction } from './log';
 import { LogType } from '@vorfol/common';
 import { StatusBarDebug } from './ui/StatusBar';
-import { ensureProjectSettings, projectSection } from './ext-api/ensure-project';
+import { FileManagerExt } from './ext-api/file_manager';
+const { Subject } = require('await-notify');
 
 
 export enum TypeRunConfig
@@ -24,6 +25,13 @@ export enum TypeRunConfig
 	TypeRunRun = "RUN"
 }
 
+export enum StatusConnection
+{
+	StatusDisconnected = 0,
+	StatusConnected = 1,
+	StatusConnecting = 2
+}
+
 const locale = vscode.env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 const logFn = createLogFunction("VMS Debug");
@@ -31,25 +39,18 @@ const logFn = createLogFunction("VMS Debug");
 let shell : ShellSession;
 let session : VMSDebugSession | undefined;
 let sessionRun : VMSNoDebugSession | undefined;
-let serverIsConnect : boolean = false;
 let typeRunConfig : TypeRunConfig = TypeRunConfig.TypeRunNone;
-let statusConn : StatusBarDebug = new StatusBarDebug();
+let statusConnBar : StatusBarDebug = new StatusBarDebug();
+let statusShell : StatusConnection = StatusConnection.StatusDisconnected;
 
 
 export function activate(context: vscode.ExtensionContext)
 {
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.connect', () =>
 	{
-		if(serverIsConnect === false)
-		{
-			shell = new ShellSession(ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, logFn);
+		ConnectShell(false);
 
-			const message = localize('extention.conecting', "Connecting to the server ...");
-			const messageBar = localize('extention.bar.conecting', "Connecting ...");
-			vscode.window.showInformationMessage(message);
-			statusConn.setMessage(messageBar);
-		}
-		else
+		if(statusShell === StatusConnection.StatusConnected)
 		{
 			const message = localize('extention.connected', "Connected to the server");
 			vscode.window.showInformationMessage(message);
@@ -68,6 +69,31 @@ export function deactivate()
 	shell.DisconectSession();
 }
 
+
+async function ConnectShell(wait : boolean) : Promise<StatusConnection>
+{
+	if(statusShell === StatusConnection.StatusDisconnected)
+	{
+		let configurationDone = new Subject();
+		statusShell = StatusConnection.StatusConnecting;
+		shell = new ShellSession(ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, logFn);
+
+		const message = localize('extention.conecting', "Connecting to the server ...");
+		const messageBar = localize('extention.bar.conecting', "Connecting ...");
+		vscode.window.showInformationMessage(message);
+		statusConnBar.setMessage(messageBar);
+
+		if(wait)
+		{
+			while(statusShell === StatusConnection.StatusConnecting)
+			{
+				await configurationDone.wait(500);
+			}
+		}
+	}
+
+    return statusShell;
+}
 
 let ExtensionDataCb = function(data: string, mode: ModeWork) : void
 {
@@ -89,24 +115,24 @@ let ExtensionDataCb = function(data: string, mode: ModeWork) : void
 
 let ExtensionReadyCb = function() : void
 {
-	serverIsConnect = true;
+	statusShell = StatusConnection.StatusConnected;
 
 	const message = localize('extention.connected', "Connected to the server");
 	const messageBar = localize('extention.bar.connected', "Connected");
 	vscode.window.showInformationMessage(message);
-	statusConn.setMessage(messageBar);
+	statusConnBar.setMessage(messageBar);
 
 	logFn(LogType.information, () => message, true);
 };
 
 let ExtensionCloseCb = function() : void
 {
-	serverIsConnect = false;
+	statusShell = StatusConnection.StatusDisconnected;
 
 	const message = localize('extention.closed', "Connection is closed");
 	const messageBar = localize('extention.bar.disconnected', "Disconnected");
 	vscode.window.showInformationMessage(message);
-	statusConn.setMessage(messageBar);
+	statusConnBar.setMessage(messageBar);
 
 	logFn(LogType.information, () => message, true);
 
@@ -128,84 +154,107 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 	{
 		return new Promise<DebugConfiguration|null|undefined>(async (resolve) => {
 
-			if(serverIsConnect === true)
+			if (config.type)
 			{
-				if(config.noDebug)//if user hit Ctrl+F5
+				let status = await ConnectShell(true);
+
+				if(status === StatusConnection.StatusConnected)
 				{
-					if(config.noDebug === true)//start without debugging
+					if (!config.program)
 					{
-						config.typeRun = "RUN";
+						let fileManager = new FileManagerExt();
+						let projectSection = await fileManager.getProjectSection();
+
+						if (projectSection)
+						{
+							const buildType = config.typeRun === "DEBUG" ? "debug" : "release";
+							const pathToExecutable = `[.${projectSection.root}.${projectSection.outdir}.${buildType}]${projectSection.projectName}.exe`;
+							config.program = pathToExecutable;
+						}
+						else
+						{
+							const message = localize('extention.сustomize_configuration', "Customize configuration");
+							vscode.window.showInformationMessage(message);
+
+							resolve(null);
+							return;
+						}
+					}
+
+					if(config.noDebug)//if user hit Ctrl+F5
+					{
+						if(config.noDebug === true)//start without debugging
+						{
+							config.typeRun = "RUN";
+						}
+					}
+
+					if(config.typeRun === "DEBUG")
+					{
+						typeRunConfig = TypeRunConfig.TypeRunDebug;
+						// start port listener on launch of first debug session
+						if (!this.serverDbg)
+						{
+							// start listening on a random port
+							this.serverDbg = Net.createServer(socket =>
+							{
+								session = new VMSDebugSession(shell, logFn);
+								session.setRunAsServer(true);
+								session.start(<NodeJS.ReadableStream>socket, socket);
+							}).listen(0);
+						}
+
+						// make VS Code connect to debug server instead of launching debug adapter
+						config.debugServer = this.serverDbg.address().port;
+					}
+					else if(config.typeRun === "RUN")
+					{
+						config.noDebug = true;
+						typeRunConfig = TypeRunConfig.TypeRunRun;
+						// start port listener on launch of first debug session
+						if (!this.serverNoDbg)
+						{
+							// start listening on a random port
+							this.serverNoDbg = Net.createServer(socket =>
+							{
+								sessionRun = new VMSNoDebugSession(shell, logFn);
+								sessionRun.setRunAsServer(true);
+								sessionRun.start(<NodeJS.ReadableStream>socket, socket);
+							}).listen(0);
+						}
+
+						// make VS Code connect to debug server instead of launching debug adapter
+						config.debugServer = this.serverNoDbg.address().port;
+					}
+					else
+					{
+						typeRunConfig = TypeRunConfig.TypeRunNone;
+
+						const message = localize('extention.сustomize_configuration', "Customize configuration");
+						vscode.window.showInformationMessage(message);
+
+						resolve(null);
+						return;
 					}
 				}
-
-				if(config.typeRun === "DEBUG")
+				else if(status === StatusConnection.StatusConnecting)
 				{
-					typeRunConfig = TypeRunConfig.TypeRunDebug;
-					// start port listener on launch of first debug session
-					if (!this.serverDbg)
-					{
-						// start listening on a random port
-						this.serverDbg = Net.createServer(socket =>
-						{
-							session = new VMSDebugSession(shell, logFn);
-							session.setRunAsServer(true);
-							session.start(<NodeJS.ReadableStream>socket, socket);
-						}).listen(0);
-					}
+					const message = localize('extention.conecting', "Connecting to the server ...");
+					vscode.window.showInformationMessage(message);
 
-					// make VS Code connect to debug server instead of launching debug adapter
-					config.debugServer = this.serverDbg.address().port;
-				}
-				else if(config.typeRun === "RUN")
-				{
-					config.noDebug = true;
-					typeRunConfig = TypeRunConfig.TypeRunRun;
-					// start port listener on launch of first debug session
-					if (!this.serverNoDbg)
-					{
-						// start listening on a random port
-						this.serverNoDbg = Net.createServer(socket =>
-						{
-							sessionRun = new VMSNoDebugSession(shell, logFn);
-							sessionRun.setRunAsServer(true);
-							sessionRun.start(<NodeJS.ReadableStream>socket, socket);
-						}).listen(0);
-					}
-
-					// make VS Code connect to debug server instead of launching debug adapter
-					config.debugServer = this.serverNoDbg.address().port;
+					resolve(undefined);
+					return;
 				}
 				else
 				{
-					typeRunConfig = TypeRunConfig.TypeRunNone;
-
-					const message = localize('extention.сustomize_configuration', "Customize configuration");
+					const message = localize('extention.not_connected', "Do not connect to the server");
 					vscode.window.showInformationMessage(message);
 
-					resolve(null);
+					resolve(undefined);
 					return;
 				}
 			}
 			else
-			{
-				const message = localize('extention.not_connected', "Do not connected to the server");
-				vscode.window.showInformationMessage(message);
-
-				resolve(undefined);
-				return;
-			}
-
-			if (!config.program)
-			{
-				if (await ensureProjectSettings() && projectSection)
-				{
-					const buildType = config.typeRun === "DEBUG" ? "debug" : "release";
-					const pathToExecutable = `[.${projectSection.root}.${projectSection.outdir}.${buildType}]${projectSection.projectName}.exe`;
-					config.program = pathToExecutable;
-				}
-			}
-
-			if (!config.program)
 			{
 				const message = localize('extention.сustomize_configuration', "Customize configuration");
 				vscode.window.showInformationMessage(message);
