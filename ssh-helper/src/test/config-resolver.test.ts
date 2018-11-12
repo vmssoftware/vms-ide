@@ -5,9 +5,8 @@
 
 // The module 'assert' provides assertion methods from node
 import * as assert from "assert";
-import { ConnectConfig } from "ssh2";
 
-import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
+import { IConnectConfigResolver, IConnectConfig } from "../api";
 import { ConnectConfigResolverImpl, settingsCache } from "../config-resolve/connect-config-resolver-impl";
 import { ContextPasswordFiller } from "../config-resolve/context-password-filler";
 
@@ -27,7 +26,7 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
 
         const correctPassword = "PASS";
 
-        const configTest: ConnectConfig = {
+        const configTest: IConnectConfig = {
             host: "1.2.3.4",
             port: 22,
             username: "anon",
@@ -65,7 +64,7 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
 
         const correctPassword = "PASS";
 
-        const configTest: ConnectConfig = {
+        const configTest: IConnectConfig = {
             host: "1.2.3.4",
             port: 22,
             username: "anon",
@@ -100,7 +99,7 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
         const correctPassword = "PASS";
         const incorrectPassword = "PS";
 
-        const configTest: ConnectConfig = {
+        const configTest: IConnectConfig = {
             host: "1.2.3.4",
             port: 22,
             username: "anon",
@@ -134,7 +133,7 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
 
         const correctPassword = "PASS";
 
-        const configTest: ConnectConfig = {
+        const configTest: IConnectConfig = {
             host: "1.2.3.4",
             port: 22,
             username: "anon",
@@ -176,7 +175,7 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
         const correctPassword = "PASS";
         const incorrectPassword = "PSS";
 
-        const configTest: ConnectConfig = {
+        const configTest: IConnectConfig = {
             host: "1.2.3.4",
             port: 22,
             username: "anon",
@@ -213,7 +212,7 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
 
         const correctPassword = "PASS";
 
-        const configTest: ConnectConfig = {
+        const configTest: IConnectConfig = {
             host: "1.2.3.4",
             port: 22,
             username: "anon",
@@ -245,8 +244,8 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
     });
 
     // tslint:disable-next-line:max-line-length
-    async function pushTest(resolver: IConnectConfigResolver,
-                            config: ConnectConfig,
+    async function pushTest(resolver: IConnectConfigResolver<IConnectConfig>,
+                            config: IConnectConfig,
                             feedbackTimeout: number,
                             correctPassword: string,
                             order: number) {
@@ -259,7 +258,7 @@ suite("Config resolver tests", function(this: Mocha.Suite) {
     }
 
     // tslint:disable-next-line:max-line-length
-    function AcceptIfPassIsCorrect(cfg: ConnectConfig | undefined, feedbackTimeout: number, correctPassowrd: string): Promise<boolean> {
+    function AcceptIfPassIsCorrect(cfg: IConnectConfig | undefined, feedbackTimeout: number, correctPassowrd: string): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
             if (cfg) {
                 setTimeout(() => {

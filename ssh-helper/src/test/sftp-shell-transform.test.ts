@@ -1,10 +1,9 @@
-import { ConnectConfig } from "ssh2";
 import { Transform } from "stream";
 
 import { Lock, LogFunction } from "@vorfol/common";
 import { LogType } from "@vorfol/common";
 
-import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
+import { IConnectConfigResolver, IConnectConfig } from "../api";
 import { ConnectConfigResolverImpl, settingsCache } from "../config-resolve/connect-config-resolver-impl";
 import { ContextPasswordFiller } from "../config-resolve/context-password-filler";
 import { IParseWelcome } from "../api";
@@ -27,10 +26,10 @@ suite("Shell transform tests", function(this: Mocha.Suite) {
     debugLogFn = undefined;
     // tslint:disable-next-line:no-console
     debugLogFn = console.log;
-    let configLocal: ConnectConfig;
-    let configVms: ConnectConfig;
+    let configLocal: IConnectConfig;
+    let configVms: IConnectConfig;
     let filler: ContextPasswordFiller;
-    let resolver: IConnectConfigResolver;
+    let resolver: IConnectConfigResolver<IConnectConfig>;
     let parser: IParseWelcome;
     let parserVms: IParseWelcome;
     let promptCatcher: IPromptCatcher;

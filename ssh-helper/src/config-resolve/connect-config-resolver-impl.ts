@@ -1,11 +1,10 @@
-import { ConnectConfig } from "ssh2";
 import { inspect } from "util";
 
 import { Lock } from "@vorfol/common";
 import { LogFunction, LogType } from "@vorfol/common";
 
-import { IConnectConfigResolver } from "./connect-config-resolver";
 import { ISettingsFiller } from "./settings-filler";
+import { IConnectConfigResolver, IConnectConfig, ResolverState } from "../api";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -16,7 +15,7 @@ class SettingsCacheNode {
     public lock: Lock = new Lock();         // locked until feedback
     public timer?: NodeJS.Timer;
 
-    public settings?: ConnectConfig;
+    public settings?: IConnectConfig;
     public accepted?: boolean;
 
     public get canClear(): boolean {
@@ -30,13 +29,13 @@ class SettingsCacheNode {
 export const settingsCache: Map<string, SettingsCacheNode> = new Map<string, SettingsCacheNode>();
 
 // tslint:disable-next-line:max-classes-per-file
-export class ConnectConfigResolverImpl implements IConnectConfigResolver {
+export class ConnectConfigResolverImpl implements IConnectConfigResolver<IConnectConfig> {
 
     /**
      * Build key string
      * @param settings
      */
-    public static buildCacheString(settings: ConnectConfig): string {
+    public static buildCacheString(settings: IConnectConfig): string {
         return JSON.stringify(settings);
     }
 
@@ -66,7 +65,7 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
      * @param settings previous unresolved settings
      * @param accepted true if resolved settings was accepted
      */
-    public static feedBack(settings: ConnectConfig, accepted: boolean, logFn?: LogFunction): void {
+    public static feedBack(settings: IConnectConfig, accepted: boolean, logFn?: LogFunction): void {
         const cacheStr = ConnectConfigResolverImpl.buildCacheString(settings);
         if (logFn) {
             logFn(LogType.debug, () => localize("debug.feedback", "feedBack: element {0} accepted={1}", cacheStr, accepted));
@@ -112,7 +111,7 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
         return true;
     }
 
-    public feedBack(settings: ConnectConfig, accepted: boolean): void {
+    public feedBack(settings: IConnectConfig, accepted: boolean): void {
         ConnectConfigResolverImpl.feedBack(settings, accepted, this.logFn);
     }
 
@@ -121,9 +120,9 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
      * @param settings settings to resolve, immutable
      * @returns new resolved settings, or undefined if unaccepted
      */
-    public async resolveConnectConfig(settings: ConnectConfig): Promise<ConnectConfig | undefined> {
+    public async resolveConnectConfig(settings: IConnectConfig): Promise<IConnectConfig | undefined> {
 
-        let retConfig: ConnectConfig | undefined;
+        let retConfig: IConnectConfig | undefined;
 
         const cacheStr = ConnectConfigResolverImpl.buildCacheString(settings);
         this.logFn(LogType.debug, () => localize("debug.resolve.start", "resolveConnectConfig: try {0}", cacheStr));
@@ -193,4 +192,20 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver {
         return retConfig;
     }
 
+    testConnectConfig(settings: IConnectConfig): { settengs?: IConnectConfig; state: ResolverState; } {
+        const cacheStr = ConnectConfigResolverImpl.buildCacheString(settings);
+        this.logFn(LogType.debug, () => localize("debug.resolve.start", "resolveConnectConfig: try {0}", cacheStr));
+        let node = settingsCache.get(cacheStr);
+        if (!node) {
+            return { state: ResolverState.absent};
+        } else {
+            if (node.accepted === true) {
+                return { settengs: node.settings, state: ResolverState.accepted };
+            }
+            if (node.accepted === false) {
+                return { state: ResolverState.rejected };
+            }
+            return { state: ResolverState.asked };
+        }
+    }
 }

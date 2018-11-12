@@ -1,8 +1,7 @@
-import { ConnectConfig } from "ssh2";
-
 import { Lock } from "@vorfol/common";
 
 import { ISettingsFiller } from "./settings-filler";
+import { IConnectConfig } from "../api";
 
 export interface IContextPassword {
     host?: string;
@@ -16,7 +15,7 @@ export class ContextPasswordFiller implements ISettingsFiller {
     constructor(public contexts: IContextPassword[] = [], public emulateUserDelay = 0) {
     }
 
-    public testSettings(settings: ConnectConfig): boolean {
+    public testSettings(settings: IConnectConfig): boolean {
         const ret = typeof settings.host === "string" &&
                     !!settings.host &&
                     typeof settings.username === "string" &&
@@ -24,7 +23,7 @@ export class ContextPasswordFiller implements ISettingsFiller {
         return ret;
     }
 
-    public async fillSetting(settings: ConnectConfig): Promise<boolean> {
+    public async fillSetting(settings: IConnectConfig): Promise<boolean> {
 
         if (typeof settings.password === "string" &&
             settings.password) {

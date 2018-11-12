@@ -1,4 +1,5 @@
-import { ConnectConfig } from "ssh2";
+
+import { IConnectConfig } from "../api";
 
 export interface ISettingsFiller {
     /**
@@ -6,12 +7,12 @@ export interface ISettingsFiller {
      * @param settings settings to test
      * @returns true if can be filled (or already filled)
      */
-    testSettings(settings: ConnectConfig): boolean;
+    testSettings(settings: IConnectConfig): boolean;
 
     /**
      * Fill settings
      * @param settings settings to fill out
      * @returns true if settings filled and can be used
      */
-    fillSetting(settings: ConnectConfig): Promise<boolean>;
+    fillSetting(settings: IConnectConfig): Promise<boolean>;
 }

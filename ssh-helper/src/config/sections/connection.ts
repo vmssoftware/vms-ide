@@ -1,11 +1,5 @@
 import { IConfigData, IConfigSection } from "../config";
-
-export interface IConnectionSection {
-    host: string;
-    port: number;
-    username: string;
-    password?: string;
-}
+import { IConnectionSection } from "../../api";
 
 export class ConnectionSection implements IConnectionSection, IConfigSection {
 

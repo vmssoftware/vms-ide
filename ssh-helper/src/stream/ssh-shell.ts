@@ -1,4 +1,4 @@
-import { ClientChannel, ConnectConfig } from "ssh2";
+import { ClientChannel } from "ssh2";
 import { Transform } from "stream";
 
 import { Lock } from "@vorfol/common";
@@ -6,7 +6,7 @@ import { LogFunction, LogType } from "@vorfol/common";
 import { IUnSubscribe, Subscribe } from "@vorfol/common";
 import { WaitableOperation } from "@vorfol/common";
 
-import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
+import { IConnectConfigResolver, IConnectConfig } from "../api";
 import { SshClient } from "./ssh-client";
 import { ParseWelcome } from "./parse-welcome";
 import { PromptCatcher } from "./prompt-catcher";
@@ -44,8 +44,8 @@ export class SshShell extends SshClient implements ISshShell {
     private userStream?: Transform;
     private _width = 132;
 
-    constructor(config: ConnectConfig,
-                resolver?: IConnectConfigResolver,
+    constructor(config: IConnectConfig,
+                resolver?: IConnectConfigResolver<IConnectConfig>,
                 private welcomeParser?: IParseWelcome,
                 private promptCatcher?: IPromptCatcher,
                 logFn?: LogFunction,

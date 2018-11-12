@@ -1,8 +1,9 @@
-import { ConnectConfig } from "ssh2";
+
 import { window } from "vscode";
 
 import { Lock } from "@vorfol/common";
 
+import { IConnectConfig } from "../api";
 import { ISettingsFiller } from "./settings-filler";
 
 import * as nls from "vscode-nls";
@@ -17,7 +18,7 @@ export class PasswordVscodeFiller implements ISettingsFiller {
      * True it settings has unempty host and username
      * @param settings
      */
-    public testSettings(settings: ConnectConfig): boolean {
+    public testSettings(settings: IConnectConfig): boolean {
         const ret = typeof settings.host === "string" &&
                     !!settings.host &&
                     typeof settings.username === "string" &&
@@ -25,7 +26,7 @@ export class PasswordVscodeFiller implements ISettingsFiller {
         return ret;
     }
 
-    public async fillSetting(settings: ConnectConfig): Promise<boolean> {
+    public async fillSetting(settings: IConnectConfig): Promise<boolean> {
         if (typeof settings.password === "string" &&
             settings.password) {
             // ok, already has

@@ -1,10 +1,9 @@
 import * as assert from "assert";
-import { ConnectConfig } from "ssh2";
 
 import { LogType, LogFunction } from "@vorfol/common";
 import { MemoryReadStream, MemoryWriteStream } from "@vorfol/common";
 
-import { IConnectConfigResolver } from "../config-resolve/connect-config-resolver";
+import { IConnectConfigResolver, IConnectConfig } from "../api";
 import { ConnectConfigResolverImpl } from "../config-resolve/connect-config-resolver-impl";
 import { ContextPasswordFiller } from "../config-resolve/context-password-filler";
 import { PipeFile } from "../stream/pipe";
@@ -22,10 +21,10 @@ suite("Pipe tests", function(this: Mocha.Suite) {
     debugLogFn = undefined;
     // tslint:disable-next-line:no-console
     // debugLogFn = console.log;
-    let configLocal: ConnectConfig;
-    let configVms: ConnectConfig;
+    let configLocal: IConnectConfig;
+    let configVms: IConnectConfig;
     let filler: ContextPasswordFiller;
-    let resolver: IConnectConfigResolver;
+    let resolver: IConnectConfigResolver<IConnectConfig>;
     interface IFileTestData {
         file: string;
         fileDest: string;
@@ -311,9 +310,9 @@ suite("Pipe tests", function(this: Mocha.Suite) {
         return true;
     }
 
-    async function TestPipeRealToFakeParr(config: ConnectConfig,
+    async function TestPipeRealToFakeParr(config: IConnectConfig,
                                           fileDataArr: IFileTestData[],
-                                          configResolver?: IConnectConfigResolver,
+                                          configResolver?: IConnectConfigResolver<IConnectConfig>,
                                           logFn?: LogFunction) {
         const src = new SftpClient(config, configResolver, logFn, "*");
         const results: ITestResult[] = [];
@@ -360,9 +359,9 @@ suite("Pipe tests", function(this: Mocha.Suite) {
      * @param fileDataArr datas
      * @param logFn log
      */
-    async function TestPipeFakeToRealParrWithTest(config: ConnectConfig,
+    async function TestPipeFakeToRealParrWithTest(config: IConnectConfig,
                                                   fileDataArr: IFileTestData[],
-                                                  configResolver?: IConnectConfigResolver,
+                                                  configResolver?: IConnectConfigResolver<IConnectConfig>,
                                                   logFn?: LogFunction) {
         const dst = new SftpClient(config, configResolver, logFn, "*");
         const results: ITestResult[] = [];
@@ -390,10 +389,10 @@ suite("Pipe tests", function(this: Mocha.Suite) {
         return TestPipeRealToFakeParr(config, filesToCheck, configResolver, logFn);
     }
 
-    async function TestPipeRealToRealParrWithTest(configSrc: ConnectConfig,
-                                                  configDst: ConnectConfig,
+    async function TestPipeRealToRealParrWithTest(configSrc: IConnectConfig,
+                                                  configDst: IConnectConfig,
                                                   fileDataArr: IFileTestData[],
-                                                  configResolver?: IConnectConfigResolver,
+                                                  configResolver?: IConnectConfigResolver<IConnectConfig>,
                                                   logFn?: LogFunction) {
         const src = new SftpClient(configSrc, configResolver, logFn, "*src*");
         const dst = new SftpClient(configDst, configResolver, logFn, "*dst*");
@@ -427,9 +426,9 @@ suite("Pipe tests", function(this: Mocha.Suite) {
         return TestPipeRealToFakeParr(configDst, filesToCheck, configResolver, logFn);
     }
 
-    async function TestPipeRealToSameRealParrWithTest(configSrc: ConnectConfig,
+    async function TestPipeRealToSameRealParrWithTest(configSrc: IConnectConfig,
                                                       fileDataArr: IFileTestData[],
-                                                      configResolver?: IConnectConfigResolver,
+                                                      configResolver?: IConnectConfigResolver<IConnectConfig>,
                                                       logFn?: LogFunction) {
         const src = new SftpClient(configSrc, configResolver, logFn, "*");
         const results: ITestResult[] = [];
