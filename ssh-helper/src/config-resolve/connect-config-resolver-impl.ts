@@ -4,7 +4,7 @@ import { Lock } from "@vorfol/common";
 import { LogFunction, LogType } from "@vorfol/common";
 
 import { ISettingsFiller } from "./settings-filler";
-import { IConnectConfigResolver, IConnectConfig } from "../api";
+import { IConnectConfigResolver, IConnectConfig, ResolverState } from "../api";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -192,4 +192,20 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver<IConnec
         return retConfig;
     }
 
+    testConnectConfig(settings: IConnectConfig): { settengs?: IConnectConfig; state: ResolverState; } {
+        const cacheStr = ConnectConfigResolverImpl.buildCacheString(settings);
+        this.logFn(LogType.debug, () => localize("debug.resolve.start", "resolveConnectConfig: try {0}", cacheStr));
+        let node = settingsCache.get(cacheStr);
+        if (!node) {
+            return { state: ResolverState.absent};
+        } else {
+            if (node.accepted === true) {
+                return { settengs: node.settings, state: ResolverState.accepted };
+            }
+            if (node.accepted === false) {
+                return { state: ResolverState.rejected };
+            }
+            return { state: ResolverState.asked };
+        }
+    }
 }

@@ -98,9 +98,17 @@ export interface ITimeoutsSection  {
     welcomeTimeout: number;
 }
 
+export enum ResolverState {
+    absent,
+    asked,
+    accepted,
+    rejected,
+}
+
 export interface IConnectConfigResolver<T extends any> {
     timeout?: number;
     resolveConnectConfig(settings: T): Promise<T | undefined>;
+    testConnectConfig(settings: T): {settengs?: T, state: ResolverState };
     feedBack(settings: T, accepted: boolean): void;
     clearCache(): boolean;
 }
