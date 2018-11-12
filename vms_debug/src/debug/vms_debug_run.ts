@@ -81,9 +81,6 @@ export class VMSNoDebugSession extends LoggingDebugSession
 	protected configurationDoneRequest(response: DebugProtocol.ConfigurationDoneResponse, args: DebugProtocol.ConfigurationDoneArguments): void
 	{
 		super.configurationDoneRequest(response, args);
-
-		// notify the launchRequest that configuration has finished
-		this.configurationDone.notify();
 	}
 
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments)

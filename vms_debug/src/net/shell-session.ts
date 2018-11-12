@@ -151,10 +151,13 @@ export class ShellSession
             }
             else
             {
-                let indexEnd = data.indexOf("\x00");
-                data = data.substr(0, indexEnd-1);
+                if(this.currentCmd.getBody() !== "")
+                {
+                    let indexEnd = data.indexOf("\x00");
+                    data = data.substr(0, indexEnd-1);
 
-                this.resultData += data + "> ";
+                    this.resultData += data + "> ";
+                }
 
                 this. mode = ModeWork.shell;
             }

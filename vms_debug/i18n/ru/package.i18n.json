@@ -1,5 +1,6 @@
 {
     "extension.vms_c_debug": "VMS Отладчик",
     "extension.vms_connect": "Подключиться к VMS серверу",
+    "extension.vms_terminal": "Терминал",
     "command.category": "OpenVMS"
 }

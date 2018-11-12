@@ -57,7 +57,7 @@
 		"vscode-nls-dev": "github:vorfol/vscode-nls-dev"
 	},
 	"dependencies": {
-		"@vorfol/common": "^0.0.18",
+		"@vorfol/common": "0.0.18",
 		"await-notify": "^1.0.1",
 		"net": "^1.0.2",
 		"vscode-debugadapter": "^1.32.1",
@@ -67,13 +67,19 @@
 	"main": "./out/extension",
 	"activationEvents": [
 		"onDebug",
-		"onCommand:extension.vms-debug.connect"
+		"onCommand:extension.vms-debug.connect",
+		"onCommand:extension.vms-debug.terminal"
 	],
 	"contributes": {
 		"commands": [
 			{
 				"command": "extension.vms-debug.connect",
 				"title": "%extension.vms_connect%",
+				"category": "%command.category%"
+			},
+			{
+				"command": "extension.vms-debug.terminal",
+				"title": "%extension.vms_terminal%",
 				"category": "%command.category%"
 			}
 		],
