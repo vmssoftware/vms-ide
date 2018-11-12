@@ -35,24 +35,24 @@
 					  }
 					},
 					"comment": "ends only if no continuation symbol is at the end of the line (may followed by spaces) or line is empty",
-					"end" : "(.*[^-\\\\\\s])\\s*$\\n|(?=^\\s*$\\n)",
+					"end" : "(.*[^-\\\\\\s])?(?=\\s*$\\n)",
 					"endCaptures" : 
 					{
 						"1" : 
 						{
-							"name" : "comment.block.mms"
+							"name" : "comment.block.1.mms"
 						}
 					},
 					"patterns": 
 					[
 						{
 							"comment": "comments with continuation",
-							"match": "(.*)([-\\\\]\\s*$\\n)",
+							"match": "(.*([-\\\\]))?\\s*$\\n",
 							"captures": 
 							{
 								"1": 
 								{
-									"name" : "comment.block.mms"
+									"name" : "comment.block.2.mms"
 								},
 								"2": 
 								{
@@ -69,14 +69,56 @@
 			"patterns": 
 			[
 				{
-					"begin": "^\\.",
+					"begin": "^(\\.)(\\S+)",
+					"beginCaptures": {
+						"1": 
+						{
+							"name": "keyword.control.directives.begin.mms"
+						},
+						"2":
+						{
+							"patterns": 
+							[
+								{
+									"include": "#mms-directives"
+								}
+							]
+						}
+					},
+					"end" : "([^!]*[^-\\s!])(?=\\s*(!.*)?$\\n)|(?=\\s*(!.*)?$\\n)",															   
+					"endCaptures" : 
+					{
+						"1" : 
+						{
+							"name" : "markup.italic.directive.1.mms"
+						},
+						"2" : 
+						{
+							"name" : "comment.block.3.mms"
+						}
+					},
 					"patterns": 
 					[
 						{
-							"include": "#mms-directives"
+							"comment": "directive with continuation",
+							"match": "([^!]*)([-])\\s*(!.*)?$\\n",
+							"captures": 
+							{
+								"1": 
+								{
+									"name" : "markup.italic.directive.2.mms"
+								},
+								"2": 
+								{
+									"name" : "markup.italic.directive.continuation.mms"
+								},
+								"3": 
+								{
+									"name" : "comment.block.4.mms"
+								}
+							}
 						}
-					],
-					"end": "\\s"
+					]
 				}
 			]
 		},
@@ -88,6 +130,11 @@
 					"comment": "MMS directives",
 					"name": "keyword.control.directives.mms",
 					"match": "(?i)ACTION_STATUS|DEFAULT|ELSE|ELSIF|ENDIF|FIRST|IF|IFDEF|IGNORE|INCLUDE|LAST|SILENT|SUFFIXES|SUFFIXES_DELETE|SUFFIXES_AFTER|SUFFIXES_BEFORE"
+				},
+				{
+					"comment": "wrong MMS directives",
+					"name": "invalid.illegal.directive.mms",
+					"match": "[\\S]+"
 				}
 			]
 		},
@@ -112,8 +159,8 @@
 							"name": "keyword.operator.macro-define.mms"
 						}
 					},
-					"end" : "(.*[^-\\s]\\s*$\\n)|^\\s*$\\n",
-					"endCaptures" : 
+					"end" : "([^!]*[^-\\s!])\\s*(!.*)?$\\n|(?=^\\s*$\\n)",
+					"endCaptures": 
 					{
 						"1" : 
 						{
@@ -123,12 +170,17 @@
 									"include": "#macro-value"
 								}
 							]
+						},
+						"2" : 
+						{
+							"name" : "comment.block.5.mms"
 						}
 					},
 					"patterns": 
 					[
 						{
-							"match": "(.*)([-]\\s*$\\n)",
+							"comment": "macro with continuation",
+							"match": "([^!]*)([-])\\s*(!.*)?$\\n",
 							"captures": 
 							{
 								"1": 
@@ -143,6 +195,10 @@
 								"2": 
 								{
 									"name" : "constant.character.macro-value.continuation.mms"
+								},
+								"3": 
+								{
+									"name" : "comment.block.6.mms"
 								}
 							}
 						}
@@ -164,9 +220,6 @@
 		{
 			"patterns": 
 			[
-				{
-					"include": "#comment"
-				},
 				{
 					"match": "[^!]*",
 					"name" : "constant.character.macro-value.mms"
