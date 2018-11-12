@@ -1,15 +1,16 @@
 import { Event } from "vscode";
 import { LogFunction } from "@vorfol/common";
-import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator } from "./api";
+import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator, IConnectionSection, ITimeoutsSection, IConnectConfigResolver } from "./api";
 export declare class SshHelper {
-    logFn?: LogFunction | undefined;
     readonly section: string;
-    private settingsEnsured?;
-    private sections;
     private configHelper?;
     private config?;
     onDidLoadConfig?: Event<null>;
-    constructor(logFn?: LogFunction | undefined);
+    logFn: LogFunction;
+    connectionSection?: IConnectionSection;
+    timeoutSection?: ITimeoutsSection;
+    connectConfigResolver?: IConnectConfigResolver<IConnectionSection>;
+    constructor(logFn?: LogFunction);
     dispose(): void;
     clearPasswordCashe(): void;
     pipeFile(source: ICanCreateReadStream, dest: ICanCreateWriteStream, file: string, destFile?: string, logFn?: LogFunction): Promise<boolean>;
