@@ -4,11 +4,15 @@ import { GetSourceHelperFromApi } from './get-source-helper';
 import { ensureProjectSettings, projectSection } from './ensure-project';
 import * as readline from 'readline';
 import { IProjectSection } from './sections/project';
+import { SshHelper } from './ssh-helper';
+import { GetSshHelperFromApi } from '../ext-api/get-ssh-helper';
+import { IConnectionSection } from './api';
 
 
 export class FileManagerExt
 {
 	private localSource?: ISource;
+	private sshHelper?: SshHelper;
 
 
 	private async ensureLocalSource() : Promise<boolean>
@@ -26,6 +30,39 @@ export class FileManagerExt
 		return this.localSource !== undefined;
 	}
 
+	private async ensureSshHelper() : Promise<boolean>
+	{
+		if (!this.sshHelper)
+		{
+			const sshHelperType = await GetSshHelperFromApi();
+
+			if (sshHelperType)
+			{
+				this.sshHelper = new sshHelperType();
+			}
+		}
+
+		return this.sshHelper !== undefined;
+	}
+
+
+	public async getConnectionSection() : Promise<IConnectionSection | undefined>
+	{
+		if (!await this.ensureSshHelper())
+		{
+			return undefined;
+		}
+
+		if(this.sshHelper)
+		{
+			if(await this.sshHelper.ensureSettings())
+			{
+				return this.sshHelper.connectionSection;
+			}
+		}
+
+		return undefined;
+	}
 
 	public async getProjectSection() : Promise<IProjectSection | undefined>
 	{

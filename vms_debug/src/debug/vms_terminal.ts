@@ -1,39 +1,65 @@
 import * as vscode from 'vscode';
+import { OsCmdVMS } from '../command/os_commands';
+const { Subject } = require('await-notify');
 
+
+interface TerminalQuickPickItem extends vscode.QuickPickItem
+{
+	terminal: vscode.Terminal;
+}
 
 export class TerminalVMS
 {
-	private terminal : vscode.Terminal;
-
-	constructor()
+	public async create(nameTerminal : string, pathToTerminal? : string): Promise<vscode.Terminal | undefined>
 	{
-		this.terminal = vscode.window.createTerminal("VMS Terminal", "C:/Program Files/Git/bin/bash.exe");
+		let terminal : vscode.Terminal | undefined;
+		let configurationDone = new Subject();
+
+		if(pathToTerminal)
+		{
+			terminal = vscode.window.createTerminal(nameTerminal, pathToTerminal);
+		}
+		else
+		{
+			terminal = vscode.window.createTerminal(nameTerminal);
+		}
+
+		await configurationDone.wait(1000);
+
+		return terminal;
 	}
 
-	public showTerminal()
+	public start(terminal : vscode.Terminal, host : string, userName : string, password? : string)
 	{
-		if (this.ensureTerminalExists())
+		if (terminal)
 		{
-			this.selectTerminal().then(terminal =>
+			terminal.sendText("ssh " + userName + "@" + host);
+
+			if(password)
 			{
-				if (terminal)
-				{
-					terminal.sendText("ssh kulikovskiy@104.207.199.181");
-					terminal.sendText("Qaz515402");
-					terminal.show();
-				}
-			});
+				terminal.sendText(password);
+			}
+
+			terminal.show();
+		}
+	}
+
+	public exit(nameTerminal : string)
+	{
+		const terminals = <vscode.Terminal[]>vscode.window.terminals;
+
+		for(let term of terminals)
+		{
+			if(term.name === nameTerminal)
+			{
+				term.sendText(OsCmdVMS.osExit);
+			}
 		}
 	}
 
 	public selectTerminal(): Thenable<vscode.Terminal | undefined>
 	{
-		interface TerminalQuickPickItem extends vscode.QuickPickItem
-		{
-			terminal: vscode.Terminal;
-		}
-
-		const terminals = <vscode.Terminal[]>(<any>vscode.window).terminals;
+		const terminals = <vscode.Terminal[]>vscode.window.terminals;
 
 		const items: TerminalQuickPickItem[] = terminals.map(t =>
 		{
@@ -56,15 +82,19 @@ export class TerminalVMS
 		});
 	}
 
-	public ensureTerminalExists(): boolean
+	public findLastTerminal(nameTerminal : string): vscode.Terminal | undefined
 	{
-		if ((<any>vscode.window).terminals.length === 0)
-		{
-			vscode.window.showErrorMessage('No active terminals');
+		let terminal : vscode.Terminal | undefined;
+		const terminals = <vscode.Terminal[]>vscode.window.terminals;
 
-			return false;
+		for(let term of terminals)
+		{
+			if(term.name === nameTerminal)
+			{
+				terminal = term;
+			}
 		}
 
-		return true;
+		return terminal;
 	}
 }
