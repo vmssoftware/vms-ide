@@ -15,7 +15,7 @@ import { createLogFunction } from './log';
 import { LogType } from '@vorfol/common';
 import { StatusBarDebug } from './ui/StatusBar';
 import { FileManagerExt } from './ext-api/file_manager';
-import { OsCmdVMS } from './command/os_commands';
+import { TerminalVMS } from './debug/vms_terminal';
 const { Subject } = require('await-notify');
 
 
@@ -43,7 +43,8 @@ let sessionRun : VMSNoDebugSession | undefined;
 let typeRunConfig : TypeRunConfig = TypeRunConfig.TypeRunNone;
 let statusConnBar : StatusBarDebug = new StatusBarDebug();
 let statusShell : StatusConnection = StatusConnection.StatusDisconnected;
-let terminal : vscode.Terminal;
+let terminals : TerminalVMS = new TerminalVMS();
+let fileManager : FileManagerExt = new FileManagerExt();
 
 
 export function activate(context: vscode.ExtensionContext)
@@ -61,20 +62,7 @@ export function activate(context: vscode.ExtensionContext)
 
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.terminal', () =>
 	{
-		terminal = vscode.window.createTerminal("VMS Terminal", "C:/Program Files/Git/bin/bash.exe");
-
-		if (ensureTerminalExists())
-		{
-			selectTerminal().then(terminal =>
-			{
-				if (terminal)
-				{
-					terminal.sendText("ssh kulikovskiy@104.207.199.181");
-					terminal.sendText("Qaz515402");
-					terminal.show();
-				}
-			});
-		}
+		createTerminal();
 	}));
 
 	// register a configuration provider for 'vms' debug type
@@ -86,50 +74,23 @@ export function activate(context: vscode.ExtensionContext)
 export function deactivate()
 {
 	// nothing to do
-	terminal.sendText(OsCmdVMS.osExit);
+	terminals.exit("VMS Terminal");
 	shell.DisconectSession();
 }
 
 
-function selectTerminal(): Thenable<vscode.Terminal | undefined>
+async function createTerminal() : Promise<void>
 {
-	interface TerminalQuickPickItem extends vscode.QuickPickItem
+	terminals.create("VMS Terminal", "C:/Program Files/Git/bin/bash.exe")
+	.then(async(terminal) =>
 	{
-		terminal: vscode.Terminal;
-	}
+		let connection = await fileManager.getConnectionSection();
 
-	const terminals = <vscode.Terminal[]>(<any>vscode.window).terminals;
-
-	const items: TerminalQuickPickItem[] = terminals.map(t =>
-	{
-		return {
-			label: `name: ${t.name}`,
-			terminal: t
-		};
-	});
-
-	return vscode.window.showQuickPick(items).then(item =>
-	{
-		if(item)
+		if(connection && terminal)
 		{
-			return item.terminal;
-		}
-		else
-		{
-			return undefined;
+			terminals.start(terminal, connection.host, connection.username, connection.password);
 		}
 	});
-}
-function ensureTerminalExists(): boolean
-{
-	if ((<any>vscode.window).terminals.length === 0)
-	{
-		vscode.window.showErrorMessage('No active terminals');
-
-		return false;
-	}
-
-	return true;
 }
 
 async function ConnectShell(wait : boolean) : Promise<StatusConnection>
@@ -224,7 +185,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 				{
 					if (!config.program)
 					{
-						let fileManager = new FileManagerExt();
+						//let fileManager = new FileManagerExt();
 						let projectSection = await fileManager.getProjectSection();
 
 						if (projectSection)
