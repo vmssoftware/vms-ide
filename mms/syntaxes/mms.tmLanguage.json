@@ -661,9 +661,9 @@
 		},
 		"string": 
 		{
-			"name": "string.quoted.double.mms",
-			"begin": "\"",
-			"end": "\"",
+			"name": "string.quoted.$1.mms",
+			"begin": "(\"|')",
+			"end": "\\1",
 			"patterns": 
 			[
 				{
