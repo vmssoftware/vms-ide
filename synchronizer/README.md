@@ -24,10 +24,13 @@ Latest "**vmssoftware.config-helper**" and "**vmssoftware.ssh-helper**" extensio
 
 | Section | Type | Name | Description |
 | --- | --- | --- | --- |
-| `vmssoftware.synchronizer.project.root` | `string` | Root | Project root folder on the VMS host. |
-| `vmssoftware.synchronizer.project.exclude` | `string` | Exclude | Glob, files or folder to skip. |
 | `vmssoftware.synchronizer.project.builders` | `string` | Builders | Glob, files needed to build project on VMS host. |
+| `vmssoftware.synchronizer.project.exclude` | `string` | Exclude | Glob, files or folder to skip. |
 | `vmssoftware.synchronizer.project.headers` | `string` | Headers | Glob, header files.|
+| `vmssoftware.synchronizer.project.listing` | `string` | Listing | Glob, listing files.|
+| `vmssoftware.synchronizer.project.outdir` | `string` | Outdir | Project output folder inn the VMS host. |
+| `vmssoftware.synchronizer.project.projectName` | `string` | Project Name | Project executable name. |
+| `vmssoftware.synchronizer.project.root` | `string` | Root | Project root folder in the VMS host. |
 | `vmssoftware.synchronizer.project.source` | `string` | Source | Glob, source files.|
 | `vmssoftware.synchronizer.project.resource` | `string` | Resource | Glob, any resource files.|
 
