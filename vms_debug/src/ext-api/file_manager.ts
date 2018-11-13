@@ -57,7 +57,29 @@ export class FileManagerExt
 		{
 			if(await this.sshHelper.ensureSettings())
 			{
-				return this.sshHelper.connectionSection;
+				if(this.sshHelper.connectionSection)
+				{
+					if(this.sshHelper.connectionSection.password === "")
+					{
+						if(this.sshHelper.connectConfigResolver)
+						{
+							let connection = this.sshHelper.connectConfigResolver.testConnectConfig(this.sshHelper.connectionSection);
+
+							if(connection.settengs)
+							{
+								return connection.settengs;
+							}
+							else
+							{
+								return this.sshHelper.connectionSection;
+							}
+						}
+					}
+					else
+					{
+						return this.sshHelper.connectionSection;
+					}
+				}
 			}
 		}
 

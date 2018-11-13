@@ -111,6 +111,8 @@ export class ShellSession
                     this.logFn(LogType.debug, () => String(error));
                 }
             }
+
+            this.extensionCloseCb();
         }
     }
 

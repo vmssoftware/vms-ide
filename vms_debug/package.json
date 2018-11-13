@@ -71,6 +71,12 @@
 		"onCommand:extension.vms-debug.terminal"
 	],
 	"contributes": {
+		"keybindings": [
+			{
+				"command": "extension.vms-debug.terminal",
+				"key": "Ctrl+F6"
+			}
+		],
 		"commands": [
 			{
 				"command": "extension.vms-debug.connect",
