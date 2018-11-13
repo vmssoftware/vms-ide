@@ -4,6 +4,10 @@
     "description": "mms language",
     "version": "0.1.0",
     "publisher": "vmssoftware",
+    "repository": {
+        "type": "git",
+        "url": "git:vmssoftware"
+    },
     "engines": {
         "vscode": "^1.28.0"
     },
