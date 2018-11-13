@@ -188,18 +188,27 @@
 			"patterns": 
 			[
 				{
-					"include": "#macro-substitution"
-				},
-				{
-					"include": "#string"
-				},
-				{
-					"match": "[-](?=\\s*(!.*)?$)",
-					"name": "markup.italic.directive.continuation.mms"
-				},
-				{
-					"match": "[^!]",
-					"name" : "markup.italic.directive.value.mms"
+					"name" : "markup.italic.directive.value.mms",
+					"match": ".*",
+					"captures":
+					{
+						"0":
+						{
+							"patterns": 
+							[
+								{
+									"include": "#macro-substitution"
+								},
+								{
+									"include": "#string"
+								},
+								{
+									"match": "[-](?=\\s*(!.*)?$)",
+									"name": "markup.italic.directive.continuation.mms"
+								}
+							]
+						}
+					}
 				}
 			]
 		},
@@ -284,18 +293,27 @@
 			"patterns": 
 			[
 				{
-					"include": "#macro-substitution"
-				},
-				{
-					"include": "#string"
-				},
-				{
-					"match": "[-](?=\\s*(!.*)?$)",
-					"name": "constant.character.macro-value.continuation.mms"
-				},
-				{
-					"match": "[^!]",
-					"name" : "constant.character.macro-value.mms"
+					"name" : "constant.character.macro-value.mms",
+					"match": ".*",
+					"captures":
+					{
+						"0":
+						{
+							"patterns": 
+							[
+								{
+									"include": "#macro-substitution"
+								},
+								{
+									"include": "#string"
+								},
+								{
+									"match": "[-](?=\\s*(!.*)?$)",
+									"name": "constant.character.macro-value.continuation.mms"
+								}
+							]
+						}
+					}
 				}
 			]
 		},
@@ -471,18 +489,27 @@
 			"patterns": 
 			[
 				{
-					"include": "#macro-substitution"
-				},
-				{
-					"include": "#string"
-				},
-				{
-					"match": "[-](?=\\s*(!.*)?$)",
-					"name": "markup.bold.action-line.continuation.mms"
-				},
-				{
-					"match": "[^!]",
-					"name" : "markup.bold.action-line.mms"
+					"name": "markup.bold.action-line.mms",
+					"match": ".*",
+					"captures":
+					{
+						"0":
+						{
+							"patterns": 
+							[
+								{
+									"include": "#macro-substitution"
+								},
+								{
+									"include": "#string"
+								},
+								{
+									"match": "[-](?=\\s*(!.*)?$)",
+									"name": "markup.bold.action-line.continuation.mms"
+								}												
+							]
+						}
+					}
 				}
 			]
 		},
@@ -530,6 +557,7 @@
 					"patterns": 
 					[
 						{
+							"name": "entity.name.class.macro-subst.body",
 							"begin": "\\S+",
 							"beginCaptures": 
 							{
@@ -562,16 +590,11 @@
 							},
 							"patterns": 
 							[
-								
 								{
 									"include": "#macro-substitution"
 								},
 								{
 									"include": "#string"
-								},
-								{
-									"match": ".",
-									"name": "entity.name.class.macro-subst.body"
 								}
 							]
 						}
@@ -630,28 +653,109 @@
 				{
 					"name": "mms.dependency",
 					"comment": "TARGET : SOURCE",
-					"match": "(?i)^([^!.\\s].*)(\\bDEPENDS_ON\\b|\\bADDITIONALLY_DEPENDS_ON\\b|\\s::\\s|\\s:\\s)(.*)$",
-					"captures": 
+					"begin": "(?i)^([^!.\\s].*)(\\bDEPENDS_ON\\b|\\bADDITIONALLY_DEPENDS_ON\\b|\\s::(?=\\s)|\\s:(?=\\s))",
+					"beginCaptures": 
 					{
 						"1":
 						{
 							"patterns":
 							[
 								{
-									"include": "#macro-substitution"
+									"include": "#target"
 								}
 							]
 						},
 						"2":
 						{
 							"name": "strong.depend"
-						},
-						"3":
+						}
+					},
+					"end": "([^!]*[^-\\s!])?(?=\\s*(!.*)?$\\n)",
+					"endCaptures": 
+					{
+						"1":
 						{
 							"patterns":
 							[
 								{
+									"include": "#source"
+								}
+							]
+						}
+					},
+					"patterns":
+					[
+						{
+							"comment": "source with continuation (may followed by spaces and comment)",
+							"match": "([^!]*([-]))?\\s*(!.*)?$\\n",
+							"captures": 
+							{
+								"1": 
+								{
+									"patterns": 
+									[
+										{
+											"include": "#source"
+										}
+									]
+								},
+								"2": 
+								{
+									"name" : "constant.character.source.continuation.mms"
+								},
+								"3": 
+								{
+									"name" : "comment.block.6.mms"
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		"target":
+		{
+			"patterns":
+			[
+				{
+					"name": "constant.character.target.mms",
+					"match": ".*",
+					"captures": 
+					{
+						"0":
+						{
+							"patterns": 
+							[
+								{
 									"include": "#macro-substitution"
+								},
+								{
+									"include": "#string"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		"source":
+		{
+			"patterns":
+			[
+				{
+					"name": "constant.character.source.mms",
+					"match": ".*",
+					"captures": 
+					{
+						"0":
+						{
+							"patterns": 
+							[
+								{
+									"include": "#macro-substitution"
+								},
+								{
+									"include": "#string"
 								}
 							]
 						}
