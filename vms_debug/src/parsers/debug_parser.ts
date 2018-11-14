@@ -9,9 +9,9 @@ import { FileManagerExt } from '../ext-api/file_manager';
 export enum MessageDebuger
 {
 	msgStepped = "stepped to",
-	msgSteppedReturn = "stepped on return",
+	msgSteppedOn = "stepped on",
 	msgBreak = "break at",
-	msgException = "break on unhandled exception",
+	msgBreakOn = "break on",
 	msgKeyDbg = "%DEBUG-",
 	msgKeySys = "%SYSTEM-",
 	msgKeyDcl = "%DCL-",
@@ -258,8 +258,8 @@ export class DebugParser
 	{
 		if(msgLine.includes(MessageDebuger.msgStepped) ||
 			msgLine.includes(MessageDebuger.msgBreak) ||
-			msgLine.includes(MessageDebuger.msgSteppedReturn) ||
-			msgLine.includes(MessageDebuger.msgException))
+			msgLine.includes(MessageDebuger.msgSteppedOn) ||
+			msgLine.includes(MessageDebuger.msgBreakOn))
 		{
 			this.commandDone = true;
 		}

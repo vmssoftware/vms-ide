@@ -13,9 +13,9 @@ import * as nls from 'vscode-nls';
 import { VMSNoDebugSession } from './debug/vms_debug_run';
 import { createLogFunction } from './log';
 import { LogType } from '@vorfol/common';
-import { StatusBarDebug } from './ui/StatusBar';
+import { StatusBarDebug } from './ui/status_bar';
 import { FileManagerExt } from './ext-api/file_manager';
-import { TerminalVMS } from './debug/vms_terminal';
+import { TerminalVMS } from './ui/terminal';
 const { Subject } = require('await-notify');
 
 
@@ -37,6 +37,7 @@ const locale = vscode.env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 const logFn = createLogFunction("VMS Debug");
 
+let nameTerminalVMS : string = "VMS Terminal";
 let shell : ShellSession;
 let session : VMSDebugSession | undefined;
 let sessionRun : VMSNoDebugSession | undefined;
@@ -74,21 +75,28 @@ export function activate(context: vscode.ExtensionContext)
 export function deactivate()
 {
 	// nothing to do
-	terminals.exit("VMS Terminal");
+	terminals.exit(nameTerminalVMS);
 	shell.DisconectSession();
 }
 
 
 async function createTerminal() : Promise<void>
 {
-	terminals.create("VMS Terminal", "C:/Program Files/Git/bin/bash.exe")
+	terminals.create(nameTerminalVMS)
 	.then(async(terminal) =>
 	{
 		let connection = await fileManager.getConnectionSection();
 
-		if(connection && terminal)
+		if(terminal)
 		{
-			terminals.start(terminal, connection.host, connection.username, connection.password);
+			if(connection)
+			{
+				terminals.start(terminal, connection.host, connection.username, connection.password);
+			}
+			else
+			{
+				terminal.show();
+			}
 		}
 	});
 }
@@ -154,7 +162,7 @@ let ExtensionCloseCb = function() : void
 
 	const message = localize('extention.closed', "Connection is closed");
 	const messageBar = localize('extention.bar.disconnected', "Disconnected");
-	vscode.window.showInformationMessage(message);
+	vscode.window.showWarningMessage(message);
 	statusConnBar.setMessage(messageBar);
 
 	logFn(LogType.information, () => message, true);
@@ -197,7 +205,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 						else
 						{
 							const message = localize('extention.сustomize_configuration', "Customize configuration");
-							vscode.window.showInformationMessage(message);
+							vscode.window.showWarningMessage(message);
 
 							resolve(null);
 							return;
@@ -254,7 +262,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 						typeRunConfig = TypeRunConfig.TypeRunNone;
 
 						const message = localize('extention.сustomize_configuration', "Customize configuration");
-						vscode.window.showInformationMessage(message);
+						vscode.window.showWarningMessage(message);
 
 						resolve(null);
 						return;
@@ -271,7 +279,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 				else
 				{
 					const message = localize('extention.not_connected', "Do not connect to the server");
-					vscode.window.showInformationMessage(message);
+					vscode.window.showWarningMessage(message);
 
 					resolve(undefined);
 					return;
@@ -280,7 +288,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 			else
 			{
 				const message = localize('extention.сustomize_configuration', "Customize configuration");
-				vscode.window.showInformationMessage(message);
+				vscode.window.showWarningMessage(message);
 
 				resolve(null);	//return null to open launch.json
 				return;
