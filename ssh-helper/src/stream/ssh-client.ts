@@ -90,8 +90,9 @@ export class SshClient {
         });
         // resolve config now and there
         if (this.resolver) {
-            const configResolved = await this.resolver.resolveConnectConfig(this.config);
+            let configResolved = await this.resolver.resolveConnectConfig(this.config);
             if (configResolved) {
+                //configResolved = Object.assign({ debug: (s: string) => console.log(s) }, configResolved);
                 client.connect(configResolved);
             } else {
                 this.logFn(LogType.debug, () => localize("debug.resolver", "no config resolved {0}", this.tag ? " " + this.tag : ""));

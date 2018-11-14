@@ -18,19 +18,19 @@ export class KeyFiller implements ISettingsFiller {
      * @param settings
      */
     public testSettings(settings: IConnectConfig): boolean {
-        const ret = typeof settings.host === "string" &&
-                    !!settings.host &&
-                    typeof settings.username === "string" &&
-                    !!settings.username &&
-                    typeof settings.keyFile === "string" &&
-                    !!settings.keyFile;
+        const ret = typeof settings.host === "string" && !!settings.host &&
+                    typeof settings.username === "string" && !!settings.username &&
+                    ( (typeof settings.privateKey === "string" && !!settings.privateKey) || 
+                      Buffer.isBuffer(settings.privateKey) || 
+                      (typeof settings.keyFile === "string" && !!settings.keyFile)
+                    );
         return ret;
     }
 
     public async fillSetting(settings: IConnectConfig): Promise<boolean> {
 
-        if (typeof settings.privateKey === "string" &&
-            settings.privateKey) {
+        if (typeof settings.privateKey === "string" ||
+            Buffer.isBuffer(settings.privateKey)) {
             // ok, already has
             return true;
         }
@@ -39,6 +39,12 @@ export class KeyFiller implements ISettingsFiller {
         }
         try {
             settings.privateKey = await fs.readFile(settings.keyFile);
+            if (settings.keyFile !== undefined) {
+                delete settings.keyFile;
+            }
+            if (settings.password !== undefined) {
+                delete settings.password;
+            }
             return true;
         } catch (err) {
             this.logFn(LogType.error, () => String(err));
