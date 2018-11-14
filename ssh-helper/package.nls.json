@@ -6,6 +6,7 @@
     "configuration.port": "Port",
     "configuration.username": "User name",
     "configuration.password": "Password, may be omitted",
+    "configuration.keyFile": "SSH key file or leave it empty to use password authentication.",
     "configuration.timeouts.command": "Time out for command answer",
     "configuration.timeouts.feedback": "Feedback timeout",
     "configuration.timeouts.welcome": "Timeout for welcome parser"

@@ -11,10 +11,9 @@ import { PromptCatcher } from "../stream/prompt-catcher";
 import { PromptCatcherVms } from "../stream/prompt-catcher-vms";
 import { SshShell } from "../stream/ssh-shell";
 import { TestConfiguration } from "./config/config";
+import { KeyFiller } from "../config-resolve/key-filler";
 
 suite("Shell tests", function(this: Mocha.Suite) {
-
-    // return;
 
     this.timeout(0);
 
@@ -25,6 +24,7 @@ suite("Shell tests", function(this: Mocha.Suite) {
     // debugLogFn = console.log;
     let configLocal: IConnectConfig;
     let configVms: IConnectConfig;
+    let keyFiller: KeyFiller;
     let filler: ContextPasswordFiller;
     let resolver: IConnectConfigResolver<IConnectConfig>;
     let parser: IParseWelcome;
@@ -50,16 +50,14 @@ suite("Shell tests", function(this: Mocha.Suite) {
             {
                 host: configLocal.host,
                 password: configLocal.password,
-            },
-            {
-                host: configVms.host,
-                password: configVms.password,
-            },
+            }
         ], 0);
+
+        keyFiller = new KeyFiller(debugLogFn);
 
         delete configLocal.password;
         delete configVms.password;
-        resolver = new ConnectConfigResolverImpl([filler]);
+        resolver = new ConnectConfigResolverImpl([keyFiller, filler]);  // key first!
         parser = new ParseWelcome(0, debugLogFn, "wel");
         promptCatcher = new PromptCatcher("", 0, debugLogFn, "prom");
         parserVms = new ParseWelcomeVms(5000, debugLogFn, "wel vms");

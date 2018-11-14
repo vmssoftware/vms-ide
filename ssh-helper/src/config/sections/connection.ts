@@ -10,13 +10,15 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             typeof candidate.host === "string" &&
             typeof candidate.port === "number" &&
             typeof candidate.username === "string" &&
+            (typeof candidate.keyFile === "string" || candidate.keyFile === undefined) &&
             (typeof candidate.password === "string" || candidate.password === undefined);
     }
 
     public host: string = "";
+    public keyFile?: string;
+    public password?: string;
     public port: number = 22;
     public username: string = "";
-    public password?: string = "";
 
     public name(): string {
         return ConnectionSection.section;
@@ -32,7 +34,8 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
     public templateToFillFrom(): IConfigData {
         return {
             host: this.host,
-            password: this.password,
+            keyFile: this.keyFile || "",
+            password: this.password || "",
             port: this.port,
             username: this.username,
         };
@@ -41,9 +44,10 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
     public fillFrom(data: IConfigData): boolean {
         if (ConnectionSection.is(data)) {
             this.host = data.host;
+            this.keyFile = data.keyFile;
+            this.password = data.password;
             this.port = data.port;
             this.username = data.username;
-            this.password = data.password || "";
             return true;
         }
         return false;

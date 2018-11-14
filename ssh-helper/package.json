@@ -2,7 +2,7 @@
     "name": "ssh-helper",
     "displayName": "ssh-helper",
     "description": "ssh-helper",
-    "version": "0.1.14",
+    "version": "0.1.16",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -55,6 +55,11 @@
                     "type": "string",
                     "default": "",
                     "description": "%configuration.password%"
+                },
+                "vmssoftware.ssh-helper.connection.keyFile": {
+                    "type": "string",
+                    "default": "",
+                    "description": "%configuration.keyFile%"
                 },
                 "vmssoftware.ssh-helper.timeouts.cmdTimeout": {
                     "type": "number",

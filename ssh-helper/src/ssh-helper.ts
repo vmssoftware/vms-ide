@@ -18,6 +18,7 @@ import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IM
 import { PipeFile } from "./stream/pipe";
 import { MemoryStreamCreator } from "./stream/stream-creators";
 import { ConstPasswordFiller } from "./config-resolve/password-filler";
+import { KeyFiller } from "./config-resolve/key-filler";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -141,7 +142,7 @@ export class SshHelper {
             this.timeoutSection = timeoutSection;
         }
         if (!this.connectConfigResolver && this.timeoutSection) {
-            const fillers = [new PasswordVscodeFiller()];
+            const fillers = [new KeyFiller(this.logFn), new PasswordVscodeFiller()];
             this.connectConfigResolver = new ConnectConfigResolverImpl(fillers, this.timeoutSection.feedbackTimeout, this.logFn);
         }
         return this.connectionSection !== undefined && 
