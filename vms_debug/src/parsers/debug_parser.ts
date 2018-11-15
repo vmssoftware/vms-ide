@@ -15,6 +15,7 @@ export enum MessageDebuger
 	msgKeyDbg = "%DEBUG-",
 	msgKeySys = "%SYSTEM-",
 	msgKeyDcl = "%DCL-",
+	msgNoImage = "%DCL-W-ACTIMAGE, error activating image",
 	msgEnd = "%DEBUG-I-EXITSTATUS, is '%SYSTEM-S-NORMAL, normal successful completion",
 }
 

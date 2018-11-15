@@ -111,7 +111,7 @@
 						"properties": {
 							"program": {
 								"type": "string",
-								"description": "Absolute path to EXE file.",
+								"description": "Path from home directory to EXE file.",
 								"default": ""
 							},
 							"stopOnEntry": {

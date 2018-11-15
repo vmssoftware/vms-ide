@@ -10,6 +10,9 @@ interface TerminalQuickPickItem extends vscode.QuickPickItem
 
 export class TerminalVMS
 {
+	private prompt : string = "";
+	private passwd : string = "";
+
 	public async create(nameTerminal : string, pathToTerminal? : string): Promise<vscode.Terminal | undefined>
 	{
 		let terminal : vscode.Terminal | undefined;
@@ -31,13 +34,29 @@ export class TerminalVMS
 
 	public start(terminal : vscode.Terminal, host : string, userName : string, password? : string)
 	{
+		this.prompt = userName + "@" + host + "'s password:";
+
+		if((<any>terminal).onDidWriteData)
+		{
+			(<any>terminal).onDidWriteData(data =>
+			{
+				if(data.includes(this.prompt))
+				{
+					if(this.passwd !== "")
+					{
+						terminal.sendText(this.passwd);
+					}
+				}
+			});
+		}
+
 		if (terminal)
 		{
 			terminal.sendText("ssh " + userName + "@" + host);
 
 			if(password)
 			{
-				terminal.sendText(password);
+				this.passwd = password;
 			}
 
 			terminal.show();

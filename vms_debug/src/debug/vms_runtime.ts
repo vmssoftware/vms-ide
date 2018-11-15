@@ -37,8 +37,6 @@ export enum DebugButtonEvent
 // VMS runtime with minimal debugger functionality.
 export class VMSRuntime extends EventEmitter
 {
-	// the initial (and one and only) file we are 'debugging'
-	private sourceFile: string;
 	//private lisFile: string;
 	private buttonPressd : DebugButtonEvent;
 	private shell : ShellSession;
@@ -197,11 +195,6 @@ export class VMSRuntime extends EventEmitter
 		}
 
 		return result;
-	}
-
-	public getSourceFile() : string
-	{
-		return this.sourceFile;
 	}
 
 
@@ -382,15 +375,7 @@ export class VMSRuntime extends EventEmitter
 
 	private async loadSourceLang(file: string) : Promise<string[]>
 	{
-		let sourceLines: string[] = [];
-
-		if (this.sourceFile !== file)
-		{
-			this.sourceFile = file;
-			sourceLines = await this.fileManager.loadContextFile(this.sourceFile);
-		}
-
-		return sourceLines;
+		return this.fileManager.loadContextFile(file);
 	}
 
 	private async loadSourceLis(file: string) : Promise<string[]>
@@ -578,6 +563,11 @@ export class VMSRuntime extends EventEmitter
 				}
 
 				vscode.debug.activeDebugConsole.append(messageUser);
+
+				if(messageUser.includes(MessageDebuger.msgNoImage))
+				{
+					this.sendEvent('end');
+				}
 			}
 
 			if(this.dbgParser.getCommandStatus())
