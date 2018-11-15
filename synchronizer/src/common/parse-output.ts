@@ -29,7 +29,10 @@ const rgxMsgPosCXX = /^(\.*)\^/;
 const rgxMsgMMS = /^((%|-)(MMS)-(\S)-(\S*)),\s(.*)$/;
 const rgxMsgFileSintax = /(.*) in file (.*)$/;
 const rgxMsgFileAbort = /For target (.*), (.*)$/;
-const rgxMsgInfo = /\d+ error(s?) detected in the compilation of/;
+const rgxMsgInfoMessages = [
+    /\d+ (catastrophic )?error(s?) detected in the compilation of/,
+    /Compilation terminated/,
+]
 const mmsExt = ".MMS";
 
 const lineStartRgx = [
@@ -73,7 +76,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
     function findCxxErrors(problems: IPartialDiagnostics[], line: string, idx: number) {
         const matched = line.match(rgxMsgCXX);
         if (matched) {
-            if (matched[6].match(rgxMsgInfo)) {
+            if (rgxMsgInfoMessages.some((rgx) => rgx.test(matched[6]))) {
                 // skip summary information
                 return problems;
             }

@@ -90,6 +90,7 @@ export interface IConnectionSection {
     port: number;
     username: string;
     password?: string;
+    keyFile?: string;
 }
 
 export interface ITimeoutsSection  {
@@ -114,4 +115,5 @@ export interface IConnectConfigResolver<T extends any> {
 }
 
 export interface IConnectConfig extends IConnectionSection {
+    privateKey?: Buffer | string;
 }

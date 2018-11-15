@@ -74,4 +74,35 @@ export interface ISshShell {
     detachUser(): Promise<void>;
     execCmd(command: string): Promise<string[] | undefined>;
 }
+export interface IConnectionSection {
+    host: string;
+    port: number;
+    username: string;
+    password?: string;
+    keyFile?: string;
+}
+export interface ITimeoutsSection {
+    cmdTimeout: number;
+    feedbackTimeout: number;
+    welcomeTimeout: number;
+}
+export declare enum ResolverState {
+    absent = 0,
+    asked = 1,
+    accepted = 2,
+    rejected = 3
+}
+export interface IConnectConfigResolver<T extends any> {
+    timeout?: number;
+    resolveConnectConfig(settings: T): Promise<T | undefined>;
+    testConnectConfig(settings: T): {
+        settengs?: T;
+        state: ResolverState;
+    };
+    feedBack(settings: T, accepted: boolean): void;
+    clearCache(): boolean;
+}
+export interface IConnectConfig extends IConnectionSection {
+    privateKey?: Buffer | string;
+}
 //# sourceMappingURL=api.d.ts.map

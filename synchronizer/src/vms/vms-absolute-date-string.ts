@@ -1,6 +1,5 @@
 
 export function VmsAbsoluteDateString(date: Date, locale: string = "en-US"): string {
-    date = new Date(date.valueOf() + date.getTimezoneOffset() * 60 * 1000);
     const day = date.getDate().toString(10).padStart(2, "0");
     const year = date.getFullYear().toString(10);
     const hour = date.getHours().toString(10).padStart(2, "0");

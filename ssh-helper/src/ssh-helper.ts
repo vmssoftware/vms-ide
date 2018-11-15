@@ -1,4 +1,4 @@
-import { Event } from "vscode";
+import { Event, Disposable } from "vscode";
 
 import { SftpClient } from "./stream/sftp-client";
 import { SshShell } from "./stream/ssh-shell";
@@ -18,6 +18,7 @@ import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IM
 import { PipeFile } from "./stream/pipe";
 import { MemoryStreamCreator } from "./stream/stream-creators";
 import { ConstPasswordFiller } from "./config-resolve/password-filler";
+import { KeyFiller } from "./config-resolve/key-filler";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -29,6 +30,8 @@ export class SshHelper {
     
     private configHelper?: IConfigHelper;
     private config?: IConfig;
+    private configIsInvalid = false;
+    private didLoadDispose?: Disposable;
 
     public onDidLoadConfig?: Event<null>;
     public logFn: LogFunction;
@@ -44,7 +47,10 @@ export class SshHelper {
     }
 
     public dispose() {
-        //
+        if (this.didLoadDispose) {
+            this.didLoadDispose.dispose();
+            this.didLoadDispose = undefined;
+        }
     }
 
     public clearPasswordCashe() {
@@ -100,7 +106,8 @@ export class SshHelper {
     }
 
     public async ensureSettings() {
-        if (this.connectionSection && 
+        if (!this.configIsInvalid &&
+            this.connectionSection && 
             this.timeoutSection &&
             this.connectConfigResolver) {
             return true;
@@ -111,6 +118,9 @@ export class SshHelper {
                 this.configHelper = api.getConfigHelper(this.section);
                 this.config = this.configHelper.getConfig();
                 this.onDidLoadConfig = this.config.onDidLoad;
+                this.didLoadDispose = this.onDidLoadConfig(() => {
+                    this.configIsInvalid = true;
+                });
             }
         }
         if (!this.config) {
@@ -141,12 +151,14 @@ export class SshHelper {
             this.timeoutSection = timeoutSection;
         }
         if (!this.connectConfigResolver && this.timeoutSection) {
-            const fillers = [new PasswordVscodeFiller()];
+            const fillers = [new KeyFiller(this.logFn), new PasswordVscodeFiller()];
             this.connectConfigResolver = new ConnectConfigResolverImpl(fillers, this.timeoutSection.feedbackTimeout, this.logFn);
         }
-        return this.connectionSection !== undefined && 
-            this.timeoutSection !== undefined &&
-            this.connectConfigResolver !== undefined;
+        this.configIsInvalid = 
+            this.connectionSection === undefined ||
+            this.timeoutSection === undefined ||
+            this.connectConfigResolver === undefined;
+        return !this.configIsInvalid;
     }
     
     public async getTestSftp(host: string, port: number, username: string, password: string) {

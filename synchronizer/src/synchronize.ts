@@ -1,7 +1,6 @@
 
 import { LogFunction, LogType } from "@vorfol/common";
 
-import { EnsureSettings } from "./ensure-settings";
 import { Perform } from "./performer";
 import { Synchronizer } from "./sync/synchronizer";
 
