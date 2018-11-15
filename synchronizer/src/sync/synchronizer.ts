@@ -89,6 +89,8 @@ export class Synchronizer {
         if (this.projectSection
             && this.synchronizeSection
             && this.sshHelper) {
+            // clear password cache
+            this.sshHelper.clearPasswordCashe();
             const [sftp, shell] = await Promise.all([
                     this.sshHelper.getDefaultSftp(),
                     this.sshHelper.getDefaultVmsShell(),
@@ -280,7 +282,7 @@ export class Synchronizer {
                 this.onDidLoadConfig = synchronizerConfig.onDidLoad( async () => {
                     // test if "keep alive" changed
                     if (synchronizerConfig) {
-                        const tst = await synchronizerConfig.get(SynchronizeSection.name);
+                        const tst = await synchronizerConfig.get(SynchronizeSection.section);
                         if (!SynchronizeSection.is(tst)
                             || tst.keepAlive === false) {
                             this.dispose();

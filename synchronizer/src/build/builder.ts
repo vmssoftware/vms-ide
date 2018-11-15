@@ -447,6 +447,8 @@ export class Builder {
             this.sshHelper = new sshHelperType(this.logFn);
         }
         if (this.sshHelper) {
+            // clear password cache
+            this.sshHelper.clearPasswordCashe();
             this.shell = await this.sshHelper.getDefaultVmsShell();
         }
         // if (this.shell) {
