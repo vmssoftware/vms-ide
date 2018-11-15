@@ -536,11 +536,12 @@ export class Synchronizer {
      * @param date date
      */
     private async transferFile(from: ISource, to: ISource, file: string, date: Date) {
-        const dirEnd = file.lastIndexOf(ftpPathSeparator);
-        if (dirEnd !== -1) {
-            const dir = file.slice(0, dirEnd);
-            await to.ensureDirectory(dir);
+        let dir = "";
+        const dirInFileEnd = file.lastIndexOf(ftpPathSeparator);
+        if (dirInFileEnd !== -1) {
+            dir = file.slice(0, dirInFileEnd);
         }
+        await to.ensureDirectory(dir);
         return this.sshHelper!.pipeFile(from, to, file, file, this.logFn)
             .then(async (ok) => {
                 if (ok) {
