@@ -63,6 +63,23 @@ export class TerminalVMS
 		}
 	}
 
+	public startByKey(terminal : vscode.Terminal, host : string, userName : string, keyFile? : string)
+	{
+		if (terminal)
+		{
+			if(keyFile !== "")
+			{
+				terminal.sendText("ssh -i " + keyFile + " " + userName + "@" + host);
+			}
+			else
+			{
+				terminal.sendText("ssh " + userName + "@" + host);
+			}
+
+			terminal.show();
+		}
+	}
+
 	public exit(nameTerminal : string)
 	{
 		const terminals = <vscode.Terminal[]>vscode.window.terminals;

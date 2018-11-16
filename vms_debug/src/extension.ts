@@ -91,7 +91,14 @@ async function createTerminal() : Promise<void>
 		{
 			if(connection)
 			{
-				terminals.start(terminal, connection.host, connection.username, connection.password);
+				if(connection.keyFile !== "")
+				{
+					terminals.startByKey(terminal, connection.host, connection.username, connection.keyFile);
+				}
+				else
+				{
+					terminals.start(terminal, connection.host, connection.username, connection.password);
+				}
 			}
 			else
 			{
