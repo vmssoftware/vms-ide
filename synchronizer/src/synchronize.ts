@@ -14,10 +14,10 @@ export async function StopSyncProject() {
 }
 
 export async function SyncProject(logFn?: LogFunction) {
-    return Perform("save.all", logFn)
+    return Perform("save all", logFn)
             .then((saved) => {
                 if (saved) {
-                    return Perform("syncronize", logFn);
+                    return Perform("synchronize", logFn);
                 }
                 return saved;
             });

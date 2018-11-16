@@ -14,7 +14,7 @@ const localize = nls.loadMessageBundle();
 
 export type AsyncAction = (logFn?: LogFunction) => Promise<boolean>;
 
-export type ActionType = "save.all" | "syncronize" | "build" | "clean";
+export type ActionType = "save all" | "synchronize" | "build" | "clean" | "upload source";
 
 export interface IPerform {
     actionFunc: AsyncAction;
@@ -28,7 +28,7 @@ export interface IPerform {
 export const actions: IPerform[] = [
     {
         actionFunc: async (logFn?: LogFunction) => workspace.saveAll(false),
-        actionName: "save.all",
+        actionName: "save all",
         context: CommandContext.isSaving,
         fail: localize("saving.fail", "Saving failed"),
         status: localize("saving.status", "$(check) Saving..."),
@@ -39,11 +39,22 @@ export const actions: IPerform[] = [
             const syncronizer = Synchronizer.acquire(logFn);
             return syncronizer.syncronizeProject();
         },
-        actionName: "syncronize",
+        actionName: "synchronize",
         context: CommandContext.isSyncronizing,
         fail: localize("synchronizing.fail", "Synchronizing failed"),
         status: localize("synchronizing.status", "$(sync) Synchronizing..."),
         success: localize("synchronizing.success", "Synchronizing ok"),
+    },
+    {
+        actionFunc: async (logFn?: LogFunction) => {
+            const syncronizer = Synchronizer.acquire(logFn);
+            return syncronizer.uploadSource();
+        },
+        actionName: "upload source",
+        context: CommandContext.isBuilding,
+        fail: localize("upload.source.fail", "Upload source failed"),
+        status: localize("upload.source.status", "$(sync) Uploading source..."),
+        success: localize("upload.source.success", "Upload source ok"),
     },
     {
         actionFunc: async (logFn?: LogFunction) => {

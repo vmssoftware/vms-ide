@@ -5,7 +5,7 @@ import { setExtensionContext } from "./context";
 import { configApi, configHelper, EnsureSettings } from "./ensure-settings";
 import { Perform } from "./performer";
 import { SourceHelper } from "./sync/get-source";
-import { StopSyncProject, SyncProject } from "./synchronize";
+import { Synchronizer } from "./sync/synchronizer";
 
 import { LogFunction, LogType } from "@vorfol/common";
 
@@ -40,17 +40,29 @@ export async function activate(context: ExtensionContext) {
         }}));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async () => {
-        return SyncProject(syncLog);
+        return Perform("save all", syncLog)
+            .then((saved) => {
+                if (saved) {
+                    return Perform("synchronize", syncLog);
+                }
+                return saved;
+            });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async () => {
-        return SyncProject(syncLog)
-                .then((syncOk) => {
-                    if (syncOk) {
-                        return Perform("build", buildLog);
-                    }
-                    return syncOk;
-                });
+        return Perform("save all", syncLog)
+            .then((saved) => {
+                if (saved) {
+                    return Perform("upload source", syncLog);
+                }
+                return saved;
+            })
+            .then((uploadOk) => {
+                if (uploadOk) {
+                    return Perform("build", buildLog);
+                }
+                return uploadOk;
+            });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async () => {
@@ -58,7 +70,7 @@ export async function activate(context: ExtensionContext) {
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopSync", async () => {
-        return StopSyncProject();
+        return Synchronizer.acquire().disableRemote();
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async () => {
@@ -71,7 +83,7 @@ export async function activate(context: ExtensionContext) {
                     return false;
                 }
             }).catch((err) => {
-                syncLog(LogType.error, () => String(err));
+                logFn(LogType.error, () => String(err));
                 return false;
             });
     }));

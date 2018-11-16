@@ -4,6 +4,7 @@
     "output.edit_count": "Отредактируйте и сохраните {0} файл(ов) самостоятельно",
     "debug.retcode": "Синхронизация вернула: {0}",
     "output.edit_settings": "Отредактируйте настройки",
+    "debug.upload.retcode": "Upload source retCode: {0}",
     "debug.download_listing.error": "Error while download listings {0}",
     "debug.download.error": "Error while download {0}",
     "debug.upload.error": "Error while upload {0}",

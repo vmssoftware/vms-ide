@@ -120,7 +120,7 @@ export class Synchronizer {
             const includes = [
                 this.projectSection.source,
                 this.projectSection.resource,
-                this.projectSection.listing,
+                // this.projectSection.listing,
                 this.projectSection.headers,
                 this.projectSection.builders,
             ];
@@ -167,6 +167,44 @@ export class Synchronizer {
         return false;
     }
 
+    public async uploadSource() {
+        if (!await this.prepareSources()) {
+            return false;
+        }
+        if (this.localSource
+            && this.remoteSource
+            && this.projectSection
+            && this.synchronizeSection
+            && this.sshHelper) {
+            // enable
+            this.enableRemote();
+            // clear password cache
+            this.sshHelper.clearPasswordCashe();
+            // get full list
+            const includes = [
+                this.projectSection.source,
+                // this.projectSection.resource,
+                // this.projectSection.listing,
+                this.projectSection.headers,
+                // this.projectSection.builders,
+            ];
+            const include = includes.join(",");
+            const [remoteList,
+                   localList] = await Promise.all([this.remoteSource.findFiles(include, this.projectSection.exclude),
+                                                   this.localSource.findFiles(include, this.projectSection.exclude)]);
+            // compare them
+            const compareResult = this.compareLists(localList, remoteList);
+            const retCode = await this.executeAction(compareResult.upload, "upload");
+            // end
+            this.decideDispose();
+            this.logFn(LogType.debug, () => localize("debug.upload.retcode", "Upload source retCode: {0}", retCode));
+            return retCode;
+        } else {
+            this.logFn(LogType.error, () => localize("output.edit_settings", "In first please edit settings"));
+        }
+        return false;
+    }
+
     /**
      * Download listing files, all (without "exculde")
      */
@@ -177,14 +215,17 @@ export class Synchronizer {
         if (this.remoteSource
             && this.localSource
             && this.projectSection) {
-                // const onlyOutFind = [this.projectSection.root, this.projectSection.outdir, "**", this.projectSection.listing].join(ftpPathSeparator);
                 const outdir = this.projectSection.outdir;
                 this.remoteSource.root += ftpPathSeparator + outdir;    // find only in output directory
-                const list = await this.remoteSource.findFiles(this.projectSection.listing);
-                // do not add outdir to the files in list! because remoteSource already has root pointed to outdir
                 const localRoot = this.localSource.root;
                 this.localSource.root += ftpPathSeparator + outdir;     // download exactly in output directory
-                return this.executeAction(list, "download")
+                const [remoteList, localList] =
+                    await Promise.all([this.remoteSource.findFiles(this.projectSection.listing),
+                                       this.localSource.findFiles(this.projectSection.listing)]);
+                // compare them
+                const compareResult = this.compareLists(localList, remoteList);
+                 // do not add outdir to the files in list! because remoteSource already has root pointed to outdir
+                return this.executeAction(compareResult.download, "download")
                     .catch((err) => {
                         this.logFn(LogType.debug, () => localize("debug.download_listing.error", "Error while download listings {0}", String(err)));
                         return false;
