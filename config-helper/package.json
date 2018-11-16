@@ -2,7 +2,7 @@
     "name": "config-helper",
     "displayName": "config-helper",
     "description": "Config helper",
-    "version": "0.1.29",
+    "version": "0.1.31",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -56,6 +56,11 @@
                     "type": "string",
                     "default": "test",
                     "description": "%configuration.test.description%"
+                },
+                "vmssoftware.config-helper.debug": {
+                    "type": "string",
+                    "default": "console",
+                    "description": "%configuration.debug.description%"
                 }
             }
         }

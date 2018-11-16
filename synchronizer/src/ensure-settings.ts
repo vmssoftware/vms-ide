@@ -1,4 +1,4 @@
-import { IConfig, IConfigHelper, IConfigSection } from "./ext-api/config";
+import { ConfigHelper, IConfig, IConfigHelper, IConfigSection } from "./ext-api/config";
 
 import { LogFunction, LogType } from "@vorfol/common";
 
@@ -11,6 +11,7 @@ sections.push(new ProjectSection());
 sections.push(new SynchronizeSection());
 
 export let settingsEnsured: boolean | undefined;
+export let configApi: typeof ConfigHelper | undefined;
 export let configHelper: IConfigHelper | undefined;
 export let synchronizerConfig: IConfig | undefined;
 
@@ -25,9 +26,9 @@ export async function EnsureSettings(debugLog?: LogFunction) {
         return settingsEnsured;
     }
     if (!synchronizerConfig) {
-        const api = await GetConfigHelperFromApi();
-        if (api) {
-            configHelper = api.getConfigHelper(sectionName);
+        configApi = await GetConfigHelperFromApi();
+        if (configApi) {
+            configHelper = configApi.getConfigHelper(sectionName);
             synchronizerConfig = configHelper.getConfig();
             synchronizerConfig.onDidLoad(() => {
                 if (debugLog) {

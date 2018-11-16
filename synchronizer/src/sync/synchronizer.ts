@@ -5,7 +5,7 @@ import { GetSshHelperFromApi } from "../config/get-ssh-helper";
 import { IProjectSection, ProjectSection } from "../config/sections/project";
 import { ISynchronizeSection, SynchronizeSection } from "../config/sections/synchronize";
 
-import { Delay } from "@vorfol/common";
+import { Barrier, Delay } from "@vorfol/common";
 import { LogFunction, LogType } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
 import { IFileEntry } from "@vorfol/common";
@@ -40,6 +40,7 @@ export class Synchronizer {
     private sshHelper?: SshHelper;
     private remoteSource?: ISource;
     private localSource?: ISource;
+    private transferBarrier = new Barrier(10);
     // private acquires = 0;
 
     private projectSection?: IProjectSection;
@@ -536,6 +537,7 @@ export class Synchronizer {
      * @param date date
      */
     private async transferFile(from: ISource, to: ISource, file: string, date: Date) {
+        await this.transferBarrier.acquire();
         let dir = "";
         const dirInFileEnd = file.lastIndexOf(ftpPathSeparator);
         if (dirInFileEnd !== -1) {
@@ -550,6 +552,10 @@ export class Synchronizer {
                     return to.setDate(file, date);
                 }
                 return false;
+            })
+            .then((done) => {
+                this.transferBarrier.release();
+                return done;
             });
     }
 

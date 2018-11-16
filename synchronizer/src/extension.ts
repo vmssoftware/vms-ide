@@ -2,22 +2,31 @@
 import { commands, env, ExtensionContext, window } from "vscode";
 
 import { setExtensionContext } from "./context";
-import { configHelper, EnsureSettings } from "./ensure-settings";
-import { createLogFunction } from "./log";
+import { configApi, configHelper, EnsureSettings } from "./ensure-settings";
 import { Perform } from "./performer";
 import { SourceHelper } from "./sync/get-source";
 import { StopSyncProject, SyncProject } from "./synchronize";
 
-import { LogType } from "@vorfol/common";
-
-const syncLog = createLogFunction("OpenVMS synchronizer");
-const buildLog = createLogFunction("OpenVMS builder");
+import { LogFunction, LogType } from "@vorfol/common";
 
 const locale = env.language ;
 import * as nls from "vscode-nls";
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
+// tslint:disable-next-line:no-empty
+let logFn: LogFunction = () => {};
+
 export async function activate(context: ExtensionContext) {
+
+    const apiLoaded = await EnsureSettings();
+    if (!apiLoaded || configApi === undefined) {
+        return undefined;
+    }
+
+    const syncLog = configApi.createLogFunction("OpenVMS synchronizer");
+    const buildLog = configApi.createLogFunction("OpenVMS builder");
+
+    logFn = syncLog;
 
     setExtensionContext(context);
 
@@ -72,5 +81,5 @@ export async function activate(context: ExtensionContext) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    syncLog(LogType.debug, () => localize("debug.deactivated", "OpenVMS extension is deactivated"));
+    logFn(LogType.debug, () => localize("debug.deactivated", "OpenVMS extension is deactivated"));
 }

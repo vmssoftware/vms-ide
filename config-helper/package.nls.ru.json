@@ -6,5 +6,6 @@
 	"configuration.fs.description": "Использовать файловую систему",
 	"configuration.vfs.description": "Использовать виртуальную файловую систему VS Code",
 	"configuration.type.description": "Место хранения конфигурации",
+	"configuration.debug.description": "Debug output to, 'console' or folder",
 	"configuration.test.description": "Тест"
 }

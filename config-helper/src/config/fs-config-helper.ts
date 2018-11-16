@@ -4,6 +4,7 @@ import { Disposable, FileSystemWatcher, Uri, workspace } from "vscode";
 
 import { Debouncer, LogFunction, LogType } from "@vorfol/common";
 
+import { createLogFunction } from "../log";
 import { ConfigHelper, IConfig, IConfigEditor, IConfigStorage } from "./config";
 import { ConfigPool } from "./config-pool";
 import { DummyEditor } from "./dummy-editor";
@@ -27,6 +28,10 @@ export class FSConfigHelper implements ConfigHelper {
         }
         const retInstance = FSConfigHelper.instances.get(section)!;
         return retInstance;
+    }
+
+    public static createLogFunction(channelName: string): LogFunction {
+        return createLogFunction(channelName);
     }
 
     private static readonly folder = ".vscode";

@@ -6,5 +6,6 @@
     "configuration.fs.description": "Use File System",
     "configuration.vfs.description": "Use VS Code virtual File System",
     "configuration.type.description": "Type of config",
+    "configuration.debug.description": "Debug output to, 'console' or folder",
     "configuration.test.description": "Test"
 }

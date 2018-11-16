@@ -4,15 +4,16 @@ import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
 
 import { IConfigHelper } from "./config/config";
 import { FSConfigHelper } from "./config/fs-config-helper";
-import { TestSection } from "./config/test-section";
+import { ConfigHelperSection } from "./config/test-section";
 import { VFSConfigHelper } from "./config/vfs-config-helper";
 import { VSCConfigHelper } from "./config/vsc-config-helper";
+import { createLogFunction } from "./log";
 
 const locale = vscode.env.language ;
 import * as nls from "vscode-nls";
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
-const logFn = logConsoleFn;
+const logFn = createLogFunction("VMS config");
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -37,12 +38,12 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push( vscode.commands.registerCommand("vmssoftware.config-helper.test", async () => {
         //
         const configHelper: IConfigHelper = configHelperType.getConfigHelper("vmssoftware", logFn);
-        let test = await configHelper.getConfig().get(TestSection.section);
-        if (!TestSection.is(test)) {
-            configHelper.getConfig().add(new TestSection());
-            test = await configHelper.getConfig().get(TestSection.section);
+        let test = await configHelper.getConfig().get(ConfigHelperSection.section);
+        if (!ConfigHelperSection.is(test)) {
+            configHelper.getConfig().add(new ConfigHelperSection());
+            test = await configHelper.getConfig().get(ConfigHelperSection.section);
         }
-        if (TestSection.is(test)) {
+        if (ConfigHelperSection.is(test)) {
             test.test = "passed";
             configHelper.getConfig().save();
         }

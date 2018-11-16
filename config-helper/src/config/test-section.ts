@@ -1,24 +1,27 @@
 import { IConfigData, IConfigSection } from "./config";
 
-export class TestSection implements IConfigSection {
+export class ConfigHelperSection implements IConfigSection {
 
     public static readonly section = "config-helper";
 
-    public static is(candidate: any): candidate is TestSection {
+    public static is(candidate: any): candidate is ConfigHelperSection {
         return !!candidate &&
+        typeof candidate.debug === "string" &&
         typeof candidate.test === "string" &&
         typeof candidate.using === "string";
     }
 
+    public debug: string = "console";
     public test: string = "test";
     public using: "FS" | "VSC" | "VFS" = "FS";
 
     public name(): string {
-        return TestSection.section;
+        return ConfigHelperSection.section;
     }
 
     public store(): IConfigData {
         return {
+            debug: this.debug,
             test: this.test,
             using: this.using,
         };
@@ -29,7 +32,8 @@ export class TestSection implements IConfigSection {
     }
 
     public fillFrom(data: IConfigData): boolean {
-        if (TestSection.is(data)) {
+        if (ConfigHelperSection.is(data)) {
+            this.debug = data.debug;
             this.test = data.test;
             switch (data.using) {
                 case "FS":

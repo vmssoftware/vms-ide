@@ -33,20 +33,21 @@ export class VmsSource extends SftpSource {
         const converter = new VmsPathConverter(vmsFileName);
         const dateTry = this.timeOffsetInSeconds ? new Date(date.valueOf() + this.timeOffsetInSeconds * 1000) : date;
         let   dateString = VmsAbsoluteDateString(dateTry);
+        this.logFn(LogType.debug, () => `=== Try set time for "${filename}" when offset is <${this.timeOffsetInSeconds}>`);
         let   strCmd = setFileDates(converter.fullPath, dateString, dateString);
         const timeSet = await this.tryExec(strCmd, setFileErrorResponse);
         if (timeSet) {
             const dateActual = await this.getDate(filename);
             if (dateActual !== undefined) {
                 // if they still are not the same, do correct offset
-                let diff = (date.valueOf() - dateActual.valueOf()) / 1000;
+                const diff = (date.valueOf() - dateActual.valueOf()) / 1000;
                 if (Math.abs(diff) > 1) {
-                    diff = Math.round(diff);
                     if (this.timeOffsetInSeconds === undefined) {
-                        this.timeOffsetInSeconds = diff;
+                        this.timeOffsetInSeconds = Math.round(diff);
                     }
-                    const dateFinal = new Date(date.valueOf() + diff * 1000);
+                    const dateFinal = new Date(dateTry.valueOf() + diff * 1000);
                     dateString = VmsAbsoluteDateString(dateFinal);
+                    this.logFn(LogType.debug, () => `=== SECOND TRY set time for "${filename}" when offset is <${this.timeOffsetInSeconds}> and diff is <${diff}>`);
                     strCmd = setFileDates(converter.fullPath, dateString, dateString);
                     return this.tryExec(strCmd, setFileErrorResponse);
                 }
@@ -79,8 +80,8 @@ export class VmsSource extends SftpSource {
             const result = await this.shell.execCmd(command);
             if (result) {
                 const error = result.some((s) => s.startsWith(errorResponse));
-                if (error && this.debugLog) {
-                    this.debugLog(LogType.debug, () => `ERROR: ${command} => ${result}`);
+                if (error) {
+                    this.logFn(LogType.debug, () => `ERROR: ${command} => ${result}`);
                 } else {
                     return true;    // good return here
                 }
@@ -88,6 +89,7 @@ export class VmsSource extends SftpSource {
                 break;
             }
         } while (--attempts);
+        this.logFn(LogType.error, () => `ERROR: ${command} failed`);
         return false;
     }
 

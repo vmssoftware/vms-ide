@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.20",
+    "version": "0.1.21",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -156,15 +156,15 @@
         "dir": "dir ..\\ssh-helper\\out"
     },
     "dependencies": {
-        "@vorfol/common": "0.0.18",
-        "fs-extra": "^7.0.0",
+        "@vorfol/common": "0.0.19",
+        "fs-extra": "^7.0.1",
         "micromatch": "^3.1.10",
         "vscode-nls": "^4.0.0"
     },
     "devDependencies": {
         "@types/micromatch": "^3.1.0",
         "@types/mocha": "^5.2.5",
-        "@types/node": "^8.1.0",
+        "@types/node": "^8.10.38",
         "del": "^3.0.0",
         "event-stream": "^4.0.1",
         "gulp": "^3.9.1",
@@ -172,8 +172,8 @@
         "gulp-typescript": "^5.0.0-alpha.3",
         "run-sequence": "^2.2.1",
         "tslint": "^5.11.0",
-        "typescript": "^3.x.x",
-        "vsce": "^1.52.0",
+        "typescript": "^3.1.6",
+        "vsce": "^1.53.0",
         "vscode": "^1.1.21",
         "vscode-nls-dev": "github:vorfol/vscode-nls-dev"
     }

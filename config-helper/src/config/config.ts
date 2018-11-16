@@ -1,3 +1,4 @@
+import { LogFunction } from "@vorfol/common";
 import { Disposable } from "vscode";
 import { Event } from "vscode";
 
@@ -110,6 +111,7 @@ export interface IConfigHelper extends Disposable {
  */
 export declare class ConfigHelper implements IConfigHelper {
     public static getConfigHelper(section: string): IConfigHelper;
+    public static createLogFunction(channelName: string): LogFunction;
     public getConfig(): IConfig;
     public getEditor(): IConfigEditor;
     public dispose(): void;
