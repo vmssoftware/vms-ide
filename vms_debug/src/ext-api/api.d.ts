@@ -79,6 +79,7 @@ export interface IConnectionSection {
     port: number;
     username: string;
     password?: string;
+    keyFile?: string;
 }
 export interface ITimeoutsSection {
     cmdTimeout: number;
@@ -102,5 +103,6 @@ export interface IConnectConfigResolver<T extends any> {
     clearCache(): boolean;
 }
 export interface IConnectConfig extends IConnectionSection {
+    privateKey?: Buffer | string;
 }
 //# sourceMappingURL=api.d.ts.map

@@ -9,6 +9,7 @@ export function createLogFunction(channelName: string): LogFunction {
 
     const config = workspace.getConfiguration("vmssoftware.config-helper");
     const debug = config.get<string>("debug");
+    const addCaleeInfo = config.get<boolean>("addCalleeInfo");
 
     // tslint:disable-next-line:no-empty
     let fnDebugOut: ((s: string) => void) | undefined;
@@ -47,18 +48,21 @@ export function createLogFunction(channelName: string): LogFunction {
 
     let strQueue: string[] = [];
 
-    return function logVsCode(type: LogType, message: LogResult, show?: boolean ) {
+    return function logVsCode(type: LogType, message: LogResult, show?: boolean, addStackLevel?: number ) {
         switch (type) {
             case LogType.debug:
                 if (debug) {
                     // user chose do not ignore debug messages
-                    const err = new Error();
                     let place: string | undefined;
-                    if (err.stack) {
-                        const lines = err.stack.split("at ");
-                        if (lines.length > 2) {
-                            // TODO: format it any how...
-                            place = lines[2].trim();
+                    if (addCaleeInfo) {
+                        const err = new Error();
+                        if (err.stack) {
+                            addStackLevel = addStackLevel ? addStackLevel + 2 : 2;
+                            const lines = err.stack.split("at ");
+                            if (lines.length > addStackLevel) {
+                                // TODO: format it any how...
+                                place = lines[addStackLevel].trim();
+                            }
                         }
                     }
                     if (fnDebugOut) {

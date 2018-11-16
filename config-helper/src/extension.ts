@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 
-import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
+import { LogType } from "@vorfol/common";
 
 import { IConfigHelper } from "./config/config";
+import { ConfigHelperSection } from "./config/config-hepler-section";
 import { FSConfigHelper } from "./config/fs-config-helper";
-import { ConfigHelperSection } from "./config/test-section";
 import { VFSConfigHelper } from "./config/vfs-config-helper";
 import { VSCConfigHelper } from "./config/vsc-config-helper";
 import { createLogFunction } from "./log";

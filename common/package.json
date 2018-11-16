@@ -1,6 +1,6 @@
 {
   "name": "@vorfol/common",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "Common",
   "main": "out/main",
   "scripts": {

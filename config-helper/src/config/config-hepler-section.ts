@@ -6,12 +6,14 @@ export class ConfigHelperSection implements IConfigSection {
 
     public static is(candidate: any): candidate is ConfigHelperSection {
         return !!candidate &&
+        typeof candidate.addCalleeInfo === "boolean" &&
         typeof candidate.debug === "string" &&
         typeof candidate.test === "string" &&
         typeof candidate.using === "string";
     }
 
-    public debug: string = "console";
+    public addCalleeInfo: boolean = false;
+    public debug: string = "";
     public test: string = "test";
     public using: "FS" | "VSC" | "VFS" = "FS";
 
@@ -21,6 +23,7 @@ export class ConfigHelperSection implements IConfigSection {
 
     public store(): IConfigData {
         return {
+            addCalleeInfo: this.addCalleeInfo,
             debug: this.debug,
             test: this.test,
             using: this.using,
@@ -33,6 +36,7 @@ export class ConfigHelperSection implements IConfigSection {
 
     public fillFrom(data: IConfigData): boolean {
         if (ConfigHelperSection.is(data)) {
+            this.addCalleeInfo = data.addCalleeInfo;
             this.debug = data.debug;
             this.test = data.test;
             switch (data.using) {

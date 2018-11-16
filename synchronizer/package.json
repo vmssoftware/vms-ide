@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.22",
+    "version": "0.1.23",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -172,7 +172,7 @@
         "vscode-nls-dev": "github:vorfol/vscode-nls-dev"
     },
     "dependencies": {
-        "@vorfol/common": "0.0.19",
+        "@vorfol/common": "^0.0.20",
         "fs-extra": "^7.0.1",
         "micromatch": "^3.1.10",
         "vscode-nls": "^4.0.0"
