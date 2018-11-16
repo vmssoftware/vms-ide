@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.21",
+    "version": "0.1.22",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -155,12 +155,6 @@
         "get-ext-api": "PowerShell copy -Path ..\\ssh-helper\\out\\api.d.ts, ..\\ssh-helper\\out\\ssh-helper.d.ts, ..\\config-helper\\out\\config\\config.d.ts -Destination src\\ext-api\\",
         "dir": "dir ..\\ssh-helper\\out"
     },
-    "dependencies": {
-        "@vorfol/common": "0.0.19",
-        "fs-extra": "^7.0.1",
-        "micromatch": "^3.1.10",
-        "vscode-nls": "^4.0.0"
-    },
     "devDependencies": {
         "@types/micromatch": "^3.1.0",
         "@types/mocha": "^5.2.5",
@@ -176,5 +170,11 @@
         "vsce": "^1.53.0",
         "vscode": "^1.1.21",
         "vscode-nls-dev": "github:vorfol/vscode-nls-dev"
+    },
+    "dependencies": {
+        "@vorfol/common": "0.0.19",
+        "fs-extra": "^7.0.1",
+        "micromatch": "^3.1.10",
+        "vscode-nls": "^4.0.0"
     }
 }
