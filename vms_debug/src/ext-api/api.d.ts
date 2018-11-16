@@ -79,6 +79,7 @@ export interface IConnectionSection {
     port: number;
     username: string;
     password?: string;
+    keyFile?: string;
 }
 export interface ITimeoutsSection {
     cmdTimeout: number;

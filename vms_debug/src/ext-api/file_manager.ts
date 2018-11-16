@@ -59,7 +59,8 @@ export class FileManagerExt
 			{
 				if(this.sshHelper.connectionSection)
 				{
-					if(this.sshHelper.connectionSection.password === "")
+					if(this.sshHelper.connectionSection.password === "" &&
+						this.sshHelper.connectionSection.keyFile === "")
 					{
 						if(this.sshHelper.connectConfigResolver)
 						{

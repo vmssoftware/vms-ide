@@ -45,7 +45,6 @@ export class VMSRuntimeRun extends EventEmitter
 		if(this.statusProgram === true)
 		{
 			this.shell.SendCommand(this.osCmd.killProgram());
-			this.statusProgram = false;
 		}
 	}
 
@@ -85,12 +84,13 @@ export class VMSRuntimeRun extends EventEmitter
 			{
 				vscode.debug.activeDebugConsole.append(data);
 
-				if(this.shell.getStatusCommand())
+				if(this.shell.getStatusCommand() && this.statusProgram)
 				{
 					this.statusProgram = false;
-					this.sendEvent('end');
 					const message = localize('runtime.program_end', "Program complete!");
 					vscode.debug.activeDebugConsole.append(message + "\n\n");
+					vscode.window.showWarningMessage(message);
+					this.sendEvent('end');
 				}
 			}
 		}
