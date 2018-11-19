@@ -183,10 +183,10 @@ export class Synchronizer {
             // get full list
             const includes = [
                 this.projectSection.source,
-                // this.projectSection.resource,
+                this.projectSection.resource,
                 // this.projectSection.listing,
                 this.projectSection.headers,
-                // this.projectSection.builders,
+                this.projectSection.builders,
             ];
             const include = includes.join(",");
             const [remoteList,
