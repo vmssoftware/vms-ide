@@ -103,5 +103,6 @@ export interface IConnectConfigResolver<T extends any> {
     clearCache(): boolean;
 }
 export interface IConnectConfig extends IConnectionSection {
+    privateKey?: Buffer | string;
 }
 //# sourceMappingURL=api.d.ts.map

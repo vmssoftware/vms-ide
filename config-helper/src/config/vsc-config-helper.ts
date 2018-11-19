@@ -2,6 +2,7 @@ import { Disposable, workspace } from "vscode";
 
 import { Debouncer, LogFunction, LogType } from "@vorfol/common";
 
+import { createLogFunction } from "../log";
 import { ConfigHelper, IConfig, IConfigEditor, IConfigStorage } from "./config";
 import { ConfigPool } from "./config-pool";
 import { VSCWorkspaceConfigEditor } from "./vsc-editor";
@@ -23,9 +24,13 @@ export class VSCConfigHelper implements ConfigHelper {
         return VSCConfigHelper.instances.get(section)!;
     }
 
-    public logFn: LogFunction;
+    public static createLogFunction(channelName: string): LogFunction {
+        return createLogFunction(channelName);
+    }
 
     private static instances: Map<string, VSCConfigHelper> = new Map<string, VSCConfigHelper>();
+
+    public logFn: LogFunction;
 
     protected config: ConfigPool;
     protected storage: IConfigStorage;

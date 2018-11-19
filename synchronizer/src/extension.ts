@@ -2,22 +2,31 @@
 import { commands, env, ExtensionContext, window } from "vscode";
 
 import { setExtensionContext } from "./context";
-import { configHelper, EnsureSettings } from "./ensure-settings";
-import { createLogFunction } from "./log";
+import { configApi, configHelper, EnsureSettings } from "./ensure-settings";
 import { Perform } from "./performer";
 import { SourceHelper } from "./sync/get-source";
-import { StopSyncProject, SyncProject } from "./synchronize";
+import { Synchronizer } from "./sync/synchronizer";
 
-import { LogType } from "@vorfol/common";
-
-const syncLog = createLogFunction("OpenVMS synchronizer");
-const buildLog = createLogFunction("OpenVMS builder");
+import { LogFunction, LogType } from "@vorfol/common";
 
 const locale = env.language ;
 import * as nls from "vscode-nls";
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
+// tslint:disable-next-line:no-empty
+let logFn: LogFunction = () => {};
+
 export async function activate(context: ExtensionContext) {
+
+    const apiLoaded = await EnsureSettings();
+    if (!apiLoaded || configApi === undefined) {
+        return undefined;
+    }
+
+    const syncLog = configApi.createLogFunction("OpenVMS synchronizer");
+    const buildLog = configApi.createLogFunction("OpenVMS builder");
+
+    logFn = syncLog;
 
     setExtensionContext(context);
 
@@ -31,17 +40,29 @@ export async function activate(context: ExtensionContext) {
         }}));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async () => {
-        return SyncProject(syncLog);
+        return Perform("save all", syncLog)
+            .then((saved) => {
+                if (saved) {
+                    return Perform("synchronize", syncLog);
+                }
+                return saved;
+            });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async () => {
-        return SyncProject(syncLog)
-                .then((syncOk) => {
-                    if (syncOk) {
-                        return Perform("build", buildLog);
-                    }
-                    return syncOk;
-                });
+        return Perform("save all", syncLog)
+            .then((saved) => {
+                if (saved) {
+                    return Perform("upload source", syncLog);
+                }
+                return saved;
+            })
+            .then((uploadOk) => {
+                if (uploadOk) {
+                    return Perform("build", buildLog);
+                }
+                return uploadOk;
+            });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async () => {
@@ -49,7 +70,7 @@ export async function activate(context: ExtensionContext) {
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopSync", async () => {
-        return StopSyncProject();
+        return Synchronizer.acquire().disableRemote();
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async () => {
@@ -62,7 +83,7 @@ export async function activate(context: ExtensionContext) {
                     return false;
                 }
             }).catch((err) => {
-                syncLog(LogType.error, () => String(err));
+                logFn(LogType.error, () => String(err));
                 return false;
             });
     }));
@@ -72,5 +93,5 @@ export async function activate(context: ExtensionContext) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    syncLog(LogType.debug, () => localize("debug.deactivated", "OpenVMS extension is deactivated"));
+    logFn(LogType.debug, () => localize("debug.deactivated", "OpenVMS extension is deactivated"));
 }

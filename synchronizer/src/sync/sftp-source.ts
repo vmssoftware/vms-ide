@@ -8,8 +8,6 @@ import { ISource } from "./source";
 
 export class SftpSource implements ISource {
 
-    private ftpLikeRoot = "";
-
     public get root() {
         return this.ftpLikeRoot;
     }
@@ -17,14 +15,6 @@ export class SftpSource implements ISource {
     public set root(anyRoot: string | undefined) {
         anyRoot = anyRoot || "";
         this.ftpLikeRoot = anyRoot.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
-    }
-
-    constructor(protected sftp: ISftpClient, root?: string, public debugLog?: LogFunction, public attempts?: number) {
-        this.root = root;
-    }
-
-    public dispose() {
-        this.sftp.dispose();
     }
 
     public get enabled() {
@@ -35,9 +25,23 @@ export class SftpSource implements ISource {
         this.sftp.enabled = action;
     }
 
+    public logFn: LogFunction;
+
+    private ftpLikeRoot = "";
+
+    constructor(protected sftp: ISftpClient, root?: string, logFn?: LogFunction, public attempts?: number) {
+        // tslint:disable-next-line:no-empty
+        this.logFn = logFn || (() => {});
+        this.root = root;
+    }
+
+    public dispose() {
+        this.sftp.dispose();
+    }
+
     public findFiles(include: string, exclude: string): Promise<IFileEntry[]> {
         // we sure the root exists
-        return findFiles(this.sftp, this.root!, include, exclude, this.debugLog).then((list) => {
+        return findFiles(this.sftp, this.root!, include, exclude, this.logFn).then((list) => {
             let pos = this.root!.length;
             if (pos > 0) {
                 pos += ftpPathSeparator.length;

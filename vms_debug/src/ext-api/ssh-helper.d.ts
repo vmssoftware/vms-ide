@@ -5,6 +5,8 @@ export declare class SshHelper {
     readonly section: string;
     private configHelper?;
     private config?;
+    private configIsInvalid;
+    private didLoadDispose?;
     onDidLoadConfig?: Event<null>;
     logFn: LogFunction;
     connectionSection?: IConnectionSection;

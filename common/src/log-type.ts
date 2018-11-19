@@ -8,4 +8,4 @@ export enum LogType {
 
 export type LogResult= () => string;
 
-export type LogFunction = (type: LogType, message: LogResult, show?: boolean) => void;
+export type LogFunction = (type: LogType, message: LogResult, show?: boolean, addStackLevel?: number) => void;
