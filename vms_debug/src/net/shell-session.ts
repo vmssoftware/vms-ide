@@ -126,55 +126,58 @@ export class ShellSession
         }
         else if(data.includes("\x00") && (data.includes(this.promptCmd) || data.includes("DBG> ")))
         {
-            if(data.includes("DBG> "))
+            if(this.receiveCmd)
             {
-                if(this.mode === ModeWork.shell)
+                if(data.includes("DBG> "))
                 {
-                    this.resultData = "";
+                    if(this.mode === ModeWork.shell)
+                    {
+                        this.resultData = "";
+                    }
+                    else
+                    {
+                        let indexEnd = data.indexOf("\x00");
+                        data = data.substr(0, indexEnd-1);
+                        data = data.trim();
+
+                        if(data !== "")
+                        {
+                            if(this.resultData === "")
+                            {
+                                this.resultData = "D:";
+                            }
+
+                            this.resultData += data;
+                        }
+                    }
+
+                    this.mode = ModeWork.debug;
                 }
                 else
                 {
-                    let indexEnd = data.indexOf("\x00");
-                    data = data.substr(0, indexEnd-1);
-                    data = data.trim();
-
-                    if(data !== "")
+                    if(this.currentCmd.getBody() !== "")
                     {
-                        if(this.resultData === "")
-                        {
-                            this.resultData = "D:";
-                        }
+                        let indexEnd = data.indexOf("\x00");
+                        data = data.substr(0, indexEnd-1);
 
-                        this.resultData += data;
+                        this.resultData += data + "> ";
                     }
+
+                    this. mode = ModeWork.shell;
                 }
 
-                this.mode = ModeWork.debug;
-            }
-            else
-            {
-                if(this.currentCmd.getBody() !== "")
+                this.readyCmd = true;
+
+                if(this.resultData !== "")
                 {
-                    let indexEnd = data.indexOf("\x00");
-                    data = data.substr(0, indexEnd-1);
-
-                    this.resultData += data + "> ";
+                    this.extensionDataCb(this.resultData, this.mode);
+                    this.resultData = "";
                 }
 
-                this. mode = ModeWork.shell;
-            }
-
-            this.readyCmd = true;
-
-            if(this.resultData !== "")
-            {
-                this.extensionDataCb(this.resultData, this.mode);
-                this.resultData = "";
-            }
-
-            if(this.queueCmd.size() > 0)
-            {
-                this.SendCommandToQueue(this.queueCmd.pop());
+                if(this.queueCmd.size() > 0)
+                {
+                    this.SendCommandToQueue(this.queueCmd.pop());
+                }
             }
         }
         else
