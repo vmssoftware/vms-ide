@@ -32,7 +32,8 @@ const rgxMsgFileAbort = /For target (.*), (.*)$/;
 const rgxMsgInfoMessages = [
     /\d+ (catastrophic )?error(s?) detected in the compilation of/,
     /Compilation terminated/,
-]
+];
+
 const mmsExt = ".MMS";
 
 const lineStartRgx = [
@@ -61,24 +62,41 @@ export function consolidateOutputLines(output: string[], shellWidth?: number) {
     return retLines;
 }
 
+function isVmsSeverity(o: any): o is VmsSeverity {
+    return Object.values(VmsSeverity).includes(o);
+}
+
 export function parseVmsOutput(output: string[], shellWidth?: number) {
     const lines = consolidateOutputLines(output, shellWidth);
-    const result: IPartialDiagnostics[] = [];
-    lines.reduce(findCxxErrors, result);
-    lines.reduce(findMmsErrors, result);
+    const problems: IPartialDiagnostics[] = [];
 
-    return result;
-
-    function isVmsSeverity(o: any): o is VmsSeverity {
-        return Object.values(VmsSeverity).includes(o);
+    let i = 0;
+    while (i < lines.length) {
+        let consumed = findCxxErrors(i);
+        if (!consumed) {
+            consumed = findMmsErrors(i);
+        }
+        if (consumed) {
+            lines.splice(i, consumed);
+        } else {
+            i++;
+        }
     }
 
-    function findCxxErrors(problems: IPartialDiagnostics[], line: string, idx: number) {
+    return { problems, lines } ;
+
+    /**
+     * returns consumed lines
+     */
+    function findCxxErrors(idx: number) {
+        let consumed = 0;
+        const line = lines[idx];
         const matched = line.match(rgxMsgCXX);
         if (matched) {
+            consumed++;
             if (rgxMsgInfoMessages.some((rgx) => rgx.test(matched[6]))) {
                 // skip summary information
-                return problems;
+                return consumed;
             }
             const diagnostic: IPartialDiagnostics = {
                 facility: matched[3],
@@ -90,7 +108,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
             }
             if (// diagnostic.severity === VmsSeverity.information ||
                 diagnostic.severity === VmsSeverity.success) {
-                    return problems;
+                    return consumed;
             }
             diagnostic.type = matched[5];
             diagnostic.message = matched[6];
@@ -103,9 +121,10 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                 }
             }
             // get file and line
-            let posNext = idx + 1;
-            while (posNext < lines.length) {
-                const nextLine = lines[posNext];
+            idx++;
+            consumed++;
+            while (idx < lines.length) {
+                const nextLine = lines[idx];
                 const nextLineMathed = nextLine.match(rgxPlaceCXX);
                 if (nextLineMathed) {
                     diagnostic.line = parseInt(nextLineMathed[1], 10);
@@ -115,17 +134,21 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                     break;
                 } else {
                     diagnostic.message += nextLine;
-                    posNext ++;
+                    idx++;
+                    consumed++;
                 }
             }
             problems.push(diagnostic);
         }
-        return problems;
+        return consumed;
     }
 
-    function findMmsErrors(problems: IPartialDiagnostics[], line: string, idx: number) {
+    function findMmsErrors(idx: number) {
+        let consumed = 0;
+        const line = lines[idx];
         const matched = line.match(rgxMsgMMS);
         if (matched) {
+            consumed++;
             const diagnostic: IPartialDiagnostics = {
                 facility: matched[3],
                 severity: VmsSeverity.information,
@@ -141,14 +164,6 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                 diagnostic.file = matchFile[2];
                 diagnostic.message = matchFile[1];
             }
-            // we don't need file from such messages
-            // if (diagnostic.file === undefined) {
-            //     matchFile = diagnostic.message.match(rgxMsgFileAbort);
-            //     if (matchFile) {
-            //         diagnostic.file = matchFile[1];
-            //         diagnostic.message = matchFile[2];
-            //     }
-            // }
             if (diagnostic.file) {
                 const converter = VmsPathConverter.fromVms(diagnostic.file);
                 if (converter.file.includes(".")) {
@@ -159,6 +174,6 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
             }
             problems.push(diagnostic);
         }
-        return problems;
+        return consumed;
     }
 }
