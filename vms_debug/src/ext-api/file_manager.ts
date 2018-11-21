@@ -66,9 +66,9 @@ export class FileManagerExt
 						{
 							let connection = this.sshHelper.connectConfigResolver.testConnectConfig(this.sshHelper.connectionSection);
 
-							if(connection.settengs)
+							if(connection.settings)
 							{
-								return connection.settengs;
+								return connection.settings;
 							}
 							else
 							{

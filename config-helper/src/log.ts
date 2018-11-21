@@ -4,6 +4,54 @@ import * as path from "path";
 import { LogFunction, LogResult, LogType } from "@vorfol/common";
 import { window, workspace } from "vscode";
 
+let strQueue: string[] = [];
+let fnDebugToFile: ((s: string) => void) | undefined;
+let waitFnCreated = false;
+let dir = "";
+
+function debugToFile(s: string) {
+    if (fnDebugToFile) {
+        fnDebugToFile(s);
+        return;
+    }
+    strQueue.push(s);
+    if (waitFnCreated) {
+        return;
+    }
+    waitFnCreated = true;
+    fs.stat(dir, (err, stat) => {
+        if (!err && stat) {
+            if (stat.isDirectory()) {
+                const now = new Date();
+                const parts = [
+                    now.getFullYear(),
+                    now.getMonth(),
+                    now.getDate(),
+                ];
+                const logFileName = path.join(dir, parts.join("_") + ".log");
+                const stream = fs.createWriteStream(logFileName, {
+                    flags: "a",
+                });
+                fnDebugToFile = (str: string) => {
+                    try {
+                        stream.write(str);
+                        stream.write("\n");
+                    } catch (err) {
+                        // tslint:disable-next-line:no-console
+                        console.log(err);
+                        fnDebugToFile = undefined;
+                    }
+                };
+                for (const str of strQueue) {
+                    fnDebugToFile(str);
+                }
+                strQueue = [];
+            }
+        }
+        waitFnCreated = false;
+    });
+}
+
 export function createLogFunction(channelName: string): LogFunction {
     const channel = window.createOutputChannel(channelName);
 
@@ -11,42 +59,17 @@ export function createLogFunction(channelName: string): LogFunction {
     const debug = config.get<string>("debug");
     const addCaleeInfo = config.get<boolean>("addCalleeInfo");
 
-    // tslint:disable-next-line:no-empty
-    let fnDebugOut: ((s: string) => void) | undefined;
+    let fnDebugOut: ((s: string) => void);
     if (debug !== undefined) {
         if (debug.toLowerCase() === "console") {
             // tslint:disable-next-line:no-console
             fnDebugOut = console.log;
         } else {
-            fs.stat(debug, (err, stat) => {
-                if (!err && stat) {
-                    if (stat.isDirectory()) {
-                        const now = new Date();
-                        const parts = [
-                            now.getFullYear(),
-                            now.getMonth(),
-                            now.getDate(),
-                        ];
-                        const logFileName = path.join(debug, parts.join("_") + ".log");
-                        const stream = fs.createWriteStream(logFileName, {
-                            flags: "a",
-                        });
-                        fnDebugOut = (s: string) => {
-                            try {
-                                stream.write(s);
-                                stream.write("\n");
-                            } catch (err) {
-                                fnDebugOut = undefined;
-                            }
-                        };
-                        fnDebugOut(`\nStart debug LOG for "${channelName}" : ${now.toLocaleString()}\n`);
-                    }
-                }
-            });
+            dir = debug;
+            fnDebugOut = debugToFile;
+            fnDebugOut(`\nStart debug LOG for "${channelName}" : ${new Date().toLocaleString()}\n`);
         }
     }
-
-    let strQueue: string[] = [];
 
     return function logVsCode(type: LogType, message: LogResult, show?: boolean, addStackLevel?: number ) {
         switch (type) {
@@ -65,22 +88,10 @@ export function createLogFunction(channelName: string): LogFunction {
                             }
                         }
                     }
-                    if (fnDebugOut) {
-                        for (const str of strQueue) {
-                            fnDebugOut(str);
-                        }
-                        strQueue = [];
-                        if (place) {
-                            fnDebugOut(place);
-                        }
-                        fnDebugOut(message());
-                    } else {
-                        // we are waiting for file is opened
-                        if (place) {
-                            strQueue.push(place);
-                        }
-                        strQueue.push(message());
+                    if (place) {
+                        fnDebugOut(place);
                     }
+                    fnDebugOut(message());
                 }
                 break;
             default:

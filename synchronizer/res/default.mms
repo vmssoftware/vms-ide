@@ -1,11 +1,6 @@
+
 ! MMS - run with /EXTENDED_SYNTAX qualifier
 .SILENT
-
-! Project constants, files must be defined as VMS paths
-! OUTDIR
-! NAME
-! INCLUDES
-! SOURCES
 
 ! Debug or Release
 .IF DEBUG
@@ -39,8 +34,3 @@ OBJECTS = $(JOIN $(PATSUBST *,[*],$(PATSUBST *[*],**,$(SUBST [],,$(ADDPREFIX $(O
 [$(OUT_DIR)]$(NAME).exe DEPENDS_ON $(OBJECTS)
     $(LINK) $(LINKFLAGS) $(MMS$SOURCE_LIST)
 
-$(OBJECTS) DEPENDS_ON $(SOURCES) $(INCLUDES)
-
-CLEAN :
-    pipe del/tree [$(OUT_DIR)...]*.*;* | copy SYS$INPUT nl:
-        

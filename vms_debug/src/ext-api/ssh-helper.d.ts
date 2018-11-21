@@ -1,6 +1,6 @@
 import { Event } from "vscode";
 import { LogFunction } from "@vorfol/common";
-import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator, IConnectionSection, ITimeoutsSection, IConnectConfigResolver } from "./api";
+import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator, IConnectionSection, ITimeoutsSection, IConnectConfigResolver, IHostsSection } from "./api";
 export declare class SshHelper {
     readonly section: string;
     private configHelper?;
@@ -10,6 +10,7 @@ export declare class SshHelper {
     onDidLoadConfig?: Event<null>;
     logFn: LogFunction;
     connectionSection?: IConnectionSection;
+    hostsSection?: IHostsSection;
     timeoutSection?: ITimeoutsSection;
     connectConfigResolver?: IConnectConfigResolver<IConnectionSection>;
     constructor(logFn?: LogFunction);

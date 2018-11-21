@@ -23,8 +23,10 @@ import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
+type BuildType = "com" | "mms" | "debug" | "release" | "both";
+
 interface IBuildQuickPickItem extends QuickPickItem {
-    type: "user" | "debug" | "release" | "both";
+    type: BuildType;
 }
 
 function iFileEntryToVmsPath(file: IFileEntry) {
@@ -46,7 +48,8 @@ export class Builder {
     }
 
     private static readonly defMmsFileName = "res/default.mms";
-    private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO="DEBUG=${"_1_"}"`;
+    private static readonly mmsUserCmd = printLike`MMS/DESCR=${"_.mms"}`;
+    private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}")`;
     private static readonly mmsExt = ".mms";
     private static readonly defRange = new Range(0, 0, 0, 0);
 
@@ -99,10 +102,15 @@ export class Builder {
             // build selection list, excluding own mms
             const selectItems = items.filter((file) => file.filename.toUpperCase() !== (this.projectSection!.projectName + Builder.mmsExt).toUpperCase())
                 .map((file) => {
+                    let type: BuildType = "com";
+                    const extPos = file.filename.lastIndexOf(".");
+                    if (extPos > 0 && file.filename.slice(extPos).toLowerCase() === Builder.mmsExt) {
+                        type = "mms";
+                    }
                     const ret: IBuildQuickPickItem = {
                         description: localize("quick.build.file", "Build using {0}", file.filename),
                         label: file.filename,
-                        type: "user",
+                        type,
                     };
                     return ret;
                 });
@@ -203,7 +211,7 @@ export class Builder {
     }
 
     private async ensureMmsCreated(selection: IBuildQuickPickItem) {
-        if (selection.type === "user") {
+        if (!(selection.type === "debug" || selection.type === "release" || selection.type === "both")) {
             return true;
         }
         if (this.projectSection
@@ -217,11 +225,16 @@ export class Builder {
                     fs.readFile(defMmsPath, "utf8"),
                     this.localSource.findFiles(this.projectSection.headers, this.projectSection.exclude),
                     this.localSource.findFiles(this.projectSection.source, this.projectSection.exclude)]);
-                const newContent = `OUTDIR=${this.projectSection.outdir}\n`
+                let newContent = `OUTDIR=${this.projectSection.outdir}\n`
                               + `NAME=${this.projectSection.projectName}\n`
-                              + `INCLUDES=${headres.map(iFileEntryToVmsPath).join(" -\n")}\n`
-                              + `SOURCES=${sources.map(iFileEntryToVmsPath).join(" -\n")}\n`
+                              + `INCLUDES=${headres.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
+                              + `SOURCES=${sources.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
                               + content;
+                for (const source of sources) {
+                    const vms = new VmsPathConverter(source.filename);
+                    const sourceDependencyLine = "[$(OBJ_DIR)" + vms.bareDirectory + "]" + vms.fileName + ".obj : " + vms.fullPath + " $(INCLUDES)";
+                    newContent += sourceDependencyLine + "\n";
+                }
                 await fs.writeFile(this.workspaceUri.fsPath + ftpPathSeparator + localMmsFile, newContent);
                 return Synchronizer.acquire(this.logFn).uploadFiles([localMmsFile]);
             } else {
@@ -290,35 +303,38 @@ export class Builder {
             }
             // decide how to run
             switch (selection.type) {
-                case "user":
+                case "com":
                     command = "@" + selection.label;
                     break;
+                case "mms":
+                    command = Builder.mmsUserCmd(selection.label);
+                    break;
                 case "debug":
-                    command = Builder.mmsCmd(this.projectSection.projectName + Builder.mmsExt, "1");
+                    command = Builder.mmsCmd(this.projectSection.projectName + Builder.mmsExt, "1", this.projectSection.outdir, this.projectSection.projectName);
                     break;
                 case "release":
-                    command = Builder.mmsCmd(this.projectSection.projectName + Builder.mmsExt, "");
+                    command = Builder.mmsCmd(this.projectSection.projectName + Builder.mmsExt, "", this.projectSection.outdir, this.projectSection.projectName);
                     break;
             }
             // run if decided
             if (command) {
                 output = await this.shell.execCmd(command);
                 if (output) {
-                    if (selection.type === "user") {
+                    let retCode = true;
+                    if (selection.type === "com" || selection.type === "mms") {
+                        // just output as is
                         for (const line of output) {
                             this.logFn(LogType.information, () => line);
                         }
-                        return true;
                     } else {
                         // parse
-                        return this.parseProblems(output, selection)
-                            .then((parseResults) => {
-                                if (parseResults) {
-                                    return Synchronizer.acquire(this.logFn).downloadListings();
-                                }
-                                return parseResults;
-                            });
+                        retCode = await this.parseProblems(output, selection);
                     }
+                    if (retCode) {
+                        // get listings
+                        retCode = await Synchronizer.acquire(this.logFn).downloadListings();
+                    }
+                    return retCode;
                 } else {
                     this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute > {0}", command));
                     return false;
@@ -367,8 +383,14 @@ export class Builder {
             return false;
         }
         const result = parseVmsOutput(output, this.shell.width);
+        for (const line of result.lines) {
+            this.logFn(LogType.warning, () => line);
+        }
+        let cwd = "";
+        cwd = this.shellRootConverter.initial + this.projectSection.root + ftpPathSeparator;
+        cwd = cwd.toUpperCase();
         const errMap = new Map<string, Diagnostic[]>();
-        for (const entry of result) {
+        for (const entry of result.problems) {
             if (entry.message) {
                 const diagnostic = new Diagnostic(Builder.defRange, entry.message);
                 if (entry.line &&
@@ -390,45 +412,43 @@ export class Builder {
                 }
                 if (!entry.file) {
                     if (entry.facility && entry.facility.toUpperCase() === "MMS") {
-                        if (selection.type === "user") {
+                        if (selection.type === "mms") {
                             entry.file = selection.label;
                         } else {
                             entry.file = this.projectSection.projectName + Builder.mmsExt;
                         }
                     }
                 }
-                let diagArr = errMap.get(String(entry.file));
+                const file = String(entry.file);
+                let uri = Uri.file(file);
+                if (entry.file !== undefined &&
+                    workspace.workspaceFolders) {
+                    let localFile = file;
+                    // cut cwd
+                    if (cwd && file.toUpperCase().startsWith(cwd)) {
+                        localFile = file.slice(cwd.length);
+                    }
+                    // find case-insensitive
+                    if (this.localSource) {
+                        const found = await this.localSource.findFiles(localFile);
+                        if (found.length === 1) {
+                            localFile = found[0].filename;
+                        }
+                    }
+                    uri = Uri.file(path.join(workspace.workspaceFolders[0].uri.fsPath, localFile));
+                }
+                let diagArr = errMap.get(uri.toString());
                 diagArr = diagArr || [];
                 diagArr.push(diagnostic);
-                errMap.set(String(entry.file), diagArr);
+                errMap.set(uri.toString(), diagArr);
             }
         }
         if (!this.collection) {
             this.collection = languages.createDiagnosticCollection("open-vms.build");
         }
         this.collection.clear();
-        let cwd = "";
-        cwd = this.shellRootConverter.initial + this.projectSection.root + ftpPathSeparator;
-        cwd = cwd.toUpperCase();
-        for (const [file, arrDiag] of errMap) {
-            let uri = Uri.file(file);
-            if (file !== String(undefined) &&
-                workspace.workspaceFolders) {
-                let localFile = file;
-                // cut cwd
-                if (cwd && file.toUpperCase().startsWith(cwd)) {
-                    localFile = file.slice(cwd.length);
-                }
-                // find case-insensitive
-                if (this.localSource) {
-                    const found = await this.localSource.findFiles(localFile);
-                    if (found.length === 1) {
-                        localFile = found[0].filename;
-                    }
-                }
-                uri = Uri.file(path.join(workspace.workspaceFolders[0].uri.fsPath, localFile));
-            }
-            this.collection.set(uri, arrDiag);
+        for (const [uriStr, arrDiag] of errMap) {
+            this.collection.set(Uri.parse(uriStr), arrDiag);
         }
         return true;
     }

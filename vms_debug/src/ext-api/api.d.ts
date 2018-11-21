@@ -81,6 +81,12 @@ export interface IConnectionSection {
     password?: string;
     keyFile?: string;
 }
+export interface IHost extends IConnectionSection {
+    label: string;
+}
+export interface IHostsSection {
+    hosts: IHost[];
+}
 export interface ITimeoutsSection {
     cmdTimeout: number;
     feedbackTimeout: number;
@@ -96,7 +102,7 @@ export interface IConnectConfigResolver<T extends any> {
     timeout?: number;
     resolveConnectConfig(settings: T): Promise<T | undefined>;
     testConnectConfig(settings: T): {
-        settengs?: T;
+        settings?: T;
         state: ResolverState;
     };
     feedBack(settings: T, accepted: boolean): void;

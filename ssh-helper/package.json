@@ -2,7 +2,7 @@
     "name": "ssh-helper",
     "displayName": "ssh-helper",
     "description": "ssh-helper",
-    "version": "0.1.22",
+    "version": "0.1.25",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -75,6 +75,20 @@
                     "type": "number",
                     "default": 0,
                     "description": "%configuration.timeouts.welcome%"
+                },
+                "vmssoftware.ssh-helper.host-collection.hosts": {
+                    "type": "array",
+                    "default": [
+                        {
+                            "label": "",
+                            "host": "",
+                            "port": 22,
+                            "username": "",
+                            "password": "",
+                            "keyFile": ""
+                        }
+                    ],
+                    "description": "array of hosts"
                 }
             }
         }
