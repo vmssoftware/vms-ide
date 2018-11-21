@@ -86,7 +86,6 @@ export class SshHelper {
         // get current config
         if (!await this.ensureSettings() ||
             !this.connectionSection ||
-            !this.timeoutSection ||
             !this.connectConfigResolver) {
             return undefined;
         }
@@ -146,7 +145,7 @@ export class SshHelper {
         if (!timeoutSection) {
             this.config.add(new TimeoutsSection());
         }
-        // senond try
+        // second try
         [connectionSection, hostsSection, timeoutSection] = 
             await Promise.all(
                 [this.config.get(ConnectionSection.section),
@@ -162,7 +161,7 @@ export class SshHelper {
         if (TimeoutsSection.is(timeoutSection)) {
             this.timeoutSection = timeoutSection;
         }
-        if (!this.connectConfigResolver && this.timeoutSection && this.hostsSection) {
+        if (this.timeoutSection && this.hostsSection) {
             const fillers = [new HostFiller(this.hostsSection, this.logFn), new KeyFiller(this.logFn), new PasswordVscodeFiller()];
             this.connectConfigResolver = new ConnectConfigResolverImpl(fillers, this.timeoutSection.feedbackTimeout, this.logFn);
         }
