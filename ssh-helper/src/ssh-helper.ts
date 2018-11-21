@@ -14,13 +14,15 @@ import { PasswordVscodeFiller } from "./config-resolve/password-vscode-filler";
 import { ConnectConfigResolverImpl } from "./config-resolve/connect-config-resolver-impl";
 import { ParseWelcomeVms } from "./stream/parse-welcome-vms";
 import { PromptCatcherVms } from "./stream/prompt-catcher-vms";
-import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator, IConnectionSection, ITimeoutsSection, IConnectConfigResolver } from "./api";
+import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator, IConnectionSection, ITimeoutsSection, IConnectConfigResolver, IHostsSection } from "./api";
 import { PipeFile } from "./stream/pipe";
 import { MemoryStreamCreator } from "./stream/stream-creators";
 import { ConstPasswordFiller } from "./config-resolve/password-filler";
 import { KeyFiller } from "./config-resolve/key-filler";
 
 import * as nls from "vscode-nls";
+import { HostsSection } from "./config/sections/hosts";
+import { HostFiller } from "./config-resolve/host-filler";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
@@ -37,6 +39,7 @@ export class SshHelper {
     public logFn: LogFunction;
 
     public connectionSection?: IConnectionSection;
+    public hostsSection?: IHostsSection;
     public timeoutSection?: ITimeoutsSection;
     public connectConfigResolver?: IConnectConfigResolver<IConnectionSection>;
 
@@ -108,6 +111,7 @@ export class SshHelper {
     public async ensureSettings() {
         if (!this.configIsInvalid &&
             this.connectionSection && 
+            this.hostsSection && 
             this.timeoutSection &&
             this.connectConfigResolver) {
             return true;
@@ -127,31 +131,39 @@ export class SshHelper {
             return false;
         }
         // first try
-        let [connectionSection, timeoutSection] = 
+        let [connectionSection, hostsSection, timeoutSection] = 
             await Promise.all(
                 [this.config.get(ConnectionSection.section),
-                this.config.get(TimeoutsSection.section)]);
+                 this.config.get(HostsSection.section),
+                 this.config.get(TimeoutsSection.section)]);
         // test and add if missed
         if (!connectionSection) {
             this.config.add(new ConnectionSection());
+        }
+        if (!hostsSection) {
+            this.config.add(new HostsSection());
         }
         if (!timeoutSection) {
             this.config.add(new TimeoutsSection());
         }
         // senond try
-        [connectionSection, timeoutSection] = 
+        [connectionSection, hostsSection, timeoutSection] = 
             await Promise.all(
                 [this.config.get(ConnectionSection.section),
-                this.config.get(TimeoutsSection.section)]);
+                 this.config.get(HostsSection.section),
+                 this.config.get(TimeoutsSection.section)]);
         // then ensure all are loaded
         if (ConnectionSection.is(connectionSection)) {
             this.connectionSection = connectionSection;
         }
+        if (HostsSection.is(hostsSection)) {
+            this.hostsSection = hostsSection;
+        }
         if (TimeoutsSection.is(timeoutSection)) {
             this.timeoutSection = timeoutSection;
         }
-        if (!this.connectConfigResolver && this.timeoutSection) {
-            const fillers = [new KeyFiller(this.logFn), new PasswordVscodeFiller()];
+        if (!this.connectConfigResolver && this.timeoutSection && this.hostsSection) {
+            const fillers = [new HostFiller(this.hostsSection, this.logFn), new KeyFiller(this.logFn), new PasswordVscodeFiller()];
             this.connectConfigResolver = new ConnectConfigResolverImpl(fillers, this.timeoutSection.feedbackTimeout, this.logFn);
         }
         this.configIsInvalid = 

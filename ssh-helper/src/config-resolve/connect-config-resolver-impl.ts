@@ -7,6 +7,7 @@ import { ISettingsFiller } from "./settings-filler";
 import { IConnectConfigResolver, IConnectConfig, ResolverState } from "../api";
 
 import * as nls from "vscode-nls";
+import { copy } from "fs-extra";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
@@ -192,20 +193,29 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver<IConnec
         return retConfig;
     }
 
-    testConnectConfig(settings: IConnectConfig): { settengs?: IConnectConfig; state: ResolverState; } {
+    testConnectConfig(settings: IConnectConfig): { settings?: IConnectConfig; state: ResolverState; } {
         const cacheStr = ConnectConfigResolverImpl.buildCacheString(settings);
         this.logFn(LogType.debug, () => localize("debug.resolve.start", "resolveConnectConfig: try {0}", cacheStr));
         let node = settingsCache.get(cacheStr);
         if (!node) {
-            return { state: ResolverState.absent};
+            const copySettings = Object.assign({}, settings);
+            // let's give a chance to the host-filler
+            if (this.settingsFillers) {
+                for (const filler of this.settingsFillers) {
+                    if (!filler.testSettings(copySettings)) {
+                        continue;
+                    }
+                }
+            }
+            return { settings: copySettings,  state: ResolverState.absent};
         } else {
             if (node.accepted === true) {
-                return { settengs: node.settings, state: ResolverState.accepted };
+                return { settings: node.settings, state: ResolverState.accepted };
             }
             if (node.accepted === false) {
-                return { state: ResolverState.rejected };
+                return { settings: node.settings, state: ResolverState.rejected };
             }
-            return { state: ResolverState.asked };
+            return { settings: node.settings, state: ResolverState.asked };
         }
     }
 }
