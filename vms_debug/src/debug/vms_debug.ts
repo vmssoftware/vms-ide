@@ -130,6 +130,15 @@ export class VMSDebugSession extends LoggingDebugSession
 				this.sendEvent(new BreakpointEvent('removed', mbp));
 			}
 		});
+		this.runtime.on('breakpointAdd', (bp: VMSBreakpoint | undefined, path : string) =>
+		{
+			if (bp)
+			{
+				const bpm = <DebugProtocol.Breakpoint> new Breakpoint(bp.verified, this.convertDebuggerLineToClient(bp.line), undefined, this.createSource(path));
+				bpm.id= bp.id;
+				this.sendEvent(new BreakpointEvent('new', bpm));
+			}
+		});
 	}
 
 	// The 'initialize' request is the first request called by the frontend
@@ -227,12 +236,13 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void//call 1
 	{
+		this.responseStackTrace.push(response);
+
 		const startFrame = typeof args.startFrame === 'number' ? args.startFrame : 0;
 		const maxLevels = typeof args.levels === 'number' ? args.levels : 1000;
 		const endFrame = startFrame + maxLevels;
 
 		this.runtime.stack(startFrame, endFrame);
-		this.responseStackTrace.push(response);
 	}
 
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void//call 2

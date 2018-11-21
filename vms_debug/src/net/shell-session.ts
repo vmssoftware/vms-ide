@@ -174,6 +174,17 @@ export class ShellSession
                     this.resultData = "";
                 }
 
+                let cmd = this.currentCmd.getBody();
+
+                if(!(cmd.includes(DebugCmdVMS.dbgGo) ||
+                    cmd.includes(DebugCmdVMS.dbgStepOver) ||
+                    cmd.includes(DebugCmdVMS.dbgStepIn) ||
+                    cmd.includes(DebugCmdVMS.dbgStepReturn) ||
+                    cmd.includes(OsCmdVMS.osRunProgram)))
+                {
+                    this.currentCmd = new CommandMessage("", "");
+                }
+
                 if(this.queueCmd.size() > 0)
                 {
                     this.SendCommandToQueue(this.queueCmd.pop());
@@ -204,7 +215,7 @@ export class ShellSession
                 }
             }
             else if(cmd.includes(DebugCmdVMS.dbgGo) ||
-                cmd.includes(DebugCmdVMS.dbgStep) ||
+                cmd.includes(DebugCmdVMS.dbgStepOver) ||
                 cmd.includes(DebugCmdVMS.dbgStepIn) ||
                 cmd.includes(DebugCmdVMS.dbgStepReturn) ||
                 cmd.includes(OsCmdVMS.osRunProgram))

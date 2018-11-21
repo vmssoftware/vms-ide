@@ -6,7 +6,8 @@ export enum DebugCmdVMS
 	dbgExit = "exit",//exit from debuging
 
 	dbgGo = "go",
-	dbgStep = "step /over",
+	dbgStep = "step",
+	dbgStepOver = "step /over",
 	dbgStepIn = "step /into",
 	dbgStepReturn = "step /return",
 
@@ -99,7 +100,7 @@ export class DebugCommands
 	}
 	public step() : CommandMessage
 	{
-		return new CommandMessage(DebugCmdVMS.dbgStep, "");
+		return new CommandMessage(DebugCmdVMS.dbgStepOver, "");
 	}
 	public stepIn() : CommandMessage
 	{
@@ -215,5 +216,10 @@ export class DebugCommands
 	public removeDisplay(displayName : string) : CommandMessage
 	{
 		return new CommandMessage(DebugCmdVMS.dbgSetDisplay, "/remove " + displayName);
+	}
+
+	public customCmdNoParam(command : string) : CommandMessage
+	{
+		return new CommandMessage(command, "");
 	}
 }

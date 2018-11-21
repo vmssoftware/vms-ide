@@ -36,9 +36,11 @@ export class DebugParser
 	private queueMsgData = new Queue<string>();
 	private fleInfo : HolderDebugFileInfo;
 	private commandDone : boolean;
+	private commandButtonDone : boolean;
 	private topicNumberString : Array<number> = new Array<number>();
 	private displayDataString : string[] = ["", "", ""];
 	private fileManager : FileManagerExt;
+	private framesOld = new Array<any>();
 
 	constructor()
 	{
@@ -46,6 +48,7 @@ export class DebugParser
 		this.fleInfo = new HolderDebugFileInfo();
 		this.fileManager = new FileManagerExt();
 		this.commandDone = false;
+		this.commandButtonDone = false;
 	}
 
 
@@ -66,10 +69,11 @@ export class DebugParser
 				case DebugCmdVMS.dbgStop:
 				case DebugCmdVMS.dbgExit:
 					this.commandDone = true;
+					this.commandButtonDone = true;
 					break;
 
 				case DebugCmdVMS.dbgGo:
-				case DebugCmdVMS.dbgStep:
+				case DebugCmdVMS.dbgStepOver:
 				case DebugCmdVMS.dbgStepIn:
 				case DebugCmdVMS.dbgStepReturn:
 					for(let item of msgLines)
@@ -110,6 +114,10 @@ export class DebugParser
 							}
 						}
 					}
+					break;
+
+				case "":
+					this.queueMsgUser.push(/*MessagePrompt.prmtUSER +*/ this.displayDataString[1]);
 					break;
 
 				default:
@@ -263,6 +271,7 @@ export class DebugParser
 			msgLine.includes(MessageDebuger.msgBreakOn))
 		{
 			this.commandDone = true;
+			this.commandButtonDone = true;
 		}
 		else if(msgLine.includes(MessageDebuger.msgKeyDbg) ||
 				msgLine.includes(MessageDebuger.msgKeySys) ||
@@ -338,7 +347,7 @@ export class DebugParser
 	public async parseCallStackMsg(data : string, sourcePaths: string[], lisPaths: string[], startFrame: number, endFrame: number) //: any
 	{
 		let numberLine : number = -1;
-		const frames = new Array<any>();
+		let frames = new Array<any>();
 		let msgLines = data.split("\n");
 
 		for(let i = 1; i < msgLines.length; i++)
@@ -384,6 +393,15 @@ export class DebugParser
 			}
 		}
 
+		if(frames.length === 0)
+		{
+			frames = this.framesOld;
+		}
+		else
+		{
+			this.framesOld = frames;
+		}
+
 		return {
 			frames: frames,
 			count: frames.length
@@ -400,6 +418,13 @@ export class DebugParser
 	{
 		let status = this.commandDone;
 		this.commandDone = false;
+
+		return status;
+	}
+	public getCommandButtonStatus() : boolean
+	{
+		let status = this.commandButtonDone;
+		this.commandButtonDone = false;
 
 		return status;
 	}

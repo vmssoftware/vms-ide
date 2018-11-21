@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as vscode from 'vscode';
+import * as nls from 'vscode-nls';
 import { EventEmitter } from 'events';
 import { ShellSession, ModeWork } from '../net/shell-session';
 import { OsCommands } from '../command/os_commands';
@@ -11,6 +12,9 @@ import { DebugParser, MessageDebuger } from '../parsers/debug_parser';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { LogFunction, LogType, ftpPathSeparator } from '@vorfol/common';
 import { FileManagerExt } from '../ext-api/file_manager';
+
+nls.config({ messageFormat: nls.MessageFormat.both });
+const localize = nls.loadMessageBundle();
 
 
 export interface VMSBreakpoint
@@ -93,7 +97,6 @@ export class VMSRuntime extends EventEmitter
 		this.shell.SendCommandToQueue(this.osCmd.runDebug());
 		this.shell.SendCommandToQueue(this.dbgCmd.setDisplay("dbge", "q1", "output"));
 		this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("error", "dbge"));
-		//this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("input", "out"));
 		this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
 		this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
 		this.shell.SendCommandToQueue(this.dbgCmd.modeNoWait());
@@ -188,9 +191,51 @@ export class VMSRuntime extends EventEmitter
 	{
 		let result = false;
 
-		if(!this.shell.getStatusCommand())
+		if(!this.shell.getStatusCommand())//enter user data
 		{
 			this.shell.SendData(data);
+			result = true;
+		}
+		else//enter bebug command
+		{
+			switch(data)
+			{
+				case DebugCmdVMS.dbgRunExe:
+				case DebugCmdVMS.dbgRerunExe:
+				case DebugCmdVMS.dbgStop:
+				case DebugCmdVMS.dbgExit:
+				case DebugCmdVMS.dbgGo:
+				case DebugCmdVMS.dbgStep:
+				case DebugCmdVMS.dbgStepOver:
+				case DebugCmdVMS.dbgStepIn:
+				case DebugCmdVMS.dbgStepReturn:
+				case DebugCmdVMS.dbgBreakPointSet:
+				case DebugCmdVMS.dbgBreakPointRemove:
+				case DebugCmdVMS.dbgBreakPointShow:
+				case DebugCmdVMS.dbgBreakPointActivate:
+				case DebugCmdVMS.dbgBreakPointDeactivate:
+				case DebugCmdVMS.dbgSetModeNoWait:
+				case DebugCmdVMS.dbgSetModeScreen:
+				case DebugCmdVMS.dbgSelect:
+				case DebugCmdVMS.dbgSetDisplay:
+					//don't resolve in manual
+					const message = localize('runtime.command_ignore', "This command is not allowed!");
+					vscode.debug.activeDebugConsole.append(message + "\n");
+					break;
+
+				default:
+					if(this.shell.getCurrentCommand().getBody() === "")
+					{
+						this.shell.SendData(data);
+					}
+					else
+					{
+						const message = localize('runtime.command_failed', "This command failed!");
+						vscode.debug.activeDebugConsole.append(message + "\n");
+					}
+					break;
+			}
+
 			result = true;
 		}
 
@@ -204,6 +249,8 @@ export class VMSRuntime extends EventEmitter
 		let newBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 		let setBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 		let remBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
+		let notBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
+		let vrfBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 
 		let source = await this.fileManager.getLocalSource();
 
@@ -212,6 +259,7 @@ export class VMSRuntime extends EventEmitter
 			return undefined;
 		}
 
+		let fullPath = path;
 		path = path.replace(/\\/g, ftpPathSeparator);
 		path = path.slice(source.root!.length + 1);// to relative path
 
@@ -243,7 +291,15 @@ export class VMSRuntime extends EventEmitter
 
 				if(!bpFound)
 				{
-					remBps.push(bpO);
+					if(this.shell.getCurrentCommand().getBody() !== DebugCmdVMS.dbgGo)
+					{
+						remBps.push(bpO);
+					}
+					else
+					{
+						newBps.push(bpO);
+						this.sendEvent('breakpointAdd', bpO, fullPath);
+					}
 				}
 			}
 
@@ -262,7 +318,14 @@ export class VMSRuntime extends EventEmitter
 
 				if(!bpFound)
 				{
-					setBps.push(bpN);
+					if(this.shell.getCurrentCommand().getBody() !== DebugCmdVMS.dbgGo)
+					{
+						setBps.push(bpN);
+					}
+					else
+					{
+						notBps.push(bpN);
+					}
 				}
 			}
 		}
@@ -270,7 +333,14 @@ export class VMSRuntime extends EventEmitter
 		{
 			for(let bpN of newBps)
 			{
-				setBps.push(bpN);
+				if(this.shell.getCurrentCommand().getBody() !== DebugCmdVMS.dbgGo)
+				{
+					setBps.push(bpN);
+				}
+				else
+				{
+					notBps.push(bpN);
+				}
 			}
 		}
 
@@ -278,9 +348,29 @@ export class VMSRuntime extends EventEmitter
 		this.breakPointsSet.delete(key);
 		this.breakPointsRem.delete(key);
 
-		this.breakPoints.set(key, newBps);
 		this.breakPointsSet.set(key, setBps);
 		this.breakPointsRem.set(key, remBps);
+
+		for(let bp of newBps)
+		{
+			let find = false;
+
+			for(let nBp of notBps)
+			{
+				if(bp === nBp)
+				{
+					find = true;
+					break;
+				}
+			}
+
+			if(!find)
+			{
+				vrfBps.push(bp);
+			}
+		}
+
+		this.breakPoints.set(key, vrfBps);
 
 		await this.verifyBreakpoints(path);
 		//set remote breakpoints
@@ -570,7 +660,7 @@ export class VMSRuntime extends EventEmitter
 				}
 			}
 
-			if(this.dbgParser.getCommandStatus())
+			if(this.dbgParser.getCommandButtonStatus())
 			{
 				switch(this.buttonPressd)
 				{
