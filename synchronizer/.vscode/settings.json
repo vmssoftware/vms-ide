@@ -26,5 +26,6 @@
     "vmssoftware.ssh-helper.timeouts.cmdTimeout": 0,
     "vmssoftware.ssh-helper.timeouts.feedbackTimeout": 0,
     "vmssoftware.ssh-helper.timeouts.welcomeTimeout": 0,
-    "vmssoftware.ssh-helper.connection.keyFile": "H:/.ssh/sv01"
+    "vmssoftware.ssh-helper.connection.keyFile": "H:/.ssh/sv01",
+    "vmssoftware.config-helper.debug": "h:/"
 }
