@@ -390,6 +390,7 @@ export class Builder {
         cwd = this.shellRootConverter.initial + this.projectSection.root + ftpPathSeparator;
         cwd = cwd.toUpperCase();
         const errMap = new Map<string, Diagnostic[]>();
+        let hasError = false;
         for (const entry of result.problems) {
             if (entry.message) {
                 const diagnostic = new Diagnostic(Builder.defRange, entry.message);
@@ -401,6 +402,7 @@ export class Builder {
                     case "E":
                     case "F":
                         diagnostic.severity = DiagnosticSeverity.Error;
+                        hasError = true;
                         break;
                     case "W":
                         diagnostic.severity = DiagnosticSeverity.Warning;
@@ -450,7 +452,7 @@ export class Builder {
         for (const [uriStr, arrDiag] of errMap) {
             this.collection.set(Uri.parse(uriStr), arrDiag);
         }
-        return true;
+        return !hasError;
     }
 
     private async prepareShell() {
