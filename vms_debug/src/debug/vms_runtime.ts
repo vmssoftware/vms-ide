@@ -80,7 +80,7 @@ export class VMSRuntime extends EventEmitter
 	}
 
 	// Start executing the given program.
-	public async start(programName: string) : Promise<void>
+	public async start(programName: string, stopOnEntry : boolean) : Promise<void>
 	{
 		let section = await this.fileManager.getProjectSection();
 
@@ -101,6 +101,11 @@ export class VMSRuntime extends EventEmitter
 		this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
 		this.shell.SendCommandToQueue(this.dbgCmd.modeNoWait());
 		this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
+
+		if(!stopOnEntry)
+		{
+			this.shell.SendCommandToQueue(this.dbgCmd.breakPointsRemove());//remove entry breakpoint
+		}
 
 		await this.setRemoteBreakpointsAll();
 
@@ -142,6 +147,12 @@ export class VMSRuntime extends EventEmitter
 	public exit()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStop;
+
+		//if the programm is running
+		if(this.shell.getCurrentCommand().getBody() !== "")
+		{
+			this.shell.SendCommand(this.dbgCmd.customCmdNoParam("0"));
+		}
 		this.shell.SendCommandToQueue(this.dbgCmd.exit());
 	}
 
@@ -191,14 +202,17 @@ export class VMSRuntime extends EventEmitter
 	{
 		let result = false;
 
-		if(!this.shell.getStatusCommand())//enter user data
+		//if(!this.shell.getStatusCommand())//enter user data
+		if(this.shell.getCurrentCommand().getBody() !== "")//go, step /over!!!????
 		{
 			this.shell.SendData(data);
 			result = true;
 		}
 		else//enter bebug command
 		{
-			switch(data)
+			let command = data.toLowerCase();
+
+			switch(command)
 			{
 				case DebugCmdVMS.dbgRunExe:
 				case DebugCmdVMS.dbgRerunExe:
@@ -209,11 +223,10 @@ export class VMSRuntime extends EventEmitter
 				case DebugCmdVMS.dbgStepOver:
 				case DebugCmdVMS.dbgStepIn:
 				case DebugCmdVMS.dbgStepReturn:
-				case DebugCmdVMS.dbgBreakPointSet:
-				case DebugCmdVMS.dbgBreakPointRemove:
-				case DebugCmdVMS.dbgBreakPointShow:
-				case DebugCmdVMS.dbgBreakPointActivate:
-				case DebugCmdVMS.dbgBreakPointDeactivate:
+				//case DebugCmdVMS.dbgBreakPointSet:
+				// case DebugCmdVMS.dbgBreakPointRemove:
+				// case DebugCmdVMS.dbgBreakPointActivate:
+				// case DebugCmdVMS.dbgBreakPointDeactivate:
 				case DebugCmdVMS.dbgSetModeNoWait:
 				case DebugCmdVMS.dbgSetModeScreen:
 				case DebugCmdVMS.dbgSelect:

@@ -185,10 +185,7 @@ export class ShellSession
                     this.currentCmd = new CommandMessage("", "");
                 }
 
-                if(this.queueCmd.size() > 0)
-                {
-                    this.SendCommandToQueue(this.queueCmd.pop());
-                }
+                this.SendCommandFromQueue();
             }
         }
         else
@@ -227,10 +224,7 @@ export class ShellSession
 
                     if(this.readyCmd)
                     {
-                        if(this.queueCmd.size() > 0)
-                        {
-                            this.SendCommandToQueue(this.queueCmd.pop());
-                        }
+                        this.SendCommandFromQueue();
                     }
                 }
             }
@@ -309,37 +303,37 @@ export class ShellSession
         return result;
     }
 
-    public SendCommandToQueue(command : CommandMessage) : void
+    public SendCommandFromQueue() : void
     {
         if(this.readyCmd === true)
         {
-            if(this.sshShell)
+            if(this.queueCmd.size() > 0)
             {
-                let result : boolean;
+                let cmd = this.queueCmd.getv();
 
-                this.currentCmd = command;
-                this.receiveCmd = false;
-                result = this.shellParser.push(command.getCommand() + '\r\n');
+                if(cmd)
+                {
+                    let result = this.SendCommand(cmd);
 
-                if(!result)
-                {
-                    this.queueCmd.push(command);
-                    this.readyCmd = true;
-                }
-                else
-                {
-                    this.readyCmd = false;
+                    if(!result)
+                    {
+                        this.readyCmd = true;
+                    }
+                    else
+                    {
+                        this.queueCmd.pop();
+                        this.readyCmd = false;
+                    }
                 }
             }
-            else
-            {
-                this.queueCmd.push(command);
-            }
         }
-        else
-        {
-            this.queueCmd.push(command);
-        }
+    }
+
+    public SendCommandToQueue(command : CommandMessage) : void
+    {
+        this.queueCmd.push(command);
+
+        this.SendCommandFromQueue();
     }
 
     public DisconectSession()
