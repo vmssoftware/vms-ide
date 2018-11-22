@@ -72,12 +72,13 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
 
     let i = 0;
     while (i < lines.length) {
-        let consumed = findCxxErrors(i);
-        if (!consumed) {
-            consumed = findMmsErrors(i);
+        let [consume, from]  = findCxxErrors(i);
+        if (!consume) {
+            [consume, from] = findMmsErrors(i);
         }
-        if (consumed) {
-            lines.splice(i, consumed);
+        if (consume) {
+            lines.splice(from, consume);
+            i = from;
         } else {
             i++;
         }
@@ -89,14 +90,15 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
      * returns consumed lines
      */
     function findCxxErrors(idx: number) {
-        let consumed = 0;
+        let consume = 0;
+        let from = idx;
         const line = lines[idx];
         const matched = line.match(rgxMsgCXX);
         if (matched) {
-            consumed++;
+            consume++;
             if (rgxMsgInfoMessages.some((rgx) => rgx.test(matched[6]))) {
                 // skip summary information
-                return consumed;
+                return [consume, from];
             }
             const diagnostic: IPartialDiagnostics = {
                 facility: matched[3],
@@ -108,7 +110,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
             }
             if (// diagnostic.severity === VmsSeverity.information ||
                 diagnostic.severity === VmsSeverity.success) {
-                    return consumed;
+                    return [consume, from];
             }
             diagnostic.type = matched[5];
             diagnostic.message = matched[6];
@@ -118,11 +120,13 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                 const prevMathed = prevLine.match(rgxMsgPosCXX);
                 if (prevMathed) {
                     diagnostic.pos = prevMathed[0].length;
+                    from -= 2;
+                    consume += 2;
                 }
             }
             // get file and line
             idx++;
-            consumed++;
+            consume++;
             while (idx < lines.length) {
                 const nextLine = lines[idx];
                 const nextLineMathed = nextLine.match(rgxPlaceCXX);
@@ -135,20 +139,20 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                 } else {
                     diagnostic.message += nextLine;
                     idx++;
-                    consumed++;
+                    consume++;
                 }
             }
             problems.push(diagnostic);
         }
-        return consumed;
+        return [consume, from];
     }
 
     function findMmsErrors(idx: number) {
-        let consumed = 0;
+        let consume = 0;
         const line = lines[idx];
         const matched = line.match(rgxMsgMMS);
         if (matched) {
-            consumed++;
+            consume++;
             const diagnostic: IPartialDiagnostics = {
                 facility: matched[3],
                 severity: VmsSeverity.information,
@@ -174,6 +178,6 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
             }
             problems.push(diagnostic);
         }
-        return consumed;
+        return [consume, idx];
     }
 }

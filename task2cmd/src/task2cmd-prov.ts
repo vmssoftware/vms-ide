@@ -13,9 +13,19 @@ export class Task2CmdProvider implements vscode.TaskProvider {
 
     constructor() {
         this.server = net.createServer((client) => {
+            client.on("error", (err) => {
+            });
             client.on("data", (data) => {
                 const cmd = data.toString("utf8");
-                vscode.commands.executeCommand(cmd);
+                vscode.commands.executeCommand(cmd)
+                    .then((ret) => {
+                        if (ret) {
+                            client.end(`Done`);
+                        } else {
+                            client.end(`Failed`);
+                        }
+                        console.log(`Done (${ret})`);
+                    });
             });
         });
         this.server.on('error', (err) => {
