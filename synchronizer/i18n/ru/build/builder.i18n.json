@@ -7,7 +7,7 @@
     "quick.clean.debug": "Очистить debug версию",
     "quick.clean.both": "Очистить всё",
     "error.no_settings": "Не удалось получить настройки",
-    "error.bad_settings": "Неподходящие настройки или папки проекта нет",
+    "error.no_workspace": "Рабочая область пуста",
     "output.cannot_exec": "Не удалось запустить {0}",
     "debug.cannot_get_ssh_helper": "Не удалось загрузить ssh-helper API",
     "output.install_ssh": "Установите плагин 'vmssoftware.ssh-helper'"

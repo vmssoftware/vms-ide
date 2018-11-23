@@ -6,6 +6,7 @@
     "command.editProject.title": "Edit OpenVMS project settings",
     "command.syncProject.title": "Syncronize project files with VMS",
     "command.stopSync.title": "Stop syncronization",
+    "command.changeCRLF.title": "Change CR/LF for all source files",
     "properties.project.builders.description": "Exclude pattern",
     "properties.project.exclude.description": "Exclude pattern",
     "properties.project.headers.description": "Headers pattern",

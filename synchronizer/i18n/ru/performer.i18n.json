@@ -14,5 +14,8 @@
     "clean.fail": "Очистка неудачна",
     "clean.status": "Очистка...",
     "clean.success": "Очистка удачна",
+    "crlf.fail": "Замена CrLf неудачна",
+    "crlf.status": "$(search) Замена...",
+    "crlf.success": "Замена CrLf удачна",
     "error.no_action": "Отсутсвует действие: {0}"
 }

@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.26",
+    "version": "0.1.27",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -20,6 +20,7 @@
         "onCommand:vmssoftware.synchronizer.cleanProject",
         "onCommand:vmssoftware.synchronizer.syncProject",
         "onCommand:vmssoftware.synchronizer.editProject",
+        "onCommand:vmssoftware.synchronizer.changeCRLF",
         "onUri"
     ],
     "main": "./out/extension",
@@ -40,6 +41,10 @@
                 },
                 {
                     "command": "vmssoftware.synchronizer.syncProject",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.changeCRLF",
                     "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 }
             ]
@@ -68,6 +73,11 @@
             {
                 "command": "vmssoftware.synchronizer.editProject",
                 "title": "%command.editProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.changeCRLF",
+                "title": "%command.changeCRLF.title%",
                 "category": "%command.category%"
             }
         ],

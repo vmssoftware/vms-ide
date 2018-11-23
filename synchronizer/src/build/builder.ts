@@ -10,7 +10,7 @@ import { ftpPathSeparator } from "@vorfol/common";
 import { parseVmsOutput } from "../common/parse-output";
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
 import { IProjectSection, ProjectSection } from "../config/sections/project";
-import { EnsureSettings, synchronizerConfig } from "../ensure-settings";
+import { ensureSettings, projectSection, synchronizerConfig } from "../ensure-settings";
 import { ISshShell } from "../ext-api/api";
 import { SshHelper } from "../ext-api/ssh-helper";
 import { FsSource } from "../sync/fs-source";
@@ -58,7 +58,6 @@ export class Builder {
     public logFn: LogFunction;
 
     private collection?: DiagnosticCollection;
-    private projectSection?: IProjectSection;
     private workspaceUri?: Uri;
     private shellRootConverter?: VmsPathConverter;
     private shell?: ISshShell;
@@ -92,15 +91,15 @@ export class Builder {
         if (!await this.ensureSettings()) {
             return false;
         }
-        if (this.projectSection && this.workspaceUri) {
+        if (projectSection && this.workspaceUri) {
             // create local source
             if (!this.localSource) {
                 this.localSource = new FsSource(this.workspaceUri.fsPath, this.logFn);
             }
             // get list of builders
-            const items = await this.localSource.findFiles(this.projectSection.builders, this.projectSection.exclude);
+            const items = await this.localSource.findFiles(projectSection.builders, projectSection.exclude);
             // build selection list, excluding own mms
-            const selectItems = items.filter((file) => file.filename.toUpperCase() !== (this.projectSection!.projectName + Builder.mmsExt).toUpperCase())
+            const selectItems = items.filter((file) => file.filename.toUpperCase() !== (projectSection!.projectName + Builder.mmsExt).toUpperCase())
                 .map((file) => {
                     let type: BuildType = "com";
                     const extPos = file.filename.lastIndexOf(".");
@@ -153,7 +152,7 @@ export class Builder {
         if (!await this.ensureSettings()) {
             return false;
         }
-        if (this.projectSection) {
+        if (projectSection) {
             const selectItems: IBuildQuickPickItem[] = [
                 {
                     description: localize("quick.clean.release", "Clean release version"),
@@ -190,43 +189,35 @@ export class Builder {
     }
 
     private async ensureSettings() {
-        if (!await EnsureSettings() || !synchronizerConfig) {
+        if (!await ensureSettings(this.logFn) || !synchronizerConfig) {
             this.logFn(LogType.error, () => localize("error.no_settings", "Cannot get settings"));
             return false;
         }
-        const projectSection = await synchronizerConfig.get(ProjectSection.section);
-        // get current values
-        const project = projectSection ? projectSection.store() : undefined;
-        if (ProjectSection.is(project) &&
-            workspace.workspaceFolders &&
-            workspace.workspaceFolders.length > 0) {
-            // hold
-            this.projectSection = project;
-            this.workspaceUri = workspace.workspaceFolders[0].uri;
-            return true;
-        } else {
-            this.logFn(LogType.error, () => localize("error.bad_settings", "Inconsistent settings or workspace is empty"));
+        if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
+            this.logFn(LogType.error, () => localize("error.no_workspace", "Workspace is empty"));
             return false;
         }
-    }
+        this.workspaceUri = workspace.workspaceFolders[0].uri;
+        return true;
+}
 
     private async ensureMmsCreated(selection: IBuildQuickPickItem) {
         if (!(selection.type === "debug" || selection.type === "release" || selection.type === "both")) {
             return true;
         }
-        if (this.projectSection
+        if (projectSection
             && this.localSource
             && this.workspaceUri) {
-            const localMmsFile = this.projectSection.projectName + Builder.mmsExt;
+            const localMmsFile = projectSection.projectName + Builder.mmsExt;
             const foundMms = await this.localSource.findFiles(localMmsFile);
             if (foundMms.length === 0) {
                 const defMmsPath = contextSaved!.asAbsolutePath(Builder.defMmsFileName);
                 const [content, headres, sources] = await Promise.all([
                     fs.readFile(defMmsPath, "utf8"),
-                    this.localSource.findFiles(this.projectSection.headers, this.projectSection.exclude),
-                    this.localSource.findFiles(this.projectSection.source, this.projectSection.exclude)]);
-                let newContent = `OUTDIR=${this.projectSection.outdir}\n`
-                              + `NAME=${this.projectSection.projectName}\n`
+                    this.localSource.findFiles(projectSection.headers, projectSection.exclude),
+                    this.localSource.findFiles(projectSection.source, projectSection.exclude)]);
+                let newContent = `OUTDIR=${projectSection.outdir}\n`
+                              + `NAME=${projectSection.projectName}\n`
                               + `INCLUDES=${headres.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
                               + `SOURCES=${sources.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
                               + content;
@@ -247,14 +238,14 @@ export class Builder {
     private async runRemoteClean(selection: IBuildQuickPickItem) {
         let command: string | undefined;
         let output: string[] | undefined;
-        if (await this.prepareShell() && this.shell && this.projectSection) {
+        if (await this.prepareShell() && this.shell && projectSection) {
             // get shell root
             if (!await this.ensureShellRoot()) {
                 this.dispose();
                 return false;
             }
             // set default directory
-            const converter = new VmsPathConverter(this.projectSection.root + ftpPathSeparator);
+            const converter = new VmsPathConverter(projectSection.root + ftpPathSeparator);
             if (!await this.setShellProjectDirectory(converter.directory)) {
                 this.dispose();
                 return false;
@@ -262,13 +253,13 @@ export class Builder {
             // decide what to clean
             switch (selection.type) {
                 case "both":
-                    command = `del/tree [.${this.projectSection.outdir}...]*.*;*`;
+                    command = `del/tree [.${projectSection.outdir}...]*.*;*`;
                     break;
                 case "debug":
-                    command = `del/tree [.${this.projectSection.outdir}.DEBUG...]*.*;*`;
+                    command = `del/tree [.${projectSection.outdir}.DEBUG...]*.*;*`;
                     break;
                 case "release":
-                    command = `del/tree [.${this.projectSection.outdir}.RELEASE...]*.*;*`;
+                    command = `del/tree [.${projectSection.outdir}.RELEASE...]*.*;*`;
                     break;
             }
             // run if decided
@@ -289,14 +280,14 @@ export class Builder {
     private async runRemoteBuild(selection: IBuildQuickPickItem) {
         let command: string | undefined;
         let output: string[] | undefined;
-        if (await this.prepareShell() && this.shell && this.projectSection) {
+        if (await this.prepareShell() && this.shell && projectSection) {
             // get shell root
             if (!await this.ensureShellRoot()) {
                 this.dispose();
                 return false;
             }
             // set default directory
-            const converter = new VmsPathConverter(this.projectSection.root + ftpPathSeparator);
+            const converter = new VmsPathConverter(projectSection.root + ftpPathSeparator);
             if (!await this.setShellProjectDirectory(converter.directory)) {
                 this.dispose();
                 return false;
@@ -310,10 +301,10 @@ export class Builder {
                     command = Builder.mmsUserCmd(selection.label);
                     break;
                 case "debug":
-                    command = Builder.mmsCmd(this.projectSection.projectName + Builder.mmsExt, "1", this.projectSection.outdir, this.projectSection.projectName);
+                    command = Builder.mmsCmd(projectSection.projectName + Builder.mmsExt, "1", projectSection.outdir, projectSection.projectName);
                     break;
                 case "release":
-                    command = Builder.mmsCmd(this.projectSection.projectName + Builder.mmsExt, "", this.projectSection.outdir, this.projectSection.projectName);
+                    command = Builder.mmsCmd(projectSection.projectName + Builder.mmsExt, "", projectSection.outdir, projectSection.projectName);
                     break;
             }
             // run if decided
@@ -378,7 +369,7 @@ export class Builder {
 
     private async parseProblems(output: string[], selection: IBuildQuickPickItem) {
         if (!this.shellRootConverter ||
-            !this.projectSection ||
+            !projectSection ||
             !this.shell) {
             return false;
         }
@@ -387,7 +378,7 @@ export class Builder {
             this.logFn(LogType.warning, () => line);
         }
         let cwd = "";
-        cwd = this.shellRootConverter.initial + this.projectSection.root + ftpPathSeparator;
+        cwd = this.shellRootConverter.initial + projectSection.root + ftpPathSeparator;
         cwd = cwd.toUpperCase();
         const errMap = new Map<string, Diagnostic[]>();
         let hasError = false;
@@ -417,7 +408,7 @@ export class Builder {
                         if (selection.type === "mms") {
                             entry.file = selection.label;
                         } else {
-                            entry.file = this.projectSection.projectName + Builder.mmsExt;
+                            entry.file = projectSection.projectName + Builder.mmsExt;
                         }
                     }
                 }

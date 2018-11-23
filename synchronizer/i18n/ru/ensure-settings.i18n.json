@@ -1,4 +1,6 @@
 {
-    "debug.did_load_config": "Конфигурация изменена",
-    "debug.different_types": "Типы секций различаются ${0}"
+    "already": "Конфигурация уже загружена",
+    "invalidate": "Настройки устарели: onDidLoad()",
+    "config.failed": "Невозможно загрузить config-helper",
+    "returns": "Возврат: {0}"
 }

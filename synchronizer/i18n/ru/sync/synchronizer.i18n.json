@@ -19,7 +19,7 @@
     "debug.create_remote": "Создание удалённого источника",
     "debug.create_local": "Создание локального источника",
     "error.no_settings": "Невозможно получить настройки",
-    "error.bad_settings": "Настройки не совпадают или рабочая область отсутствует",
+    "error.no_workspace": "Рабочая область пуста",
     "debug.cannot_get_ssh_helper": "Не удалось загрузить ssh-helper API",
     "output.install_ssh": "Установите плагин 'vmssoftware.ssh-helper'",
     "message.action_success": "{0} удачно: {1}",

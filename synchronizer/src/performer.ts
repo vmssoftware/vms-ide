@@ -1,7 +1,7 @@
 import { LogFunction, LogType } from "@vorfol/common";
 
 import { CommandContext, setContext } from "./command-context";
-import { configHelper, EnsureSettings } from "./ensure-settings";
+import { configHelper, ensureSettings } from "./ensure-settings";
 
 import { window, workspace } from "vscode";
 
@@ -9,12 +9,13 @@ import { Builder } from "./build/builder";
 import { Synchronizer } from "./sync/synchronizer";
 
 import * as nls from "vscode-nls";
+import { ChangeCrLf } from "./change-crlf";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export type AsyncAction = (logFn?: LogFunction) => Promise<boolean>;
 
-export type ActionType = "save all" | "synchronize" | "build" | "clean" | "upload source";
+export type ActionType = "save all" | "synchronize" | "build" | "clean" | "upload source" | "crlf";
 
 export interface IPerform {
     actionFunc: AsyncAction;
@@ -64,7 +65,7 @@ export const actions: IPerform[] = [
         actionName: "build",
         context: CommandContext.isBuilding,
         fail: localize("building.fail", "Building failed"),
-        status: localize("building.status", "$(file-binary) Building..."),
+        status: localize("building.status", "$(tools) Building..."),
         success: localize("buiding.success", "Building ok"),
     },
     {
@@ -78,6 +79,17 @@ export const actions: IPerform[] = [
         status: localize("clean.status", "$(trashcan) Clean..."),
         success: localize("clean.success", "Clean ok"),
     },
+    {
+        actionFunc: async (logFn?: LogFunction) => {
+            const crlf = new ChangeCrLf(logFn);
+            return crlf.perform();
+        },
+        actionName: "crlf",
+        context: CommandContext.isBuilding,
+        fail: localize("crlf.fail", "Change CrLf failed"),
+        status: localize("crlf.status", "$(search) Changing..."),
+        success: localize("crlf.success", "Change CrLf done"),
+    },
 ];
 
 export async function Perform(actionName: ActionType, logFn?: LogFunction) {
@@ -88,7 +100,7 @@ export async function Perform(actionName: ActionType, logFn?: LogFunction) {
         }
         return false;
     }
-    return EnsureSettings(logFn)
+    return ensureSettings(logFn)
         .then((ok) => {
             if (ok && configHelper) {
                 setContext(actionToDo.context, true);
