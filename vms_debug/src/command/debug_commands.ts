@@ -217,6 +217,10 @@ export class DebugCommands
 	{
 		return new CommandMessage(DebugCmdVMS.dbgSetDisplay, "/remove " + displayName);
 	}
+	public clearDisplay(displayNames : string) : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgSetDisplay, "/clear " + displayNames);
+	}
 
 	public customCmdNoParam(command : string) : CommandMessage
 	{

@@ -40,6 +40,7 @@ export class ShellSession
     constructor( ExtensionDataCb: (data: string, mode: ModeWork) => void, ExtensionReadyCb: () => void, ExtensionCloseCb: () => void, public logFn?: LogFunction)
     {
         this.promptCmd = "";
+        this.mode = ModeWork.shell;
         this.extensionDataCb = ExtensionDataCb;
         this.extensionReadyCb = ExtensionReadyCb;
         this.extensionCloseCb = ExtensionCloseCb;
@@ -163,7 +164,7 @@ export class ShellSession
                         this.resultData += data + "> ";
                     }
 
-                    this. mode = ModeWork.shell;
+                    this.mode = ModeWork.shell;
                 }
 
                 this.readyCmd = true;
@@ -221,11 +222,7 @@ export class ShellSession
                 {
                     this.extensionDataCb(this.resultData, this.mode);
                     this.resultData = "";
-
-                    if(this.readyCmd)
-                    {
-                        this.SendCommandFromQueue();
-                    }
+                    this.SendCommandFromQueue();
                 }
             }
         }
@@ -263,8 +260,12 @@ export class ShellSession
         this.resultData = "";
         this.readyCmd = true;
         this.receiveCmd = false;
-        this.mode = ModeWork.shell;
         this.currentCmd = new CommandMessage("", "");
+    }
+
+    public getModeWork() : ModeWork
+    {
+        return this.mode;
     }
 
     public getStatusCommand() : boolean
@@ -297,6 +298,7 @@ export class ShellSession
         {
             this.currentCmd = command;
             this.receiveCmd = false;
+            this.readyCmd = false;
             result = this.shellParser.push(command.getCommand() + '\r\n');
         }
 

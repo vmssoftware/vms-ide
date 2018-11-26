@@ -49,6 +49,7 @@ export class VMSRuntime extends EventEmitter
 	private dbgParser : DebugParser;
 	private fileManager : FileManagerExt;
 	private debugRun : boolean;
+	private programEnd : boolean;
 
 	private stackStartFrame: number;
 	private stackEndFrame: number;
@@ -77,11 +78,13 @@ export class VMSRuntime extends EventEmitter
 		this.dbgParser = new DebugParser();
 		this.fileManager = new FileManagerExt();
 		this.debugRun = false;
+		this.programEnd = false;
 	}
 
 	// Start executing the given program.
 	public async start(programName: string, stopOnEntry : boolean) : Promise<void>
 	{
+		this.programEnd = false;
 		let section = await this.fileManager.getProjectSection();
 
 		if (!section)
@@ -94,19 +97,28 @@ export class VMSRuntime extends EventEmitter
 
 		this.shell.resetParameters();
 		//run debuger
-		this.shell.SendCommandToQueue(this.osCmd.runDebug());
-		this.shell.SendCommandToQueue(this.dbgCmd.setDisplay("dbge", "q1", "output"));
-		this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("error", "dbge"));
-		this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
-		this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
-		this.shell.SendCommandToQueue(this.dbgCmd.modeNoWait());
-		this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
-
+		if(this.shell.getModeWork() === ModeWork.shell)
+		{
+			this.shell.SendCommandToQueue(this.osCmd.runDebug());
+			this.shell.SendCommandToQueue(this.dbgCmd.setDisplay("dbge", "q1", "output"));
+			this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("error", "dbge"));
+			this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
+			this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
+			this.shell.SendCommandToQueue(this.dbgCmd.modeNoWait());
+			this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
+		}
+		else
+		{
+			this.shell.SendCommandToQueue(this.dbgCmd.clearDisplay("dbge, out"));
+			this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
+			this.shell.SendCommandToQueue(this.dbgCmd.rerun());
+		}
+		//clear entry breakpoint
 		if(!stopOnEntry)
 		{
 			this.shell.SendCommandToQueue(this.dbgCmd.breakPointsRemove());//remove entry breakpoint
 		}
-
+		//set breakpoint
 		await this.setRemoteBreakpointsAll();
 
 		this.continue();
@@ -144,16 +156,27 @@ export class VMSRuntime extends EventEmitter
 		this.shell.SendCommandToQueue(this.dbgCmd.stop());
 	}
 
-	public exit()
+	public exit(restart? : boolean)
 	{
 		this.buttonPressd = DebugButtonEvent.btnStop;
-
 		//if the programm is running
-		if(this.shell.getCurrentCommand().getBody() !== "")
+		if(this.programEnd === false && this.shell.getCurrentCommand().getBody() !== "")
 		{
-			this.shell.SendCommand(this.dbgCmd.customCmdNoParam("0"));
+			if(this.shell.getStatusCommand() === false)
+			{
+				this.shell.SendCommand(this.dbgCmd.customCmdNoParam("0"));
+			}
+			else
+			{
+				this.shell.SendCommand(this.dbgCmd.customCmdNoParam(""));
+				this.shell.SendCommand(this.dbgCmd.customCmdNoParam("0"));
+			}
 		}
-		this.shell.SendCommandToQueue(this.dbgCmd.exit());
+
+		if(!restart)
+		{
+			this.shell.SendCommandToQueue(this.dbgCmd.exit());
+		}
 	}
 
 	public variableValue(nameVar : string)
@@ -202,8 +225,7 @@ export class VMSRuntime extends EventEmitter
 	{
 		let result = false;
 
-		//if(!this.shell.getStatusCommand())//enter user data
-		if(this.shell.getCurrentCommand().getBody() !== "")//go, step /over!!!????
+		if(this.shell.getCurrentCommand().getBody() !== "")//go, step
 		{
 			this.shell.SendData(data);
 			result = true;
@@ -237,15 +259,7 @@ export class VMSRuntime extends EventEmitter
 					break;
 
 				default:
-					if(this.shell.getCurrentCommand().getBody() === "")
-					{
-						this.shell.SendData(data);
-					}
-					else
-					{
-						const message = localize('runtime.command_failed', "This command failed!");
-						vscode.debug.activeDebugConsole.append(message + "\n");
-					}
+					this.shell.SendData(data);//send command to the debugger
 					break;
 			}
 
@@ -655,6 +669,7 @@ export class VMSRuntime extends EventEmitter
 
 				if(messageDebug.includes(MessageDebuger.msgEnd))
 				{
+					this.programEnd = true;
 					this.sendEvent('end');
 				}
 			}
@@ -669,6 +684,7 @@ export class VMSRuntime extends EventEmitter
 
 				if(messageUser.includes(MessageDebuger.msgNoImage))
 				{
+					this.programEnd = true;
 					this.sendEvent('end');
 				}
 			}
