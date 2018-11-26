@@ -2,7 +2,7 @@
 import { commands, env, ExtensionContext, window } from "vscode";
 
 import { setExtensionContext } from "./context";
-import { configApi, configHelper, EnsureSettings } from "./ensure-settings";
+import { configApi, configHelper, ensureSettings, projectSection } from "./ensure-settings";
 import { Perform } from "./performer";
 import { SourceHelper } from "./sync/get-source";
 import { Synchronizer } from "./sync/synchronizer";
@@ -11,6 +11,7 @@ import { LogFunction, LogType } from "@vorfol/common";
 
 const locale = env.language ;
 import * as nls from "vscode-nls";
+import { ChangeCrLf } from "./change-crlf";
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
 // tslint:disable-next-line:no-empty
@@ -18,7 +19,7 @@ let logFn: LogFunction = () => {};
 
 export async function activate(context: ExtensionContext) {
 
-    const apiLoaded = await EnsureSettings();
+    const apiLoaded = await ensureSettings();
     if (!apiLoaded || configApi === undefined) {
         return undefined;
     }
@@ -74,7 +75,7 @@ export async function activate(context: ExtensionContext) {
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async () => {
-        return EnsureSettings()
+        return ensureSettings(syncLog)
             .then((ok) => {
                 if (ok && configHelper) {
                     const editor = configHelper.getEditor();
@@ -86,6 +87,10 @@ export async function activate(context: ExtensionContext) {
                 logFn(LogType.error, () => String(err));
                 return false;
             });
+    }));
+
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.changeCRLF", async () => {
+        return Perform("crlf", syncLog);
     }));
 
     return new SourceHelper();

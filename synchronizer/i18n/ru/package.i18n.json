@@ -6,6 +6,7 @@
     "command.editProject.title": "Редактировать настройки OpenVMS проекта",
     "command.syncProject.title": "Синхронизировать проект с VMS",
     "command.stopSync.title": "Остановить синхронизацию",
+    "command.changeCRLF.title": "Сменить CR/LF для всех файлов",
     "properties.project.builders.description": "Файлы для построения проекта",
     "properties.project.exclude.description": "Исключить",
     "properties.project.headers.description": "Заголовочные файлы",

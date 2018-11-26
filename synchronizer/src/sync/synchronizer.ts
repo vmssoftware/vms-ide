@@ -13,7 +13,7 @@ import { IFileEntry } from "@vorfol/common";
 import { SshHelper } from "../ext-api/ssh-helper";
 
 import { createFile } from "../common/create-file";
-import { EnsureSettings, synchronizerConfig } from "../ensure-settings";
+import { ensureSettings, projectSection, synchronizerConfig, synchronizeSection } from "../ensure-settings";
 import { FsSource } from "./fs-source";
 import { ISource } from "./source";
 import { VmsSource } from "./vms-source";
@@ -43,8 +43,6 @@ export class Synchronizer {
     private transferBarrier = new Barrier(10);
     // private acquires = 0;
 
-    private projectSection?: IProjectSection;
-    private synchronizeSection?: ISynchronizeSection;
     private workspaceUri?: vscode.Uri;
 
     private onDidLoadConfig?: vscode.Disposable;  // dispose listener
@@ -87,8 +85,8 @@ export class Synchronizer {
             return undefined;
         }
         // check if all are ready to create sources
-        if (this.projectSection
-            && this.synchronizeSection
+        if (projectSection
+            && synchronizeSection
             && this.sshHelper) {
             // clear password cache
             this.sshHelper.clearPasswordCashe();
@@ -97,7 +95,7 @@ export class Synchronizer {
                     this.sshHelper.getDefaultVmsShell(),
                 ]);
             if (sftp && shell) {
-                return new VmsSource(sftp, shell, this.projectSection.root, this.logFn, this.synchronizeSection.setTimeAttempts);
+                return new VmsSource(sftp, shell, projectSection.root, this.logFn, synchronizeSection.setTimeAttempts);
             }
         }
         return undefined;
@@ -109,8 +107,8 @@ export class Synchronizer {
         }
         if (this.localSource
             && this.remoteSource
-            && this.projectSection
-            && this.synchronizeSection
+            && projectSection
+            && synchronizeSection
             && this.sshHelper) {
             // enable
             this.enableRemote();
@@ -118,22 +116,22 @@ export class Synchronizer {
             this.sshHelper.clearPasswordCashe();
             // get full list
             const includes = [
-                this.projectSection.source,
-                this.projectSection.resource,
-                // this.projectSection.listing,
-                this.projectSection.headers,
-                this.projectSection.builders,
+                projectSection.source,
+                projectSection.resource,
+                // projectSection.listing,
+                projectSection.headers,
+                projectSection.builders,
             ];
             const include = includes.join(",");
             const [remoteList,
-                   localList] = await Promise.all([this.remoteSource.findFiles(include, this.projectSection.exclude),
-                                                   this.localSource.findFiles(include, this.projectSection.exclude)]);
+                   localList] = await Promise.all([this.remoteSource.findFiles(include, projectSection.exclude),
+                                                   this.localSource.findFiles(include, projectSection.exclude)]);
             // compare them
             const compareResult = this.compareLists(localList, remoteList);
             const waitAll = [];
             // upload
             waitAll.push(this.executeAction(compareResult.upload, "upload"));
-            switch (this.synchronizeSection.downloadNewFiles) {
+            switch (synchronizeSection.downloadNewFiles) {
                 case "overwrite":
                     waitAll.push(this.executeAction(compareResult.download, "download"));
                     break;
@@ -173,8 +171,8 @@ export class Synchronizer {
         }
         if (this.localSource
             && this.remoteSource
-            && this.projectSection
-            && this.synchronizeSection
+            && projectSection
+            && synchronizeSection
             && this.sshHelper) {
             // enable
             this.enableRemote();
@@ -182,16 +180,16 @@ export class Synchronizer {
             this.sshHelper.clearPasswordCashe();
             // get full list
             const includes = [
-                this.projectSection.source,
-                this.projectSection.resource,
-                // this.projectSection.listing,
-                this.projectSection.headers,
-                this.projectSection.builders,
+                projectSection.source,
+                projectSection.resource,
+                // projectSection.listing,
+                projectSection.headers,
+                projectSection.builders,
             ];
             const include = includes.join(",");
             const [remoteList,
-                   localList] = await Promise.all([this.remoteSource.findFiles(include, this.projectSection.exclude),
-                                                   this.localSource.findFiles(include, this.projectSection.exclude)]);
+                   localList] = await Promise.all([this.remoteSource.findFiles(include, projectSection.exclude),
+                                                   this.localSource.findFiles(include, projectSection.exclude)]);
             // compare them
             const compareResult = this.compareLists(localList, remoteList);
             const retCode = await this.executeAction(compareResult.upload, "upload");
@@ -214,14 +212,14 @@ export class Synchronizer {
         }
         if (this.remoteSource
             && this.localSource
-            && this.projectSection) {
-                const outdir = this.projectSection.outdir;
+            && projectSection) {
+                const outdir = projectSection.outdir;
                 this.remoteSource.root += ftpPathSeparator + outdir;    // find only in output directory
                 const localRoot = this.localSource.root;
                 this.localSource.root += ftpPathSeparator + outdir;     // download exactly in output directory
                 const [remoteList, localList] =
-                    await Promise.all([this.remoteSource.findFiles(this.projectSection.listing),
-                                       this.localSource.findFiles(this.projectSection.listing)]);
+                    await Promise.all([this.remoteSource.findFiles(projectSection.listing),
+                                       this.localSource.findFiles(projectSection.listing)]);
                 // compare them
                 const compareResult = this.compareLists(localList, remoteList);
                  // do not add outdir to the files in list! because remoteSource already has root pointed to outdir
@@ -233,9 +231,9 @@ export class Synchronizer {
                     .then((done) => {
                         if (this.remoteSource
                             && this.localSource
-                            && this.projectSection) {
+                            && projectSection) {
                                 this.localSource.root = localRoot;
-                                this.remoteSource.root = this.projectSection.root;
+                                this.remoteSource.root = projectSection.root;
                             }
                         this.decideDispose();
                         return done;
@@ -317,8 +315,8 @@ export class Synchronizer {
         // }
         // this.acquires = 0;  // to prevent under zero values
         if (synchronizerConfig
-            && this.synchronizeSection
-            && this.synchronizeSection.keepAlive) {
+            && synchronizeSection
+            && synchronizeSection.keepAlive) {
             // test configuration watcher and create if need
             if (this.onDidLoadConfig === undefined) {
                 this.onDidLoadConfig = synchronizerConfig.onDidLoad( async () => {
@@ -452,8 +450,8 @@ export class Synchronizer {
             return false;
         }
         // check if all are ready to create sources
-        if (this.projectSection
-            && this.synchronizeSection
+        if (projectSection
+            && synchronizeSection
             && this.workspaceUri
             && this.sshHelper) {
             // this.acquires ++;
@@ -464,7 +462,7 @@ export class Synchronizer {
                         this.sshHelper.getDefaultVmsShell(),
                     ]);
                 if (sftp && shell) {
-                    this.remoteSource = new VmsSource(sftp, shell, this.projectSection.root, this.logFn, this.synchronizeSection.setTimeAttempts);
+                    this.remoteSource = new VmsSource(sftp, shell, projectSection.root, this.logFn, synchronizeSection.setTimeAttempts);
                 }
             }
             if (!this.localSource) {
@@ -480,32 +478,17 @@ export class Synchronizer {
      * Get and copy settings to this
      */
     private async ensureSettings() {
-        if (!await EnsureSettings() || !synchronizerConfig) {
+        if (!await ensureSettings(this.logFn) || !synchronizerConfig) {
             this.logFn(LogType.error, () => localize("error.no_settings", "Cannot get settings"));
             return false;
         }
-        const [projectSection, synchronizeSection] = await Promise.all([
-                    synchronizerConfig.get(ProjectSection.section),
-                    synchronizerConfig.get(SynchronizeSection.section)]);
-        // get current values
-        const project = projectSection ? projectSection.store() : undefined;
-        const synch = synchronizeSection ? synchronizeSection.store() : undefined;
-        if (ProjectSection.is(project)
-            && SynchronizeSection.is(synch)
-            && vscode.workspace.workspaceFolders
-            && vscode.workspace.workspaceFolders.length > 0) {
-            // hold
-            this.projectSection = project;
-            this.synchronizeSection = synch;
-            this.workspaceUri = vscode.workspace.workspaceFolders[0].uri;
-            return true;
-        } else {
-            if (this.logFn) {
-                this.logFn(LogType.error, () => localize("error.bad_settings", "Inconsistent settings or workspace is empty"));
-            }
+        if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
+            this.logFn(LogType.error, () => localize("error.no_workspace", "Workspace is empty"));
             return false;
         }
-    }
+        this.workspaceUri = vscode.workspace.workspaceFolders[0].uri;
+        return true;
+}
 
     /**
      * Ensure that ssh-helper loaded
