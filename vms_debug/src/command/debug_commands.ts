@@ -11,13 +11,15 @@ export enum DebugCmdVMS
 	dbgStepIn = "step /into",
 	dbgStepReturn = "step /return",
 
+	dbgSet = "set",
+
 	dbgBreakPointSet = "set break",
 	dbgBreakPointRemove = "cancel break",
 	dbgBreakPointShow = "show break",
 	dbgBreakPointActivate = "activate break",
 	dbgBreakPointDeactivate = "deactivate break",
 
-	dbgCurrentLine = "type",
+	dbgTypeLine = "type",
 	dbgExamine = "examine",
 	dbgEvaluate = "evaluate",
 	dbgDeposit = "deposit",
@@ -29,6 +31,7 @@ export enum DebugCmdVMS
 
 	dbgSetModeNoWait = "set mode nowait",
 	dbgSetModeScreen = "set mode screen",
+	dbgSetModeNoScreen = "set mode noscreen",
 	dbgSelect = "select",
 	dbgSetDisplay = "display",
 }
@@ -77,11 +80,6 @@ export class DebugCommands
 	public rerun() : CommandMessage
 	{
 		return new CommandMessage(DebugCmdVMS.dbgRerunExe, "");
-	}
-
-	public showCurrentLine() : CommandMessage
-	{
-		return new CommandMessage(DebugCmdVMS.dbgCurrentLine, "");
 	}
 
 	public stop() : CommandMessage
@@ -146,6 +144,10 @@ export class DebugCommands
 	}
 
 
+	public showCurrentLine() : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgTypeLine, "");
+	}
 	//get value of variable by name
 	//(show format) (file\locateFunc\nameVar:       value) - local variable
 	//(show format) (file\nameVar:       value) - global variable

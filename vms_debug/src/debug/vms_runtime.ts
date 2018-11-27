@@ -5,7 +5,7 @@
 import * as vscode from 'vscode';
 import * as nls from 'vscode-nls';
 import { EventEmitter } from 'events';
-import { ShellSession, ModeWork } from '../net/shell-session';
+import { ShellSession, ModeWork, TypeDataMessage } from '../net/shell-session';
 import { OsCommands } from '../command/os_commands';
 import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
 import { DebugParser, MessageDebuger } from '../parsers/debug_parser';
@@ -96,7 +96,7 @@ export class VMSRuntime extends EventEmitter
 		this.lisPaths = await this.fileManager.loadPathListFiles(section.listing);
 
 		this.shell.resetParameters();
-		//run debuger
+		//run debugger
 		if(this.shell.getModeWork() === ModeWork.shell)
 		{
 			this.shell.SendCommandToQueue(this.osCmd.runDebug());
@@ -107,7 +107,7 @@ export class VMSRuntime extends EventEmitter
 			this.shell.SendCommandToQueue(this.dbgCmd.modeNoWait());
 			this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
 		}
-		else
+		else//reload program
 		{
 			this.shell.SendCommandToQueue(this.dbgCmd.clearDisplay("dbge, out"));
 			this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
@@ -232,9 +232,11 @@ export class VMSRuntime extends EventEmitter
 		}
 		else//enter bebug command
 		{
+			let allow : boolean = true;
 			let command = data.toLowerCase();
+			let parts = command.split(/\s+/);
 
-			switch(command)
+			switch(parts[0])
 			{
 				case DebugCmdVMS.dbgRunExe:
 				case DebugCmdVMS.dbgRerunExe:
@@ -242,25 +244,29 @@ export class VMSRuntime extends EventEmitter
 				case DebugCmdVMS.dbgExit:
 				case DebugCmdVMS.dbgGo:
 				case DebugCmdVMS.dbgStep:
-				case DebugCmdVMS.dbgStepOver:
-				case DebugCmdVMS.dbgStepIn:
-				case DebugCmdVMS.dbgStepReturn:
-				//case DebugCmdVMS.dbgBreakPointSet:
-				// case DebugCmdVMS.dbgBreakPointRemove:
-				// case DebugCmdVMS.dbgBreakPointActivate:
-				// case DebugCmdVMS.dbgBreakPointDeactivate:
-				case DebugCmdVMS.dbgSetModeNoWait:
-				case DebugCmdVMS.dbgSetModeScreen:
 				case DebugCmdVMS.dbgSelect:
 				case DebugCmdVMS.dbgSetDisplay:
-					//don't resolve in manual
-					const message = localize('runtime.command_ignore', "This command is not allowed!");
-					vscode.debug.activeDebugConsole.append(message + "\n");
+					//don't resolve from the debug console
+					allow = false;
+					break;
+
+				case DebugCmdVMS.dbgSet:
+					if(command.includes(DebugCmdVMS.dbgSetModeScreen) ||
+						command.includes(DebugCmdVMS.dbgSetModeNoScreen))
+					{
+						allow = false;
+					}
 					break;
 
 				default:
 					this.shell.SendData(data);//send command to the debugger
 					break;
+			}
+
+			if(!allow)
+			{
+				const message = localize('runtime.command_ignore', "This command is not allowed!");
+				vscode.debug.activeDebugConsole.append(message + "\n");
 			}
 
 			result = true;
@@ -614,7 +620,7 @@ export class VMSRuntime extends EventEmitter
 	}
 
 
-	public receiveData(data: string, mode: ModeWork) : void
+	public receiveData(mode: ModeWork, type: TypeDataMessage, data: string) : void
 	{
 		if(mode === ModeWork.shell)
 		{
@@ -624,7 +630,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			this.debugRun = true;
 
-			this.dbgParser.parseDebugData(this.shell.getCurrentCommand(), data, this.sourcePaths, this.lisPaths);
+			this.dbgParser.parseDebugData(this.shell.getCurrentCommand(), type, data, this.sourcePaths, this.lisPaths);
 
 			let messageCommand = this.dbgParser.getCommandMessage();
 			let messageDebug = this.dbgParser.getDebugMessage();

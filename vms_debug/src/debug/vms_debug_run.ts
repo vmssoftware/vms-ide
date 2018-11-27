@@ -10,7 +10,7 @@ import {
 } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { VMSRuntimeRun } from './vms_runtime_run';
-import { ShellSession, ModeWork } from '../net/shell-session';
+import { ShellSession, ModeWork, TypeDataMessage } from '../net/shell-session';
 import { LogFunction } from '@vorfol/common';
 const { Subject } = require('await-notify');
 
@@ -146,9 +146,9 @@ export class VMSNoDebugSession extends LoggingDebugSession
 	}
 
 	//---- helpers
-	public receiveDataShell(data: string, mode: ModeWork)
+	public receiveDataShell(mode: ModeWork, type: TypeDataMessage, data: string)
 	{
-		this.runtime.receiveData(data, mode);
+		this.runtime.receiveData(mode, type, data);
 	}
 
 	public closeDebugSession()
