@@ -226,17 +226,18 @@ export class DebugParser
 								{
 									if(positionOld === position[0])
 									{
-										this.displayDataString[i] += " " + item.substr(index, item.length);
+										this.displayDataString[i] = this.addLine(this.displayDataString[i], item.substr(index, item.length), position[1]);
 									}
 									else
 									{
 										if(this.displayDataString[i] === "")
 										{
-											this.displayDataString[i] = item.substr(index, item.length);
+											this.displayDataString[i] = this.addLine(this.displayDataString[i], item.substr(index, item.length), position[1]);
 										}
 										else
 										{
-											this.displayDataString[i] += "\n" + item.substr(index, item.length);
+											this.displayDataString[i] += "\n";
+											this.displayDataString[i] = this.addLine(this.displayDataString[i], item.substr(index, item.length), position[1]);
 										}
 									}
 
@@ -258,6 +259,21 @@ export class DebugParser
 		{
 			this.queueMsgUser.push(/*MessagePrompt.prmtUSER +*/ this.displayDataString[2]);
 		}
+	}
+
+	private addLine(lineBase : string, lineAdd : string, position : number) : string
+	{
+		let items = lineBase.split("\n");
+		let sizeLastLine = items[items.length - 1].length;
+
+		for(let i = 0; i < (position - sizeLastLine - 1); i++)
+		{
+			lineBase += " ";
+		}
+
+		lineBase += lineAdd;
+
+		return lineBase;
 	}
 
 	private parseLineMsg(msgLine: string, sourcePaths: string[], lisPaths: string[])
