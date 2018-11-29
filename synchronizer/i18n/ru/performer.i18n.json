@@ -1,7 +1,4 @@
 {
-    "saving.fail": "Сохранение неудачно",
-    "saving.status": "Сохранение...",
-    "saving.success": "Сохранение удачно",
     "synchronizing.fail": "Синхронизация неудачна",
     "synchronizing.status": "Синхронизация...",
     "synchronizing.success": "Синхронизация удачна",
@@ -17,5 +14,8 @@
     "crlf.fail": "Замена CrLf неудачна",
     "crlf.status": "$(search) Замена...",
     "crlf.success": "Замена CrLf удачна",
+    "edit.fail": "Edit settings failed",
+    "edit.status": "Edit settings...",
+    "edit.success": "Edit settings done",
     "error.no_action": "Отсутсвует действие: {0}"
 }

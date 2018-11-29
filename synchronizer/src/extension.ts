@@ -1,8 +1,8 @@
+import { commands, env, ExtensionContext, window, workspace } from "vscode";
 
-import { commands, env, ExtensionContext, window } from "vscode";
-
+import { Builder } from "./build/builder";
 import { setExtensionContext } from "./context";
-import { configApi, configHelper, ensureSettings, projectSection } from "./ensure-settings";
+import { configApi, ensureConfigHelperApi } from "./ensure-settings";
 import { Perform } from "./performer";
 import { SourceHelper } from "./sync/get-source";
 import { Synchronizer } from "./sync/synchronizer";
@@ -11,7 +11,6 @@ import { LogFunction, LogType } from "@vorfol/common";
 
 const locale = env.language ;
 import * as nls from "vscode-nls";
-import { ChangeCrLf } from "./change-crlf";
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
 // tslint:disable-next-line:no-empty
@@ -19,8 +18,7 @@ let logFn: LogFunction = () => {};
 
 export async function activate(context: ExtensionContext) {
 
-    const apiLoaded = await ensureSettings();
-    if (!apiLoaded || configApi === undefined) {
+    if (!await ensureConfigHelperApi() || configApi === undefined) {
         return undefined;
     }
 
@@ -33,6 +31,9 @@ export async function activate(context: ExtensionContext) {
 
     syncLog(LogType.debug, () => localize("debug.activated", "OpenVMS extension is activated"));
 
+    context.subscriptions.push(Synchronizer.acquire(syncLog));
+    context.subscriptions.push(Builder.acquire(buildLog));
+
     context.subscriptions.push( window.registerUriHandler({
         handleUri(uri) {
             syncLog(LogType.debug, () => `command: ${uri.path}`);
@@ -40,57 +41,46 @@ export async function activate(context: ExtensionContext) {
             syncLog(LogType.debug, () => `fragment: ${uri.fragment}`);
         }}));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async () => {
-        return Perform("save all", syncLog)
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async (scope: string) => {
+        return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
-                    return Perform("synchronize", syncLog);
+                    return Perform("synchronize", scope, syncLog);
                 }
                 return saved;
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async () => {
-        return Perform("save all", syncLog)
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async (scope: string) => {
+        return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
-                    return Perform("upload source", syncLog);
+                    return Perform("upload source", scope, syncLog);
                 }
                 return saved;
             })
             .then((uploadOk) => {
                 if (uploadOk) {
-                    return Perform("build", buildLog);
+                    return Perform("build", scope, buildLog);
                 }
                 return uploadOk;
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async () => {
-        return Perform("clean", buildLog);
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope: string) => {
+        return Perform("clean", scope, buildLog);
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopSync", async () => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopSync", async (scope: string) => {
         return Synchronizer.acquire().disableRemote();
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async () => {
-        return ensureSettings(syncLog)
-            .then((ok) => {
-                if (ok && configHelper) {
-                    const editor = configHelper.getEditor();
-                    return editor.invoke();
-                } else {
-                    return false;
-                }
-            }).catch((err) => {
-                logFn(LogType.error, () => String(err));
-                return false;
-            });
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async (scope: string) => {
+        return Perform("edit settings", scope, syncLog);
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.changeCRLF", async () => {
-        return Perform("crlf", syncLog);
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.changeCRLF", async (scope: string) => {
+        return Perform("crlf", scope, syncLog);
     }));
 
     return new SourceHelper();

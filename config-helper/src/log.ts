@@ -55,7 +55,7 @@ function debugToFile(s: string) {
 export function createLogFunction(channelName: string): LogFunction {
     const channel = window.createOutputChannel(channelName);
 
-    const config = workspace.getConfiguration("vmssoftware.config-helper");
+    const config = workspace.getConfiguration("vmssoftware.config-helper.settings", null);
     const debug = config.get<string>("debug");
     const addCaleeInfo = config.get<boolean>("addCalleeInfo");
 

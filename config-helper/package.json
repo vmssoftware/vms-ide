@@ -2,7 +2,7 @@
     "name": "config-helper",
     "displayName": "config-helper",
     "description": "Config helper",
-    "version": "0.1.34",
+    "version": "0.1.44",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -37,7 +37,8 @@
         "configuration": {
             "title": "%configuration.title%",
             "properties": {
-                "vmssoftware.config-helper.using": {
+                "vmssoftware.config-helper.settings.using": {
+                    "scope": "resource",
                     "type": "string",
                     "enum": [
                         "VSC",
@@ -52,17 +53,20 @@
                     "default": "FS",
                     "description": "%configuration.type.description%"
                 },
-                "vmssoftware.config-helper.test": {
+                "vmssoftware.config-helper.settings.test": {
+                    "scope": "resource",
                     "type": "string",
                     "default": "test",
                     "description": "%configuration.test.description%"
                 },
-                "vmssoftware.config-helper.debug": {
+                "vmssoftware.config-helper.settings.debug": {
+                    "scope": "resource",
                     "type": "string",
                     "default": "",
                     "description": "%configuration.debug.description%"
                 },
-                "vmssoftware.config-helper.addCalleeInfo": {
+                "vmssoftware.config-helper.settings.addCalleeInfo": {
+                    "scope": "resource",
                     "type": "boolean",
                     "default": false,
                     "description": "%configuration.addCalleeInfo.description%"

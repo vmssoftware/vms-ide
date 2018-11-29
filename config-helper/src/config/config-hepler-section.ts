@@ -2,7 +2,7 @@ import { IConfigData, IConfigSection } from "./config";
 
 export class ConfigHelperSection implements IConfigSection {
 
-    public static readonly section = "config-helper";
+    public static readonly section = "settings";
 
     public static is(candidate: any): candidate is ConfigHelperSection {
         return !!candidate &&

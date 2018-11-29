@@ -1,10 +1,12 @@
+import { ensureSettings } from "../ensure-settings";
 import { ISource, sourceType } from "./source";
 
 export class SourceHelper {
-    public async getSource(type: sourceType): Promise<ISource | undefined> {
+    public async getSource(scope: string, type: sourceType): Promise<ISource | undefined> {
         const sync = require("./synchronizer").Synchronizer.acquire();
-        if (sync) {
-            return sync.requestSource(type);
+        const ensured = ensureSettings(scope);
+        if (sync && ensured) {
+            return sync.requestSource(ensured, type);
         }
         return undefined;
     }

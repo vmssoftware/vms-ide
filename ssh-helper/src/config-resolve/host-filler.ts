@@ -1,8 +1,7 @@
-import * as fs from "fs-extra";
 
 import { ISettingsFiller } from "./settings-filler";
 import { IConnectConfig, IHostsSection } from "../api";
-import { LogFunction, LogType } from "@vorfol/common";
+import { LogFunction } from "@vorfol/common";
 
 export class HostFiller implements ISettingsFiller {
 

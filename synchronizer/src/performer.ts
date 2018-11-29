@@ -1,21 +1,21 @@
 import { LogFunction, LogType } from "@vorfol/common";
 
 import { CommandContext, setContext } from "./command-context";
-import { configHelper, ensureSettings } from "./ensure-settings";
+import { ensureSettings, IEnsured } from "./ensure-settings";
 
 import { window, workspace } from "vscode";
 
 import { Builder } from "./build/builder";
+import { ChangeCrLf } from "./change-crlf";
 import { Synchronizer } from "./sync/synchronizer";
 
 import * as nls from "vscode-nls";
-import { ChangeCrLf } from "./change-crlf";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export type AsyncAction = (logFn?: LogFunction) => Promise<boolean>;
+export type AsyncAction = (ensured: IEnsured, logFn: LogFunction) => Promise<boolean>;
 
-export type ActionType = "save all" | "synchronize" | "build" | "clean" | "upload source" | "crlf";
+export type ActionType = "save all" | "synchronize" | "build" | "clean" | "upload source" | "crlf" | "edit settings";
 
 export interface IPerform {
     actionFunc: AsyncAction;
@@ -28,17 +28,9 @@ export interface IPerform {
 
 export const actions: IPerform[] = [
     {
-        actionFunc: async (logFn?: LogFunction) => workspace.saveAll(false),
-        actionName: "save all",
-        context: CommandContext.isSaving,
-        fail: localize("saving.fail", "Saving failed"),
-        status: localize("saving.status", "$(check) Saving..."),
-        success: localize("saving.success", "Saving ok"),
-    },
-    {
-        actionFunc: async (logFn?: LogFunction) => {
+        actionFunc: async (ensured: IEnsured, logFn: LogFunction) => {
             const syncronizer = Synchronizer.acquire(logFn);
-            return syncronizer.syncronizeProject();
+            return syncronizer.syncronizeProject(ensured);
         },
         actionName: "synchronize",
         context: CommandContext.isSyncronizing,
@@ -47,9 +39,9 @@ export const actions: IPerform[] = [
         success: localize("synchronizing.success", "Synchronizing ok"),
     },
     {
-        actionFunc: async (logFn?: LogFunction) => {
+        actionFunc: async (ensured: IEnsured, logFn: LogFunction) => {
             const syncronizer = Synchronizer.acquire(logFn);
-            return syncronizer.uploadSource();
+            return syncronizer.uploadSource(ensured);
         },
         actionName: "upload source",
         context: CommandContext.isBuilding,
@@ -58,9 +50,9 @@ export const actions: IPerform[] = [
         success: localize("upload.source.success", "Upload source ok"),
     },
     {
-        actionFunc: async (logFn?: LogFunction) => {
+        actionFunc: async (ensured: IEnsured, logFn: LogFunction) => {
             const builder = Builder.acquire(logFn);
-            return builder.buildProject();
+            return builder.buildProject(ensured);
         },
         actionName: "build",
         context: CommandContext.isBuilding,
@@ -69,9 +61,9 @@ export const actions: IPerform[] = [
         success: localize("buiding.success", "Building ok"),
     },
     {
-        actionFunc: async (logFn?: LogFunction) => {
+        actionFunc: async (ensured: IEnsured, logFn: LogFunction) => {
             const builder = Builder.acquire(logFn);
-            return builder.cleanProject();
+            return builder.cleanProject(ensured);
         },
         actionName: "clean",
         context: CommandContext.isBuilding,
@@ -80,55 +72,76 @@ export const actions: IPerform[] = [
         success: localize("clean.success", "Clean ok"),
     },
     {
-        actionFunc: async (logFn?: LogFunction) => {
+        actionFunc: async (ensured: IEnsured, logFn: LogFunction) => {
             const crlf = new ChangeCrLf(logFn);
-            return crlf.perform();
+            return crlf.perform(ensured);
         },
         actionName: "crlf",
-        context: CommandContext.isBuilding,
+        context: CommandContext.isCrLf,
         fail: localize("crlf.fail", "Change CrLf failed"),
         status: localize("crlf.status", "$(search) Changing..."),
         success: localize("crlf.success", "Change CrLf done"),
     },
+    {
+        actionFunc: async (ensured: IEnsured) => {
+            if (ensured.configHelper) {
+                const editor = ensured.configHelper.getEditor();
+                return editor.invoke();
+            }
+            return false;
+        },
+        actionName: "edit settings",
+        context: CommandContext.isEdit,
+        fail: localize("edit.fail", "Edit settings failed"),
+        status: localize("edit.status", "Edit settings..."),
+        success: localize("edit.success", "Edit settings done"),
+    },
 ];
 
-export async function Perform(actionName: ActionType, logFn?: LogFunction) {
+export async function Perform(actionName: ActionType, scope: string, logFn: LogFunction) {
     const actionToDo = actions.find((action) => action.actionName === actionName);
     if (!actionToDo) {
-        if (logFn) {
-            logFn(LogType.debug, () => localize("error.no_action", "Cannot find action: {0}", actionName));
-        }
+        logFn(LogType.debug, () => localize("error.no_action", "Cannot find action: {0}", actionName));
         return false;
     }
-    return ensureSettings(logFn)
-        .then((ok) => {
-            if (ok && configHelper) {
-                setContext(actionToDo.context, true);
-                const msg = window.setStatusBarMessage(actionToDo.status);
-                return actionToDo.actionFunc(logFn)
-                    .catch((err) => {
-                        if (logFn) {
+    let scopes = [scope];
+    if (scope === undefined) {
+        // TODO: get sorted by dependencies list of scopes
+        if (workspace.workspaceFolders) {
+            scopes = workspace.workspaceFolders.map((wf) => wf.name);
+        }
+    }
+    let result = true;
+    for (const curScope of scopes) {
+        const scopeResult = await ensureSettings(curScope, logFn)
+            .then((ensured) => {
+                if (ensured) {
+                    setContext(actionToDo.context, true);
+                    const msg = window.setStatusBarMessage(actionToDo.status + ` [${curScope}]`);
+                    return actionToDo.actionFunc(ensured, logFn)
+                        .catch((err) => {
                             logFn(LogType.error, () => err);
-                        }
-                        return false;
-                    }).then((result) => {
-                        setContext(actionToDo.context, false);
-                        msg.dispose();
-                        if (result) {
-                            window.showInformationMessage(actionToDo.success);
-                            if (logFn) {
-                                logFn(LogType.information, () => actionToDo.success, true);
+                            return false;
+                        }).then((actionResult) => {
+                            setContext(actionToDo.context, false);
+                            msg.dispose();
+                            if (actionResult) {
+                                window.showInformationMessage(actionToDo.success + ` [${curScope}]`);
+                                logFn(LogType.information, () => actionToDo.success + ` [${curScope}]`, true);
+                            } else {
+                                window.showInformationMessage(actionToDo.fail + ` [${curScope}]`);
+                                logFn(LogType.error, () => actionToDo.fail + ` [${curScope}]`, true);
                             }
-                        } else {
-                            window.showInformationMessage(actionToDo.fail);
-                            if (logFn) {
-                                logFn(LogType.error, () => actionToDo.fail, true);
-                            }
-                        }
-                        return result;
-                    });
-            } else {
-                return false;
-            }
-        });
+                            return actionResult;
+                        });
+                } else {
+                    return false;
+                }
+            });
+        if (!scopeResult) {
+            return false;
+        }
+        result = result && scopeResult;
+    }
+    return result;
 }

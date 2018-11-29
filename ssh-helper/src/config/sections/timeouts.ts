@@ -1,7 +1,7 @@
 import { IConfigData, IConfigSection } from "../config";
 import { ITimeoutsSection } from "../../api";
 
-export class TimeoutsSection implements ITimeoutsSection, IConfigSection {
+export class TimeoutSection implements ITimeoutsSection, IConfigSection {
 
     public static readonly section = "timeouts";
 
@@ -17,7 +17,7 @@ export class TimeoutsSection implements ITimeoutsSection, IConfigSection {
     public welcomeTimeout: number = 0; // in msec
 
     public name(): string {
-        return TimeoutsSection.section;
+        return TimeoutSection.section;
     }
 
     public store(): IConfigData {
@@ -33,7 +33,7 @@ export class TimeoutsSection implements ITimeoutsSection, IConfigSection {
     }
 
     public fillFrom(data: IConfigData): boolean {
-        if (TimeoutsSection.is(data)) {
+        if (TimeoutSection.is(data)) {
             this.cmdTimeout = data.cmdTimeout;
             this.feedbackTimeout = data.feedbackTimeout;
             this.welcomeTimeout = data.welcomeTimeout;

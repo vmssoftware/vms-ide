@@ -10,7 +10,14 @@
             "isBackground": true,
             "presentation": {
                 "reveal": "never"
-            },
+            }
+        },
+        {
+            "type": "npm",
+            "script": "compile",
+            "problemMatcher": [
+                "$tsc"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true

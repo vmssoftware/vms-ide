@@ -1,19 +1,17 @@
 import path from "path";
-import vscode from "vscode";
+import * as vscode from "vscode";
 
 import { GetSshHelperFromApi } from "../config/get-ssh-helper";
-import { IProjectSection, ProjectSection } from "../config/sections/project";
-import { ISynchronizeSection, SynchronizeSection } from "../config/sections/synchronize";
 
 import { Barrier, Delay } from "@vorfol/common";
 import { LogFunction, LogType } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
 import { IFileEntry } from "@vorfol/common";
 
-import { SshHelper } from "../ext-api/ssh-helper";
+import { IDispose, SshHelper } from "../ext-api/ssh-helper";
 
 import { createFile } from "../common/create-file";
-import { ensureSettings, projectSection, synchronizerConfig, synchronizeSection } from "../ensure-settings";
+import { IEnsured } from "../ensure-settings";
 import { FsSource } from "./fs-source";
 import { ISource } from "./source";
 import { VmsSource } from "./vms-source";
@@ -22,7 +20,21 @@ import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
+interface IScopeSyncData {
+    ensured: IEnsured;      // saved settings
+    isValid: boolean;
+    localSource: ISource;
+    remoteSource: ISource;
+    watcher: IDispose;
+    sshWatcher: IDispose;
+}
+
 export class Synchronizer {
+
+    /**
+     * Keep sources for each scope
+     */
+    public static syncScopes: Map<string, IScopeSyncData> = new Map<string, IScopeSyncData>();
 
     public static acquire(logFn?: LogFunction) {
         if (!Synchronizer.instance) {
@@ -38,15 +50,7 @@ export class Synchronizer {
     public logFn: LogFunction;
 
     private sshHelper?: SshHelper;
-    private remoteSource?: ISource;
-    private localSource?: ISource;
     private transferBarrier = new Barrier(10);
-    // private acquires = 0;
-
-    private workspaceUri?: vscode.Uri;
-
-    private onDidLoadConfig?: vscode.Disposable;  // dispose listener
-    private onDidLoadSSHConfig?: vscode.Disposable;  // dispose listener
 
     private constructor(logFn?: LogFunction) {
         // tslint:disable-next-line:no-empty
@@ -54,209 +58,197 @@ export class Synchronizer {
     }
 
     public enableRemote() {
-        if (this.remoteSource) {
-            this.remoteSource.enabled = true;
+        for (const scopeData of Synchronizer.syncScopes.values()) {
+            scopeData.remoteSource.enabled = true;
         }
     }
 
     public disableRemote() {
-        this.logFn(LogType.debug, () => localize("debug.dissblig", "Disabling SFTP and SHELL"));
-        if (this.remoteSource) {
-            this.remoteSource.enabled = false;
+        this.logFn(LogType.debug, () => localize("debug.disablig", "Disabling all SFTP and SHELL"));
+        for (const scopeData of Synchronizer.syncScopes.values()) {
+            scopeData.remoteSource.enabled = false;
+        }
+    }
+
+    /**
+     * Dispose all sources and watchers
+     */
+    public dispose() {
+        this.logFn(LogType.debug, () => localize("debug.disposing", "Disposing sources"));
+        for (const scopeData of Synchronizer.syncScopes.values()) {
+            this.disposeScopeData(scopeData);
+        }
+        Synchronizer.syncScopes.clear();
+    }
+
+    public disposeScopeData(scopeData: IScopeSyncData, remove?: boolean): void {
+        scopeData.localSource.dispose();
+        scopeData.remoteSource.dispose();
+        scopeData.watcher.dispose();
+        scopeData.sshWatcher.dispose();
+        if (remove) {
+            const scopeKey = scopeData.ensured.configHelper.workspaceFolder ? scopeData.ensured.configHelper.workspaceFolder.name : "";
+            Synchronizer.syncScopes.delete(scopeKey);
         }
     }
 
     /**
      * User have to dispose the source
      */
-    public async requestSource(type: "local" | "remote"): Promise<ISource | undefined> {
-        // get current config
-        if (!await this.ensureSettings()) {
-            return undefined;
-        }
-        if (type === "local") {
-            if (this.workspaceUri) {
-                return new FsSource(this.workspaceUri.fsPath, this.logFn);
-            }
-            return undefined;
+    public async requestSource(ensured: IEnsured, type: "local" | "remote"): Promise<ISource | undefined> {
+        if (type === "local" && ensured.configHelper && ensured.configHelper.workspaceFolder) {
+            return new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
         }
         // get ssh helper
-        if (!await this.ensureSshHelper()) {
+        if (!await this.ensureSshHelper() || !this.sshHelper) {
             return undefined;
         }
-        // check if all are ready to create sources
-        if (projectSection
-            && synchronizeSection
-            && this.sshHelper) {
-            // clear password cache
-            this.sshHelper.clearPasswordCashe();
-            const [sftp, shell] = await Promise.all([
-                    this.sshHelper.getDefaultSftp(),
-                    this.sshHelper.getDefaultVmsShell(),
-                ]);
-            if (sftp && shell) {
-                return new VmsSource(sftp, shell, projectSection.root, this.logFn, synchronizeSection.setTimeAttempts);
-            }
+        // clear password cache
+        this.sshHelper.clearPasswordCashe();
+        const scope = ensured.configHelper.workspaceFolder ? ensured.configHelper.workspaceFolder.name : undefined;
+        const [sftp, shell] = await Promise.all([
+                this.sshHelper.getDefaultSftp(scope),
+                this.sshHelper.getDefaultVmsShell(scope),
+            ]);
+        if (sftp && shell) {
+            return new VmsSource(sftp, shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
         }
         return undefined;
     }
 
-    public async syncronizeProject() {
-        if (!await this.prepareSources()) {
+    public async syncronizeProject(ensured: IEnsured) {
+        const scopeData = await this.prepareScopeData(ensured);
+        if (!scopeData) {
             return false;
         }
-        if (this.localSource
-            && this.remoteSource
-            && projectSection
-            && synchronizeSection
-            && this.sshHelper) {
-            // enable
-            this.enableRemote();
-            // clear password cache
-            this.sshHelper.clearPasswordCashe();
-            // get full list
-            const includes = [
-                projectSection.source,
-                projectSection.resource,
-                // projectSection.listing,
-                projectSection.headers,
-                projectSection.builders,
-            ];
-            const include = includes.join(",");
-            const [remoteList,
-                   localList] = await Promise.all([this.remoteSource.findFiles(include, projectSection.exclude),
-                                                   this.localSource.findFiles(include, projectSection.exclude)]);
-            // compare them
-            const compareResult = this.compareLists(localList, remoteList);
-            const waitAll = [];
-            // upload
-            waitAll.push(this.executeAction(compareResult.upload, "upload"));
-            switch (synchronizeSection.downloadNewFiles) {
-                case "overwrite":
-                    waitAll.push(this.executeAction(compareResult.download, "download"));
-                    break;
-                case "skip":
-                    for (const downloadFile of compareResult.download) {
-                        this.logFn(LogType.information, () => localize("output.download_manually", "Remote {0} is newer, please check and download it manually", downloadFile.filename));
-                    }
-                    break;
-                case "edit":
-                    for (const downloadFile of compareResult.download) {
-                        waitAll.push(this.editFile(this.remoteSource, downloadFile.filename));
-                    }
-                    if (compareResult.download.length > 0) {
-                        this.logFn(LogType.information, () => localize("output.edit_count", "Please edit and save {0} files manually", compareResult.download.length));
-                    }
-                    break;
-            }
-            // wait all operations are done
-            const results = await Promise.all(waitAll);
-            // end
-            this.decideDispose();
-            const retCode = results.reduce((acc, result) => {
-                    acc = acc && result;
-                    return acc;
-                }, true);
-            this.logFn(LogType.debug, () => localize("debug.retcode", "Synchronize retCode: {0}", retCode));
-            return retCode;
-        } else {
-            this.logFn(LogType.error, () => localize("output.edit_settings", "In first please edit settings"));
+        // enable
+        this.enableRemote();
+        // clear password cache
+        this.sshHelper!.clearPasswordCashe();
+        // get full list
+        const includes = [
+            ensured.projectSection.source,
+            ensured.projectSection.resource,
+            // projectSection.listing,
+            ensured.projectSection.headers,
+            ensured.projectSection.builders,
+        ];
+        const include = includes.join(",");
+        const [remoteList, localList] = await Promise.all(
+            [scopeData.remoteSource.findFiles(include, ensured.projectSection.exclude),
+                scopeData.localSource.findFiles(include, ensured.projectSection.exclude)]);
+        // compare them
+        const compareResult = this.compareLists(localList, remoteList);
+        const waitAll = [];
+        // upload
+        waitAll.push(this.executeAction(scopeData, compareResult.upload, "upload"));
+        switch (ensured.synchronizeSection.downloadNewFiles) {
+            case "overwrite":
+                waitAll.push(this.executeAction(scopeData, compareResult.download, "download"));
+                break;
+            case "skip":
+                for (const downloadFile of compareResult.download) {
+                    this.logFn(LogType.information, () => localize("output.download_manually", "Remote {0} is newer, please check and download it manually", downloadFile.filename));
+                }
+                break;
+            case "edit":
+                for (const downloadFile of compareResult.download) {
+                    waitAll.push(this.editFile(scopeData.remoteSource!, downloadFile.filename));
+                }
+                if (compareResult.download.length > 0) {
+                    this.logFn(LogType.information, () => localize("output.edit_count", "Please edit and save {0} files manually", compareResult.download.length));
+                }
+                break;
         }
-        return false;
+        // wait all operations are done
+        const results = await Promise.all(waitAll);
+        // end
+        this.decideDispose(scopeData);
+        const retCode = results.reduce((acc, result) => {
+                acc = acc && result;
+                return acc;
+            }, true);
+        this.logFn(LogType.debug, () => localize("debug.retcode", "Synchronize retCode: {0}", retCode));
+        return retCode;
     }
 
-    public async uploadSource() {
-        if (!await this.prepareSources()) {
+    public async uploadSource(ensured: IEnsured) {
+        const scopeData = await this.prepareScopeData(ensured);
+        if (!scopeData) {
             return false;
         }
-        if (this.localSource
-            && this.remoteSource
-            && projectSection
-            && synchronizeSection
-            && this.sshHelper) {
-            // enable
-            this.enableRemote();
-            // clear password cache
-            this.sshHelper.clearPasswordCashe();
-            // get full list
-            const includes = [
-                projectSection.source,
-                projectSection.resource,
-                // projectSection.listing,
-                projectSection.headers,
-                projectSection.builders,
-            ];
-            const include = includes.join(",");
-            const [remoteList,
-                   localList] = await Promise.all([this.remoteSource.findFiles(include, projectSection.exclude),
-                                                   this.localSource.findFiles(include, projectSection.exclude)]);
-            // compare them
-            const compareResult = this.compareLists(localList, remoteList);
-            const retCode = await this.executeAction(compareResult.upload, "upload");
-            // end
-            this.decideDispose();
-            this.logFn(LogType.debug, () => localize("debug.upload.retcode", "Upload source retCode: {0}", retCode));
-            return retCode;
-        } else {
-            this.logFn(LogType.error, () => localize("output.edit_settings", "In first please edit settings"));
-        }
-        return false;
+        // enable
+        this.enableRemote();
+        // clear password cache
+        this.sshHelper!.clearPasswordCashe();
+        // get full list
+        const includes = [
+            ensured.projectSection.source,
+            ensured.projectSection.resource,
+            // projectSection.listing,
+            ensured.projectSection.headers,
+            ensured.projectSection.builders,
+        ];
+        const include = includes.join(",");
+        const [remoteList, localList] = await Promise.all(
+            [scopeData.remoteSource.findFiles(include, ensured.projectSection.exclude),
+                scopeData.localSource.findFiles(include, ensured.projectSection.exclude)]);
+        // compare them
+        const compareResult = this.compareLists(localList, remoteList);
+        const retCode = await this.executeAction(scopeData, compareResult.upload, "upload");
+        // end
+        this.decideDispose(scopeData);
+        this.logFn(LogType.debug, () => localize("debug.upload.retcode", "Upload source retCode: {0}", retCode));
+        return retCode;
     }
 
     /**
      * Download listing files, all (without "exculde")
      */
-    public async downloadListings() {
-        if (!await this.prepareSources()) {
+    public async downloadListings(ensured: IEnsured) {
+        const scopeData = await this.prepareScopeData(ensured);
+        if (!scopeData) {
             return false;
         }
-        if (this.remoteSource
-            && this.localSource
-            && projectSection) {
-                const outdir = projectSection.outdir;
-                this.remoteSource.root += ftpPathSeparator + outdir;    // find only in output directory
-                const localRoot = this.localSource.root;
-                this.localSource.root += ftpPathSeparator + outdir;     // download exactly in output directory
-                const [remoteList, localList] =
-                    await Promise.all([this.remoteSource.findFiles(projectSection.listing),
-                                       this.localSource.findFiles(projectSection.listing)]);
-                // compare them
-                const compareResult = this.compareLists(localList, remoteList);
-                 // do not add outdir to the files in list! because remoteSource already has root pointed to outdir
-                return this.executeAction(compareResult.download, "download")
-                    .catch((err) => {
-                        this.logFn(LogType.debug, () => localize("debug.download_listing.error", "Error while download listings {0}", String(err)));
-                        return false;
-                    })
-                    .then((done) => {
-                        if (this.remoteSource
-                            && this.localSource
-                            && projectSection) {
-                                this.localSource.root = localRoot;
-                                this.remoteSource.root = projectSection.root;
-                            }
-                        this.decideDispose();
-                        return done;
-                    });
-        }
-        return false;
+        const outdir = ensured.projectSection.outdir;
+        scopeData.remoteSource.root += ftpPathSeparator + outdir;    // find only in output directory
+        const localRoot = scopeData.localSource.root;
+        scopeData.localSource.root += ftpPathSeparator + outdir;     // download exactly in output directory
+        const [remoteList, localList] = await Promise.all(
+            [scopeData.remoteSource.findFiles(ensured.projectSection.listing),
+                scopeData.localSource.findFiles(ensured.projectSection.listing)]);
+        // compare them
+        const compareResult = this.compareLists(localList, remoteList);
+            // do not add outdir to the files in list! because remoteSource already has root pointed to outdir
+        return this.executeAction(scopeData, compareResult.download, "download")
+            .catch((err) => {
+                this.logFn(LogType.debug, () => localize("debug.download_listing.error", "Error while download listings {0}", String(err)));
+                return false;
+            })
+            .then((done) => {
+                scopeData.localSource.root = localRoot;
+                scopeData.remoteSource.root = ensured.projectSection.root;
+                this.decideDispose(scopeData);
+                return done;
+            });
     }
 
     /**
      * Download files without comparing
      * @param files files
      */
-    public async downloadFiles(files: string[] | IFileEntry[]) {
-        if (!await this.prepareSources()) {
+    public async downloadFiles(ensured: IEnsured, files: string[] | IFileEntry[]) {
+        const scopeData = await this.prepareScopeData(ensured);
+        if (!scopeData) {
             return false;
         }
-        return this.executeAction(files, "download")
+        return this.executeAction(scopeData, files, "download")
             .catch((err) => {
                 this.logFn(LogType.debug, () => localize("debug.download.error", "Error while download {0}", String(err)));
                 return false;
             })
             .then((done) => {
-                this.decideDispose();
+                this.decideDispose(scopeData);
                 return done;
             });
     }
@@ -265,84 +257,28 @@ export class Synchronizer {
      * Upload files, without comparing
      * @param files files
      */
-    public async uploadFiles(files: string[] | IFileEntry[]) {
-        if (!await this.prepareSources()) {
+    public async uploadFiles(ensured: IEnsured, files: string[] | IFileEntry[]) {
+        const scopeData = await this.prepareScopeData(ensured);
+        if (!scopeData) {
             return false;
         }
-        return this.executeAction(files, "upload")
+        return this.executeAction(scopeData, files, "upload")
             .catch((err) => {
                 this.logFn(LogType.debug, () => localize("debug.upload.error", "Error while upload {0}", String(err)));
                 return false;
             })
             .then((done) => {
-                this.decideDispose();
+                this.decideDispose(scopeData);
                 return done;
             });
-}
-
-    /**
-     * Dispose all sources and watchers
-     */
-    public dispose() {
-        this.logFn(LogType.debug, () => localize("debug.disposing", "Disposing sources"));
-        // sources
-        if (this.remoteSource) {
-            this.remoteSource.dispose();
-            this.remoteSource = undefined;
-        }
-        if (this.localSource) {
-            this.localSource.dispose();
-            this.localSource = undefined;
-        }
-        // watchers
-        if (this.onDidLoadConfig) {
-            this.onDidLoadConfig.dispose();
-            this.onDidLoadConfig = undefined;
-        }
-        if (this.onDidLoadSSHConfig) {
-            this.onDidLoadSSHConfig.dispose();
-            this.onDidLoadSSHConfig = undefined;
-        }
     }
 
     /**
      * Dispose or setup watchers besides on "keep alive" flag
      */
-    private decideDispose() {
-        // this.acquires--;
-        // if (this.acquires > 0) {
-        //     return;
-        // }
-        // this.acquires = 0;  // to prevent under zero values
-        if (synchronizerConfig
-            && synchronizeSection
-            && synchronizeSection.keepAlive) {
-            // test configuration watcher and create if need
-            if (this.onDidLoadConfig === undefined) {
-                this.onDidLoadConfig = synchronizerConfig.onDidLoad( async () => {
-                    // test if "keep alive" changed
-                    if (synchronizerConfig) {
-                        const tst = await synchronizerConfig.get(SynchronizeSection.section);
-                        if (!SynchronizeSection.is(tst)
-                            || tst.keepAlive === false) {
-                            this.dispose();
-                        }
-                    } else {
-                        // nothing to keep
-                        this.dispose();
-                    }
-                });
-            }
-            // attach watcher to the sshHelper (always do dispose)
-            if (this.onDidLoadSSHConfig === undefined
-                && this.sshHelper
-                && this.sshHelper.onDidLoadConfig !== undefined) {
-                this.onDidLoadSSHConfig = this.sshHelper.onDidLoadConfig(() => {
-                    this.dispose();
-                });
-            }
-        } else {
-            this.dispose();
+    private decideDispose(scopeData: IScopeSyncData) {
+        if (!scopeData.ensured.synchronizeSection.keepAlive) {
+            this.disposeScopeData(scopeData, true);
         }
     }
 
@@ -436,59 +372,56 @@ export class Synchronizer {
     /**
      * Prepare sources if missed, also get settings
      */
-    private async prepareSources() {
-        if (this.remoteSource && this.localSource) {
-            // this.acquires++;
-            return true;
+    private async prepareScopeData(ensured: IEnsured) {
+        const scopeKey = ensured.configHelper.workspaceFolder ? ensured.configHelper.workspaceFolder.name : "";
+        const scopeData = Synchronizer.syncScopes.get(scopeKey);
+        if (scopeData && scopeData.isValid) {
+            return scopeData;
         }
-        // get current config
-        if (!await this.ensureSettings()) {
-            return false;
+        if (scopeData) {
+            this.disposeScopeData(scopeData, true);
         }
         // get ssh helper
-        if (!await this.ensureSshHelper()) {
-            return false;
+        if (!await this.ensureSshHelper() || !this.sshHelper) {
+            return undefined;
         }
         // check if all are ready to create sources
-        if (projectSection
-            && synchronizeSection
-            && this.workspaceUri
-            && this.sshHelper) {
-            // this.acquires ++;
-            if (!this.remoteSource) {
-                this.logFn(LogType.debug, () => localize("debug.create_remote", "Creating remote source"));
-                const [sftp, shell] = await Promise.all([
-                        this.sshHelper.getDefaultSftp(),
-                        this.sshHelper.getDefaultVmsShell(),
-                    ]);
-                if (sftp && shell) {
-                    this.remoteSource = new VmsSource(sftp, shell, projectSection.root, this.logFn, synchronizeSection.setTimeAttempts);
+        if (ensured.configHelper.workspaceFolder) {
+            const scope = ensured.configHelper.workspaceFolder.name;
+            this.logFn(LogType.debug, () => localize("debug.create_remote", "Creating remote source"));
+            const [sftp, shell] = await Promise.all([
+                    this.sshHelper.getDefaultSftp(scope),
+                    this.sshHelper.getDefaultVmsShell(scope),
+                ]);
+            if (!sftp || !shell) {
+                return undefined;
+            }
+            const remoteSource = new VmsSource(sftp, shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
+            this.logFn(LogType.debug, () => localize("debug.create_local", "Creating local source"));
+            const localSource = new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
+
+            const watcher = ensured.configHelper.getConfig().onDidLoad(markInvalid);
+            const sshWatcher = this.sshHelper.setConfigWatcher(scope, markInvalid);
+            return {
+                ensured,
+                isValid: true,
+                localSource,
+                remoteSource,
+                sshWatcher,
+                watcher,
+            } as IScopeSyncData;
+
+            function markInvalid() {
+                // mark as invalid by scopeKey
+                const delData = Synchronizer.syncScopes.get(scopeKey);
+                if (delData) {
+                    delData.isValid = false;
                 }
             }
-            if (!this.localSource) {
-                this.logFn(LogType.debug, () => localize("debug.create_local", "Creating local source"));
-                this.localSource = new FsSource(this.workspaceUri.fsPath, this.logFn);
-            }
-            return true;
-        }
-        return false;
-    }
 
-    /**
-     * Get and copy settings to this
-     */
-    private async ensureSettings() {
-        if (!await ensureSettings(this.logFn) || !synchronizerConfig) {
-            this.logFn(LogType.error, () => localize("error.no_settings", "Cannot get settings"));
-            return false;
         }
-        if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
-            this.logFn(LogType.error, () => localize("error.no_workspace", "Workspace is empty"));
-            return false;
-        }
-        this.workspaceUri = vscode.workspace.workspaceFolders[0].uri;
-        return true;
-}
+        return undefined;
+    }
 
     /**
      * Ensure that ssh-helper loaded
@@ -513,10 +446,7 @@ export class Synchronizer {
      * @param files files
      * @param action action
      */
-    private async executeAction(files: string[] | IFileEntry[], action: "download" | "upload" ) {
-        if (!this.localSource || !this.remoteSource) {
-            return false;
-        }
+    private async executeAction(scopeData: IScopeSyncData, files: string[] | IFileEntry[], action: "download" | "upload" ) {
         const waitAll = [];
         for (const file of files) {
             let filename: string;
@@ -528,8 +458,8 @@ export class Synchronizer {
                 filename = file.filename;
                 filedate = file.date;
             }
-            const from = action === "download" ? this.remoteSource : this.localSource;
-            const to = action === "download" ? this.localSource : this.remoteSource;
+            const from = action === "download" ? scopeData.remoteSource : scopeData.localSource;
+            const to = action === "download" ? scopeData.localSource : scopeData.remoteSource;
             waitAll.push(this.transferFile(from, to, filename, filedate)
                                 .then((ok) => {
                                     if (ok) {

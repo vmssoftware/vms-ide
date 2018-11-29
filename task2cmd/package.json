@@ -2,7 +2,7 @@
     "name": "task2cmd",
     "displayName": "task2cmd",
     "description": "Task 2 Cmd",
-    "version": "0.1.2",
+    "version": "0.1.5",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -33,6 +33,14 @@
                     "label": {
                         "type": "string",
                         "description": "Label to display"
+                    },
+                    "extension": {
+                        "type": "string",
+                        "description": "Extension which executes command"
+                    },
+                    "parameter": {
+                        "type": "string",
+                        "description": "One string parameter"
                     }
                 }
             }
@@ -50,8 +58,5 @@
         "typescript": "^2.6.1",
         "vscode": "^1.1.21"
     },
-    "dependencies": {
-        "@types/optimist": "0.0.29",
-        "optimist": "^0.6.1"
-    }
+    "dependencies": {}
 }

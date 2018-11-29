@@ -87,8 +87,8 @@ export interface ISshShell {
 
 export interface IConnectionSection {
     host: string;
-    port: number;
-    username: string;
+    port?: number;
+    username?: string;
     password?: string;
     keyFile?: string;
 }
