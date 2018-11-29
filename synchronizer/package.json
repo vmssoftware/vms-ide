@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.30",
+    "version": "0.1.33",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",

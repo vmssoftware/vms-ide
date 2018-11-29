@@ -20,14 +20,10 @@ import { HostsSection } from "./config/sections/hosts";
 import { HostFiller } from "./config-resolve/host-filler";
 import { configApi } from "./config-api";
 
-import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator, IConnectionSection, ITimeoutsSection, IConnectConfigResolver, IHostsSection, IConnectConfig } from "./api";
+import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator, ISshScopeSettings } from "./api";
 
-interface IEnsured {
+interface IEnsured extends ISshScopeSettings {
     configHelper: IConfigHelper;
-    connectionSection: IConnectionSection;
-    hostsSection: IHostsSection;
-    timeoutSection: ITimeoutsSection;
-    connectConfigResolver: IConnectConfigResolver<IConnectConfig>;
 }
 
 export interface IDispose {
@@ -85,6 +81,15 @@ export class SshHelper {
         }
         const sftp = new SftpClient(ensured.connectionSection, ensured.connectConfigResolver, this.logFn);
         return sftp as ISftpClient;
+    }
+
+    public async getSettings(scope?: string) {
+        // get current config
+        const ensured = await ensureSettings(this.logFn, scope);
+        if (!ensured) {
+            return undefined;
+        }
+        return ensured as ISshScopeSettings;
     }
 
     public async getDefaultVmsShell(scope?: string) {

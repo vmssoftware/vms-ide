@@ -4,7 +4,7 @@ import { inspect } from "util";
 import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
 
 import { findFiles } from "../common/find-files";
-import { GetSshHelperFromApi } from "../config/get-ssh-helper";
+import { GetSshHelperType } from "../config/get-ssh-helper";
 import { IInputAttributes } from "../ext-api/api";
 import { SshHelper } from "../ext-api/ssh-helper";
 import { Vms } from "./config/vms";
@@ -28,7 +28,7 @@ suite("SFTP directory tests", function(this: Mocha.Suite) {
     let sshHelper: SshHelper;
 
     this.beforeAll(async () => {
-        const sshHelperType = await GetSshHelperFromApi();
+        const sshHelperType = await GetSshHelperType();
         assert.notEqual(sshHelperType, undefined, `Cannot get ssh-helper api`);
         sshHelper = new sshHelperType!(debugLogFn);
     });

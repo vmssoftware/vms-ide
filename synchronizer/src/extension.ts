@@ -4,7 +4,7 @@ import { Builder } from "./build/builder";
 import { setExtensionContext } from "./context";
 import { configApi, ensureConfigHelperApi } from "./ensure-settings";
 import { Perform } from "./performer";
-import { SourceHelper } from "./sync/get-source";
+import { SyncApi } from "./sync/sync-api";
 import { Synchronizer } from "./sync/synchronizer";
 
 import { LogFunction, LogType } from "@vorfol/common";
@@ -83,7 +83,7 @@ export async function activate(context: ExtensionContext) {
         return Perform("crlf", scope, syncLog);
     }));
 
-    return new SourceHelper();
+    return new SyncApi();
 }
 
 // this method is called when your extension is deactivated

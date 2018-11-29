@@ -1,5 +1,5 @@
 import { LogFunction } from "@vorfol/common";
-import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator } from "./api";
+import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator, ISshScopeSettings } from "./api";
 export interface IDispose {
     dispose(): any;
 }
@@ -13,6 +13,7 @@ export declare class SshHelper {
     memStream(): IMemoryStreamCreator;
     editSettings(scope?: string): Promise<boolean>;
     getDefaultSftp(scope?: string): Promise<ISftpClient | undefined>;
+    getSettings(scope?: string): Promise<ISshScopeSettings | undefined>;
     getDefaultVmsShell(scope?: string): Promise<ISshShell | undefined>;
     setConfigWatcher(scope: string, watcher: () => void): IDispose;
     getTestSftp(host: string, port: number, username: string, password: string): Promise<ISftpClient>;

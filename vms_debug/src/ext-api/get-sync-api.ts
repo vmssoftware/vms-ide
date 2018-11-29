@@ -1,13 +1,13 @@
 import { extensions } from "vscode";
-import { SourceHelper } from "./get-source";
+import { SyncApi } from "./sync-api";
 
-export async function GetSourceHelperFromApi() {
+export async function GetSyncApi() {
     const extension = extensions.getExtension("vmssoftware.synchronizer");
     if (extension) {
         if (extension.isActive) {
-            return extension.exports as SourceHelper;
+            return extension.exports as SyncApi;
         } else {
-            return extension.activate() as Promise<SourceHelper>;
+            return extension.activate() as Promise<SyncApi>;
         }
     }
     return undefined;

@@ -67,7 +67,7 @@ export class VMSRuntime extends EventEmitter
 	private breakpointId = 1;
 
 
-	constructor(shell : ShellSession, public logFn?: LogFunction)
+	constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, public logFn?: LogFunction)
 	{
 		super();
 
@@ -75,8 +75,8 @@ export class VMSRuntime extends EventEmitter
 		this.buttonPressd = DebugButtonEvent.btnNoEvent;
 		this.osCmd = new OsCommands();
 		this.dbgCmd = new DebugCommands();
-		this.dbgParser = new DebugParser();
-		this.fileManager = new FileManagerExt();
+		this.dbgParser = new DebugParser(folder);
+		this.fileManager = new FileManagerExt(folder ? folder.name : "");
 		this.debugRun = false;
 		this.programEnd = false;
 	}

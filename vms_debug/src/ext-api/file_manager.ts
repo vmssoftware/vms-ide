@@ -1,29 +1,32 @@
 import { IFileEntry, Lock } from '@vorfol/common';
 import { ISource } from "./source";
-import { GetSourceHelperFromApi } from './get-source-helper';
-import { ensureProjectSettings, projectSection } from './ensure-project';
+import { GetSyncApi } from './get-sync-api';
 import * as readline from 'readline';
-import { IProjectSection } from './sections/project';
 import { SshHelper } from './ssh-helper';
-import { GetSshHelperFromApi } from '../ext-api/get-ssh-helper';
+import { GetSshHelperType } from '../ext-api/get-ssh-helper';
 import { IConnectionSection } from './api';
+import { IProjectSection, SyncApi } from './sync-api';
 
 
 export class FileManagerExt
 {
 	private localSource?: ISource;
 	private sshHelper?: SshHelper;
+	private syncApi?: SyncApi;
 
+	constructor(public scope: string) {
+		//
+	}
 
 	private async ensureLocalSource() : Promise<boolean>
 	{
 		if (!this.localSource)
 		{
-			const sourceHelper = await GetSourceHelperFromApi();
+			const sourceHelper = await GetSyncApi();
 
 			if (sourceHelper)
 			{
-				this.localSource = await sourceHelper.getSource("local");
+				this.localSource = await sourceHelper.getSource(this.scope, "local");
 			}
 		}
 
@@ -34,7 +37,7 @@ export class FileManagerExt
 	{
 		if (!this.sshHelper)
 		{
-			const sshHelperType = await GetSshHelperFromApi();
+			const sshHelperType = await GetSshHelperType();
 
 			if (sshHelperType)
 			{
@@ -55,31 +58,26 @@ export class FileManagerExt
 
 		if(this.sshHelper)
 		{
-			if(await this.sshHelper.ensureSettings())
+			const configuredSettings = await this.sshHelper.getSettings(this.scope);
+			if (configuredSettings)
 			{
-				if(this.sshHelper.connectionSection)
+				if(configuredSettings.connectionSection.password === "" &&
+				   configuredSettings.connectionSection.keyFile === "")
 				{
-					if(this.sshHelper.connectionSection.password === "" &&
-						this.sshHelper.connectionSection.keyFile === "")
-					{
-						if(this.sshHelper.connectConfigResolver)
-						{
-							let connection = this.sshHelper.connectConfigResolver.testConnectConfig(this.sshHelper.connectionSection);
+					let connection = configuredSettings.connectConfigResolver.testConnectConfig(configuredSettings.connectionSection);
 
-							if(connection.settings)
-							{
-								return connection.settings;
-							}
-							else
-							{
-								return this.sshHelper.connectionSection;
-							}
-						}
+					if(connection.settings)
+					{
+						return connection.settings;
 					}
 					else
 					{
-						return this.sshHelper.connectionSection;
+						return configuredSettings.connectionSection;
 					}
+				}
+				else
+				{
+					return configuredSettings.connectionSection;
 				}
 			}
 		}
@@ -89,12 +87,19 @@ export class FileManagerExt
 
 	public async getProjectSection() : Promise<IProjectSection | undefined>
 	{
-		if (!await ensureProjectSettings() || !projectSection )
+		if (!this.syncApi)
 		{
-			return undefined;
+			this.syncApi = await GetSyncApi();
 		}
-
-		return projectSection;
+		if (this.syncApi)
+		{
+			const currentSettings = await this.syncApi.getSettings(this.scope);
+			if (currentSettings)
+			{
+				return currentSettings.projectSection;
+			}
+		}
+		return undefined;
 	}
 
 	public async getLocalSource() : Promise<ISource | undefined>

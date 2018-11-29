@@ -1,16 +1,5 @@
 import { IConfigData, IConfigSection } from "../../ext-api/config";
-
-export interface IProjectSection {
-    builders: string;
-    exclude: string;
-    headers: string;
-    listing: string;
-    outdir: string;
-    projectName: string;
-    resource: string;
-    root: string;
-    source: string;
-}
+import { IProjectSection } from "../../sync/sync-api";
 
 export class ProjectSection implements IProjectSection, IConfigSection {
 

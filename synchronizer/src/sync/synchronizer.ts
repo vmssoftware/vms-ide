@@ -1,7 +1,7 @@
 import path from "path";
 import * as vscode from "vscode";
 
-import { GetSshHelperFromApi } from "../config/get-ssh-helper";
+import { GetSshHelperType } from "../config/get-ssh-helper";
 
 import { Barrier, Delay } from "@vorfol/common";
 import { LogFunction, LogType } from "@vorfol/common";
@@ -428,7 +428,7 @@ export class Synchronizer {
      */
     private async ensureSshHelper() {
         if (!this.sshHelper) {
-            const sshHelperType = await GetSshHelperFromApi();
+            const sshHelperType = await GetSshHelperType();
             if (!sshHelperType) {
                 if (this.logFn) {
                     this.logFn(LogType.debug, () => localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));

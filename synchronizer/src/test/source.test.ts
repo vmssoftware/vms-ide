@@ -1,7 +1,7 @@
 import * as assert from "assert";
 
 import { logConsoleFn, LogFunction, LogType, MemoryWriteStream } from "@vorfol/common";
-import { GetSshHelperFromApi } from "../config/get-ssh-helper";
+import { GetSshHelperType } from "../config/get-ssh-helper";
 import { SshHelper } from "../ext-api/ssh-helper";
 import { FsSource } from "../sync/fs-source";
 import { ISource } from "../sync/source";
@@ -24,7 +24,7 @@ suite("Source tests", function(this: Mocha.Suite) {
 
     // prepare resolver
     this.beforeAll(async () => {
-        const sshHelperType = await GetSshHelperFromApi();
+        const sshHelperType = await GetSshHelperType();
         assert.notEqual(sshHelperType, undefined, `Cannot get ssh-helper api`);
         sshHelper = new sshHelperType!(debugLogFn);
     });

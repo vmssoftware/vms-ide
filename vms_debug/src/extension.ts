@@ -45,14 +45,14 @@ let typeRunConfig : TypeRunConfig = TypeRunConfig.TypeRunNone;
 let statusConnBar : StatusBarDebug = new StatusBarDebug();
 let statusShell : StatusConnection = StatusConnection.StatusDisconnected;
 let terminals : TerminalVMS = new TerminalVMS();
-let fileManager : FileManagerExt = new FileManagerExt();
+let fileManager : FileManagerExt = new FileManagerExt("");
 
 
 export function activate(context: vscode.ExtensionContext)
 {
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.connect', () =>
 	{
-		ConnectShell(false);
+		ConnectShell(undefined, false);
 
 		if(statusShell === StatusConnection.StatusConnected)
 		{
@@ -89,7 +89,7 @@ async function createTerminal() : Promise<void>
 
 		if(terminal)
 		{
-			if(connection)
+			if(connection && connection.username)
 			{
 				if(connection.keyFile !== "")
 				{
@@ -108,13 +108,13 @@ async function createTerminal() : Promise<void>
 	});
 }
 
-async function ConnectShell(wait : boolean) : Promise<StatusConnection>
+async function ConnectShell(folder: WorkspaceFolder | undefined, wait : boolean) : Promise<StatusConnection>
 {
 	if(statusShell === StatusConnection.StatusDisconnected)
 	{
 		let configurationDone = new Subject();
 		statusShell = StatusConnection.StatusConnecting;
-		shell = new ShellSession(ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, logFn);
+		shell = new ShellSession(folder, ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, logFn);
 
 		const message = localize('extention.conecting', "Connecting to the server ...");
 		const messageBar = localize('extention.bar.conecting', "Connecting ...");
@@ -194,13 +194,13 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 
 			if (config.type)
 			{
-				let status = await ConnectShell(true);
+				let status = await ConnectShell(folder, true);
 
 				if(status === StatusConnection.StatusConnected)
 				{
 					if (!config.program)
 					{
-						//let fileManager = new FileManagerExt();
+						let fileManager = new FileManagerExt(folder?folder.name:"");
 						let projectSection = await fileManager.getProjectSection();
 
 						if (projectSection)
@@ -236,7 +236,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 							// start listening on a random port
 							this.serverDbg = Net.createServer(socket =>
 							{
-								session = new VMSDebugSession(shell, logFn);
+								session = new VMSDebugSession(folder, shell, logFn);
 								session.setRunAsServer(true);
 								session.start(<NodeJS.ReadableStream>socket, socket);
 							}).listen(0);

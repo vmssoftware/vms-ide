@@ -3,7 +3,7 @@ import * as assert from "assert";
 import { SshHelper } from "../ext-api/ssh-helper";
 
 import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
-import { GetSshHelperFromApi } from "../config/get-ssh-helper";
+import { GetSshHelperType } from "../config/get-ssh-helper";
 
 suite("Directory tests", function(this: Mocha.Suite) {
 
@@ -17,7 +17,7 @@ suite("Directory tests", function(this: Mocha.Suite) {
     let sshHelper: SshHelper;
 
     this.beforeAll(async () => {
-        const sshHelperType = await GetSshHelperFromApi();
+        const sshHelperType = await GetSshHelperType();
         assert.notEqual(sshHelperType, undefined, `Cannot get ssh-helper api`);
         sshHelper = new sshHelperType!(debugLogFn);
     });

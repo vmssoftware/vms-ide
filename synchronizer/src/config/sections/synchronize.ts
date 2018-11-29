@@ -1,12 +1,5 @@
 import { IConfigData, IConfigSection } from "../../ext-api/config";
-
-export type DownloadAction = "overwrite" | "skip" | "edit";
-
-export interface ISynchronizeSection  {
-    downloadNewFiles: DownloadAction;
-    keepAlive: boolean;
-    setTimeAttempts: number;
-}
+import { DownloadAction, ISynchronizeSection } from "../../sync/sync-api";
 
 export class SynchronizeSection implements ISynchronizeSection, IConfigSection {
 

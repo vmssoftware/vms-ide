@@ -7,7 +7,7 @@ import { IFileEntry, LogFunction, LogType } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
 import { printLike } from "@vorfol/common";
 import { parseVmsOutput } from "../common/parse-output";
-import { GetSshHelperFromApi } from "../config/get-ssh-helper";
+import { GetSshHelperType } from "../config/get-ssh-helper";
 import { IEnsured } from "../ensure-settings";
 import { ISshShell } from "../ext-api/api";
 import { IDispose, SshHelper } from "../ext-api/ssh-helper";
@@ -379,7 +379,7 @@ export class Builder {
         }
         // get ssh helper
         if (!this.sshHelper) {
-            const sshHelperType = await GetSshHelperFromApi();
+            const sshHelperType = await GetSshHelperType();
             if (!sshHelperType) {
                 this.logFn(LogType.debug, () => localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
                 this.logFn(LogType.error, () => localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));

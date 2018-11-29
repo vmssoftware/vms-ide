@@ -111,4 +111,10 @@ export interface IConnectConfigResolver<T extends any> {
 export interface IConnectConfig extends IConnectionSection {
     privateKey?: Buffer | string;
 }
+export interface ISshScopeSettings {
+    connectionSection: IConnectionSection;
+    hostsSection: IHostsSection;
+    timeoutSection: ITimeoutsSection;
+    connectConfigResolver: IConnectConfigResolver<IConnectConfig>;
+}
 //# sourceMappingURL=api.d.ts.map

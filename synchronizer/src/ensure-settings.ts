@@ -1,24 +1,23 @@
 import { LogFunction } from "@vorfol/common";
-import { GetConfigHelperFromApi } from "./config/get-config-helper";
-import { IProjectSection, ProjectSection } from "./config/sections/project";
-import { ISynchronizeSection, SynchronizeSection } from "./config/sections/synchronize";
+import { GetConfigApi } from "./config/get-config-api";
+import { ProjectSection } from "./config/sections/project";
+import { SynchronizeSection } from "./config/sections/synchronize";
 import { IConfigApi, IConfigHelper } from "./ext-api/config";
+import { ISyncScopeSettings } from "./sync/sync-api";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export interface IEnsured {
+export interface IEnsured extends ISyncScopeSettings {
     configHelper: IConfigHelper;
-    projectSection: IProjectSection;
-    synchronizeSection: ISynchronizeSection;
 }
 
 export let configApi: IConfigApi | undefined;
 
 export async function ensureConfigHelperApi(): Promise<boolean> {
     if (!configApi) {
-        configApi = await GetConfigHelperFromApi();
+        configApi = await GetConfigApi();
     }
     return configApi !== undefined;
 }
