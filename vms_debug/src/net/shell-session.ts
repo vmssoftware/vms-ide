@@ -14,6 +14,12 @@ export enum ModeWork
     debug,
 }
 
+export enum TypeDataMessage
+{
+    typeCmd = 1,
+    typeData,
+}
+
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -37,9 +43,10 @@ export class ShellSession
 
     private shellParser: ShellParser;
 
-    constructor( ExtensionDataCb: (data: string, mode: ModeWork) => void, ExtensionReadyCb: () => void, ExtensionCloseCb: () => void, public logFn?: LogFunction)
+    constructor( ExtensionDataCb: (mode: ModeWork, type: TypeDataMessage, data: string) => void, ExtensionReadyCb: () => void, ExtensionCloseCb: () => void, public logFn?: LogFunction)
     {
         this.promptCmd = "";
+        this.mode = ModeWork.shell;
         this.extensionDataCb = ExtensionDataCb;
         this.extensionReadyCb = ExtensionReadyCb;
         this.extensionCloseCb = ExtensionCloseCb;
@@ -130,27 +137,13 @@ export class ShellSession
             {
                 if(data.includes("DBG> "))
                 {
-                    if(this.mode === ModeWork.shell)
-                    {
-                        this.resultData = "";
-                    }
-                    else
-                    {
-                        let indexEnd = data.indexOf("\x00");
-                        data = data.substr(0, indexEnd-1);
-                        data = data.trim();
+                    let indexEnd = data.indexOf("\x00");
+                    let dataS = data.substr(0, indexEnd-1);
+                    let dataP = data.substr(indexEnd-1);
+                    indexEnd = dataP.indexOf(" ");
+                    let dataE = dataP.substr(indexEnd, dataP.length-1);
 
-                        if(data !== "")
-                        {
-                            if(this.resultData === "")
-                            {
-                                this.resultData = "D:";
-                            }
-
-                            this.resultData += data;
-                        }
-                    }
-
+                    this.resultData += dataS + dataE;
                     this.mode = ModeWork.debug;
                 }
                 else
@@ -163,14 +156,14 @@ export class ShellSession
                         this.resultData += data + "> ";
                     }
 
-                    this. mode = ModeWork.shell;
+                    this.mode = ModeWork.shell;
                 }
 
                 this.readyCmd = true;
 
                 if(this.resultData !== "")
                 {
-                    this.extensionDataCb(this.resultData, this.mode);
+                    this.extensionDataCb(this.mode, TypeDataMessage.typeData, this.resultData);
                     this.resultData = "";
                 }
 
@@ -190,14 +183,6 @@ export class ShellSession
         }
         else
         {
-            if(this.receiveCmd)
-            {
-                if(this.resultData === "")
-                {
-                    this.resultData = "D:";
-                }
-            }
-
             this.resultData += data;
             let cmd = this.currentCmd.getBody();
 
@@ -205,8 +190,7 @@ export class ShellSession
             {
                 if(this.resultData.includes(this.currentCmd.getCommand()))
                 {
-                    this.resultData = "C:" + this.resultData;
-                    this.extensionDataCb(this.resultData, this.mode);
+                    this.extensionDataCb(this.mode, TypeDataMessage.typeCmd, this.resultData);
                     this.resultData = "";
                     this.receiveCmd = true;
                 }
@@ -219,13 +203,9 @@ export class ShellSession
             {
                 if(this.resultData !== "")
                 {
-                    this.extensionDataCb(this.resultData, this.mode);
+                    this.extensionDataCb(this.mode, TypeDataMessage.typeData, this.resultData);
                     this.resultData = "";
-
-                    if(this.readyCmd)
-                    {
-                        this.SendCommandFromQueue();
-                    }
+                    this.SendCommandFromQueue();
                 }
             }
         }
@@ -263,8 +243,12 @@ export class ShellSession
         this.resultData = "";
         this.readyCmd = true;
         this.receiveCmd = false;
-        this.mode = ModeWork.shell;
         this.currentCmd = new CommandMessage("", "");
+    }
+
+    public getModeWork() : ModeWork
+    {
+        return this.mode;
     }
 
     public getStatusCommand() : boolean
@@ -297,6 +281,7 @@ export class ShellSession
         {
             this.currentCmd = command;
             this.receiveCmd = false;
+            this.readyCmd = false;
             result = this.shellParser.push(command.getCommand() + '\r\n');
         }
 

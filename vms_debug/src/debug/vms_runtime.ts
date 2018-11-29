@@ -5,7 +5,7 @@
 import * as vscode from 'vscode';
 import * as nls from 'vscode-nls';
 import { EventEmitter } from 'events';
-import { ShellSession, ModeWork } from '../net/shell-session';
+import { ShellSession, ModeWork, TypeDataMessage } from '../net/shell-session';
 import { OsCommands } from '../command/os_commands';
 import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
 import { DebugParser, MessageDebuger } from '../parsers/debug_parser';
@@ -49,6 +49,7 @@ export class VMSRuntime extends EventEmitter
 	private dbgParser : DebugParser;
 	private fileManager : FileManagerExt;
 	private debugRun : boolean;
+	private programEnd : boolean;
 
 	private stackStartFrame: number;
 	private stackEndFrame: number;
@@ -77,11 +78,13 @@ export class VMSRuntime extends EventEmitter
 		this.dbgParser = new DebugParser();
 		this.fileManager = new FileManagerExt();
 		this.debugRun = false;
+		this.programEnd = false;
 	}
 
 	// Start executing the given program.
 	public async start(programName: string, stopOnEntry : boolean) : Promise<void>
 	{
+		this.programEnd = false;
 		let section = await this.fileManager.getProjectSection();
 
 		if (!section)
@@ -93,20 +96,29 @@ export class VMSRuntime extends EventEmitter
 		this.lisPaths = await this.fileManager.loadPathListFiles(section.listing);
 
 		this.shell.resetParameters();
-		//run debuger
-		this.shell.SendCommandToQueue(this.osCmd.runDebug());
-		this.shell.SendCommandToQueue(this.dbgCmd.setDisplay("dbge", "q1", "output"));
-		this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("error", "dbge"));
-		this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
-		this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
-		this.shell.SendCommandToQueue(this.dbgCmd.modeNoWait());
-		this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
-
+		//run debugger
+		if(this.shell.getModeWork() === ModeWork.shell)
+		{
+			this.shell.SendCommandToQueue(this.osCmd.runDebug());
+			this.shell.SendCommandToQueue(this.dbgCmd.setDisplay("dbge", "q1", "output"));
+			this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("error", "dbge"));
+			this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
+			this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
+			this.shell.SendCommandToQueue(this.dbgCmd.modeNoWait());
+			this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
+		}
+		else//reload program
+		{
+			this.shell.SendCommandToQueue(this.dbgCmd.clearDisplay("dbge, out"));
+			this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
+			this.shell.SendCommandToQueue(this.dbgCmd.rerun());
+		}
+		//clear entry breakpoint
 		if(!stopOnEntry)
 		{
 			this.shell.SendCommandToQueue(this.dbgCmd.breakPointsRemove());//remove entry breakpoint
 		}
-
+		//set breakpoint
 		await this.setRemoteBreakpointsAll();
 
 		this.continue();
@@ -144,16 +156,27 @@ export class VMSRuntime extends EventEmitter
 		this.shell.SendCommandToQueue(this.dbgCmd.stop());
 	}
 
-	public exit()
+	public exit(restart? : boolean)
 	{
 		this.buttonPressd = DebugButtonEvent.btnStop;
-
 		//if the programm is running
-		if(this.shell.getCurrentCommand().getBody() !== "")
+		if(this.programEnd === false && this.shell.getCurrentCommand().getBody() !== "")
 		{
-			this.shell.SendCommand(this.dbgCmd.customCmdNoParam("0"));
+			if(this.shell.getStatusCommand() === false)
+			{
+				this.shell.SendCommand(this.dbgCmd.customCmdNoParam("0"));
+			}
+			else
+			{
+				this.shell.SendCommand(this.dbgCmd.customCmdNoParam(""));
+				this.shell.SendCommand(this.dbgCmd.customCmdNoParam("0"));
+			}
 		}
-		this.shell.SendCommandToQueue(this.dbgCmd.exit());
+
+		if(!restart)
+		{
+			this.shell.SendCommandToQueue(this.dbgCmd.exit());
+		}
 	}
 
 	public variableValue(nameVar : string)
@@ -202,17 +225,18 @@ export class VMSRuntime extends EventEmitter
 	{
 		let result = false;
 
-		//if(!this.shell.getStatusCommand())//enter user data
-		if(this.shell.getCurrentCommand().getBody() !== "")//go, step /over!!!????
+		if(this.shell.getCurrentCommand().getBody() !== "")//go, step
 		{
 			this.shell.SendData(data);
 			result = true;
 		}
 		else//enter bebug command
 		{
+			let allow : boolean = true;
 			let command = data.toLowerCase();
+			let parts = command.split(/\s+/);
 
-			switch(command)
+			switch(parts[0])
 			{
 				case DebugCmdVMS.dbgRunExe:
 				case DebugCmdVMS.dbgRerunExe:
@@ -220,33 +244,29 @@ export class VMSRuntime extends EventEmitter
 				case DebugCmdVMS.dbgExit:
 				case DebugCmdVMS.dbgGo:
 				case DebugCmdVMS.dbgStep:
-				case DebugCmdVMS.dbgStepOver:
-				case DebugCmdVMS.dbgStepIn:
-				case DebugCmdVMS.dbgStepReturn:
-				//case DebugCmdVMS.dbgBreakPointSet:
-				// case DebugCmdVMS.dbgBreakPointRemove:
-				// case DebugCmdVMS.dbgBreakPointActivate:
-				// case DebugCmdVMS.dbgBreakPointDeactivate:
-				case DebugCmdVMS.dbgSetModeNoWait:
-				case DebugCmdVMS.dbgSetModeScreen:
 				case DebugCmdVMS.dbgSelect:
 				case DebugCmdVMS.dbgSetDisplay:
-					//don't resolve in manual
-					const message = localize('runtime.command_ignore', "This command is not allowed!");
-					vscode.debug.activeDebugConsole.append(message + "\n");
+					//don't resolve from the debug console
+					allow = false;
+					break;
+
+				case DebugCmdVMS.dbgSet:
+					if(command.includes(DebugCmdVMS.dbgSetModeScreen) ||
+						command.includes(DebugCmdVMS.dbgSetModeNoScreen))
+					{
+						allow = false;
+					}
 					break;
 
 				default:
-					if(this.shell.getCurrentCommand().getBody() === "")
-					{
-						this.shell.SendData(data);
-					}
-					else
-					{
-						const message = localize('runtime.command_failed', "This command failed!");
-						vscode.debug.activeDebugConsole.append(message + "\n");
-					}
+					this.shell.SendData(data);//send command to the debugger
 					break;
+			}
+
+			if(!allow)
+			{
+				const message = localize('runtime.command_ignore', "This command is not allowed!");
+				vscode.debug.activeDebugConsole.append(message + "\n");
 			}
 
 			result = true;
@@ -600,7 +620,7 @@ export class VMSRuntime extends EventEmitter
 	}
 
 
-	public receiveData(data: string, mode: ModeWork) : void
+	public receiveData(mode: ModeWork, type: TypeDataMessage, data: string) : void
 	{
 		if(mode === ModeWork.shell)
 		{
@@ -610,7 +630,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			this.debugRun = true;
 
-			this.dbgParser.parseDebugData(this.shell.getCurrentCommand(), data, this.sourcePaths, this.lisPaths);
+			this.dbgParser.parseDebugData(this.shell.getCurrentCommand(), type, data, this.sourcePaths, this.lisPaths);
 
 			let messageCommand = this.dbgParser.getCommandMessage();
 			let messageDebug = this.dbgParser.getDebugMessage();
@@ -655,6 +675,7 @@ export class VMSRuntime extends EventEmitter
 
 				if(messageDebug.includes(MessageDebuger.msgEnd))
 				{
+					this.programEnd = true;
 					this.sendEvent('end');
 				}
 			}
@@ -669,6 +690,7 @@ export class VMSRuntime extends EventEmitter
 
 				if(messageUser.includes(MessageDebuger.msgNoImage))
 				{
+					this.programEnd = true;
 					this.sendEvent('end');
 				}
 			}

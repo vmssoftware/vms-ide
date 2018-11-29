@@ -4,6 +4,7 @@ import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
 import { Queue } from '../queue/queues';
 import { ftpPathSeparator } from '@vorfol/common';
 import { FileManagerExt } from '../ext-api/file_manager';
+import { TypeDataMessage } from '../net/shell-session';
 
 
 export enum MessageDebuger
@@ -52,13 +53,13 @@ export class DebugParser
 	}
 
 
-	public parseDebugData(command : CommandMessage, data : string, sourcePaths: string[], lisPaths: string[])
+	public parseDebugData(command : CommandMessage, type: TypeDataMessage, data : string, sourcePaths: string[], lisPaths: string[])
 	{
 		if(data !== "")
 		{
 			let cmd = command.getBody();
 
-			this.splitData(command, data);
+			this.splitData(command, type, data);
 
 			let msgLines = this.displayDataString[1].split("\n");//debugger data
 
@@ -96,7 +97,7 @@ export class DebugParser
 					this.commandDone = true;
 					break;
 
-				case DebugCmdVMS.dbgCurrentLine:
+				case DebugCmdVMS.dbgTypeLine:
 				case DebugCmdVMS.dbgExamine:
 				case DebugCmdVMS.dbgEvaluate:
 				case DebugCmdVMS.dbgDeposit:
@@ -127,22 +128,18 @@ export class DebugParser
 	}
 
 
-	private splitData(command : CommandMessage, data : string)
+	private splitData(command : CommandMessage, type: TypeDataMessage, data : string)
 	{
-		if(data.length > 2)
+		if(data.length > 0)
 		{
-			let typeData = data.substr(0, 2);
-			let dataMsg = data.substr(2);
-
 			//clean the old data
 			this.displayDataString[0] = "";
 			this.displayDataString[1] = "";
 			this.displayDataString[2] = "";
 
-
-			if(typeData === "C:")//command
+			if(type === TypeDataMessage.typeCmd)//command
 			{
-				let userData = dataMsg.replace(command.getCommand(), "");
+				let userData = data.replace(command.getCommand(), "");
 				this.queueMsgCommand.push(MessagePrompt.prmtCMD + command.getCommand());
 
 				if(userData !== "")//data
@@ -152,7 +149,7 @@ export class DebugParser
 			}
 			else//data
 			{
-				this.parseEscSequence(dataMsg);
+				this.parseEscSequence(data);
 			}
 		}
 	}
@@ -160,7 +157,7 @@ export class DebugParser
 	private parseEscSequence(data : string)
 	{
 		let positionOld : number = 0;
-		let escapes = data.split("\x1B");
+		let escapes = data.split("\x1B");//[ESC]
 		let dataPrompt = escapes.shift();
 
 		if(dataPrompt)//prompt data (coommand and user data)
@@ -229,17 +226,18 @@ export class DebugParser
 								{
 									if(positionOld === position[0])
 									{
-										this.displayDataString[i] += " " + item.substr(index, item.length);
+										this.displayDataString[i] = this.addLine(this.displayDataString[i], item.substr(index, item.length), position[1]);
 									}
 									else
 									{
 										if(this.displayDataString[i] === "")
 										{
-											this.displayDataString[i] = item.substr(index, item.length);
+											this.displayDataString[i] = this.addLine(this.displayDataString[i], item.substr(index, item.length), position[1]);
 										}
 										else
 										{
-											this.displayDataString[i] += "\n" + item.substr(index, item.length);
+											this.displayDataString[i] += "\n";
+											this.displayDataString[i] = this.addLine(this.displayDataString[i], item.substr(index, item.length), position[1]);
 										}
 									}
 
@@ -261,6 +259,21 @@ export class DebugParser
 		{
 			this.queueMsgUser.push(/*MessagePrompt.prmtUSER +*/ this.displayDataString[2]);
 		}
+	}
+
+	private addLine(lineBase : string, lineAdd : string, position : number) : string
+	{
+		let items = lineBase.split("\n");
+		let sizeLastLine = items[items.length - 1].length;
+
+		for(let i = 0; i < (position - sizeLastLine - 1); i++)
+		{
+			lineBase += " ";
+		}
+
+		lineBase += lineAdd;
+
+		return lineBase;
 	}
 
 	private parseLineMsg(msgLine: string, sourcePaths: string[], lisPaths: string[])

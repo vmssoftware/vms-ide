@@ -1,4 +1,3 @@
 {
-    "runtime.command_ignore": "Команда запрещена!",
-    "runtime.command_failed": "Команда не выполнена!"
+    "runtime.command_ignore": "Команда запрещена!"
 }

@@ -7,7 +7,7 @@
 import * as vscode from 'vscode';
 import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
 import { VMSDebugSession } from './debug/vms_debug';
-import { ShellSession, ModeWork } from './net/shell-session';
+import { ShellSession, ModeWork, TypeDataMessage } from './net/shell-session';
 import * as Net from 'net';
 import * as nls from 'vscode-nls';
 import { VMSNoDebugSession } from './debug/vms_debug_run';
@@ -133,20 +133,20 @@ async function ConnectShell(wait : boolean) : Promise<StatusConnection>
     return statusShell;
 }
 
-let ExtensionDataCb = function(data: string, mode: ModeWork) : void
+let ExtensionDataCb = function(mode: ModeWork, type: TypeDataMessage, data: string) : void
 {
 	if(typeRunConfig === TypeRunConfig.TypeRunDebug)
 	{
 		if(session)
 		{
-			session.receiveDataShell(data, mode);
+			session.receiveDataShell(mode, type, data);
 		}
 	}
 	else if(typeRunConfig === TypeRunConfig.TypeRunRun)
 	{
 		if(sessionRun)
 		{
-			sessionRun.receiveDataShell(data, mode);
+			sessionRun.receiveDataShell(mode, type, data);
 		}
 	}
 };

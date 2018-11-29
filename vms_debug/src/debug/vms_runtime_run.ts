@@ -5,8 +5,8 @@
 import * as vscode from 'vscode';
 import * as nls from 'vscode-nls';
 import { EventEmitter } from 'events';
-import { ShellSession, ModeWork } from '../net/shell-session';
-import { OsCommands } from '../command/os_commands';
+import { ShellSession, ModeWork, TypeDataMessage } from '../net/shell-session';
+import { OsCommands, OsCmdVMS } from '../command/os_commands';
 import { MessagePrompt } from '../parsers/debug_parser';
 import { LogFunction, LogType } from '@vorfol/common';
 
@@ -44,7 +44,7 @@ export class VMSRuntimeRun extends EventEmitter
 	{
 		if(this.statusProgram === true)
 		{
-			this.shell.SendCommand(this.osCmd.killProgram());
+			this.shell.SendData(OsCmdVMS.osKillProgram);
 		}
 	}
 
@@ -62,23 +62,16 @@ export class VMSRuntimeRun extends EventEmitter
 		return result;
 	}
 
-	public receiveData(data: string, mode: ModeWork)
+	public receiveData(mode: ModeWork, type: TypeDataMessage, data: string)
 	{
 		if(mode === ModeWork.shell)
 		{
-			let typeData = data.substr(0, 2);
-			let dataMsg = data.substr(2);
-
-			if(typeData === "C:")//command
+			if(type === TypeDataMessage.typeCmd)//command
 			{
 				if (this.logFn)
 				{
-					this.logFn(LogType.information, () => MessagePrompt.prmtCMD + dataMsg);
+					this.logFn(LogType.information, () => MessagePrompt.prmtCMD + data);
 				}
-			}
-			else if(typeData === "D:")
-			{
-				vscode.debug.activeDebugConsole.append(dataMsg);
 			}
 			else
 			{

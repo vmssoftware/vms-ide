@@ -11,7 +11,7 @@ import {
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { basename } from 'path';
 import { VMSRuntime, VMSBreakpoint } from './vms_runtime';
-import { ShellSession, ModeWork } from '../net/shell-session';
+import { ShellSession, ModeWork, TypeDataMessage } from '../net/shell-session';
 import { DebugCmdVMS } from '../command/debug_commands';
 import { Queue } from '../queue/queues';
 import { LogFunction } from '@vorfol/common';
@@ -345,8 +345,8 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void
 	{
+		this.runtime.exit(args.restart);
 		this.sendResponse(response);//disconnect or restart event
-		this.runtime.exit();
 	}
 
 	//---- helpers
@@ -357,9 +357,9 @@ export class VMSDebugSession extends LoggingDebugSession
 	}
 
 
-	public receiveDataShell(data: string, mode: ModeWork)
+	public receiveDataShell(mode: ModeWork, type: TypeDataMessage, data: string)
 	{
-		this.runtime.receiveData(data, mode);
+		this.runtime.receiveData(mode, type, data);
 	}
 
 	public closeDebugSession()
