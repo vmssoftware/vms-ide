@@ -39,9 +39,9 @@ export class KeyFiller implements ISettingsFiller {
         }
         try {
             settings.privateKey = await fs.readFile(settings.keyFile);
-            if (settings.keyFile !== undefined) {
-                delete settings.keyFile;
-            }
+            // if (settings.keyFile !== undefined) {
+            //     delete settings.keyFile;
+            // }
             if (settings.password !== undefined) {
                 delete settings.password;
             }
