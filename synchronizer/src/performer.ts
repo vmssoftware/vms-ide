@@ -13,7 +13,7 @@ import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export type AsyncAction = (ensured: IEnsured, logFn: LogFunction) => Promise<boolean>;
+export type AsyncAction = (ensured: IEnsured, logFn: LogFunction, params?: string) => Promise<boolean>;
 
 export type ActionType = "save all" | "synchronize" | "build" | "clean" | "upload source" | "crlf" | "edit settings";
 
@@ -50,9 +50,9 @@ export const actions: IPerform[] = [
         success: localize("upload.source.success", "Upload source ok"),
     },
     {
-        actionFunc: async (ensured: IEnsured, logFn: LogFunction) => {
+        actionFunc: async (ensured: IEnsured, logFn: LogFunction, params?: string) => {
             const builder = Builder.acquire(logFn);
-            return builder.buildProject(ensured);
+            return builder.buildProject(ensured, params);
         },
         actionName: "build",
         context: CommandContext.isBuilding,
@@ -61,9 +61,9 @@ export const actions: IPerform[] = [
         success: localize("buiding.success", "Building ok"),
     },
     {
-        actionFunc: async (ensured: IEnsured, logFn: LogFunction) => {
+        actionFunc: async (ensured: IEnsured, logFn: LogFunction, params?: string) => {
             const builder = Builder.acquire(logFn);
-            return builder.cleanProject(ensured);
+            return builder.cleanProject(ensured, params);
         },
         actionName: "clean",
         context: CommandContext.isBuilding,
@@ -98,7 +98,7 @@ export const actions: IPerform[] = [
     },
 ];
 
-export async function Perform(actionName: ActionType, scope: string, logFn: LogFunction) {
+export async function Perform(actionName: ActionType, scope: string, logFn: LogFunction, params?: string) {
     const actionToDo = actions.find((action) => action.actionName === actionName);
     if (!actionToDo) {
         logFn(LogType.debug, () => localize("error.no_action", "Cannot find action: {0}", actionName));
@@ -118,7 +118,7 @@ export async function Perform(actionName: ActionType, scope: string, logFn: LogF
                 if (ensured) {
                     setContext(actionToDo.context, true);
                     const msg = window.setStatusBarMessage(actionToDo.status + ` [${curScope}]`);
-                    return actionToDo.actionFunc(ensured, logFn)
+                    return actionToDo.actionFunc(ensured, logFn, params)
                         .catch((err) => {
                             logFn(LogType.error, () => err);
                             return false;

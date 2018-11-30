@@ -51,7 +51,7 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async (scope: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async (scope: string, params: string) => {
         return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
@@ -61,14 +61,14 @@ export async function activate(context: ExtensionContext) {
             })
             .then((uploadOk) => {
                 if (uploadOk) {
-                    return Perform("build", scope, buildLog);
+                    return Perform("build", scope, buildLog, params);
                 }
                 return uploadOk;
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope: string) => {
-        return Perform("clean", scope, buildLog);
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope: string, params: string) => {
+        return Perform("clean", scope, buildLog, params);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopSync", async (scope: string) => {

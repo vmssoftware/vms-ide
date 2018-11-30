@@ -21,7 +21,7 @@ import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-type BuildType = "com" | "mms" | "debug" | "release" | "both";
+type BuildType = "com" | "mms" | "debug" | "release" | "both" | "undefined";
 
 interface IBuildQuickPickItem extends QuickPickItem {
     type: BuildType;
@@ -64,8 +64,13 @@ export class Builder {
     private static readonly mmsUserCmd = printLike`MMS/DESCR=${"_.mms"}`;
     private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}")`;
     private static readonly mmsExt = ".mms";
+    private static readonly comExt = ".com";
     private static readonly defRange = new Range(0, 0, 0, 0);
     private static readonly getShellRootCmd = `WRITE SYS$OUTPUT F$TRNLNM("SYS$LOGIN")`;
+    private static readonly labelDebug = "DEBUG";
+    private static readonly labelRelease = "RELEASE";
+    private static readonly labelBoth = "BOTH";
+    private static readonly rgFile = /^([-_$a-z][-_$a-z0-9]*)(\.[-_$a-z0-9]*)?/;
 
     private static instance?: Builder;
 
@@ -106,47 +111,75 @@ export class Builder {
         }
     }
 
-    public async buildProject(ensured: IEnsured) {
+    public async buildProject(ensured: IEnsured, params?: string) {
         const scopeData = await this.prepareScopeData(ensured);
         if (!scopeData) {
             return false;
         }
         // clear password cache
         this.sshHelper!.clearPasswordCashe();
-        // get list of builders
-        const items = await scopeData.localSource.findFiles(ensured.projectSection.builders, ensured.projectSection.exclude);
-        // build selection list, excluding own mms
-        const selectItems = items.filter((file) => file.filename.toUpperCase() !== (ensured.projectSection.projectName + Builder.mmsExt).toUpperCase())
-            .map((file) => {
-                let type: BuildType = "com";
-                const extPos = file.filename.lastIndexOf(".");
-                if (extPos > 0 && file.filename.slice(extPos).toLowerCase() === Builder.mmsExt) {
-                    type = "mms";
+        let buildSelection: IBuildQuickPickItem | undefined;
+        if (params === undefined) {
+            // get list of builders
+            const items = await scopeData.localSource.findFiles(ensured.projectSection.builders, ensured.projectSection.exclude);
+            // build selection list, excluding own mms
+            const selectItems = items.filter((file) => file.filename.toUpperCase() !== (ensured.projectSection.projectName + Builder.mmsExt).toUpperCase())
+                .map((file) => {
+                    let type: BuildType = "com";
+                    const extPos = file.filename.lastIndexOf(".");
+                    if (extPos > 0 && file.filename.slice(extPos).toLowerCase() === Builder.mmsExt) {
+                        type = "mms";
+                    }
+                    const ret: IBuildQuickPickItem = {
+                        description: localize("quick.build.file", "Build using {0} [{1}]", file.filename, ensured.configHelper.workspaceFolder!.name),
+                        label: file.filename,
+                        type,
+                    };
+                    return ret;
+                });
+            selectItems.unshift({
+                    description: localize("quick.build.release", "Build release version [{0}]", ensured.configHelper.workspaceFolder!.name),
+                    label: Builder.labelRelease,
+                    type: "release",
+                });
+            selectItems.unshift({
+                description: localize("quick.build.debug", "Build debug version [{0}]", ensured.configHelper.workspaceFolder!.name),
+                label: Builder.labelDebug,
+                type: "debug",
+            });
+            // select one
+            buildSelection = await window.showQuickPick(selectItems, { ignoreFocusOut: true, canPickMany: false});
+        } else if (typeof params === "string") {
+            buildSelection = {
+                label: "",
+                type: "undefined",
+            };
+            switch (params.trim().toUpperCase()) {
+                case Builder.labelDebug.toUpperCase():
+                    buildSelection.type = "debug";
+                    break;
+                case Builder.labelRelease.toUpperCase():
+                    buildSelection.type = "release";
+                    break;
+            }
+            if (buildSelection.type === "undefined") {
+                const match = params.trim().toLowerCase().match(Builder.rgFile);
+                if (match) {
+                    if (match[1] && match[1] === Builder.mmsExt) {
+                        buildSelection.type = "mms";
+                        buildSelection.label = params.trim();
+                    } else if (match[1] && match[1] === Builder.comExt) {
+                        buildSelection.type = "com";
+                        buildSelection.label = params.trim();
+                    }
                 }
-                const ret: IBuildQuickPickItem = {
-                    description: localize("quick.build.file", "Build using {0} [{1}]", file.filename, ensured.configHelper.workspaceFolder!.name),
-                    label: file.filename,
-                    type,
-                };
-                return ret;
-            });
-        selectItems.unshift({
-                description: localize("quick.build.release", "Build release version [{0}]", ensured.configHelper.workspaceFolder!.name),
-                label: "RELEASE",
-                type: "release",
-            });
-        selectItems.unshift({
-            description: localize("quick.build.debug", "Build debug version [{0}]", ensured.configHelper.workspaceFolder!.name),
-            label: "DEBUG",
-            type: "debug",
-        });
-        // select one
-        const buildSelection = await window.showQuickPick(selectItems, { ignoreFocusOut: true, canPickMany: false});
-        if (buildSelection !== undefined) {
+            }
+        }
+        if (buildSelection !== undefined && buildSelection.type !== "undefined") {
             return this.ensureMmsCreated(scopeData, buildSelection)
                 .then((ok) => {
                     if (ok) {
-                        return this.runRemoteBuild(scopeData, buildSelection)
+                        return this.runRemoteBuild(scopeData, buildSelection!)
                             .then((result) => {
                                 // TODO: deside if we want to keep it alive
                                 this.decideDispose(scopeData);
@@ -160,27 +193,46 @@ export class Builder {
         }
     }
 
-    public async cleanProject(ensured: IEnsured) {
-        const selectItems: IBuildQuickPickItem[] = [
-            {
-                description: localize("quick.clean.release", "Clean release version [{0}]", ensured.configHelper.workspaceFolder!.name),
-                label: "RELEASE",
-                type: "release",
-            },
-            {
-                description: localize("quick.clean.debug", "Clean debug version [{0}]", ensured.configHelper.workspaceFolder!.name),
-                label: "DEBUG",
-                type: "debug",
-            },
-            {
-                description: localize("quick.clean.both", "Clean all [{0}]", ensured.configHelper.workspaceFolder!.name),
-                label: "BOTH",
-                type: "both",
-            },
-        ];
-        // select one
-        const cleanSelection = await window.showQuickPick(selectItems, { ignoreFocusOut: true, canPickMany: false});
-        if (cleanSelection !== undefined) {
+    public async cleanProject(ensured: IEnsured, params?: string) {
+        let cleanSelection: IBuildQuickPickItem | undefined;
+        if (params === undefined) {
+            const selectItems: IBuildQuickPickItem[] = [
+                {
+                    description: localize("quick.clean.release", "Clean release version [{0}]", ensured.configHelper.workspaceFolder!.name),
+                    label: Builder.labelRelease,
+                    type: "release",
+                },
+                {
+                    description: localize("quick.clean.debug", "Clean debug version [{0}]", ensured.configHelper.workspaceFolder!.name),
+                    label: Builder.labelDebug,
+                    type: "debug",
+                },
+                {
+                    description: localize("quick.clean.both", "Clean all [{0}]", ensured.configHelper.workspaceFolder!.name),
+                    label: Builder.labelBoth,
+                    type: "both",
+                },
+            ];
+            // select one
+            cleanSelection = await window.showQuickPick(selectItems, { ignoreFocusOut: true, canPickMany: false});
+        } else if (typeof params === "string") {
+            cleanSelection = {
+                label: "",
+                type: "undefined",
+            };
+            switch (params.trim().toUpperCase()) {
+                case Builder.labelDebug.toUpperCase():
+                    cleanSelection.type = "debug";
+                    break;
+                case Builder.labelRelease.toLocaleUpperCase():
+                    cleanSelection.type = "release";
+                    break;
+                case Builder.labelBoth.toLocaleUpperCase():
+                    cleanSelection.type = "both";
+                    break;
+            }
+        }
+        if (cleanSelection !== undefined && cleanSelection.type !== "undefined") {
             return this.runRemoteClean(ensured, cleanSelection);
         } else {
             return false;
