@@ -164,11 +164,11 @@ export class Builder {
             }
             if (buildSelection.type === "undefined") {
                 const match = params.trim().toLowerCase().match(Builder.rgFile);
-                if (match) {
-                    if (match[1] && match[1] === Builder.mmsExt) {
+                if (match && match[1] && match[2]) {
+                    if ( match[2] === Builder.mmsExt) {
                         buildSelection.type = "mms";
                         buildSelection.label = params.trim();
-                    } else if (match[1] && match[1] === Builder.comExt) {
+                    } else if ( match[2] === Builder.comExt) {
                         buildSelection.type = "com";
                         buildSelection.label = params.trim();
                     }

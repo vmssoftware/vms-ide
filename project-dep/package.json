@@ -1,0 +1,140 @@
+{
+    "name": "project-dep",
+    "displayName": "project-dep",
+    "description": "Project dependencies",
+    "version": "0.0.1",
+    "publisher": "vmssoftware",
+    "repository": {
+        "type": "git",
+        "url": "git:"
+    },
+    "engines": {
+        "vscode": "^1.28.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onView:vmssoftware.project-dep.projectDependencies",
+        "onView:vmssoftware.project-dep.projectDescription"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "project-explorer",
+                    "title": "Project Explorer",
+                    "icon": "media/dep.svg"
+                }
+            ]
+        },
+        "views": {
+            "project-explorer": [
+                {
+                    "id": "vmssoftware.project-dep.projectDependencies",
+                    "name": "Project Dependencies"
+                },
+                {
+                    "id": "vmssoftware.project-dep.projectDescription",
+                    "name": "Project description"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.refresh",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.add",
+                "title": "Add"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.remove",
+                "title": "Remove"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDescription.refresh",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDescription.select",
+                "title": "Select"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDescription.edit",
+                "title": "Edit"
+            }
+        ],
+        "menus": {
+            "view/title": [
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.refresh",
+                    "when": "view == vmssoftware.project-dep.projectDependencies",
+                    "group": "navigation"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDescription.refresh",
+                    "when": "view == vmssoftware.project-dep.projectDescription",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.add",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.remove",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == depends"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDescription.edit",
+                    "when": "view == vmssoftware.project-dep.projectDescription"
+                }
+            ]
+        },
+        "configuration": [
+            {
+                "title": "OpenVMS Project dependencies",
+                "properties": {
+                    "vmssoftware.project-dep.dependencies": {
+                        "scope": "resource",
+                        "type": "array",
+                        "default": [
+                            {
+                                "folder": "",
+                                "depends": [
+                                    ""
+                                ]
+
+                            }
+                        ],
+                        "description": "Project dependencies"
+                        }
+                }
+            }
+        ]
+    },
+    "scripts": {
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "devDependencies": {
+        "@types/node": "^8.10.25",
+        "tslint": "^5.11.0",
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.21"
+    },
+    "dependencies": {}
+}

@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.34",
+    "version": "0.1.35",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -33,19 +33,23 @@
                 },
                 {
                     "command": "vmssoftware.synchronizer.buildProject",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "vmssoftware.isSingleRoot && !vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 },
                 {
                     "command": "vmssoftware.synchronizer.cleanProject",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "vmssoftware.isSingleRoot && !vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 },
                 {
                     "command": "vmssoftware.synchronizer.syncProject",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "vmssoftware.isSingleRoot && !vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.editProject",
+                    "when": "vmssoftware.isSingleRoot && !vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 },
                 {
                     "command": "vmssoftware.synchronizer.changeCRLF",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "vmssoftware.isSingleRoot && !vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 }
             ]
         },
