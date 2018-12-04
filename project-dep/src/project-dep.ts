@@ -66,6 +66,7 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
 
     public select(node: IProjectElement) {
         this.selected = node;
+        vscode.commands.executeCommand("vmssoftware.project-dep.projectDescription.select", node.name);
     }
 
     public add(node: IProjectElement) {
@@ -88,6 +89,13 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
     }
 
     public refresh() {
+        this.projects = new DepTree();
+        if (vscode.workspace.workspaceFolders) {
+            for (const folder of vscode.workspace.workspaceFolders) {
+                this.projects.add(folder.name);
+            }
+        }
+        this.load();
         this.didChangeTreeEmitter.fire();
     }
 
