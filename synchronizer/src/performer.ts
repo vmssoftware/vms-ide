@@ -7,15 +7,17 @@ import { window, workspace } from "vscode";
 
 import { Builder } from "./build/builder";
 import { ChangeCrLf } from "./change-crlf";
+import { GetProjectDepApi } from "./ext-api/get-proj-api";
+import { ProjApi } from "./ext-api/proj-api";
 import { Synchronizer } from "./sync/synchronizer";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export type AsyncAction = (ensured: IEnsured, logFn: LogFunction, params?: string) => Promise<boolean>;
+export type AsyncAction = (scope: string, logFn: LogFunction, params?: string) => Promise<boolean>;
 
-export type ActionType = "save all" | "synchronize" | "build" | "clean" | "upload source" | "crlf" | "edit settings";
+export type ActionType = "synchronize" | "build" | "clean" | "crlf" | "edit settings";
 
 export interface IPerform {
     actionFunc: AsyncAction;
@@ -26,11 +28,38 @@ export interface IPerform {
     fail: string;
 }
 
+let projApi: ProjApi | undefined;
+
+async function ensureProjApi() {
+    if (projApi) {
+        return projApi;
+    }
+    projApi = await GetProjectDepApi();
+    return projApi;
+}
+
 export const actions: IPerform[] = [
     {
-        actionFunc: async (ensured: IEnsured, logFn: LogFunction) => {
-            const syncronizer = Synchronizer.acquire(logFn);
-            return syncronizer.syncronizeProject(ensured);
+        actionFunc: async (scope: string, logFn: LogFunction) => {
+            const api = await ensureProjApi();
+            if (api && api.isSynchronized(scope)) {
+                return true;
+            }
+            const ensured = await ensureSettings(scope, logFn);
+            if (ensured) {
+                const syncronizer = Synchronizer.acquire(logFn);
+                return syncronizer.syncronizeProject(ensured)
+                    .then(async (result) => {
+                        if (result) {
+                            if (api) {
+                                api.setSynchronized(scope, true);
+                            }
+                        }
+                        return result;
+                    });
+            } else {
+                return false;
+            }
         },
         actionName: "synchronize",
         context: CommandContext.isSyncronizing,
@@ -38,21 +67,74 @@ export const actions: IPerform[] = [
         status: localize("synchronizing.status", "$(sync) Synchronizing..."),
         success: localize("synchronizing.success", "Synchronizing ok"),
     },
+    // {
+    //     actionFunc: async (scope: string, ensured: IEnsured, logFn: LogFunction) => {
+    //         const api = await ensureProjApi();
+    //         if (api && api.isSynchronized(scope)) {
+    //             return true;
+    //         }
+    //         const syncronizer = Synchronizer.acquire(logFn);
+    //         return syncronizer.uploadSource(ensured)
+    //             .then(async (result) => {
+    //                 if (result) {
+    //                     if (api) {
+    //                         api.setSynchronized(scope, true);
+    //                     }
+    //                 }
+    //                 return result;
+    //             });
+    //     },
+    //     actionName: "upload source",
+    //     context: CommandContext.isBuilding,
+    //     fail: localize("upload.source.fail", "Upload source failed"),
+    //     status: localize("upload.source.status", "$(sync) Uploading source..."),
+    //     success: localize("upload.source.success", "Upload source ok"),
+    // },
     {
-        actionFunc: async (ensured: IEnsured, logFn: LogFunction) => {
-            const syncronizer = Synchronizer.acquire(logFn);
-            return syncronizer.uploadSource(ensured);
-        },
-        actionName: "upload source",
-        context: CommandContext.isBuilding,
-        fail: localize("upload.source.fail", "Upload source failed"),
-        status: localize("upload.source.status", "$(sync) Uploading source..."),
-        success: localize("upload.source.success", "Upload source ok"),
-    },
-    {
-        actionFunc: async (ensured: IEnsured, logFn: LogFunction, params?: string) => {
+        actionFunc: async (scope: string, logFn: LogFunction, params?: string) => {
+            let scopes: string[] = [scope];
+            const api = await ensureProjApi();
+            if (api) {
+                scopes = api.getDepList(scope).reverse();
+            } else if (!scope) {
+                if (workspace.workspaceFolders) {
+                    scopes = workspace.workspaceFolders.map((wf) => wf.name);
+                }
+            }
+            params = params || "DEBUG";
             const builder = Builder.acquire(logFn);
-            return builder.buildProject(ensured, params);
+            let retCode = true;
+            for (const curScope of scopes) {
+                if (!api || !api.isSynchronized(curScope)) {
+                    const ensured = await ensureSettings(curScope, logFn);
+                    if (ensured) {
+                        const syncronizer = Synchronizer.acquire(logFn);
+                        const result = await syncronizer.uploadSource(ensured);
+                        if (result && api) {
+                            api.setSynchronized(curScope, true);
+                        }
+                        retCode = retCode && result;
+                    } else {
+                        retCode = false;
+                    }
+                }
+                if (retCode && (!api || !api.isBuilt(curScope, params))) {
+                    const ensured = await ensureSettings(curScope, logFn);
+                    if (ensured) {
+                        const result = await builder.buildProject(ensured, params);
+                        if (api && params) {
+                            api.setBuilt(curScope, params, result);
+                        }
+                        retCode = retCode && result;
+                    } else {
+                        retCode = false;
+                    }
+                }
+                if (!retCode) {
+                    break;
+                }
+            }
+            return retCode;
         },
         actionName: "build",
         context: CommandContext.isBuilding,
@@ -61,9 +143,22 @@ export const actions: IPerform[] = [
         success: localize("buiding.success", "Building ok"),
     },
     {
-        actionFunc: async (ensured: IEnsured, logFn: LogFunction, params?: string) => {
+        actionFunc: async (scope: string, logFn: LogFunction, params?: string) => {
+            const ensured = await ensureSettings(scope, logFn);
+            if (!ensured) {
+                return false;
+            }
             const builder = Builder.acquire(logFn);
-            return builder.cleanProject(ensured, params);
+            return builder.cleanProject(ensured, params)
+                .then(async (result) => {
+                    if (result) {
+                        const api = await ensureProjApi();
+                        if (api && params) {
+                            api.setBuilt(scope, params, false);
+                        }
+                    }
+                    return result;
+                });
         },
         actionName: "clean",
         context: CommandContext.isBuilding,
@@ -72,7 +167,11 @@ export const actions: IPerform[] = [
         success: localize("clean.success", "Clean ok"),
     },
     {
-        actionFunc: async (ensured: IEnsured, logFn: LogFunction) => {
+        actionFunc: async (scope: string, logFn: LogFunction) => {
+            const ensured = await ensureSettings(scope, logFn);
+            if (!ensured) {
+                return false;
+            }
             const crlf = new ChangeCrLf(logFn);
             return crlf.perform(ensured);
         },
@@ -83,7 +182,11 @@ export const actions: IPerform[] = [
         success: localize("crlf.success", "Change CrLf done"),
     },
     {
-        actionFunc: async (ensured: IEnsured) => {
+        actionFunc: async (scope: string, logFn: LogFunction) => {
+            const ensured = await ensureSettings(scope, logFn);
+            if (!ensured) {
+                return false;
+            }
             if (ensured.configHelper) {
                 const editor = ensured.configHelper.getEditor();
                 return editor.invoke();
@@ -104,44 +207,24 @@ export async function Perform(actionName: ActionType, scope: string, logFn: LogF
         logFn(LogType.debug, () => localize("error.no_action", "Cannot find action: {0}", actionName));
         return false;
     }
-    let scopes = [scope];
-    if (scope === undefined) {
-        // TODO: get sorted by dependencies list of scopes
-        if (workspace.workspaceFolders) {
-            scopes = workspace.workspaceFolders.map((wf) => wf.name);
-        }
-    }
-    let result = true;
-    for (const curScope of scopes) {
-        const scopeResult = await ensureSettings(curScope, logFn)
-            .then((ensured) => {
-                if (ensured) {
-                    setContext(actionToDo.context, true);
-                    const msg = window.setStatusBarMessage(actionToDo.status + ` [${curScope}]`);
-                    return actionToDo.actionFunc(ensured, logFn, params)
-                        .catch((err) => {
-                            logFn(LogType.error, () => err);
-                            return false;
-                        }).then((actionResult) => {
-                            setContext(actionToDo.context, false);
-                            msg.dispose();
-                            if (actionResult) {
-                                window.showInformationMessage(actionToDo.success + ` [${curScope}]`);
-                                logFn(LogType.information, () => actionToDo.success + ` [${curScope}]`, true);
-                            } else {
-                                window.showInformationMessage(actionToDo.fail + ` [${curScope}]`);
-                                logFn(LogType.error, () => actionToDo.fail + ` [${curScope}]`, true);
-                            }
-                            return actionResult;
-                        });
-                } else {
-                    return false;
-                }
-            });
-        if (!scopeResult) {
+    setContext(actionToDo.context, true);
+    const msg = window.setStatusBarMessage(actionToDo.status + ` [${scope}]`);
+    return actionToDo.actionFunc(scope, logFn, params)
+        .catch((err) => {
+            logFn(LogType.error, () => err);
             return false;
-        }
-        result = result && scopeResult;
-    }
-    return result;
+        }).then((actionResult) => {
+            setContext(actionToDo.context, false);
+            msg.dispose();
+            if (actionResult) {
+                const str = actionToDo.success + ` [${scope}]`;
+                window.showInformationMessage(str);
+                logFn(LogType.information, () => str, true);
+            } else {
+                const str = actionToDo.fail + ` [${scope}]`;
+                window.showInformationMessage(str);
+                logFn(LogType.error, () => str, true);
+            }
+            return actionResult;
+        });
 }

@@ -4,7 +4,7 @@ import { inspect } from "util";
 import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
 
 import { findFiles } from "../common/find-files";
-import { GetSshHelperType } from "../config/get-ssh-helper";
+import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 import { IInputAttributes } from "../ext-api/api";
 import { SshHelper } from "../ext-api/ssh-helper";
 import { Vms } from "./config/vms";

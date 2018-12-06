@@ -1,7 +1,7 @@
 import path from "path";
 import * as vscode from "vscode";
 
-import { GetSshHelperType } from "../config/get-ssh-helper";
+import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 
 import { Barrier, Delay } from "@vorfol/common";
 import { LogFunction, LogType } from "@vorfol/common";

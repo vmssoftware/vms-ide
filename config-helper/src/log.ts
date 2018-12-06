@@ -24,9 +24,9 @@ function debugToFile(s: string) {
             if (stat.isDirectory()) {
                 const now = new Date();
                 const parts = [
-                    now.getFullYear(),
-                    now.getMonth(),
-                    now.getDate(),
+                    now.getFullYear().toString(10),
+                    now.getMonth().toString(10).padStart(2),
+                    now.getDate().toString(10).padStart(2),
                 ];
                 const logFileName = path.join(dir, parts.join("_") + ".log");
                 const stream = fs.createWriteStream(logFileName, {

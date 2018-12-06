@@ -43,20 +43,27 @@ export class DepTree {
         }
     }
 
-    public testChildR(parentName: string, childName: string) {
-        const node = this.root.children.get(parentName);
-        if (node) {
-            if (node.children.get(childName)) {
-                return true;
-            }
-            for (const child of node.children.keys()) {
-                if (this.testChildR(child, childName)) {
-                    return true;
-                }
-            }
+    public remove(nodeName: string, parentName: string) {
+        const parentNode = this.root.children.get(parentName);
+        if (parentNode) {
+            parentNode.children.delete(nodeName);
         }
-        return false;
     }
+
+    // public testChildR(parentName: string, childName: string) {
+    //     const node = this.root.children.get(parentName);
+    //     if (node) {
+    //         if (node.children.get(childName)) {
+    //             return true;
+    //         }
+    //         for (const child of node.children.keys()) {
+    //             if (this.testChildR(child, childName)) {
+    //                 return true;
+    //             }
+    //         }
+    //     }
+    //     return false;
+    // }
 
     public testChild(parentName: string, childName: string) {
         const nodeParent = this.root.children.get(parentName);

@@ -2,7 +2,7 @@
     "name": "project-dep",
     "displayName": "project-dep",
     "description": "Project dependencies",
-    "version": "0.0.1",
+    "version": "0.0.6",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -55,6 +55,14 @@
                 "title": "Add"
             },
             {
+                "command": "vmssoftware.project-dep.projectDependencies.build",
+                "title": "Build"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.clean",
+                "title": "Clean"
+            },
+            {
                 "command": "vmssoftware.project-dep.projectDependencies.remove",
                 "title": "Remove"
             },
@@ -73,9 +81,27 @@
             {
                 "command": "vmssoftware.project-dep.projectDescription.edit",
                 "title": "Edit"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectState.didSynchronize",
+                "title": "vmssoftware.project-dep.projectState.didSynchronize"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectState.didBuild",
+                "title": "vmssoftware.project-dep.projectState.didBuild"
             }
         ],
         "menus": {
+            "commandPalette": [
+                {
+                    "command": "vmssoftware.project-dep.projectState.didSynchronize",
+                    "when": "vmssoftware.project-dep.projectState:never"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectState.didBuild",
+                    "when": "vmssoftware.project-dep.projectState:never"
+                }
+            ],
             "view/title": [
                 {
                     "command": "vmssoftware.project-dep.projectDependencies.refresh",
@@ -94,6 +120,14 @@
                     "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
                 },
                 {
+                    "command": "vmssoftware.project-dep.projectDependencies.build",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.clean",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
                     "command": "vmssoftware.project-dep.projectDependencies.remove",
                     "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == depends"
                 },
@@ -107,6 +141,18 @@
             {
                 "title": "OpenVMS Project dependencies",
                 "properties": {
+                    "vmssoftware.project-dep.buildType": {
+                        "scope": "resource",
+                        "type" : "string",
+                        "enum": [
+                            "DEBUG",
+                            "RELEASE"
+                        ],
+                        "enumDescriptions": [
+                            "Debug",
+                            "Release"
+                        ]
+                    },
                     "vmssoftware.project-dep.dependencies": {
                         "scope": "resource",
                         "type": "array",

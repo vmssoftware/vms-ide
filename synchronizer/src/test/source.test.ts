@@ -1,7 +1,7 @@
 import * as assert from "assert";
 
 import { logConsoleFn, LogFunction, LogType, MemoryWriteStream } from "@vorfol/common";
-import { GetSshHelperType } from "../config/get-ssh-helper";
+import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 import { SshHelper } from "../ext-api/ssh-helper";
 import { FsSource } from "../sync/fs-source";
 import { ISource } from "../sync/source";

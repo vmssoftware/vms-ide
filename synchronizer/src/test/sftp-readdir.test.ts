@@ -3,7 +3,7 @@ import * as assert from "assert";
 import { SshHelper } from "../ext-api/ssh-helper";
 
 import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
-import { GetSshHelperType } from "../config/get-ssh-helper";
+import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 
 suite("Directory tests", function(this: Mocha.Suite) {
 

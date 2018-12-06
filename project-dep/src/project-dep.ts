@@ -1,29 +1,33 @@
 import * as vscode from "vscode";
-import { DepTree } from "./dep-tree";
+import { ProjDepTree } from "./proj-dep-tree";
+import { BuildType, ProjDescrProvider } from "./project-descr";
 
 export interface IProjectElement {
     parent?: string;
     name: string;
 }
 
+export enum FolderContext {
+    folder = "folder",
+    depends = "depends",
+}
+
 export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement> {
+
+    public static readonly cmdSelect = "vmssoftware.project-dep.projectDependencies.select";
+    public static readonly cmdDescrSelect = "vmssoftware.project-dep.projectDescription.select";
+    public static readonly cmdBuild = "vmssoftware.synchronizer.buildProject";
+    public static readonly cmdClean = "vmssoftware.synchronizer.cleanProject";
 
     public readonly onDidChangeTreeData: vscode.Event<IProjectElement | undefined>;
 
     private didChangeTreeEmitter: vscode.EventEmitter<IProjectElement | undefined> = new vscode.EventEmitter<IProjectElement | undefined>();
-
-    private projects: DepTree = new DepTree();
-
+    private projects: ProjDepTree;
     private selected?: IProjectElement;
 
     constructor() {
+        this.projects =  new ProjDepTree();
         this.onDidChangeTreeData = this.didChangeTreeEmitter.event;
-        if (vscode.workspace.workspaceFolders) {
-            for (const folder of vscode.workspace.workspaceFolders) {
-                this.projects.add(folder.name);
-            }
-        }
-        this.load();
     }
 
     public getChildren(element?: IProjectElement | undefined): vscode.ProviderResult<IProjectElement[]> {
@@ -52,12 +56,13 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
         const node = this.projects.root.children.get(element.name);
         if (node) {
             const item = new vscode.TreeItem(element.name, node.children.size > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
-            item.contextValue = element.parent ? "depends" : "folder";
+            item.contextValue = element.parent ? FolderContext.depends : FolderContext.folder;
             item.command = {
                 arguments: [element],
-                command: "vmssoftware.project-dep.projectDependencies.select",
+                command: ProjDepProvider.cmdSelect,
                 title: "",
             };
+            item.tooltip = this.projects.getDepList(element.name).join("->");
             return item;
         } else {
             return new vscode.TreeItem("undefined", vscode.TreeItemCollapsibleState.None);
@@ -66,64 +71,54 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
 
     public select(node: IProjectElement) {
         this.selected = node;
-        vscode.commands.executeCommand("vmssoftware.project-dep.projectDescription.select", node.name);
+        vscode.commands.executeCommand(ProjDepProvider.cmdDescrSelect, node.name);
     }
 
     public add(node: IProjectElement) {
         if (this.selected && !this.selected.parent && this.selected !== node) {
             this.projects.add(node.name, this.selected.name);
             this.didChangeTreeEmitter.fire();
-            this.save();
+        }
+    }
+
+    public build(node: IProjectElement) {
+        if (this.selected) {
+            let buildType = BuildType.debug;
+            const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
+            switch (config.get(ProjDescrProvider.configBuildTypeSection)) {
+                case BuildType.release:
+                    buildType = BuildType.release;
+                    break;
+            }
+            // TODO: activate extension
+            vscode.commands.executeCommand(ProjDepProvider.cmdBuild, this.selected.name, buildType);
+        }
+    }
+
+    public clean(node: IProjectElement) {
+        if (this.selected) {
+            let buildType = BuildType.debug;
+            const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
+            switch (config.get(ProjDescrProvider.configBuildTypeSection)) {
+                case BuildType.release:
+                    buildType = BuildType.release;
+                    break;
+            }
+            // TODO: activate extension
+            vscode.commands.executeCommand(ProjDepProvider.cmdClean, this.selected.name, buildType);
         }
     }
 
     public remove(node: IProjectElement) {
         if (node.parent) {
-            const parentNode = this.projects.root.children.get(node.parent);
-            if (parentNode) {
-                parentNode.children.delete(node.name);
-            }
+            this.projects.remove(node.name, node.parent);
             this.didChangeTreeEmitter.fire();
-            this.save();
         }
     }
 
     public refresh() {
-        this.projects = new DepTree();
-        if (vscode.workspace.workspaceFolders) {
-            for (const folder of vscode.workspace.workspaceFolders) {
-                this.projects.add(folder.name);
-            }
-        }
-        this.load();
+        this.projects.create();
         this.didChangeTreeEmitter.fire();
     }
 
-    public load() {
-        const config = vscode.workspace.getConfiguration("vmssoftware.project-dep", null);
-        const dependencies = config.get("dependencies");
-        if (Array.isArray(dependencies)) {
-            for (const folder of dependencies) {
-                if (typeof folder.folder === "string" && Array.isArray(folder.depends)) {
-                    for (const depend of folder.depends) {
-                        this.projects.add(depend, folder.folder);
-                    }
-                }
-            }
-        }
-    }
-
-    public save() {
-        const dependencies = [];
-        for (const [name, node] of this.projects.root.children) {
-            if (node.children.size > 0) {
-                dependencies.push({
-                    depends: new Array(...node.children.keys()),
-                    folder: name,
-                });
-            }
-        }
-        const config = vscode.workspace.getConfiguration("vmssoftware.project-dep", null);
-        config.update("dependencies", dependencies, false);
-    }
 }

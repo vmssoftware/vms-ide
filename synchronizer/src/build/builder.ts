@@ -7,7 +7,7 @@ import { IFileEntry, LogFunction, LogType } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
 import { printLike } from "@vorfol/common";
 import { parseVmsOutput } from "../common/parse-output";
-import { GetSshHelperType } from "../config/get-ssh-helper";
+import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 import { IEnsured } from "../ensure-settings";
 import { ISshShell } from "../ext-api/api";
 import { IDispose, SshHelper } from "../ext-api/ssh-helper";
