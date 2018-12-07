@@ -8,8 +8,8 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
     public static is(candidate: any): candidate is IConnectionSection {
         return !!candidate &&
             typeof candidate.host === "string" &&
-            typeof candidate.port === "number" &&
-            typeof candidate.username === "string" &&
+            (typeof candidate.port === "number" || candidate.port === undefined) &&
+            (typeof candidate.username === "string" || candidate.username === undefined) &&
             (typeof candidate.keyFile === "string" || candidate.keyFile === undefined) &&
             (typeof candidate.password === "string" || candidate.password === undefined);
     }
@@ -17,8 +17,8 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
     public host: string = "";
     public keyFile?: string;
     public password?: string;
-    public port: number = 22;
-    public username: string = "";
+    public port?: number = 22;
+    public username?: string = "";
 
     public name(): string {
         return ConnectionSection.section;
@@ -36,8 +36,8 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             host: this.host,
             keyFile: this.keyFile || "",
             password: this.password || "",
-            port: this.port,
-            username: this.username,
+            port: this.port || 0,
+            username: this.username || "",
         };
     }
 

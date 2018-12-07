@@ -1,7 +1,7 @@
 import { LogFunction, LogType } from "@vorfol/common";
 import * as path from "path";
 import { EndOfLine, Range, TextEdit, Uri, workspace, WorkspaceEdit } from "vscode";
-import { ensureSettings, projectSection } from "./ensure-settings";
+import { IEnsured } from "./ensure-settings";
 import { FsSource } from "./sync/fs-source";
 
 export class ChangeCrLf {
@@ -12,20 +12,17 @@ export class ChangeCrLf {
         this.logFn = log || (() => {});
     }
 
-    public async perform() {
-        if (!await ensureSettings()) {
-            return false;
-        }
-        if (projectSection && workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
-            const wsUri = workspace.workspaceFolders[0].uri;
-            const filesCfg = workspace.getConfiguration("files");
+    public async perform(ensured: IEnsured) {
+        if (ensured.configHelper.workspaceFolder) {
+            const filesCfg = workspace.getConfiguration("files", ensured.configHelper.workspaceFolder.uri);
             filesCfg.update("eol", "\n", false);
-            const localSource = new FsSource(wsUri.fsPath, this.logFn);
-            const fileNames = [projectSection.builders, projectSection.headers, projectSection.source].join(",");
-            const fileEntries = await localSource.findFiles(fileNames, projectSection.exclude);
+            const localPath = ensured.configHelper.workspaceFolder.uri.fsPath;
+            const localSource = new FsSource(localPath, this.logFn);
+            const fileNames = [ensured.projectSection.builders, ensured.projectSection.headers, ensured.projectSection.source].join(",");
+            const fileEntries = await localSource.findFiles(fileNames, ensured.projectSection.exclude);
             for (const fileEntry of fileEntries) {
                 try {
-                    const uri = Uri.file(path.join(wsUri.fsPath, fileEntry.filename));
+                    const uri = Uri.file(path.join(localPath, fileEntry.filename));
                     const doc = await workspace.openTextDocument(uri);
                     if (doc && doc.eol === EndOfLine.CRLF) {
                         this.logFn(LogType.information, () => `File ${fileEntry.filename} had CRLF => changed to LF`);

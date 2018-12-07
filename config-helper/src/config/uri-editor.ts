@@ -17,7 +17,7 @@ export class UriEditor implements IConfigEditor {
     public invoke(): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
             this.cfg.save().then(() => {
-                window.showTextDocument(this.uri).then(() => {
+                window.showTextDocument(this.uri, { preview: false }).then(() => {
                     resolve(true);
                 }, () => {
                     resolve(false);

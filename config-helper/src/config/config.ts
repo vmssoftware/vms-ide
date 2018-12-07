@@ -1,5 +1,5 @@
 import { LogFunction } from "@vorfol/common";
-import { Disposable } from "vscode";
+import { Disposable, WorkspaceFolder } from "vscode";
 import { Event } from "vscode";
 
 /**
@@ -99,20 +99,12 @@ export interface IConfigEditor {
  * IConfigHelper
  */
 export interface IConfigHelper extends Disposable {
-
+    workspaceFolder: WorkspaceFolder | undefined;
     getConfig(): IConfig;
-
     getEditor(): IConfigEditor;
-
 }
 
-/**
- * ConfigHelper
- */
-export declare class ConfigHelper implements IConfigHelper {
-    public static getConfigHelper(section: string): IConfigHelper;
-    public static createLogFunction(channelName: string): LogFunction;
-    public getConfig(): IConfig;
-    public getEditor(): IConfigEditor;
-    public dispose(): void;
+export interface IConfigApi {
+    getConfigHelper(extension: string, scope?: string): IConfigHelper;
+    createLogFunction(channelName: string): LogFunction;
 }

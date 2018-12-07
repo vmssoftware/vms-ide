@@ -1,9 +1,9 @@
-
+import { WorkspaceFolder } from 'vscode';
 import { Queue } from '../queue/queues';
 import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
 import { SshHelper } from '../ext-api/ssh-helper';
 import { LogType, LogFunction } from '@vorfol/common';
-import { GetSshHelperFromApi } from '../ext-api/get-ssh-helper';
+import { GetSshHelperType } from '../ext-api/get-ssh-helper';
 import { ISshShell } from '../ext-api/api';
 import { ShellParser } from './shell-parser';
 import { OsCmdVMS } from '../command/os_commands';
@@ -43,7 +43,7 @@ export class ShellSession
 
     private shellParser: ShellParser;
 
-    constructor( ExtensionDataCb: (mode: ModeWork, type: TypeDataMessage, data: string) => void, ExtensionReadyCb: () => void, ExtensionCloseCb: () => void, public logFn?: LogFunction)
+    constructor(public folder: WorkspaceFolder | undefined, ExtensionDataCb: (mode: ModeWork, type: TypeDataMessage, data: string) => void, ExtensionReadyCb: () => void, ExtensionCloseCb: () => void, public logFn?: LogFunction)
     {
         this.promptCmd = "";
         this.mode = ModeWork.shell;
@@ -63,7 +63,7 @@ export class ShellSession
         {
             if (!this.sshHelper)
             {
-                const sshHelperType = await GetSshHelperFromApi();
+                const sshHelperType = await GetSshHelperType();
 
                 if (!sshHelperType)
                 {
@@ -80,7 +80,7 @@ export class ShellSession
             if (this.sshHelper)
             {
                 this.sshHelper.clearPasswordCashe();
-                this.sshShell = await this.sshHelper.getDefaultVmsShell();
+                this.sshShell = await this.sshHelper.getDefaultVmsShell(this.folder ? this.folder.name : "");
 
                 if (this.sshShell)
                 {

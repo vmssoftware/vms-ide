@@ -1,78 +1,72 @@
-import { Disposable } from "vscode";
-
-import { LogFunction, LogType } from "@vorfol/common";
-
-import { GetConfigHelperFromApi } from "./config/get-config-helper";
-import { IProjectSection, ProjectSection } from "./config/sections/project";
-import { ISynchronizeSection, SynchronizeSection } from "./config/sections/synchronize";
-import { ConfigHelper, IConfig, IConfigHelper } from "./ext-api/config";
-
-export let projectSection: IProjectSection | undefined;
-export let synchronizeSection: ISynchronizeSection | undefined;
-export let configIsInvalid = false;
-export let didLoadDispose: Disposable;
-
-export let configApi: typeof ConfigHelper | undefined;
-export let configHelper: IConfigHelper | undefined;
-export let synchronizerConfig: IConfig | undefined;
-
-const sectionName = "vmssoftware.synchronizer";
+import { LogFunction } from "@vorfol/common";
+import { GetConfigApi } from "./config/get-config-api";
+import { ProjectSection } from "./config/sections/project";
+import { SynchronizeSection } from "./config/sections/synchronize";
+import { IConfigApi, IConfigHelper } from "./ext-api/config";
+import { ISyncScopeSettings } from "./sync/sync-api";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export async function ensureSettings(log?: LogFunction) {
-    // tslint:disable-next-line:no-console
-    const logFn = log || ((t, mf) => console.log(mf()));
-    if (!configIsInvalid &&
-        projectSection &&
-        synchronizeSection) {
-        logFn(LogType.debug, () => localize("already", "Already have all sections loaded"));
-        return true;
+export interface IEnsured extends ISyncScopeSettings {
+    configHelper: IConfigHelper;
+}
+
+export let configApi: IConfigApi | undefined;
+
+export async function ensureConfigHelperApi(): Promise<boolean> {
+    if (!configApi) {
+        configApi = await GetConfigApi();
     }
-    if (!synchronizerConfig) {
-        configApi = await GetConfigHelperFromApi();
-        if (configApi) {
-            configHelper = configApi.getConfigHelper(sectionName);
-            synchronizerConfig = configHelper.getConfig();
-            didLoadDispose = synchronizerConfig.onDidLoad(() => {
-                configIsInvalid = true;
-                logFn(LogType.debug, () => localize("invalidate", "Invalidate settings: onDidLoad()"));
-            });
-        }
+    return configApi !== undefined;
+}
+
+const extensionName = "vmssoftware.synchronizer";
+
+/**
+ * Returns always new IEnsured object with properly filled values.
+ * @param scope name of workspaseFolder
+ * @param log log
+ */
+export async function ensureSettings(scope?: string, log?: LogFunction): Promise<IEnsured | undefined> {
+    // tslint:disable-next-line:no-empty
+    const logFn = log || (() => {});
+    if (!await ensureConfigHelperApi() || configApi === undefined) {
+        return undefined;
     }
-    if (!synchronizerConfig) {
-        logFn(LogType.debug, () => localize("config.failed", "Failed to load config-helper"));
-        return false;
-    }
+    const configHelper = configApi.getConfigHelper(extensionName, scope);
+    const config = configHelper.getConfig();
     // first try
-    let [projectSectionT, syncSectionT] =
+    let [projectSection, synchronizeSection] =
         await Promise.all(
-            [synchronizerConfig.get(ProjectSection.section),
-             synchronizerConfig.get(SynchronizeSection.section)]);
+            [config.get(ProjectSection.section),
+             config.get(SynchronizeSection.section)]);
     // test and add if missed
-    if (!projectSectionT) {
-        synchronizerConfig.add(new ProjectSection());
+    const wait = [];
+    if (!projectSection) {
+        config.add(new ProjectSection());
+        wait.push(config.get(ProjectSection.section).then((section) => {
+            projectSection = section;
+        }));
     }
-    if (!syncSectionT) {
-        synchronizerConfig.add(new SynchronizeSection());
+    if (!synchronizeSection) {
+        config.add(new SynchronizeSection());
+        wait.push(config.get(SynchronizeSection.section).then((section) => {
+            synchronizeSection = section;
+        }));
     }
-    // second try
-    [projectSectionT, syncSectionT] =
-        await Promise.all(
-            [synchronizerConfig.get(ProjectSection.section),
-             synchronizerConfig.get(SynchronizeSection.section)]);
+    // wait
+    if (wait.length > 0) {
+        await Promise.all(wait);
+    }
     // then ensure all are loaded
-    if (ProjectSection.is(projectSectionT)) {
-        projectSection = projectSectionT;
+    if (ProjectSection.is(projectSection) && SynchronizeSection.is(synchronizeSection)) {
+        return {
+            configHelper,
+            projectSection,
+            synchronizeSection,
+        };
     }
-    if (SynchronizeSection.is(syncSectionT)) {
-        synchronizeSection = syncSectionT;
-    }
-    configIsInvalid =
-        projectSection === undefined ||
-        synchronizeSection === undefined;
-    logFn(LogType.debug, () => localize("returns", "returns: {0}", !configIsInvalid));
-    return !configIsInvalid;
+    return undefined;
 }

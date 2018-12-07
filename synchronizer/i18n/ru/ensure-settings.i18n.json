@@ -1,6 +1,1 @@
-{
-    "already": "Конфигурация уже загружена",
-    "invalidate": "Настройки устарели: onDidLoad()",
-    "config.failed": "Невозможно загрузить config-helper",
-    "returns": "Возврат: {0}"
-}
+{}

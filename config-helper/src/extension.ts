@@ -1,12 +1,7 @@
 import * as vscode from "vscode";
 
-import { LogType } from "@vorfol/common";
-
-import { IConfigHelper } from "./config/config";
+import { ConfigApi } from "./config/config-api";
 import { ConfigHelperSection } from "./config/config-hepler-section";
-import { FSConfigHelper } from "./config/fs-config-helper";
-import { VFSConfigHelper } from "./config/vfs-config-helper";
-import { VSCConfigHelper } from "./config/vsc-config-helper";
 import { createLogFunction } from "./log";
 
 const locale = vscode.env.language ;
@@ -17,39 +12,27 @@ const logFn = createLogFunction("VMS config");
 
 export function activate(context: vscode.ExtensionContext) {
 
-    const config = vscode.workspace.getConfiguration("vmssoftware.config-helper");
-    const using = config.get<string>("using");
-    let configHelperType: typeof FSConfigHelper | typeof VFSConfigHelper | typeof VSCConfigHelper;
-    switch (using) {
-        case "FS":
-            configHelperType = FSConfigHelper;
-            logFn(LogType.information, () => localize("message.created", "{0} created", "FS"));
-            break;
-        case "VFS":
-            configHelperType = VFSConfigHelper;
-            logFn(LogType.information, () => localize("message.created", "{0} created", "VFS"));
-            break;
-        default:
-            configHelperType = VSCConfigHelper;
-            logFn(LogType.information, () => localize("message.created", "{0} created", "VSC"));
-            break;
-    }
+    const configApi = new ConfigApi(logFn);
+
+    // vscode.commands.executeCommand("setContext", "vmssoftware.config-helper.test:enabled", true); // required "*" in "activationEvents" in package.json
 
     context.subscriptions.push( vscode.commands.registerCommand("vmssoftware.config-helper.test", async () => {
         //
-        const configHelper: IConfigHelper = configHelperType.getConfigHelper("vmssoftware", logFn);
-        let test = await configHelper.getConfig().get(ConfigHelperSection.section);
-        if (!ConfigHelperSection.is(test)) {
-            configHelper.getConfig().add(new ConfigHelperSection());
-            test = await configHelper.getConfig().get(ConfigHelperSection.section);
-        }
-        if (ConfigHelperSection.is(test)) {
-            test.test = "passed";
-            configHelper.getConfig().save();
+        const configHelper = configApi.getConfigHelper("vmssoftware.config-helper");
+        if (configHelper) {
+            let test = await configHelper.getConfig().get(ConfigHelperSection.section);
+            if (!ConfigHelperSection.is(test)) {
+                configHelper.getConfig().add(new ConfigHelperSection());
+                test = await configHelper.getConfig().get(ConfigHelperSection.section);
+            }
+            if (ConfigHelperSection.is(test)) {
+                test.test = "passed";
+                configHelper.getConfig().save();
+            }
         }
     }));
 
-    return configHelperType;
+    return configApi;
 }
 
 export function deactivate() {

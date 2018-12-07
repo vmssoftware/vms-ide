@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.27",
+    "version": "0.1.34",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -85,51 +85,61 @@
             "title": "%configuration.title%",
             "properties": {
                 "vmssoftware.synchronizer.project.builders": {
+                    "scope": "resource",
                     "type": "string",
                     "default": "*.{mms,com}",
                     "description": "Builders"
                 },
                 "vmssoftware.synchronizer.project.exclude": {
+                    "scope": "resource",
                     "type": "string",
                     "default": "**/{.vscode,node-modules}",
                     "description": "%properties.project.exclude.description%"
                 },
                 "vmssoftware.synchronizer.project.headers": {
+                    "scope": "resource",
                     "type": "string",
                     "default": "*.{h,hpp}",
                     "description": "%properties.project.headers.description%"
                 },
                 "vmssoftware.synchronizer.project.listing": {
+                    "scope": "resource",
                     "type": "string",
                     "default": "*.lis",
                     "description": "%properties.project.listing.description%"
                 },
                 "vmssoftware.synchronizer.project.outdir": {
+                    "scope": "resource",
                     "type": "string",
                     "default": "out",
                     "description": "%properties.project.outdir.description%"
                 },
                 "vmssoftware.synchronizer.project.projectName": {
+                    "scope": "resource",
                     "type": "string",
                     "default": "project",
                     "description": "%properties.project.projectName.description%"
                 },
                 "vmssoftware.synchronizer.project.source": {
+                    "scope": "resource",
                     "type": "string",
                     "default": "*.{c,cpp}",
                     "description": "%properties.project.source.description%"
                 },
                 "vmssoftware.synchronizer.project.resource": {
+                    "scope": "resource",
                     "type": "string",
                     "default": "**/resource/**/*.*",
                     "description": "%properties.project.resource.description%"
                 },
                 "vmssoftware.synchronizer.project.root": {
+                    "scope": "resource",
                     "type": "string",
                     "default": "project",
                     "description": "%properties.project.root.description%"
                 },
                 "vmssoftware.synchronizer.synchronize.downloadNewFiles": {
+                    "scope": "resource",
                     "type": "string",
                     "enum": [
                         "overwrite",
@@ -145,11 +155,13 @@
                     "description": "%properties.synchronize.downloadNewFiles.description%"
                 },
                 "vmssoftware.synchronizer.synchronize.keepAlive": {
+                    "scope": "resource",
                     "type": "boolean",
                     "default": false,
                     "description": "%properties.synchronize.keepAlive.description%"
                 },
                 "vmssoftware.synchronizer.synchronize.setTimeAttempts": {
+                    "scope": "resource",
                     "type": "number",
                     "default": 3,
                     "description": "%properties.synchronize.setTimeAttempts.description%"

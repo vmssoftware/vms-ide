@@ -1,22 +1,24 @@
 import * as net from "net";
-import * as optimist from "optimist";
 
-const argv = optimist.argv;
+if (process.argv.length < 4) {
+  console.log("Params required");
+  process.exit(2);
+}
 
-const client = net.createConnection({ port: argv.port }, () => {
+const port = parseInt(process.argv[2], 10);
+
+const client = net.createConnection({ port }, () => {
   let resp = "";
-  client.write(argv.command);
+  const buff = Buffer.from(process.argv[3], "base64");
+  client.write(buff);
   client.on("data", (data) => {
     resp += data.toString("utf8");
-    if (resp === "Done") {
-      client.end();
-      console.log("Done");
+    client.end();
+    console.log(resp);
+    if (resp.startsWith("Done")) {
       process.exit(0);
-    } else if (resp === "Failed") {
-      client.end();
-      console.log("Failed");
-      process.exit(1);
     }
+    process.exit(1);
   });
 });
 

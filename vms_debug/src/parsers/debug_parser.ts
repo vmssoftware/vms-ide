@@ -6,6 +6,7 @@ import { ftpPathSeparator } from '@vorfol/common';
 import { FileManagerExt } from '../ext-api/file_manager';
 import { TypeDataMessage } from '../net/shell-session';
 import { VariableFileInfo, HolderDebugVariableInfo } from './debug_variable_info';
+import { WorkspaceFolder } from 'vscode';
 
 
 export enum MessageDebuger
@@ -45,12 +46,12 @@ export class DebugParser
 	private fileManager : FileManagerExt;
 	private framesOld = new Array<any>();
 
-	constructor()
+	constructor(public folder: WorkspaceFolder | undefined)
 	{
 		this.currentName = "";
 		this.fileInfo = new HolderDebugFileInfo();
 		this.varsInfo = new HolderDebugVariableInfo();
-		this.fileManager = new FileManagerExt();
+		this.fileManager = new FileManagerExt(folder?folder.name:"");
 		this.commandDone = false;
 		this.commandButtonDone = false;
 	}

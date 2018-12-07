@@ -9,9 +9,9 @@ import { IConfig, IConfigEditor } from "./config";
 
 export class VSCWorkspaceConfigEditor implements IConfigEditor {
 
-    private readonly command = "workbench.action.openWorkspaceSettings";
+    protected readonly command = "workbench.action.openWorkspaceSettings";
 
-    constructor(private cfg: IConfig, public logFn?: LogFunction) {
+    constructor(protected cfg: IConfig, protected logFn?: LogFunction) {
 
     }
 

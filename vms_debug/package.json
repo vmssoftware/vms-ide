@@ -1,7 +1,7 @@
 {
 	"name": "vms-debug",
 	"displayName": "VMS Debugger",
-	"version": "0.28.2",
+	"version": "0.28.3",
 	"publisher": "vmssoftware",
 	"description": "The extension for developing debug adapters for VS Code.",
 	"author": {
@@ -30,7 +30,7 @@
 		"url": "https://host/project/issues"
 	},
 	"scripts": {
-		"get-ext-api": "PowerShell copy -Path ..\\synchronizer\\out\\sync\\source.d.ts, ..\\synchronizer\\out\\sync\\get-source.d.ts, ..\\ssh-helper\\out\\api.d.ts, ..\\ssh-helper\\out\\ssh-helper.d.ts, ..\\config-helper\\out\\config\\config.d.ts -Destination src\\ext-api",
+		"get-ext-api": "PowerShell copy -Path ..\\synchronizer\\out\\sync\\source.d.ts, ..\\synchronizer\\out\\sync\\sync-api.d.ts, ..\\ssh-helper\\out\\api.d.ts, ..\\ssh-helper\\out\\ssh-helper.d.ts, ..\\config-helper\\out\\config\\config.d.ts -Destination src\\ext-api",
 		"prepublish": "tsc -p ./",
 		"compile": "tsc -p ./",
 		"tslint": "tslint ./**/*.ts",

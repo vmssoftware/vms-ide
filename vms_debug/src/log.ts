@@ -1,10 +1,10 @@
 import { LogResult, LogType, LogFunction } from "@vorfol/common";
-import { GetConfigHelperFromApi } from "./ext-api/get-config-helper";
+import { GetConfigApi } from "./ext-api/get-config-api";
 
 export function createLogFunction(channelName: string) {
     let logFn: LogFunction | undefined;
     // get function from api
-    GetConfigHelperFromApi()
+    GetConfigApi()
         .then((api) => {
             if (api) {
                 logFn = api.createLogFunction(channelName);

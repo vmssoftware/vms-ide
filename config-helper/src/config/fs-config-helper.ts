@@ -1,11 +1,10 @@
 import * as path from "path";
 import * as util from "util";
-import { Disposable, FileSystemWatcher, Uri, workspace } from "vscode";
+import { Disposable, FileSystemWatcher, Uri, workspace, WorkspaceFolder } from "vscode";
 
 import { Debouncer, LogFunction, LogType } from "@vorfol/common";
 
-import { createLogFunction } from "../log";
-import { ConfigHelper, IConfig, IConfigEditor, IConfigStorage } from "./config";
+import { IConfig, IConfigEditor, IConfigHelper, IConfigStorage } from "./config";
 import { ConfigPool } from "./config-pool";
 import { DummyEditor } from "./dummy-editor";
 import { DummyStorage } from "./dummy-storage";
@@ -19,29 +18,16 @@ import { UriEditor } from "./uri-editor";
 /**
  * ConfigHelper implementation
  */
-export class FSConfigHelper implements ConfigHelper {
+export class FSConfigHelper implements IConfigHelper {
 
-    public static getConfigHelper(section: string, logFn?: LogFunction): FSConfigHelper {
-        if (FSConfigHelper.instances.get(section) === undefined) {
-            const relativeFileName = path.join(FSConfigHelper.folder, section + FSConfigHelper.suffix);
-            FSConfigHelper.instances.set(section, new FSConfigHelper(relativeFileName, logFn));
-        }
-        const retInstance = FSConfigHelper.instances.get(section)!;
-        return retInstance;
-    }
+    protected static readonly folder = ".vscode";
+    protected static readonly suffix = "-settings.json";
 
-    public static createLogFunction(channelName: string): LogFunction {
-        return createLogFunction(channelName);
-    }
-
-    private static readonly folder = ".vscode";
-    private static readonly suffix = "-settings.json";
-    private static instances: Map<string, FSConfigHelper> = new Map<string, FSConfigHelper>();
-
-    public logFn: LogFunction;
+    protected logFn: LogFunction;
 
     protected config: ConfigPool;
     protected storage: IConfigStorage;
+    protected relativeFileName: string;
     protected editor: IConfigEditor;
     protected disposables: Disposable[] = [];
     /**
@@ -54,9 +40,10 @@ export class FSConfigHelper implements ConfigHelper {
     protected debouncer = new Debouncer(1000);
     protected watcher: FileSystemWatcher | undefined = undefined;
 
-    protected constructor(protected relativeFileName: string, logFn?: LogFunction) {
+    constructor(public workspaceFolder: WorkspaceFolder, extension: string, logFn?: LogFunction) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
+        this.relativeFileName = path.join(FSConfigHelper.folder, extension + FSConfigHelper.suffix);
         this.storage = new DummyStorage();
         this.config = new ConfigPool(this.storage, logFn);
         this.editor = new DummyEditor();
@@ -95,7 +82,7 @@ export class FSConfigHelper implements ConfigHelper {
         if (this.storage instanceof DummyStorage) {
             if (workspace.workspaceFolders) {
                 // allocate storage in first workspace
-                this.createFS_Storage(workspace.workspaceFolders[0].uri);
+                this.createFS_Storage(this.workspaceFolder.uri);
                 this.editor = new UriEditor(this.fileUri, this.config, this.logFn);
                 this.config.setStorage(this.storage);
             }

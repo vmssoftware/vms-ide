@@ -57,22 +57,22 @@ export class VmsSource extends SftpSource {
         return false;
     }
 
-    /**
-     * Also change file record format when finished
-     * @param filename file
-     */
-    public createWriteStream(filename: string) {
-        const streamPromise = super.createWriteStream(filename);
-        // streamPromise.then((stream) => {
-        //     if (stream) {
-        //         stream.once("finish", () => {
-        //             const converter = new VmsPathConverter(this.root + ftpPathSeparator + filename);
-        //             this.tryExec(setFileFormatSTM + converter.fullPath, setFileErrorResponse);
-        //         });
-        //     }
-        // });
-        return streamPromise;
-    }
+    // /**
+    //  * Also change file record format when finished
+    //  * @param filename file
+    //  */
+    // public createWriteStream(filename: string) {
+    //     const streamPromise = super.createWriteStream(filename);
+    //     // streamPromise.then((stream) => {
+    //     //     if (stream) {
+    //     //         stream.once("finish", () => {
+    //     //             const converter = new VmsPathConverter(this.root + ftpPathSeparator + filename);
+    //     //             this.tryExec(setFileFormatSTM + converter.fullPath, setFileErrorResponse);
+    //     //         });
+    //     //     }
+    //     // });
+    //     return streamPromise;
+    // }
 
     private async tryExec(command: string, errorResponse: string) {
         let attempts = this.attempts || 3;

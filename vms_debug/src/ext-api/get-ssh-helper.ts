@@ -2,7 +2,7 @@ import { extensions } from "vscode";
 
 import { SshHelper } from "./ssh-helper";
 
-export async function GetSshHelperFromApi() {
+export async function GetSshHelperType() {
     const extension = extensions.getExtension("vmssoftware.ssh-helper");
     if (extension) {
         if (extension.isActive) {

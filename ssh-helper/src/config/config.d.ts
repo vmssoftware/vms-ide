@@ -1,5 +1,5 @@
 import { LogFunction } from "@vorfol/common";
-import { Disposable } from "vscode";
+import { Disposable, WorkspaceFolder } from "vscode";
 import { Event } from "vscode";
 /**
  * Base types and interfaces
@@ -76,17 +76,12 @@ export interface IConfigEditor {
  * IConfigHelper
  */
 export interface IConfigHelper extends Disposable {
+    workspaceFolder: WorkspaceFolder | undefined;
     getConfig(): IConfig;
     getEditor(): IConfigEditor;
 }
-/**
- * ConfigHelper
- */
-export declare class ConfigHelper implements IConfigHelper {
-    static getConfigHelper(section: string): IConfigHelper;
-    static createLogFunction(channelName: string): LogFunction;
-    getConfig(): IConfig;
-    getEditor(): IConfigEditor;
-    dispose(): void;
+export interface IConfigApi {
+    getConfigHelper(extension: string, scope?: string): IConfigHelper;
+    createLogFunction(channelName: string): LogFunction;
 }
 //# sourceMappingURL=config.d.ts.map

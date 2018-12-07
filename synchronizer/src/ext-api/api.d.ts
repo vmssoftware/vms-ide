@@ -76,10 +76,16 @@ export interface ISshShell {
 }
 export interface IConnectionSection {
     host: string;
-    port: number;
-    username: string;
+    port?: number;
+    username?: string;
     password?: string;
     keyFile?: string;
+}
+export interface IHost extends IConnectionSection {
+    label: string;
+}
+export interface IHostsSection {
+    hosts: IHost[];
 }
 export interface ITimeoutsSection {
     cmdTimeout: number;
@@ -96,7 +102,7 @@ export interface IConnectConfigResolver<T extends any> {
     timeout?: number;
     resolveConnectConfig(settings: T): Promise<T | undefined>;
     testConnectConfig(settings: T): {
-        settengs?: T;
+        settings?: T;
         state: ResolverState;
     };
     feedBack(settings: T, accepted: boolean): void;
@@ -104,5 +110,11 @@ export interface IConnectConfigResolver<T extends any> {
 }
 export interface IConnectConfig extends IConnectionSection {
     privateKey?: Buffer | string;
+}
+export interface ISshScopeSettings {
+    connectionSection: IConnectionSection;
+    hostsSection: IHostsSection;
+    timeoutSection: ITimeoutsSection;
+    connectConfigResolver: IConnectConfigResolver<IConnectConfig>;
 }
 //# sourceMappingURL=api.d.ts.map

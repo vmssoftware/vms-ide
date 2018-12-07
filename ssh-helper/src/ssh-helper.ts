@@ -1,59 +1,50 @@
-import { Event, Disposable } from "vscode";
+// import * as nls from "vscode-nls";
+// nls.config({messageFormat: nls.MessageFormat.both});
+// const localize = nls.loadMessageBundle();
 
 import { SftpClient } from "./stream/sftp-client";
 import { SshShell } from "./stream/ssh-shell";
-
-import { LogType, IFileEntry, LogFunction } from "@vorfol/common";
-
-import { IConfig, IConfigSection, IConfigHelper } from "./config/config";
-import { GetConfigHelperFromApi } from "./config/get-config-helper";
-
+import { LogFunction } from "@vorfol/common";
+import { IConfigHelper } from "./config/config";
 import { ConnectionSection } from "./config/sections/connection";
-import { TimeoutsSection } from "./config/sections/timeouts";
+import { TimeoutSection } from "./config/sections/timeouts";
 import { PasswordVscodeFiller } from "./config-resolve/password-vscode-filler";
 import { ConnectConfigResolverImpl } from "./config-resolve/connect-config-resolver-impl";
 import { ParseWelcomeVms } from "./stream/parse-welcome-vms";
 import { PromptCatcherVms } from "./stream/prompt-catcher-vms";
-import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator, IConnectionSection, ITimeoutsSection, IConnectConfigResolver, IHostsSection } from "./api";
 import { PipeFile } from "./stream/pipe";
 import { MemoryStreamCreator } from "./stream/stream-creators";
 import { ConstPasswordFiller } from "./config-resolve/password-filler";
 import { KeyFiller } from "./config-resolve/key-filler";
-
-import * as nls from "vscode-nls";
 import { HostsSection } from "./config/sections/hosts";
 import { HostFiller } from "./config-resolve/host-filler";
-nls.config({messageFormat: nls.MessageFormat.both});
-const localize = nls.loadMessageBundle();
+import { configApi } from "./config-api";
+
+import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator, ISshScopeSettings } from "./api";
+
+interface IEnsured extends ISshScopeSettings {
+    configHelper: IConfigHelper;
+}
+
+export interface IDispose {
+    dispose(): any;
+}
+
+const extensionName = "vmssoftware.ssh-helper";
 
 export class SshHelper {
 
-    readonly section: string;
+    readonly extensionName: string;
     
-    private configHelper?: IConfigHelper;
-    private config?: IConfig;
-    private configIsInvalid = false;
-    private didLoadDispose?: Disposable;
-
-    public onDidLoadConfig?: Event<null>;
     public logFn: LogFunction;
-
-    public connectionSection?: IConnectionSection;
-    public hostsSection?: IHostsSection;
-    public timeoutSection?: ITimeoutsSection;
-    public connectConfigResolver?: IConnectConfigResolver<IConnectionSection>;
 
     constructor(logFn?: LogFunction) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
-        this.section = "vmssoftware.ssh-helper";
+        this.extensionName = extensionName;
     }
 
     public dispose() {
-        if (this.didLoadDispose) {
-            this.didLoadDispose.dispose();
-            this.didLoadDispose = undefined;
-        }
     }
 
     public clearPasswordCashe() {
@@ -73,105 +64,58 @@ export class SshHelper {
         return new MemoryStreamCreator();
     }
 
-    public async editSettings() {
-        if (!await this.ensureSettings() ||
-            !this.configHelper) {
+    public async editSettings(scope?: string) {
+        const ensured = await ensureSettings(this.logFn, scope);
+        if (!ensured) {
             return false;
         }
-        const editor = this.configHelper.getEditor();
+        const editor = ensured.configHelper.getEditor();
         return editor.invoke();
     }
 
-    public async getDefaultSftp() {
+    public async getDefaultSftp(scope?: string) {
         // get current config
-        if (!await this.ensureSettings() ||
-            !this.connectionSection ||
-            !this.connectConfigResolver) {
+        const ensured = await ensureSettings(this.logFn, scope);
+        if (!ensured) {
             return undefined;
         }
-        const sftp = new SftpClient(this.connectionSection, this.connectConfigResolver, this.logFn);
+        const sftp = new SftpClient(ensured.connectionSection, ensured.connectConfigResolver, this.logFn);
         return sftp as ISftpClient;
     }
 
-    public async getDefaultVmsShell() {
+    public async getSettings(scope?: string) {
         // get current config
-        if (!await this.ensureSettings() ||
-            !this.connectionSection ||
-            !this.timeoutSection ||
-            !this.connectConfigResolver) {
+        const ensured = await ensureSettings(this.logFn, scope);
+        if (!ensured) {
             return undefined;
         }
-        const welcome = new ParseWelcomeVms(this.timeoutSection.welcomeTimeout, this.logFn);
-        const prompter = new PromptCatcherVms("", this.timeoutSection.cmdTimeout, this.logFn);
-        const shell = new SshShell(this.connectionSection, this.connectConfigResolver, welcome, prompter, this.logFn);
+        return ensured as ISshScopeSettings;
+    }
+
+    public async getDefaultVmsShell(scope?: string) {
+        // get current config
+        const ensured = await ensureSettings(this.logFn, scope);
+        if (!ensured) {
+            return undefined;
+        }
+        const welcome = new ParseWelcomeVms(ensured.timeoutSection.welcomeTimeout, this.logFn);
+        const prompter = new PromptCatcherVms("", ensured.timeoutSection.cmdTimeout, this.logFn);
+        const shell = new SshShell(ensured.connectionSection, ensured.connectConfigResolver, welcome, prompter, this.logFn);
         return shell as ISshShell;
     }
 
-    public async ensureSettings() {
-        if (!this.configIsInvalid &&
-            this.connectionSection && 
-            this.hostsSection && 
-            this.timeoutSection &&
-            this.connectConfigResolver) {
-            return true;
+    public setConfigWatcher(scope: string, watcher: () => void): IDispose {
+        if (!configApi) {
+            return {
+                dispose() {
+                    //
+                }
+            };
         }
-        if (!this.config) {
-            const api = await GetConfigHelperFromApi();
-            if (api) {
-                this.configHelper = api.getConfigHelper(this.section);
-                this.config = this.configHelper.getConfig();
-                this.onDidLoadConfig = this.config.onDidLoad;
-                this.didLoadDispose = this.onDidLoadConfig(() => {
-                    this.configIsInvalid = true;
-                });
-            }
-        }
-        if (!this.config) {
-            return false;
-        }
-        // first try
-        let [connectionSection, hostsSection, timeoutSection] = 
-            await Promise.all(
-                [this.config.get(ConnectionSection.section),
-                 this.config.get(HostsSection.section),
-                 this.config.get(TimeoutsSection.section)]);
-        // test and add if missed
-        if (!connectionSection) {
-            this.config.add(new ConnectionSection());
-        }
-        if (!hostsSection) {
-            this.config.add(new HostsSection());
-        }
-        if (!timeoutSection) {
-            this.config.add(new TimeoutsSection());
-        }
-        // second try
-        [connectionSection, hostsSection, timeoutSection] = 
-            await Promise.all(
-                [this.config.get(ConnectionSection.section),
-                 this.config.get(HostsSection.section),
-                 this.config.get(TimeoutsSection.section)]);
-        // then ensure all are loaded
-        if (ConnectionSection.is(connectionSection)) {
-            this.connectionSection = connectionSection;
-        }
-        if (HostsSection.is(hostsSection)) {
-            this.hostsSection = hostsSection;
-        }
-        if (TimeoutsSection.is(timeoutSection)) {
-            this.timeoutSection = timeoutSection;
-        }
-        if (this.timeoutSection && this.hostsSection) {
-            const fillers = [new HostFiller(this.hostsSection, this.logFn), new KeyFiller(this.logFn), new PasswordVscodeFiller()];
-            this.connectConfigResolver = new ConnectConfigResolverImpl(fillers, this.timeoutSection.feedbackTimeout, this.logFn);
-        }
-        this.configIsInvalid = 
-            this.connectionSection === undefined ||
-            this.timeoutSection === undefined ||
-            this.connectConfigResolver === undefined;
-        return !this.configIsInvalid;
+        const configHelper = configApi.getConfigHelper(this.extensionName, scope);
+        return configHelper.getConfig().onDidLoad(watcher);
     }
-    
+
     public async getTestSftp(host: string, port: number, username: string, password: string) {
         const fillers = [new ConstPasswordFiller(password)];
         const resolver = new ConnectConfigResolverImpl(fillers, 0, this.logFn);
@@ -187,5 +131,62 @@ export class SshHelper {
         const sftp = new SshShell({host, port, username}, resolver, welcome, prompter, this.logFn);
         return sftp as ISshShell;
     }
-
 }
+
+/**
+ * Every time returns new IEnsured
+ * @param scope string, workspaceFolder.name
+ */
+async function ensureSettings(logFn: LogFunction, scope?: string): Promise<IEnsured | undefined> {
+    if (!configApi) {
+        return undefined;
+    }
+    const configHelper = configApi.getConfigHelper(extensionName, scope);
+    const config = configHelper.getConfig();
+    // first try
+    let [connectionSection, hostsSection, timeoutSection] = 
+        await Promise.all(
+            [config.get(ConnectionSection.section),
+                config.get(HostsSection.section),
+                config.get(TimeoutSection.section)]);
+    const wait = [];
+    // test and add if missed
+    if (!connectionSection) {
+        config.add(new ConnectionSection());
+        wait.push(config.get(ConnectionSection.section).then((section) => {
+            connectionSection = section;
+        }));
+    }
+    if (!hostsSection) {
+        config.add(new HostsSection());
+        wait.push(config.get(HostsSection.section).then((section) => {
+            hostsSection = section;
+        }));
+    }
+    if (!timeoutSection) {
+        config.add(new TimeoutSection());
+        wait.push(config.get(TimeoutSection.section).then((section) => {
+            timeoutSection = section;
+        }));
+    }
+    // wait
+    if (wait.length > 0) {
+        await Promise.all(wait);
+    }
+    // then ensure all are loaded
+    if (ConnectionSection.is(connectionSection) &&
+        HostsSection.is(hostsSection) &&
+        TimeoutSection.is(timeoutSection)) {
+        const fillers = [new HostFiller(hostsSection, logFn), new KeyFiller(logFn), new PasswordVscodeFiller()];
+        const connectConfigResolver = new ConnectConfigResolverImpl(fillers, timeoutSection.feedbackTimeout, logFn);
+        return {
+            configHelper,
+            connectionSection,
+            hostsSection,
+            timeoutSection,
+            connectConfigResolver,
+        };
+    }
+    return undefined;
+}
+    

@@ -1,5 +1,5 @@
 
-import { workspace, WorkspaceConfiguration } from "vscode";
+import { Uri, workspace, WorkspaceConfiguration, WorkspaceFolder } from "vscode";
 
 import { LogFunction, LogType } from "@vorfol/common";
 import { CSAResult, IConfigData, IConfigStorage, ValueData } from "./config";
@@ -12,11 +12,11 @@ import { CSAResult, IConfigData, IConfigStorage, ValueData } from "./config";
  * VSCConfigStorage
  */
 export class VSCConfigStorage implements IConfigStorage {
-    public logFn: LogFunction;
+    protected logFn: LogFunction;
 
     protected storePromise: Promise<CSAResult> | undefined;
 
-    constructor(protected section: string, logFn?: LogFunction) {
+    constructor(protected workspaceFolder: WorkspaceFolder | undefined, protected section: string, logFn?: LogFunction) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
     }
@@ -27,7 +27,7 @@ export class VSCConfigStorage implements IConfigStorage {
     }
 
     public fillData(section: string, data: IConfigData): Promise<CSAResult> {
-        const configuration = workspace.getConfiguration(this.section);
+        const configuration = workspace.getConfiguration(this.section, this.workspaceFolder ? this.workspaceFolder.uri : null);
         // tslint:disable-next-line:forin
         for (const key in data) {
             data[key] = this.setCfgValue(data[key], `${section}.${key}`, configuration);
@@ -52,7 +52,7 @@ export class VSCConfigStorage implements IConfigStorage {
         }
         this.storePromise = new Promise(async (resolve) => {
             let retCode = CSAResult.ok;
-            const configuration = workspace.getConfiguration(this.section);
+            const configuration = workspace.getConfiguration(this.section, this.workspaceFolder ? this.workspaceFolder.uri : null);
             // tslint:disable-next-line:forin
             for (const key in data) {
                 const cfgKey = `${section}.${key}`;

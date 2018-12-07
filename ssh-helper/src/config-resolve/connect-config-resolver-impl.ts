@@ -7,7 +7,6 @@ import { ISettingsFiller } from "./settings-filler";
 import { IConnectConfigResolver, IConnectConfig, ResolverState } from "../api";
 
 import * as nls from "vscode-nls";
-import { copy } from "fs-extra";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
@@ -99,8 +98,8 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver<IConnec
 
     /**
      * PasswordResolver
-     * @param settingsFillers fillers
-     * @param timeout timeout for feedback, in ms. else lock will be released and accepted set to false
+     * @param settingsFillers fillers, the order is important
+     * @param timeout timeout for feedback, in ms. when timeout elapsed 'node.lock' will be released and 'node.accepted' flag will be set to false
      */
     constructor(public settingsFillers?: ISettingsFiller[], public timeout?: number, logFn?: LogFunction) {
         // tslint:disable-next-line:no-empty
