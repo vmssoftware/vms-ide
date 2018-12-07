@@ -46,7 +46,7 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	private configurationDone = new Subject();
 
-	private responseEvaluate: DebugProtocol.EvaluateResponse;
+	private responseEvaluate: DebugProtocol.EvaluateResponse | undefined;
 	private responseStackTrace =  new Queue<DebugProtocol.StackTraceResponse>();
 
 	/**
@@ -62,18 +62,24 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.setDebuggerColumnsStartAt1(false);
 
 		this.runtime = new VMSRuntime(shell, logFn);
+		this.responseEvaluate = undefined;
 
 		// response event handlers
 		this.runtime.on(DebugCmdVMS.dbgExamine, (data : string) =>
 		{
 			let reply: string | undefined = undefined;
 
-			this.responseEvaluate.body =
+			if(this.responseEvaluate)
 			{
-				result: reply ? reply : `context: '${data}'`,
-				variablesReference: 0
-			};
-			this.sendResponse(this.responseEvaluate);
+				this.responseEvaluate.body =
+				{
+					result: reply ? reply : `context: '${data}'`,
+					variablesReference: 0
+				};
+				this.sendResponse(this.responseEvaluate);
+
+				this.responseEvaluate = undefined;
+			}
 		});
 		this.runtime.on(DebugCmdVMS.dbgStack, (stack : any) =>
 		{
@@ -259,21 +265,26 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.sendResponse(response);
 	}
 
-	protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void//call 3
+	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): Promise<void>//call 3
 	{
 		const id = this.variableHandles.get(args.variablesReference);
-		const variables = this.runtime.getVariables(id);
+		const variables = await this.runtime.getVariables(id);
 
 		response.body =
 		{
 			variables: variables
 		};
-
 		this.sendResponse(response);
 	}
 
 	protected setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments): void
 	{
+		this.runtime.setVariableValue(args.name, args.value);
+
+		response.body =
+		{
+			value: args.value
+		};
 		this.sendResponse(response);
 	}
 

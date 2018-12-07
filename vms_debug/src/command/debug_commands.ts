@@ -26,6 +26,7 @@ export enum DebugCmdVMS
 
 	dbgCallStack = "show calls",
 	dbgStack = "show stack",
+	dbgSymbol = "show symbol/type * in",
 
 	dbgDump = "dump",
 
@@ -162,9 +163,9 @@ export class DebugCommands
 	}
 
 	//set value of variable by name
-	public deposit(nameVar : string, value : number) : CommandMessage
+	public deposit(nameVar : string, value : string) : CommandMessage
 	{
-		return new CommandMessage(DebugCmdVMS.dbgDeposit, nameVar + "=" + value.toString());
+		return new CommandMessage(DebugCmdVMS.dbgDeposit, nameVar + "=" + value);
 	}
 
 	//show call stack
@@ -176,6 +177,11 @@ export class DebugCommands
 	public stack() : CommandMessage
 	{
 		return new CommandMessage(DebugCmdVMS.dbgStack, "");
+	}
+	//show variables, types
+	public showSymbols(nameFile : string) : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgSymbol, " " + nameFile.toUpperCase());
 	}
 
 	//dump

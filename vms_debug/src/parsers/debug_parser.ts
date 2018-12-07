@@ -5,6 +5,7 @@ import { Queue } from '../queue/queues';
 import { ftpPathSeparator } from '@vorfol/common';
 import { FileManagerExt } from '../ext-api/file_manager';
 import { TypeDataMessage } from '../net/shell-session';
+import { VariableFileInfo, HolderDebugVariableInfo } from './debug_variable_info';
 
 
 export enum MessageDebuger
@@ -35,7 +36,8 @@ export class DebugParser
 	private queueMsgUser = new Queue<string>();
 	private queueMsgCommand = new Queue<string>();
 	private queueMsgData = new Queue<string>();
-	private fleInfo : HolderDebugFileInfo;
+	private fileInfo : HolderDebugFileInfo;
+	private varsInfo : HolderDebugVariableInfo;
 	private commandDone : boolean;
 	private commandButtonDone : boolean;
 	private topicNumberString : Array<number> = new Array<number>();
@@ -46,7 +48,8 @@ export class DebugParser
 	constructor()
 	{
 		this.currentName = "";
-		this.fleInfo = new HolderDebugFileInfo();
+		this.fileInfo = new HolderDebugFileInfo();
+		this.varsInfo = new HolderDebugVariableInfo();
 		this.fileManager = new FileManagerExt();
 		this.commandDone = false;
 		this.commandButtonDone = false;
@@ -103,6 +106,7 @@ export class DebugParser
 				case DebugCmdVMS.dbgDeposit:
 				case DebugCmdVMS.dbgCallStack:
 				case DebugCmdVMS.dbgStack:
+				case DebugCmdVMS.dbgSymbol:
 				case DebugCmdVMS.dbgDump:
 					for(let item of msgLines)
 					{
@@ -133,9 +137,9 @@ export class DebugParser
 		if(data.length > 0)
 		{
 			//clean the old data
-			this.displayDataString[0] = "";
-			this.displayDataString[1] = "";
-			this.displayDataString[2] = "";
+			this.displayDataString[0] = "";//debugger message
+			this.displayDataString[1] = "";//debugger data
+			this.displayDataString[2] = "";//user data
 
 			if(type === TypeDataMessage.typeCmd)//command
 			{
@@ -317,7 +321,7 @@ export class DebugParser
 				this.currentName = fileName;
 			}
 
-			let shift = this.fleInfo.getShiftLine(fileName);
+			let shift = this.fileInfo.getShiftLine(fileName);
 
 			if(shift === -1)
 			{
@@ -331,14 +335,14 @@ export class DebugParser
 				if(shift !== -1)//calculate successfull
 				{
 					currentLineNumber = parseInt(array[0], 10) - shift;
-					this.fleInfo.setItem(pathFile, fileName, shift, currentLineNumber);
-					debugFileInfo = this.fleInfo.getItem(fileName);
+					this.fileInfo.setItem(pathFile, fileName, shift, currentLineNumber);
+					debugFileInfo = this.fileInfo.getItem(fileName);
 				}
 			}
 			else
 			{
 				currentLineNumber = parseInt(array[0], 10) - shift;
-				debugFileInfo = this.fleInfo.getItem(fileName);
+				debugFileInfo = this.fileInfo.getItem(fileName);
 
 				if(debugFileInfo)
 				{
@@ -350,7 +354,7 @@ export class DebugParser
 		return debugFileInfo;
 	}
 
-	//examples a lines
+	//examples lines
 	// DBG> show calls
 	// module name    routine name     line           rel PC           abs PC
 	// *REM            rem                12       0000000000000012 0000000000020432
@@ -374,7 +378,7 @@ export class DebugParser
 				let numberLineDebug = columns[2];
 				let pathFile = this.findPathFileByName(fileName, sourcePaths);
 				let pathLisFile = this.findPathFileByName(fileName, lisPaths);
-				let shift = this.fleInfo.getShiftLine(fileName);
+				let shift = this.fileInfo.getShiftLine(fileName);
 
 				if(pathFile !== "" && pathLisFile !== "")
 				{
@@ -387,11 +391,11 @@ export class DebugParser
 						numberLine = this.getNumberLineSourceCode(numberLineDebug, lisLines);
 						//save file info
 						shift = parseInt(numberLineDebug, 10) - numberLine;
-						this.fleInfo.setItem(pathFile, fileName, shift, numberLine);
+						this.fileInfo.setItem(pathFile, fileName, shift, numberLine);
 					}
 					else
 					{
-						numberLine = parseInt(numberLineDebug, 10) - this.fleInfo.getShiftLine(fileName);
+						numberLine = parseInt(numberLineDebug, 10) - this.fileInfo.getShiftLine(fileName);
 					}
 
 					frames.push({
@@ -421,9 +425,187 @@ export class DebugParser
 		};
 	}
 
-	public parseVariableMsg()
+	// 	SHOW SYMBOL/type * in REM
+	// data REM\rem\__func__
+	// 	array type, 1 dimension, bounds: [0:3], size: 4 bytes
+	// 		cell type: const
+	// 			atomic type, byte integer, size: 1 byte
+	// data REM\rem\num2
+	// 	atomic type, longword integer, size: 4 bytes
+	// data HELLO\main\%LINE 1641\a
+	//  atomic type, longword integer, size: 4 bytes
+	// routine REM\rem
+	// type REM\long pointer
+	// 	atomic type, quadword logical, size: 8 bytes
+	// record component HELLO\_iobuf._pad2
+    //  atomic type, byte logical, size: 1 byte
+	public parseVariableMsg(rootPath: string, sourcePaths: string[], data: string) : void
 	{
+		let filePath : string = "";
+		let variableInfo = new Array<VariableFileInfo>();
+		let msgLines = data.split("\n");
 
+		for(let i = 0; i < msgLines.length; i++)
+		{
+			let type = msgLines[i].trim().split(/\s+/);
+
+			if(type[0] === "data")
+			{
+				let info = msgLines[i].substr(type[0].length+1);
+				let infoData = info.split("\\");
+				let fileName = infoData[0];
+				let functionName = infoData[1];
+				let variableName = infoData[infoData.length-1];
+
+				if(infoData.length === 2)
+				{
+					functionName = "";//it is global variable
+				}
+
+				if(filePath === "")
+				{
+					filePath = rootPath + ftpPathSeparator + this.findPathFileByName(fileName, sourcePaths);
+				}
+
+				if(variableName !== "__func__")
+				{
+					let variableType = msgLines[i+1].trim();
+					let variable = <VariableFileInfo> { filePath, fileName, functionName, variableName, variableType };
+
+					variableInfo.push(variable);
+				}
+			}
+			else if(type[0] === "routine")
+			{
+
+			}
+			else if(type[0] === "type")
+			{
+
+			}
+		}
+
+		this.varsInfo.setVariableFile(filePath, variableInfo);
+	}
+
+	// examine a,del,data,count
+	// HELLO\main\%LINE 1641\a:        0
+	// HELLO\main\del: 0
+	// HELLO\data[0:9]
+	//     [0]-[9]:    0
+	// HELLO\main\count:       5
+	// HELLO\data[0:9]
+    // 	[0]:        0
+    // 	[1]:        100
+    // 	[2]-[9]:    0
+	public parseVariableValuesMsg(currentPath: string, data: string) : void
+	{
+		let variableInfo = this.varsInfo.getVariableFile(currentPath);
+		let msgLines = data.split("\n");
+
+		if(variableInfo)
+		{
+			for(let i = 0; i < msgLines.length; i++)
+			{
+				let info = msgLines[i].trim().split("\\");
+
+				if(info.length < 2)//data of array
+				{
+
+				}
+				else if(info.length < 3)//global variable
+				{
+					let nameVar = info[info.length-1].split(":")[0].trim();
+
+					if(nameVar.includes("["))//array
+					{
+						nameVar = nameVar.split("[")[0];
+					}
+
+					for(let item of variableInfo)
+					{
+						if(item.functionName === "" &&
+							nameVar === item.variableName)
+						{
+							if(info[info.length-1].includes("["))//array
+							{
+								let values : string = "";
+
+								while(i < (msgLines.length-1))
+								{
+									let arrayData = msgLines[++i].trim();
+
+									if(arrayData.includes("["))
+									{
+										values += arrayData + "\n";
+									}
+									else
+									{
+										--i;
+										break;
+									}
+								}
+
+								item.variableValue = values;
+							}
+							else
+							{
+								let values = info[info.length-1].split(":");
+								item.variableValue = values[1].trim();
+							}
+						}
+					}
+				}
+				else//local variable
+				{
+					let nameVar = info[info.length-1].split(":")[0].trim();
+
+					if(nameVar.includes("["))//array
+					{
+						nameVar = nameVar.split("[")[0];
+					}
+
+					for(let item of variableInfo)
+					{
+						if(info[1] === item.functionName &&
+							nameVar === item.variableName)
+						{
+							if(info[info.length-1].includes("["))//array
+							{
+								let values : string = "";
+
+								while(i < (msgLines.length-1))
+								{
+									let arrayData = msgLines[++i].trim();
+
+									if(arrayData.includes("["))
+									{
+										values += arrayData + "\n";
+									}
+									else
+									{
+										--i;
+										break;
+									}
+								}
+
+								item.variableValue = values;
+							}
+							else
+							{
+								let values = info[info.length-1].split(":");
+								item.variableValue = values[1].trim();
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public getVariableFileInfo() : HolderDebugVariableInfo
+	{
+		return this.varsInfo;
 	}
 
 
@@ -607,7 +789,7 @@ export class DebugParser
 	// 1    1635 {
 	// 1    1636   int count = 5;
 	// 1    1637   int del = 0;
-	public findeBreakPointNumberLine(currentNumberLine : number, sourceLisLines: string[]) : number
+	public findBreakPointNumberLine(currentNumberLine : number, sourceLisLines: string[]) : number
 	{
 		let indexLine : number = 0;
 		let shiftHeader : number = 3;
