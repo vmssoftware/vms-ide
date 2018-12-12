@@ -37,6 +37,9 @@ export class ConstPasswordFiller implements ISettingsFiller {
             const waitUser = new Lock(true);    // simulate user
             setTimeout(() => {
                 settings.password = this.password;
+                if (settings.keyFile !== undefined) {
+                    delete settings.keyFile;
+                }
                 waitUser.release();
             }, this.timeout);
             await waitUser.acquire();   // do not pass until password entered

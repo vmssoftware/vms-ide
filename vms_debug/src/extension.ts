@@ -206,7 +206,8 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 						if (projectSection)
 						{
 							const buildType = config.typeRun === "DEBUG" ? "debug" : "release";
-							const pathToExecutable = `[.${projectSection.root}.${projectSection.outdir}.${buildType}]${projectSection.projectName}.exe`;
+							const dotted_root = projectSection.root.replace(/\//g, ".");
+							const pathToExecutable = `[.${dotted_root}.${projectSection.outdir}.${buildType}]${projectSection.projectName}.exe`;
 							config.program = pathToExecutable;
 						}
 						else

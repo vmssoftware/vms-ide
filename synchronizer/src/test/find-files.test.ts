@@ -4,14 +4,13 @@ import { inspect } from "util";
 import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
 
 import { findFiles } from "../common/find-files";
-import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 import { IInputAttributes } from "../ext-api/api";
+import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 import { SshHelper } from "../ext-api/ssh-helper";
 import { Vms } from "./config/vms";
+import { VmsSftpClient } from "../sync/vms-sftp-client";
 
 suite("SFTP directory tests", function(this: Mocha.Suite) {
-
-    return;
 
     this.timeout(0);
 
@@ -33,9 +32,37 @@ suite("SFTP directory tests", function(this: Mocha.Suite) {
         sshHelper = new sshHelperType!(debugLogFn);
     });
 
+    test(`findFiles vms`, async () => {
+        const include = "**/*.{c,cpp,h},**/resource/**,**/*.mms";
+        const exclude = "**/out";
+        const src = new VmsSftpClient(await sshHelper.getTestSftp(Vms));
+        assert.notEqual(src, undefined, `Cannot get sftp`);
+        const all = [];
+        // all.push(findFiles(src!, "", include, exclude, debugLogFn).then((list) => {
+        //     if (debugLogFn) {
+        //         debugLogFn(LogType.debug, () => inspect(list));
+        //     }
+        // }));
+        all.push(findFiles(src!, "test/shareable", include, exclude, debugLogFn).then((list) => {
+            if (debugLogFn) {
+                debugLogFn(LogType.debug, () => inspect(list));
+            }
+        }));
+        // all.push(findFiles(src!, "invalid", include, exclude, debugLogFn).then((list) => {
+        //     if (debugLogFn) {
+        //         debugLogFn(LogType.debug, () => inspect(list));
+        //     }
+        // }));
+        await Promise.all(all);
+        src!.dispose();
+        assert.ok(true, "ok");
+    });
+
+    return;
+
     test(`set stat local`, async () => {
         const fileName = "current.txt";
-        const src = await sshHelper.getTestSftp("localhost", 22, "user", "pass");
+        const src = await sshHelper.getTestSftp({host: "localhost", port: 22, username: "user", password: "pass"});
         assert.notEqual(src, undefined, `Cannot get sftp`);
         const sec = Math.trunc((new Date()).valueOf() / 1000);
         const newTime: IInputAttributes = {
@@ -52,7 +79,7 @@ suite("SFTP directory tests", function(this: Mocha.Suite) {
     });
 
     test(`get stat local`, async () => {
-        const src = await sshHelper.getTestSftp("localhost", 22, "user", "pass");
+        const src = await sshHelper.getTestSftp({host: "localhost", port: 22, username: "user", password: "pass"});
         assert.notEqual(src, undefined, `Cannot get sftp`);
         const stat = await src!.getStat("DENIED.TXT");
         if (debugLogFn && stat) {
@@ -66,7 +93,7 @@ suite("SFTP directory tests", function(this: Mocha.Suite) {
     test(`findFiles local`, async () => {
         const include = "**/*.{c,cpp,h},**/resource/**,**/*.mms";
         const exclude = "**/{out,bin},**/.vscode*";
-        const src = await sshHelper.getTestSftp("localhost", 22, "user", "pass");
+        const src = await sshHelper.getTestSftp({host: "localhost", port: 22, username: "user", password: "pass"});
         assert.notEqual(src, undefined, `Cannot get sftp`);
         const all = [];
         all.push(findFiles(src!, "", include, exclude, debugLogFn).then((list) => {
@@ -91,7 +118,7 @@ suite("SFTP directory tests", function(this: Mocha.Suite) {
 
     test(`set stat vms`, async () => {
         const fileName = "current.txt";
-        const src = await sshHelper.getTestSftp(Vms.host, Vms.port, Vms.username, Vms.password);
+        const src = await sshHelper.getTestSftp(Vms);
         assert.notEqual(src, undefined, `Cannot get sftp`);
         const sec = Math.trunc((new Date()).valueOf() / 1000);
         const newTime: IInputAttributes = {
@@ -108,39 +135,13 @@ suite("SFTP directory tests", function(this: Mocha.Suite) {
     });
 
     test(`get stat vms`, async () => {
-        const src = await sshHelper.getTestSftp(Vms.host, Vms.port, Vms.username, Vms.password);
+        const src = await sshHelper.getTestSftp(Vms);
         assert.notEqual(src, undefined, `Cannot get sftp`);
         const stat = await src!.getStat("DENIED.TXT");
         if (debugLogFn && stat) {
             debugLogFn(LogType.debug, () => inspect(stat));
             debugLogFn(LogType.debug, () => String(new Date(stat.mtime * 1000)));
         }
-        src!.dispose();
-        assert.ok(true, "ok");
-    });
-
-    test(`findFiles vms`, async () => {
-        const include = "**/*.{c,cpp,h},**/resource/**,**/*.mms";
-        const exclude = "**/{out,bin},**/.vscode*";
-        const src = await sshHelper.getTestSftp(Vms.host, Vms.port, Vms.username, Vms.password);
-        assert.notEqual(src, undefined, `Cannot get sftp`);
-        const all = [];
-        all.push(findFiles(src!, "", include, exclude, debugLogFn).then((list) => {
-            if (debugLogFn) {
-                debugLogFn(LogType.debug, () => inspect(list));
-            }
-        }));
-        all.push(findFiles(src!, "wrk", include, exclude, debugLogFn).then((list) => {
-            if (debugLogFn) {
-                debugLogFn(LogType.debug, () => inspect(list));
-            }
-        }));
-        all.push(findFiles(src!, "invalid", include, exclude, debugLogFn).then((list) => {
-            if (debugLogFn) {
-                debugLogFn(LogType.debug, () => inspect(list));
-            }
-        }));
-        await Promise.all(all);
         src!.dispose();
         assert.ok(true, "ok");
     });

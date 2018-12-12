@@ -36,6 +36,9 @@ export class PasswordVscodeFiller implements ISettingsFiller {
         settings.port = settings.port || 22;
         const prompt = localize("query.password", "Password for {0}@{1}:{2} ", settings.username, settings.host, settings.port);
         settings.password = await window.showInputBox( { password: true, prompt, ignoreFocusOut: true });
+        if (settings.keyFile !== undefined) {
+            delete settings.keyFile;
+        }
         lock.release();
         return settings.password !== undefined;
     }

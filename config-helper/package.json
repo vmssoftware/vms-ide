@@ -2,7 +2,7 @@
     "name": "config-helper",
     "displayName": "config-helper",
     "description": "Config helper",
-    "version": "0.1.47",
+    "version": "0.1.48",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",

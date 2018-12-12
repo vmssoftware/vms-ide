@@ -9,12 +9,14 @@ export class SynchronizeSection implements ISynchronizeSection, IConfigSection {
         return !!candidate &&
         typeof candidate.downloadNewFiles === "string" &&
         typeof candidate.keepAlive === "boolean" &&
-        typeof candidate.setTimeAttempts === "number";
+        typeof candidate.setTimeAttempts === "number" &&
+        typeof candidate.setTimeByShell === "boolean" ;
     }
 
     public downloadNewFiles: DownloadAction = "edit";
     public keepAlive: boolean = false;
     public setTimeAttempts: number = 3;
+    public setTimeByShell: boolean = true;
 
     public name(): string {
         return SynchronizeSection.section;
@@ -29,6 +31,7 @@ export class SynchronizeSection implements ISynchronizeSection, IConfigSection {
             downloadNewFiles: this.downloadNewFiles,
             keepAlive: this.keepAlive,
             setTimeAttempts: this.setTimeAttempts,
+            setTimeByShell: this.setTimeByShell,
         };
     }
 
@@ -46,6 +49,7 @@ export class SynchronizeSection implements ISynchronizeSection, IConfigSection {
             }
             this.keepAlive = data.keepAlive;
             this.setTimeAttempts = data.setTimeAttempts;
+            this.setTimeByShell = data.setTimeByShell;
             return true;
         }
         return false;

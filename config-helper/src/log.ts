@@ -25,7 +25,7 @@ function debugToFile(s: string) {
                 const now = new Date();
                 const parts = [
                     now.getFullYear().toString(10),
-                    now.getMonth().toString(10).padStart(2, "0"),
+                    (now.getMonth() + 1).toString(10).padStart(2, "0"),
                     now.getDate().toString(10).padStart(2, "0"),
                 ];
                 const logFileName = path.join(dir, parts.join("_") + ".log");

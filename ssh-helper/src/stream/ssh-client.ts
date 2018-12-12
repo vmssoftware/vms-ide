@@ -93,6 +93,7 @@ export class SshClient {
             let configResolved = await this.resolver.resolveConnectConfig(this.config);
             if (configResolved) {
                 //configResolved = Object.assign({ debug: (s: string) => console.log(s) }, configResolved);
+                configResolved = Object.assign({ algorithms: { serverHostKey: ['ssh-rsa', 'ssh-dss'] } }, configResolved);
                 client.connect(configResolved);
             } else {
                 this.logFn(LogType.debug, () => localize("debug.resolver", "no config resolved {0}", this.tag ? " " + this.tag : ""));

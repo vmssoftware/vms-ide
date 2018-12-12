@@ -168,12 +168,23 @@ export const actions: IPerform[] = [
     },
     {
         actionFunc: async (scope: string, logFn: LogFunction) => {
-            const ensured = await ensureSettings(scope, logFn);
-            if (!ensured) {
-                return false;
+            let scopes: string[] = [scope];
+            if (!scope) {
+                if (workspace.workspaceFolders) {
+                    scopes = workspace.workspaceFolders.map((wf) => wf.name);
+                }
             }
-            const crlf = new ChangeCrLf(logFn);
-            return crlf.perform(ensured);
+            const wait: Array<Promise<boolean>> = [];
+            for (const curScope of scopes) {
+                const ensured = await ensureSettings(curScope, logFn);
+                if (ensured) {
+                    const crlf = new ChangeCrLf(logFn);
+                    wait.push(crlf.perform(ensured));
+                }
+            }
+            return Promise.all(wait).then((all) => {
+                return all.reduce((res, cur) => res && cur, true);
+            });
         },
         actionName: "crlf",
         context: CommandContext.isCrLf,

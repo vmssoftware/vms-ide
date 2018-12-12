@@ -5,12 +5,12 @@ import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 import { SshHelper } from "../ext-api/ssh-helper";
 import { FsSource } from "../sync/fs-source";
 import { ISource } from "../sync/source";
-import { VmsSource } from "../sync/vms-source";
+import { VmsShellSource } from "../sync/vms-shell-source";
 import { Vms } from "./config/vms";
 
 suite("Source tests", function(this: Mocha.Suite) {
 
-    // return;
+    return;
 
     this.timeout(0);
 
@@ -30,11 +30,11 @@ suite("Source tests", function(this: Mocha.Suite) {
     });
 
     test("Walk files SFTP VMS", async () => {
-        const sftp = await sshHelper.getTestSftp(Vms.host, Vms.port, Vms.username, Vms.password);
+        const sftp = await sshHelper.getTestSftp(Vms);
         assert.notEqual(sftp, undefined, `Cannot get sftp`);
-        const shell = await sshHelper.getTestShell(Vms.host, Vms.port, Vms.username, Vms.password, true);
+        const shell = await sshHelper.getTestShell(Vms, true);
         assert.notEqual(shell, undefined, `Cannot get shell`);
-        const source: ISource = new VmsSource(sftp!, shell!, "wrk", debugLogFn);
+        const source: ISource = new VmsShellSource(sftp!, shell!, "wrk", debugLogFn);
         await WalkFiles(source, debugLogFn);
         sftp!.dispose();
         shell!.dispose();

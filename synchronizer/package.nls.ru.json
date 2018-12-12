@@ -18,5 +18,6 @@
 	"properties.project.root.description": "Корневая папка проекта на VMS",
 	"properties.synchronize.downloadNewFiles.description": "Действия для более новых файлов из VMS",
 	"properties.synchronize.keepAlive.description": "Держать подключения",
-	"properties.synchronize.setTimeAttempts.description": "Кол-во попыток установить дату на файл"
+	"properties.synchronize.setTimeAttempts.description": "Кол-во попыток установить дату на файл",
+	"properties.synchronize.setTimeByShell.description": "Do or not set file time by shell"
 }

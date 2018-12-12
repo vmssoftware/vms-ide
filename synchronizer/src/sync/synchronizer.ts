@@ -13,10 +13,12 @@ import { IDispose, SshHelper } from "../ext-api/ssh-helper";
 import { createFile } from "../common/create-file";
 import { IEnsured } from "../ensure-settings";
 import { FsSource } from "./fs-source";
+import { SftpSource } from "./sftp-source";
 import { ISource } from "./source";
-import { VmsSource } from "./vms-source";
+import { VmsShellSource } from "./vms-shell-source";
 
 import * as nls from "vscode-nls";
+import { VmsSftpClient } from "./vms-sftp-client";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
@@ -111,7 +113,9 @@ export class Synchronizer {
                 this.sshHelper.getDefaultVmsShell(scope),
             ]);
         if (sftp && shell) {
-            return new VmsSource(sftp, shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
+            return ensured.synchronizeSection.setTimeByShell
+            ? new VmsShellSource(new VmsSftpClient(sftp), shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts)
+            : new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
         }
         return undefined;
     }
@@ -136,7 +140,7 @@ export class Synchronizer {
         const include = includes.join(",");
         const [remoteList, localList] = await Promise.all(
             [scopeData.remoteSource.findFiles(include, ensured.projectSection.exclude),
-                scopeData.localSource.findFiles(include, ensured.projectSection.exclude)]);
+             scopeData.localSource.findFiles(include, ensured.projectSection.exclude)]);
         // compare them
         const compareResult = this.compareLists(localList, remoteList);
         const waitAll = [];
@@ -192,7 +196,7 @@ export class Synchronizer {
         const include = includes.join(",");
         const [remoteList, localList] = await Promise.all(
             [scopeData.remoteSource.findFiles(include, ensured.projectSection.exclude),
-                scopeData.localSource.findFiles(include, ensured.projectSection.exclude)]);
+             scopeData.localSource.findFiles(include, ensured.projectSection.exclude)]);
         // compare them
         const compareResult = this.compareLists(localList, remoteList);
         const retCode = await this.executeAction(scopeData, compareResult.upload, "upload");
@@ -396,7 +400,9 @@ export class Synchronizer {
             if (!sftp || !shell) {
                 return undefined;
             }
-            const remoteSource = new VmsSource(sftp, shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
+            const remoteSource =  ensured.synchronizeSection.setTimeByShell
+                ? new VmsShellSource(new VmsSftpClient(sftp), shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts)
+                : new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
             this.logFn(LogType.debug, () => localize("debug.create_local", "Creating local source"));
             const localSource = new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
 
@@ -503,7 +509,15 @@ export class Synchronizer {
                 if (ok) {
                     // TODO: test anyhow that file is completely written before setting date
                     await Delay(500);
-                    return to.setDate(file, date);
+                    if (await to.setDate(file, date)) {
+                        const actualDate = await to.getDate(file);
+                        if (actualDate) {
+                            const diff = date.valueOf() - actualDate.valueOf();
+                            if (Math.abs(diff) > 1000) {
+                                return to.setDate(file, new Date(date.valueOf() + diff));
+                            }
+                        }
+                    }
                 }
                 return false;
             })

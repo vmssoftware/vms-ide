@@ -64,14 +64,28 @@ export class SftpSource implements ISource {
     }
 
     public async setDate(filename: string, date: Date): Promise<boolean> {
+        const newDateValue = date.valueOf() / 1000;  // seconds
         const newTime: IInputAttributes = {
-            atime: date,
-            mtime: date,
+            atime: newDateValue,
+            mtime: newDateValue,
         };
         filename = this.root + ftpPathSeparator + filename;
-        await this.sftp.setStat(filename, newTime);
-        // TODO: test result and try this.attempts times again
-        return true;
+        return this.sftp.setStat(filename, newTime).then(() => true);
+        // // test result and try again
+        // const actualStat = await this.sftp.getStat(filename);
+        // if (actualStat) {
+        //     const diff = newDateValue - actualStat.mtime;
+        //     if (Math.abs(diff) > 1) {
+        //         const finalDateValue = newDateValue + diff;
+        //         const finalTime: IInputAttributes = {
+        //             atime: finalDateValue,
+        //             mtime: finalDateValue,
+        //         };
+        //         await this.sftp.setStat(filename, finalTime);
+        //     }
+        //     return true;
+        // }
+        // return false;
     }
 
     public ensureDirectory(directory: string): Promise<boolean> {

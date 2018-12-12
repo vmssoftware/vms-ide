@@ -2,7 +2,7 @@
     "name": "ssh-helper",
     "displayName": "ssh-helper",
     "description": "ssh-helper",
-    "version": "0.1.38",
+    "version": "0.1.40",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
