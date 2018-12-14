@@ -9,6 +9,7 @@ export interface IProjectSection {
     listing: string;
     outdir: string;
     projectName: string;
+    projectType: string;
     resource: string;
     root: string;
     source: string;

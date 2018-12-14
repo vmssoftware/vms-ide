@@ -6,6 +6,7 @@ export interface IProjectSection {
     listing: string;
     outdir: string;
     projectName: string;
+    projectType: string;
     resource: string;
     root: string;
     source: string;
@@ -15,6 +16,7 @@ export interface ISynchronizeSection {
     downloadNewFiles: DownloadAction;
     keepAlive: boolean;
     setTimeAttempts: number;
+    setTimeByShell: boolean;
 }
 export interface ISyncScopeSettings {
     projectSection: IProjectSection;
@@ -24,4 +26,3 @@ export declare class SyncApi {
     getSource(scope: string, type: sourceType): Promise<ISource | undefined>;
     getSettings(scope: string): Promise<ISyncScopeSettings | undefined>;
 }
-//# sourceMappingURL=sync-api.d.ts.map

@@ -12,12 +12,13 @@ import { ProjApi } from "./ext-api/proj-api";
 import { Synchronizer } from "./sync/synchronizer";
 
 import * as nls from "vscode-nls";
+import { onTheSameVms } from "./on-the-same-vms";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export type AsyncAction = (scope: string, logFn: LogFunction, params?: string) => Promise<boolean>;
 
-export type ActionType = "synchronize" | "build" | "clean" | "crlf" | "edit settings";
+export type ActionType = "synchronize" | "build" | "clean" | "crlf" | "edit settings" | "create mms";
 
 export interface IPerform {
     actionFunc: AsyncAction;
@@ -40,26 +41,41 @@ async function ensureProjApi() {
 
 export const actions: IPerform[] = [
     {
+        // synchronize
         actionFunc: async (scope: string, logFn: LogFunction) => {
-            const api = await ensureProjApi();
-            if (api && api.isSynchronized(scope)) {
-                return true;
+            let scopes: string[] = [scope];
+            if (!scope) {
+                if (workspace.workspaceFolders) {
+                    scopes = workspace.workspaceFolders.map((wf) => wf.name);
+                }
             }
-            const ensured = await ensureSettings(scope, logFn);
-            if (ensured) {
-                const syncronizer = Synchronizer.acquire(logFn);
-                return syncronizer.syncronizeProject(ensured)
-                    .then(async (result) => {
-                        if (result) {
-                            if (api) {
-                                api.setSynchronized(scope, true);
-                            }
-                        }
-                        return result;
-                    });
-            } else {
-                return false;
+            const wait: Array<Promise<boolean>> = [];
+            for (const curScope of scopes) {
+                wait.push( (async () => {
+                    const api = await ensureProjApi();
+                    if (api && api.isSynchronized(curScope)) {
+                        return true;
+                    }
+                    const ensured = await ensureSettings(curScope, logFn);
+                    if (ensured) {
+                        const syncronizer = Synchronizer.acquire(logFn);
+                        return syncronizer.syncronizeProject(ensured)
+                            .then(async (result) => {
+                                if (result) {
+                                    if (api) {
+                                        api.setSynchronized(curScope, true);
+                                    }
+                                }
+                                return result;
+                            });
+                    } else {
+                        return false;
+                    }
+                })() );
             }
+            return Promise.all(wait).then((all) => {
+                return all.reduce((res, cur) => res && cur, true);
+            });
         },
         actionName: "synchronize",
         context: CommandContext.isSyncronizing,
@@ -91,7 +107,12 @@ export const actions: IPerform[] = [
     //     success: localize("upload.source.success", "Upload source ok"),
     // },
     {
+        // build
         actionFunc: async (scope: string, logFn: LogFunction, params?: string) => {
+            if (!await onTheSameVms(scope, logFn)) {
+                logFn(LogType.error, () => localize("error.depend.vms", "All dependent projects must be on the same VMS host"));
+                return false;
+            }
             let scopes: string[] = [scope];
             const api = await ensureProjApi();
             if (api) {
@@ -143,22 +164,39 @@ export const actions: IPerform[] = [
         success: localize("buiding.success", "Building ok"),
     },
     {
+        // clean
         actionFunc: async (scope: string, logFn: LogFunction, params?: string) => {
-            const ensured = await ensureSettings(scope, logFn);
-            if (!ensured) {
-                return false;
+            let scopes: string[] = [scope];
+            if (!scope) {
+                if (workspace.workspaceFolders) {
+                    scopes = workspace.workspaceFolders.map((wf) => wf.name);
+                }
             }
-            const builder = Builder.acquire(logFn);
-            return builder.cleanProject(ensured, params)
-                .then(async (result) => {
-                    if (result) {
-                        const api = await ensureProjApi();
-                        if (api && params) {
-                            api.setBuilt(scope, params, false);
-                        }
+            const wait: Array<Promise<boolean>> = [];
+            for (const curScope of scopes) {
+                wait.push( (async () => {
+                    const ensured = await ensureSettings(curScope, logFn);
+                    if (ensured) {
+                        params = params || "DEBUG";
+                        const builder = Builder.acquire(logFn);
+                        return builder.cleanProject(ensured, params)
+                            .then(async (result) => {
+                                if (result) {
+                                    const api = await ensureProjApi();
+                                    if (api && params) {
+                                        api.setBuilt(curScope, params, false);
+                                    }
+                                }
+                                return result;
+                            });
+                    } else {
+                        return false;
                     }
-                    return result;
-                });
+                })() );
+            }
+            return Promise.all(wait).then((all) => {
+                return all.reduce((res, cur) => res && cur, true);
+            });
         },
         actionName: "clean",
         context: CommandContext.isBuilding,
@@ -167,6 +205,23 @@ export const actions: IPerform[] = [
         success: localize("clean.success", "Clean ok"),
     },
     {
+        // create MMS
+        actionFunc: async (scope: string, logFn: LogFunction, params?: string) => {
+            const ensured = await ensureSettings(scope, logFn);
+            if (!ensured) {
+                return false;
+            }
+            const builder = Builder.acquire(logFn);
+            return builder.createMmsFiles(ensured);
+        },
+        actionName: "create mms",
+        context: CommandContext.isBuilding,
+        fail: localize("mms.fail", "Create MMS failed"),
+        status: localize("mms.status", "Creating MMS..."),
+        success: localize("mms.success", "Create MMS ok"),
+    },
+    {
+        // change CR/LF
         actionFunc: async (scope: string, logFn: LogFunction) => {
             let scopes: string[] = [scope];
             if (!scope) {
@@ -193,6 +248,7 @@ export const actions: IPerform[] = [
         success: localize("crlf.success", "Change CrLf done"),
     },
     {
+        // edit settings
         actionFunc: async (scope: string, logFn: LogFunction) => {
             const ensured = await ensureSettings(scope, logFn);
             if (!ensured) {
@@ -219,7 +275,8 @@ export async function Perform(actionName: ActionType, scope: string, logFn: LogF
         return false;
     }
     setContext(actionToDo.context, true);
-    const msg = window.setStatusBarMessage(actionToDo.status + ` [${scope}]`);
+    const scopeStr = scope ? ` [${scope}]` : ` [All]`;
+    const msg = window.setStatusBarMessage(actionToDo.status + scopeStr);
     return actionToDo.actionFunc(scope, logFn, params)
         .catch((err) => {
             logFn(LogType.error, () => err);
@@ -228,11 +285,11 @@ export async function Perform(actionName: ActionType, scope: string, logFn: LogF
             setContext(actionToDo.context, false);
             msg.dispose();
             if (actionResult) {
-                const str = actionToDo.success + ` [${scope}]`;
+                const str = actionToDo.success + scopeStr;
                 window.showInformationMessage(str);
                 logFn(LogType.information, () => str, true);
             } else {
-                const str = actionToDo.fail + ` [${scope}]`;
+                const str = actionToDo.fail + scopeStr;
                 window.showInformationMessage(str);
                 logFn(LogType.error, () => str, true);
             }

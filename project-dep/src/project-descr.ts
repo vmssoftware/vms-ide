@@ -13,14 +13,27 @@ export enum ContextType {
 }
 
 export enum Fields {
-    folder = "folder",
-    projectName = "projectName",
-    host = "host",
-    root = "root",
-    buildType = "buildType",
-    sourceState = "sourceState",
-    bildState = "buildState",
-    masters = "masters",
+    CommonFields,
+    SshFields,
+    ProjectFields,
+}
+
+export enum SshFields {
+    host,
+}
+
+export enum ProjectFields {
+    projectName,
+    projectType,
+    root,
+}
+
+export enum CommonFields {
+    folder,
+    buildType,
+    sourceState,
+    bildState,
+    masters,
 }
 
 export enum BuildType {
@@ -57,33 +70,47 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
     }
 
     public async getChildren(element?: string | undefined): Promise<string[]> {
-        if (element || !this.selectedProject) {
-            return [];
+        const retArray: string[] = [];
+        if (!element && this.selectedProject) {
+            const scope = this.selectedProject;
+            const [syncApi, sshHelperType] = await Promise.all(
+                [   GetSyncApi(),
+                    GetSshHelperType(),
+                ]);
+            if (syncApi) {
+                this.syncScopeSettings = await syncApi.getSettings(scope);
+            }
+            if (sshHelperType) {
+                const sshHelper = new sshHelperType();
+                this.sshScopeSettings = await sshHelper.getSettings(scope);
+            }
+            for (const val in Fields) {
+                if (typeof Fields[val] === "string") {
+                    retArray.push(Fields[val]);
+                }
+            }
         }
-        const scope = this.selectedProject;
-        const [syncApi, sshHelperType] = await Promise.all(
-            [   GetSyncApi(),
-                GetSshHelperType(),
-            ]);
-        if (syncApi) {
-            this.syncScopeSettings = await syncApi.getSettings(scope);
+        if (element === Fields[Fields.SshFields] && this.sshScopeSettings) {
+            for (const val in SshFields) {
+                if (typeof SshFields[val] === "string") {
+                    retArray.push(SshFields[val]);
+                }
+            }
         }
-        if (sshHelperType) {
-            const sshHelper = new sshHelperType();
-            this.sshScopeSettings = await sshHelper.getSettings(scope);
+        if (element === Fields[Fields.ProjectFields] && this.syncScopeSettings) {
+            for (const val in ProjectFields) {
+                if (typeof ProjectFields[val] === "string") {
+                    retArray.push(ProjectFields[val]);
+                }
+            }
         }
-        const retArray: string[] = [Fields.folder];
-        if (this.sshScopeSettings) {
-            retArray.push(Fields.host);
+        if (element === Fields[Fields.CommonFields]) {
+            for (const val in CommonFields) {
+                if (typeof CommonFields[val] === "string") {
+                    retArray.push(CommonFields[val]);
+                }
+            }
         }
-        if (this.syncScopeSettings) {
-            retArray.push(Fields.projectName);
-            retArray.push(Fields.root);
-        }
-        retArray.push(Fields.buildType);
-        retArray.push(Fields.sourceState);
-        retArray.push(Fields.bildState);
-        retArray.push(Fields.masters);
         return retArray;
     }
 
@@ -91,43 +118,66 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
         if (!this.selectedProject) {
             return new vscode.TreeItem(element, vscode.TreeItemCollapsibleState.None);
         }
+        if (element === Fields[Fields.SshFields] && this.sshScopeSettings) {
+            return new vscode.TreeItem(`SSH`, vscode.TreeItemCollapsibleState.Expanded);
+        }
+        if (element === Fields[Fields.ProjectFields] && this.syncScopeSettings) {
+            return new vscode.TreeItem(`Project`, vscode.TreeItemCollapsibleState.Expanded);
+        }
+        if (element === Fields[Fields.CommonFields]) {
+            return new vscode.TreeItem(`Local`, vscode.TreeItemCollapsibleState.Expanded);
+        }
         let data = "";
+        let editable = false;
         switch (element) {
-            case Fields.folder:
-                data = this.selectedProject;
-                break;
-            case Fields.projectName:
-                if (this.syncScopeSettings) {
-                    data = this.syncScopeSettings.projectSection.projectName;
-                }
-                break;
-            case Fields.host:
+            case SshFields[SshFields.host]:
                 if (this.sshScopeSettings) {
                     data = this.resolveHost(this.sshScopeSettings.connectionSection.host);
+                    editable = true;
                 }
                 break;
-            case Fields.root:
+            case ProjectFields[ProjectFields.projectName]:
+                if (this.syncScopeSettings) {
+                    data = this.syncScopeSettings.projectSection.projectName;
+                    editable = true;
+                }
+                break;
+            case ProjectFields[ProjectFields.projectType]:
+                if (this.syncScopeSettings) {
+                    data = this.syncScopeSettings.projectSection.projectType;
+                    editable = true;
+                }
+                break;
+            case ProjectFields[ProjectFields.root]:
                 if (this.syncScopeSettings) {
                     data = this.syncScopeSettings.projectSection.root;
+                    editable = true;
                 }
                 break;
-            case Fields.buildType:
+            case CommonFields[CommonFields.folder]:
+                data = this.selectedProject;
+                break;
+            case CommonFields[CommonFields.buildType]:
                 data = this.buildType;
                 break;
-            case Fields.sourceState:
+            case CommonFields[CommonFields.sourceState]:
                 // TODO: i18n
                 data = ProjectState.acquire().isSynchronized(this.selectedProject) ? "synchronized" : "modified";
                 break;
-            case Fields.bildState:
+            case CommonFields[CommonFields.bildState]:
                 // TODO: i18n
                 data = ProjectState.acquire().isBuilt(this.selectedProject, this.buildType) ? "built" : "not built";
                 break;
-            case Fields.masters:
-                data = new ProjDepTree().getMasterList(this.selectedProject).join(" : ");
+            case CommonFields[CommonFields.masters]:
+                data = new ProjDepTree().getMasterList(this.selectedProject).join(" => ");
                 break;
         }
         const item = new vscode.TreeItem(`${element}: ${data}`, vscode.TreeItemCollapsibleState.None);
-        if (element === Fields.buildType) {
+        if (editable) {
+            item.contextValue = "editable";
+        }
+        if (element === CommonFields[CommonFields.buildType]) {
+            item.tooltip = "Click to change build type";
             item.command = {
                 arguments: [],
                 command: ProjDescrProvider.cmdChangeBuildType,
@@ -147,15 +197,10 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
     }
 
     public edit(element: string) {
-        switch (element) {
-            case Fields.folder:
-            case Fields.projectName:
-            case Fields.root:
-                vscode.commands.executeCommand(ProjDescrProvider.cmdEditSync, this.selectedProject);
-                break;
-            case Fields.host:
-                vscode.commands.executeCommand(ProjDescrProvider.cmdEditSsh, this.selectedProject);
-                break;
+        if (element in SshFields) {
+            vscode.commands.executeCommand(ProjDescrProvider.cmdEditSsh, this.selectedProject);
+        } else if (element in ProjectFields) {
+            vscode.commands.executeCommand(ProjDescrProvider.cmdEditSync, this.selectedProject);
         }
     }
 

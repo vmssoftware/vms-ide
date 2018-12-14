@@ -52,7 +52,7 @@ export class TerminalVMS
 
 		if (terminal)
 		{
-			terminal.sendText("ssh " + userName + "@" + host);
+			terminal.sendText("ssh -oHostKeyAlgorithms=+ssh-dss " + userName + "@" + host);
 
 			if(password)
 			{
@@ -69,11 +69,11 @@ export class TerminalVMS
 		{
 			if(keyFile !== "")
 			{
-				terminal.sendText("ssh -i " + keyFile + " " + userName + "@" + host);
+				terminal.sendText("ssh -oHostKeyAlgorithms=+ssh-dss -i " + keyFile + " " + userName + "@" + host);
 			}
 			else
 			{
-				terminal.sendText("ssh " + userName + "@" + host);
+				terminal.sendText("ssh -oHostKeyAlgorithms=+ssh-dss " + userName + "@" + host);
 			}
 
 			terminal.show();

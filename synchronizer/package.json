@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.37",
+    "version": "0.1.39",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -17,6 +17,7 @@
     "activationEvents": [
         "onCommand:vmssoftware.synchronizer.stopSync",
         "onCommand:vmssoftware.synchronizer.buildProject",
+        "onCommand:vmssoftware.synchronizer.createMMS",
         "onCommand:vmssoftware.synchronizer.cleanProject",
         "onCommand:vmssoftware.synchronizer.syncProject",
         "onCommand:vmssoftware.synchronizer.editProject",
@@ -57,6 +58,11 @@
             {
                 "command": "vmssoftware.synchronizer.stopSync",
                 "title": "%command.stopSync.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.createMMS",
+                "title": "%command.createMMS.title%",
                 "category": "%command.category%"
             },
             {
@@ -123,6 +129,22 @@
                     "type": "string",
                     "default": "project",
                     "description": "%properties.project.projectName.description%"
+                },
+                "vmssoftware.synchronizer.project.projectType": {
+                    "scope": "resource",
+                    "type": "string",
+                    "enum": [
+                        "executable",
+                        "library",
+                        "shareable"
+                    ],
+                    "enumDescriptions": [
+                        "Executable",
+                        "Static library",
+                        "Shareable image"
+                    ],
+                    "default": "executable",
+                    "description": "%properties.project.projectType.description%"
                 },
                 "vmssoftware.synchronizer.project.source": {
                     "scope": "resource",

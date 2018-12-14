@@ -515,6 +515,8 @@ export class Synchronizer {
                             const diff = date.valueOf() - actualDate.valueOf();
                             if (Math.abs(diff) > 1000) {
                                 return to.setDate(file, new Date(date.valueOf() + diff));
+                            } else {
+                                return true;
                             }
                         }
                     }
