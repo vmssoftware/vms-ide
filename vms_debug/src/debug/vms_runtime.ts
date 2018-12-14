@@ -8,11 +8,10 @@ import { EventEmitter } from 'events';
 import { ShellSession, ModeWork, TypeDataMessage } from '../net/shell-session';
 import { OsCommands } from '../command/os_commands';
 import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
-import { DebugParser, MessageDebuger } from '../parsers/debug_parser';
-import { DebugProtocol } from 'vscode-debugprotocol';
+import { DebugParser, MessageDebuger, Parameters } from '../parsers/debug_parser';
 import { LogFunction, LogType, ftpPathSeparator } from '@vorfol/common';
 import { FileManagerExt } from '../ext-api/file_manager';
-import { HolderDebugVariableInfo } from '../parsers/debug_variable_info';
+import { HolderDebugVariableInfo, DebugVariable, ReflectKind } from '../parsers/debug_variable_info';
 const { Subject } = require('await-notify');
 
 nls.config({ messageFormat: nls.MessageFormat.both });
@@ -226,89 +225,71 @@ export class VMSRuntime extends EventEmitter
 		}
 	}
 
-	public async getVariables(id : string) : Promise<Array<DebugProtocol.Variable>>
+	public async getVariables(id : string) : Promise<Array<DebugVariable>>
 	{
-		const variables = new Array<DebugProtocol.Variable>();
+		const variables = new Array<DebugVariable>();
 
 		if (id !== null)
 		{
+			let funcName : string = "";//if function name = "" search global variable
 			this.varsInfo = this.dbgParser.getVariableFileInfo();
 			let vars = this.varsInfo.getVariableFile(this.currentFilePath);
 
-			if(id === ("local_0"))
+			if(id === ("local"))
 			{
-				if(vars)
-				{
-					let nameVars : string = "";
+				funcName = this.currentRoutine;
+			}
+			else // global
+			{
+				funcName = "";
+			}
 
-					for(let item of vars)
+			if(vars)
+			{
+				let nameVars : string = "";
+
+				for(let item of vars)
+				{
+					if(item.functionName === funcName)
 					{
-						if(item.functionName !== "" &&
-							item.functionName === this.currentRoutine)
+						if(!item.variableType.includes("anonymous"))
 						{
 							if(nameVars !== "")
 							{
 								nameVars += ",";
 							}
 							nameVars += item.variableName;
-						}
-					}
-
-					if(nameVars !== "")
-					{
-						this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));
-						await this.waitVars.wait(5000);
-
-						for(let item of vars)
-						{
-							if(item.functionName !== "" &&
-								item.functionName === this.currentRoutine)
-							{
-								variables.push({
-									name: item.variableName,
-									type: item.variableType,
-									value: item.variableValue,
-									variablesReference: 0
-								});
-							}
 						}
 					}
 				}
-			}
-			else if(id === "global_0")
-			{
-				if(vars)
+
+				if(nameVars !== "")
 				{
-					let nameVars : string = "";
+					this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));
+					await this.waitVars.wait(5000);
 
 					for(let item of vars)
 					{
-						if(item.functionName === "")
+						if(item.functionName === funcName)
 						{
-							if(nameVars !== "")
-							{
-								nameVars += ",";
-							}
-							nameVars += item.variableName;
-						}
-					}
+							let childs : DebugVariable[] = [];
 
-					if(nameVars !== "")
-					{
-						this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));
-						await this.waitVars.wait(5000);
-
-						for(let item of vars)
-						{
-							if(item.functionName === "")
+							if(item.variableKind === ReflectKind.Array || item.variableKind === ReflectKind.Struct)
 							{
-								variables.push({
-									name: item.variableName,
-									type: item.variableType,
-									value: item.variableValue,
-									variablesReference: 0
-								});
+								childs = this.dbgParser.parseStructValues(item, new Parameters());
 							}
+
+							variables.push({
+								name: item.variableName,
+								addr: 0,
+								type: item.variableType,
+								kind: item.variableKind,
+								value: item.variableValue,
+								len: 0,
+								unreadable: "",
+								fullyQualifiedName: "",
+								children : childs
+							});
 						}
 					}
 				}
@@ -788,6 +769,10 @@ export class VMSRuntime extends EventEmitter
 				{
 					this.programEnd = true;
 					this.sendEvent('end');
+				}
+				else if(messageDebug.includes(MessageDebuger.msgNoSccess))
+				{
+					this.waitVars.notify();
 				}
 			}
 			if(messageUser !== "")

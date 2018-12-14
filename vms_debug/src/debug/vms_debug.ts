@@ -16,6 +16,7 @@ import { DebugCmdVMS } from '../command/debug_commands';
 import { Queue } from '../queue/queues';
 import { LogFunction } from '@vorfol/common';
 import { WorkspaceFolder } from 'vscode';
+import { DebugVariable, ReflectKind } from '../parsers/debug_variable_info';
 const { Subject } = require('await-notify');
 
 
@@ -43,7 +44,7 @@ export class VMSDebugSession extends LoggingDebugSession
 	// a VMS runtime (or debugger)
 	private runtime: VMSRuntime;
 
-	private variableHandles = new Handles<string>();
+	private variableHandles = new Handles<DebugVariable>();
 
 	private configurationDone = new Subject();
 
@@ -252,12 +253,45 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.runtime.stack(startFrame, endFrame);
 	}
 
-	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void//call 2
+	protected async scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): Promise<void>//call 2
 	{
 		const frameReference = args.frameId;
 		const scopes = new Array<Scope>();
-		scopes.push(new Scope("Local", this.variableHandles.create("local_" + frameReference), false));
-		scopes.push(new Scope("Global", this.variableHandles.create("global_" + frameReference), true));
+
+		if(frameReference === 0)
+		{
+			const locals = await this.runtime.getVariables("local");
+			const globals = await this.runtime.getVariables("global");
+
+			this.addFullyQualifiedName(locals);
+			this.addFullyQualifiedName(globals);
+
+			let localVariables = {
+				name: "Local",
+				addr: 0,
+				type: "",
+				kind: 0,
+				value: "",
+				len: 0,
+				children: locals,
+				unreadable: "",
+				fullyQualifiedName: "",
+			};
+			let globalVariables = {
+				name: "Global",
+				addr: 0,
+				type: "",
+				kind: 0,
+				value: "",
+				len: 0,
+				children: globals,
+				unreadable: "",
+				fullyQualifiedName: "",
+			};
+
+			scopes.push(new Scope("Local", this.variableHandles.create(localVariables), false));
+			scopes.push(new Scope("Global", this.variableHandles.create(globalVariables), true));
+		}
 
 		response.body =
 		{
@@ -266,10 +300,69 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.sendResponse(response);
 	}
 
-	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): Promise<void>//call 3
+	protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void//call 3
 	{
-		const id = this.variableHandles.get(args.variablesReference);
-		const variables = await this.runtime.getVariables(id);
+		let variables;
+		const vari = this.variableHandles.get(args.variablesReference);
+
+		if (vari.kind === ReflectKind.Array)
+		{
+			variables = vari.children.map((v, i) =>
+			{
+				let { result, variablesReference } = this.convertDebugVariableToProtocolVariable(v, i);
+
+				return {
+					name: "[" + i + "]",
+					value: result,
+					type: v.type,
+					evaluateName: vari.fullyQualifiedName + "[" + i + "]",
+					variablesReference
+				};
+			});
+		}
+		else if (vari.kind === ReflectKind.Map)
+		{
+			variables = [];
+
+			for (let i = 0; i < vari.children.length; i += 2)
+			{
+				if (i + 1 >= vari.children.length)
+				{
+					break;
+				}
+
+				let mapKey = this.convertDebugVariableToProtocolVariable(vari.children[i], i);
+				let mapValue = this.convertDebugVariableToProtocolVariable(vari.children[i + 1], i + 1);
+
+				variables.push({
+					name: mapKey.result,
+					value: mapValue.result,
+					type: vari.children[i + 1].type,
+					evaluateName: vari.fullyQualifiedName + "[" + mapKey.result + "]",
+					variablesReference: mapValue.variablesReference
+				});
+			}
+		}
+		else
+		{
+			variables = vari.children.map((v, i) =>
+			{
+				let { result, variablesReference } = this.convertDebugVariableToProtocolVariable(v, i);
+
+				if (v.fullyQualifiedName === undefined)
+				{
+					v.fullyQualifiedName = vari.fullyQualifiedName + "." + v.name;
+				}
+
+				return {
+					name: v.name,
+					value: result,
+					type: v.type,
+					evaluateName: v.fullyQualifiedName,
+					variablesReference
+				};
+			});
+		}
 
 		response.body =
 		{
@@ -377,5 +470,83 @@ export class VMSDebugSession extends LoggingDebugSession
 	public closeDebugSession()
 	{
 		this.sendEvent(new TerminatedEvent());
+	}
+
+	private convertDebugVariableToProtocolVariable(v: DebugVariable, i: number): { result: string; variablesReference: number; }
+	{
+		if (v.kind === ReflectKind.Pointer)
+		{
+			if (v.children[0].addr === 0)
+			{
+				return {
+					result: "nil <" + v.type + ">",
+					variablesReference: 0
+				};
+			}
+			else if (v.children[0].type === "void")
+			{
+				return {
+					result: "void",
+					variablesReference: 0
+				};
+			}
+			else
+			{
+				if (v.children[0].children.length > 0)
+				{
+					v.children[0].fullyQualifiedName = v.fullyQualifiedName;
+					v.children[0].children.forEach(child => {
+						child.fullyQualifiedName = v.fullyQualifiedName + "." + child.name;
+					});
+				}
+
+				return {
+					result: `<${v.type}>(0x${v.children[0].addr.toString(16)})`,
+					variablesReference: v.children.length > 0 ? this.variableHandles.create(v) : 0
+				};
+			}
+		}
+		else if (v.kind === ReflectKind.Array || v.kind === ReflectKind.Struct)
+		{
+			return {
+				result: "<" + v.type + ">",
+				variablesReference: this.variableHandles.create(v)
+			};
+		}
+		else if (v.kind === ReflectKind.String)
+		{
+			let val = v.value;
+			let byteLength = Buffer.byteLength(val || "");
+
+			if (v.value && byteLength < v.len)
+			{
+				val += `...+${v.len - byteLength} more`;
+			}
+
+			return {
+				result: v.unreadable ? ("<" + v.unreadable + ">") : ('"' + val + '"'),
+				variablesReference: 0
+			};
+		}
+		else
+		{
+			return {
+				result: v.value || ("<" + v.type + ">"),
+				variablesReference: v.children.length > 0 ? this.variableHandles.create(v) : 0
+			};
+		}
+	}
+
+	private addFullyQualifiedName(variables: DebugVariable[])
+	{
+		variables.forEach(local =>
+		{
+			local.fullyQualifiedName = local.name;
+
+			local.children.forEach(child =>
+			{
+				child.fullyQualifiedName = local.name;
+			});
+		});
 	}
 }

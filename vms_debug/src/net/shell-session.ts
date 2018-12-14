@@ -188,7 +188,7 @@ export class ShellSession
 
             if(!this.receiveCmd)
             {
-                if(this.resultData.includes(this.currentCmd.getCommand()))
+                if(this.resultData.includes(this.currentCmd.getBody()))//getCommand()
                 {
                     this.extensionDataCb(this.mode, TypeDataMessage.typeCmd, this.resultData);
                     this.resultData = "";
@@ -244,6 +244,7 @@ export class ShellSession
         this.readyCmd = true;
         this.receiveCmd = false;
         this.currentCmd = new CommandMessage("", "");
+        this.queueCmd = new Queue<CommandMessage>();
     }
 
     public getModeWork() : ModeWork
