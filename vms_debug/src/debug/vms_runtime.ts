@@ -206,19 +206,6 @@ export class VMSRuntime extends EventEmitter
 		}
 	}
 
-	public variableValue(nameVar : string)
-	{
-		if(nameVar.length > 0)
-		{
-			if(nameVar.charAt(0) === "&" || nameVar.charAt(0) === "*")
-			{
-				nameVar = nameVar.substr(1);
-			}
-
-			this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVar));
-		}
-	}
-
 	public stack(startFrame: number, endFrame: number)
 	{
 		this.stackStartFrame = startFrame;
@@ -233,6 +220,58 @@ export class VMSRuntime extends EventEmitter
 		{
 			this.shell.SendCommandToQueue(this.dbgCmd.deposit(nameVar, valueVar));
 		}
+	}
+
+	public async getVariable(nameVar : string) : Promise<Array<DebugVariable>>
+	{
+		const variables = new Array<DebugVariable>();
+
+		if(nameVar.length > 0)
+		{
+			if(nameVar.charAt(0) === "&" || nameVar.charAt(0) === "*")
+			{
+				nameVar = nameVar.substr(1);
+			}
+
+			this.varsInfo = this.dbgParser.getVariableFileInfo();
+			let vars = this.varsInfo.getVariableFile(this.currentFilePath);
+
+			if(vars)
+			{
+				for(let item of vars)
+				{
+					if(item.variableName === nameVar)
+					{
+						if(!item.variableType.includes("anonymous"))
+						{
+							this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVar));
+							await this.waitVars.wait(5000);
+
+							let childs : DebugVariable[] = [];
+
+							if(item.variableKind === ReflectKind.Array || item.variableKind === ReflectKind.Struct)
+							{
+								childs = this.dbgParser.parseStructValues(item, new Parameters());
+							}
+
+							variables.push({
+								name: item.variableName,
+								addr: 0,
+								type: item.variableType,
+								kind: item.variableKind,
+								value: item.variableValue,
+								len: 0,
+								unreadable: "",
+								fullyQualifiedName: "",
+								children : childs
+							});
+						}
+					}
+				}
+			}
+		}
+
+		return variables;
 	}
 
 	public async getVariables(id : string) : Promise<Array<DebugVariable>>
@@ -348,6 +387,7 @@ export class VMSRuntime extends EventEmitter
 
 				default:
 					this.shell.SendData(data);//send command to the debugger
+					result = true;
 					break;
 			}
 
@@ -356,8 +396,6 @@ export class VMSRuntime extends EventEmitter
 				const message = localize('runtime.command_ignore', "This command is not allowed!");
 				vscode.debug.activeDebugConsole.append(message + "\n");
 			}
-
-			result = true;
 		}
 
 		return result;
@@ -740,7 +778,6 @@ export class VMSRuntime extends EventEmitter
 					case DebugCmdVMS.dbgExamine:
 						this.dbgParser.parseVariableValuesMsg(this.currentFilePath, messageData);
 						this.waitVars.notify();
-						this.sendEvent(DebugCmdVMS.dbgExamine, messageData);
 						break;
 
 					case DebugCmdVMS.dbgCallStack:
