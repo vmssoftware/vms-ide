@@ -4,7 +4,6 @@
 	"typescript.tsdk": "node_modules/typescript/lib",
 	"files.trimTrailingWhitespace": true,
 	"editor.insertSpaces": false,
-	"vmssoftware.config-helper.using": "VSC",
 	"vmssoftware.ssh-helper.connection.host": "host",
 	"vmssoftware.ssh-helper.connection.port": 22,
 	"vmssoftware.ssh-helper.connection.username": "",
