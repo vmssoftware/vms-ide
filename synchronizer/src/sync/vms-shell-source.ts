@@ -14,7 +14,7 @@ const setFileErrorResponse = `%SET-`;
 // const setFileFormatSTM = "set file/attribute=RFM:STM ";
 const setFileDates = printLike`set file ${"_file_"} /attributes=(mod="${"_date_"}",att="${"_date_"}")`;
 
-export class VmsSource extends SftpSource {
+export class VmsShellSource extends SftpSource {
 
     private timeOffsetInSeconds?: number;   // between local local_time and remote local_time in dependency of actual file date
     // private timeOffetLock = new Lock();
@@ -32,29 +32,30 @@ export class VmsSource extends SftpSource {
         const vmsFileName = this.root + ftpPathSeparator + filename;
         const converter = new VmsPathConverter(vmsFileName);
         const dateTry = this.timeOffsetInSeconds ? new Date(date.valueOf() + this.timeOffsetInSeconds * 1000) : date;
-        let   dateString = VmsAbsoluteDateString(dateTry);
+        const dateString = VmsAbsoluteDateString(dateTry);
         this.logFn(LogType.debug, () => `=== Try set time for "${filename}" when offset is <${this.timeOffsetInSeconds}>`);
-        let   strCmd = setFileDates(converter.fullPath, dateString, dateString);
+        const strCmd = setFileDates(converter.fullPath, dateString, dateString);
         const timeSet = await this.tryExec(strCmd, setFileErrorResponse);
-        if (timeSet) {
-            const dateActual = await this.getDate(filename);
-            if (dateActual !== undefined) {
-                // if they still are not the same, do correct offset
-                const diff = (date.valueOf() - dateActual.valueOf()) / 1000;
-                if (Math.abs(diff) > 1) {
-                    if (this.timeOffsetInSeconds === undefined) {
-                        this.timeOffsetInSeconds = Math.round(diff);
-                    }
-                    const dateFinal = new Date(dateTry.valueOf() + diff * 1000);
-                    dateString = VmsAbsoluteDateString(dateFinal);
-                    this.logFn(LogType.debug, () => `=== SECOND TRY set time for "${filename}" when offset is <${this.timeOffsetInSeconds}> and diff is <${diff}>`);
-                    strCmd = setFileDates(converter.fullPath, dateString, dateString);
-                    return this.tryExec(strCmd, setFileErrorResponse);
-                }
-                return true;
-            }
-        }
-        return false;
+        return timeSet;
+        // if (timeSet) {
+        //     const dateActual = await this.getDate(filename);
+        //     if (dateActual !== undefined) {
+        //         // if they still are not the same, do correct offset
+        //         const diff = (date.valueOf() - dateActual.valueOf()) / 1000;
+        //         if (Math.abs(diff) > 1) {
+        //             if (this.timeOffsetInSeconds === undefined) {
+        //                 this.timeOffsetInSeconds = Math.round(diff);
+        //             }
+        //             const dateFinal = new Date(dateTry.valueOf() + diff * 1000);
+        //             dateString = VmsAbsoluteDateString(dateFinal);
+        //             this.logFn(LogType.debug, () => `=== SECOND TRY set time for "${filename}" when offset is <${this.timeOffsetInSeconds}> and diff is <${diff}>`);
+        //             strCmd = setFileDates(converter.fullPath, dateString, dateString);
+        //             return this.tryExec(strCmd, setFileErrorResponse);
+        //         }
+        //         return true;
+        //     }
+        // }
+        // return false;
     }
 
     // /**

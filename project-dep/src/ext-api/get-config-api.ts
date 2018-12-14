@@ -1,6 +1,6 @@
 import { extensions } from "vscode";
 
-import { IConfigApi } from "../ext-api/config";
+import { IConfigApi } from "./config";
 
 export async function GetConfigApi() {
     const extension = extensions.getExtension("vmssoftware.config-helper");

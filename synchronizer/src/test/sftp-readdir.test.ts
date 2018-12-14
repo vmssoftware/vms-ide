@@ -3,7 +3,7 @@ import * as assert from "assert";
 import { SshHelper } from "../ext-api/ssh-helper";
 
 import { logConsoleFn, LogFunction, LogType } from "@vorfol/common";
-import { GetSshHelperType } from "../config/get-ssh-helper";
+import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 
 suite("Directory tests", function(this: Mocha.Suite) {
 
@@ -23,7 +23,7 @@ suite("Directory tests", function(this: Mocha.Suite) {
     });
 
     test(`Read local "" dirname`, async () => {
-        const sftp = await sshHelper.getTestSftp("localhost", 22, "user", "pass");
+        const sftp = await sshHelper.getTestSftp({host: "localhost", port: 22, username: "user", password: "pass"});
         assert.notEqual(sftp, undefined, "sftp must be defined");
         const files = await sftp!.readDirectory("");
         sftp!.dispose();
@@ -34,7 +34,7 @@ suite("Directory tests", function(this: Mocha.Suite) {
     });
 
     test(`Read local "WRK" dirname`, async () => {
-        const sftp = await sshHelper.getTestSftp("localhost", 22, "user", "pass");
+        const sftp = await sshHelper.getTestSftp({host: "localhost", port: 22, username: "user", password: "pass"});
         assert.notEqual(sftp, undefined, "sftp must be defined");
         const files = await sftp!.readDirectory("WRK");
         sftp!.dispose();
@@ -45,7 +45,7 @@ suite("Directory tests", function(this: Mocha.Suite) {
     });
 
     test(`Read local "unexist" dirname`, async () => {
-        const sftp = await sshHelper.getTestSftp("localhost", 22, "user", "pass");
+        const sftp = await sshHelper.getTestSftp({host: "localhost", port: 22, username: "user", password: "pass"});
         assert.notEqual(sftp, undefined, "sftp must be defined");
         const files = await sftp!.readDirectory("unexist");
         sftp!.dispose();

@@ -20,7 +20,7 @@ import { HostsSection } from "./config/sections/hosts";
 import { HostFiller } from "./config-resolve/host-filler";
 import { configApi } from "./config-api";
 
-import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator, ISshScopeSettings } from "./api";
+import { ICanCreateReadStream, ICanCreateWriteStream, ISftpClient, ISshShell, IMemoryStreamCreator, ISshScopeSettings, IConnectConfig } from "./api";
 
 interface IEnsured extends ISshScopeSettings {
     configHelper: IConfigHelper;
@@ -116,19 +116,19 @@ export class SshHelper {
         return configHelper.getConfig().onDidLoad(watcher);
     }
 
-    public async getTestSftp(host: string, port: number, username: string, password: string) {
-        const fillers = [new ConstPasswordFiller(password)];
+    public async getTestSftp(settings: IConnectConfig) {
+        const fillers = [new KeyFiller()];
         const resolver = new ConnectConfigResolverImpl(fillers, 0, this.logFn);
-        const sftp = new SftpClient({host, port, username}, resolver, this.logFn);
+        const sftp = new SftpClient(settings, resolver, this.logFn);
         return sftp as ISftpClient;
     }
 
-    public async getTestShell(host: string, port: number, username: string, password: string, isVms: boolean) {
-        const fillers = [new ConstPasswordFiller(password)];
+    public async getTestShell(settings: IConnectConfig, isVms: boolean) {
+        const fillers = [new KeyFiller()];
         const resolver = new ConnectConfigResolverImpl(fillers, 0, this.logFn);
         const welcome = isVms ? new ParseWelcomeVms(0, this.logFn) : undefined;
         const prompter = isVms ? new PromptCatcherVms("", 0, this.logFn) : undefined;
-        const sftp = new SshShell({host, port, username}, resolver, welcome, prompter, this.logFn);
+        const sftp = new SshShell(settings, resolver, welcome, prompter, this.logFn);
         return sftp as ISshShell;
     }
 }

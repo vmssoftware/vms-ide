@@ -1,22 +1,28 @@
-import * as vscode from "vscode";
+import { commands, env, ExtensionContext, workspace } from "vscode";
+import { CommandContext, setContext } from "./command-context";
 
 import { ConfigApi } from "./config/config-api";
 import { ConfigHelperSection } from "./config/config-hepler-section";
 import { createLogFunction } from "./log";
 
-const locale = vscode.env.language ;
+const locale = env.language ;
 import * as nls from "vscode-nls";
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
 const logFn = createLogFunction("VMS config");
 
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: ExtensionContext) {
 
     const configApi = new ConfigApi(logFn);
 
-    // vscode.commands.executeCommand("setContext", "vmssoftware.config-helper.test:enabled", true); // required "*" in "activationEvents" in package.json
+    // setContext(CommandContext.isTestEnabled, true); // to test command, also required "*" in "activationEvents" in package.json
 
-    context.subscriptions.push( vscode.commands.registerCommand("vmssoftware.config-helper.test", async () => {
+    setContext(CommandContext.isSingleRoot, (workspace.workspaceFolders !== undefined && workspace.workspaceFolders.length === 1));
+    context.subscriptions.push( workspace.onDidChangeWorkspaceFolders(() => {
+        setContext(CommandContext.isSingleRoot, (workspace.workspaceFolders !== undefined && workspace.workspaceFolders.length === 1));
+    }));
+
+    context.subscriptions.push( commands.registerCommand("vmssoftware.config-helper.test", async () => {
         //
         const configHelper = configApi.getConfigHelper("vmssoftware.config-helper");
         if (configHelper) {

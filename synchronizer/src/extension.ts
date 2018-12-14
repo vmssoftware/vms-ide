@@ -55,15 +55,9 @@ export async function activate(context: ExtensionContext) {
         return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
-                    return Perform("upload source", scope, syncLog);
-                }
-                return saved;
-            })
-            .then((uploadOk) => {
-                if (uploadOk) {
                     return Perform("build", scope, buildLog, params);
                 }
-                return uploadOk;
+                return saved;
             });
     }));
 
@@ -75,8 +69,8 @@ export async function activate(context: ExtensionContext) {
         return Synchronizer.acquire().disableRemote();
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async (scope: string) => {
-        return Perform("edit settings", scope, syncLog);
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async (scope: string, params: string) => {
+        return Perform("edit settings", scope, syncLog, params);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.changeCRLF", async (scope: string) => {

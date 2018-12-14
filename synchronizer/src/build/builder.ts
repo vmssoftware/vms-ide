@@ -4,12 +4,12 @@ import path from "path";
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, QuickPickItem, Range, Uri, window, workspace } from "vscode";
 
 import { IFileEntry, LogFunction, LogType } from "@vorfol/common";
-import { ftpPathSeparator } from "@vorfol/common";
 import { printLike } from "@vorfol/common";
+import { ftpPathSeparator } from "@vorfol/common";
 import { parseVmsOutput } from "../common/parse-output";
-import { GetSshHelperType } from "../config/get-ssh-helper";
 import { IEnsured } from "../ensure-settings";
 import { ISshShell } from "../ext-api/api";
+import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 import { IDispose, SshHelper } from "../ext-api/ssh-helper";
 import { FsSource } from "../sync/fs-source";
 import { ISource } from "../sync/source";
@@ -164,11 +164,11 @@ export class Builder {
             }
             if (buildSelection.type === "undefined") {
                 const match = params.trim().toLowerCase().match(Builder.rgFile);
-                if (match) {
-                    if (match[1] && match[1] === Builder.mmsExt) {
+                if (match && match[1] && match[2]) {
+                    if ( match[2] === Builder.mmsExt) {
                         buildSelection.type = "mms";
                         buildSelection.label = params.trim();
-                    } else if (match[1] && match[1] === Builder.comExt) {
+                    } else if ( match[2] === Builder.comExt) {
                         buildSelection.type = "com";
                         buildSelection.label = params.trim();
                     }
@@ -239,23 +239,24 @@ export class Builder {
         }
     }
 
-    private async ensureMmsCreated(scopeData: IScopeBuildData, selection: IBuildQuickPickItem) {
-        if (!(selection.type === "debug" || selection.type === "release" || selection.type === "both")) {
-            return true;
-        }
+    public async createMms(scopeData: IScopeBuildData) {
         const localMmsFile = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
         const foundMms = await scopeData.localSource.findFiles(localMmsFile);
         if (foundMms.length === 0) {
+            // TODO: check project type: [exe, olb, shareable]
+            // TODO: add dependencies
             const defMmsPath = contextSaved!.asAbsolutePath(Builder.defMmsFileName);
             const [content, headres, sources] = await Promise.all([
                 fs.readFile(defMmsPath, "utf8"),
                 scopeData.localSource.findFiles(scopeData.ensured.projectSection.headers, scopeData.ensured.projectSection.exclude),
                 scopeData.localSource.findFiles(scopeData.ensured.projectSection.source, scopeData.ensured.projectSection.exclude)]);
+            // add files to the lists
             let newContent = `OUTDIR=${scopeData.ensured.projectSection.outdir}\n`
                             + `NAME=${scopeData.ensured.projectSection.projectName}\n`
                             + `INCLUDES=${headres.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
                             + `SOURCES=${sources.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
                             + content;
+            // add "source -> obj" dependency for each source
             for (const source of sources) {
                 const vms = new VmsPathConverter(source.filename);
                 const sourceDependencyLine = "[$(OBJ_DIR)" + vms.bareDirectory + "]" + vms.fileName + ".obj : " + vms.fullPath + " $(INCLUDES)";
@@ -266,6 +267,13 @@ export class Builder {
         } else {
             return true;
         }
+    }
+
+    private async ensureMmsCreated(scopeData: IScopeBuildData, selection: IBuildQuickPickItem) {
+        if (!(selection.type === "debug" || selection.type === "release" || selection.type === "both")) {
+            return true;
+        }
+        return this.createMms(scopeData);
     }
 
     private async runRemoteClean(ensured: IEnsured, selection: IBuildQuickPickItem) {

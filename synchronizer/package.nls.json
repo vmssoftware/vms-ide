@@ -18,5 +18,6 @@
     "properties.project.root.description": "VMS root",
     "properties.synchronize.downloadNewFiles.description": "Download action",
     "properties.synchronize.keepAlive.description": "Keep alive",
-    "properties.synchronize.setTimeAttempts.description": "Set time attempts"
+    "properties.synchronize.setTimeAttempts.description": "Set time attempts",
+    "properties.synchronize.setTimeByShell.description": "Do or not set file time by shell"
 }

@@ -1,8 +1,8 @@
 import { LogFunction } from "@vorfol/common";
-import { GetConfigApi } from "./config/get-config-api";
 import { ProjectSection } from "./config/sections/project";
 import { SynchronizeSection } from "./config/sections/synchronize";
 import { IConfigApi, IConfigHelper } from "./ext-api/config";
+import { GetConfigApi } from "./ext-api/get-config-api";
 import { ISyncScopeSettings } from "./sync/sync-api";
 
 import * as nls from "vscode-nls";
