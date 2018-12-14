@@ -48,7 +48,6 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	private configurationDone = new Subject();
 
-	private responseEvaluate: DebugProtocol.EvaluateResponse | undefined;
 	private responseStackTrace =  new Queue<DebugProtocol.StackTraceResponse>();
 
 	/**
@@ -64,25 +63,8 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.setDebuggerColumnsStartAt1(false);
 
 		this.runtime = new VMSRuntime(folder, shell, logFn);
-		this.responseEvaluate = undefined;
 
 		// response event handlers
-		this.runtime.on(DebugCmdVMS.dbgExamine, (data : string) =>
-		{
-			let reply: string | undefined = undefined;
-
-			if(this.responseEvaluate)
-			{
-				this.responseEvaluate.body =
-				{
-					result: reply ? reply : `context: '${data}'`,
-					variablesReference: 0
-				};
-				this.sendResponse(this.responseEvaluate);
-
-				this.responseEvaluate = undefined;
-			}
-		});
 		this.runtime.on(DebugCmdVMS.dbgStack, (stack : any) =>
 		{
 			let response = this.responseStackTrace.pop();
@@ -260,6 +242,8 @@ export class VMSDebugSession extends LoggingDebugSession
 
 		if(frameReference === 0)
 		{
+			this.variableHandles = new Handles<DebugVariable>(); //clean  old data
+
 			const locals = await this.runtime.getVariables("local");
 			const globals = await this.runtime.getVariables("global");
 
@@ -373,7 +357,19 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	protected setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments): void
 	{
-		this.runtime.setVariableValue(args.name, args.value);
+		let variable = this.variableHandles.get(args.variablesReference);
+		let fullName : string = args.name;
+
+		if(variable.kind === ReflectKind.Array)
+		{
+			fullName = variable.fullyQualifiedName + args.name;
+		}
+		else if(variable.kind === ReflectKind.Struct)
+		{
+			fullName = variable.fullyQualifiedName + "." + args.name;
+		}
+
+		this.runtime.setVariableValue(fullName, args.value);
 
 		response.body =
 		{
@@ -382,38 +378,31 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.sendResponse(response);
 	}
 
-	protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void
+	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): Promise<void>
 	{
 		if(args.context === "hover")//request value of selected a variable
 		{
-			this.runtime.variableValue(args.expression);
-			this.responseEvaluate = response;
+			const variable = await this.runtime.getVariable(args.expression);
+
+			this.addFullyQualifiedName(variable);
+
+			variable.map((v, i) =>
+			{
+				response.body = this.convertDebugVariableToProtocolVariable(v, 0);
+			});
 		}
 		else if(args.context === "repl")//data from debug console
 		{
-			if(this.runtime.sendDataToProgram(args.expression))
-			{
-				response.body =
-				{
-					result: "\r",
-					variablesReference: 0
-				};
-			}
-			else
-			{
-				response.body =
-				{
-					result: "",
-					variablesReference: 0
-				};
-			}
+			this.runtime.sendDataToProgram(args.expression);
 
-			this.sendResponse(response);
+			response.body =
+			{
+				result: "\r",
+				variablesReference: 0
+			};
 		}
-		else
-		{
-			this.sendResponse(response);
-		}
+
+		this.sendResponse(response);
 	}
 
 
@@ -542,11 +531,24 @@ export class VMSDebugSession extends LoggingDebugSession
 		variables.forEach(local =>
 		{
 			local.fullyQualifiedName = local.name;
+			this.addChildQualifiedName(local);
+		});
+	}
 
-			local.children.forEach(child =>
+	private addChildQualifiedName(variable: DebugVariable)
+	{
+		variable.children.forEach(child =>
+		{
+			if(variable.kind === ReflectKind.Array)
 			{
-				child.fullyQualifiedName = local.name;
-			});
+				child.fullyQualifiedName = variable.fullyQualifiedName + child.name;
+			}
+			else if(variable.kind === ReflectKind.Struct)
+			{
+				child.fullyQualifiedName = variable.fullyQualifiedName + "." + child.name;
+			}
+
+			this.addChildQualifiedName(child);
 		});
 	}
 }
