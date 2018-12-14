@@ -82,6 +82,9 @@ export function deactivate()
 
 async function createTerminal() : Promise<void>
 {
+	if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+		fileManager.scope = vscode.workspace.workspaceFolders[0].name;
+	}
 	terminals.create(nameTerminalVMS)
 	.then(async(terminal) =>
 	{
