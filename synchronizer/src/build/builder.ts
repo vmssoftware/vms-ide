@@ -290,6 +290,14 @@ export class Builder {
                     }
                     await fs.writeFile(localOptPath, content.contentOPT);
                 }
+                if (content.contentCOM) {
+                    const localComFile = ensured.projectSection.projectName + Builder.comExt;
+                    const localComPath = ensured.configHelper.workspaceFolder!.uri.fsPath + ftpPathSeparator + localComFile;
+                    if (await fs.pathExists(localComPath)) {
+                        await fs.move(localComPath, localComPath + ".back", {overwrite: true});
+                    }
+                    await fs.writeFile(localComPath, content.contentCOM);
+                }
                 return true;
             }
         }
@@ -307,6 +315,7 @@ export class Builder {
             localSource.findFiles(ensured.projectSection.source, ensured.projectSection.exclude)]);
 
         const optLines: string[] = [];
+        const comLines: string[] = [];
 
         const headerLines = [
             `OUTDIR=${ensured.projectSection.outdir}`,
@@ -357,6 +366,12 @@ export class Builder {
                             }
                             if (depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
                                 optLines.push(`${projName}_LIB_DIR:${projName}/SHAREABLE`);
+                                // com file
+                                comLines.push(`TYPE:=DEBUG`);
+                                comLines.push(`if P1 .NES. "" THEN TYPE:='P1'`);
+                                comLines.push(`${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}.${outDir}.'TYPE']"`);
+                                comLines.push(`DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
+                                comLines.push(`DEFINE ${projName} ${projName}_LIB_DIR:${projName}.exe`);
                             }
                         }
                     }
@@ -471,7 +486,12 @@ export class Builder {
             contentOPT = optLines.join("\n");
         }
 
-        return { contentMMS, contentOPT};
+        let contentCOM: string | undefined;
+        if (comLines.length) {
+            contentCOM = comLines.join("\n");
+        }
+
+        return { contentMMS, contentOPT, contentCOM};
     }
 
     private async ensureMmsCreated(scopeData: IScopeBuildData, selection: IBuildQuickPickItem) {
@@ -490,6 +510,11 @@ export class Builder {
                         const foundOpt = await scopeData.localSource.findFiles(localOptFile);
                         if (foundOpt.length !== 0) {
                             files.push(localOptFile);
+                        }
+                        const localComFile = scopeData.ensured.projectSection.projectName + Builder.comExt;
+                        const foundCom = await scopeData.localSource.findFiles(localComFile);
+                        if (foundCom.length !== 0) {
+                            files.push(localComFile);
                         }
                         return Synchronizer.acquire(this.logFn).uploadFiles(scopeData.ensured, files);
                     }

@@ -108,6 +108,16 @@ export class VMSRuntime extends EventEmitter
 		this.lisPaths = await this.fileManager.loadPathListFiles(section.listing);
 
 		this.shell.resetParameters();
+
+		// run appropriate COM file, if it exists
+		const preRunFile = section.projectName + ".com";
+		const found = await localSource!.findFiles(preRunFile);
+		if (found.length === 1) {
+			const dotted_root = section.root.replace(/\//g, ".");
+			const pathToPreRunFile = `[.${dotted_root}]${preRunFile} DEBUG`;
+			this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
+		}
+
 		//run debugger
 		if(this.shell.getModeWork() === ModeWork.shell)
 		{
