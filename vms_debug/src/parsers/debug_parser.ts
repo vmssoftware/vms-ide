@@ -5,7 +5,7 @@ import { Queue } from '../queue/queues';
 import { ftpPathSeparator } from '@vorfol/common';
 import { FileManagerExt } from '../ext-api/file_manager';
 import { TypeDataMessage } from '../net/shell-session';
-import { VariableFileInfo, HolderDebugVariableInfo } from './debug_variable_info';
+import { VariableFileInfo, HolderDebugVariableInfo, ReflectKind, DebugVariable } from './debug_variable_info';
 import { WorkspaceFolder } from 'vscode';
 
 
@@ -19,6 +19,7 @@ export enum MessageDebuger
 	msgKeySys = "%SYSTEM-",
 	msgKeyDcl = "%DCL-",
 	msgNoImage = "%DCL-W-ACTIMAGE, error activating image",
+	msgNoSccess = "%DEBUG-E-NOACCESSR, no read access to address",
 	msgEnd = "%DEBUG-I-EXITSTATUS, is '%SYSTEM-S-NORMAL, normal successful completion",
 }
 
@@ -498,7 +499,18 @@ export class DebugParser
 	// HELLO\data[0:9]
     // 	[0]:        0
     // 	[1]:        100
-    // 	[2]-[9]:    0
+	// 	[2]-[9]:    0
+	// ADD\sum\structData
+	// state:      I2C_STATE_DISABLE
+	// channal:    0
+	// data
+	// 	[0]
+	// 		dataAdc:    2068890056
+	// 		buffer:     "P{"
+	// 	[1]
+	// 		dataAdc:    0
+	// 		buffer:     ""
+	// battery:    54828
 	public parseVariableValuesMsg(currentPath: string, data: string) : void
 	{
 		let variableInfo = this.varsInfo.getVariableFile(currentPath);
@@ -510,12 +522,23 @@ export class DebugParser
 			{
 				let info = msgLines[i].trim().split("\\");
 
-				if(info.length < 2)//data of array
+				if(info.length === 1)//data of array or struct
 				{
 
 				}
-				else if(info.length < 3)//global variable
+				else //variable
 				{
+					let nameFunc: string;
+
+					if(info.length === 2)//global variable
+					{
+						nameFunc = "";
+					}
+					else //local variable
+					{
+						nameFunc = info[1];
+					}
+
 					let nameVar = info[info.length-1].split(":")[0].trim();
 
 					if(nameVar.includes("["))//array
@@ -525,18 +548,38 @@ export class DebugParser
 
 					for(let item of variableInfo)
 					{
-						if(item.functionName === "" &&
-							nameVar === item.variableName)
+						if(item.functionName === nameFunc &&
+							item.variableName === nameVar)
 						{
 							if(info[info.length-1].includes("["))//array
+							{
+								item.variableKind = ReflectKind.Array;
+							}
+							else
+							{
+								const matcherS = /^\s*(\S+):\s*(\S+)/;//Struct name: 23
+								let matches = info[info.length-1].match(matcherS);
+
+								if(matches)//simple variable
+								{
+									item.variableValue = matches[matches.length-1];
+									item.variableKind = ReflectKind.Atomic;
+								}
+								else //stucture
+								{
+									item.variableKind = ReflectKind.Struct;
+								}
+							}
+
+							if(item.variableKind !== ReflectKind.Atomic)
 							{
 								let values : string = "";
 
 								while(i < (msgLines.length-1))
 								{
-									let arrayData = msgLines[++i].trim();
+									let arrayData = msgLines[++i];
 
-									if(arrayData.includes("["))
+									if(!arrayData.includes("\\"))
 									{
 										values += arrayData + "\n";
 									}
@@ -548,60 +591,170 @@ export class DebugParser
 								}
 
 								item.variableValue = values;
-							}
-							else
-							{
-								let values = info[info.length-1].split(":");
-								item.variableValue = values[1].trim();
-							}
-						}
-					}
-				}
-				else//local variable
-				{
-					let nameVar = info[info.length-1].split(":")[0].trim();
-
-					if(nameVar.includes("["))//array
-					{
-						nameVar = nameVar.split("[")[0];
-					}
-
-					for(let item of variableInfo)
-					{
-						if(info[1] === item.functionName &&
-							nameVar === item.variableName)
-						{
-							if(info[info.length-1].includes("["))//array
-							{
-								let values : string = "";
-
-								while(i < (msgLines.length-1))
-								{
-									let arrayData = msgLines[++i].trim();
-
-									if(arrayData.includes("["))
-									{
-										values += arrayData + "\n";
-									}
-									else
-									{
-										--i;
-										break;
-									}
-								}
-
-								item.variableValue = values;
-							}
-							else
-							{
-								let values = info[info.length-1].split(":");
-								item.variableValue = values[1].trim();
 							}
 						}
 					}
 				}
 			}
 		}
+	}
+
+	public parseStructValues(variable: VariableFileInfo, prm : Parameters) : DebugVariable[]
+	{
+		let countItems : number = 0;
+		let childs : DebugVariable[] = [];
+		let items = variable.variableValue.split("\n");
+		const matcherA = /^\s*\[(\d+)\](\-\[(\d+)\])?:\s*(\S+)/;//Array ([0]-[2]: 23)
+		const matcherS = /^\s*(\S+):\s*(\S+)/;//Struct (name: 23)
+
+		while(prm.counter < items.length)
+		{
+			let v = items[prm.counter];
+			prm.counter++;
+
+			if(v !== "")
+			{
+				let matches : RegExpMatchArray | null;
+				let kind : number;
+				let itemLevel = v.length - v.trim().length;
+
+				if(itemLevel < prm.level)
+				{
+					prm.level -= 4;
+					prm.counter--;
+					return childs;
+				}
+
+				if(v.includes("["))//array
+				{
+					matches = v.match(matcherA);
+
+					if(matches)
+					{
+						kind = ReflectKind.Array;
+					}
+					else if((prm.counter) < items.length)
+					{
+						if(items[prm.counter].includes("["))//array
+						{
+							kind = ReflectKind.Array;
+						}
+						else //struct
+						{
+							kind = ReflectKind.Struct;
+						}
+					}
+					else
+					{
+						kind = ReflectKind.Array;
+					}
+				}
+				else //struct
+				{
+					matches = v.match(matcherS);
+
+					if(matches)
+					{
+						kind = ReflectKind.Struct;
+					}
+					else if((prm.counter) < items.length)
+					{
+						if(items[prm.counter].includes("["))//array
+						{
+							kind = ReflectKind.Array;
+						}
+						else //struct
+						{
+							kind = ReflectKind.Struct;
+						}
+					}
+					else
+					{
+						kind = ReflectKind.Struct;
+					}
+				}
+
+				if(matches)
+				{
+					let count : number = 0;
+					let name : string = "";
+					let value = matches[matches.length-1];
+					prm.level = itemLevel;
+
+					if(matches.length === 3)
+					{
+						count = 1;
+						name = matches[1];
+					}
+					else if(matches.length === 5)
+					{
+						if(matches[3])
+						{
+							count = parseInt(matches[3], 10) - parseInt(matches[1], 10) + 1;
+						}
+						else
+						{
+							count = 1;
+						}
+					}
+
+					for(let i = 0; i < count; i++)
+					{
+						if(matches.length === 5)
+						{
+							name =  "[" + countItems++ + "]";
+						}
+
+						let child = <DebugVariable>
+						{
+							name: name,
+							addr: 0,
+							type: "atomic",
+							kind: ReflectKind.Atomic,
+							value: value,
+							len: 0,
+							unreadable: "",
+							fullyQualifiedName: "",
+							children : [],
+						};
+
+						childs.push(child);
+					}
+				}
+				else
+				{
+					if(itemLevel >= prm.level)
+					{
+						let name = v.trim();
+						let typeName = (kind === ReflectKind.Array) ? "array" : "struct";
+						let childsIn = this.parseStructValues(variable, prm);
+
+						let child = <DebugVariable>
+						{
+							name: name,
+							addr: 0,
+							type: typeName,
+							kind: kind,
+							value: "",
+							len: 0,
+							unreadable: "",
+							fullyQualifiedName: "",
+							children : childsIn,
+						};
+
+						childs.push(child);
+					}
+					else
+					{
+						prm.level -= 4;
+						prm.counter--;
+						return childs;
+					}
+				}
+			}
+		}
+
+		return childs;
 	}
 
 	public getVariableFileInfo() : HolderDebugVariableInfo
@@ -818,5 +971,17 @@ export class DebugParser
 		}
 
 		return number;
+	}
+}
+
+export class Parameters
+{
+	public counter : number;
+	public level : number;
+
+	constructor()
+	{
+		this.counter = 0;
+		this.level = 0;
 	}
 }

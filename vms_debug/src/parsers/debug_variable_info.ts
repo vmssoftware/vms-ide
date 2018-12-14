@@ -1,3 +1,29 @@
+export enum ReflectKind
+{
+	Invalid = 0,
+	Atomic,
+	Array,
+	Class,
+	Func,
+	Map,
+	Pointer,
+	String,
+	Struct
+}
+
+export interface DebugVariable
+{
+	name: string;
+	addr: number;
+	type: string;
+	kind: ReflectKind;
+	value: string;
+	len: number;
+	children: DebugVariable[];
+	unreadable: string;
+	fullyQualifiedName: string;
+}
+
 export interface VariableFileInfo
 {
 	filePath: string;
@@ -6,6 +32,7 @@ export interface VariableFileInfo
 	variableName: string;
 	variableType: string;
 	variableValue: string;
+	variableKind: ReflectKind;
 }
 
 export class HolderDebugVariableInfo
