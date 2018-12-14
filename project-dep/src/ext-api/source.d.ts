@@ -14,4 +14,3 @@ export interface ISource {
     getDate(filename: string): Promise<Date | undefined>;
     setDate(filename: string, date: Date): Promise<boolean>;
 }
-//# sourceMappingURL=source.d.ts.map

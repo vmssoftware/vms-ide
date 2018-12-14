@@ -1,6 +1,12 @@
 import { IConfigData, IConfigSection } from "../../ext-api/config";
 import { IProjectSection } from "../../sync/sync-api";
 
+export enum ProjectType {
+    executable,
+    library,
+    shareable,
+}
+
 export class ProjectSection implements IProjectSection, IConfigSection {
 
     public static readonly section = "project";
@@ -13,6 +19,7 @@ export class ProjectSection implements IProjectSection, IConfigSection {
         typeof candidate.listing === "string" &&
         typeof candidate.outdir === "string" &&
         typeof candidate.projectName === "string" &&
+        typeof candidate.projectType === "string" &&
         typeof candidate.resource === "string" &&
         typeof candidate.root === "string" &&
         typeof candidate.source === "string";
@@ -24,6 +31,7 @@ export class ProjectSection implements IProjectSection, IConfigSection {
     public listing: string = "*.lis";
     public outdir: string = "out";
     public projectName: string = "project";
+    public projectType: string = ProjectType[ProjectType.executable];
     public resource: string = "**/resource/**";
     public root: string = "project";
     public source: string = "*.{cpp,c}";
@@ -44,6 +52,7 @@ export class ProjectSection implements IProjectSection, IConfigSection {
             listing: this.listing,
             outdir: this.outdir,
             projectName: this.projectName,
+            projectType: this.projectType,
             resource: this.resource,
             root: this.root,
             source: this.source,
@@ -57,6 +66,9 @@ export class ProjectSection implements IProjectSection, IConfigSection {
             this.listing = data.listing;
             this.outdir = data.outdir;
             this.projectName = data.projectName;
+            if (data.projectType in ProjectType) {  // already known as string
+                this.projectType = data.projectType;
+            }
             this.resource = data.resource;
             this.root = data.root;
             this.source = data.source;

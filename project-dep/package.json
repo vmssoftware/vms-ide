@@ -2,7 +2,7 @@
     "name": "project-dep",
     "displayName": "project-dep",
     "description": "Project dependencies",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -133,7 +133,7 @@
                 },
                 {
                     "command": "vmssoftware.project-dep.projectDescription.edit",
-                    "when": "view == vmssoftware.project-dep.projectDescription"
+                    "when": "view == vmssoftware.project-dep.projectDescription && viewItem == editable"
                 }
             ]
         },

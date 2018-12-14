@@ -16,7 +16,7 @@ const setFileDates = printLike`set file ${"_file_"} /attributes=(mod="${"_date_"
 
 export class VmsShellSource extends SftpSource {
 
-    private timeOffsetInSeconds?: number;   // between local local_time and remote local_time in dependency of actual file date
+    // private timeOffsetInSeconds?: number;   // between local local_time and remote local_time in dependency of actual file date
     // private timeOffetLock = new Lock();
 
     constructor(sftp: ISftpClient,
@@ -31,9 +31,9 @@ export class VmsShellSource extends SftpSource {
         // try to set time
         const vmsFileName = this.root + ftpPathSeparator + filename;
         const converter = new VmsPathConverter(vmsFileName);
-        const dateTry = this.timeOffsetInSeconds ? new Date(date.valueOf() + this.timeOffsetInSeconds * 1000) : date;
-        const dateString = VmsAbsoluteDateString(dateTry);
-        this.logFn(LogType.debug, () => `=== Try set time for "${filename}" when offset is <${this.timeOffsetInSeconds}>`);
+        // const dateTry = this.timeOffsetInSeconds ? new Date(date.valueOf() + this.timeOffsetInSeconds * 1000) : date;
+        const dateString = VmsAbsoluteDateString(date);
+        this.logFn(LogType.debug, () => `=== Try set time for "${filename}"`); // when offset is <${this.timeOffsetInSeconds}>`);
         const strCmd = setFileDates(converter.fullPath, dateString, dateString);
         const timeSet = await this.tryExec(strCmd, setFileErrorResponse);
         return timeSet;

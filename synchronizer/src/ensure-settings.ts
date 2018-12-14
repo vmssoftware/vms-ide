@@ -10,6 +10,7 @@ nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export interface IEnsured extends ISyncScopeSettings {
+    scope?: string;
     configHelper: IConfigHelper;
 }
 
@@ -65,6 +66,7 @@ export async function ensureSettings(scope?: string, log?: LogFunction): Promise
         return {
             configHelper,
             projectSection,
+            scope,
             synchronizeSection,
         };
     }
