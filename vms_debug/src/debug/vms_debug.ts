@@ -245,10 +245,10 @@ export class VMSDebugSession extends LoggingDebugSession
 			this.variableHandles = new Handles<DebugVariable>(); //clean  old data
 
 			const locals = await this.runtime.getVariables("local");
-			const globals = await this.runtime.getVariables("global");
+			//const globals = await this.runtime.getVariables("global");
 
 			this.addFullyQualifiedName(locals);
-			this.addFullyQualifiedName(globals);
+			//this.addFullyQualifiedName(globals);
 
 			let localVariables = {
 				name: "Local",
@@ -261,20 +261,20 @@ export class VMSDebugSession extends LoggingDebugSession
 				unreadable: "",
 				fullyQualifiedName: "",
 			};
-			let globalVariables = {
-				name: "Global",
-				addr: 0,
-				type: "",
-				kind: 0,
-				value: "",
-				len: 0,
-				children: globals,
-				unreadable: "",
-				fullyQualifiedName: "",
-			};
+			// let globalVariables = {
+			// 	name: "Global",
+			// 	addr: 0,
+			// 	type: "",
+			// 	kind: 0,
+			// 	value: "",
+			// 	len: 0,
+			// 	children: globals,
+			// 	unreadable: "",
+			// 	fullyQualifiedName: "",
+			// };
 
 			scopes.push(new Scope("Local", this.variableHandles.create(localVariables), false));
-			scopes.push(new Scope("Global", this.variableHandles.create(globalVariables), true));
+			//scopes.push(new Scope("Global", this.variableHandles.create(globalVariables), true));
 		}
 
 		response.body =

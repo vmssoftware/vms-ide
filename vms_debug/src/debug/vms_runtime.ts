@@ -232,8 +232,14 @@ export class VMSRuntime extends EventEmitter
 				{
 					if(item.variableName === nameVar)
 					{
-						if(!item.variableType.includes("anonymous"))
+						if(item.functionName === this.currentRoutine ||
+							item.functionName === "")
 						{
+							if(item.variableType.includes("pointer to"))
+							{
+								nameVar = "*" + nameVar;
+							}
+
 							this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVar));
 							await this.waitVars.wait(5000);
 
@@ -255,6 +261,7 @@ export class VMSRuntime extends EventEmitter
 								fullyQualifiedName: "",
 								children : childs
 							});
+							break;
 						}
 					}
 				}
@@ -291,13 +298,25 @@ export class VMSRuntime extends EventEmitter
 				{
 					if(item.functionName === funcName)
 					{
-						if(!item.variableType.includes("anonymous"))
+						if(nameVars !== "")
 						{
-							if(nameVars !== "")
+							nameVars += ",";
+						}
+
+						// if(item.variableType.includes("pointer to"))
+						// {
+						// 	nameVars +=  "*" + item.variableName;
+						// }
+						// else
+						{
+							if(item.variableName === "this")
 							{
-								nameVars += ",";
+								nameVars += "*" + item.variableName;
 							}
-							nameVars += item.variableName;
+							else
+							{
+								nameVars += item.variableName;
+							}
 						}
 					}
 				}
@@ -778,7 +797,7 @@ export class VMSRuntime extends EventEmitter
 								if(stack.count > 0)
 								{
 									this.currentFilePath = stack.frames[0].file;
-									this.currentRoutine = stack.frames[0].name.substr(0, stack.frames[0].name.indexOf("("));
+									this.currentRoutine = stack.frames[0].name.substr(0, stack.frames[0].name.indexOf("["));
 								}
 
 								this.sendEvent(DebugCmdVMS.dbgStack, stack);
@@ -807,7 +826,8 @@ export class VMSRuntime extends EventEmitter
 					this.programEnd = true;
 					this.sendEvent('end');
 				}
-				else if(messageDebug.includes(MessageDebuger.msgNoSccess))
+				else if(messageDebug.includes(MessageDebuger.msgNoSccess) ||
+						messageDebug.includes(MessageDebuger.msgNoFind))
 				{
 					this.waitVars.notify();
 				}
