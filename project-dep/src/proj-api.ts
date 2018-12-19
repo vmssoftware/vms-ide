@@ -1,6 +1,13 @@
 import { ProjDepTree } from "./proj-dep-tree";
 import { ProjectState } from "./proj-state";
 
+// import { GetSyncApi } from "./ext-api/get-sync-api";
+
+// export interface IShareDefs {
+//     shareName: string;
+//     sharePath: string;
+// }
+
 export class ProjApi {
 
     public getDepList(nodeName?: string) {
@@ -28,4 +35,24 @@ export class ProjApi {
     public setBuilt(projectName: string, buildType: string, built = true) {
         ProjectState.acquire().setBuilt(projectName, buildType, built);
     }
+
+    // public async getShareableDepDefines(scope: string, buildType: string) {
+    //     const shareDefs: IShareDefs[] = [];
+    //     const syncApi = await GetSyncApi();
+    //     if (!syncApi) {
+    //         return shareDefs;
+    //     }
+    //     const depList = this.getDepList(scope);
+    //     if (depList.length > 1) {
+    //         for (let i = 1; i < depList.length; i++) {
+    //             const defSets = await syncApi.getSettings(depList[i]);
+    //             if (defSets) {
+    //                 if (defSets.projectSection.projectType === "shareable") {
+
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return shareDefs;
+    // }
 }

@@ -154,8 +154,11 @@ export class ShellSession
                         data = data.substr(0, indexEnd-1);
 
                         this.resultData += data + "> ";
-                        this.DisconectSession();//close SSH session
-                        this.extensionCloseCb();
+                        if (this.currentCmd.getBody() !== OsCmdVMS.osRunCOM)
+                        {
+                            this.DisconectSession();//close SSH session
+                            this.extensionCloseCb();
+                        }
                     }
 
                     this.mode = ModeWork.shell;
