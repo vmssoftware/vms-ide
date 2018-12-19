@@ -280,6 +280,7 @@ export class Builder {
                 const localMmsPath = ensured.configHelper.workspaceFolder!.uri.fsPath + ftpPathSeparator + localMmsFile;
                 if (await fs.pathExists(localMmsPath)) {
                     await fs.move(localMmsPath, localMmsPath + ".back", {overwrite: true});
+                    this.logFn(LogType.warning, () => localize("mms_exist", "Previous MMS file is renamed to {0}", localMmsFile + ".back"));
                 }
                 await fs.writeFile(localMmsPath, content.contentMMS);
                 if (content.contentOPT) {
@@ -287,6 +288,7 @@ export class Builder {
                     const localOptPath = ensured.configHelper.workspaceFolder!.uri.fsPath + ftpPathSeparator + localOptFile;
                     if (await fs.pathExists(localOptPath)) {
                         await fs.move(localOptPath, localOptPath + ".back", {overwrite: true});
+                        this.logFn(LogType.warning, () => localize("opt_exist", "Previous OPT file is renamed to {0}", localOptFile + ".back"));
                     }
                     await fs.writeFile(localOptPath, content.contentOPT);
                 }
@@ -295,6 +297,7 @@ export class Builder {
                     const localComPath = ensured.configHelper.workspaceFolder!.uri.fsPath + ftpPathSeparator + localComFile;
                     if (await fs.pathExists(localComPath)) {
                         await fs.move(localComPath, localComPath + ".back", {overwrite: true});
+                        this.logFn(LogType.warning, () => localize("com_exist", "Previous COM file is renamed to {0}", localComFile + ".back"));
                     }
                     await fs.writeFile(localComPath, content.contentCOM);
                 }
