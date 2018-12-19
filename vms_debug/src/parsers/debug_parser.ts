@@ -20,6 +20,7 @@ export enum MessageDebuger
 	msgKeyDcl = "%DCL-",
 	msgNoImage = "%DCL-W-ACTIMAGE, error activating image",
 	msgNoSccess = "%DEBUG-E-NOACCESSR, no read access to address",
+	msgNoFind = "%DEBUG-E-NOTRAZERO, Unable to find",
 	msgEnd = "%DEBUG-I-EXITSTATUS, is '%SYSTEM-S-NORMAL, normal successful completion",
 }
 
@@ -402,7 +403,7 @@ export class DebugParser
 
 					frames.push({
 						index: startFrame,
-						name: `${routineName}(${startFrame})`,
+						name: `${routineName}[${startFrame}]`,
 						file: localSource!.root + ftpPathSeparator + pathFile,
 						line: numberLine
 					});
@@ -451,17 +452,44 @@ export class DebugParser
 		{
 			let type = msgLines[i].trim().split(/\s+/);
 
-			if(type[0] === "data")
+			if(type[0] === "data" || type[0] === "record")
 			{
+				let fileName : string = "";
+				let functionName : string = "";
+				let variableName : string = "";
+				const matcherR = /^\S+\s*(\S+)::(\S+)/;
+				const matcherS = /^\s*(\S+)::(\S+)\\(\S+)/;//class::member\field
 				let info = msgLines[i].substr(type[0].length+1);
-				let infoData = info.split("\\");
-				let fileName = infoData[0];
-				let functionName = infoData[1];
-				let variableName = infoData[infoData.length-1];
+				let matches = info.match(matcherS);
 
-				if(infoData.length === 2)
+				if(type[0] === "record")
 				{
-					functionName = "";//it is global variable
+					let matchesR = info.match(matcherR);
+
+					if(matchesR)
+					{
+						fileName = matchesR[matchesR.length-2].toUpperCase();
+						functionName = "";
+						variableName = matchesR[matchesR.length-1];
+					}
+				}
+				else if(matches)//Class
+				{
+					fileName = matches[matches.length-3].toUpperCase();
+					functionName = matches[matches.length-2];
+					variableName = matches[matches.length-1];
+				}
+				else
+				{
+					let infoData = info.split("\\");
+					fileName = infoData[0];
+					functionName = infoData[1];
+					variableName = infoData[infoData.length-1];
+
+					if(infoData.length === 2)
+					{
+						functionName = "";//it is global variable
+					}
 				}
 
 				if(filePath === "")
@@ -469,9 +497,26 @@ export class DebugParser
 					filePath = rootPath + ftpPathSeparator + this.findPathFileByName(fileName, sourcePaths);
 				}
 
-				if(variableName !== "__func__")
+				if(variableName !== "__func__" && variableName !== "")
 				{
-					let variableType = msgLines[i+1].trim();
+					let variableType : string = "";
+
+					while(i < (msgLines.length-1))
+					{
+						let arrayData = msgLines[++i].trim();
+
+						if(!arrayData.includes("\\") && !arrayData.includes("::"))
+						{
+							variableType += arrayData + "\n   ";//full data info
+						}
+						else
+						{
+							--i;
+							variableType = variableType.trim();
+							break;
+						}
+					}
+
 					let variable = <VariableFileInfo> { filePath, fileName, functionName, variableName, variableType };
 
 					variableInfo.push(variable);
@@ -520,26 +565,40 @@ export class DebugParser
 		{
 			for(let i = 0; i < msgLines.length; i++)
 			{
+				let nameFunc : string;
+				let nameVar : string;
+				const matcherS = /^\s*(\S+)::(\S+)\\(\S+)\:/;//class::func\var: val
+				let matches = msgLines[i].match(matcherS);
 				let info = msgLines[i].trim().split("\\");
 
-				if(info.length === 1)//data of array or struct
+				if(info.length > 1)//variable
 				{
-
-				}
-				else //variable
-				{
-					let nameFunc: string;
-
-					if(info.length === 2)//global variable
+					if(matches)//variable of class
 					{
-						nameFunc = "";
+						if(matches[matches.length-1].includes("this->"))
+						{
+							nameFunc = "";
+							nameVar = matches[matches.length-1].replace("this->", "");
+						}
+						else
+						{
+							nameFunc = matches[matches.length-2];
+							nameVar = matches[matches.length-1];
+						}
 					}
-					else //local variable
+					else
 					{
-						nameFunc = info[1];
-					}
+						if(info.length === 2)//global variable
+						{
+							nameFunc = "";
+						}
+						else //local variable
+						{
+							nameFunc = info[1];
+						}
 
-					let nameVar = info[info.length-1].split(":")[0].trim();
+						nameVar = info[info.length-1].split(":")[0].trim();
+					}
 
 					if(nameVar.includes("["))//array
 					{
@@ -560,14 +619,22 @@ export class DebugParser
 								const matcherS = /^\s*(\S+):\s*(\S+)/;//Struct name: 23
 								let matches = info[info.length-1].match(matcherS);
 
-								if(matches)//simple variable
-								{
-									item.variableValue = matches[matches.length-1];
-									item.variableKind = ReflectKind.Atomic;
-								}
-								else //stucture
+								if(item.variableType.includes("pointer to") ||
+									item.variableType.includes("record type"))
 								{
 									item.variableKind = ReflectKind.Struct;
+								}
+								else
+								{
+									if(matches)//simple variable
+									{
+										item.variableValue = matches[matches.length-1];
+										item.variableKind = ReflectKind.Atomic;
+									}
+									else //stucture
+									{
+										item.variableKind = ReflectKind.Struct;
+									}
 								}
 							}
 
