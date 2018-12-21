@@ -50,17 +50,6 @@ let fileManager : FileManagerExt = new FileManagerExt("");
 
 export function activate(context: vscode.ExtensionContext)
 {
-	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.connect', () =>
-	{
-		ConnectShell(undefined, false);
-
-		if(statusShell === StatusConnection.StatusConnected)
-		{
-			const message = localize('extention.connected', "Connected to the server");
-			vscode.window.showInformationMessage(message);
-		}
-	}));
-
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.terminal', () =>
 	{
 		createTerminal();

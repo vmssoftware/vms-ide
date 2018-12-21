@@ -256,6 +256,7 @@ export class VMSDebugSession extends LoggingDebugSession
 				type: "",
 				kind: 0,
 				value: "",
+				info: "",
 				len: 0,
 				children: locals,
 				unreadable: "",
@@ -267,6 +268,7 @@ export class VMSDebugSession extends LoggingDebugSession
 			// 	type: "",
 			// 	kind: 0,
 			// 	value: "",
+			//  info: "",
 			// 	len: 0,
 			// 	children: globals,
 			// 	unreadable: "",
@@ -368,6 +370,10 @@ export class VMSDebugSession extends LoggingDebugSession
 		{
 			fullName = variable.fullyQualifiedName + "." + args.name;
 		}
+		else if(variable.kind === ReflectKind.Pointer)
+		{
+			fullName = variable.fullyQualifiedName + "->" + args.name;
+		}
 
 		this.runtime.setVariableValue(fullName, args.value);
 
@@ -463,34 +469,30 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	private convertDebugVariableToProtocolVariable(v: DebugVariable, i: number): { result: string; variablesReference: number; }
 	{
+		let info : string;
+
+		if(v.info && v.info !== "")
+		{
+			info = v.info;
+		}
+		else
+		{
+			info = v.type;
+		}
+
 		if (v.kind === ReflectKind.Pointer)
 		{
-			if (v.children[0].addr === 0)
+			if (v.addr === 0)
 			{
 				return {
-					result: "nil <" + v.type + ">",
-					variablesReference: 0
-				};
-			}
-			else if (v.children[0].type === "void")
-			{
-				return {
-					result: "void",
+					result: "null <" + info + ">",
 					variablesReference: 0
 				};
 			}
 			else
 			{
-				if (v.children[0].children.length > 0)
-				{
-					v.children[0].fullyQualifiedName = v.fullyQualifiedName;
-					v.children[0].children.forEach(child => {
-						child.fullyQualifiedName = v.fullyQualifiedName + "." + child.name;
-					});
-				}
-
 				return {
-					result: `<${v.type}>(0x${v.children[0].addr.toString(16)})`,
+					result: v.addr ? `(0x${v.addr.toString(16)}) <${info}>` : `<${info}>`,
 					variablesReference: v.children.length > 0 ? this.variableHandles.create(v) : 0
 				};
 			}
@@ -498,7 +500,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		else if (v.kind === ReflectKind.Array || v.kind === ReflectKind.Struct)
 		{
 			return {
-				result: "<" + v.type + ">",
+				result: "<" + info + ">",
 				variablesReference: this.variableHandles.create(v)
 			};
 		}
@@ -520,7 +522,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		else
 		{
 			return {
-				result: v.value || ("<" + v.type + ">"),
+				result: v.value || ("<" + info + ">"),
 				variablesReference: v.children.length > 0 ? this.variableHandles.create(v) : 0
 			};
 		}
@@ -546,6 +548,10 @@ export class VMSDebugSession extends LoggingDebugSession
 			else if(variable.kind === ReflectKind.Struct)
 			{
 				child.fullyQualifiedName = variable.fullyQualifiedName + "." + child.name;
+			}
+			else if(variable.kind === ReflectKind.Pointer)
+			{
+				child.fullyQualifiedName = variable.fullyQualifiedName + "->" + child.name;
 			}
 
 			this.addChildQualifiedName(child);

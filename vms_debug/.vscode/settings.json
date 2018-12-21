@@ -9,5 +9,6 @@
 	"vmssoftware.ssh-helper.connection.username": "",
 	"vmssoftware.ssh-helper.timeouts.cmdTimeout": 0,
 	"vmssoftware.ssh-helper.timeouts.feedbackTimeout": 0,
-	"vmssoftware.ssh-helper.timeouts.welcomeTimeout": 0
+	"vmssoftware.ssh-helper.timeouts.welcomeTimeout": 0,
+	"vmssoftware.project-dep.buildType": "DEBUG"
 }

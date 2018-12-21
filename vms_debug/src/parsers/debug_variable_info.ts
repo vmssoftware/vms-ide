@@ -18,6 +18,7 @@ export interface DebugVariable
 	type: string;
 	kind: ReflectKind;
 	value: string;
+	info: string;
 	len: number;
 	children: DebugVariable[];
 	unreadable: string;
@@ -32,6 +33,8 @@ export interface VariableFileInfo
 	variableName: string;
 	variableType: string;
 	variableValue: string;
+	variableInfo: string;
+	variableAddress: number;
 	variableKind: ReflectKind;
 }
 
