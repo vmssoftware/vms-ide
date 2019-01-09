@@ -255,17 +255,20 @@ export class VMSRuntime extends EventEmitter
 
 							let childs : DebugVariable[] = [];
 
-							if(item.variableKind === ReflectKind.Array || item.variableKind === ReflectKind.Struct)
+							if(item.variableKind === ReflectKind.Array ||
+								item.variableKind === ReflectKind.Struct ||
+								item.variableKind === ReflectKind.Pointer)
 							{
 								childs = this.dbgParser.parseStructValues(item, new Parameters());
 							}
 
 							variables.push({
 								name: item.variableName,
-								addr: 0,
+								addr: item.variableAddress,
 								type: item.variableType,
 								kind: item.variableKind,
 								value: item.variableValue,
+								info: item.variableInfo,
 								len: 0,
 								unreadable: "",
 								fullyQualifiedName: "",
@@ -313,20 +316,34 @@ export class VMSRuntime extends EventEmitter
 							nameVars += ",";
 						}
 
-						// if(item.variableType.includes("pointer to"))
-						// {
-						// 	nameVars +=  "*" + item.variableName;
-						// }
-						// else
+						if(item.variableType.includes("pointer to"))
 						{
-							if(item.variableName === "this")
+							if(item.variableAddress)
 							{
-								nameVars += "*" + item.variableName;
+								if(item.variableAddress !== 0)
+								{
+									nameVars += "*" + item.variableName;
+								}
+								else
+								{
+									nameVars += item.variableName;
+								}
 							}
 							else
 							{
-								nameVars += item.variableName;
+								if(item.variableName === "this")
+								{
+									nameVars += "*" + item.variableName;
+								}
+								else
+								{
+									nameVars += item.variableName;
+								}
 							}
+						}
+						else
+						{
+							nameVars += item.variableName;
 						}
 					}
 				}
@@ -342,17 +359,20 @@ export class VMSRuntime extends EventEmitter
 						{
 							let childs : DebugVariable[] = [];
 
-							if(item.variableKind === ReflectKind.Array || item.variableKind === ReflectKind.Struct)
+							if(item.variableKind === ReflectKind.Array ||
+								item.variableKind === ReflectKind.Struct ||
+								item.variableKind === ReflectKind.Pointer)
 							{
 								childs = this.dbgParser.parseStructValues(item, new Parameters());
 							}
 
 							variables.push({
 								name: item.variableName,
-								addr: 0,
+								addr: item.variableAddress,
 								type: item.variableType,
 								kind: item.variableKind,
 								value: item.variableValue,
+								info: item.variableInfo,
 								len: 0,
 								unreadable: "",
 								fullyQualifiedName: "",
@@ -550,9 +570,10 @@ export class VMSRuntime extends EventEmitter
 
 		this.breakPoints.set(key, vrfBps);
 
-		await this.verifyBreakpoints(path);
 		//set remote breakpoints
 		await this.setRemoteBreakpointsPath(path);
+		//verify breakpoints
+		await this.verifyBreakpoints(path);
 
 		return newBps;
 	}
@@ -725,8 +746,9 @@ export class VMSRuntime extends EventEmitter
 					}
 					else//clear breakpoint
 					{
-						const bpm = this.clearBreakPoint(path, bp.line);
-						this.sendEvent('breakpointRemoved', bpm);
+						this.clearBreakPoint(path, bp.line);
+						//const bpm = this.clearBreakPoint(path, bp.line);
+						//this.sendEvent('breakpointRemoved', bpm);//???
 					}
 				});
 			}
@@ -749,8 +771,9 @@ export class VMSRuntime extends EventEmitter
 					}
 					else//clear breakpoint
 					{
-						const bpm = this.clearBreakPoint(path, bp.line);
-						this.sendEvent('breakpointRemoved', bpm);
+						this.clearBreakPoint(path, bp.line);
+						//const bpm = this.clearBreakPoint(path, bp.line);
+						//this.sendEvent('breakpointRemoved', bpm);//???
 					}
 				});
 			}
@@ -837,7 +860,8 @@ export class VMSRuntime extends EventEmitter
 					this.sendEvent('end');
 				}
 				else if(messageDebug.includes(MessageDebuger.msgNoSccess) ||
-						messageDebug.includes(MessageDebuger.msgNoFind))
+						messageDebug.includes(MessageDebuger.msgNoFind) ||
+						messageDebug.includes(MessageDebuger.msgUnAlloc))
 				{
 					this.waitVars.notify();
 				}

@@ -67,7 +67,6 @@
 	"main": "./out/extension",
 	"activationEvents": [
 		"onDebug",
-		"onCommand:extension.vms-debug.connect",
 		"onCommand:extension.vms-debug.terminal"
 	],
 	"contributes": {
@@ -78,11 +77,6 @@
 			}
 		],
 		"commands": [
-			{
-				"command": "extension.vms-debug.connect",
-				"title": "%extension.vms_connect%",
-				"category": "%command.category%"
-			},
 			{
 				"command": "extension.vms-debug.terminal",
 				"title": "%extension.vms_terminal%",

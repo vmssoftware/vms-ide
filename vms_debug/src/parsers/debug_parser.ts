@@ -21,6 +21,7 @@ export enum MessageDebuger
 	msgNoImage = "%DCL-W-ACTIMAGE, error activating image",
 	msgNoSccess = "%DEBUG-E-NOACCESSR, no read access to address",
 	msgNoFind = "%DEBUG-E-NOTRAZERO, Unable to find",
+	msgUnAlloc = "%DEBUG-W-UNALLOCATED",
 	msgEnd = "%DEBUG-I-EXITSTATUS, is '%SYSTEM-S-NORMAL, normal successful completion",
 }
 
@@ -619,9 +620,38 @@ export class DebugParser
 								const matcherS = /^\s*(\S+):\s*(\S+)/;//Struct name: 23
 								let matches = info[info.length-1].match(matcherS);
 
-								if(item.variableType.includes("pointer to") ||
-									item.variableType.includes("record type"))
+								if(item.variableType.includes("pointer to"))
 								{
+									if(matches)
+									{
+										let addr = parseInt(matches[matches.length-1], 10);
+
+										if(!Number.isNaN(addr))
+										{
+											if(addr < 0x1000)
+											{
+												item.variableAddress = 0;
+											}
+											else
+											{
+												item.variableAddress = addr;
+											}
+										}
+										else
+										{
+											item.variableInfo = info[info.length-1].split(":")[1].trim();
+										}
+									}
+
+									item.variableKind = ReflectKind.Pointer;
+								}
+								else if(item.variableType.includes("record type"))
+								{
+									if(matches)
+									{
+										item.variableInfo = info[info.length-1].split(":")[1].trim();
+									}
+
 									item.variableKind = ReflectKind.Struct;
 								}
 								else
@@ -668,6 +698,7 @@ export class DebugParser
 
 	public parseStructValues(variable: VariableFileInfo, prm : Parameters) : DebugVariable[]
 	{
+		const shiftLevel : number = 4;
 		let countItems : number = 0;
 		let childs : DebugVariable[] = [];
 		let items = variable.variableValue.split("\n");
@@ -676,6 +707,8 @@ export class DebugParser
 
 		while(prm.counter < items.length)
 		{
+			let goNextLevel : boolean = true;
+			let itemInfo : string = "";
 			let v = items[prm.counter];
 			prm.counter++;
 
@@ -685,9 +718,9 @@ export class DebugParser
 				let kind : number;
 				let itemLevel = v.length - v.trim().length;
 
-				if(itemLevel < prm.level)
+				if(itemLevel < prm.level)//go to up level
 				{
-					prm.level -= 4;
+					prm.level -= shiftLevel;
 					prm.counter--;
 					return childs;
 				}
@@ -698,18 +731,31 @@ export class DebugParser
 
 					if(matches)
 					{
-						kind = ReflectKind.Array;
+						if((prm.counter) < items.length)
+						{
+							let itemNext = items[prm.counter];
+							let itemLevelNext = itemNext.length - itemNext.trim().length;
+
+							if(itemLevelNext > itemLevel)
+							{
+								kind = this.getKindVariable(items[prm.counter]);
+								itemInfo = v.split(":")[1].trim();
+							}
+							else
+							{
+								goNextLevel = false;
+								kind = ReflectKind.Array;
+							}
+						}
+						else
+						{
+							goNextLevel = false;
+							kind = ReflectKind.Array;
+						}
 					}
 					else if((prm.counter) < items.length)
 					{
-						if(items[prm.counter].includes("["))//array
-						{
-							kind = ReflectKind.Array;
-						}
-						else //struct
-						{
-							kind = ReflectKind.Struct;
-						}
+						kind = this.getKindVariable(items[prm.counter]);
 					}
 					else
 					{
@@ -722,18 +768,31 @@ export class DebugParser
 
 					if(matches)
 					{
-						kind = ReflectKind.Struct;
+						if((prm.counter) < items.length)
+						{
+							let itemNext = items[prm.counter];
+							let itemLevelNext = itemNext.length - itemNext.trim().length;
+
+							if(itemLevelNext > itemLevel)
+							{
+								kind = this.getKindVariable(items[prm.counter]);
+								itemInfo = v.split(":")[1].trim();
+							}
+							else
+							{
+								goNextLevel = false;
+								kind = ReflectKind.Struct;
+							}
+						}
+						else
+						{
+							goNextLevel = false;
+							kind = ReflectKind.Struct;
+						}
 					}
 					else if((prm.counter) < items.length)
 					{
-						if(items[prm.counter].includes("["))//array
-						{
-							kind = ReflectKind.Array;
-						}
-						else //struct
-						{
-							kind = ReflectKind.Struct;
-						}
+						kind = this.getKindVariable(items[prm.counter]);
 					}
 					else
 					{
@@ -741,19 +800,19 @@ export class DebugParser
 					}
 				}
 
-				if(matches)
+				if(matches && !goNextLevel)//add item
 				{
 					let count : number = 0;
 					let name : string = "";
 					let value = matches[matches.length-1];
 					prm.level = itemLevel;
 
-					if(matches.length === 3)
+					if(matches.length === 3)//struct info
 					{
 						count = 1;
 						name = matches[1];
 					}
-					else if(matches.length === 5)
+					else if(matches.length === 5)//array  info
 					{
 						if(matches[3])
 						{
@@ -779,6 +838,7 @@ export class DebugParser
 							type: "atomic",
 							kind: ReflectKind.Atomic,
 							value: value,
+							info: "",
 							len: 0,
 							unreadable: "",
 							fullyQualifiedName: "",
@@ -790,11 +850,11 @@ export class DebugParser
 				}
 				else
 				{
-					if(itemLevel >= prm.level)
+					if(itemLevel >= prm.level)//go to down level
 					{
-						let name = v.trim();
+						let name = v.split(":")[0].trim();
 						let typeName = (kind === ReflectKind.Array) ? "array" : "struct";
-						let childsIn = this.parseStructValues(variable, prm);
+						let childsIn = this.parseStructValues(variable, prm);//parse next inner level
 
 						let child = <DebugVariable>
 						{
@@ -803,6 +863,7 @@ export class DebugParser
 							type: typeName,
 							kind: kind,
 							value: "",
+							info: itemInfo,
 							len: 0,
 							unreadable: "",
 							fullyQualifiedName: "",
@@ -811,9 +872,9 @@ export class DebugParser
 
 						childs.push(child);
 					}
-					else
+					else//go to up level
 					{
-						prm.level -= 4;
+						prm.level -= shiftLevel;
 						prm.counter--;
 						return childs;
 					}
@@ -822,6 +883,18 @@ export class DebugParser
 		}
 
 		return childs;
+	}
+
+	private getKindVariable(item : string) : ReflectKind
+	{
+		if(item.includes("["))//array
+		{
+			return ReflectKind.Array;
+		}
+		else //struct
+		{
+			return ReflectKind.Struct;
+		}
 	}
 
 	public getVariableFileInfo() : HolderDebugVariableInfo

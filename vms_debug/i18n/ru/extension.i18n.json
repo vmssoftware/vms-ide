@@ -1,7 +1,7 @@
 {
-    "extention.connected": "Соединение с сервером установлено",
     "extention.conecting": "Соединение с сервером ...",
     "extention.bar.conecting": "Соединение ...",
+    "extention.connected": "Соединение с сервером установлено",
     "extention.bar.connected": "Подключен",
     "extention.closed": "Соединение закрыто",
     "extention.bar.disconnected": "Отключен",

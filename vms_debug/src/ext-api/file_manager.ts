@@ -132,29 +132,32 @@ export class FileManagerExt
 
 	public async loadContextFile(file: string) : Promise<string[]>
 	{
-		if (await this.ensureLocalSource())
+		if(file !== "")
 		{
-			const stream = await this.localSource!.createReadStream(file);
-
-			if (stream)
+			if (await this.ensureLocalSource())
 			{
-				const ret: string[] = [];
-				const lock = new Lock(true);
-				const rl = readline.createInterface(stream);
+				const stream = await this.localSource!.createReadStream(file);
 
-				rl.on("close", () =>
+				if (stream)
 				{
-					lock.release();
-				});
+					const ret: string[] = [];
+					const lock = new Lock(true);
+					const rl = readline.createInterface(stream);
 
-				rl.on("line", (line) =>
-				{
-					ret.push(line);
-				});
+					rl.on("close", () =>
+					{
+						lock.release();
+					});
 
-				await lock.acquire();
+					rl.on("line", (line) =>
+					{
+						ret.push(line);
+					});
 
-				return ret;
+					await lock.acquire();
+
+					return ret;
+				}
 			}
 		}
 
