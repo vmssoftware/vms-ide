@@ -4,8 +4,8 @@ import path from "path";
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, QuickPickItem, Range, Uri, window, workspace } from "vscode";
 
 import { IFileEntry, LogFunction, LogType } from "@vorfol/common";
-import { printLike } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
+import { printLike } from "@vorfol/common";
 import { parseVmsOutput } from "../common/parse-output";
 import { ProjectType } from "../config/sections/project";
 import { ProjDepTree } from "../dep-tree/proj-dep-tree";
@@ -16,14 +16,19 @@ import { IDispose, SshHelper } from "../ext-api/ssh-helper";
 import { FsSource } from "../sync/fs-source";
 import { ISource } from "../sync/source";
 import { Synchronizer } from "../sync/synchronizer";
-import { VmsPathConverter } from "../vms/vms-path-converter";
-import { contextSaved } from "./../context";
+import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 type BuildType = "com" | "mms" | "debug" | "release" | "both" | "undefined";
+
+enum MmsLineType {
+    nothing,
+    includes,
+    sources,
+}
 
 interface IBuildQuickPickItem extends QuickPickItem {
     type: BuildType;
@@ -74,6 +79,8 @@ export class Builder {
     private static readonly labelRelease = "RELEASE";
     private static readonly labelBoth = "BOTH";
     private static readonly rgFile = /^([-_$a-z][-_$a-z0-9]*)(\.[-_$a-z0-9]*)?/;
+    private static readonly includesLine = "INCLUDES=";
+    private static readonly sourcesLine = "SOURCES=";
 
     private static instance?: Builder;
 
@@ -321,16 +328,17 @@ export class Builder {
         const comLines: string[] = [];
 
         const headerLines = [
+            `! Do not modify this file. It may be overwritten automatically.`,
             `OUTDIR=${ensured.projectSection.outdir}`,
             `NAME=${ensured.projectSection.projectName}`,
         ];
 
-        const includeLines = [`INCLUDES=`];
+        const includeLines = [Builder.includesLine];
         for (const inc of headers) {
             includeLines[includeLines.length - 1] = includeLines[includeLines.length - 1] + " -";    // continuation
             includeLines.push(iFileEntryToVmsPath(inc));
         }
-        const sourceLines = [`SOURCES=`];
+        const sourceLines = [Builder.sourcesLine];
         for (const src of sources) {
             sourceLines[sourceLines.length - 1] = sourceLines[sourceLines.length - 1] + " -";        // continuation
             sourceLines.push(iFileEntryToVmsPath(src));
@@ -494,6 +502,86 @@ export class Builder {
         return { contentMMS, contentOPT, contentCOM};
     }
 
+    /**
+     * Test if we need to create new MMS
+     * @param ensured settings
+     * @param content old MMS content
+     * @returns true if we need to create MMS
+     */
+    public async checkMmsContent(ensured: IEnsured, content: string) {
+        if (!ensured.configHelper.workspaceFolder) {
+            return false;
+        }
+        if (!content) {
+            return true;
+        }
+
+        const foundIncludes: string[] = [];
+        const foundSources: string[] = [];
+
+        let lineType: MmsLineType = MmsLineType.nothing;
+        let blocksFound = 0;
+        for (const line of content.split("\n")) {
+            if (lineType !== MmsLineType.nothing) {
+                const matched = line.match(vmsPathRgx);
+                if (matched && matched[VmsPathPart.fileName]) {
+                    if (lineType === MmsLineType.includes) {
+                        foundIncludes.push(VmsPathConverter.fromVms(matched[0]).initial);
+                    } else if (lineType === MmsLineType.sources) {
+                        foundSources.push(VmsPathConverter.fromVms(matched[0]).initial);
+                    }
+                } else {
+                    lineType = MmsLineType.nothing;
+                }
+            } else if (line.startsWith(Builder.includesLine)) {
+                lineType = MmsLineType.includes;
+                blocksFound = blocksFound + 1;
+            } else if (line.startsWith(Builder.sourcesLine)) {
+                lineType = MmsLineType.sources;
+                blocksFound = blocksFound + 1;
+            } else if (blocksFound === 2) {
+                // stop searching
+                break;
+            }
+        }
+
+        const localSource = new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
+        // common part
+        const [localIncludes, localSources] = await Promise.all([
+            localSource.findFiles(ensured.projectSection.headers, ensured.projectSection.exclude),
+            localSource.findFiles(ensured.projectSection.source, ensured.projectSection.exclude)]);
+
+        if (localIncludes.length !== foundIncludes.length) {
+            return true;
+        }
+
+        if (localSources.length !== foundSources.length) {
+            return true;
+        }
+
+        if (foundIncludes.length > 0) {
+            const sortedFound = foundIncludes.sort();
+            const sortedLocal = localIncludes.map((entry) => entry.filename).sort();
+            for (let idx = 0; idx < sortedLocal.length; idx++) {
+                if (sortedLocal[idx] !== sortedFound[idx]) {
+                    return true;
+                }
+            }
+        }
+
+        if (foundSources.length > 0) {
+            const sortedFound = foundSources.sort();
+            const sortedLocal = localSources.map((entry) => entry.filename).sort();
+            for (let idx = 0; idx < sortedLocal.length; idx++) {
+                if (sortedLocal[idx] !== sortedFound[idx]) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private async ensureMmsCreated(scopeData: IScopeBuildData, selection: IBuildQuickPickItem) {
         if (!(selection.type === "debug" || selection.type === "release" || selection.type === "both")) {
             return true;
@@ -501,7 +589,12 @@ export class Builder {
 
         const localMmsFile = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
         const foundMms = await scopeData.localSource.findFiles(localMmsFile);
-        if (foundMms.length === 0) {
+        let createMMS = true;
+        if (foundMms.length === 1) {
+            const localMmsPath = scopeData.localSource.root + ftpPathSeparator + localMmsFile;
+            createMMS = await this.checkMmsContent(scopeData.ensured, (await fs.readFile(localMmsPath)).toString("utf8"));
+        }
+        if (createMMS) {
             return this.createMmsFiles(scopeData.ensured)
                 .then(async (ok) => {
                     if (ok) {

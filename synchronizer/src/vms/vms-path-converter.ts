@@ -2,6 +2,12 @@ import { ftpPathSeparator } from "@vorfol/common";
 
 export const splitter = new RegExp(ftpPathSeparator, "g");
 export const vmsPathRgx = /((\w+):)?(\[((\.)?(\w+)(\.(\w+))*)\])?(((\w+)(\.(\w+)?)?)?(;(\d+))?)?/;
+export enum VmsPathPart {
+    bareDir = 4,
+    isRelative = 5,
+    fileName = 11,
+    fileExt = 12,
+}
 /**
  * Uses path.sep to determine directory.
  * Do not use other path functions because it incorrect parses path without file (directory only, ends with path.sep)
@@ -40,16 +46,17 @@ export class VmsPathConverter {
         const converter = new VmsPathConverter();
         const match = relPath.match(vmsPathRgx);
         if (match) {
-            converter.vmsBareDir = match[4] || "";
-            converter.vmsFileName = match[11] || "";
-            converter.vmsFileExt = match[12] || "";
+            converter.vmsBareDir = match[VmsPathPart.bareDir] || "";
+            converter.vmsFileName = match[VmsPathPart.fileName] || "";
+            converter.vmsFileExt = match[VmsPathPart.fileExt] || "";
             if (converter.vmsBareDir) {
-                if (!match[5]) {
+                if (!match[VmsPathPart.isRelative]) {
                     converter.fsPath = ftpPathSeparator;
                 }
                 converter.fsPath += converter.vmsBareDir.split(".").filter((s) => !!s).join(ftpPathSeparator);
-                converter.fsPath += ftpPathSeparator + converter.file;
+                converter.fsPath += ftpPathSeparator;
             }
+            converter.fsPath += converter.file;
         }
         return converter;
     }
