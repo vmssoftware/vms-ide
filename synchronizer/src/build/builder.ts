@@ -4,12 +4,13 @@ import path from "path";
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, QuickPickItem, Range, Uri, window, workspace } from "vscode";
 
 import { IFileEntry, LogFunction, LogType } from "@vorfol/common";
-import { ftpPathSeparator } from "@vorfol/common";
 import { printLike } from "@vorfol/common";
+import { ftpPathSeparator } from "@vorfol/common";
 import { parseVmsOutput } from "../common/parse-output";
+import { ProjectType } from "../config/sections/project";
+import { ProjDepTree } from "../dep-tree/proj-dep-tree";
 import { ensureSettings, IEnsured } from "../ensure-settings";
 import { ISshShell } from "../ext-api/api";
-import { GetProjectDepApi } from "../ext-api/get-proj-api";
 import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 import { IDispose, SshHelper } from "../ext-api/ssh-helper";
 import { FsSource } from "../sync/fs-source";
@@ -19,7 +20,6 @@ import { VmsPathConverter } from "../vms/vms-path-converter";
 import { contextSaved } from "./../context";
 
 import * as nls from "vscode-nls";
-import { ProjectType } from "../config/sections/project";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
@@ -62,7 +62,7 @@ export class Builder {
         return Builder.instance;
     }
 
-    private static readonly defMmsFileName = "res/default.mms";
+    private static readonly defMmsFileName = "resource/default.mms";
     private static readonly mmsUserCmd = printLike`MMS/DESCR=${"_.mms"}`;
     private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}")`;
     private static readonly mmsExt = ".mms";
@@ -242,35 +242,35 @@ export class Builder {
         }
     }
 
-    public async createMms(scopeData: IScopeBuildData) {
-        const localMmsFile = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
-        const foundMms = await scopeData.localSource.findFiles(localMmsFile);
-        if (foundMms.length === 0) {
-            // TODO: check project type: [exe, olb, shareable]
-            // TODO: add dependencies
-            const defMmsPath = contextSaved!.asAbsolutePath(Builder.defMmsFileName);
-            const [content, headres, sources] = await Promise.all([
-                fs.readFile(defMmsPath, "utf8"),
-                scopeData.localSource.findFiles(scopeData.ensured.projectSection.headers, scopeData.ensured.projectSection.exclude),
-                scopeData.localSource.findFiles(scopeData.ensured.projectSection.source, scopeData.ensured.projectSection.exclude)]);
-            // add files to the lists
-            let newContent = `OUTDIR=${scopeData.ensured.projectSection.outdir}\n`
-                            + `NAME=${scopeData.ensured.projectSection.projectName}\n`
-                            + `INCLUDES=${headres.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
-                            + `SOURCES=${sources.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
-                            + content;
-            // add "source -> obj" dependency for each source
-            for (const source of sources) {
-                const vms = new VmsPathConverter(source.filename);
-                const sourceDependencyLine = "[$(OBJ_DIR)" + vms.bareDirectory + "]" + vms.fileName + ".obj : " + vms.fullPath + " $(INCLUDES)";
-                newContent += sourceDependencyLine + "\n";
-            }
-            await fs.writeFile(scopeData.localSource.root + ftpPathSeparator + localMmsFile, newContent);
-            return Synchronizer.acquire(this.logFn).uploadFiles(scopeData.ensured, [localMmsFile]);
-        } else {
-            return true;
-        }
-    }
+    // public async createMms(scopeData: IScopeBuildData) {
+    //     const localMmsFile = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
+    //     const foundMms = await scopeData.localSource.findFiles(localMmsFile);
+    //     if (foundMms.length === 0) {
+    //         // TODO: check project type: [exe, olb, shareable]
+    //         // TODO: add dependencies
+    //         const defMmsPath = contextSaved!.asAbsolutePath(Builder.defMmsFileName);
+    //         const [content, headres, sources] = await Promise.all([
+    //             fs.readFile(defMmsPath, "utf8"),
+    //             scopeData.localSource.findFiles(scopeData.ensured.projectSection.headers, scopeData.ensured.projectSection.exclude),
+    //             scopeData.localSource.findFiles(scopeData.ensured.projectSection.source, scopeData.ensured.projectSection.exclude)]);
+    //         // add files to the lists
+    //         let newContent = `OUTDIR=${scopeData.ensured.projectSection.outdir}\n`
+    //                         + `NAME=${scopeData.ensured.projectSection.projectName}\n`
+    //                         + `INCLUDES=${headres.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
+    //                         + `SOURCES=${sources.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
+    //                         + content;
+    //         // add "source -> obj" dependency for each source
+    //         for (const source of sources) {
+    //             const vms = new VmsPathConverter(source.filename);
+    //             const sourceDependencyLine = "[$(OBJ_DIR)" + vms.bareDirectory + "]" + vms.fileName + ".obj : " + vms.fullPath + " $(INCLUDES)";
+    //             newContent += sourceDependencyLine + "\n";
+    //         }
+    //         await fs.writeFile(scopeData.localSource.root + ftpPathSeparator + localMmsFile, newContent);
+    //         return Synchronizer.acquire(this.logFn).uploadFiles(scopeData.ensured, [localMmsFile]);
+    //     } else {
+    //         return true;
+    //     }
+    // }
 
     public async createMmsFiles(ensured: IEnsured) {
         const content = await this.createMmsContent(ensured);
@@ -346,36 +346,33 @@ export class Builder {
         // project dependecies
         const cxxIncludes: string[] = [];
         const contentFirst: string[] = [".FIRST"];
-        const projApi = await GetProjectDepApi();
-        if (projApi) {
-            let deps = projApi.getDepList(ensured.scope);
-            if (deps.length > 1) {  // first is this project
-                deps = deps.splice(1);
-                for (const depPrj of deps) {
-                    const depEnsured = await ensureSettings(depPrj, this.logFn);
-                    if (depEnsured) {
-                        if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library] ||
-                            depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
-                            const vms = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
-                            const projName = depEnsured.projectSection.projectName.toUpperCase();
-                            const outDir = depEnsured.projectSection.outdir;
-                            contentFirst.push(`    ${projName}_INC_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}]"`);
-                            contentFirst.push(`    DEFINE ${projName}_INC_DIR '${projName}_INC_SYMB'`);
-                            contentFirst.push(`    ${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}.${outDir}.$(TYPE_DIR)]"`);
-                            contentFirst.push(`    DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
-                            cxxIncludes.push(`${projName}_INC_DIR`);
-                            if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library]) {
-                                optLines.push(`${projName}_LIB_DIR:${projName}/LIBRARY`);
-                            }
-                            if (depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
-                                optLines.push(`${projName}_LIB_DIR:${projName}/SHAREABLE`);
-                                // com file
-                                comLines.push(`TYPE:=DEBUG`);
-                                comLines.push(`if P1 .NES. "" THEN TYPE:='P1'`);
-                                comLines.push(`${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}.${outDir}.'TYPE']"`);
-                                comLines.push(`DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
-                                comLines.push(`DEFINE ${projName} ${projName}_LIB_DIR:${projName}.exe`);
-                            }
+        let deps = new ProjDepTree().getDepList(ensured.scope);
+        if (deps.length > 1) {  // first is this project
+            deps = deps.splice(1);
+            for (const depPrj of deps) {
+                const depEnsured = await ensureSettings(depPrj, this.logFn);
+                if (depEnsured) {
+                    if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library] ||
+                        depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
+                        const vms = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
+                        const projName = depEnsured.projectSection.projectName.toUpperCase();
+                        const outDir = depEnsured.projectSection.outdir;
+                        contentFirst.push(`    ${projName}_INC_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}]"`);
+                        contentFirst.push(`    DEFINE ${projName}_INC_DIR '${projName}_INC_SYMB'`);
+                        contentFirst.push(`    ${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}.${outDir}.$(TYPE_DIR)]"`);
+                        contentFirst.push(`    DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
+                        cxxIncludes.push(`${projName}_INC_DIR`);
+                        if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library]) {
+                            optLines.push(`${projName}_LIB_DIR:${projName}/LIBRARY`);
+                        }
+                        if (depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
+                            optLines.push(`${projName}_LIB_DIR:${projName}/SHAREABLE`);
+                            // com file
+                            comLines.push(`TYPE:=DEBUG`);
+                            comLines.push(`if P1 .NES. "" THEN TYPE:='P1'`);
+                            comLines.push(`${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}.${outDir}.'TYPE']"`);
+                            comLines.push(`DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
+                            comLines.push(`DEFINE ${projName} ${projName}_LIB_DIR:${projName}.exe`);
                         }
                     }
                 }
