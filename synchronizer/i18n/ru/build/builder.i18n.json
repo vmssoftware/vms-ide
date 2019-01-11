@@ -1,14 +1,16 @@
 {
+    "debug.disposing": "Disposing sources",
     "quick.build.file": "Компиляция с использованием {0}",
     "quick.build.release": "Построить release версию",
     "quick.build.debug": "Построить debug версию",
-    "output.not_resolved": "Не удалось получить конфигурацию или текущую рабочую папку",
     "quick.clean.release": "Очистить release версию",
     "quick.clean.debug": "Очистить debug версию",
     "quick.clean.both": "Очистить всё",
-    "error.no_settings": "Не удалось получить настройки",
-    "error.no_workspace": "Рабочая область пуста",
+    "mms_exist": "Previous MMS file is renamed to {0}",
+    "opt_exist": "Previous OPT file is renamed to {0}",
+    "com_exist": "Previous COM file is renamed to {0}",
     "output.cannot_exec": "Не удалось запустить {0}",
     "debug.cannot_get_ssh_helper": "Не удалось загрузить ssh-helper API",
-    "output.install_ssh": "Установите плагин 'vmssoftware.ssh-helper'"
+    "output.install_ssh": "Установите плагин 'vmssoftware.ssh-helper'",
+    "debug.create_shell": "Creating builder shell"
 }

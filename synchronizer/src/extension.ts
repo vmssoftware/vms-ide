@@ -2,6 +2,9 @@ import { commands, env, ExtensionContext, window, workspace } from "vscode";
 
 import { Builder } from "./build/builder";
 import { setExtensionContext } from "./context";
+import { ProjectState } from "./dep-tree/proj-state";
+import { ProjDepProvider } from "./dep-tree/project-dep";
+import { ProjDescrProvider } from "./dep-tree/project-descr";
 import { configApi, ensureConfigHelperApi } from "./ensure-settings";
 import { Perform } from "./performer";
 import { SyncApi } from "./sync/sync-api";
@@ -80,6 +83,38 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.changeCRLF", async (scope: string) => {
         return Perform("crlf", scope, syncLog);
     }));
+
+    const projectDependenciesProvider = new ProjDepProvider();
+    const projectDescriptionProvider = new ProjDescrProvider();
+
+    context.subscriptions.push( window.registerTreeDataProvider("vmssoftware.project-dep.projectDependencies", projectDependenciesProvider) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.select",
+        (element) => projectDependenciesProvider.select(element)) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.add",
+        (element) => projectDependenciesProvider.add(element)) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.build",
+        (element) => projectDependenciesProvider.build(element)) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.clean",
+        (element) => projectDependenciesProvider.clean(element)) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.remove",
+        (element) => projectDependenciesProvider.remove(element)) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.refresh",
+        () => projectDependenciesProvider.refresh()) );
+
+    context.subscriptions.push( window.registerTreeDataProvider("vmssoftware.project-dep.projectDescription", projectDescriptionProvider) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDescription.select",
+        (projectName) => projectDescriptionProvider.select(projectName)) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDescription.refresh",
+        () => projectDescriptionProvider.refresh()) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDescription.edit",
+        (element) => projectDescriptionProvider.edit(element)) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDescription.changeBuildType",
+        () => projectDescriptionProvider.changeBuildType()) );
+
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectState.didSynchronize",
+        (folderName: string) => ProjectState.acquire().setSynchronized(folderName)) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectState.didBuild",
+        (folderName: string, buildType: string) => ProjectState.acquire().setBuilt(folderName, buildType)) );
 
     return new SyncApi();
 }

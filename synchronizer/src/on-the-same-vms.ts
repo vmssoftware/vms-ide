@@ -1,14 +1,10 @@
 import { LogFunction } from "@vorfol/common";
+import { ProjDepTree } from "./dep-tree/proj-dep-tree";
 import { IConnectConfig } from "./ext-api/api";
-import { GetProjectDepApi } from "./ext-api/get-proj-api";
 import { GetSshHelperType } from "./ext-api/get-ssh-helper";
 
 export async function onTheSameVms(scope: string, logFn: LogFunction) {
     if (!scope) {
-        return true;
-    }
-    const projApi = await GetProjectDepApi();
-    if (!projApi) {
         return true;
     }
     const sshHelperType = await GetSshHelperType();
@@ -16,7 +12,7 @@ export async function onTheSameVms(scope: string, logFn: LogFunction) {
         return true;
     }
     const sshHelper = new sshHelperType(logFn);
-    const deps = projApi.getDepList(scope);
+    const deps = new ProjDepTree().getDepList(scope);
     let   testConnectionSettings: IConnectConfig | undefined;
     for (const dep of deps) {
         const cfg = await sshHelper.getSettings(dep);

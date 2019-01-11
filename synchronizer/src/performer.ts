@@ -7,12 +7,12 @@ import { window, workspace } from "vscode";
 
 import { Builder } from "./build/builder";
 import { ChangeCrLf } from "./change-crlf";
-import { GetProjectDepApi } from "./ext-api/get-proj-api";
-import { ProjApi } from "./ext-api/proj-api";
+import { ProjDepTree } from "./dep-tree/proj-dep-tree";
+import { ProjectState } from "./dep-tree/proj-state";
+import { onTheSameVms } from "./on-the-same-vms";
 import { Synchronizer } from "./sync/synchronizer";
 
 import * as nls from "vscode-nls";
-import { onTheSameVms } from "./on-the-same-vms";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
@@ -29,16 +29,6 @@ export interface IPerform {
     fail: string;
 }
 
-let projApi: ProjApi | undefined;
-
-async function ensureProjApi() {
-    if (projApi) {
-        return projApi;
-    }
-    projApi = await GetProjectDepApi();
-    return projApi;
-}
-
 export const actions: IPerform[] = [
     {
         // synchronize
@@ -52,8 +42,7 @@ export const actions: IPerform[] = [
             const wait: Array<Promise<boolean>> = [];
             for (const curScope of scopes) {
                 wait.push( (async () => {
-                    const api = await ensureProjApi();
-                    if (api && api.isSynchronized(curScope)) {
+                    if (ProjectState.acquire().isSynchronized(curScope)) {
                         return true;
                     }
                     const ensured = await ensureSettings(curScope, logFn);
@@ -62,9 +51,7 @@ export const actions: IPerform[] = [
                         return syncronizer.syncronizeProject(ensured)
                             .then(async (result) => {
                                 if (result) {
-                                    if (api) {
-                                        api.setSynchronized(curScope, true);
-                                    }
+                                    ProjectState.acquire().setSynchronized(curScope, true);
                                 }
                                 return result;
                             });
@@ -114,37 +101,28 @@ export const actions: IPerform[] = [
                 return false;
             }
             let scopes: string[] = [scope];
-            const api = await ensureProjApi();
-            if (api) {
-                scopes = api.getDepList(scope).reverse();
-            } else if (!scope) {
-                if (workspace.workspaceFolders) {
-                    scopes = workspace.workspaceFolders.map((wf) => wf.name);
-                }
-            }
+            scopes = new ProjDepTree().getDepList(scope).reverse();
             params = params || "DEBUG";
             const builder = Builder.acquire(logFn);
             let retCode = true;
             for (const curScope of scopes) {
-                if (!api || !api.isSynchronized(curScope)) {
+                if (!ProjectState.acquire().isSynchronized(curScope)) {
                     const ensured = await ensureSettings(curScope, logFn);
                     if (ensured) {
                         const syncronizer = Synchronizer.acquire(logFn);
                         const result = await syncronizer.uploadSource(ensured);
-                        if (result && api) {
-                            api.setSynchronized(curScope, true);
-                        }
+                        ProjectState.acquire().setSynchronized(curScope, result);
                         retCode = retCode && result;
                     } else {
                         retCode = false;
                     }
                 }
-                if (retCode && (!api || !api.isBuilt(curScope, params))) {
+                if (retCode && !ProjectState.acquire().isBuilt(curScope, params)) {
                     const ensured = await ensureSettings(curScope, logFn);
                     if (ensured) {
                         const result = await builder.buildProject(ensured, params);
-                        if (api && params) {
-                            api.setBuilt(curScope, params, result);
+                        if (params) {
+                            ProjectState.acquire().setBuilt(curScope, params, result);
                         }
                         retCode = retCode && result;
                     } else {
@@ -182,9 +160,8 @@ export const actions: IPerform[] = [
                         return builder.cleanProject(ensured, params)
                             .then(async (result) => {
                                 if (result) {
-                                    const api = await ensureProjApi();
-                                    if (api && params) {
-                                        api.setBuilt(curScope, params, false);
+                                    if (params) {
+                                        ProjectState.acquire().setBuilt(curScope, params, false);
                                     }
                                 }
                                 return result;

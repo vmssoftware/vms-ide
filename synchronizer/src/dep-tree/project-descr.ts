@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
-import { ISshScopeSettings } from "./ext-api/api";
-import { GetSshHelperType } from "./ext-api/get-ssh-helper";
-import { GetSyncApi } from "./ext-api/get-sync-api";
-import { ISyncScopeSettings } from "./ext-api/sync-api";
+import { ensureSettings } from "../ensure-settings";
+import { ISshScopeSettings } from "../ext-api/api";
+import { GetSshHelperType } from "../ext-api/get-ssh-helper";
+import { ISyncScopeSettings } from "../sync/sync-api";
 import { ProjDepTree } from "./proj-dep-tree";
 import { ProjectState } from "./proj-state";
 
@@ -73,13 +73,8 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
         const retArray: string[] = [];
         if (!element && this.selectedProject) {
             const scope = this.selectedProject;
-            const [syncApi, sshHelperType] = await Promise.all(
-                [   GetSyncApi(),
-                    GetSshHelperType(),
-                ]);
-            if (syncApi) {
-                this.syncScopeSettings = await syncApi.getSettings(scope);
-            }
+            const sshHelperType = await GetSshHelperType();
+            this.syncScopeSettings = await ensureSettings(scope);
             if (sshHelperType) {
                 const sshHelper = new sshHelperType();
                 this.sshScopeSettings = await sshHelper.getSettings(scope);

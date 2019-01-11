@@ -7,23 +7,28 @@ import { IFileEntry, LogFunction, LogType } from "@vorfol/common";
 import { ftpPathSeparator } from "@vorfol/common";
 import { printLike } from "@vorfol/common";
 import { parseVmsOutput } from "../common/parse-output";
+import { ProjectType } from "../config/sections/project";
+import { ProjDepTree } from "../dep-tree/proj-dep-tree";
 import { ensureSettings, IEnsured } from "../ensure-settings";
 import { ISshShell } from "../ext-api/api";
-import { GetProjectDepApi } from "../ext-api/get-proj-api";
 import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 import { IDispose, SshHelper } from "../ext-api/ssh-helper";
 import { FsSource } from "../sync/fs-source";
 import { ISource } from "../sync/source";
 import { Synchronizer } from "../sync/synchronizer";
-import { VmsPathConverter } from "../vms/vms-path-converter";
-import { contextSaved } from "./../context";
+import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
 
 import * as nls from "vscode-nls";
-import { ProjectType } from "../config/sections/project";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 type BuildType = "com" | "mms" | "debug" | "release" | "both" | "undefined";
+
+enum MmsLineType {
+    nothing,
+    includes,
+    sources,
+}
 
 interface IBuildQuickPickItem extends QuickPickItem {
     type: BuildType;
@@ -62,7 +67,7 @@ export class Builder {
         return Builder.instance;
     }
 
-    private static readonly defMmsFileName = "res/default.mms";
+    private static readonly defMmsFileName = "resource/default.mms";
     private static readonly mmsUserCmd = printLike`MMS/DESCR=${"_.mms"}`;
     private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}")`;
     private static readonly mmsExt = ".mms";
@@ -74,6 +79,8 @@ export class Builder {
     private static readonly labelRelease = "RELEASE";
     private static readonly labelBoth = "BOTH";
     private static readonly rgFile = /^([-_$a-z][-_$a-z0-9]*)(\.[-_$a-z0-9]*)?/;
+    private static readonly includesLine = "INCLUDES=";
+    private static readonly sourcesLine = "SOURCES=";
 
     private static instance?: Builder;
 
@@ -242,35 +249,35 @@ export class Builder {
         }
     }
 
-    public async createMms(scopeData: IScopeBuildData) {
-        const localMmsFile = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
-        const foundMms = await scopeData.localSource.findFiles(localMmsFile);
-        if (foundMms.length === 0) {
-            // TODO: check project type: [exe, olb, shareable]
-            // TODO: add dependencies
-            const defMmsPath = contextSaved!.asAbsolutePath(Builder.defMmsFileName);
-            const [content, headres, sources] = await Promise.all([
-                fs.readFile(defMmsPath, "utf8"),
-                scopeData.localSource.findFiles(scopeData.ensured.projectSection.headers, scopeData.ensured.projectSection.exclude),
-                scopeData.localSource.findFiles(scopeData.ensured.projectSection.source, scopeData.ensured.projectSection.exclude)]);
-            // add files to the lists
-            let newContent = `OUTDIR=${scopeData.ensured.projectSection.outdir}\n`
-                            + `NAME=${scopeData.ensured.projectSection.projectName}\n`
-                            + `INCLUDES=${headres.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
-                            + `SOURCES=${sources.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
-                            + content;
-            // add "source -> obj" dependency for each source
-            for (const source of sources) {
-                const vms = new VmsPathConverter(source.filename);
-                const sourceDependencyLine = "[$(OBJ_DIR)" + vms.bareDirectory + "]" + vms.fileName + ".obj : " + vms.fullPath + " $(INCLUDES)";
-                newContent += sourceDependencyLine + "\n";
-            }
-            await fs.writeFile(scopeData.localSource.root + ftpPathSeparator + localMmsFile, newContent);
-            return Synchronizer.acquire(this.logFn).uploadFiles(scopeData.ensured, [localMmsFile]);
-        } else {
-            return true;
-        }
-    }
+    // public async createMms(scopeData: IScopeBuildData) {
+    //     const localMmsFile = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
+    //     const foundMms = await scopeData.localSource.findFiles(localMmsFile);
+    //     if (foundMms.length === 0) {
+    //         // TODO: check project type: [exe, olb, shareable]
+    //         // TODO: add dependencies
+    //         const defMmsPath = contextSaved!.asAbsolutePath(Builder.defMmsFileName);
+    //         const [content, headres, sources] = await Promise.all([
+    //             fs.readFile(defMmsPath, "utf8"),
+    //             scopeData.localSource.findFiles(scopeData.ensured.projectSection.headers, scopeData.ensured.projectSection.exclude),
+    //             scopeData.localSource.findFiles(scopeData.ensured.projectSection.source, scopeData.ensured.projectSection.exclude)]);
+    //         // add files to the lists
+    //         let newContent = `OUTDIR=${scopeData.ensured.projectSection.outdir}\n`
+    //                         + `NAME=${scopeData.ensured.projectSection.projectName}\n`
+    //                         + `INCLUDES=${headres.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
+    //                         + `SOURCES=${sources.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
+    //                         + content;
+    //         // add "source -> obj" dependency for each source
+    //         for (const source of sources) {
+    //             const vms = new VmsPathConverter(source.filename);
+    //             const sourceDependencyLine = "[$(OBJ_DIR)" + vms.bareDirectory + "]" + vms.fileName + ".obj : " + vms.fullPath + " $(INCLUDES)";
+    //             newContent += sourceDependencyLine + "\n";
+    //         }
+    //         await fs.writeFile(scopeData.localSource.root + ftpPathSeparator + localMmsFile, newContent);
+    //         return Synchronizer.acquire(this.logFn).uploadFiles(scopeData.ensured, [localMmsFile]);
+    //     } else {
+    //         return true;
+    //     }
+    // }
 
     public async createMmsFiles(ensured: IEnsured) {
         const content = await this.createMmsContent(ensured);
@@ -280,6 +287,7 @@ export class Builder {
                 const localMmsPath = ensured.configHelper.workspaceFolder!.uri.fsPath + ftpPathSeparator + localMmsFile;
                 if (await fs.pathExists(localMmsPath)) {
                     await fs.move(localMmsPath, localMmsPath + ".back", {overwrite: true});
+                    this.logFn(LogType.warning, () => localize("mms_exist", "Previous MMS file is renamed to {0}", localMmsFile + ".back"));
                 }
                 await fs.writeFile(localMmsPath, content.contentMMS);
                 if (content.contentOPT) {
@@ -287,6 +295,7 @@ export class Builder {
                     const localOptPath = ensured.configHelper.workspaceFolder!.uri.fsPath + ftpPathSeparator + localOptFile;
                     if (await fs.pathExists(localOptPath)) {
                         await fs.move(localOptPath, localOptPath + ".back", {overwrite: true});
+                        this.logFn(LogType.warning, () => localize("opt_exist", "Previous OPT file is renamed to {0}", localOptFile + ".back"));
                     }
                     await fs.writeFile(localOptPath, content.contentOPT);
                 }
@@ -295,6 +304,7 @@ export class Builder {
                     const localComPath = ensured.configHelper.workspaceFolder!.uri.fsPath + ftpPathSeparator + localComFile;
                     if (await fs.pathExists(localComPath)) {
                         await fs.move(localComPath, localComPath + ".back", {overwrite: true});
+                        this.logFn(LogType.warning, () => localize("com_exist", "Previous COM file is renamed to {0}", localComFile + ".back"));
                     }
                     await fs.writeFile(localComPath, content.contentCOM);
                 }
@@ -318,16 +328,17 @@ export class Builder {
         const comLines: string[] = [];
 
         const headerLines = [
+            `! Do not modify this file. It may be overwritten automatically.`,
             `OUTDIR=${ensured.projectSection.outdir}`,
             `NAME=${ensured.projectSection.projectName}`,
         ];
 
-        const includeLines = [`INCLUDES=`];
+        const includeLines = [Builder.includesLine];
         for (const inc of headers) {
             includeLines[includeLines.length - 1] = includeLines[includeLines.length - 1] + " -";    // continuation
             includeLines.push(iFileEntryToVmsPath(inc));
         }
-        const sourceLines = [`SOURCES=`];
+        const sourceLines = [Builder.sourcesLine];
         for (const src of sources) {
             sourceLines[sourceLines.length - 1] = sourceLines[sourceLines.length - 1] + " -";        // continuation
             sourceLines.push(iFileEntryToVmsPath(src));
@@ -343,36 +354,33 @@ export class Builder {
         // project dependecies
         const cxxIncludes: string[] = [];
         const contentFirst: string[] = [".FIRST"];
-        const projApi = await GetProjectDepApi();
-        if (projApi) {
-            let deps = projApi.getDepList(ensured.scope);
-            if (deps.length > 1) {  // first is this project
-                deps = deps.splice(1);
-                for (const depPrj of deps) {
-                    const depEnsured = await ensureSettings(depPrj, this.logFn);
-                    if (depEnsured) {
-                        if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library] ||
-                            depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
-                            const vms = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
-                            const projName = depEnsured.projectSection.projectName.toUpperCase();
-                            const outDir = depEnsured.projectSection.outdir;
-                            contentFirst.push(`    ${projName}_INC_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}]"`);
-                            contentFirst.push(`    DEFINE ${projName}_INC_DIR '${projName}_INC_SYMB'`);
-                            contentFirst.push(`    ${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}.${outDir}.$(TYPE_DIR)]"`);
-                            contentFirst.push(`    DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
-                            cxxIncludes.push(`${projName}_INC_DIR`);
-                            if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library]) {
-                                optLines.push(`${projName}_LIB_DIR:${projName}/LIBRARY`);
-                            }
-                            if (depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
-                                optLines.push(`${projName}_LIB_DIR:${projName}/SHAREABLE`);
-                                // com file
-                                comLines.push(`TYPE:=DEBUG`);
-                                comLines.push(`if P1 .NES. "" THEN TYPE:='P1'`);
-                                comLines.push(`${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}.${outDir}.'TYPE']"`);
-                                comLines.push(`DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
-                                comLines.push(`DEFINE ${projName} ${projName}_LIB_DIR:${projName}.exe`);
-                            }
+        let deps = new ProjDepTree().getDepList(ensured.scope);
+        if (deps.length > 1) {  // first is this project
+            deps = deps.splice(1);
+            for (const depPrj of deps) {
+                const depEnsured = await ensureSettings(depPrj, this.logFn);
+                if (depEnsured) {
+                    if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library] ||
+                        depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
+                        const vms = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
+                        const projName = depEnsured.projectSection.projectName.toUpperCase();
+                        const outDir = depEnsured.projectSection.outdir;
+                        contentFirst.push(`    ${projName}_INC_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}]"`);
+                        contentFirst.push(`    DEFINE ${projName}_INC_DIR '${projName}_INC_SYMB'`);
+                        contentFirst.push(`    ${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}.${outDir}.$(TYPE_DIR)]"`);
+                        contentFirst.push(`    DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
+                        cxxIncludes.push(`${projName}_INC_DIR`);
+                        if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library]) {
+                            optLines.push(`${projName}_LIB_DIR:${projName}/LIBRARY`);
+                        }
+                        if (depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
+                            optLines.push(`${projName}_LIB_DIR:${projName}/SHAREABLE`);
+                            // com file
+                            comLines.push(`TYPE:=DEBUG`);
+                            comLines.push(`if P1 .NES. "" THEN TYPE:='P1'`);
+                            comLines.push(`${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}.${outDir}.'TYPE']"`);
+                            comLines.push(`DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
+                            comLines.push(`DEFINE ${projName} ${projName}_LIB_DIR:${projName}.exe`);
                         }
                     }
                 }
@@ -494,6 +502,86 @@ export class Builder {
         return { contentMMS, contentOPT, contentCOM};
     }
 
+    /**
+     * Test if we need to create new MMS
+     * @param ensured settings
+     * @param content old MMS content
+     * @returns true if we need to create MMS
+     */
+    public async checkMmsContent(ensured: IEnsured, content: string) {
+        if (!ensured.configHelper.workspaceFolder) {
+            return false;
+        }
+        if (!content) {
+            return true;
+        }
+
+        const foundIncludes: string[] = [];
+        const foundSources: string[] = [];
+
+        let lineType: MmsLineType = MmsLineType.nothing;
+        let blocksFound = 0;
+        for (const line of content.split("\n")) {
+            if (lineType !== MmsLineType.nothing) {
+                const matched = line.match(vmsPathRgx);
+                if (matched && matched[VmsPathPart.fileName]) {
+                    if (lineType === MmsLineType.includes) {
+                        foundIncludes.push(VmsPathConverter.fromVms(matched[0]).initial);
+                    } else if (lineType === MmsLineType.sources) {
+                        foundSources.push(VmsPathConverter.fromVms(matched[0]).initial);
+                    }
+                } else {
+                    lineType = MmsLineType.nothing;
+                }
+            } else if (line.startsWith(Builder.includesLine)) {
+                lineType = MmsLineType.includes;
+                blocksFound = blocksFound + 1;
+            } else if (line.startsWith(Builder.sourcesLine)) {
+                lineType = MmsLineType.sources;
+                blocksFound = blocksFound + 1;
+            } else if (blocksFound === 2) {
+                // stop searching
+                break;
+            }
+        }
+
+        const localSource = new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
+        // common part
+        const [localIncludes, localSources] = await Promise.all([
+            localSource.findFiles(ensured.projectSection.headers, ensured.projectSection.exclude),
+            localSource.findFiles(ensured.projectSection.source, ensured.projectSection.exclude)]);
+
+        if (localIncludes.length !== foundIncludes.length) {
+            return true;
+        }
+
+        if (localSources.length !== foundSources.length) {
+            return true;
+        }
+
+        if (foundIncludes.length > 0) {
+            const sortedFound = foundIncludes.sort();
+            const sortedLocal = localIncludes.map((entry) => entry.filename).sort();
+            for (let idx = 0; idx < sortedLocal.length; idx++) {
+                if (sortedLocal[idx] !== sortedFound[idx]) {
+                    return true;
+                }
+            }
+        }
+
+        if (foundSources.length > 0) {
+            const sortedFound = foundSources.sort();
+            const sortedLocal = localSources.map((entry) => entry.filename).sort();
+            for (let idx = 0; idx < sortedLocal.length; idx++) {
+                if (sortedLocal[idx] !== sortedFound[idx]) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private async ensureMmsCreated(scopeData: IScopeBuildData, selection: IBuildQuickPickItem) {
         if (!(selection.type === "debug" || selection.type === "release" || selection.type === "both")) {
             return true;
@@ -501,7 +589,12 @@ export class Builder {
 
         const localMmsFile = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
         const foundMms = await scopeData.localSource.findFiles(localMmsFile);
-        if (foundMms.length === 0) {
+        let createMMS = true;
+        if (foundMms.length === 1) {
+            const localMmsPath = scopeData.localSource.root + ftpPathSeparator + localMmsFile;
+            createMMS = await this.checkMmsContent(scopeData.ensured, (await fs.readFile(localMmsPath)).toString("utf8"));
+        }
+        if (createMMS) {
             return this.createMmsFiles(scopeData.ensured)
                 .then(async (ok) => {
                     if (ok) {
