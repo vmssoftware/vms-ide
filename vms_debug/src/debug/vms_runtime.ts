@@ -8,10 +8,10 @@ import { EventEmitter } from 'events';
 import { ShellSession, ModeWork, TypeDataMessage } from '../net/shell-session';
 import { OsCommands } from '../command/os_commands';
 import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
-import { DebugParser, MessageDebuger, Parameters } from '../parsers/debug_parser';
+import { DebugParser, MessageDebuger, Parameters, StringsPrompt } from '../parsers/debug_parser';
 import { LogFunction, LogType, ftpPathSeparator } from '@vorfol/common';
 import { FileManagerExt } from '../ext-api/file_manager';
-import { HolderDebugVariableInfo, DebugVariable, ReflectKind } from '../parsers/debug_variable_info';
+import { HolderDebugVariableInfo, DebugVariable, ReflectKind, VariableFileInfo } from '../parsers/debug_variable_info';
 const { Subject } = require('await-notify');
 
 nls.config({ messageFormat: nls.MessageFormat.both });
@@ -249,6 +249,13 @@ export class VMSRuntime extends EventEmitter
 							{
 								nameVar = "*" + nameVar;
 							}
+							else if(item.variableType.includes("typedef string"))
+							{
+								if(item.variableAddress && item.variableAddress !== 0)
+								{
+									nameVar = "*" + nameVar + StringsPrompt.cppString;
+								}
+							}
 
 							this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVar));
 							await this.waitVars.wait(5000);
@@ -307,51 +314,37 @@ export class VMSRuntime extends EventEmitter
 			{
 				let nameVars : string = "";
 
-				for(let item of vars)
+				for(let item of vars)//create string of variables
 				{
 					if(item.functionName === funcName)
 					{
-						if(nameVars !== "")
-						{
-							nameVars += ",";
-						}
-
-						if(item.variableType.includes("pointer to"))
-						{
-							if(item.variableAddress)
-							{
-								if(item.variableAddress !== 0)
-								{
-									nameVars += "*" + item.variableName;
-								}
-								else
-								{
-									nameVars += item.variableName;
-								}
-							}
-							else
-							{
-								if(item.variableName === "this")
-								{
-									nameVars += "*" + item.variableName;
-								}
-								else
-								{
-									nameVars += item.variableName;
-								}
-							}
-						}
-						else
-						{
-							nameVars += item.variableName;
-						}
+						nameVars = this.addVariableToString(nameVars, item);
 					}
 				}
 
 				if(nameVars !== "")
 				{
-					this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));
+					this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of variables
 					await this.waitVars.wait(5000);
+
+					nameVars = "";
+
+					for(let item of vars)//create string of pointers
+					{
+						if(item.functionName === funcName)
+						{
+							if(!item.variableValue && !item.variableInfo && item.variableAddress !== 0)//check a value of variable
+							{
+								nameVars = this.addVariableToString(nameVars, item);
+							}
+						}
+					}
+
+					if(nameVars !== "")
+					{
+						this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of pointers
+						await this.waitVars.wait(5000);
+					}
 
 					for(let item of vars)
 					{
@@ -382,6 +375,57 @@ export class VMSRuntime extends EventEmitter
 					}
 				}
 			}
+		}
+
+		return variables;
+	}
+
+	private addVariableToString(variables : string, item : VariableFileInfo) : string
+	{
+		if(variables !== "")
+		{
+			variables += ",";
+		}
+
+		if(item.variableType.includes("pointer to"))
+		{
+			if(item.variableAddress)
+			{
+				if(item.variableAddress !== 0)
+				{
+					variables += "*" + item.variableName;
+				}
+				else
+				{
+					variables += item.variableName;
+				}
+			}
+			else
+			{
+				if(item.variableName === "this")
+				{
+					variables += "*" + item.variableName;
+				}
+				else
+				{
+					variables += item.variableName;
+				}
+			}
+		}
+		else if(item.variableType.includes("typedef string"))
+		{
+			if(item.variableAddress && item.variableAddress !== 0)
+			{
+				variables += "*" + item.variableName + StringsPrompt.cppString;
+			}
+			else
+			{
+				variables += item.variableName;
+			}
+		}
+		else
+		{
+			variables += item.variableName;
 		}
 
 		return variables;

@@ -32,6 +32,11 @@ export enum MessagePrompt
 	prmtUSER = "USER: ",
 }
 
+export enum StringsPrompt
+{
+	cppString = "._C_data",
+}
+
 
 export class DebugParser
 {
@@ -599,6 +604,11 @@ export class DebugParser
 						}
 
 						nameVar = info[info.length-1].split(":")[0].trim();
+
+						if(nameVar.includes(StringsPrompt.cppString))
+						{
+							nameVar = nameVar.replace(StringsPrompt.cppString, "");
+						}
 					}
 
 					if(nameVar.includes("["))//array
@@ -624,32 +634,94 @@ export class DebugParser
 								{
 									if(matches)
 									{
-										let addr = parseInt(matches[matches.length-1], 10);
-
-										if(!Number.isNaN(addr))
+										if(info[0].charAt(0) === "*")//it is value
 										{
-											if(addr < 0x1000)
+											let indexStart = info[info.length-1].indexOf(":");
+                        					item.variableValue = info[info.length-1].substr(indexStart+1).trim();
+										}
+										else//it is address
+										{
+											let addr = parseInt(matches[matches.length-1], 10);
+
+											if(!Number.isNaN(addr))
 											{
-												item.variableAddress = 0;
+												if(addr < 0x1000)
+												{
+													item.variableAddress = 0;
+												}
+												else
+												{
+													item.variableAddress = addr;
+												}
 											}
 											else
 											{
-												item.variableAddress = addr;
+												let indexStart = info[info.length-1].indexOf(":");
+												item.variableInfo = info[info.length-1].substr(indexStart+1).trim();
 											}
-										}
-										else
-										{
-											item.variableInfo = info[info.length-1].split(":")[1].trim();
 										}
 									}
 
 									item.variableKind = ReflectKind.Pointer;
 								}
+								else if(item.variableType.includes("typedef string"))
+								{
+									if(matches)
+									{
+										if(item.variableAddress && item.variableAddress !== 0)
+										{
+											let indexStart = info[info.length-1].indexOf(":");
+                        					item.variableValue = info[info.length-1].substr(indexStart+1).trim();
+										}
+										else
+										{
+											let value : string = "";
+
+											while(i < (msgLines.length-1))
+											{
+												let arrayData = msgLines[++i];
+
+												if(!arrayData.includes("\\"))
+												{
+													value += arrayData + "\n";
+												}
+												else
+												{
+													--i;
+													break;
+												}
+											}
+
+											let indexStart = value.indexOf(":");
+                        					let addrString = value.substr(indexStart+1);
+											let addr = parseInt(addrString, 10);
+
+											if(!Number.isNaN(addr))
+											{
+												if(addr < 0x1000)
+												{
+													item.variableAddress = 0;
+												}
+												else
+												{
+													item.variableAddress = addr;
+												}
+											}
+											else
+											{
+												item.variableAddress = 0;
+											}
+										}
+
+										item.variableKind = ReflectKind.String;
+									}
+								}
 								else if(item.variableType.includes("record type"))
 								{
 									if(matches)
 									{
-										item.variableInfo = info[info.length-1].split(":")[1].trim();
+										let indexStart = info[info.length-1].indexOf(":");
+										item.variableInfo = info[info.length-1].substr(indexStart+1).trim();
 									}
 
 									item.variableKind = ReflectKind.Struct;
@@ -658,7 +730,8 @@ export class DebugParser
 								{
 									if(matches)//simple variable
 									{
-										item.variableValue = matches[matches.length-1];
+										let indexStart = info[info.length-1].indexOf(":");
+                        				item.variableValue = info[info.length-1].substr(indexStart+1).trim();
 										item.variableKind = ReflectKind.Atomic;
 									}
 									else //stucture
@@ -668,7 +741,8 @@ export class DebugParser
 								}
 							}
 
-							if(item.variableKind !== ReflectKind.Atomic)
+							if(item.variableKind !== ReflectKind.Atomic &&
+								item.variableKind !== ReflectKind.String)
 							{
 								let values : string = "";
 
@@ -676,7 +750,7 @@ export class DebugParser
 								{
 									let arrayData = msgLines[++i];
 
-									if(!arrayData.includes("\\"))
+									if(arrayData !== "" && !arrayData.includes("\\"))
 									{
 										values += arrayData + "\n";
 									}
@@ -687,7 +761,14 @@ export class DebugParser
 									}
 								}
 
-								item.variableValue = values;
+								if(values !== "")
+								{
+									item.variableValue = values;
+								}
+								else if(!item.variableValue)
+								{
+									item.variableValue = "";
+								}
 							}
 						}
 					}
@@ -739,7 +820,8 @@ export class DebugParser
 							if(itemLevelNext > itemLevel)
 							{
 								kind = this.getKindVariable(items[prm.counter]);
-								itemInfo = v.split(":")[1].trim();
+								let indexStart = v.indexOf(":");
+								itemInfo = v.substr(indexStart+1).trim();
 							}
 							else
 							{
@@ -776,7 +858,8 @@ export class DebugParser
 							if(itemLevelNext > itemLevel)
 							{
 								kind = this.getKindVariable(items[prm.counter]);
-								itemInfo = v.split(":")[1].trim();
+								let indexStart = v.indexOf(":");
+								itemInfo = v.substr(indexStart+1).trim();
 							}
 							else
 							{
@@ -796,7 +879,14 @@ export class DebugParser
 					}
 					else
 					{
-						kind = ReflectKind.Struct;
+						if(variable.variableType.includes("atomic type"))
+						{
+							kind = ReflectKind.Atomic;
+						}
+						else
+						{
+							kind = ReflectKind.Struct;
+						}
 					}
 				}
 
@@ -852,9 +942,24 @@ export class DebugParser
 				{
 					if(itemLevel >= prm.level)//go to down level
 					{
-						let name = v.split(":")[0].trim();
-						let typeName = (kind === ReflectKind.Array) ? "array" : "struct";
-						let childsIn = this.parseStructValues(variable, prm);//parse next inner level
+						let name : string;
+						let typeName : string;
+						let value : string;
+						let childsIn : DebugVariable[] = [];
+
+						if(kind !== ReflectKind.Atomic)
+						{
+							name = v.split(":")[0].trim();
+							typeName = (kind === ReflectKind.Array) ? "array" : "struct";
+							value = "";
+							childsIn = this.parseStructValues(variable, prm);//parse next inner level
+						}
+						else
+						{
+							name = "value";
+							typeName = "atomic";
+							value = v;
+						}
 
 						let child = <DebugVariable>
 						{
@@ -862,7 +967,7 @@ export class DebugParser
 							addr: 0,
 							type: typeName,
 							kind: kind,
-							value: "",
+							value: value,
 							info: itemInfo,
 							len: 0,
 							unreadable: "",
