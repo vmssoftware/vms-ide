@@ -791,8 +791,9 @@ export class VMSRuntime extends EventEmitter
 					else//clear breakpoint
 					{
 						this.clearBreakPoint(path, bp.line);
-						//const bpm = this.clearBreakPoint(path, bp.line);
-						//this.sendEvent('breakpointRemoved', bpm);//???
+
+						bp.verified = false;
+						this.sendEvent('breakpointValidated', bp);//breakpoint off
 					}
 				});
 			}
@@ -816,8 +817,9 @@ export class VMSRuntime extends EventEmitter
 					else//clear breakpoint
 					{
 						this.clearBreakPoint(path, bp.line);
-						//const bpm = this.clearBreakPoint(path, bp.line);
-						//this.sendEvent('breakpointRemoved', bpm);//???
+
+						bp.verified = false;
+						this.sendEvent('breakpointValidated', bp);//breakpoint off
 					}
 				});
 			}
