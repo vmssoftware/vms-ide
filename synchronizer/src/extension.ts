@@ -64,24 +64,32 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope: string, params: string) => {
-        return Perform("clean", scope, buildLog, params);
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope: string, buildType: string) => {
+        return Perform("clean", scope, buildLog, buildType);
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.createMMS", async (scope: string, params: string) => {
-        return Perform("create mms", scope, buildLog, params);
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.createMMS", async (scope: string) => {
+        return Perform("create mms", scope, buildLog);
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopSync", async (scope: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopSync", async () => {
         return Synchronizer.acquire().disableRemote();
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async (scope: string, params: string) => {
-        return Perform("edit settings", scope, syncLog, params);
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async (scope: string) => {
+        return Perform("edit settings", scope, syncLog);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.changeCRLF", async (scope: string) => {
         return Perform("crlf", scope, syncLog);
+    }));
+
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.forceSynchronized", async (scope: string) => {
+        return ProjectState.acquire().setSynchronized(scope, true);
+    }));
+
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.forceBuilt", async (scope: string, buildType: string) => {
+        return ProjectState.acquire().setBuilt(scope, buildType, true);
     }));
 
     const projectDependenciesProvider = new ProjDepProvider();

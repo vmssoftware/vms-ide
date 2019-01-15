@@ -8,6 +8,8 @@
     "command.stopSync.title": "Stop syncronization",
     "command.createMMS.title": "Create MMS",
     "command.changeCRLF.title": "Change CR/LF for all source files",
+    "command.forceSynchronized.title": "Force synchronized status",
+    "command.forceBuilt.title": "Force built status",
     "properties.project.builders.description": "Exclude pattern",
     "properties.project.exclude.description": "Exclude pattern",
     "properties.project.headers.description": "Headers pattern",
