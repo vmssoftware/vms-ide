@@ -68,7 +68,7 @@ export class Builder {
     }
 
     private static readonly defMmsFileName = "resource/default.mms";
-    private static readonly mmsUserCmd = printLike`MMS/DESCR=${"_.mms"}`;
+    private static readonly mmsUserCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}`;
     private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}")`;
     private static readonly mmsExt = ".mms";
     private static readonly optExt = ".opt";
