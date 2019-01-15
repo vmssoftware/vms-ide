@@ -1,7 +1,7 @@
 {
     "name": "cld",
     "displayName": "cld",
-    "description": "cld syntax",
+    "description": "CLD syntax highlighting",
     "version": "0.0.1",
     "publisher": "vmssoftware",
     "repository": {
@@ -35,5 +35,8 @@
                 "path": "./syntaxes/cld.tmLanguage.json"
             }
         ]
+    },
+    "scripts": {
+        "package": "vsce package"
     }
 }
