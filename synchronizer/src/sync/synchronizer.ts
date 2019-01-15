@@ -378,7 +378,7 @@ export class Synchronizer {
      */
     private async prepareScopeData(ensured: IEnsured) {
         const scopeKey = ensured.configHelper.workspaceFolder ? ensured.configHelper.workspaceFolder.name : "";
-        const scopeData = Synchronizer.syncScopes.get(scopeKey);
+        let   scopeData = Synchronizer.syncScopes.get(scopeKey);
         if (scopeData && scopeData.isValid) {
             return scopeData;
         }
@@ -408,7 +408,7 @@ export class Synchronizer {
 
             const watcher = ensured.configHelper.getConfig().onDidLoad(markInvalid);
             const sshWatcher = this.sshHelper.setConfigWatcher(scope, markInvalid);
-            return {
+            scopeData = {
                 ensured,
                 isValid: true,
                 localSource,
@@ -416,6 +416,8 @@ export class Synchronizer {
                 sshWatcher,
                 watcher,
             } as IScopeSyncData;
+            Synchronizer.syncScopes.set(scopeKey, scopeData);
+            return scopeData;
 
             function markInvalid() {
                 // mark as invalid by scopeKey
