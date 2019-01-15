@@ -17,6 +17,7 @@ import { Queue } from '../queue/queues';
 import { LogFunction } from '@vorfol/common';
 import { WorkspaceFolder } from 'vscode';
 import { DebugVariable, ReflectKind } from '../parsers/debug_variable_info';
+import { StringsPrompt } from '../parsers/debug_parser';
 const { Subject } = require('await-notify');
 
 
@@ -372,7 +373,28 @@ export class VMSDebugSession extends LoggingDebugSession
 		}
 		else if(variable.kind === ReflectKind.Pointer)
 		{
-			fullName = variable.fullyQualifiedName + "->" + args.name;
+			if(variable.type.includes("atomic type"))
+			{
+				fullName = "*" + variable.fullyQualifiedName;
+			}
+			else
+			{
+				fullName = variable.fullyQualifiedName + "->" + args.name;
+			}
+		}
+		else
+		{
+			for(let item of variable.children)
+			{
+				if(item.name === args.name)
+				{
+					if(item.kind === ReflectKind.String)
+					{
+						fullName = "*" + args.name + StringsPrompt.cppString;
+					}
+					break;
+				}
+			}
 		}
 
 		this.runtime.setVariableValue(fullName, args.value);
@@ -506,16 +528,20 @@ export class VMSDebugSession extends LoggingDebugSession
 		}
 		else if (v.kind === ReflectKind.String)
 		{
-			let val = v.value;
-			let byteLength = Buffer.byteLength(val || "");
-
-			if (v.value && byteLength < v.len)
+			if(!v.value)
 			{
-				val += `...+${v.len - byteLength} more`;
+				if(v.addr === 0)
+				{
+					v.value = "null" + " <" + v.type + ">";
+				}
+				else
+				{
+					v.value = `(0x${v.addr.toString(16)})` + " <" + v.type + ">";
+				}
 			}
 
 			return {
-				result: v.unreadable ? ("<" + v.unreadable + ">") : ('"' + val + '"'),
+				result: v.unreadable ? ("<" + v.unreadable + ">") : (v.value),
 				variablesReference: 0
 			};
 		}
