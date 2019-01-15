@@ -43,9 +43,12 @@ export class SftpClient extends SshClient {
         }
         this.waitOperation.release();
         if (readStream) {
+            this.logFn(LogType.debug, () => `readstream created for ${file}`);
             readStream.on("error", (err) => {
                 this.logFn(LogType.debug, () => localize("debug.read.err", "read stream{0} error: {1}", this.tag ? " " + this.tag : "", err.message));
             });
+        } else {
+            this.logFn(LogType.debug, () => `readstream failed for ${file}`);
         }
         return readStream;
     }
@@ -60,9 +63,12 @@ export class SftpClient extends SshClient {
         }
         this.waitOperation.release();
         if (writeStream) {
+            this.logFn(LogType.debug, () => `writestream created for ${file}`);
             writeStream.on("error", (err) => {
                 this.logFn(LogType.debug, () => localize("debug.write.err", "write stream{0} error: {1}", this.tag ? " " + this.tag : "", err.message));
             });
+        } else {
+            this.logFn(LogType.debug, () => `writestream failed for ${file}`);
         }
         return writeStream;
     }

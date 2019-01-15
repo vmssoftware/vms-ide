@@ -1,0 +1,16 @@
+{
+	"name": "cld highlighting",
+	"type": "dark",
+	"tokenColors": [
+		{
+			"name": "cld define",
+			"scope": [
+				"statement.define.keyword",
+			],
+			"settings": {
+				"fontStyle": "bold",
+				"foreground": "#10369e"
+			}
+		}
+	]
+}

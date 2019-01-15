@@ -1,0 +1,42 @@
+{
+    "name": "cld",
+    "displayName": "cld",
+    "description": "CLD syntax highlighting",
+    "version": "0.0.1",
+    "publisher": "vmssoftware",
+    "repository": {
+        "type": "git",
+        "url": "git:vmssoftware"
+    },
+    "engines": {
+        "vscode": "^1.30.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "cld",
+                "aliases": [
+                    "CLD",
+                    "cld"
+                ],
+                "extensions": [
+                    ".cld"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "cld",
+                "scopeName": "source.cld",
+                "path": "./syntaxes/cld.tmLanguage.json"
+            }
+        ]
+    },
+    "scripts": {
+        "package": "vsce package"
+    }
+}

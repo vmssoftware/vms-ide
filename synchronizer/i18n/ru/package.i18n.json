@@ -6,8 +6,10 @@
     "command.editProject.title": "Редактировать настройки OpenVMS проекта",
     "command.syncProject.title": "Синхронизировать проект с VMS",
     "command.stopSync.title": "Остановить синхронизацию",
-    "command.createMMS.title": "Create MMS",
+	"command.createMMS.title": "Создать MMS",
     "command.changeCRLF.title": "Сменить CR/LF для всех файлов",
+	"command.forceSynchronized.title": "Установить статус синхронизировано",
+	"command.forceBuilt.title": "Установить статус постороено",
     "properties.project.builders.description": "Файлы для построения проекта",
     "properties.project.exclude.description": "Исключить",
     "properties.project.headers.description": "Заголовочные файлы",
@@ -21,5 +23,5 @@
     "properties.synchronize.downloadNewFiles.description": "Действия для более новых файлов из VMS",
     "properties.synchronize.keepAlive.description": "Держать подключения",
     "properties.synchronize.setTimeAttempts.description": "Кол-во попыток установить дату на файл",
-    "properties.synchronize.setTimeByShell.description": "Do or not set file time by shell"
+    "properties.synchronize.setTimeByShell.description": "Использовать shell для установки даты файла"
 }

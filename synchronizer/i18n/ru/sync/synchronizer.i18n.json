@@ -1,5 +1,5 @@
 {
-    "debug.disablig": "Disabling all SFTP and SHELL",
+    "debug.disablig": "Запрет SFTP и SHELL коннектов",
     "debug.disposing": "Освобождение ресурсов",
     "output.download_manually": "Удалённый файл {0} новее, проверьте и загрузите его самостоятельно",
     "output.edit_count": "Отредактируйте и сохраните {0} файл(ов) самостоятельно",

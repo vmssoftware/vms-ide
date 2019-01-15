@@ -1,4 +1,6 @@
 
+import { ProjDepTree } from "../dep-tree/proj-dep-tree";
+import { ProjectState } from "../dep-tree/proj-state";
 import { ensureSettings } from "../ensure-settings";
 import { ISource, sourceType } from "./source";
 
@@ -45,4 +47,31 @@ export class SyncApi {
         }
         return undefined;
     }
+
+    public getDepList(nodeName?: string) {
+        const projDepTree = new ProjDepTree();
+        return projDepTree.getDepList(nodeName);
+    }
+
+    public getMasterList(nodeName?: string) {
+        const projDepTree = new ProjDepTree();
+        return projDepTree.getMasterList(nodeName);
+    }
+
+    public isSynchronized(projectName: string) {
+        return ProjectState.acquire().isSynchronized(projectName);
+    }
+
+    public isBuilt(projectName: string, buildType: string) {
+        return ProjectState.acquire().isBuilt(projectName, buildType);
+    }
+
+    public setSynchronized(projectName: string, synchronized = true) {
+        return ProjectState.acquire().setSynchronized(projectName, synchronized);
+    }
+
+    public setBuilt(projectName: string, buildType: string, built = true) {
+        return ProjectState.acquire().setBuilt(projectName, buildType, built);
+    }
+
 }

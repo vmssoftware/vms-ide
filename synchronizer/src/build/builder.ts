@@ -68,7 +68,7 @@ export class Builder {
     }
 
     private static readonly defMmsFileName = "resource/default.mms";
-    private static readonly mmsUserCmd = printLike`MMS/DESCR=${"_.mms"}`;
+    private static readonly mmsUserCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}`;
     private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}")`;
     private static readonly mmsExt = ".mms";
     private static readonly optExt = ".opt";
@@ -771,7 +771,7 @@ export class Builder {
      */
     private async prepareScopeData(ensured: IEnsured) {
         const scopeKey = ensured.configHelper.workspaceFolder ? ensured.configHelper.workspaceFolder.name : "";
-        const scopeData = Builder.buildScopes.get(scopeKey);
+        let scopeData = Builder.buildScopes.get(scopeKey);
         if (scopeData && scopeData.isValid) {
             return scopeData;
         }
@@ -813,7 +813,7 @@ export class Builder {
             const localSource = new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
             const watcher = ensured.configHelper.getConfig().onDidLoad(markInvalid);
             const sshWatcher = this.sshHelper.setConfigWatcher(scope, markInvalid);
-            return {
+            scopeData = {
                 ensured,
                 isValid: true,
                 localSource,
@@ -822,6 +822,8 @@ export class Builder {
                 sshWatcher,
                 watcher,
             } as IScopeBuildData;
+            Builder.buildScopes.set(scopeKey, scopeData);
+            return scopeData;
 
             function markInvalid() {
                 // mark as invalid by scopeKey

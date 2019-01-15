@@ -66,11 +66,11 @@ export class ProjectState {
         return false;    // always modified
     }
 
-    public setSynchronized(projectName: string, synchronized = true) {
+    public setSynchronized(projectName: string, status = true) {
         const state = this.states.get(projectName);
         if (state) {
-            state.sourceState = synchronized ? SourceState.synchronized : SourceState.modified;
-            if (!synchronized) {
+            state.sourceState = status ? SourceState.synchronized : SourceState.modified;
+            if (!status) {
                 const projDep = new ProjDepTree();
                 for (const dep of projDep.getMasterList(projectName)) {
                     const depState = this.states.get(dep);
@@ -80,7 +80,9 @@ export class ProjectState {
                 }
             }
             this.updateDescription();
+            return true;
         }
+        return false;
     }
 
     public isBuilt(projectName: string, buildType: string) {
@@ -92,12 +94,14 @@ export class ProjectState {
         return false;    // always unbuilt
     }
 
-    public setBuilt(projectName: string, buildType: string, built = true) {
+    public setBuilt(projectName: string, buildType: string, status = true) {
         const state = this.states.get(projectName);
         if (state) {
-            state.buildState.set(buildType.trim().toUpperCase(), built);
+            state.buildState.set(buildType.trim().toUpperCase(), status);
             this.updateDescription();
+            return true;
         }
+        return false;
     }
 
     public updateDescription() {
