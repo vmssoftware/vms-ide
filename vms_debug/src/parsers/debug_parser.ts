@@ -645,7 +645,7 @@ export class DebugParser
 
 											if(!Number.isNaN(addr))
 											{
-												if(addr < 0x1000)
+												if(addr < 0x1000 && addr > 0)
 												{
 													item.variableAddress = 0;
 												}
@@ -698,7 +698,7 @@ export class DebugParser
 
 											if(!Number.isNaN(addr))
 											{
-												if(addr < 0x1000)
+												if(addr < 0x1000 && addr > 0)
 												{
 													item.variableAddress = 0;
 												}
