@@ -848,7 +848,7 @@ export class DebugParser
 				{
 					matches = v.match(matcherS);
 
-					if(matches)
+					if(matches && v.charAt(0) !== '"')
 					{
 						if((prm.counter) < items.length)
 						{
