@@ -3,6 +3,7 @@ import micromatch from "micromatch";
 import { LogFunction, LogType } from "@vorfol/common";
 
 import { ftpPathSeparator, IFileEntry, IReadDirectory } from "@vorfol/common";
+import { IProgress } from "../sync/source";
 
 export const leadingSepRg = /^[/\\]+/g;
 export const middleSepRg = /[/\\]+/g;
@@ -18,6 +19,10 @@ interface ISepFileDir {
     dirs: IFileEntry[];
 }
 
+export const DirectoryToken = "Directory";
+export const FilesToken = "Files";
+export const AcceptedToken = "Accepted";
+
 /**
  * Recursive find files
  * @param canReadDir see interface
@@ -31,7 +36,8 @@ export async function findFiles(canReadDir: IReadDirectory,
                                 rootDir: string,
                                 include?: string,
                                 exclude?: string,
-                                debugLog?: LogFunction) {
+                                debugLog?: LogFunction,
+                                progress?: IProgress) {
     include = include || "*";
     const options: micromatch.Options = {
         basename: true,
@@ -71,11 +77,16 @@ export async function findFiles(canReadDir: IReadDirectory,
         walkDir = walkDir.trim();
         walkDir = walkDir.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
         const fileEntries = await canReadDir.readDirectory(walkDir);
-        if (fileEntries) {
+        const cancel = progress ? progress.addProgress(DirectoryToken, 1) : false;
+        if (!cancel && fileEntries) {
             const separated = fileEntries.map(addWalkDir).reduce(separateFilesAndDirsAndMatch, {files: [], dirs: []});
-            for (const dir of separated.dirs) {
-                const inside = await walk(dir.filename);
-                separated.files.push(...inside);
+            if (progress ? !progress.addProgress(FilesToken, fileEntries.length)
+                        && !progress.addProgress(AcceptedToken, separated.files.length)
+                        : true) {
+                for (const dir of separated.dirs) {
+                    const inside = await walk(dir.filename);
+                    separated.files.push(...inside);
+                }
             }
             return separated.files;
         }

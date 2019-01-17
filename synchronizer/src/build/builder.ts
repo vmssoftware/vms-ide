@@ -423,7 +423,7 @@ export class Builder {
             `OUT_DIR = .$(OUTDIR).$(TYPE_DIR)`,
             `OBJ_DIR = $(OUT_DIR).obj`,
             `.SUFFIXES`,
-            `.SUFFIXES .OBJ .CPP .C`,
+            `.SUFFIXES .OBJ .CPP .C .CLD`,
             `.CPP.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    $(CXX) $(CXXFLAGS) $(MMS$SOURCE)`,
@@ -431,6 +431,11 @@ export class Builder {
             `.C.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    $(CC) $(CCFLAGS) $(MMS$SOURCE)`,
+            ``,
+            ``,
+            `.CLD.OBJ`,
+            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+            `    $SET COMMAND/OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
             ``,
         ];
 
