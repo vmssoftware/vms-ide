@@ -1,6 +1,10 @@
 import path from "path";
 import * as vscode from "vscode";
 
+import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
+
 import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 
 import { Barrier, Delay } from "@vorfol/common";
@@ -11,16 +15,14 @@ import { IFileEntry } from "@vorfol/common";
 import { IDispose, SshHelper } from "../ext-api/ssh-helper";
 
 import { createFile } from "../common/create-file";
+import { AcceptedToken } from "../common/find-files";
+import { Progress } from "../common/progress";
 import { IEnsured } from "../ensure-settings";
 import { FsSource } from "./fs-source";
 import { SftpSource } from "./sftp-source";
-import { ISource } from "./source";
-import { VmsShellSource } from "./vms-shell-source";
-
-import * as nls from "vscode-nls";
+import { IProgress, ISource } from "./source";
 import { VmsSftpClient } from "./vms-sftp-client";
-nls.config({messageFormat: nls.MessageFormat.both});
-const localize = nls.loadMessageBundle();
+import { VmsShellSource } from "./vms-shell-source";
 
 interface IScopeSyncData {
     ensured: IEnsured;      // saved settings
@@ -138,17 +140,22 @@ export class Synchronizer {
             ensured.projectSection.builders,
         ];
         const include = includes.join(",");
+        const progressRemote = new Progress();
         const [remoteList, localList] = await Promise.all(
-            [scopeData.remoteSource.findFiles(include, ensured.projectSection.exclude),
+            [scopeData.remoteSource.findFiles(include, ensured.projectSection.exclude, progressRemote),
              scopeData.localSource.findFiles(include, ensured.projectSection.exclude)]);
+        progressRemote.dispose();
+
         // compare them
         const compareResult = this.compareLists(localList, remoteList);
         const waitAll = [];
+
+        const progressProcess = new Progress();
         // upload
-        waitAll.push(this.executeAction(scopeData, compareResult.upload, "upload"));
+        waitAll.push(this.executeAction(scopeData, compareResult.upload, "upload", progressProcess));
         switch (ensured.synchronizeSection.downloadNewFiles) {
             case "overwrite":
-                waitAll.push(this.executeAction(scopeData, compareResult.download, "download"));
+                waitAll.push(this.executeAction(scopeData, compareResult.download, "download", progressProcess));
                 break;
             case "skip":
                 for (const downloadFile of compareResult.download) {
@@ -166,6 +173,9 @@ export class Synchronizer {
         }
         // wait all operations are done
         const results = await Promise.all(waitAll);
+
+        progressProcess.dispose();
+
         // end
         this.decideDispose(scopeData);
         const retCode = results.reduce((acc, result) => {
@@ -393,16 +403,25 @@ export class Synchronizer {
         if (ensured.configHelper.workspaceFolder) {
             const scope = ensured.configHelper.workspaceFolder.name;
             this.logFn(LogType.debug, () => localize("debug.create_remote", "Creating remote source"));
-            const [sftp, shell] = await Promise.all([
-                    this.sshHelper.getDefaultSftp(scope),
-                    this.sshHelper.getDefaultVmsShell(scope),
-                ]);
-            if (!sftp || !shell) {
+            const sftp = await this.sshHelper.getDefaultSftp(scope);
+            if (!sftp) {
                 return undefined;
             }
-            const remoteSource =  ensured.synchronizeSection.setTimeByShell
-                ? new VmsShellSource(new VmsSftpClient(sftp), shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts)
-                : new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
+            const remoteSource = await (async (sshHelper) => {
+                if (ensured.synchronizeSection.setTimeByShell) {
+                    const shell = await sshHelper.getDefaultVmsShell(scope);
+                    if (!shell) {
+                        return undefined;
+                    }
+                    return new VmsShellSource(new VmsSftpClient(sftp), shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
+                } else {
+                    return new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
+                }
+            })(this.sshHelper);
+            if (!remoteSource) {
+                return undefined;
+            }
+
             this.logFn(LogType.debug, () => localize("debug.create_local", "Creating local source"));
             const localSource = new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
 
@@ -454,8 +473,11 @@ export class Synchronizer {
      * @param files files
      * @param action action
      */
-    private async executeAction(scopeData: IScopeSyncData, files: string[] | IFileEntry[], action: "download" | "upload" ) {
+    private async executeAction(scopeData: IScopeSyncData, files: string[] | IFileEntry[], action: "download" | "upload", progress?: IProgress ) {
         const waitAll = [];
+        if (progress) {
+            progress.setProgress(action, 0, files.length);
+        }
         for (const file of files) {
             let filename: string;
             let filedate: Date;
@@ -470,6 +492,9 @@ export class Synchronizer {
             const to = action === "download" ? scopeData.localSource : scopeData.remoteSource;
             waitAll.push(this.transferFile(from, to, filename, filedate)
                                 .then((ok) => {
+                                    if (progress) {
+                                        progress.addProgress(action, 1);
+                                    }
                                     if (ok) {
                                         this.logFn(LogType.information, () => localize("message.action_success", "{0} success: {1}", action, filename));
                                     } else {

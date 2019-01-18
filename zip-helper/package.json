@@ -1,0 +1,53 @@
+{
+    "name": "zip-helper",
+    "displayName": "zip-helper",
+    "description": "zip-helper",
+    "version": "0.1.1",
+    "publisher": "vmssoftware",
+    "repository": {
+        "type": "git",
+        "url": "git:"
+    },
+    "engines": {
+        "vscode": "^1.28.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "*"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "configuration": {
+            "title": "%configuration.title%",
+            "properties": {
+                "vmssoftware.zip-helper.zip.level": {
+                    "scope": "resource",
+                    "type": "integer",
+                    "default": "7",
+                    "description": "%description.zip.level%"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "compile": "tsc",
+        "package": "vsce package",
+        "watch": "tsc -watch",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "devDependencies": {
+        "@types/mocha": "^5.2.5",
+        "@types/archiver": "^2.1.2",
+        "@types/node": "^8.10.38",
+        "tslint": "^5.11.0",
+        "typescript": "^3.1.6",
+        "vsce": "^1.53.0",
+        "vscode": "^1.1.21"
+    },
+    "dependencies": {
+        "@vorfol/common": "0.0.20",
+        "archiver": "^3.0.0"
+    }
+}

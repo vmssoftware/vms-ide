@@ -4,7 +4,7 @@ import { IFileEntry } from "@vorfol/common";
 
 import { findFiles, leadingSepRg, middleSepRg, trailingSepRg } from "../common/find-files";
 import { IInputAttributes, ISftpClient } from "../ext-api/api";
-import { ISource } from "./source";
+import { IProgress, ISource } from "./source";
 
 export class SftpSource implements ISource {
 
@@ -39,9 +39,9 @@ export class SftpSource implements ISource {
         this.sftp.dispose();
     }
 
-    public findFiles(include: string, exclude: string): Promise<IFileEntry[]> {
+    public findFiles(include: string, exclude: string, progress?: IProgress): Promise<IFileEntry[]> {
         // we sure the root exists
-        return findFiles(this.sftp, this.root!, include, exclude, this.logFn).then((list) => {
+        return findFiles(this.sftp, this.root!, include, exclude, this.logFn, progress).then((list) => {
             let pos = this.root!.length;
             if (pos > 0) {
                 pos += ftpPathSeparator.length;
