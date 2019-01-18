@@ -17,7 +17,8 @@ export class UploadZip {
     }
 
     public async perform(ensured: IEnsured) {
-        if (ensured.configHelper.workspaceFolder) {
+        if (ensured.scope &&
+            ensured.configHelper.workspaceFolder) {
             const ZipApiType = await GetZipHelperType();
             if (!ZipApiType) {
                 return false;
@@ -62,12 +63,12 @@ export class UploadZip {
                     if (!answer || answer.length === 0) {
                         return false;
                     }
-                    const unzipResult = await shell.execCmd("unzip " + zipFileName);
+                    const unzipResult = await shell.execCmd("unzip -oo " + zipFileName);
                     if (!unzipResult || unzipResult.length === 0) {
                         return false;
                     }
                     // 3. force set synchronized
-                    ProjectState.acquire().setSynchronized(ensured.projectSection.projectName, true);
+                    ProjectState.acquire().setSynchronized(ensured.scope, true);
                     return true;
                 }
             }
