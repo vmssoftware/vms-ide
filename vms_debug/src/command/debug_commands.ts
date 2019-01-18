@@ -19,10 +19,15 @@ export enum DebugCmdVMS
 	dbgBreakPointActivate = "activate break",
 	dbgBreakPointDeactivate = "deactivate break",
 
+	dbgWatchPointSet = "set watch",
+	dbgWatchPointRemove = "cancel watch",
+	dbgWatchPointShow = "show watch",
+
 	dbgTypeLine = "type",
 	dbgExamine = "examine",
 	dbgEvaluate = "evaluate",
 	dbgDeposit = "deposit",
+	dbgWatch = "deposit",
 
 	dbgCallStack = "show calls",
 	dbgStack = "show stack",
@@ -144,6 +149,23 @@ export class DebugCommands
 		return new CommandMessage(DebugCmdVMS.dbgBreakPointDeactivate, fileName.toUpperCase()  + "\\%line " + numberLine.toString());
 	}
 
+	//watch points
+	public watchPointSet(variableName : string) : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgWatchPointSet, variableName);
+	}
+	public watchPointRemove(variableName : string) : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgWatchPointRemove, variableName);
+	}
+	public watchPointsRemove() : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgWatchPointRemove, "/all");
+	}
+	public watchPointShow() : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgWatchPointShow, "");
+	}
 
 	public showCurrentLine() : CommandMessage
 	{

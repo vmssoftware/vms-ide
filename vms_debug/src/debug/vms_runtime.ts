@@ -13,6 +13,8 @@ import { LogFunction, LogType, ftpPathSeparator } from '@vorfol/common';
 import { FileManagerExt } from '../ext-api/file_manager';
 import { HolderDebugVariableInfo, DebugVariable, ReflectKind, VariableFileInfo } from '../parsers/debug_variable_info';
 const { Subject } = require('await-notify');
+import * as WaitSubject from 'await-notify';
+import { Queue } from '../queue/queues';
 
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
@@ -24,6 +26,12 @@ export interface VMSBreakpoint
 	file: string;
 	line: number;
 	verified: boolean;
+}
+
+export interface VMSWatchpoint
+{
+	name: string;
+	params: string;
 }
 
 export enum DebugButtonEvent
@@ -52,8 +60,8 @@ export class VMSRuntime extends EventEmitter
 	private varsInfo : HolderDebugVariableInfo;
 	private debugRun : boolean;
 	private programEnd : boolean;
-	private waitVars = new Subject();
 	private waitSymbols = new Subject();
+	private queueWaitVar = new Queue<WaitSubject>();
 
 	private stackStartFrame: number;
 	private stackEndFrame: number;
@@ -69,6 +77,8 @@ export class VMSRuntime extends EventEmitter
 	private breakPoints = new Map<string, VMSBreakpoint[]>();
 	private breakPointsSet = new Map<string, VMSBreakpoint[]>();
 	private breakPointsRem = new Map<string, VMSBreakpoint[]>();
+	// maps of VSM watchpoints
+	private watchPoints = new Map<string, VMSWatchpoint[]>();
 
 	// since we want to send breakpoint events, we will assign an id to every event
 	// so that the frontend can match events with breakpoints.
@@ -110,19 +120,19 @@ export class VMSRuntime extends EventEmitter
 
 		this.shell.resetParameters();
 
-		// run appropriate COM file, if it exists
-		const preRunFile = section.projectName + ".com";
-		const found = await localSource!.findFiles(preRunFile);
-		if (found.length === 1)
-		{
-			const dotted_root = section.root.replace(/\//g, ".");
-			const pathToPreRunFile = `[.${dotted_root}]${preRunFile} DEBUG`;
-			this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
-		}
-
 		//run debugger
 		if(this.shell.getModeWork() === ModeWork.shell)
 		{
+			// run appropriate COM file, if it exists
+			const preRunFile = section.projectName + ".com";
+			const found = await localSource!.findFiles(preRunFile);
+			if (found.length === 1)
+			{
+				const dotted_root = section.root.replace(/\//g, ".");
+				const pathToPreRunFile = `[.${dotted_root}]${preRunFile} DEBUG`;
+				this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
+			}
+			//config debugger
 			this.shell.SendCommandToQueue(this.osCmd.runDebug());
 			this.shell.SendCommandToQueue(this.dbgCmd.setDisplay("dbge", "q1", "output"));
 			this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("error", "dbge"));
@@ -218,6 +228,76 @@ export class VMSRuntime extends EventEmitter
 		}
 	}
 
+	public setWatchVariable(nameVar : string, params : string)
+	{
+		if(nameVar.length > 0)
+		{
+			let wpFound = false;
+			let wpChanged = false;
+			let wpIndex = -1;
+			let currWps = this.watchPoints.get("keyWatchPoints");
+			params = params.toLowerCase();
+
+			if (currWps)
+			{
+				for(let wp of currWps)//finding watchpoint
+				{
+					wpIndex++;
+
+					if(wp.name === nameVar)
+					{
+						if(wp.params !== params)
+						{
+							wpChanged = true;
+							wp.params = params;
+						}
+						wpFound = true;
+						break;
+					}
+				}
+			}
+			else
+			{
+				currWps = new Array<VMSWatchpoint>();
+			}
+
+			if(!wpFound || wpChanged)
+			{
+				if(params.includes("()") || params.includes("when"))//set watch to variable
+				{
+					if(!wpFound)
+					{
+						const wp = <VMSWatchpoint> { name: nameVar, params: params };
+
+						currWps.push(wp);
+						this.watchPoints.delete("keyWatchPoints");
+						this.watchPoints.set("keyWatchPoints", currWps);
+					}
+
+					if(params.includes("when"))//add condition to watchpoint
+					{
+						params = params.substring(1, params.length-1);
+						nameVar = nameVar + " " + params;
+					}
+
+					this.shell.SendCommandToQueue(this.dbgCmd.watchPointSet(nameVar));
+				}
+				else if(wpChanged)//cancel watch
+				{
+					currWps.splice(wpIndex, 1);
+					this.watchPoints.delete("keyWatchPoints");
+					this.watchPoints.set("keyWatchPoints", currWps);
+
+					this.shell.SendCommandToQueue(this.dbgCmd.watchPointRemove(nameVar));
+				}
+				else
+				{
+					//error parameters!
+				}
+			}
+		}
+	}
+
 	public async getVariable(nameVar : string) : Promise<Array<DebugVariable>>
 	{
 		const variables = new Array<DebugVariable>();
@@ -254,7 +334,10 @@ export class VMSRuntime extends EventEmitter
 							}
 
 							this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVar));
-							await this.waitVars.wait(5000);
+
+							let wait = new Subject();
+							this.queueWaitVar.push(wait);
+							await wait.wait(5000);
 
 							let childs : DebugVariable[] = [];
 
@@ -330,7 +413,10 @@ export class VMSRuntime extends EventEmitter
 				if(nameVars !== "")
 				{
 					this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of variables
-					await this.waitVars.wait(5000);
+
+					let wait = new Subject();
+					this.queueWaitVar.push(wait);
+					await wait.wait(5000);
 
 					nameVars = "";
 
@@ -348,7 +434,10 @@ export class VMSRuntime extends EventEmitter
 					if(nameVars !== "")
 					{
 						this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of pointers
-						await this.waitVars.wait(5000);
+
+						let wait = new Subject();
+						this.queueWaitVar.push(wait);
+						await wait.wait(5000);
 					}
 
 					for(let item of vars)
@@ -471,11 +560,14 @@ export class VMSRuntime extends EventEmitter
 					{
 						allow = false;
 					}
+					else
+					{
+						this.shell.SendData(data);//send command to the debugger
+					}
 					break;
 
 				default:
 					this.shell.SendData(data);//send command to the debugger
-					result = true;
 					break;
 			}
 
@@ -870,7 +962,11 @@ export class VMSRuntime extends EventEmitter
 				{
 					case DebugCmdVMS.dbgExamine:
 						this.dbgParser.parseVariableValuesMsg(this.currentFilePath, messageData);
-						this.waitVars.notify();
+
+						if(this.queueWaitVar.size() > 0)
+						{
+							this.queueWaitVar.pop().notify();
+						}
 						break;
 
 					case DebugCmdVMS.dbgCallStack:
@@ -941,12 +1037,18 @@ export class VMSRuntime extends EventEmitter
 						}
 					}
 
-					this.waitVars.notify();
+					if(this.queueWaitVar.size() > 0)
+					{
+						this.queueWaitVar.pop().notify();
+					}
 				}
 				else if(messageDebug.includes(MessageDebuger.msgNoFind) ||
 						messageDebug.includes(MessageDebuger.msgUnAlloc))
 				{
-					this.waitVars.notify();
+					if(this.queueWaitVar.size() > 0)
+					{
+						this.queueWaitVar.pop().notify();
+					}
 				}
 
 				if(showMsg)
