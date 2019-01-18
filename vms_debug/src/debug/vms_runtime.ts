@@ -53,6 +53,7 @@ export class VMSRuntime extends EventEmitter
 	private debugRun : boolean;
 	private programEnd : boolean;
 	private waitVars = new Subject();
+	private waitSymbols = new Subject();
 
 	private stackStartFrame: number;
 	private stackEndFrame: number;
@@ -112,7 +113,8 @@ export class VMSRuntime extends EventEmitter
 		// run appropriate COM file, if it exists
 		const preRunFile = section.projectName + ".com";
 		const found = await localSource!.findFiles(preRunFile);
-		if (found.length === 1) {
+		if (found.length === 1)
+		{
 			const dotted_root = section.root.replace(/\//g, ".");
 			const pathToPreRunFile = `[.${dotted_root}]${preRunFile} DEBUG`;
 			this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
@@ -139,12 +141,6 @@ export class VMSRuntime extends EventEmitter
 		if(!stopOnEntry)
 		{
 			this.shell.SendCommandToQueue(this.dbgCmd.breakPointsRemove());//remove entry breakpoint
-		}
-		//request variables info
-		for(let path of this.sourcePaths)
-		{
-			let nameFile = this.getNameFromPath(path);
-			this.shell.SendCommandToQueue(this.dbgCmd.showSymbols(nameFile));
 		}
 		//set breakpoint
 		await this.setRemoteBreakpointsAll();
@@ -300,6 +296,15 @@ export class VMSRuntime extends EventEmitter
 			let funcName : string = "";//if function name = "" search global variable
 			this.varsInfo = this.dbgParser.getVariableFileInfo();
 			let vars = this.varsInfo.getVariableFile(this.currentFilePath);
+
+			if(!vars)//request variables info
+			{
+				let nameFile = this.getNameFromPath(this.currentFilePath);
+				this.shell.SendCommandToQueue(this.dbgCmd.showSymbols(nameFile));
+				await this.waitSymbols.wait(5000);
+
+				vars = this.varsInfo.getVariableFile(this.currentFilePath);
+			}
 
 			if(id === ("local"))
 			{
@@ -885,6 +890,7 @@ export class VMSRuntime extends EventEmitter
 
 					case DebugCmdVMS.dbgSymbol:
 						this.dbgParser.parseVariableMsg(this.rootPath, this.sourcePaths, messageData);
+						this.waitSymbols.notify();
 						break;
 
 					default:
@@ -893,23 +899,59 @@ export class VMSRuntime extends EventEmitter
 			}
 			if(messageDebug !== "")
 			{
+				let showMsg : boolean = true;
+
 				if (this.logFn)
 				{
 					this.logFn(LogType.information, () => messageDebug);
 				}
-
-				vscode.debug.activeDebugConsole.append(messageDebug);
 
 				if(messageDebug.includes(MessageDebuger.msgEnd))
 				{
 					this.programEnd = true;
 					this.sendEvent('end');
 				}
-				else if(messageDebug.includes(MessageDebuger.msgNoSccess) ||
-						messageDebug.includes(MessageDebuger.msgNoFind) ||
+				else if(messageDebug.includes(MessageDebuger.msgNoSccess))
+				{
+					showMsg = false;
+
+					let indexStart = messageDebug.indexOf(":");
+					let addressStr = messageDebug.substr(indexStart+1).replace(MessageDebuger.msgNoSccess, "");
+					let address = parseInt(addressStr, 16);
+
+					if(!Number.isNaN(address))
+					{
+						let vars = this.varsInfo.getVariableFile(this.currentFilePath);
+
+						if(vars)
+						{
+							for(let item of vars)//check the unresolved address of variable
+							{
+								if(item.functionName === this.currentRoutine)
+								{
+									if(!item.variableValue && item.variableAddress && item.variableAddress !== 0)
+									{
+										if(item.variableAddress === address)
+										{
+											item.variableAddress = 0;
+										}
+									}
+								}
+							}
+						}
+					}
+
+					this.waitVars.notify();
+				}
+				else if(messageDebug.includes(MessageDebuger.msgNoFind) ||
 						messageDebug.includes(MessageDebuger.msgUnAlloc))
 				{
 					this.waitVars.notify();
+				}
+
+				if(showMsg)
+				{
+					vscode.debug.activeDebugConsole.append(messageDebug);
 				}
 			}
 			if(messageUser !== "")

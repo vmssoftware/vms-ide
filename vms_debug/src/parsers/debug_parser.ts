@@ -645,7 +645,7 @@ export class DebugParser
 
 											if(!Number.isNaN(addr))
 											{
-												if(addr < 0x1000)
+												if(addr < 0x1000 && addr > 0)
 												{
 													item.variableAddress = 0;
 												}
@@ -698,7 +698,7 @@ export class DebugParser
 
 											if(!Number.isNaN(addr))
 											{
-												if(addr < 0x1000)
+												if(addr < 0x1000 && addr > 0)
 												{
 													item.variableAddress = 0;
 												}
@@ -848,7 +848,7 @@ export class DebugParser
 				{
 					matches = v.match(matcherS);
 
-					if(matches)
+					if(matches && v.charAt(0) !== '"')
 					{
 						if((prm.counter) < items.length)
 						{
