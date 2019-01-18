@@ -403,16 +403,25 @@ export class Synchronizer {
         if (ensured.configHelper.workspaceFolder) {
             const scope = ensured.configHelper.workspaceFolder.name;
             this.logFn(LogType.debug, () => localize("debug.create_remote", "Creating remote source"));
-            const [sftp, shell] = await Promise.all([
-                    this.sshHelper.getDefaultSftp(scope),
-                    this.sshHelper.getDefaultVmsShell(scope),
-                ]);
-            if (!sftp || !shell) {
+            const sftp = await this.sshHelper.getDefaultSftp(scope);
+            if (!sftp) {
                 return undefined;
             }
-            const remoteSource =  ensured.synchronizeSection.setTimeByShell
-                ? new VmsShellSource(new VmsSftpClient(sftp), shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts)
-                : new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
+            const remoteSource = await (async (sshHelper) => {
+                if (ensured.synchronizeSection.setTimeByShell) {
+                    const shell = await sshHelper.getDefaultVmsShell(scope);
+                    if (!shell) {
+                        return undefined;
+                    }
+                    return new VmsShellSource(new VmsSftpClient(sftp), shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
+                } else {
+                    return new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
+                }
+            })(this.sshHelper);
+            if (!remoteSource) {
+                return undefined;
+            }
+
             this.logFn(LogType.debug, () => localize("debug.create_local", "Creating local source"));
             const localSource = new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
 

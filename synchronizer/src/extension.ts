@@ -92,6 +92,10 @@ export async function activate(context: ExtensionContext) {
         return ProjectState.acquire().setBuilt(scope, buildType, true);
     }));
 
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.uploadZip", async (scope: string) => {
+        return Perform("zip", scope, syncLog);
+    }));
+
     const projectDependenciesProvider = new ProjDepProvider();
     const projectDescriptionProvider = new ProjDescrProvider();
 

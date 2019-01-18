@@ -13,12 +13,13 @@ import { onTheSameVms } from "./on-the-same-vms";
 import { Synchronizer } from "./sync/synchronizer";
 
 import * as nls from "vscode-nls";
+import { UploadZip } from "./upload-zip";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export type AsyncAction = (scope: string, logFn: LogFunction, params?: string) => Promise<boolean>;
 
-export type ActionType = "synchronize" | "build" | "clean" | "crlf" | "edit settings" | "create mms";
+export type ActionType = "synchronize" | "build" | "clean" | "crlf" | "edit settings" | "create mms" | "zip";
 
 export interface IPerform {
     actionFunc: AsyncAction;
@@ -223,6 +224,33 @@ export const actions: IPerform[] = [
         fail: localize("crlf.fail", "Change CrLf failed"),
         status: localize("crlf.status", "$(search) Changing..."),
         success: localize("crlf.success", "Change CrLf done"),
+    },
+    {
+        // ZIP
+        actionFunc: async (scope: string, logFn: LogFunction) => {
+            let scopes: string[] = [scope];
+            if (!scope) {
+                if (workspace.workspaceFolders) {
+                    scopes = workspace.workspaceFolders.map((wf) => wf.name);
+                }
+            }
+            const wait: Array<Promise<boolean>> = [];
+            for (const curScope of scopes) {
+                const ensured = await ensureSettings(curScope, logFn);
+                if (ensured) {
+                    const crlf = new UploadZip(logFn);
+                    wait.push(crlf.perform(ensured));
+                }
+            }
+            return Promise.all(wait).then((all) => {
+                return all.reduce((res, cur) => res && cur, true);
+            });
+        },
+        actionName: "zip",
+        context: CommandContext.isCrLf,
+        fail: localize("zip.fail", "Zip failed"),
+        status: localize("zip.status", "$(search) Zipping..."),
+        success: localize("zip.success", "Zip done"),
     },
     {
         // edit settings

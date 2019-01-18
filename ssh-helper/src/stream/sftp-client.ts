@@ -2,7 +2,7 @@ import { SFTPWrapper } from "ssh2";
 import { FileEntry } from "ssh2-streams";
 import stream = require("stream");
 
-import { Lock, LogFunction }                     from "@vorfol/common";
+import { Lock, LogFunction }        from "@vorfol/common";
 import { LogType }                  from "@vorfol/common";
 import { IUnSubscribe, Subscribe }  from "@vorfol/common";
 import { WaitableOperation }        from "@vorfol/common";

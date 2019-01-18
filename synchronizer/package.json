@@ -26,6 +26,7 @@
         "onCommand:vmssoftware.synchronizer.changeCRLF",
         "onCommand:vmssoftware.synchronizer.forceSynchronized",
         "onCommand:vmssoftware.synchronizer.forceBuilt",
+        "onCommand:vmssoftware.synchronizer.uploadZip",
         "onUri"
     ],
     "main": "./out/extension",
@@ -83,6 +84,10 @@
                 },
                 {
                     "command": "vmssoftware.synchronizer.changeCRLF",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.uploadZip",
                     "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 }
             ],
@@ -213,6 +218,11 @@
             {
                 "command": "vmssoftware.synchronizer.forceBuilt",
                 "title": "%command.forceBuilt.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.uploadZip",
+                "title": "%command.uploadZip.title%",
                 "category": "%command.category%"
             }
         ],
@@ -356,7 +366,7 @@
         "watch": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run compile && node ./node_modules/vscode/bin/test",
-        "get-ext-api": "PowerShell copy -Path ..\\ssh-helper\\out\\api.d.ts, ..\\ssh-helper\\out\\ssh-helper.d.ts, ..\\config-helper\\out\\config\\config.d.ts -Destination src\\ext-api\\",
+        "get-ext-api": "PowerShell copy -Path ..\\zip-helper\\out\\zip-api.d.ts, ..\\ssh-helper\\out\\api.d.ts, ..\\ssh-helper\\out\\ssh-helper.d.ts, ..\\config-helper\\out\\config\\config.d.ts -Destination src\\ext-api\\",
         "dir": "dir ..\\ssh-helper\\out"
     },
     "devDependencies": {
