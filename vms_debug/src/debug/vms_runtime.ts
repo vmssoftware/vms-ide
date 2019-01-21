@@ -292,7 +292,12 @@ export class VMSRuntime extends EventEmitter
 				}
 				else
 				{
-					//error parameters!
+					if(params !== "")
+					{
+						//error parameters!
+						const message = localize('runtime.watch_error', "Watch: Error parameter. Example: (when x > 3) or ().");
+						vscode.debug.activeDebugConsole.append(message + "\n");
+					}
 				}
 			}
 		}

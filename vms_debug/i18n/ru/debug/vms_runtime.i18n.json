@@ -1,3 +1,4 @@
 {
+    "runtime.watch_error": "Watch: Ошибка параметра. Пример: (when x > 3) или ().",
     "runtime.command_ignore": "Команда запрещена!"
 }
