@@ -429,6 +429,28 @@ export class VMSDebugSession extends LoggingDebugSession
 				variablesReference: 0
 			};
 		}
+		else if(args.context === "watch")//set watch
+		{
+			let varName : string = args.expression;
+			let params : string = "";
+			let indexSymbol = args.expression.indexOf("(");
+
+			if(indexSymbol !== -1)
+			{
+				varName = args.expression.substr(0, indexSymbol);
+				params = args.expression.substr(indexSymbol);
+			}
+
+			this.runtime.setWatchVariable(varName, params);
+			const variable = await this.runtime.getVariable(varName);
+
+			this.addFullyQualifiedName(variable);
+
+			variable.map((v, i) =>
+			{
+				response.body = this.convertDebugVariableToProtocolVariable(v, 0);
+			});
+		}
 
 		this.sendResponse(response);
 	}
