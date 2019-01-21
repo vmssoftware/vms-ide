@@ -431,14 +431,20 @@ export class VMSDebugSession extends LoggingDebugSession
 		}
 		else if(args.context === "watch")//set watch
 		{
+			if(args.expression.includes("\\"))
+			{
+				let items = args.expression.split("\\");
+				args.expression = items[items.length - 1];
+			}
+
 			let varName : string = args.expression;
 			let params : string = "";
 			let indexSymbol = args.expression.indexOf("(");
 
 			if(indexSymbol !== -1)
 			{
-				varName = args.expression.substr(0, indexSymbol);
-				params = args.expression.substr(indexSymbol);
+				varName = args.expression.substr(0, indexSymbol).trim();
+				params = args.expression.substr(indexSymbol).trim();
 			}
 
 			this.runtime.setWatchVariable(varName, params);

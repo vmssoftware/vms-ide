@@ -15,6 +15,8 @@ import { HolderDebugVariableInfo, DebugVariable, ReflectKind, VariableFileInfo }
 const { Subject } = require('await-notify');
 import * as WaitSubject from 'await-notify';
 import { Queue } from '../queue/queues';
+import { SyncApi } from '../ext-api/sync-api';
+import { GetSyncApi } from '../ext-api/get-sync-api';
 
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
@@ -57,6 +59,7 @@ export class VMSRuntime extends EventEmitter
 	private dbgCmd : DebugCommands;
 	private dbgParser : DebugParser;
 	private fileManager : FileManagerExt;
+	private syncApi : SyncApi | undefined;
 	private varsInfo : HolderDebugVariableInfo;
 	private debugRun : boolean;
 	private programEnd : boolean;
@@ -69,6 +72,7 @@ export class VMSRuntime extends EventEmitter
 	private sourcePaths: string[];
 	private lisPaths: string[];
 	private rootPath: string;
+	private rootFolderName: string;
 
 	private currentFilePath: string;
 	private currentRoutine: string;
@@ -91,15 +95,16 @@ export class VMSRuntime extends EventEmitter
 
 		this.shell = shell;
 		this.buttonPressd = DebugButtonEvent.btnNoEvent;
+		this.rootFolderName = folder ? folder.name : "";
 		this.osCmd = new OsCommands();
 		this.dbgCmd = new DebugCommands();
 		this.dbgParser = new DebugParser(folder);
-		this.fileManager = new FileManagerExt(folder ? folder.name : "");
+		this.fileManager = new FileManagerExt(this.rootFolderName);
 		this.varsInfo = new HolderDebugVariableInfo();
 		this.debugRun = false;
 		this.programEnd = false;
 		this.currentFilePath = "";
-	 	this.currentRoutine = "";
+		this.currentRoutine = "";
 	}
 
 	// Start executing the given program.
@@ -111,6 +116,13 @@ export class VMSRuntime extends EventEmitter
 		if (!section)
 		{
 			return;
+		}
+
+		this.syncApi = await GetSyncApi();
+		if(this.syncApi)
+		{
+			let list = this.syncApi.getDepList(this.rootFolderName);
+			list[0] = "";
 		}
 
 		let localSource = await this.fileManager.getLocalSource();
@@ -295,7 +307,7 @@ export class VMSRuntime extends EventEmitter
 					if(params !== "")
 					{
 						//error parameters!
-						const message = localize('runtime.watch_error', "Watch: Error parameter. Example: (when x > 3) or ().");
+						const message = localize('runtime.watch_error', "Watch: Error parameter. Example: (when (x > 3)) or ().");
 						vscode.debug.activeDebugConsole.append(message + "\n");
 					}
 				}
