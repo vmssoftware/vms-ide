@@ -19,6 +19,7 @@ const localize = nls.loadMessageBundle();
 export class SshShell extends SshClient implements ISshShell {
 
     public static eol = "\r\n";
+    public lastError?: string;
 
     public get prompt() {
         return this.promptGiven;
@@ -91,21 +92,31 @@ export class SshShell extends SshClient implements ISshShell {
      * Exec one command and continue. No "\r" or "\n" allowed inside command.
      * @param command command to execute
      */
-    public async execCmd(command: string) {
+    public async execCmd(command: string, timeout?: number) {
         let contentRet: string[] | undefined;
+        this.lastError = undefined;
         await this.waitOperation.acquire();
         if (await this.ensureChannel()) {
             if (this.channel &&
                 this.promptGiven &&
-                this.promptCatcher) {
+                this.promptCatcher)
+            {
+                const prevTimeOut = this.promptCatcher.timeout;
+                if (timeout) {
+                    this.promptCatcher.timeout = timeout;
+                }
+                
                 const waitReady = new Lock(true);
                 const trimmedCommand = command.trim();
                 const onReady = Subscribe(this.promptCatcher, this.promptCatcher.readyEvent, (content) => {
                     if (this.promptCatcher && this.promptCatcher.lastError) {
-                        const lastError = String(this.promptCatcher.lastError);
-                        this.logFn(LogType.debug, () => localize("debug.cmd.error", "shell{1} command error: {0}", lastError, this.tag ? " " + this.tag : ""));
-                        contentRet = typeof content === "string" ? [content] : contentRet;
-                        contentRet = this.promptCatcher? [this.promptCatcher.content] : contentRet;
+                        this.lastError = String(this.promptCatcher.lastError);
+                        this.logFn(LogType.debug, () => localize("debug.cmd.error", "shell{1} command error: {0}", this.lastError, this.tag ? " " + this.tag : ""));
+                        contentRet = typeof content === "string" 
+                            ? [content] 
+                            : this.promptCatcher 
+                                ? [this.promptCatcher.content] 
+                                : contentRet;
                         commandEnded.call(this);
                     } else {
                         if (typeof content === "string") {
@@ -153,6 +164,8 @@ export class SshShell extends SshClient implements ISshShell {
                 onReady.unsubscribe();
                 onClose.unsubscribe();
                 onExit.unsubscribe();
+
+                this.promptCatcher.timeout = prevTimeOut;
                 
                 function commandEnded(this: SshShell) {
                     waitReady.release();

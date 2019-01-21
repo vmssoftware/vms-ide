@@ -32,3 +32,4 @@ export declare class SyncApi {
     setSynchronized(projectName: string, synchronized?: boolean): boolean;
     setBuilt(projectName: string, buildType: string, built?: boolean): boolean;
 }
+//# sourceMappingURL=sync-api.d.ts.map

@@ -11,9 +11,9 @@ import { ProjDepTree } from "./dep-tree/proj-dep-tree";
 import { ProjectState } from "./dep-tree/proj-state";
 import { onTheSameVms } from "./on-the-same-vms";
 import { Synchronizer } from "./sync/synchronizer";
+import { UploadZip } from "./upload-zip";
 
 import * as nls from "vscode-nls";
-import { UploadZip } from "./upload-zip";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
@@ -227,7 +227,7 @@ export const actions: IPerform[] = [
     },
     {
         // ZIP
-        actionFunc: async (scope: string, logFn: LogFunction) => {
+        actionFunc: async (scope: string, logFn: LogFunction, clear?: string) => {
             let scopes: string[] = [scope];
             if (!scope) {
                 if (workspace.workspaceFolders) {
@@ -239,7 +239,7 @@ export const actions: IPerform[] = [
                 const ensured = await ensureSettings(curScope, logFn);
                 if (ensured) {
                     const crlf = new UploadZip(logFn);
-                    wait.push(crlf.perform(ensured));
+                    wait.push(crlf.perform(ensured, clear));
                 }
             }
             return Promise.all(wait).then((all) => {
@@ -248,9 +248,9 @@ export const actions: IPerform[] = [
         },
         actionName: "zip",
         context: CommandContext.isCrLf,
-        fail: localize("zip.fail", "Zip failed"),
-        status: localize("zip.status", "$(search) Zipping..."),
-        success: localize("zip.success", "Zip done"),
+        fail: localize("zip.fail", "Uploading via Zip failed"),
+        status: localize("zip.status", "$(file-zip) Uploading via Zip..."),
+        success: localize("zip.success", "Uploading via Zip done"),
     },
     {
         // edit settings

@@ -1,6 +1,22 @@
 /// <reference types="node" />
 import { IFileEntry } from "@vorfol/common";
 import { Readable, Writable } from "stream";
+export interface IProgress {
+    /**
+     * Show progress
+     * @param token name
+     * @param addvalue amount of progress
+     * @returns true on cancel
+     */
+    addProgress(token: string, addvalue: number): boolean;
+    /**
+     * Set progress
+     * @param token name
+     * @param value current value
+     * @param maxvalue max value
+     */
+    setProgress(token: string, value: number, maxvalue?: number): boolean;
+}
 export declare type sourceType = "local" | "remote";
 export interface ISource {
     root?: string;
@@ -10,7 +26,8 @@ export interface ISource {
     createWriteStream(filename: string): Promise<Writable | undefined>;
     dispose(): void;
     ensureDirectory(directory: string): Promise<boolean>;
-    findFiles(include: string, exclude?: string): Promise<IFileEntry[]>;
+    findFiles(include: string, exclude?: string, progress?: IProgress): Promise<IFileEntry[]>;
     getDate(filename: string): Promise<Date | undefined>;
     setDate(filename: string, date: Date): Promise<boolean>;
 }
+//# sourceMappingURL=source.d.ts.map
