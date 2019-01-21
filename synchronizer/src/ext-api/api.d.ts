@@ -44,7 +44,8 @@ export interface IStats extends IAttributes {
 export interface IShellParser extends Transform {
     content: string;
     readyEvent: symbol;
-    lastError?: Error | undefined;
+    lastError?: Error;
+    timeout?: number;
     prepare(): void;
 }
 export interface IPromptCatcher extends IShellParser {
@@ -68,11 +69,12 @@ export interface ISshShell {
     enabled: boolean;
     prompt?: string;
     width?: number;
+    lastError?: string;
     setParsers(welcome?: IParseWelcome, prompter?: IPromptCatcher): void;
     dispose(): void;
     attachUser(user: Transform): Promise<boolean>;
     detachUser(): Promise<void>;
-    execCmd(command: string): Promise<string[] | undefined>;
+    execCmd(command: string, timeout?: number): Promise<string[] | undefined>;
 }
 export interface IConnectionSection {
     host: string;

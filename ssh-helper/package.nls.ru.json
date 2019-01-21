@@ -1,7 +1,7 @@
 {
 	"command.category": "OpenVMS",
 	"command.edit.title": "Редактировать настройки ssh-helper",
-	"configuration.title": "OpevVMS ssh",
+	"configuration.title": "OpenVMS ssh",
 	"configuration.host": "Удалённый узел",
 	"configuration.port": "Порт",
 	"configuration.username": "Имя пользователя",

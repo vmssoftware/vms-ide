@@ -8,6 +8,10 @@ import { FsSource } from "./sync/fs-source";
 import { Synchronizer } from "./sync/synchronizer";
 import { VmsPathConverter } from "./vms/vms-path-converter";
 
+import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
+
 export class UploadZip {
 
     public logFn: LogFunction;
@@ -16,11 +20,12 @@ export class UploadZip {
         this.logFn = log || (() => {});
     }
 
-    public async perform(ensured: IEnsured) {
+    public async perform(ensured: IEnsured, clear?: string) {
         if (ensured.scope &&
             ensured.configHelper.workspaceFolder) {
             const ZipApiType = await GetZipHelperType();
             if (!ZipApiType) {
+                this.logFn(LogType.error, () => localize("zip.missed", "The extension vmssoftware.zip-helper isn't found."));
                 return false;
             }
             const zipApi = new ZipApiType(this.logFn);
@@ -29,6 +34,7 @@ export class UploadZip {
             const zipFilePath = path.join(localPath, zipFileName);
             const zipFinished = zipApi.start(zipFilePath);
             if (!zipFinished) {
+                this.logFn(LogType.error, () => localize("zip.cannot_start", "Cannot start Zip."));
                 return false;
             }
             const localSource = new FsSource(localPath, this.logFn);
@@ -44,33 +50,53 @@ export class UploadZip {
             }
             zipApi.stop();
             if (await zipFinished) {
+                // clear
+                const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
+                const sshHelperType = await GetSshHelperType();
+                if (!sshHelperType) {
+                    this.logFn(LogType.error, () => localize("zip.ssh.failed", "The extension vmssoftware.ssh-helper isn't found."));
+                    return false;
+                }
+                const sshHelper = new sshHelperType(this.logFn);
+                const shell = await sshHelper.getDefaultVmsShell(ensured.scope);
+                if (!shell) {
+                    this.logFn(LogType.error, () => localize("zip.shell.failed", "Cannot create remote shell."));
+                    return false;
+                }
+                if (typeof clear === "string") {
+                    switch (clear.toLowerCase()) {
+                        case "yes":
+                        case "true":
+                        case "clear":
+                            await shell.execCmd("set sec /prot=(o:rwed) [" + converter.bareDirectory + "...]*.*;*");
+                            await shell.execCmd("delete/tree [" + converter.bareDirectory + "...]*.*;*");
+                            break;
+                    }
+                }
                 // 1. upload zipFileName
                 if (await Synchronizer.acquire(this.logFn).uploadFiles(ensured, [zipFileName])) {
                     // 2. unzip
-                    const sshHelperType = await GetSshHelperType();
-                    if (!sshHelperType) {
-                        return false;
-                    }
-                    const sshHelper = new sshHelperType(this.logFn);
-                    const shell = await sshHelper.getDefaultVmsShell(ensured.scope);
-                    if (!shell) {
-                        return false;
-                    }
                     // set default directory for shell - project root
-                    const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
                     const cd = `set def ${converter.directory}`;
                     const answer = await shell.execCmd(cd);
                     if (!answer || answer.length === 0) {
+                        this.logFn(LogType.error, () => localize("zip.cd.failed", "Cannot set default directory."));
                         return false;
                     }
-                    const unzipResult = await shell.execCmd("unzip -oo " + zipFileName);
-                    if (!unzipResult || unzipResult.length === 0) {
+                    const unzipResult = await shell.execCmd("unzip -oo " + zipFileName, 3000);
+                    if (!unzipResult || unzipResult.length === 0 || shell.lastError) {
+                        this.logFn(LogType.error, () => localize("zip.unzip.failed", "Unzip command failed: {0}", shell.lastError || "unknown error" ));
+                        if (unzipResult && unzipResult.length) {
+                            this.logFn(LogType.error, () => "Unzip command output:\n" + unzipResult.join("\n") );
+                        }
                         return false;
                     }
                     // 3. force set synchronized
                     ProjectState.acquire().setSynchronized(ensured.scope, true);
                     return true;
                 }
+            } else {
+                this.logFn(LogType.error, () => localize("zip.cannot_finish", "Cannot finish Zip."));
             }
         }
         return false;

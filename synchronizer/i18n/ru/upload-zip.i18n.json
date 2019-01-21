@@ -1,0 +1,9 @@
+{
+    "zip.missed": "The extension vmssoftware.zip-helper isn't found.",
+    "zip.cannot_start": "Cannot start Zip.",
+    "zip.ssh.failed": "The extension vmssoftware.ssh-helper isn't found.",
+    "zip.shell.failed": "Cannot create remote shell.",
+    "zip.cd.failed": "Cannot set default directory.",
+    "zip.unzip.failed": "Unzip command failed.",
+    "zip.cannot_finish": "Cannot finish Zip."
+}

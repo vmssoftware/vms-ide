@@ -76,6 +76,7 @@ export class ShellParser extends Transform implements IShellParser {
             this.timer = setTimeout(() => {
                 this.logFn(LogType.debug, () => localize("debug.timeout", "ShellParser{0}: timeout", this.tag ? " " + this.tag : ""));
                 this.timer = undefined;
+                this.lastError = new Error("timeout");
                 this.setReady();
             }, this.timeout);
         }
