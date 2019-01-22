@@ -1,0 +1,42 @@
+{
+    "name": "msg",
+    "displayName": "msg",
+    "description": "msg language",
+    "version": "0.1.0",
+    "publisher": "vmssoftware",
+    "repository": {
+        "type": "git",
+        "url": "git:vmssoftware"
+    },
+    "engines": {
+        "vscode": "^1.28.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "scripts": {
+        "package": "vsce package"
+    },
+    "contributes": {
+        "languages": [
+            {
+                "id": "msg",
+                "aliases": [
+                    "MSG",
+                    "msg"
+                ],
+                "extensions": [
+                    ".msg"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "msg",
+                "scopeName": "source.msg",
+                "path": "./syntaxes/msg.tmLanguage.json"
+            }
+        ]
+    }
+}

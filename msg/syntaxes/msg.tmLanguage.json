@@ -1,0 +1,110 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "MSG",
+	"patterns": 
+	[
+		{
+			"include": "#title"
+		},
+		{
+			"include": "#ident"
+		},
+		{
+			"include": "#facility"
+		},
+		{
+			"include": "#page"
+		}
+	],
+	"repository": 
+	{
+		"title": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.title",
+					"match" : "(?i)\\.title\\s+([a-z$_][0-9a-z$_]{,30})(\\s+(\\S.{,27})(.*))",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "msg.modname"
+						},
+						"3":
+						{
+							"name": "msg.listing-title"
+						},
+						"4":
+						{
+							"name": "invalid.illegal"
+						}
+					}
+				}
+			]
+		},
+		"ident": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.ident",
+					"begin": "(?i)\\.ident",
+					"end": "(?i)(?=(\\.facility|\\.severity|\\.base|\\.end|\\.literal|\\.ident|\\.title|\\.page))",
+					"patterns": 
+					[
+						{
+							"name": "msg.ident.identifier",
+							"match": "(?i)([a-z$_][0-9a-z$_]{,30})(.*)",
+							"captures": 
+							{
+								"2":
+								{
+									"name": "invalid.illegal"
+								}
+							}
+						},
+						{
+							"include": "#string"
+						}
+					]
+				}
+			]
+		},
+		"facility": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.facility",
+					"begin": "(?i)\\.facility\\s",
+					"end" : "(?i)((?=\\.facility\\s)|(\\.end))"
+				}
+			]
+		},
+		"page": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.page",
+					"match": "(?i)\\.page"
+				}
+			]
+		},
+		"string": 
+		{
+			"name": "msg.string.$1",
+			"begin": "(\"|')",
+			"end": "\\1",
+			"patterns": 
+			[
+				{
+					"name": "msg.string.fao",
+					"match": "\\![A-Z][A-Z]"
+				}
+			]
+		}
+	},
+	"scopeName": "source.msg"
+}
