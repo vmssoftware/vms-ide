@@ -1,6 +1,7 @@
 import * as assert from "assert";
+import * as readline from "readline";
 
-import { logConsoleFn, LogFunction, LogType, MemoryWriteStream } from "@vorfol/common";
+import { Lock, logConsoleFn, LogFunction, LogType, MemoryWriteStream } from "@vorfol/common";
 import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 import { SshHelper } from "../ext-api/ssh-helper";
 import { FsSource } from "../sync/fs-source";
@@ -10,7 +11,7 @@ import { Vms } from "./config/vms";
 
 suite("Source tests", function(this: Mocha.Suite) {
 
-    return;
+    // return;
 
     this.timeout(0);
 
@@ -28,6 +29,42 @@ suite("Source tests", function(this: Mocha.Suite) {
         assert.notEqual(sshHelperType, undefined, `Cannot get ssh-helper api`);
         sshHelper = new sshHelperType!(debugLogFn);
     });
+
+    test("Get unexiting file", async () => {
+        const sftp = await sshHelper.getTestSftp(Vms);
+        assert.notEqual(sftp, undefined, `Cannot get sftp`);
+        const shell = await sshHelper.getTestShell(Vms, true);
+        assert.notEqual(shell, undefined, `Cannot get shell`);
+        const source: ISource = new VmsShellSource(sftp!, shell!, "wrk", debugLogFn);
+        const stream = await source.createReadStream("nothing_to_read.txt");
+        if (stream) {
+            const ret: string[] = [];
+            const lock = new Lock(true);
+            const rl = readline.createInterface(stream);
+
+            rl.on("close", () => {
+                lock.release();
+            });
+
+            rl.on("line", (line) => {
+                ret.push(line);
+            });
+
+            stream.on("error", (err) => {
+                // tslint:disable-next-line:no-console
+                console.log(err.message);
+                lock.release();
+            });
+
+            await lock.acquire();
+        }
+
+        sftp!.dispose();
+        shell!.dispose();
+        assert.ok(true, "must be true");
+    });
+
+    return;
 
     test("Walk files SFTP VMS", async () => {
         const sftp = await sshHelper.getTestSftp(Vms);

@@ -23,7 +23,7 @@
 			"patterns": 
 			[
 				{
-					"comment": "one line command, without begin-end",
+					"comment": "single line command, without begin-end",
 					"name": "msg.title",
 					"match" : "(?i)\\.title\\s+([a-z$_][a-z$_0-9]{,30})(\\s+(\\S.{,27})(.*))",
 					"captures": 
@@ -50,7 +50,7 @@
 			[
 				{
 					"name": "msg.ident",
-					"begin": "(?i)\\.ident",
+					"begin": "(?i)\\.ident\\s",
 					"end": "(?i)(?=(\\.facility|\\.severity|\\.base|\\.end|\\.literal|\\.ident|\\.title|\\.page))",
 					"patterns": 
 					[
@@ -75,8 +75,112 @@
 			[
 				{
 					"name": "msg.facility",
-					"begin": "(?i)\\.facility\\s",
-					"end" : "(?i)((?=\\.facility\\s)|(\\.end))"
+					"begin": "(?i)(\\.facility)",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "msg.facility.definition"
+						}
+					},
+					"end" : "(?i)(?=\\.facility|\\.end)",
+					"patterns": 
+					[
+						{
+							"name": "msg.facility.body",
+							"begin": "\\G",
+							"end": "([^-]|^)(?=(\\s*)\\n)",
+							"patterns": 
+							[
+								{
+									"include": "#facility.qualifiers"
+								},
+								{
+									"include": "#facility.name"
+								}
+							]
+						},
+						{
+							"include": "severity"
+						}
+					]
+				}
+			]
+		},
+		"facility.qualifiers":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.facility.shared",
+					"match": "(?i)/shared"
+				},
+				{
+					"name": "msg.facility.system",
+					"match": "(?i)/system"
+				},
+				{
+					"name": "msg.facility.prefix",
+					"match": "(?i)/prefix(\\s*)=(\\s*)([a-z$_][a-z$_0-9]{,7})(\\S*)",
+					"captures": 
+					{
+						"3":
+						{
+							"name": "msg.facility.prefix.value"
+						},
+						"4":
+						{
+							"name": "invalid.illegal"
+						}
+					}
+				}
+			]
+		},
+		"facility.name":
+		{
+			"patterns": 
+			[
+				{
+					"begin": "(?i)([a-z$_][a-z$_0-9]{,8})((\\s*)(\\s|,)(\\s*))",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "msg.facility.name"
+						},
+						"2":
+						{
+							"name": "msg.facility.separator"
+						}
+					},
+					"end": "(?=([^-]|^)(\\s*)\\n)",
+					"patterns": 
+					[
+						{
+							"include": "#facility.expression"
+						},
+						{
+							"include": "#facility.qualifiers"
+						}
+					]
+				}
+			]
+		},
+		"facility.expression":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.facility.expression",
+					"begin": "\\G",
+					"end": "(?=(([^-]|^)(\\s*)\\n)|/)",
+					"patterns": 
+					[
+						{
+							"name": "msg.facility.number",
+							"match": "\\G\\s*\\d+"
+						}
+					]
 				}
 			]
 		},
@@ -113,33 +217,6 @@
 			[
 				{
 					"name": "msg.string.fao",
-					"match": "\\![A-Z][A-Z]"
-				}
-			]
-		},
-		"zstring": 
-		{
-			"name": "msg.zstring.$1",
-			"begin": "(0)",
-			"beginCaptures": 
-			{
-				"1":
-				{
-					"name": "msg.punctuation.zstring.open"
-				}
-			},
-			"end": "(\\1)",
-			"endCaptures": 
-			{
-				"1":
-				{
-					"name": "msg.punctuation.zstring.close"
-				}
-			},
-			"patterns": 
-			[
-				{
-					"name": "msg.string.zfao",
 					"match": "\\![A-Z][A-Z]"
 				}
 			]
