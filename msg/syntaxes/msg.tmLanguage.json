@@ -23,8 +23,9 @@
 			"patterns": 
 			[
 				{
+					"comment": "one line command, without begin-end",
 					"name": "msg.title",
-					"match" : "(?i)\\.title\\s+([a-z$_][0-9a-z$_]{,30})(\\s+(\\S.{,27})(.*))",
+					"match" : "(?i)\\.title\\s+([a-z$_][a-z$_0-9]{,30})(\\s+(\\S.{,27})(.*))",
 					"captures": 
 					{
 						"1":
@@ -55,7 +56,7 @@
 					[
 						{
 							"name": "msg.ident.identifier",
-							"match": "(?i)([a-z$_][0-9a-z$_]{,30})(.*)",
+							"match": "\\G\\s+(?i)([a-z$_][a-z$_0-9]{,30})(.*)",
 							"captures": 
 							{
 								"2":
@@ -65,7 +66,19 @@
 							}
 						},
 						{
-							"include": "#string"
+							"name": "msg.ident.identifier.string",
+							"begin": "\\G\\s+",
+							"end": "(?i)(?=(\\.facility|\\.severity|\\.base|\\.end|\\.literal|\\.ident|\\.title|\\.page))",
+							"patterns": 
+							[
+								{
+									"include": "#string"
+								},
+								{
+									"name": "invalid.illegal",
+									"match": "(?<!\\G).*"
+								}
+							]
 						}
 					]
 				}
@@ -96,12 +109,62 @@
 		{
 			"name": "msg.string.$1",
 			"begin": "(\"|')",
-			"end": "\\1",
+			"beginCaptures": 
+			{
+				"1":
+				{
+					"name": "msg.punctuation.string.open"
+				}
+			},
+			"end": "(\\1)",
+			"endCaptures": 
+			{
+				"1":
+				{
+					"name": "msg.punctuation.string.close"
+				}
+			},
 			"patterns": 
 			[
 				{
 					"name": "msg.string.fao",
 					"match": "\\![A-Z][A-Z]"
+				}
+			]
+		},
+		"zstring": 
+		{
+			"name": "msg.zstring.$1",
+			"begin": "(0)",
+			"beginCaptures": 
+			{
+				"1":
+				{
+					"name": "msg.punctuation.zstring.open"
+				}
+			},
+			"end": "(\\1)",
+			"endCaptures": 
+			{
+				"1":
+				{
+					"name": "msg.punctuation.zstring.close"
+				}
+			},
+			"patterns": 
+			[
+				{
+					"name": "msg.string.zfao",
+					"match": "\\![A-Z][A-Z]"
+				}
+			]
+		},
+		"comment": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "comment"
 				}
 			]
 		}
