@@ -56,29 +56,14 @@
 					[
 						{
 							"name": "msg.ident.identifier",
-							"match": "\\G\\s+(?i)([a-z$_][a-z$_0-9]{,30})(.*)",
-							"captures": 
-							{
-								"2":
-								{
-									"name": "invalid.illegal"
-								}
-							}
+							"match": "(?i)([a-z$_][a-z$_0-9]{,30})"
 						},
 						{
-							"name": "msg.ident.identifier.string",
-							"begin": "\\G\\s+",
-							"end": "(?i)(?=(\\.facility|\\.severity|\\.base|\\.end|\\.literal|\\.ident|\\.title|\\.page))",
-							"patterns": 
-							[
-								{
-									"include": "#string"
-								},
-								{
-									"name": "invalid.illegal",
-									"match": "(?<!\\G).*"
-								}
-							]
+							"include": "#string"
+						},
+						{
+							"name": "invalid.illegal",
+							"match": "(?<!\\G).*"
 						}
 					]
 				}
