@@ -14,29 +14,263 @@
 		},
 		{
 			"include": "#page"
+		},
+		{
+			"include": "#line"
+		},
+		{
+			"include": "#comment"
+		},
+		{
+			"include": "#test-order"
 		}
 	],
 	"repository": 
 	{
+		"test-order":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.test-order",
+					"begin": "(\\.test)",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "msg.test-order.keyword keyword.control"
+						}
+					},
+					"end": "\\n",
+					"patterns": 
+					[
+						{
+							"begin": "(\"|')",
+							"beginCaptures": 
+							{
+								"1":
+								{
+									"name": "string.quoted.start"
+								}
+							},
+							"end": "(\\1)(.*)",
+							"endCaptures": 
+							{
+								"1":
+								{
+									"name": "string.quoted.end"
+								},
+								"2":
+								{
+									"patterns": 
+									[
+										{
+											"include": "#comment"
+										},
+										{
+											"name": "invalid.illegal",
+											"match": "\\S.*"
+										}
+									]
+								}
+							},
+							"patterns": 
+							[
+								{
+									"include": "#string-content"
+								}
+							]
+						},
+						{
+							"name": "msg.token",
+							"begin": "(?i)([a-z$_][a-z$_0-9]{,30})",
+							"beginCaptures": 
+							{
+								"1":
+								{
+									"name": "constant.character"
+								}
+							},
+							"end": "(?=\\n)",
+							"patterns": 
+							[
+								{
+									"include": "#comment"
+								},
+								{
+									"name": "invalid.illegal",
+									"match": "\\S.*"
+								}
+							]
+						},
+						{
+							"include": "#continuation"
+						},
+						{
+							"include": "#comment"
+						}
+					]
+				}
+			]
+		},
+		"token":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.token",
+					"match": "(?i)([a-z$_][a-z$_0-9]{,30})",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "constant.character"
+						}
+					}
+				}
+			]
+		},
+		"continuation":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.continuation",
+					"match": "\\s*(-)\\s*$\\n",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "msg.continuation string.regexp"
+						}
+					}
+				},
+				{
+					"name": "msg.continuation-with-comment",
+					"match": "\\s*(-)\\s*(!.*)$\\n",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "msg.continuation string.regexp"
+						},
+						"2":
+						{
+							"patterns": 
+							[
+								{
+									"include": "#comment"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		"comment": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "comment",
+					"begin": "!",
+					"end": "(?=\\n)",
+					"patterns": 
+					[
+						{
+							"include": "#comment-continuation"
+						}
+					]
+				}
+			]
+		},
+		"comment-continuation": 
+		{
+			"patterns": 
+			[
+				{
+					"match": "\\s*(-)\\s*\\n",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "msg.comment.continuation string.regexp"
+						}
+					}
+				}
+			]
+		},
+		"line":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.line",
+					"begin": "(?i)(\\.line)",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "msg.line.keyword keyword.control"
+						}
+					},
+					"end": "\\n",
+					"patterns": 
+					[
+						{
+							"name": "msg.line.expression",
+							"match": "\\G\\s*(?i)([a-z$_][a-z$_0-9]{,30})",
+							"captures": 
+							{
+								"1":
+								{
+									"name": "msg.line.name constant.character"
+								}
+							}
+						},
+						{
+							"include": "#continuation"
+						},
+						{
+							"include": "#comment"
+						},
+						{
+							"name": "invalid.illegal",
+							"begin": "(?<!\\G)",
+							"end": "(?=\\n)",
+							"patterns": 
+							[
+								{
+									"include": "#continuation"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
 		"title": 
 		{
 			"patterns": 
 			[
 				{
-					"comment": "single line command, without begin-end",
 					"name": "msg.title",
-					"match" : "(?i)\\.title\\s+([a-z$_][a-z$_0-9]{,30})(\\s+(\\S.{,27})(.*))",
+					"match" : "(?i)(\\.title)\\s+([a-z$_][a-z$_0-9]{,30})(\\s+(\\S.{,27})(.*))",
 					"captures": 
 					{
 						"1":
 						{
-							"name": "msg.modname"
+							"name": "msg.title.keyword keyword.control"
 						},
-						"3":
+						"2":
 						{
-							"name": "msg.listing-title"
+							"name": "msg.title.modname constant.character"
 						},
 						"4":
+						{
+							"name": "msg.title.listing-title string.unquoted"
+						},
+						"5":
 						{
 							"name": "invalid.illegal"
 						}
@@ -50,20 +284,54 @@
 			[
 				{
 					"name": "msg.ident",
-					"begin": "(?i)\\.ident\\s",
-					"end": "(?i)(?=(\\.facility|\\.severity|\\.base|\\.end|\\.literal|\\.ident|\\.title|\\.page))",
+					"begin": "(?i)(\\.ident)(?=\\s|$|\\n|-)",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "keyword.control"
+						}
+					},
+					"end": "\\n",
 					"patterns": 
 					[
 						{
 							"name": "msg.ident.identifier",
-							"match": "(?i)([a-z$_][a-z$_0-9]{,30})"
+							"begin": "(?i)([a-z$_][a-z$_0-9]{,30})",
+							"beginCaptures": 
+							{
+								"1":
+								{
+									"name": "constant.character"
+								}
+							},
+							"end": "(?=\\n)",
+							"patterns": 
+							[
+								{
+									"include": "#comment"
+								},
+								{
+									"include": "#continuation"
+								},
+								{
+									"name": "invalid.illegal",
+									"match": "."
+								}
+							]
 						},
 						{
 							"include": "#string"
 						},
 						{
+							"include": "#comment"
+						},
+						{
+							"include": "#continuation"
+						},
+						{
 							"name": "invalid.illegal",
-							"match": "(?<!\\G).*"
+							"match": "\\S.*"
 						}
 					]
 				}
@@ -80,7 +348,7 @@
 					{
 						"1":
 						{
-							"name": "msg.facility.definition"
+							"name": "msg.facility.keyword keyword.control"
 						}
 					},
 					"end" : "(?i)(?=\\.facility|\\.end)",
@@ -89,7 +357,7 @@
 						{
 							"name": "msg.facility.body",
 							"begin": "\\G",
-							"end": "([^-]|^)(?=(\\s*)\\n)",
+							"end": "(?<!-)(\\s*)(?=$\\n)",
 							"patterns": 
 							[
 								{
@@ -101,7 +369,10 @@
 							]
 						},
 						{
-							"include": "severity"
+							"include": "#severity"
+						},
+						{
+							"include": "#literal"
 						}
 					]
 				}
@@ -113,22 +384,40 @@
 			[
 				{
 					"name": "msg.facility.shared",
-					"match": "(?i)/shared"
+					"match": "(?i)(/shared)",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "msg.facility.shared.keyword variable.parameter "
+						}
+					}
 				},
 				{
 					"name": "msg.facility.system",
-					"match": "(?i)/system"
+					"match": "(?i)(/system)",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "msg.facility.system.keyword variable.parameter "
+						}
+					}
 				},
 				{
 					"name": "msg.facility.prefix",
-					"match": "(?i)/prefix(\\s*)=(\\s*)([a-z$_][a-z$_0-9]{,7})(\\S*)",
+					"match": "(?i)(/prefix)(\\s*)=(\\s*)([a-z$_][a-z$_0-9]{,7})(\\S*)",
 					"captures": 
 					{
-						"3":
+						"1":
 						{
-							"name": "msg.facility.prefix.value"
+							"name": "msg.facility.prefix.keyword variable.parameter "
 						},
 						"4":
+						{
+							"name": "msg.facility.prefix.value constant.character"
+						},
+						"5":
 						{
 							"name": "invalid.illegal"
 						}
@@ -146,14 +435,14 @@
 					{
 						"1":
 						{
-							"name": "msg.facility.name"
+							"name": "msg.facility.name constant.character"
 						},
 						"2":
 						{
 							"name": "msg.facility.separator"
 						}
 					},
-					"end": "(?=([^-]|^)(\\s*)\\n)",
+					"end": "(?<!-)(\\s*)(?=$\\n)",
 					"patterns": 
 					[
 						{
@@ -173,11 +462,11 @@
 				{
 					"name": "msg.facility.expression",
 					"begin": "\\G",
-					"end": "(?=(([^-]|^)(\\s*)\\n)|/)",
+					"end": "((?<!-)(\\s*)(?=$\\n))|/",
 					"patterns": 
 					[
 						{
-							"name": "msg.facility.number",
+							"name": "msg.facility.number constant.numeric",
 							"match": "\\G\\s*\\d+"
 						}
 					]
@@ -190,13 +479,73 @@
 			[
 				{
 					"name": "msg.page",
-					"match": "(?i)\\.page"
+					"match": "(?i)(\\.page)",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "msg.page.keyword keyword.control"
+						}
+					}
+				}
+			]
+		},
+		"severity": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.severity",
+					"begin": "(?i)(\\.severity)",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "msg.severity.keyword keyword.control"
+						}
+					},
+					"end": "(?<!-|^)\\s*\\n",
+					"patterns": 
+					[
+						{
+							"name": "msg.severity.success constant.character",
+							"match": "\\G\\s+(?i)success"
+						},
+						{
+							"name": "msg.severity.informational constant.character",
+							"match": "\\G\\s+(?i)informational"
+						},
+						{
+							"name": "msg.severity.warning constant.character",
+							"match": "\\G\\s+(?i)warning"
+						},
+						{
+							"name": "msg.severity.error constant.character",
+							"match": "\\G\\s+(?i)error"
+						},
+						{
+							"name": "msg.severity.severe constant.character",
+							"match": "\\G\\s+(?i)severe"
+						},
+						{
+							"name": "msg.severity.fatal constant.character",
+							"match": "\\G\\s+(?i)fatal"
+						},
+						{
+							"name": "invalid.illegal",
+							"match": "\\G[^-\\s]*"
+						},
+						{
+							"name": "invalid.illegal",
+							"match": "(?<!\\G)[^-\\s]*"
+						}
+					]
 				}
 			]
 		},
 		"string": 
 		{
-			"name": "msg.string.$1",
+			"name": "msg.string.$1 string.qouted",
 			"begin": "(\"|')",
 			"beginCaptures": 
 			{
@@ -221,12 +570,31 @@
 				}
 			]
 		},
-		"comment": 
+		"string-content":
 		{
 			"patterns": 
 			[
 				{
-					"name": "comment"
+					"name": "msg.string.fao",
+					"match": "(![A-Z][A-Z])",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "variable.parameter"
+						}
+					}
+				},
+				{
+					"name": "msg.string.content",
+					"match": ".",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "string.quoted"
+						}
+					}
 				}
 			]
 		}
