@@ -154,6 +154,11 @@ export class FileManagerExt
 						ret.push(line);
 					});
 
+					stream.on("error", () =>
+					{
+						lock.release();
+					});
+
 					await lock.acquire();
 
 					return ret;
