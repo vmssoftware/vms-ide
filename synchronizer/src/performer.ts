@@ -238,8 +238,8 @@ export const actions: IPerform[] = [
             for (const curScope of scopes) {
                 const ensured = await ensureSettings(curScope, logFn);
                 if (ensured) {
-                    const crlf = new UploadZip(logFn);
-                    wait.push(crlf.perform(ensured, clear));
+                    const zipper = new UploadZip(logFn);
+                    wait.push(zipper.perform(ensured, clear));
                 }
             }
             return Promise.all(wait).then((all) => {

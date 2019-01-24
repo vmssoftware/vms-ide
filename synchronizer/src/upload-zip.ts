@@ -83,7 +83,8 @@ export class UploadZip {
                         this.logFn(LogType.error, () => localize("zip.cd.failed", "Cannot set default directory."));
                         return false;
                     }
-                    const unzipResult = await shell.execCmd("unzip -oo " + zipFileName, 3000);
+                    // overwrite always, use current time for timestamping, wait 3sec before rejecting
+                    const unzipResult = await shell.execCmd(`unzip -oo "-D" ${zipFileName}`, 3000);
                     if (!unzipResult || unzipResult.length === 0 || shell.lastError) {
                         this.logFn(LogType.error, () => localize("zip.unzip.failed", "Unzip command failed: {0}", shell.lastError || "unknown error" ));
                         if (unzipResult && unzipResult.length) {
