@@ -1,4 +1,5 @@
 {
+    "runtime.lis_not_found": ".LIS фвйл не найден для исходного файла",
     "runtime.watch_error": "Watch: Ошибка параметра. Пример: (when (x > 3)) или ().",
     "runtime.command_ignore": "Команда запрещена!"
 }

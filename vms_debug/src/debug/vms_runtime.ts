@@ -149,6 +149,7 @@ export class VMSRuntime extends EventEmitter
 			this.addPrefixToArray(this.rootFolderName, this.lisPaths);
 		}
 
+		this.checkLisFiles(this.sourcePaths, this.lisPaths);
 		this.shell.resetParameters();
 
 		//run debugger
@@ -194,6 +195,35 @@ export class VMSRuntime extends EventEmitter
 		for(let i = 0; i < array.length; i++)
 		{
 			array[i] = perfix + ftpPathSeparator + array[i];
+		}
+	}
+
+	private checkLisFiles(sources : string[], lis : string[])
+	{
+		for(let itemSource of sources)
+		{
+			let found = false;
+			let name = this.getNameFromPath(itemSource);
+
+			for(let itemLis of lis)
+			{
+				if(name === this.getNameFromPath(itemLis))
+				{
+					found = true;
+					break;
+				}
+			}
+
+			if(!found)
+			{
+				const message = localize('runtime.lis_not_found', ".LIS file don't found for the source file");
+				vscode.window.showWarningMessage(message + " " + itemSource + "\n");
+
+				if (this.logFn)
+				{
+					this.logFn(LogType.information, () => message + " " + itemSource + "\n");
+				}
+			}
 		}
 	}
 
