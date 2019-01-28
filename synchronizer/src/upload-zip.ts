@@ -91,6 +91,15 @@ export class UploadZip {
                             this.logFn(LogType.error, () => "Unzip command output:\n" + unzipResult.join("\n") );
                         }
                         return false;
+                    } else {
+                        // parse unzip result
+                        if (unzipResult && unzipResult.length) {
+                            if (unzipResult.some((s) => s.startsWith("%DCL-W-IVVERB"))) {
+                                this.logFn(LogType.error, () => localize("zip.unzip.not.installed", "It seems 'unzip' isn't installed" ));
+                                this.logFn(LogType.error, () => "Unzip command output:\n" + unzipResult.join("\n") );
+                                return false;
+                            }
+                        }
                     }
                     // 3. force set synchronized
                     ProjectState.acquire().setSynchronized(ensured.scope, true);

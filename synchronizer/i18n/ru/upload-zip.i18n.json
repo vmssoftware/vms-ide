@@ -5,5 +5,6 @@
     "zip.shell.failed": "Cannot create remote shell.",
     "zip.cd.failed": "Cannot set default directory.",
     "zip.unzip.failed": "Unzip command failed.",
+    "zip.unzip.not.installed": "It seems 'unzip' isn't installed",
     "zip.cannot_finish": "Cannot finish Zip."
 }
