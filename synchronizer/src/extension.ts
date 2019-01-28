@@ -64,6 +64,16 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildProject", async (scope: string, params: string) => {
+        return workspace.saveAll(true)
+            .then((saved) => {
+                if (saved) {
+                    return Perform("rebuild", scope, buildLog, params);
+                }
+                return saved;
+            });
+    }));
+
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope: string, buildType: string) => {
         return Perform("clean", scope, buildLog, buildType);
     }));
@@ -106,6 +116,8 @@ export async function activate(context: ExtensionContext) {
         (element) => projectDependenciesProvider.add(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.build",
         (element) => projectDependenciesProvider.build(element)) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.rebuild",
+        (element) => projectDependenciesProvider.rebuild(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.clean",
         (element) => projectDependenciesProvider.clean(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.remove",

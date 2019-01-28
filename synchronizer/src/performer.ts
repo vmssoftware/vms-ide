@@ -19,7 +19,7 @@ const localize = nls.loadMessageBundle();
 
 export type AsyncAction = (scope: string, logFn: LogFunction, params?: string) => Promise<boolean>;
 
-export type ActionType = "synchronize" | "build" | "clean" | "crlf" | "edit settings" | "create mms" | "zip";
+export type ActionType = "synchronize" | "build" | "rebuild" | "clean" | "crlf" | "edit settings" | "create mms" | "zip";
 
 export interface IPerform {
     actionFunc: AsyncAction;
@@ -32,7 +32,7 @@ export interface IPerform {
 
 export const actions: IPerform[] = [
     {
-        // synchronize
+        // synchronize (!) simultaneously
         actionFunc: async (scope: string, logFn: LogFunction) => {
             let scopes: string[] = [scope];
             if (!scope) {
@@ -105,38 +105,68 @@ export const actions: IPerform[] = [
             scopes = new ProjDepTree().getDepList(scope).reverse();
             params = params || "DEBUG";
             const builder = Builder.acquire(logFn);
-            let retCode = true;
             for (const curScope of scopes) {
-                if (!ProjectState.acquire().isSynchronized(curScope)) {
-                    const ensured = await ensureSettings(curScope, logFn);
-                    if (ensured) {
-                        const syncronizer = Synchronizer.acquire(logFn);
-                        const result = await syncronizer.uploadSource(ensured);
-                        ProjectState.acquire().setSynchronized(curScope, result);
-                        retCode = retCode && result;
-                    } else {
-                        retCode = false;
-                    }
-                }
-                if (retCode && !ProjectState.acquire().isBuilt(curScope, params)) {
-                    const ensured = await ensureSettings(curScope, logFn);
-                    if (ensured) {
-                        const result = await builder.buildProject(ensured, params);
-                        if (params) {
-                            ProjectState.acquire().setBuilt(curScope, params, result);
+                const ensured = await ensureSettings(curScope, logFn);
+                if (ensured) {
+                    const syncronizer = Synchronizer.acquire(logFn);
+                    if (ProjectState.acquire().isSynchronized(curScope) || await syncronizer.uploadSource(ensured)) {
+                        ProjectState.acquire().setSynchronized(curScope, true);
+                        if (ProjectState.acquire().isBuilt(curScope, params) || await builder.buildProject(ensured, params)) {
+                            if (params) {
+                                ProjectState.acquire().setBuilt(curScope, params, true);
+                            }
+                        } else {
+                            return false;
                         }
-                        retCode = retCode && result;
                     } else {
-                        retCode = false;
+                        return false;
                     }
-                }
-                if (!retCode) {
-                    break;
+                } else {
+                    return false;
                 }
             }
-            return retCode;
+            return true;
         },
         actionName: "build",
+        context: CommandContext.isBuilding,
+        fail: localize("building.fail", "Building failed"),
+        status: localize("building.status", "$(tools) Building..."),
+        success: localize("buiding.success", "Building ok"),
+    },
+    {
+        // re-build
+        actionFunc: async (scope: string, logFn: LogFunction, params?: string) => {
+            if (!await onTheSameVms(scope, logFn)) {
+                logFn(LogType.error, () => localize("error.depend.vms", "All dependent projects must be on the same VMS host"));
+                return false;
+            }
+            let scopes: string[] = [scope];
+            scopes = new ProjDepTree().getDepList(scope).reverse();
+            params = params || "DEBUG";
+            const builder = Builder.acquire(logFn);
+            for (const curScope of scopes) {
+                const ensured = await ensureSettings(curScope, logFn);
+                if (ensured) {
+                    const syncronizer = Synchronizer.acquire(logFn);
+                    if (await syncronizer.uploadSource(ensured)) {
+                        ProjectState.acquire().setSynchronized(curScope, true);
+                        if (await builder.cleanProject(ensured, params) && await builder.buildProject(ensured, params)) {
+                            if (params) {
+                                ProjectState.acquire().setBuilt(curScope, params, true);
+                            }
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            }
+            return true;
+        },
+        actionName: "rebuild",
         context: CommandContext.isBuilding,
         fail: localize("building.fail", "Building failed"),
         status: localize("building.status", "$(tools) Building..."),
