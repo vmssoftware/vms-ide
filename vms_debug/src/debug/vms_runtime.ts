@@ -413,6 +413,14 @@ export class VMSRuntime extends EventEmitter
 							this.queueWaitVar.push(wait);
 							await wait.wait(5000);
 
+							if(wait.message === undefined)//no answer
+							{
+								if(this.queueWaitVar.size() > 0)
+								{
+									this.queueWaitVar.pop();
+								}
+							}
+
 							let childs : DebugVariable[] = [];
 
 							if(item.variableKind === ReflectKind.Array ||
@@ -492,6 +500,14 @@ export class VMSRuntime extends EventEmitter
 					this.queueWaitVar.push(wait);
 					await wait.wait(5000);
 
+					if(wait.message === undefined)//no answer
+					{
+						if(this.queueWaitVar.size() > 0)
+						{
+							this.queueWaitVar.pop();
+						}
+					}
+
 					nameVars = "";
 
 					for(let item of vars)//create string of pointers
@@ -512,6 +528,14 @@ export class VMSRuntime extends EventEmitter
 						let wait = new Subject();
 						this.queueWaitVar.push(wait);
 						await wait.wait(5000);
+
+						if(wait.message === undefined)//no answer
+						{
+							if(this.queueWaitVar.size() > 0)
+							{
+								this.queueWaitVar.pop();
+							}
+						}
 					}
 
 					for(let item of vars)
@@ -1071,7 +1095,9 @@ export class VMSRuntime extends EventEmitter
 
 						if(this.queueWaitVar.size() > 0)
 						{
-							this.queueWaitVar.pop().notify();
+							let event = this.queueWaitVar.pop();
+							event.message = "OK";
+							event.notify();
 						}
 						break;
 
@@ -1145,16 +1171,21 @@ export class VMSRuntime extends EventEmitter
 
 					if(this.queueWaitVar.size() > 0)
 					{
-						this.queueWaitVar.pop().notify();
+						let event = this.queueWaitVar.pop();
+						event.message = "ERROR";
+						event.notify();
 					}
 				}
 				else if(messageDebug.includes(MessageDebuger.msgNoFind) ||
 						messageDebug.includes(MessageDebuger.msgUnAlloc) ||
-						messageDebug.includes(MessageDebuger.msgNoSymbol))
+						messageDebug.includes(MessageDebuger.msgNoSymbol) ||
+						messageDebug.includes(MessageDebuger.msgNotAct))
 				{
 					if(this.queueWaitVar.size() > 0)
 					{
-						this.queueWaitVar.pop().notify();
+						let event = this.queueWaitVar.pop();
+						event.message = "ERROR";
+						event.notify();
 					}
 				}
 

@@ -22,6 +22,7 @@ export enum MessageDebuger
 	msgNoSccess = "%DEBUG-E-NOACCESSR, no read access to address",
 	msgNoFind = "%DEBUG-E-NOTRAZERO, Unable to find",
 	msgUnAlloc = "%DEBUG-W-UNALLOCATED",
+	msgNotAct = "%DEBUG-W-SYMNOTACT",
 	msgNoSymbol = "%DEBUG-E-NOSYMBOL, symbol",
 	msgEnd = "%DEBUG-I-EXITSTATUS, is '%SYSTEM-S-NORMAL, normal successful completion",
 }
