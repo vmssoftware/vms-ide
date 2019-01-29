@@ -15,6 +15,7 @@ import { HolderDebugVariableInfo, DebugVariable, ReflectKind, VariableFileInfo }
 const { Subject } = require('await-notify');
 import * as WaitSubject from 'await-notify';
 import { Queue } from '../queue/queues';
+import { GetSyncApi } from '../ext-api/get-sync-api';
 
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
@@ -56,7 +57,6 @@ export class VMSRuntime extends EventEmitter
 	private osCmd : OsCommands;
 	private dbgCmd : DebugCommands;
 	private dbgParser : DebugParser;
-	private fileManager : FileManagerExt;
 	private varsInfo : HolderDebugVariableInfo;
 	private debugRun : boolean;
 	private programEnd : boolean;
@@ -68,7 +68,8 @@ export class VMSRuntime extends EventEmitter
 
 	private sourcePaths: string[];
 	private lisPaths: string[];
-	private rootPath: string;
+	private workSpacePath: string;
+	private rootFolderName: string;
 
 	private currentFilePath: string;
 	private currentRoutine: string;
@@ -91,33 +92,64 @@ export class VMSRuntime extends EventEmitter
 
 		this.shell = shell;
 		this.buttonPressd = DebugButtonEvent.btnNoEvent;
+		this.rootFolderName = folder ? folder.name : "";
 		this.osCmd = new OsCommands();
 		this.dbgCmd = new DebugCommands();
 		this.dbgParser = new DebugParser(folder);
-		this.fileManager = new FileManagerExt(folder ? folder.name : "");
 		this.varsInfo = new HolderDebugVariableInfo();
 		this.debugRun = false;
 		this.programEnd = false;
+		this.workSpacePath = "";
 		this.currentFilePath = "";
-	 	this.currentRoutine = "";
+		this.currentRoutine = "";
+		this.sourcePaths = [];
+		this.lisPaths = [];
 	}
 
 	// Start executing the given program.
 	public async start(programName: string, stopOnEntry : boolean) : Promise<void>
 	{
 		this.programEnd = false;
-		let section = await this.fileManager.getProjectSection();
+		let fileManager = new FileManagerExt(this.rootFolderName);
+		let section = await fileManager.getProjectSection();
 
 		if (!section)
 		{
 			return;
 		}
 
-		let localSource = await this.fileManager.getLocalSource();
-		this.rootPath = "" + localSource!.root;
-		this.sourcePaths = await this.fileManager.loadPathListFiles(section.source);
-		this.lisPaths = await this.fileManager.loadPathListFiles(section.listing);
+		let syncApi = await GetSyncApi();
+		let localSource = await fileManager.getLocalSource();
+		let rootPath = "" + localSource!.root;
+		this.workSpacePath = rootPath.substring(0, rootPath.length - this.rootFolderName.length);
 
+		if(syncApi)
+		{
+			let listFolders = syncApi.getDepList(this.rootFolderName);
+
+			for(let folder of listFolders)
+			{
+				let fileM = new FileManagerExt(folder);
+				let sourcePaths = await fileM.loadPathListFiles(section.source);
+				let lisPaths = await fileM.loadPathListFiles(section.listing);
+
+				this.addPrefixToArray(folder, sourcePaths);
+				this.addPrefixToArray(folder, lisPaths);
+
+				this.sourcePaths = this.sourcePaths.concat(sourcePaths);
+				this.lisPaths = this.lisPaths.concat(lisPaths);
+			}
+		}
+		else
+		{
+			this.sourcePaths = await fileManager.loadPathListFiles(section.source);
+			this.lisPaths = await fileManager.loadPathListFiles(section.listing);
+
+			this.addPrefixToArray(this.rootFolderName, this.sourcePaths);
+			this.addPrefixToArray(this.rootFolderName, this.lisPaths);
+		}
+
+		this.checkLisFiles(this.sourcePaths, this.lisPaths);
 		this.shell.resetParameters();
 
 		//run debugger
@@ -156,6 +188,43 @@ export class VMSRuntime extends EventEmitter
 		await this.setRemoteBreakpointsAll();
 
 		this.continue();
+	}
+
+	private addPrefixToArray(perfix : string, array : string[])
+	{
+		for(let i = 0; i < array.length; i++)
+		{
+			array[i] = perfix + ftpPathSeparator + array[i];
+		}
+	}
+
+	private checkLisFiles(sources : string[], lis : string[])
+	{
+		for(let itemSource of sources)
+		{
+			let found = false;
+			let name = this.getNameFromPath(itemSource);
+
+			for(let itemLis of lis)
+			{
+				if(name === this.getNameFromPath(itemLis))
+				{
+					found = true;
+					break;
+				}
+			}
+
+			if(!found)
+			{
+				const message = localize('runtime.lis_not_found', ".LIS file don't found for the source file");
+				vscode.window.showWarningMessage(message + " " + itemSource + "\n");
+
+				if (this.logFn)
+				{
+					this.logFn(LogType.information, () => message + " " + itemSource + "\n");
+				}
+			}
+		}
 	}
 
 	//Continue execution to the end/beginning.
@@ -295,7 +364,7 @@ export class VMSRuntime extends EventEmitter
 					if(params !== "")
 					{
 						//error parameters!
-						const message = localize('runtime.watch_error', "Watch: Error parameter. Example: (when x > 3) or ().");
+						const message = localize('runtime.watch_error', "Watch: Error parameter. Example: (when (x > 3)) or ().");
 						vscode.debug.activeDebugConsole.append(message + "\n");
 					}
 				}
@@ -343,6 +412,14 @@ export class VMSRuntime extends EventEmitter
 							let wait = new Subject();
 							this.queueWaitVar.push(wait);
 							await wait.wait(5000);
+
+							if(wait.message === undefined)//no answer
+							{
+								if(this.queueWaitVar.size() > 0)
+								{
+									this.queueWaitVar.pop();
+								}
+							}
 
 							let childs : DebugVariable[] = [];
 
@@ -423,6 +500,14 @@ export class VMSRuntime extends EventEmitter
 					this.queueWaitVar.push(wait);
 					await wait.wait(5000);
 
+					if(wait.message === undefined)//no answer
+					{
+						if(this.queueWaitVar.size() > 0)
+						{
+							this.queueWaitVar.pop();
+						}
+					}
+
 					nameVars = "";
 
 					for(let item of vars)//create string of pointers
@@ -443,6 +528,14 @@ export class VMSRuntime extends EventEmitter
 						let wait = new Subject();
 						this.queueWaitVar.push(wait);
 						await wait.wait(5000);
+
+						if(wait.message === undefined)//no answer
+						{
+							if(this.queueWaitVar.size() > 0)
+							{
+								this.queueWaitVar.pop();
+							}
+						}
 					}
 
 					for(let item of vars)
@@ -596,17 +689,18 @@ export class VMSRuntime extends EventEmitter
 		let notBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 		let vrfBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 
-		let source = await this.fileManager.getLocalSource();
-
-		if (!source)
-		{
-			return undefined;
-		}
-
 		let fullPath = path;
 		path = path.replace(/\\/g, ftpPathSeparator);
-		path = path.slice(source.root!.length + 1);// to relative path
 
+		if(this.workSpacePath === "")
+		{
+			let fileManager = new FileManagerExt(this.rootFolderName);
+			let localSource = await fileManager.getLocalSource();
+			let rootPath = "" + localSource!.root;
+			this.workSpacePath = rootPath.substring(0, rootPath.length - this.rootFolderName.length);
+		}
+
+		path = path.slice(this.workSpacePath.length);
 		let fileName = this.getNameFromPath(path);
 		let key = path;
 		let currBps = this.breakPoints.get(key);
@@ -790,18 +884,38 @@ export class VMSRuntime extends EventEmitter
 		return item;
 	}
 
+	private getFolderName(item: string) : string //get name of the folder project, item="folder/path/file.ext"
+	{
+		let indexStart = item.indexOf(ftpPathSeparator);
+		let folderProject = item.substr(0, indexStart);
+
+		return folderProject;
+	}
+
+	private getLocalPath(item: string) : string //item="folder/path/file.ext"
+	{
+		let indexStart = item.indexOf(ftpPathSeparator);
+		let pathFile = item.substr(indexStart + 1);
+
+		return pathFile;
+	}
+
 	private findPathFileByName(fileName : string, paths : string[]) : string
 	{
 		let pathFile : string = "";
 
-		const name = this.getNameFromPath(fileName);
+		let name = this.getNameFromPath(fileName);
+		let folder = this.getFolderName(fileName);
 
 		for(let item of paths)
 		{
-			if (name === this.getNameFromPath(item))
+			if(folder === this.getFolderName(item))
 			{
-				pathFile = item;
-				break;
+				if (name === this.getNameFromPath(item))
+				{
+					pathFile = item;
+					break;
+				}
 			}
 		}
 
@@ -810,12 +924,23 @@ export class VMSRuntime extends EventEmitter
 
 	private async loadSourceLang(file: string) : Promise<string[]>
 	{
-		return this.fileManager.loadContextFile(file);
+		let folderProject = this.getFolderName(file);
+		let fileManager = new FileManagerExt(folderProject);
+
+		let pathFile = this.getLocalPath(file);
+
+		return fileManager.loadContextFile(pathFile);
 	}
 
 	private async loadSourceLis(file: string) : Promise<string[]>
 	{
-		return this.fileManager.loadContextFile(this.findPathFileByName(file, this.lisPaths));
+		let folderProject = this.getFolderName(file);
+		let fileManager = new FileManagerExt(folderProject);
+
+		let pathFileLis = this.findPathFileByName(file, this.lisPaths);
+		let pathFile = this.getLocalPath(pathFileLis);
+
+		return fileManager.loadContextFile(pathFile);
 	}
 
 	private async verifyBreakpoints(path: string) : Promise<void>
@@ -970,7 +1095,9 @@ export class VMSRuntime extends EventEmitter
 
 						if(this.queueWaitVar.size() > 0)
 						{
-							this.queueWaitVar.pop().notify();
+							let event = this.queueWaitVar.pop();
+							event.message = "OK";
+							event.notify();
 						}
 						break;
 
@@ -981,7 +1108,7 @@ export class VMSRuntime extends EventEmitter
 								//get current file and routine
 								if(stack.count > 0)
 								{
-									this.currentFilePath = stack.frames[0].file;
+									this.currentFilePath = stack.frames[0].file.slice(this.workSpacePath.length);
 									this.currentRoutine = stack.frames[0].name.substr(0, stack.frames[0].name.indexOf("["));
 								}
 
@@ -990,7 +1117,7 @@ export class VMSRuntime extends EventEmitter
 						break;
 
 					case DebugCmdVMS.dbgSymbol:
-						this.dbgParser.parseVariableMsg(this.rootPath, this.sourcePaths, messageData);
+						this.dbgParser.parseVariableMsg(this.sourcePaths, messageData);
 						this.waitSymbols.notify();
 						break;
 
@@ -1044,15 +1171,21 @@ export class VMSRuntime extends EventEmitter
 
 					if(this.queueWaitVar.size() > 0)
 					{
-						this.queueWaitVar.pop().notify();
+						let event = this.queueWaitVar.pop();
+						event.message = "ERROR";
+						event.notify();
 					}
 				}
 				else if(messageDebug.includes(MessageDebuger.msgNoFind) ||
-						messageDebug.includes(MessageDebuger.msgUnAlloc))
+						messageDebug.includes(MessageDebuger.msgUnAlloc) ||
+						messageDebug.includes(MessageDebuger.msgNoSymbol) ||
+						messageDebug.includes(MessageDebuger.msgNotAct))
 				{
 					if(this.queueWaitVar.size() > 0)
 					{
-						this.queueWaitVar.pop().notify();
+						let event = this.queueWaitVar.pop();
+						event.message = "ERROR";
+						event.notify();
 					}
 				}
 

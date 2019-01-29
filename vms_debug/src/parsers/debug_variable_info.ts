@@ -48,13 +48,13 @@ export class HolderDebugVariableInfo
 		return this.variables.size;
 	}
 
-	public getVariableFile(parhName : string) : VariableFileInfo[] | undefined
+	public getVariableFile(pathName : string) : VariableFileInfo[] | undefined
 	{
-		return this.variables.get(parhName);
+		return this.variables.get(pathName);
 	}
 
-	public setVariableFile(parhName : string, vars: VariableFileInfo[]) : void
+	public setVariableFile(pathName : string, vars: VariableFileInfo[]) : void
 	{
-		this.variables.set(parhName, vars);
+		this.variables.set(pathName, vars);
 	}
 }

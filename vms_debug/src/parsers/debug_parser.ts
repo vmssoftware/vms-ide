@@ -22,6 +22,8 @@ export enum MessageDebuger
 	msgNoSccess = "%DEBUG-E-NOACCESSR, no read access to address",
 	msgNoFind = "%DEBUG-E-NOTRAZERO, Unable to find",
 	msgUnAlloc = "%DEBUG-W-UNALLOCATED",
+	msgNotAct = "%DEBUG-W-SYMNOTACT",
+	msgNoSymbol = "%DEBUG-E-NOSYMBOL, symbol",
 	msgEnd = "%DEBUG-I-EXITSTATUS, is '%SYSTEM-S-NORMAL, normal successful completion",
 }
 
@@ -51,7 +53,6 @@ export class DebugParser
 	private commandButtonDone : boolean;
 	private topicNumberString : Array<number> = new Array<number>();
 	private displayDataString : string[] = ["", "", ""];
-	private fileManager : FileManagerExt;
 	private framesOld = new Array<any>();
 
 	constructor(public folder: WorkspaceFolder | undefined)
@@ -59,7 +60,6 @@ export class DebugParser
 		this.currentName = "";
 		this.fileInfo = new HolderDebugFileInfo();
 		this.varsInfo = new HolderDebugVariableInfo();
-		this.fileManager = new FileManagerExt(folder?folder.name:"");
 		this.commandDone = false;
 		this.commandButtonDone = false;
 	}
@@ -336,7 +336,14 @@ export class DebugParser
 			{
 				let pathFile = this.findPathFileByName(fileName, sourcePaths);
 				let pathLisFile = this.findPathFileByName(fileName, lisPaths);
-				lisLines = await this.fileManager.loadContextFile(pathLisFile);
+
+				let indexStart = pathFile.indexOf(ftpPathSeparator);
+				let folderProject = pathFile.substr(0, indexStart);
+				indexStart = pathLisFile.indexOf(ftpPathSeparator);
+				let pathLisFileLocal = pathLisFile.substr(indexStart + 1);
+
+				let fileManager = new FileManagerExt(folderProject);
+				lisLines = await fileManager.loadContextFile(pathLisFileLocal);
 
 				//calculate shift line
 				shift = this.calculateShiftLine(msgLine, lisLines);
@@ -391,11 +398,19 @@ export class DebugParser
 
 				if(pathFile !== "" && pathLisFile !== "")
 				{
-					let localSource = await this.fileManager.getLocalSource();
+					let indexStart = pathFile.indexOf(ftpPathSeparator);
+					let folderProject = pathFile.substr(0, indexStart);
+					let fileManager = new FileManagerExt(folderProject);
+					let localSource = await fileManager.getLocalSource();
+
+					indexStart = pathFile.indexOf(ftpPathSeparator);
+					let pathFileLocal = pathFile.substr(indexStart + 1);
+					indexStart = pathLisFile.indexOf(ftpPathSeparator);
+					let pathLisFileLocal = pathLisFile.substr(indexStart + 1);
 
 					if(shift === -1)
 					{
-						let lisLines = await this.fileManager.loadContextFile(pathLisFile);
+						let lisLines = await fileManager.loadContextFile(pathLisFileLocal);
 						//get source line
 						numberLine = this.getNumberLineSourceCode(numberLineDebug, lisLines);
 						//save file info
@@ -410,7 +425,7 @@ export class DebugParser
 					frames.push({
 						index: startFrame,
 						name: `${routineName}[${startFrame}]`,
-						file: localSource!.root + ftpPathSeparator + pathFile,
+						file: localSource!.root + ftpPathSeparator + pathFileLocal,
 						line: numberLine
 					});
 
@@ -448,7 +463,7 @@ export class DebugParser
 	// 	atomic type, quadword logical, size: 8 bytes
 	// record component HELLO\_iobuf._pad2
     //  atomic type, byte logical, size: 1 byte
-	public parseVariableMsg(rootPath: string, sourcePaths: string[], data: string) : void
+	public parseVariableMsg(sourcePaths: string[], data: string) : void
 	{
 		let filePath : string = "";
 		let variableInfo = new Array<VariableFileInfo>();
@@ -500,7 +515,7 @@ export class DebugParser
 
 				if(filePath === "")
 				{
-					filePath = rootPath + ftpPathSeparator + this.findPathFileByName(fileName, sourcePaths);
+					filePath = this.findPathFileByName(fileName, sourcePaths);
 				}
 
 				if(variableName !== "__func__" && variableName !== "")
