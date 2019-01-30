@@ -26,9 +26,12 @@ const rgxMsgCXX = /^((%|-)(CXX|CC)-(\S)-(\S*)),\s(.*)$/;
 const rgxPlaceCXX = /^at line number (\d.*) in file (.*)$/;
 const rgxMsgPosCXX = /^(\.*)\^/;
 
+const rgxMsgMessage = /^((%|-)(MESSAGE)-(\S)-(\S*)),\s(.*)$/;
+const rgxMsgMessageFSyntax = /%MESSAGE-F-SYNTAX, error parsing '(\S+)'/i;
+const rgxMsgMMSAbort = /%MMS-F-ABORT, For target ([^,]*),/;
+
 const rgxMsgMMS = /^((%|-)(MMS)-(\S)-(\S*)),\s(.*)$/;
 const rgxMsgFileSintax = /(.*) in file (.*)$/;
-const rgxMsgFileAbort = /For target (.*), (.*)$/;
 const rgxMsgInfoMessages = [
     /\d+ (catastrophic )?error(s?) detected in the compilation of/,
     /Compilation terminated/,
@@ -75,6 +78,9 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
         let [consume, from]  = findCxxErrors(i);
         if (!consume) {
             [consume, from] = findMmsErrors(i);
+        }
+        if (!consume) {
+            [consume, from] = findMessageErrors(i);
         }
         if (consume) {
             lines.splice(from, consume);
@@ -140,6 +146,62 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                     diagnostic.message += nextLine;
                     idx++;
                     consume++;
+                }
+            }
+            problems.push(diagnostic);
+        }
+        return [consume, from];
+    }
+
+    /**
+     * returns consumed lines
+     */
+    function findMessageErrors(idx: number) {
+        let consume = 0;
+        let from = idx;
+        const line = lines[idx];
+        const matched = line.match(rgxMsgMessage);
+        if (matched) {
+            consume++;
+            const diagnostic: IPartialDiagnostics = {
+                facility: matched[3],
+                severity: VmsSeverity.information,
+            };
+            const trySeverity = matched[4];
+            if (isVmsSeverity(trySeverity)) {
+                diagnostic.severity = trySeverity;
+            }
+            diagnostic.type = matched[5];
+            diagnostic.message = matched[6];
+            if (idx > 0) {
+                // assume prevoius line contains source line with error, so consume it
+                from -= 1;
+                consume += 1;
+                const prevLine = lines[idx - 1];
+                // assume first 40 symbols are line number
+                diagnostic.line = parseInt(prevLine.slice(0, 40), 10);
+                diagnostic.pos = 1;
+                // test if it is syntax parsing error, so we can get position
+                const syntaxMatch = line.match(rgxMsgMessageFSyntax);
+                if (syntaxMatch && syntaxMatch[1]) {
+                    const parseErrorPos = prevLine.toLowerCase().indexOf(syntaxMatch[1].toLowerCase());
+                    if (parseErrorPos >= 0) {
+                        diagnostic.pos = parseErrorPos - 40 + 1;    // magic numbers: 40 is length of line number + 1 is starting column
+                    }
+                }
+            }
+            // get file, do not consume
+            idx++;
+            while (idx < lines.length) {
+                const nextLine = lines[idx];
+                const nextLineMathed = nextLine.match(rgxMsgMMSAbort);
+                if (nextLineMathed && nextLineMathed[1]) {
+                    const path = nextLineMathed[1];
+                    const converter = VmsPathConverter.fromVms(path);
+                    diagnostic.file = converter.initial;
+                    break;
+                } else {
+                    idx++;
                 }
             }
             problems.push(diagnostic);

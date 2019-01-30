@@ -747,6 +747,17 @@ export class Builder {
                     if (cwd && file.toUpperCase().startsWith(cwd)) {
                         localFile = file.slice(cwd.length);
                     }
+                    // check MSG
+                    if (entry.facility && entry.facility.toUpperCase() === "MESSAGE" &&
+                        (selection.type === "release" || selection.type === "debug")) {
+                        // conver target to source
+                        const outPathLength = scopeData.ensured.projectSection.outdir.length + selection.type.length + 6;   // 6 = length of "obj" and three separators
+                        localFile = localFile.slice(outPathLength);
+                        const dotPos = localFile.indexOf(".");
+                        if (dotPos >= 0) {
+                            localFile = localFile.slice(0, dotPos) + ".msg";  // we assume it is MSG
+                        }
+                    }
                     // find case-insensitive
                     const found = await scopeData.localSource.findFiles(localFile);
                     if (found.length === 1) {
