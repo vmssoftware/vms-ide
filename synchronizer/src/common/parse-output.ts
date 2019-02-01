@@ -20,15 +20,57 @@ interface IDiagnostics {
 
 type IPartialDiagnostics = Partial<IDiagnostics>;
 
+interface IParseRgx {
+    rgxMain: RegExp;                // main match
+    rgxSkip: RegExp[];              // consume and skip
+    facilityPos: number;            // next 4 values are positions in rgxMain for appropriate matches
+    severityPos: number;
+    typePos: number;
+    messagePos: number;
+    lineNumLength: number;          // length of line number value in source line (starts with)
+    rgxDoSearchPrev: RegExp[];      // if mathed, search it in previous line to get position of matched[1]
+    rgxLinePresent: RegExp[];       // if mathed, do not search anything in previous line (it as absent)
+    rgxDoSearchNextForPath: RegExp; // try to find target file name
+}
+
 const rgxMsg = /^((%|-)(\S+)-(\S)-(\S*)),\s(.*)$/;
 
 const rgxMsgCXX = /^((%|-)(CXX|CC)-(\S)-(\S*)),\s(.*)$/;
 const rgxPlaceCXX = /^at line number (\d.*) in file (.*)$/;
 const rgxMsgPosCXX = /^(\.*)\^/;
 
-const rgxMsgMessage = /^((%|-)(MESSAGE)-(\S)-(\S*)),\s(.*)$/;
-const rgxMsgMessageFSyntax = /%MESSAGE-F-SYNTAX, error parsing '(\S+)'/i;
-const rgxMsgMMSAbort = /%MMS-F-ABORT, For target ([^,]*),/;
+const parseRgxMSG: IParseRgx = {
+    rgxMain: /^((%|-)(MESSAGE)-(\S)-(\S*)),\s(.*)$/,
+    rgxSkip: [ ],
+    facilityPos: 3,
+    severityPos: 4,
+    typePos: 5,
+    messagePos: 6,
+    lineNumLength: 40,
+    rgxDoSearchPrev: [
+        /%MESSAGE-F-SYNTAX, error parsing '(\S+)'/i,
+    ],
+    rgxLinePresent: [],
+    rgxDoSearchNextForPath: /%MMS-F-ABORT, For target ([^,]*),/,
+};
+
+const parseRgxCLD: IParseRgx = {
+    rgxMain: /^((%|-)(CDU)-(\S)-(\S*)),\s(.*)$/,
+    rgxSkip: [ ],
+    facilityPos: 3,
+    severityPos: 4,
+    typePos: 5,
+    messagePos: 6,
+    lineNumLength: 10,
+    rgxDoSearchPrev: [
+        /%CDU-E-INVITEM, Invalid item \"(.*?)\"/,
+        /%CDU-E-INVTYPE, Built-in type ([a-z$_][a-z$_0-9]*) is not defined/i,
+    ],
+    rgxLinePresent: [
+        /%CDU-E-(?:\w+), Line (\d+):/
+    ],
+    rgxDoSearchNextForPath: /%MMS-F-ABORT, For target ([^,]*),/,
+};
 
 const rgxMsgMMS = /^((%|-)(MMS)-(\S)-(\S*)),\s(.*)$/;
 const rgxMsgFileSintax = /(.*) in file (.*)$/;
@@ -80,7 +122,10 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
             [consume, from] = findMmsErrors(i);
         }
         if (!consume) {
-            [consume, from] = findMessageErrors(i);
+            [consume, from] = findErrors(i, parseRgxCLD);
+        }
+        if (!consume) {
+            [consume, from] = findErrors(i, parseRgxMSG);
         }
         if (consume) {
             lines.splice(from, consume);
@@ -153,62 +198,6 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
         return [consume, from];
     }
 
-    /**
-     * returns consumed lines
-     */
-    function findMessageErrors(idx: number) {
-        let consume = 0;
-        let from = idx;
-        const line = lines[idx];
-        const matched = line.match(rgxMsgMessage);
-        if (matched) {
-            consume++;
-            const diagnostic: IPartialDiagnostics = {
-                facility: matched[3],
-                severity: VmsSeverity.information,
-            };
-            const trySeverity = matched[4];
-            if (isVmsSeverity(trySeverity)) {
-                diagnostic.severity = trySeverity;
-            }
-            diagnostic.type = matched[5];
-            diagnostic.message = matched[6];
-            if (idx > 0) {
-                // assume prevoius line contains source line with error, so consume it
-                from -= 1;
-                consume += 1;
-                const prevLine = lines[idx - 1];
-                // assume first 40 symbols are line number
-                diagnostic.line = parseInt(prevLine.slice(0, 40), 10);
-                diagnostic.pos = 1;
-                // test if it is syntax parsing error, so we can get position
-                const syntaxMatch = line.match(rgxMsgMessageFSyntax);
-                if (syntaxMatch && syntaxMatch[1]) {
-                    const parseErrorPos = prevLine.toLowerCase().indexOf(syntaxMatch[1].toLowerCase());
-                    if (parseErrorPos >= 0) {
-                        diagnostic.pos = parseErrorPos - 40 + 1;    // magic numbers: 40 is length of line number + 1 is starting column
-                    }
-                }
-            }
-            // get file, do not consume
-            idx++;
-            while (idx < lines.length) {
-                const nextLine = lines[idx];
-                const nextLineMathed = nextLine.match(rgxMsgMMSAbort);
-                if (nextLineMathed && nextLineMathed[1]) {
-                    const path = nextLineMathed[1];
-                    const converter = VmsPathConverter.fromVms(path);
-                    diagnostic.file = converter.initial;
-                    break;
-                } else {
-                    idx++;
-                }
-            }
-            problems.push(diagnostic);
-        }
-        return [consume, from];
-    }
-
     function findMmsErrors(idx: number) {
         let consume = 0;
         const line = lines[idx];
@@ -242,4 +231,77 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
         }
         return [consume, idx];
     }
+
+    /**
+     * Designed for CLD and MSG
+     * @param idx starting line
+     * @param parseRgx parse parameters
+     */
+    function findErrors(idx: number, parseRgx: IParseRgx) {
+        let consume = 0;
+        let from = idx;
+        const line = lines[idx];
+        const matched = line.match(parseRgx.rgxMain);
+        if (matched) {
+            consume++;
+            if (parseRgx.rgxSkip.some((rgx) => rgx.test(matched[parseRgx.messagePos]))) {
+                return [consume, from];
+            }
+            const diagnostic: IPartialDiagnostics = {
+                facility: matched[parseRgx.facilityPos],
+                severity: VmsSeverity.information,
+            };
+            const trySeverity = matched[parseRgx.severityPos];
+            if (isVmsSeverity(trySeverity)) {
+                diagnostic.severity = trySeverity;
+            }
+            diagnostic.type = matched[parseRgx.typePos];
+            diagnostic.message = matched[parseRgx.messagePos];
+            for (const rgx of parseRgx.rgxLinePresent) {
+                const lineMatch = line.match(rgx);
+                if (lineMatch && lineMatch[1]) {
+                    diagnostic.line = parseInt(lineMatch[1], 10);
+                    diagnostic.pos = 1; // we have no source line to find error position
+                    break;
+                }
+            }
+            if (typeof diagnostic.line === "undefined" && idx > 0) {
+                // assume prevoius line contains source line with error, so consume it
+                from -= 1;
+                consume += 1;
+                const prevLine = lines[idx - 1];
+                // assume first N symbols are line number
+                diagnostic.line = parseInt(prevLine.slice(0, parseRgx.lineNumLength), 10);
+                diagnostic.pos = 1;
+                // test if it is known error, so we can get position
+                for (const rgx of parseRgx.rgxDoSearchPrev) {
+                    const knownMatch = line.match(rgx);
+                    if (knownMatch && knownMatch[1]) {
+                        const errPos = prevLine.toLowerCase().indexOf(knownMatch[1].toLowerCase());
+                        if (errPos >= 0) {
+                            diagnostic.pos = errPos - parseRgx.lineNumLength + 1;
+                            break;
+                        }
+                    }
+                }
+            }
+            // get file, do not consume
+            idx++;
+            while (idx < lines.length) {
+                const nextLine = lines[idx];
+                const nextLineMathed = nextLine.match(parseRgx.rgxDoSearchNextForPath);
+                if (nextLineMathed && nextLineMathed[1]) {
+                    const path = nextLineMathed[1];
+                    const converter = VmsPathConverter.fromVms(path);
+                    diagnostic.file = converter.initial;
+                    break;
+                } else {
+                    idx++;
+                }
+            }
+            problems.push(diagnostic);
+        }
+        return [consume, from];
+    }
+
 }
