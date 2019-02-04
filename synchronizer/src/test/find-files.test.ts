@@ -7,10 +7,12 @@ import { findFiles } from "../common/find-files";
 import { IInputAttributes } from "../ext-api/api";
 import { GetSshHelperType } from "../ext-api/get-ssh-helper";
 import { SshHelper } from "../ext-api/ssh-helper";
-import { Vms } from "./config/vms";
 import { VmsSftpClient } from "../sync/vms-sftp-client";
+import { Vms } from "./config/vms";
 
 suite("SFTP directory tests", function(this: Mocha.Suite) {
+
+    return;
 
     this.timeout(0);
 

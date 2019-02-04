@@ -17,6 +17,7 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
     public static readonly cmdSelect = "vmssoftware.project-dep.projectDependencies.select";
     public static readonly cmdDescrSelect = "vmssoftware.project-dep.projectDescription.select";
     public static readonly cmdBuild = "vmssoftware.synchronizer.buildProject";
+    public static readonly cmdReBuild = "vmssoftware.synchronizer.reBuildProject";
     public static readonly cmdClean = "vmssoftware.synchronizer.cleanProject";
 
     public readonly onDidChangeTreeData: vscode.Event<IProjectElement | undefined>;
@@ -92,6 +93,20 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
             }
             // TODO: activate extension
             vscode.commands.executeCommand(ProjDepProvider.cmdBuild, this.selected.name, buildType);
+        }
+    }
+
+    public rebuild(node: IProjectElement) {
+        if (this.selected) {
+            let buildType = BuildType.debug;
+            const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
+            switch (config.get(ProjDescrProvider.configBuildTypeSection)) {
+                case BuildType.release:
+                    buildType = BuildType.release;
+                    break;
+            }
+            // TODO: activate extension
+            vscode.commands.executeCommand(ProjDepProvider.cmdReBuild, this.selected.name, buildType);
         }
     }
 

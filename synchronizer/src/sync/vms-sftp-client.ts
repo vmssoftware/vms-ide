@@ -43,7 +43,9 @@ export class VmsSftpClient implements ISftpClient {
             list = list.map((entry) => {
                 if (entry.isDirectory) {
                     const dirDot = entry.filename.toLowerCase().lastIndexOf(".dir;");
-                    entry.filename = entry.filename.slice(0, dirDot);
+                    if (dirDot >= 0) {
+                        entry.filename = entry.filename.slice(0, dirDot);
+                    }
                 } else {
                     const verSemicolon = entry.filename.lastIndexOf(";");
                     if (verSemicolon >= 0) {

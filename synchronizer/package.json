@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.47",
+    "version": "0.1.48",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -19,6 +19,7 @@
         "onView:vmssoftware.project-dep.projectDescription",
         "onCommand:vmssoftware.synchronizer.stopSync",
         "onCommand:vmssoftware.synchronizer.buildProject",
+        "onCommand:vmssoftware.synchronizer.reBuildProject",
         "onCommand:vmssoftware.synchronizer.createMMS",
         "onCommand:vmssoftware.synchronizer.cleanProject",
         "onCommand:vmssoftware.synchronizer.syncProject",
@@ -71,6 +72,10 @@
                     "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 },
                 {
+                    "command": "vmssoftware.synchronizer.reBuildProject",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
                     "command": "vmssoftware.synchronizer.cleanProject",
                     "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 },
@@ -113,6 +118,10 @@
                     "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
                 },
                 {
+                    "command": "vmssoftware.project-dep.projectDependencies.rebuild",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
                     "command": "vmssoftware.project-dep.projectDependencies.clean",
                     "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
                 },
@@ -137,19 +146,23 @@
             },
             {
                 "command": "vmssoftware.project-dep.projectDependencies.add",
-                "title": "Add"
+                "title": "Add in dependencies to selected"
             },
             {
                 "command": "vmssoftware.project-dep.projectDependencies.build",
-                "title": "Build"
+                "title": "Build with dependencies"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.rebuild",
+                "title": "Rebuild with dependencies"
             },
             {
                 "command": "vmssoftware.project-dep.projectDependencies.clean",
-                "title": "Clean"
+                "title": "Clean this only"
             },
             {
                 "command": "vmssoftware.project-dep.projectDependencies.remove",
-                "title": "Remove"
+                "title": "Remove from dependencies"
             },
             {
                 "command": "vmssoftware.project-dep.projectDescription.refresh",
@@ -188,6 +201,11 @@
             {
                 "command": "vmssoftware.synchronizer.buildProject",
                 "title": "%command.buildProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.reBuildProject",
+                "title": "%command.reBuildProject.title%",
                 "category": "%command.category%"
             },
             {
