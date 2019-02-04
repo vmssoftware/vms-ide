@@ -4,7 +4,7 @@
 		"no-unused-expression": true,
 		"no-duplicate-variable": true,
 		"curly": true,
-		"class-name": true,
+		"class-name": false,
 		"semicolon": [
 			true,
 			"always"

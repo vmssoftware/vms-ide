@@ -9,11 +9,6 @@
             "problemMatcher": []
         },
         {
-            "type": "npm",
-            "script": "antlr4ts2",
-            "problemMatcher": []
-        },
-        {
             "type": "gulp",
             "task": "build",
             "problemMatcher": []
