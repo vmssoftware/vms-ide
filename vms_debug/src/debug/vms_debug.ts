@@ -106,6 +106,10 @@ export class VMSDebugSession extends LoggingDebugSession
 		{
 			this.sendEvent(new TerminatedEvent());
 		});
+		this.runtime.on('restart', () =>
+		{
+			this.sendEvent(new TerminatedEvent(true));
+		});
 
 		// breakpoints event handlers
 		this.runtime.on('breakpointValidated', (bp: VMSBreakpoint) =>

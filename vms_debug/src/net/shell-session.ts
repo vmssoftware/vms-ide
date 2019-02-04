@@ -36,6 +36,7 @@ export class ShellSession
     private queueCmd = new Queue<CommandMessage>();
     private readyCmd : boolean;
     private receiveCmd : boolean;
+    private disconnect : boolean;
     private currentCmd : CommandMessage;
 
     private sshHelper?: SshHelper;
@@ -133,6 +134,11 @@ export class ShellSession
         }
         else if(data.includes("\x00") && (data.includes(this.promptCmd) || data.includes("DBG> ")))
         {
+            if(data.includes("DBG> exit"))//catch command "exit"
+            {
+                this.receiveCmd = true;
+            }
+
             if(this.receiveCmd)
             {
                 if(data.includes("DBG> "))
@@ -154,10 +160,10 @@ export class ShellSession
                         data = data.substr(0, indexEnd-1);
 
                         this.resultData += data + "> ";
-                        if (this.currentCmd.getBody() !== OsCmdVMS.osRunCOM)
+
+                        if (this.disconnect)
                         {
-                            this.DisconectSession();//close SSH session
-                            this.extensionCloseCb();
+                            this.DisconectSession(true);//close SSH session
                         }
                     }
 
@@ -248,6 +254,7 @@ export class ShellSession
         this.resultData = "";
         this.readyCmd = true;
         this.receiveCmd = false;
+        this.disconnect = false;
         this.currentCmd = new CommandMessage("", "");
         this.queueCmd = new Queue<CommandMessage>();
     }
@@ -327,7 +334,7 @@ export class ShellSession
         this.SendCommandFromQueue();
     }
 
-    public DisconectSession()
+    public DisconectSession(callCloseCb : boolean)
     {
         if(this.sshShell)
         {
@@ -335,5 +342,15 @@ export class ShellSession
             this.sshShell.dispose();
             this.sshShell = undefined;
         }
+
+        if(callCloseCb)
+        {
+            this.extensionCloseCb();
+        }
+    }
+
+    public SetDisconnectInShellSession()
+    {
+        this.disconnect = true;
     }
 }
