@@ -1,8 +1,24 @@
-import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
+import { ANTLRInputStream, CommonTokenStream, ConsoleErrorListener } from 'antlr4ts';
 import { ParseTreeWalker } from 'antlr4ts/tree/ParseTreeWalker';
 import { msgLexer } from '../msgLexer';
 import { msgParser, MainRuleContext, TitleContext, TitleNameContext, TitleDescriptionContext, ExpressionAtomContext } from '../msgParser';
 import { msgListener } from '../msgListener';
+import { ANTLRErrorListener } from 'antlr4ts/ANTLRErrorListener';
+import { Recognizer } from 'antlr4ts/Recognizer';
+import { RecognitionException } from 'antlr4ts/RecognitionException';
+
+class TestMsgErrorListener implements ANTLRErrorListener<any> {
+    public syntaxError<T>(
+        recognizer: Recognizer<T, any>, 
+        offendingSymbol: T, 
+        line: number, 
+        charPositionInLine: number, 
+        msg: string, 
+        e: RecognitionException | undefined): void 
+    {
+        console.log(`${msg}`);
+    }
+}
 
 suite("Parser tests", function(this: Mocha.Suite) {
 
@@ -16,21 +32,16 @@ suite("Parser tests", function(this: Mocha.Suite) {
         // Create the lexer and parser
         let inputStream = new ANTLRInputStream(
 `
-.TITLE  SV$_test Warn & errors.
-
-.title _in09 Do it, please? 
-
-.IDENT "Test ver 1.0" 
-    
-.idEnt _Test$Ident
-.FACILITY VVS, 33 + (1 + LAST$_MESSAGE) * 3 /prefix=VS_
-.facility /system /shared SVS, 99   /prefix=SV_
-
+.FACILITY VVS, 33
+.SEVERITY error
+SYNTAX "Invalid !OW syn!5ULtax in !6(ZI) !_keyword !AZ!@AS" /fao_count=1 /error
 `
         );
         let lexer = new msgLexer(inputStream);
         let tokenStream = new CommonTokenStream(lexer);
         let parser = new msgParser(tokenStream);
+        parser.removeErrorListeners();
+        parser.addErrorListener(new TestMsgErrorListener());
         let tree = parser.mainRule();
         
         const listener: msgListener = {
