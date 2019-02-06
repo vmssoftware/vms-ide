@@ -1,4 +1,4 @@
-import { ftpPathSeparator, LogFunction, LogType } from "@vorfol/common";
+import { ftpPathSeparator, LogFunction, LogType, printLike } from "@vorfol/common";
 import * as path from "path";
 import { ProjectState } from "./dep-tree/proj-state";
 import { IEnsured } from "./ensure-settings";
@@ -13,6 +13,10 @@ nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export class UploadZip {
+
+    private static readonly unzipCmd = printLike`unzip -oo "-D" ${"zipFileName"}`;
+    private static readonly freeAllCmd = printLike`set sec /prot=(o:rwed) [${"directory"}...]*.*;*`;
+    private static readonly delAllCmd = printLike`delete/tree [${"directory"}...]*.*;*`;
 
     public logFn: LogFunction;
     constructor(log?: LogFunction) {
@@ -68,8 +72,8 @@ export class UploadZip {
                         case "yes":
                         case "true":
                         case "clear":
-                            await shell.execCmd("set sec /prot=(o:rwed) [" + converter.bareDirectory + "...]*.*;*");
-                            await shell.execCmd("delete/tree [" + converter.bareDirectory + "...]*.*;*");
+                            await shell.execCmd(UploadZip.freeAllCmd(converter.bareDirectory));
+                            await shell.execCmd(UploadZip.delAllCmd(converter.bareDirectory));
                             break;
                     }
                 }
@@ -84,11 +88,15 @@ export class UploadZip {
                         return false;
                     }
                     // overwrite always, use current time for timestamping, wait 3sec before rejecting
-                    const unzipResult = await shell.execCmd(`unzip -oo "-D" ${zipFileName}`, 3000);
+                    let command = UploadZip.unzipCmd(zipFileName);
+                    if (ensured.synchronizeSection.unzipCmd) {
+                        command = ensured.synchronizeSection.unzipCmd + " " + zipFileName;
+                    }
+                    const unzipResult = await shell.execCmd(command, 3000);
                     if (!unzipResult || unzipResult.length === 0 || shell.lastError) {
                         this.logFn(LogType.error, () => localize("zip.unzip.failed", "Unzip command failed: {0}", shell.lastError || "unknown error" ));
                         if (unzipResult && unzipResult.length) {
-                            this.logFn(LogType.error, () => "Unzip command output:\n" + unzipResult.join("\n") );
+                            this.logFn(LogType.error, () => localize("zip.unzip.error_output", "Unzip command output:\n {0}", unzipResult.join("\n")));
                         }
                         return false;
                     } else {
@@ -96,7 +104,7 @@ export class UploadZip {
                         if (unzipResult && unzipResult.length) {
                             if (unzipResult.some((s) => s.startsWith("%DCL-W-IVVERB"))) {
                                 this.logFn(LogType.error, () => localize("zip.unzip.not.installed", "It seems 'unzip' isn't installed" ));
-                                this.logFn(LogType.error, () => "Unzip command output:\n" + unzipResult.join("\n") );
+                                this.logFn(LogType.error, () => localize("zip.unzip.error_output", "Unzip command output:\n {0}", unzipResult.join("\n")));
                                 return false;
                             }
                         }
