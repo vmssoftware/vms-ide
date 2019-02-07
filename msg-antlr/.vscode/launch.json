@@ -6,6 +6,14 @@
 	"version": "0.2.0",
     "configurations": [
         {
+            "type": "antlr-debug",
+            "request": "launch",
+            "name": "Debug Current Grammar",
+            "input": "messages.msg",
+            "startRule": "mainRule",
+            "visualParseTree": true
+        },
+        {
             "name": "Extension",
             "type": "extensionHost",
             "request": "launch",

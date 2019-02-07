@@ -12,6 +12,11 @@
             "type": "gulp",
             "task": "build",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "get-ext-api",
+            "problemMatcher": []
         }
     ]
 }

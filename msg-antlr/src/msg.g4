@@ -99,7 +99,8 @@ MUL: '*';
 DIV: '/';
 BRK_OPEN: '(';
 BRK_CLOS: ')';
-PUNCTUATION: ('.'|','|':'|';'|'!'|'?'|OPERATORS);  //must be last one
+PUNCTUATION: ('.'|','|':'|';'|'!'|'?'|OPERATORS);  
+ANY: .;  //must be last one
 
 mainRule: (
       title 
@@ -108,34 +109,37 @@ mainRule: (
    |  facility
    |  empty )* EOF;
 
-title: titleKeyword WHITESPACE titleName (WHITESPACE titleDescription)? NEWLINE;
-
-titleKeyword: TITLE;
-
-titleName: NAME;
-
+title: keyword=TITLE WHITESPACE name=NAME (WHITESPACE titleDescription)? NEWLINE;  //no comments in title
 titleDescription: (~NEWLINE)*;
 
-ident: identKeyword continuation? WHITESPACE? identValue WHITESPACE? (commentEOL | NEWLINE);
-
-identKeyword: IDENT;
-
-identValue: (NAME | simpleString) ;
+ident: keyword=IDENT (continuation | WHITESPACE) WHITESPACE? identValue WHITESPACE? (commentEOL | NEWLINE);
+identValue: NAME | simpleString;
 
 simpleString: (QUOTA ~QUOTA*? QUOTA) | (DQUOTA ~DQUOTA*? DQUOTA);
 
-page: pageKeyword WHITESPACE? NEWLINE;
+page: keyword=PAGE WHITESPACE? (commentEOL | NEWLINE);
 
-pageKeyword: PAGE;
+facility: 
+   keyword=FACILITY (continuation? | WHITESPACE) facilityDescription    //ends with newline
+   facilityContent? 
+   end?;
 
-facility: facilityKeyword WHITESPACE facilityDescription facilityContent? end?;
+facilityDescription: 
+   continuation? WHITESPACE?
+   (facilityQualifier continuation? WHITESPACE?)* 
+   name=NAME 
+   continuation? WHITESPACE?
+   separator=(WHITESPACE | COMMA) 
+   continuation? WHITESPACE?
+   value=expression
+   continuation? WHITESPACE?
+   (facilityQualifier continuation? WHITESPACE?)* (commentEOL | NEWLINE);
 
-facilityKeyword: FACILITY;
+facilityQualifier: prefixQualifier | sharedQualifier | systemQualifier ;
 
-facilityDescription: (facilityQualifier WHITESPACE?)* facilityName WHITESPACE? facilityNameSeparator WHITESPACE? facilityNum WHITESPACE? 
-                     (facilityQualifier WHITESPACE?)* NEWLINE;
-
-facilityNameSeparator: (WHITESPACE | COMMA);
+prefixQualifier: keyword=QPREFIX WHITESPACE? EQ WHITESPACE? value=NAME;
+sharedQualifier: keyword=QSHARED;
+systemQualifier: keyword=QSYSTEM;
 
 facilityContent: 
    (  severity
@@ -144,65 +148,25 @@ facilityContent:
    |  base 
    |  message )+;
 
-literal: literalKeyword WHITESPACE literalDefinition (WHITESPACE? COMMA WHITESPACE? literalDefinition)? WHITESPACE? NEWLINE;
+literal: keyword=LITERAL continuation? | WHITESPACE literalDefinition (WHITESPACE? COMMA WHITESPACE? literalDefinition)? WHITESPACE? NEWLINE;
+literalDefinition: name=NAME WHITESPACE? EQ WHITESPACE? value=expression;
 
-literalKeyword: LITERAL;
-
-literalDefinition: literalName WHITESPACE? EQ WHITESPACE? literalValue;
-
-literalName: NAME;
-
-literalValue: expression;
-
-severity: severityKeyword WHITESPACE severityValue WHITESPACE? NEWLINE;
-
-severityKeyword: SEVERITY;
-
+severity: keyword=SEVERITY WHITESPACE value=severityValue WHITESPACE? NEWLINE;
 severityValue: SUCCESS | INFORMATIONAL | WARNING | ERROR | SEVERE | FATAL;
 
-base: baseKeyword WHITESPACE baseNumber WHITESPACE? NEWLINE;
+base: keyword=BASE WHITESPACE value=NUMBER WHITESPACE? NEWLINE;
 
-baseKeyword: BASE;
+end: keyword=END WHITESPACE? NEWLINE;
 
-baseNumber: NUMBER;
-
-end: endKeyword WHITESPACE? NEWLINE;
-
-endKeyword: END;
-
-facilityQualifier: prefixQualifier | sharedQualifier | systemQualifier ;
-
-prefixQualifier: prefixQualifierKeyword WHITESPACE? EQ WHITESPACE? prefixQualifierValue;
-
-prefixQualifierKeyword: QPREFIX;
-
-prefixQualifierValue: NAME;
-
-sharedQualifier: QSHARED;
-
-systemQualifier: QSYSTEM;
-
-facilityName: NAME;
-
-facilityNum: expression;
-
-expression : bracketOpen WHITESPACE? expression WHITESPACE? bracketClose
-           | expression WHITESPACE? (multiply|divide) WHITESPACE? expression
-           | expression WHITESPACE? (add|substract) WHITESPACE? expression                      
-           | expressionAtom
+expression : open='(' WHITESPACE? expression WHITESPACE? close=')'                     #brackets
+           | left=expression WHITESPACE? sign=(MUL|DIV) WHITESPACE? right=expression   #muldiv
+           | left=expression WHITESPACE? sign=(ADD|SUB) WHITESPACE? right=expression   #addsub
+           | (NUMBER | NAME)                                                           #atom
            ;
-
-bracketOpen: BRK_OPEN;
-bracketClose: BRK_CLOS;
-multiply: MUL;
-divide: DIV;
-add: ADD;
-substract: SUB;
-expressionAtom: NUMBER | NAME;
 
 empty: WHITESPACE? NEWLINE;
 
-commentEOL: commentSign (~NEWLINE)* NEWLINE;
+commentEOL: WHITESPACE? commentSign (~NEWLINE)* NEWLINE;
 commentSign: '!';
 continuation: WHITESPACE? continuationSign WHITESPACE? (commentEOL | NEWLINE);
 continuationSign: '-';

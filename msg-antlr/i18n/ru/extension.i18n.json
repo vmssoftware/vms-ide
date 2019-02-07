@@ -1,1 +1,3 @@
-{}
+{
+    "config.notfound": "Cannot find vmssoftware.config-helper extension"
+}

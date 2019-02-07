@@ -1,0 +1,1176 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "MSG",
+	"patterns": 
+	[
+		{
+			"include": "#title"
+		},
+		{
+			"include": "#ident"
+		},
+		{
+			"include": "#facility"
+		},
+		{
+			"include": "#end"
+		},
+		{
+			"include": "#page"
+		},
+		{
+			"include": "#comment"
+		},
+		{
+			"include": "#test"
+		}
+	],
+	"repository": 
+	{
+		"test":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.test",
+					"begin": "(?i)(\\.test)",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "keyword.control"
+						}
+					},
+					"end": "\\n",
+					"contentName": "msg.test.body",
+					"patterns": 
+					[
+						{
+							"include": "#test-body"
+						},
+						{
+							"name": "invalid.illegal",
+							"match": "\\S.*"
+						}
+					]
+				}
+			]
+		},
+		"test-body":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.test.body.continue",
+					"begin": "(?i)\\G\\s*(?=(-\\s*([!].*)?\\n))",
+					"end": "(?!\\G)",
+					"patterns": 
+					[
+						{
+							"include": "#continuation"
+						}
+					]
+				},
+				{
+					"name": "msg.test.body.string",
+					"begin": "(?i)\\G\\s*(?=\")",
+					"end": "(?!\\G)",
+					"patterns": 
+					[
+						{
+							"include": "#string"
+						}
+					]
+				},
+				{
+					"name": "msg.test.body.token",
+					"begin": "(?i)\\G\\s*(?=[a-z$_])",
+					"end": "(?!\\G)",
+					"patterns": 
+					[
+						{
+							"include": "#test-token"
+						}
+					]
+				},
+				{
+					"name": "msg.test.body.again",
+					"begin": "(?i)(?<!\\G)",
+					"end": "(?!\\G)",
+					"patterns": 
+					[
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#test-body"
+						}
+					]
+				}
+			]
+		},
+		"test-token":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.test.body.token.value",
+					"match": "(?i)([a-z$_][a-z$_0-9]*)",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "markup.bold"
+						}
+					}
+				}
+			]
+		},
+
+
+
+
+		"title": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.title",
+					"match" : "(?i)(\\.title)\\s+([a-z$_][a-z$_0-9]{,30})(\\s+(\\S.{,27})(.*))",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "msg.title.keyword keyword.control"
+						},
+						"2":
+						{
+							"name": "msg.title.modname constant.character"
+						},
+						"4":
+						{
+							"name": "msg.title.listing-title string.unquoted"
+						},
+						"5":
+						{
+							"name": "invalid.illegal"
+						}
+					}
+				}
+			]
+		},
+		"ident":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.ident",
+					"begin": "(?i)(\\.ident)",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "msg.ident.keyword keyword.control"
+						}
+					},
+					"end": "\\n",
+					"patterns": 
+					[
+						{
+							"name": "msg.ident.identifier-string",
+							"begin": "(\"|')",
+							"beginCaptures": 
+							{
+								"1":
+								{
+									"name": "string.quoted.start"
+								}
+							},
+							"end": "(\\1)(.*)",
+							"endCaptures": 
+							{
+								"1":
+								{
+									"name": "string.quoted.end"
+								},
+								"2":
+								{
+									"patterns": 
+									[
+										{
+											"include": "#comment"
+										},
+										{
+											"name": "invalid.illegal",
+											"match": "\\S.*"
+										}
+									]
+								}
+							},
+							"patterns": 
+							[
+								{
+									"include": "#string-content"
+								}
+							]
+						},
+						{
+							"name": "msg.ident.identifier",
+							"begin": "(?i)([a-z$_][a-z$_0-9]{,30})",
+							"beginCaptures": 
+							{
+								"1":
+								{
+									"name": "constant.character"
+								}
+							},
+							"end": "(?=\\n)",
+							"patterns": 
+							[
+								{
+									"include": "#comment"
+								},
+								{
+									"name": "invalid.illegal",
+									"match": "\\S.*"
+								}
+							]
+						},
+						{
+							"include": "#continuation"
+						},
+						{
+							"include": "#comment"
+						}
+					]
+				}
+			]
+		},
+		"facility": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.facility",
+					"begin": "(?i)(\\.facility)",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "msg.facility.keyword keyword.control"
+						}
+					},
+					"end" : "(?i)(?=\\.facility|\\.end)",
+					"patterns": 
+					[
+						{
+							"name": "msg.facility.body",
+							"begin": "\\G\\s*",
+							"end": "\\n",
+							"patterns": 
+							[
+								{
+									"include": "#facility.qualifiers"
+								},
+								{
+									"include": "#facility.name"
+								},
+								{
+									"include": "#continuation"
+								},
+								{
+									"include": "#comment"
+								}
+							]
+						},
+						{
+							"include": "#severity"
+						},
+						{
+							"include": "#literal"
+						},
+						{
+							"include": "#base"
+						},
+						{
+							"include": "#end"
+						},
+						{
+							"include": "#message"
+						}
+					]
+				}
+			]
+		},
+		"facility.qualifiers":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.facility.qualifier.shared",
+					"match": "(?i)/shared\\b",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					}
+				},
+				{
+					"name": "msg.facility.qualifier.system",
+					"match": "(?i)/system\\b",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					}
+				},
+				{
+					"name": "msg.facility.qualifier.prefix",
+					"begin": "(?i)/prefix\\s*",
+					"beginCaptures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					},
+					"end": "(?=\\s|\\n|/)",
+					"patterns": 
+					[
+						{
+							"begin": "\\s*(=)\\s*",
+							"beginCaptures": 
+							{
+								"0":
+								{
+									"name": "variable.parameter"
+								},
+								"1":
+								{
+									"name": "msg.facility.qualifier.prefix.eq"
+								}
+							},
+							"end": "(?=\\s|\\n|/)",
+							"patterns": 
+							[
+								{
+									"name": "msg.facility.qualifier.prefix.value",
+									"match": "(?i)([a-z$_][a-z$_0-9]{,7})([^/\\s,]*)",
+									"captures": 
+									{
+										"1":
+										{
+											"name": "constant.numeric"
+										},
+										"2":
+										{
+											"name": "invalid.illegal"
+										}
+									}						
+								}
+							]
+						},
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#continuation"
+						}
+					]
+				},
+				{
+					"name": "invalid.illegal",
+					"match": "/\\S*"
+				}
+			]
+		},
+		"facility.name":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.facility.name",
+					"begin": "(?i)\\b([a-z$_][a-z$_0-9]{,8})\\b",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "constant.character"
+						}
+					},
+					"end": "(?i)(?=\\n|/prefix|/system|/shared)",
+					"patterns": 
+					[
+						{
+							"include": "#continuation"
+						},
+						{
+							"include": "#facility.expression-start"
+						},
+						{
+							"name": "invalid.illegal",
+							"match": "\\S"
+						}
+					]
+				}
+			]
+		},
+		"facility.expression-start":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.facility.expression",
+					"begin": "(\\s*,)|(\\s+)",
+					"beginCaptures": 
+					{
+						"0":
+						{
+							"name": "msg.facility.separator"
+						}
+					},
+					"end": "(?i)(?=\\n|/prefix|/system|/shared)",
+					"patterns": 
+					[
+						{
+							"include": "#expression"
+						},
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#continuation"
+						}
+					]
+				}
+			]
+		},
+		"expression":
+		{
+			"patterns": 
+			[
+				{
+					"begin": "\\(",
+					"beginCaptures": 
+					{
+						"0":
+						{
+							"name": "msg.expression.bracket.start"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": 
+					{
+						"0":
+						{
+							"name": "msg.expression.bracket.end"
+						}
+					},
+					"patterns": 
+					[
+						{
+							"include": "#expression"
+						}
+					]
+				},
+				{
+					"include": "#expression.operator"
+				},
+				{
+					"include": "#expression.token"
+				},
+				{
+					"include": "#expression.number"
+				},
+				{
+					"include": "#continuation"
+				},
+				{
+					"include": "#comment"
+				}
+			]
+		},
+		"expression.operator":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.expression.operator",
+					"match": "\\+|\\-|\\*|/|@",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "keyword.operator"
+						}
+					}
+				}
+			]
+		},
+		"expression.token":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.expression.token",
+					"match": "(?i)[a-z$_][a-z$_0-9]*",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "markup.bold"
+						}
+					}
+				}
+			]
+		},
+		"expression.number":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.expression.number",
+					"match": "[1-9][0-9]*",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "constant.numeric"
+						}
+					}
+				}
+			]
+		},
+		"page": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.page",
+					"match": "(?i)(\\.page)",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "msg.page.keyword keyword.control"
+						}
+					}
+				}
+			]
+		},
+		"end": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.end",
+					"match": "(?i)(\\.end)",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "msg.end.keyword keyword.control"
+						}
+					}
+				}
+			]
+		},
+		"literal": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.literal",
+					"begin": "(?i)(\\.literal)",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "keyword.control"
+						}
+					},
+					"end": "\\n",
+					"patterns": 
+					[
+						{
+							"match": ",",
+							"name": "msg.literal.comma"
+						},
+						{
+							"include": "#literal.define"
+						},
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#continuation"
+						}
+					]
+				}
+			]
+		},
+		"literal.define":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.literal.define",
+					"begin": "(?i)([a-z$_][a-z$_0-9]*)",
+					"beginCaptures": 
+					{
+						"1": 
+						{
+							"name": "constant.character"
+						}
+					},
+					"end": "(?=(\\n)|(\\s*,))",
+					"patterns": 
+					[
+						{
+							"begin": "=",
+							"beginCaptures": 
+							{
+								"0":
+								{
+									"name": "keyword.control.less"
+								}
+							},
+							"end": "(?=(\\n)|(\\s*,))",
+							"patterns": 
+							[
+								{
+									"include": "#expression"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		"base": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.base",
+					"begin": "(?i)(\\.base)",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "msg.base.keyword keyword.control"
+						}
+					},
+					"end": "\\n",
+					"patterns": 
+					[
+						{
+							"name": "msg.base.number",
+							"begin": "(?i)([1-9][0-9]{,3})",
+							"beginCaptures": 
+							{
+								"1":
+								{
+									"name": "constant.character"
+								}
+							},
+							"end": "(?=\\n)",
+							"patterns": 
+							[
+								{
+									"include": "#comment"
+								},
+								{
+									"name": "invalid.illegal",
+									"match": "\\S.*"
+								}
+							]
+						},
+						{
+							"include": "#continuation"
+						},
+						{
+							"include": "#comment"
+						}
+					]
+				}
+			]
+		},
+		"severity": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.severity",
+					"begin": "(?i)(\\.severity)",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "msg.severity.keyword keyword.control"
+						}
+					},
+					"end": "\\n",
+					"patterns": 
+					[
+						{
+							"match": "(?i)(success|informational|warning|error|severe|fatal)(.*)",
+							"captures": 
+							{
+								"1":
+								{
+									"name": "constant.character"
+								},
+								"2":
+								{
+									"patterns": 
+									[
+										{
+											"include": "#comment"
+										},
+										{
+											"name": "invalid.illegal",
+											"match": "\\S.*"
+										}
+									]
+								}
+							}
+						},
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#continuation"
+						},
+						{
+							"name": "invalid.illegal",
+							"match": "\\S.*"
+						}
+					]
+				}
+			]
+		},
+		"message": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.message",
+					"begin": "(?i)([a-z$_][a-z$_0-9]{,30})",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "msg.message.name keyword.control"
+						}
+					},
+					"end" : "(?=\\n)",
+					"patterns": 
+					[
+						{
+							"include": "#message.qualifiers"
+						},
+						{
+							"include": "#message.string"
+						},
+						{
+							"include": "#continuation"
+						},
+						{
+							"include": "#comment"
+						}
+					]
+				}
+			]
+		},
+		"message.qualifiers":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.message.qualifier.fao_count",
+					"begin": "(?i)/fao_count\\s*",
+					"beginCaptures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					},
+					"end": "(?=\\s|\\n|/)",
+					"patterns": 
+					[
+						{
+							"begin": "\\s*(=)\\s*",
+							"beginCaptures": 
+							{
+								"0":
+								{
+									"name": "variable.parameter"
+								},
+								"1":
+								{
+									"name": "msg.message.qualifier.fao_count.eq"
+								}
+							},
+							"end": "(?=\\s|\\n|/)",
+							"patterns": 
+							[
+								{
+									"name": "msg.message.qualifier.fao_count.value",
+									"match": "(\\d+)",
+									"captures": 
+									{
+										"1":
+										{
+											"name": "constant.numeric"
+										}
+									}						
+								}
+							]
+						},
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#continuation"
+						}
+					]
+				},
+				{
+					"name": "msg.message.qualifier.identification",
+					"begin": "(?i)/identification\\s*",
+					"beginCaptures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					},
+					"end": "(?=\\s|\\n|/)",
+					"patterns": 
+					[
+						{
+							"begin": "\\s*(=)\\s*",
+							"beginCaptures": 
+							{
+								"0":
+								{
+									"name": "variable.parameter"
+								},
+								"1":
+								{
+									"name": "msg.message.qualifier.identification.eq"
+								}
+							},
+							"end": "(?=\\s|\\n|/)",
+							"patterns": 
+							[
+								{
+									"name": "msg.message.qualifier.identification.value",
+									"match": "(?i)([a-z$_][a-z$_0-9]*)",
+									"captures": 
+									{
+										"1":
+										{
+											"name": "constant.numeric"
+										}
+									}						
+								}
+							]
+						},
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#continuation"
+						}
+					]
+				},
+				{
+					"name": "msg.message.qualifier.user_value",
+					"begin": "(?i)/user_value\\s*",
+					"beginCaptures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					},
+					"end": "(?=\\s|\\n|/)",
+					"patterns": 
+					[
+						{
+							"begin": "\\s*(=)\\s*",
+							"beginCaptures": 
+							{
+								"0":
+								{
+									"name": "variable.parameter"
+								},
+								"1":
+								{
+									"name": "msg.message.qualifier.user_value.eq"
+								}
+							},
+							"end": "(?=\\s|\\n|/)",
+							"patterns": 
+							[
+								{
+									"name": "msg.message.qualifier.user_value.value",
+									"match": "(?i)(\\d+)",
+									"captures": 
+									{
+										"1":
+										{
+											"name": "constant.numeric"
+										}
+									}						
+								}
+							]
+						},
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#continuation"
+						}
+					]
+				},
+				{
+					"name": "msg.message.qualifiers",
+					"match": "(?i)/(success|informational|warning|error|severe|fatal)",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					}
+				},
+				{
+					"name": "invalid.illegal",
+					"match": "/\\S*(?=\\n)"
+				}
+			]
+		},
+		"message.string":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.message.string",
+					"begin": "[<]",
+					"beginCaptures": 
+					{
+						"0":
+						{
+							"name": "string.other.start"
+						}
+					},
+					"end": "[>]",
+					"endCaptures": 
+					{
+						"0":
+						{
+							"name": "string.other.end"
+						}
+					},
+					"patterns": 
+					[
+						{
+							"include": "#string-content-fao"
+						}
+					]
+				},
+				{
+					"include": "#string-fao"
+				}
+			]
+		},
+		"continuation":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.continuation",
+					"match": "\\s*(-)\\s*\\n",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "string.regexp"
+						}
+					}
+				},
+				{
+					"name": "msg.continuation-with-comment",
+					"match": "\\s*(-)\\s*(!.*)\\n",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "string.regexp"
+						},
+						"2":
+						{
+							"patterns": 
+							[
+								{
+									"include": "#comment"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		"comment": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "comment",
+					"begin": "!",
+					"end": "(?=\\n)",
+					"patterns": 
+					[
+						{
+							"include": "#comment-continuation"
+						}
+					]
+				}
+			]
+		},
+		"comment-continuation": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.comment.continuation",
+					"match": "\\s*(-)\\s*\\n",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "string.regexp"
+						}
+					}
+				}
+			]
+		},
+		"string-content":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.string.content",
+					"match": ".",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "string.quoted"
+						}
+					}
+				}
+			]
+		},
+		"string": 
+		{
+			"name": "msg.string.$1 string.qouted",
+			"begin": "(\"|')",
+			"beginCaptures": 
+			{
+				"1":
+				{
+					"name": "msg.punctuation.string.open"
+				}
+			},
+			"end": "(\\1)",
+			"endCaptures": 
+			{
+				"1":
+				{
+					"name": "msg.punctuation.string.close"
+				}
+			},
+			"patterns": 
+			[
+				{
+					"include": "#string-content"
+				}
+			]
+		},
+		"string-fao": 
+		{
+			"name": "msg.string.$1 string.qouted",
+			"begin": "(\"|')",
+			"beginCaptures": 
+			{
+				"1":
+				{
+					"name": "msg.punctuation.string.open"
+				}
+			},
+			"end": "(\\1)",
+			"endCaptures": 
+			{
+				"1":
+				{
+					"name": "msg.punctuation.string.close"
+				}
+			},
+			"patterns": 
+			[
+				{
+					"include": "#string-content-fao"
+				}
+			]
+		},
+		"string-content-fao":
+		{
+			"patterns": 
+			[
+				{
+					"name": "msg.string.fao",
+					"match": "!([1-9][0-9]*)?(@?)([A-Z][A-Z])",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					}
+				},
+				{
+					"name": "msg.string.fao",
+					"match": "!([1-9][0-9]*)?\\(([1-9][0-9]*)?(@?)([A-Z][A-Z])\\)",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					}
+				},
+				{
+					"name": "msg.string.content",
+					"match": ".",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "string.quoted"
+						}
+					}
+				}
+			]
+		}
+	},
+	"scopeName": "source.msg"
+}
