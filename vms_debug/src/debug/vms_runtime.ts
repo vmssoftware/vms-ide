@@ -1083,7 +1083,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			this.debugRun = true;
 
-			this.dbgParser.parseDebugData(this.shell.getCurrentCommand(), type, data, this.sourcePaths, this.lisPaths);
+			this.dbgParser.parseDebugData(this.shell.getCurrentCommand(), this.shell.getPreviousCommand(), type, data, this.sourcePaths, this.lisPaths);
 
 			let messageCommand = this.dbgParser.getCommandMessage();
 			let messageDebug = this.dbgParser.getDebugMessage();

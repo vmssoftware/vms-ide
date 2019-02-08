@@ -38,6 +38,7 @@ export class ShellSession
     private receiveCmd : boolean;
     private disconnect : boolean;
     private currentCmd : CommandMessage;
+    private previousCmd : CommandMessage;
 
     private sshHelper?: SshHelper;
     private sshShell?: ISshShell;
@@ -154,20 +155,16 @@ export class ShellSession
                 }
                 else
                 {
-                    if(this.currentCmd.getBody() !== "")
-                    {
-                        let indexEnd = data.indexOf("\x00");
-                        data = data.substr(0, indexEnd-1);
+                    let indexEnd = data.indexOf("\x00");
+                    data = data.substr(0, indexEnd-1);
 
-                        this.resultData += data + "> ";
-
-                        if (this.disconnect)
-                        {
-                            this.DisconectSession(true);//close SSH session
-                        }
-                    }
-
+                    this.resultData += data + "> ";
                     this.mode = ModeWork.shell;
+
+                    if (this.disconnect)
+                    {
+                        this.DisconectSession(true);//close SSH session
+                    }
                 }
 
                 this.readyCmd = true;
@@ -186,6 +183,7 @@ export class ShellSession
                     cmd.includes(DebugCmdVMS.dbgStepReturn) ||
                     cmd.includes(OsCmdVMS.osRunProgram)))
                 {
+                    this.previousCmd = this.currentCmd;
                     this.currentCmd = new CommandMessage("", "");
                 }
 
@@ -256,6 +254,7 @@ export class ShellSession
         this.receiveCmd = false;
         this.disconnect = false;
         this.currentCmd = new CommandMessage("", "");
+        this.previousCmd = new CommandMessage("", "");
         this.queueCmd = new Queue<CommandMessage>();
     }
 
@@ -272,6 +271,11 @@ export class ShellSession
     public getCurrentCommand() : CommandMessage
     {
         return this.currentCmd;
+    }
+
+    public getPreviousCommand() : CommandMessage
+    {
+        return this.previousCmd;
     }
 
     public SendData(data : string) : boolean
@@ -292,9 +296,15 @@ export class ShellSession
 
         if(this.sshShell)
         {
+            if(this.currentCmd.getBody() !== "")
+            {
+                this.previousCmd = this.currentCmd;
+            }
+
             this.currentCmd = command;
             this.receiveCmd = false;
             this.readyCmd = false;
+
             result = this.shellParser.push(command.getCommand() + '\r\n');
         }
 
