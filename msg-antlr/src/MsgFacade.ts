@@ -1,12 +1,10 @@
 import * as fs from "fs-extra";
 
 import { LogFunction } from "@vorfol/common";
-import { MsgSourceContext } from "./msg-context";
+import { SourceContext } from "./SourceContext";
 
 export enum SymbolKind {
-    Keyword,
-    Operator,
-    Option
+    Other
 }
 
 /**
@@ -47,7 +45,7 @@ export interface DiagnosticEntry {
 }
 
 export interface ContextEntry {
-    context: MsgSourceContext;
+    context: SourceContext;
 }
 
 export class MsgFacade {
@@ -72,7 +70,7 @@ export class MsgFacade {
         this.sourceContexts.delete(fileName);
     }
 
-    public getContext(fileName: string, source?: string): MsgSourceContext {
+    public getContext(fileName: string, source?: string): SourceContext {
         let contextEntry = this.sourceContexts.get(fileName);
         if (!contextEntry) {
             return this.loadMsg(fileName, source);
@@ -80,7 +78,7 @@ export class MsgFacade {
         return contextEntry.context;
     }
 
-    public loadMsg(fileName: string, source?: string): MsgSourceContext {
+    public loadMsg(fileName: string, source?: string): SourceContext {
         let contextEntry = this.sourceContexts.get(fileName);
         if (!contextEntry) {
             if (!source) {
@@ -92,7 +90,7 @@ export class MsgFacade {
                 }
             }
 
-            let context = new MsgSourceContext(fileName);
+            let context = new SourceContext(fileName);
             contextEntry = { context: context };
             this.sourceContexts.set(fileName, contextEntry);
 

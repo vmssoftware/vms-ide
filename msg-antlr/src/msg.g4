@@ -107,37 +107,42 @@ mainRule: (
    |  ident 
    |  page
    |  facility
+   |  literal
    |  empty )* EOF;
 
 title: keyword=TITLE WHITESPACE name=NAME (WHITESPACE titleDescription)? NEWLINE;  //no comments in title
 titleDescription: (~NEWLINE)*;
 
-ident: keyword=IDENT (continuation | WHITESPACE) WHITESPACE? identValue WHITESPACE? (commentEOL | NEWLINE);
+separatorWithContinuation: (continuation+ | WHITESPACE) WHITESPACE?;
+endOfLineWithComment: WHITESPACE? (commentEOL | NEWLINE);
+
+ident: keyword=IDENT separatorWithContinuation identValue endOfLineWithComment;
 identValue: NAME | simpleString;
 
 simpleString: (QUOTA ~QUOTA*? QUOTA) | (DQUOTA ~DQUOTA*? DQUOTA);
 
-page: keyword=PAGE WHITESPACE? (commentEOL | NEWLINE);
+page: keyword=PAGE endOfLineWithComment;
 
 facility: 
-   keyword=FACILITY (continuation? | WHITESPACE) facilityDescription    //ends with newline
+   keyword=FACILITY separatorWithContinuation 
+   facilityDescription    //ends with newline
    facilityContent? 
    end?;
 
 facilityDescription: 
-   continuation? WHITESPACE?
-   (facilityQualifier continuation? WHITESPACE?)* 
+   (facilityQualifier separatorWithContinuation?)* 
    name=NAME 
-   continuation? WHITESPACE?
-   separator=(WHITESPACE | COMMA) 
-   continuation? WHITESPACE?
+   separatorWithContinuation?
+   (WHITESPACE | COMMA)
+   separatorWithContinuation?
    value=expression
-   continuation? WHITESPACE?
-   (facilityQualifier continuation? WHITESPACE?)* (commentEOL | NEWLINE);
+   separatorWithContinuation?
+   (facilityQualifier separatorWithContinuation?)*
+   endOfLineWithComment;
 
 facilityQualifier: prefixQualifier | sharedQualifier | systemQualifier ;
 
-prefixQualifier: keyword=QPREFIX WHITESPACE? EQ WHITESPACE? value=NAME;
+prefixQualifier: keyword=QPREFIX separatorWithContinuation? EQ separatorWithContinuation? value=NAME;
 sharedQualifier: keyword=QSHARED;
 systemQualifier: keyword=QSYSTEM;
 
@@ -148,32 +153,40 @@ facilityContent:
    |  base 
    |  message )+;
 
-literal: keyword=LITERAL continuation? | WHITESPACE literalDefinition (WHITESPACE? COMMA WHITESPACE? literalDefinition)? WHITESPACE? NEWLINE;
-literalDefinition: name=NAME WHITESPACE? EQ WHITESPACE? value=expression;
+literal: keyword=LITERAL separatorWithContinuation 
+   literalDefinition 
+   separatorWithContinuation?
+   (COMMA separatorWithContinuation? literalDefinition separatorWithContinuation?)*
+   endOfLineWithComment;
+literalDefinition: name=NAME separatorWithContinuation? (EQ separatorWithContinuation? value=expression)?;
 
-severity: keyword=SEVERITY WHITESPACE value=severityValue WHITESPACE? NEWLINE;
+severity: keyword=SEVERITY separatorWithContinuation value=severityValue endOfLineWithComment;
 severityValue: SUCCESS | INFORMATIONAL | WARNING | ERROR | SEVERE | FATAL;
 
-base: keyword=BASE WHITESPACE value=NUMBER WHITESPACE? NEWLINE;
+base: keyword=BASE separatorWithContinuation value=NUMBER endOfLineWithComment;
 
-end: keyword=END WHITESPACE? NEWLINE;
+end: keyword=END endOfLineWithComment;
 
 expression : open='(' WHITESPACE? expression WHITESPACE? close=')'                     #brackets
            | left=expression WHITESPACE? sign=(MUL|DIV) WHITESPACE? right=expression   #muldiv
            | left=expression WHITESPACE? sign=(ADD|SUB) WHITESPACE? right=expression   #addsub
-           | (NUMBER | NAME)                                                           #atom
+           | unary=(ADD|SUB)? (NUMBER | variable=NAME)                                 #atom
            ;
 
 empty: WHITESPACE? NEWLINE;
 
 commentEOL: WHITESPACE? commentSign (~NEWLINE)* NEWLINE;
 commentSign: '!';
+
 continuation: WHITESPACE? continuationSign WHITESPACE? (commentEOL | NEWLINE);
 continuationSign: '-';
 
-message: messageName WHITESPACE? (messageQualifier WHITESPACE?)* messageText WHITESPACE? (messageQualifier WHITESPACE?)* (commentEOL | NEWLINE);
-
-messageName: NAME;
+message: name=NAME separatorWithContinuation? 
+   (messageQualifier separatorWithContinuation?)* 
+   value=messageText 
+   separatorWithContinuation?
+   (messageQualifier separatorWithContinuation?)* 
+   endOfLineWithComment;
 
 messageQualifier: 
       faoCount 
@@ -186,17 +199,11 @@ messageQualifier:
    |  severe
    |  fatal;
 
-faoCount: faoCountKeyword WHITESPACE? EQ WHITESPACE? faoCountValue;
-faoCountKeyword: QFAOCOUNT;
-faoCountValue: NUMBER;
+faoCount: keyword=QFAOCOUNT separatorWithContinuation? EQ separatorWithContinuation? value=NUMBER;
 
-identification: identificationKeyword WHITESPACE? EQ WHITESPACE? identificationValue;
-identificationKeyword: QIDENTIFICATION;
-identificationValue: NAME;
+identification: keyword=QIDENTIFICATION separatorWithContinuation? EQ separatorWithContinuation? value=NAME;
 
-userValue: userValueKeyword WHITESPACE? EQ WHITESPACE? userValueValue;
-userValueKeyword: QUSERVALUE;
-userValueValue: NUMBER;
+userValue: keyword=QUSERVALUE separatorWithContinuation? EQ separatorWithContinuation? value=NUMBER;
 
 success: QSUCCESS;
 informational: QINFORMATIONAL;
@@ -211,56 +218,3 @@ messageText:
    | '\'' (fao | ~'\'')* '\'';
 
 fao: FAO;
-//       faoStart faoRepeat '(' faoDef ')'
-//    |  faoStart faoDef
-//    |  faoStart faoNewLine
-//    |  faoStart faoTab
-//    |  faoStart faoTab
-//    |  faoStart faoFF
-//    |  faoStart faoEx
-//    |  faoStart faoS
-//    |  faoStart faoTime
-//    |  faoStart faoUIC
-//    |  faoStart faoUICa
-//    |  faoStart faoDate
-//    |  faoStart faoC
-//    |  faoStart faoE
-//    |  faoStart faoF
-//    |  faoStart faoNextStart
-//    |  faoStart faoNextEnd
-//    |  faoStart faoRepeatChar
-//    ;
-// faoStart: '!';
-// faoRepeat: NUMBER;
-// faoDef: faoLen? faoIndirect? faoDir;
-// faoLen: NUMBER;
-// faoIndirect: '@';
-// faoDir: faoChar | faoZeroNum | faoSpaceNum;
-// faoChar: 'AC' | 'AD' | 'AF' | 'AS' | 'AZ';
-// faoZeroNum: faoOct | faoHex | faoDec;
-// faoOct: 'O' faoNumSize;
-// faoHex: 'X' faoNumSize;
-// faoDec: 'Z' faoNumSize;
-// faoNumSize: 'B' | 'W' | 'L' | 'Q' | 'A' | 'I' | 'H' | 'J';
-// faoSpaceNum: faoSignedDec | faoUnsignedDec;
-// faoSignedDec: 'S' faoNumSize;
-// faoUnsignedDec: 'U' faoNumSize;
-// faoNewLine: '/';
-// faoTab: '_';
-// faoFF: '^';
-// faoEx: '!';
-// faoS: '%S';
-// faoTime: '%T';
-// faoUIC: '%U';
-// faoUICa: '%I';
-// faoDate: '%D';
-// faoC: faoCNum '%C';
-// faoCNum: NUMBER;
-// faoE: '%E';
-// faoF: '%F';
-// faoNextStart: faoNextNum '<';
-// faoNextNum: NUMBER;
-// faoNextEnd: '>';
-// faoRepeatChar: faoRepeatCharNum '*' faoRepeatCharVal;
-// faoRepeatCharNum: NUMBER;
-// faoRepeatCharVal: .;

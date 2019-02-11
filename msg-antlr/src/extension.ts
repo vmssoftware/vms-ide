@@ -6,7 +6,7 @@ import * as fs from "fs-extra";
 import { LogFunction, LogType } from "@vorfol/common";
 import { GetConfigApi } from './ext-api/get-config-api';
 import { languages, window, workspace, TextDocument, TextDocumentChangeEvent, Range, Diagnostic, DiagnosticSeverity, TextEditorSelectionChangeEvent, TextEditor } from 'vscode';
-import { MsgFacade, DiagnosticType } from './msg-facade';
+import { MsgFacade, DiagnosticType } from './MsgFacade';
 
 const locale = vscode.env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();

@@ -10,6 +10,8 @@ import { BracketsContext } from "./msgParser";
 import { MainRuleContext } from "./msgParser";
 import { TitleContext } from "./msgParser";
 import { TitleDescriptionContext } from "./msgParser";
+import { SeparatorWithContinuationContext } from "./msgParser";
+import { EndOfLineWithCommentContext } from "./msgParser";
 import { IdentContext } from "./msgParser";
 import { IdentValueContext } from "./msgParser";
 import { SimpleStringContext } from "./msgParser";
@@ -34,17 +36,10 @@ import { CommentSignContext } from "./msgParser";
 import { ContinuationContext } from "./msgParser";
 import { ContinuationSignContext } from "./msgParser";
 import { MessageContext } from "./msgParser";
-import { MessageNameContext } from "./msgParser";
 import { MessageQualifierContext } from "./msgParser";
 import { FaoCountContext } from "./msgParser";
-import { FaoCountKeywordContext } from "./msgParser";
-import { FaoCountValueContext } from "./msgParser";
 import { IdentificationContext } from "./msgParser";
-import { IdentificationKeywordContext } from "./msgParser";
-import { IdentificationValueContext } from "./msgParser";
 import { UserValueContext } from "./msgParser";
-import { UserValueKeywordContext } from "./msgParser";
-import { UserValueValueContext } from "./msgParser";
 import { SuccessContext } from "./msgParser";
 import { InformationalContext } from "./msgParser";
 import { WarningContext } from "./msgParser";
@@ -115,6 +110,20 @@ export interface msgVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitTitleDescription?: (ctx: TitleDescriptionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `msgParser.separatorWithContinuation`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSeparatorWithContinuation?: (ctx: SeparatorWithContinuationContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `msgParser.endOfLineWithComment`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEndOfLineWithComment?: (ctx: EndOfLineWithCommentContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `msgParser.ident`.
@@ -285,13 +294,6 @@ export interface msgVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitMessage?: (ctx: MessageContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `msgParser.messageName`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitMessageName?: (ctx: MessageNameContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `msgParser.messageQualifier`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -306,20 +308,6 @@ export interface msgVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitFaoCount?: (ctx: FaoCountContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `msgParser.faoCountKeyword`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFaoCountKeyword?: (ctx: FaoCountKeywordContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.faoCountValue`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFaoCountValue?: (ctx: FaoCountValueContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `msgParser.identification`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -327,39 +315,11 @@ export interface msgVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitIdentification?: (ctx: IdentificationContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `msgParser.identificationKeyword`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitIdentificationKeyword?: (ctx: IdentificationKeywordContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.identificationValue`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitIdentificationValue?: (ctx: IdentificationValueContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `msgParser.userValue`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitUserValue?: (ctx: UserValueContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.userValueKeyword`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitUserValueKeyword?: (ctx: UserValueKeywordContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.userValueValue`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitUserValueValue?: (ctx: UserValueValueContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `msgParser.success`.

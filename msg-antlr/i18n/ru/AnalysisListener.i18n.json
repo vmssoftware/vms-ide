@@ -1,0 +1,11 @@
+{
+    "emptyBaseValue": "The facility prefix cannot be empty.",
+    "emptyFacilityName": "The facility name cannot be empty.",
+    "emptyLiteralName": "The literal definition cannot be empty.",
+    "emptyMessageName": "The message cannot be empty.",
+    "emptyPrefixValue": "The facility prefix cannot be empty.",
+    "tooLongFacilityName": "The facility name can be up to 9 characters.",
+    "tooLongFacilityPrefix": "The maximum length of an alternate symbol prefix created with the /PREFIX qualifier is 9 characters.",
+    "tooLongMessageName": "The combined length of the prefix and the message symbol name cannot exceed 31 characters.",
+    "undefinedVariable": "Undefined variable."
+}

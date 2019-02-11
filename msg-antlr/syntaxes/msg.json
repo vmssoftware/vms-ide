@@ -136,7 +136,7 @@
 			[
 				{
 					"name": "msg.title",
-					"match" : "(?i)(\\.title)\\s+([a-z$_][a-z$_0-9]{,30})(\\s+(\\S.{,27})(.*))",
+					"match" : "(?i)(\\.title)\\s+([a-z$_][a-z$_0-9]+)(\\s+(\\S.+))",
 					"captures": 
 					{
 						"1":
@@ -150,10 +150,6 @@
 						"4":
 						{
 							"name": "msg.title.listing-title string.unquoted"
-						},
-						"5":
-						{
-							"name": "invalid.illegal"
 						}
 					}
 				}
@@ -216,7 +212,7 @@
 						},
 						{
 							"name": "msg.ident.identifier",
-							"begin": "(?i)([a-z$_][a-z$_0-9]{,30})",
+							"begin": "(?i)([a-z$_][a-z$_0-9]+)",
 							"beginCaptures": 
 							{
 								"1":
@@ -359,7 +355,7 @@
 							[
 								{
 									"name": "msg.facility.qualifier.prefix.value",
-									"match": "(?i)([a-z$_][a-z$_0-9]{,7})([^/\\s,]*)",
+									"match": "(?i)([a-z$_][a-z$_0-9]+)([^/\\s,]*)",
 									"captures": 
 									{
 										"1":
@@ -394,7 +390,7 @@
 			[
 				{
 					"name": "msg.facility.name",
-					"begin": "(?i)\\b([a-z$_][a-z$_0-9]{,8})\\b",
+					"begin": "(?i)\\b([a-z$_][a-z$_0-9]+)\\b",
 					"beginCaptures": 
 					{
 						"1":
@@ -646,6 +642,12 @@
 									"include": "#expression"
 								}
 							]
+						},
+						{
+							"include": "#continuation"
+						},
+						{
+							"include": "#comment"
 						}
 					]
 				}
@@ -670,7 +672,7 @@
 					[
 						{
 							"name": "msg.base.number",
-							"begin": "(?i)([1-9][0-9]{,3})",
+							"begin": "(?i)([1-9][0-9]+)",
 							"beginCaptures": 
 							{
 								"1":
@@ -760,7 +762,7 @@
 			[
 				{
 					"name": "msg.message",
-					"begin": "(?i)([a-z$_][a-z$_0-9]{,30})",
+					"begin": "(?i)([a-z$_][a-z$_0-9]+)",
 					"beginCaptures": 
 					{
 						"1":

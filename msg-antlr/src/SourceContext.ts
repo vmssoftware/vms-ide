@@ -1,30 +1,35 @@
 import * as path from 'path';
 
+import { Symbol, CodeCompletionCore } from "antlr4-c3";
 import { ParseCancellationException, IntervalSet, Interval } from 'antlr4ts/misc';
 import { ParseTreeWalker, TerminalNode, ParseTree, ParseTreeListener } from 'antlr4ts/tree';
 import { msgParser, MainRuleContext } from "./msgParser";
-import { ANTLRInputStream, CommonTokenStream, BailErrorStrategy, DefaultErrorStrategy } from 'antlr4ts';
+import { ANTLRInputStream, CommonTokenStream, BailErrorStrategy, DefaultErrorStrategy, ParserRuleContext } from 'antlr4ts';
 import { msgLexer } from './msgLexer';
-import { DiagnosticEntry } from './msg-facade';
+import { DiagnosticEntry, SymbolKind, Definition } from './MsgFacade';
 import { ContextErrorListener, ContextLexerErrorListener } from './ContextErrorListener';
 import { PredictionMode } from 'antlr4ts/atn/PredictionMode';
+import { ContextSymbolTable, OtherSymbol } from './ContextSymbolTable';
+import { AnalysisListener } from './AnalysisListener';
 
-export class MsgSourceContext {
+export class SourceContext {
 
     public sourceId: string;
     public diagnostics: DiagnosticEntry[] = [];
+    public symbolTable: ContextSymbolTable;
 
     // Grammar parsing infrastructure.
     private tokenStream?: CommonTokenStream;
     private parser?: msgParser;
     private errorListener: ContextErrorListener = new ContextErrorListener(this.diagnostics);
     private lexerErrorListener: ContextLexerErrorListener = new ContextLexerErrorListener(this.diagnostics);
-    private semanticAnalysisDone: boolean = false; // Includes determining reference counts.
+    private analysisDone: boolean = false; // Includes determining reference counts.
 
     private tree?: MainRuleContext; // The root context from the last parse run.
 
     constructor(public fileName: string) {
         this.sourceId = path.basename(fileName, path.extname(fileName));
+        this.symbolTable =  new ContextSymbolTable(this.sourceId, { allowDuplicateSymbols: true }, this);
     }
 
     /**
@@ -58,6 +63,7 @@ export class MsgSourceContext {
         this.tree = undefined;
 
         this.diagnostics.length = 0;
+        this.analysisDone = false;
 
         try {
             this.tree = this.parser.mainRule();
@@ -73,26 +79,64 @@ export class MsgSourceContext {
             }
         }
 
-        //let listener: DetailsListener = new DetailsListener(this.symbolTable, this.imports);
-        //ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree);
+        this.runAnalysis();
     }
 
     public getDiagnostics(): DiagnosticEntry[] {
-        this.runSemanticAnalysisIfNeeded();
+        this.runAnalysis();
 
         return this.diagnostics;
     }
 
-    private runSemanticAnalysisIfNeeded() {
-        if (!this.semanticAnalysisDone) {
-            this.semanticAnalysisDone = true;
+    private runAnalysis() {
+        if (!this.analysisDone) {
+            this.analysisDone = true;
 
-            // let semanticListener = new SemanticListener(this.diagnostics, this.symbolTable);
-            // ParseTreeWalker.DEFAULT.walk(semanticListener as ParseTreeListener, this.tree!);
-
-            // let visitor = new RuleVisitor(this.rrdScripts);
-            // visitor.visit(this.tree!);
+            let listener = new AnalysisListener(this.diagnostics);
+            ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree!);
         }
     }
 
+    public static getKindFromSymbol(symbol: Symbol): SymbolKind {
+        if (symbol instanceof OtherSymbol) {
+            return SymbolKind.Other;
+        }
+        return SymbolKind.Other;
+    }
+    /**
+     * Returns the definition info for the given rule context. Public, as it is required by listeners.
+     */
+    public static definitionForContext(ctx: ParseTree | undefined, keepQuotes: boolean): Definition | undefined {
+        if (!ctx) {
+            return undefined;
+        }
+
+        var result: Definition = {
+            text: "",
+            range: {
+                start: { column: 0, row: 0 },
+                end: { column: 0, row: 0 }
+            }
+        };
+
+        if (ctx instanceof ParserRuleContext) {
+            let range = <Interval> { a: ctx.start.startIndex, b: ctx.stop!.stopIndex };
+
+            result.range.start.column = ctx.start.charPositionInLine;
+            result.range.start.row = ctx.start.line;
+            result.range.end.column = ctx.stop!.charPositionInLine;
+            result.range.end.row = ctx.stop!.line;
+
+            let cs = ctx.start.tokenSource!.inputStream;
+            result.text = cs!.getText(range);
+        } else if (ctx instanceof TerminalNode) {
+            result.text = ctx.text;
+
+            result.range.start.column = ctx.symbol.charPositionInLine;
+            result.range.start.row = ctx.symbol.line;
+            result.range.end.column = ctx.symbol.charPositionInLine + result.text.length;
+            result.range.end.row = ctx.symbol.line;
+        }
+        return result;
+    }
 }

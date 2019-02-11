@@ -9,7 +9,7 @@
 
 import { ANTLRErrorListener, Recognizer, RecognitionException, Token, CommonToken } from 'antlr4ts';
 
-import { DiagnosticEntry, DiagnosticType } from './msg-facade';
+import { DiagnosticEntry, DiagnosticType } from './MsgFacade';
 
 export class ContextLexerErrorListener implements ANTLRErrorListener<number> {
     constructor(private errorList: DiagnosticEntry[]) {
@@ -21,11 +21,11 @@ export class ContextLexerErrorListener implements ANTLRErrorListener<number> {
             type: DiagnosticType.Error,
             message: msg,
             range: { start: { column: charPositionInLine, row: line }, end: { column: charPositionInLine + 1, row: line }}
-        }
+        };
 
         this.errorList.push(error);
     }
-};
+}
 
 export class ContextErrorListener implements ANTLRErrorListener<CommonToken> {
     constructor(private errorList: DiagnosticEntry[]) {
@@ -37,11 +37,11 @@ export class ContextErrorListener implements ANTLRErrorListener<CommonToken> {
             type: DiagnosticType.Error,
             message: msg,
             range: { start: { column: charPositionInLine, row: line }, end: { column: charPositionInLine + 1, row: line }}
-        }
+        };
 
         if (offendingSymbol) {
             error.range.end.column = charPositionInLine + offendingSymbol.stopIndex - offendingSymbol.startIndex + 1;
         }
         this.errorList.push(error);
     }
-};
+}
