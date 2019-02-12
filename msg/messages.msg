@@ -3,7 +3,7 @@
 .page
 .FACILITY VVS,33 /prefix=VS_
 .SEVERITY ErrOR
-UNRECOG <Unrecognized keyword !AZ>/FAO_COUNT=1
+UNRECOG <Unrecognized !! keyword !AZ>/FAO_COUNT=1
 .LITERAL LASTMSG=VS_UNRECOG
 .facility SVS,99 /prefix=SV_
 AMBIG <Ambiguous keyword> /Warning

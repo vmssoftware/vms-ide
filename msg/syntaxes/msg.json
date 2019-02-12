@@ -22,6 +22,9 @@
 			"include": "#comment"
 		},
 		{
+			"include": "#literal"
+		},
+		{
 			"include": "#test"
 		}
 	],
@@ -1152,6 +1155,63 @@
 				{
 					"name": "msg.string.fao",
 					"match": "!([1-9][0-9]*)?\\(([1-9][0-9]*)?(@?)([A-Z][A-Z])\\)",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					}
+				},
+				{
+					"name": "msg.string.fao",
+					"match": "!([1-9][0-9]*)\\*(.)",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					}
+				},
+				{
+					"name": "msg.string.fao",
+					"match": "!([0-9]+)%C",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					}
+				},
+				{
+					"begin": "!\\d+<",
+					"beginCaptures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					},
+					"end": "!>",
+					"endCaptures": 
+					{
+						"0":
+						{
+							"name": "variable.parameter"
+						}
+					},
+					"patterns": 
+					[
+						{
+							"include": "#string-content-fao"
+						}
+					]
+				},
+				{
+					"name": "msg.string.fao",
+					"match": "!(\\^|_|!|/|--|\\+|%S|%T|%U|%I|%D|%E|%F)",
 					"captures": 
 					{
 						"0":

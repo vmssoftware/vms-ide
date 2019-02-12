@@ -37,6 +37,7 @@ export async function activate(context: vscode.ExtensionContext) {
         if (document.languageId === MSG.language) {
             // parse file and show diagnostics
             backend.attach(document.uri.fsPath, document.getText());
+            processDiagnostic(document);
         }
     }
 

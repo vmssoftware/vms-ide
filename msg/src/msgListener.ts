@@ -37,7 +37,9 @@ import { ContinuationContext } from "./msgParser";
 import { ContinuationSignContext } from "./msgParser";
 import { MessageContext } from "./msgParser";
 import { MessageQualifierContext } from "./msgParser";
+import { SeverityQualifierContext } from "./msgParser";
 import { FaoCountContext } from "./msgParser";
+import { FaoCountValueContext } from "./msgParser";
 import { IdentificationContext } from "./msgParser";
 import { UserValueContext } from "./msgParser";
 import { SuccessContext } from "./msgParser";
@@ -438,6 +440,17 @@ export interface msgListener extends ParseTreeListener {
 	exitMessageQualifier?: (ctx: MessageQualifierContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `msgParser.severityQualifier`.
+	 * @param ctx the parse tree
+	 */
+	enterSeverityQualifier?: (ctx: SeverityQualifierContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.severityQualifier`.
+	 * @param ctx the parse tree
+	 */
+	exitSeverityQualifier?: (ctx: SeverityQualifierContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `msgParser.faoCount`.
 	 * @param ctx the parse tree
 	 */
@@ -447,6 +460,17 @@ export interface msgListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFaoCount?: (ctx: FaoCountContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.faoCountValue`.
+	 * @param ctx the parse tree
+	 */
+	enterFaoCountValue?: (ctx: FaoCountValueContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.faoCountValue`.
+	 * @param ctx the parse tree
+	 */
+	exitFaoCountValue?: (ctx: FaoCountValueContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `msgParser.identification`.

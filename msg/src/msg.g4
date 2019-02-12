@@ -48,7 +48,7 @@ FAO: FAOSTART (
    |  NUMBER '(' FAODIR ')'
    |  NUMBER '(' NUMBER FAODIR ')'
    |  FAOSPEC 
-   |  ZNUMBER '%C' 
+   |  ((ZNUMBER | NUMBER) '%C' )
    |  NUMBER '<'
    |  '>' 
    |  NUMBER '*.' 
@@ -191,15 +191,19 @@ message: name=NAME separatorWithContinuation?
 messageQualifier: 
       faoCount 
    |  identification 
-   |  userValue 
-   |  success 
+   |  userValue
+   |  severityQualifier;
+
+severityQualifier:
+      success 
    |  informational 
    |  warning
    |  error
    |  severe
    |  fatal;
 
-faoCount: keyword=QFAOCOUNT separatorWithContinuation? EQ separatorWithContinuation? value=NUMBER;
+faoCount: keyword=QFAOCOUNT separatorWithContinuation? EQ separatorWithContinuation? value=faoCountValue;
+faoCountValue: NUMBER | ZNUMBER;
 
 identification: keyword=QIDENTIFICATION separatorWithContinuation? EQ separatorWithContinuation? value=NAME;
 

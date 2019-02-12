@@ -5,7 +5,22 @@
     "tasks": [
         {
             "type": "npm",
-            "script": "package",
+            "script": "antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "build",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "get-ext-api",
+            "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "package",
             "problemMatcher": []
         }
     ]

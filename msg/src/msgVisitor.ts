@@ -37,7 +37,9 @@ import { ContinuationContext } from "./msgParser";
 import { ContinuationSignContext } from "./msgParser";
 import { MessageContext } from "./msgParser";
 import { MessageQualifierContext } from "./msgParser";
+import { SeverityQualifierContext } from "./msgParser";
 import { FaoCountContext } from "./msgParser";
+import { FaoCountValueContext } from "./msgParser";
 import { IdentificationContext } from "./msgParser";
 import { UserValueContext } from "./msgParser";
 import { SuccessContext } from "./msgParser";
@@ -301,11 +303,25 @@ export interface msgVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitMessageQualifier?: (ctx: MessageQualifierContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `msgParser.severityQualifier`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSeverityQualifier?: (ctx: SeverityQualifierContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `msgParser.faoCount`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitFaoCount?: (ctx: FaoCountContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `msgParser.faoCountValue`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFaoCountValue?: (ctx: FaoCountValueContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `msgParser.identification`.
