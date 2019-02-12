@@ -61,6 +61,7 @@ export class VMSRuntime extends EventEmitter
 	private debugRun : boolean;
 	private programEnd : boolean;
 	private waitSymbols = new Subject();
+	private waitShellMode = new Subject();
 	private queueWaitVar = new Queue<WaitSubject>();
 
 	private stackStartFrame: number;
@@ -152,6 +153,11 @@ export class VMSRuntime extends EventEmitter
 		this.checkLisFiles(this.sourcePaths, this.lisPaths);
 		this.shell.resetParameters();
 
+		if(this.shell.getModeWork() !== ModeWork.shell)
+		{
+			await this.waitShellMode.wait(1000);//wait ending the debugger
+		}
+
 		//run debugger
 		if(this.shell.getModeWork() === ModeWork.shell)
 		{
@@ -175,9 +181,11 @@ export class VMSRuntime extends EventEmitter
 		}
 		else//reload program
 		{
-			this.shell.SendCommandToQueue(this.dbgCmd.clearDisplay("dbge, out"));
-			this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
-			this.shell.SendCommandToQueue(this.dbgCmd.rerun());
+			// this.shell.SendCommandToQueue(this.dbgCmd.clearDisplay("dbge, out"));
+			// this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
+			// this.shell.SendCommandToQueue(this.dbgCmd.rerun());
+			this.sendEvent('restart');//go to restart debugger
+			return;
 		}
 		//clear entry breakpoint
 		if(!stopOnEntry)
@@ -275,10 +283,14 @@ export class VMSRuntime extends EventEmitter
 			}
 		}
 
+		this.shell.resetParameters();
+
 		if(!restart)
 		{
-			this.shell.SendCommandToQueue(this.dbgCmd.exit());
+			this.shell.SetDisconnectInShellSession();
 		}
+
+		this.shell.SendCommandToQueue(this.dbgCmd.exit());
 	}
 
 	public stack(startFrame: number, endFrame: number)
@@ -1071,7 +1083,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			this.debugRun = true;
 
-			this.dbgParser.parseDebugData(this.shell.getCurrentCommand(), type, data, this.sourcePaths, this.lisPaths);
+			this.dbgParser.parseDebugData(this.shell.getCurrentCommand(), this.shell.getPreviousCommand(), type, data, this.sourcePaths, this.lisPaths);
 
 			let messageCommand = this.dbgParser.getCommandMessage();
 			let messageDebug = this.dbgParser.getDebugMessage();
@@ -1137,7 +1149,7 @@ export class VMSRuntime extends EventEmitter
 				if(messageDebug.includes(MessageDebuger.msgEnd))
 				{
 					this.programEnd = true;
-					this.sendEvent('end');
+					this.sendEvent('end');//close debugger
 				}
 				else if(messageDebug.includes(MessageDebuger.msgNoSccess))
 				{
@@ -1188,6 +1200,10 @@ export class VMSRuntime extends EventEmitter
 						event.notify();
 					}
 				}
+				else if(messageDebug.includes(MessageDebuger.msgNoProcess))
+				{
+					this.sendEvent('end');//close debugger //Error loading image
+				}
 
 				if(showMsg)
 				{
@@ -1206,7 +1222,7 @@ export class VMSRuntime extends EventEmitter
 				if(messageUser.includes(MessageDebuger.msgNoImage))
 				{
 					this.programEnd = true;
-					this.sendEvent('end');
+					this.sendEvent('end');//close debugger
 				}
 			}
 

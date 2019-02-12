@@ -24,6 +24,7 @@ export enum MessageDebuger
 	msgUnAlloc = "%DEBUG-W-UNALLOCATED",
 	msgNotAct = "%DEBUG-W-SYMNOTACT",
 	msgNoSymbol = "%DEBUG-E-NOSYMBOL, symbol",
+	msgNoProcess = "%DEBUG-E-NOPROCESSES, the current command is targetted at an empty process set",
 	msgEnd = "%DEBUG-I-EXITSTATUS, is '%SYSTEM-S-NORMAL, normal successful completion",
 }
 
@@ -65,13 +66,11 @@ export class DebugParser
 	}
 
 
-	public parseDebugData(command : CommandMessage, type: TypeDataMessage, data : string, sourcePaths: string[], lisPaths: string[])
+	public parseDebugData(command : CommandMessage, commandPrev : CommandMessage, type: TypeDataMessage, data : string, sourcePaths: string[], lisPaths: string[])
 	{
 		if(data !== "")
 		{
-			let cmd = command.getBody();
-
-			this.splitData(command, type, data);
+			let cmd = this.splitData(command, commandPrev, type, data);
 
 			let msgLines = this.displayDataString[1].split("\n");//debugger data
 
@@ -141,8 +140,10 @@ export class DebugParser
 	}
 
 
-	private splitData(command : CommandMessage, type: TypeDataMessage, data : string)
+	private splitData(command : CommandMessage, commandPrev : CommandMessage, type: TypeDataMessage, data : string)
 	{
+		let cmdBody = command.getBody();
+
 		if(data.length > 0)
 		{
 			//clean the old data
@@ -152,7 +153,14 @@ export class DebugParser
 
 			if(type === TypeDataMessage.typeCmd)//command
 			{
-				let userData = data.replace(command.getCommand(), "");
+				let position = data.indexOf(command.getCommand());
+
+				if(position > 0)
+				{
+					cmdBody = commandPrev.getBody();
+				}
+
+				let userData = data.replace(command.getCommand(), "").trim();
 				this.queueMsgCommand.push(MessagePrompt.prmtCMD + command.getCommand());
 
 				if(userData !== "")//data
@@ -165,6 +173,8 @@ export class DebugParser
 				this.parseEscSequence(data);
 			}
 		}
+
+		return cmdBody;
 	}
 
 	private parseEscSequence(data : string)

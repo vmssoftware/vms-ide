@@ -65,7 +65,7 @@ export function deactivate()
 {
 	// nothing to do
 	terminals.exit(nameTerminalVMS);
-	shell.DisconectSession();
+	shell.DisconectSession(false);
 }
 
 
