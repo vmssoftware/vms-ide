@@ -1,7 +1,7 @@
 import * as nls from "vscode-nls";
 
 import { msgListener } from './msgListener';
-import { FacilityContext, FacilityDescriptionContext, PrefixQualifierContext, MessageContext, LiteralDefinitionContext, AtomContext, BaseContext, TitleDescriptionContext, IdentValueContext, MessageTextContext, FaoCountContext, FaoCountValueContext, UserValueContext, IdentificationContext, SeverityContext, SeverityValueContext, SeverityQualifierContext, TitleContext } from './msgParser';
+import { FacilityContext, FacilityDescriptionContext, PrefixQualifierContext, MessageContext, LiteralDefinitionContext, AtomContext, BaseContext, TitleDescriptionContext, IdentValueContext, MessageTextContext, FaoCountContext, FaoCountValueContext, UserValueContext, IdentificationContext, SeverityContext, SeverityValueContext, SeverityQualifierContext, TitleContext, NumberContext } from './msgParser';
 import { DiagnosticEntry, DiagnosticType } from './MsgFacade';
 import { Token } from "antlr4ts";
 
@@ -33,7 +33,7 @@ export class AnalysisListener implements msgListener {
     public static messageSymbolAlreadyExists = localize("messageSymbolAlreadyExists", "This message symbol already exists.");
     public static oneLine = localize("oneLine", "You cannot continue the delimited text onto another line.");
     public static tooBigFaoCount = localize("tooBigFaoCount", "The number specified must be a decimal number in the range 0 to 255.");
-    public static tooBigMessageNumber = localize("tooBigMessageNumber", "The maximum number for any message cannot exceed 4095");
+    public static tooBigMessageNumber = localize("tooBigMessageNumber", "The maximum number for any message cannot exceed 4095 and must be greater than zero.");
     public static tooBigUserValue = localize("tooBigUserValue", "The number specified must be a decimal number in the range 0 to 255.");
     public static tooLongFacilityName = localize("tooLongFacilityName", "The facility name can be up to 9 characters.");
     public static tooLongFacilityPrefix = localize("tooLongFacilityPrefix", "The maximum length of an alternate symbol prefix created with the /PREFIX qualifier is 9 characters.");
@@ -216,14 +216,34 @@ export class AnalysisListener implements msgListener {
 
     enterBase(ctx: BaseContext) {
         if (ctx._value && ctx._value.text) {
-            // TODO: parse radix
-            const value = parseInt(ctx._value.text, 10);
-            if (this.testRange(value, 1, 4095, AnalysisListener.tooBigMessageNumber, ctx._value)) {
+            const value = this.parseNumber(ctx._value);
+            if (this.testRange(value, 1, 4095, AnalysisListener.tooBigMessageNumber, ctx._value.start)) {
                 this.currentMessageNumber = value;
             }
         } else{
             this.markToken(ctx.start, AnalysisListener.emptyBaseValue);
         }
+    }
+
+    public parseNumber(ctx: NumberContext) {
+        let nodeNumber = ctx.NUMBER();
+        nodeNumber = nodeNumber || ctx.ZNUMBER();
+        if (nodeNumber) {
+            return parseInt(nodeNumber.text, 10);
+        }
+        nodeNumber = ctx.DECNUM();
+        if (nodeNumber) {
+            return parseInt(nodeNumber.text.slice(2), 10);
+        }
+        nodeNumber = ctx.HEXNUM();
+        if (nodeNumber) {
+            return parseInt(nodeNumber.text.slice(2), 16);
+        }
+        nodeNumber = ctx.OCTNUM();
+        if (nodeNumber) {
+            return parseInt(nodeNumber.text.slice(2), 8);
+        }
+        return 0;
     }
 
     /**

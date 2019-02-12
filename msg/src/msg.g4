@@ -41,6 +41,8 @@ fragment OPERATORS: ('+'|'-'|'*'|'/'|'@'|'&');
 fragment SPECIAL: [_$];
 fragment NAMESTART: LOWERCASE | UPPERCASE | SPECIAL;
 fragment NAMEREST: NAMESTART | DIGIT;
+fragment HEX: [a-fA-F0-9];
+fragment OCT: [0-7];
 
 FAO: FAOSTART (
       FAODIR
@@ -100,14 +102,17 @@ DIV: '/';
 BRK_OPEN: '(';
 BRK_CLOS: ')';
 PUNCTUATION: ('.'|','|':'|';'|'!'|'?'|OPERATORS);  
+HEXNUM: '^' X HEX+;
+OCTNUM: '^' O OCT+;
+DECNUM: '^' D DIGIT+;
 ANY: .;  //must be last one
 
 mainRule: (
-      title 
-   |  ident 
-   |  page
-   |  facility
-   |  literal
+      WHITESPACE? title 
+   |  WHITESPACE? ident 
+   |  WHITESPACE? page
+   |  WHITESPACE? facility
+   |  WHITESPACE? literal
    |  empty )* EOF;
 
 title: keyword=TITLE WHITESPACE name=NAME (WHITESPACE titleDescription)? NEWLINE;  //no comments in title
@@ -127,7 +132,7 @@ facility:
    keyword=FACILITY separatorWithContinuation 
    facilityDescription    //ends with newline
    facilityContent? 
-   end?;
+   WHITESPACE? end?;
 
 facilityDescription: 
    (facilityQualifier separatorWithContinuation?)* 
@@ -147,11 +152,12 @@ sharedQualifier: keyword=QSHARED;
 systemQualifier: keyword=QSYSTEM;
 
 facilityContent: 
-   (  severity
-   |  page
-   |  literal
-   |  base 
-   |  message )+;
+   (  WHITESPACE? severity
+   |  WHITESPACE? page
+   |  WHITESPACE? literal
+   |  empty
+   |  WHITESPACE? base 
+   |  WHITESPACE? message )+;
 
 literal: keyword=LITERAL separatorWithContinuation 
    literalDefinition 
@@ -163,14 +169,16 @@ literalDefinition: name=NAME separatorWithContinuation? (EQ separatorWithContinu
 severity: keyword=SEVERITY separatorWithContinuation value=severityValue endOfLineWithComment;
 severityValue: SUCCESS | INFORMATIONAL | WARNING | ERROR | SEVERE | FATAL;
 
-base: keyword=BASE separatorWithContinuation value=NUMBER endOfLineWithComment;
+base: keyword=BASE separatorWithContinuation value=number endOfLineWithComment;
+
+number: NUMBER | HEXNUM | OCTNUM | DECNUM | ZNUMBER ;
 
 end: keyword=END endOfLineWithComment;
 
 expression : open='(' WHITESPACE? expression WHITESPACE? close=')'                     #brackets
            | left=expression WHITESPACE? sign=(MUL|DIV) WHITESPACE? right=expression   #muldiv
            | left=expression WHITESPACE? sign=(ADD|SUB) WHITESPACE? right=expression   #addsub
-           | unary=(ADD|SUB)? (NUMBER | variable=NAME)                                 #atom
+           | unary=(ADD|SUB)? (number | variable=NAME)                                 #atom
            ;
 
 empty: WHITESPACE? NEWLINE;

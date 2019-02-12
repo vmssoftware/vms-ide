@@ -1,4 +1,4 @@
-import { commands, env, ExtensionContext, window, workspace } from "vscode";
+import { commands, env, ExtensionContext, window, workspace, extensions } from "vscode";
 
 import { Builder } from "./build/builder";
 import { setExtensionContext } from "./context";

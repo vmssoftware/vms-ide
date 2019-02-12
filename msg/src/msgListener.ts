@@ -28,6 +28,7 @@ import { LiteralDefinitionContext } from "./msgParser";
 import { SeverityContext } from "./msgParser";
 import { SeverityValueContext } from "./msgParser";
 import { BaseContext } from "./msgParser";
+import { NumberContext } from "./msgParser";
 import { EndContext } from "./msgParser";
 import { ExpressionContext } from "./msgParser";
 import { EmptyContext } from "./msgParser";
@@ -339,6 +340,17 @@ export interface msgListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitBase?: (ctx: BaseContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.number`.
+	 * @param ctx the parse tree
+	 */
+	enterNumber?: (ctx: NumberContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.number`.
+	 * @param ctx the parse tree
+	 */
+	exitNumber?: (ctx: NumberContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `msgParser.end`.

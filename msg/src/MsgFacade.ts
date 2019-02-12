@@ -1,6 +1,6 @@
-import * as fs from "fs-extra";
+import * as fs from "fs";
 
-import { LogFunction } from "@vorfol/common";
+import { LogFunction, LogType } from "@vorfol/common";
 import { SourceContext } from "./SourceContext";
 
 export enum SymbolKind {

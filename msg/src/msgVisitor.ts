@@ -28,6 +28,7 @@ import { LiteralDefinitionContext } from "./msgParser";
 import { SeverityContext } from "./msgParser";
 import { SeverityValueContext } from "./msgParser";
 import { BaseContext } from "./msgParser";
+import { NumberContext } from "./msgParser";
 import { EndContext } from "./msgParser";
 import { ExpressionContext } from "./msgParser";
 import { EmptyContext } from "./msgParser";
@@ -238,6 +239,13 @@ export interface msgVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitBase?: (ctx: BaseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `msgParser.number`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitNumber?: (ctx: NumberContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `msgParser.end`.

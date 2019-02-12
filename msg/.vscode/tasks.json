@@ -11,7 +11,11 @@
         {
             "type": "gulp",
             "task": "build",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "type": "npm",

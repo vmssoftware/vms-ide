@@ -532,15 +532,7 @@
 			"patterns": 
 			[
 				{
-					"name": "msg.expression.number",
-					"match": "[1-9][0-9]*",
-					"captures": 
-					{
-						"0":
-						{
-							"name": "constant.numeric"
-						}
-					}
+					"include": "#number"
 				}
 			]
 		},
@@ -674,26 +666,7 @@
 					"patterns": 
 					[
 						{
-							"name": "msg.base.number",
-							"begin": "(?i)([1-9][0-9]+)",
-							"beginCaptures": 
-							{
-								"1":
-								{
-									"name": "constant.character"
-								}
-							},
-							"end": "(?=\\n)",
-							"patterns": 
-							[
-								{
-									"include": "#comment"
-								},
-								{
-									"name": "invalid.illegal",
-									"match": "\\S.*"
-								}
-							]
+							"include": "#number"
 						},
 						{
 							"include": "#continuation"
@@ -1228,6 +1201,45 @@
 						"0":
 						{
 							"name": "string.quoted"
+						}
+					}
+				}
+			]
+		},
+		"number": 
+		{
+			"patterns": 
+			[
+				{
+					"match": "(?i)(\\^d)?[0-9]+",
+					"name" : "msg.number.decimal",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "constant.character"
+						}
+					}
+				},
+				{
+					"match": "(?i)\\^x[a-f0-9]+",
+					"name" : "msg.number.hexadecimal",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "constant.character"
+						}
+					}
+				},
+				{
+					"match": "(?i)\\^o[0-7]+",
+					"name" : "msg.number.octal",
+					"captures": 
+					{
+						"0":
+						{
+							"name": "constant.character"
 						}
 					}
 				}

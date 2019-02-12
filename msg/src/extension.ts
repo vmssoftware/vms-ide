@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
 import * as nls from "vscode-nls";
-import * as path from "path";
-import * as fs from "fs-extra";
 
 import { LogFunction, LogType } from "@vorfol/common";
 import { GetConfigApi } from './ext-api/get-config-api';
@@ -12,6 +10,9 @@ const locale = vscode.env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
 const MSG = { language: 'msg', scheme: 'file' };
+
+//public _(\w+): (\w+);
+//public _$1?: $2;
 
 export async function activate(context: vscode.ExtensionContext) {
 
