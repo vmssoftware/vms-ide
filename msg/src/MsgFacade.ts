@@ -4,7 +4,9 @@ import { LogFunction, LogType } from "@vorfol/common";
 import { SourceContext } from "./SourceContext";
 
 export enum SymbolKind {
-    Other
+    Keyword,
+    Operator,
+    Other,
 }
 
 /**
@@ -127,4 +129,10 @@ export class MsgFacade {
         let context = this.getContext(fileName);
         return context.getDiagnostics();
     }
+
+    public getCodeCompletionCandidates(fileName: string, column: number, row: number): SymbolInfo[] {
+        let context = this.getContext(fileName);
+        return context.getCodeCompletionCandidates(column, row);
+    }
+
 }

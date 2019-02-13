@@ -181,7 +181,7 @@ expression : open='(' WHITESPACE? expression WHITESPACE? close=')'              
            | unary=(ADD|SUB)? (number | variable=NAME)                                 #atom
            ;
 
-empty: WHITESPACE? NEWLINE;
+empty: endOfLineWithComment;
 
 commentEOL: WHITESPACE? commentSign (~NEWLINE)* NEWLINE;
 commentSign: '!';

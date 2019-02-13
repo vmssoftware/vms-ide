@@ -1,0 +1,7 @@
+{
+    "sign.add": "Addition",
+    "sign.sub": "Substruction",
+    "sign.mul": "Multiplication",
+    "sign.div": "Division",
+    "sign.eq": "Variable assignment"
+}

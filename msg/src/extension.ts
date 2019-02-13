@@ -5,6 +5,7 @@ import { LogFunction, LogType } from "@vorfol/common";
 import { GetConfigApi } from './ext-api/get-config-api';
 import { languages, window, workspace, TextDocument, TextDocumentChangeEvent, Range, Diagnostic, DiagnosticSeverity, TextEditorSelectionChangeEvent, TextEditor } from 'vscode';
 import { MsgFacade, DiagnosticType } from './MsgFacade';
+import { MsgCompletionItemProvider } from './CompletionProvider';
 
 const locale = vscode.env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -46,8 +47,8 @@ export async function activate(context: vscode.ExtensionContext) {
     // context.subscriptions.push(languages.registerDocumentSymbolProvider(MSG, new MsgSymbolProvider(backend)));
     // const codeLensProvider = new MsgCodeLensProvider(backend);
     // context.subscriptions.push(languages.registerCodeLensProvider(MSG, codeLensProvider));
-    // context.subscriptions.push(languages.registerCompletionItemProvider(MSG, new MsgCompletionItemProvider(backend),
-    //     " ", ":", "@", "<", "{", "["));
+    context.subscriptions.push(languages.registerCompletionItemProvider(MSG, new MsgCompletionItemProvider(backend),
+        " ", ":", "@", "<", "{", "["));
     // context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(MSG, new MsgFormattingProvider(backend)));
     // context.subscriptions.push(languages.registerRenameProvider(MSG, new MsgRenameProvider(backend)));
 
