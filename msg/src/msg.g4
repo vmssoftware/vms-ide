@@ -48,10 +48,9 @@ fragment HEX: [a-fA-F0-9];
 fragment OCT: [0-7];
 
 VAR:        DOT V A R;
-COMMENT:    DOT C O M M E N T;
-EXPRESSION: DOT E X P R E S S I O N;
+IDENT:      DOT I D E N T;
 
-WHITESPACE: (' '|'\t') -> channel(HIDDEN);
+WHITESPACE: (' '|'\t')+;
 NEWLINE: ('\r'?'\n'|'\n');
 //CONTINUATION: '-' .*? NEWLINE -> channel(CONTINUATION);
 
@@ -73,32 +72,45 @@ PUNCTUATION: ('.'|','|':'|';'|'!'|'?'|OPERATORS);  // do nnot forget about COMMA
 HEXNUM: '^' X HEX+;
 OCTNUM: '^' O OCT+;
 DECNUM: '^' D DIGIT+;
+ANY: .;
 
 // =============================================================================
 
-mainRule: (
+msgContent: (
       var
-   |  comment
-   |  expression)* ;
+   |  ident
+   |  emptyLine
+   |  WHITESPACE 
+   )* EOF;
 
 var: 
-   keyword=varKeyword 
-   continuation?
-   varDefinition 
-   continuation?
-   (COMMA continuation? varDefinition continuation?)*
-   (NEWLINE | EOF);
-varKeyword: var;
-varDefinition: name=NAME continuation? (ASSIGN continuation? value=expression)?;
+   WHITESPACE? varKeyword sep varDefinition (sep? COMMA sep? varDefinition)*
+   eolMayComment;
+varKeyword: VAR;
+varDefinition: varName (sep? ASSIGN sep? varValue)?;
+varName: NAME;
+varValue: expression;
 
+ident: 
+   WHITESPACE? identKeyword sep identString NEWLINE;
+identKeyword: IDENT;
+identString: ~(WHITESPACE|NEWLINE) (~NEWLINE)* ;
 
-expression : open='(' WHITESPACE? expression WHITESPACE? close=')'                     #brackets
-           | left=expression WHITESPACE? sign=(MUL|DIV) WHITESPACE? right=expression   #muldiv
-           | left=expression WHITESPACE? sign=(ADD|SUB) WHITESPACE? right=expression   #addsub
-           | unary=(ADD|SUB)? (number | variable=expressionVariable)                   #atom
-           ;
+expression : 
+      '(' WHITESPACE? expression WHITESPACE? ')'
+   |  expression WHITESPACE? (MUL|DIV) WHITESPACE? expression
+   |  expression WHITESPACE? (ADD|SUB) WHITESPACE? expression
+   |  (ADD|SUB)? WHITESPACE? (number | expressionVariable)
+   ;
 expressionVariable: NAME;
+number: NUMBER | HEXNUM | OCTNUM | DECNUM | ZNUMBER ;
 
-continuation: continuationSign (commentEOL | NEWLINE);   // no EOF
+sep: (WHITESPACE | continuation+) WHITESPACE?;
+
+continuation: WHITESPACE? continuationSign eolMayComment;
 continuationSign: '-';
 
+eolMayComment: WHITESPACE? (commentSign (~NEWLINE)*)? NEWLINE;
+commentSign: '!';
+
+emptyLine: WHITESPACE? NEWLINE;

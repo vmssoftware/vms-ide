@@ -1,8 +1,8 @@
 import { ANTLRInputStream, CommonTokenStream, ConsoleErrorListener } from 'antlr4ts';
 import { ParseTreeWalker } from 'antlr4ts/tree/ParseTreeWalker';
-import { msgLexer } from '../.antlr/msgLexer';
-import { msgParser, MainRuleContext, TitleContext, TitleDescriptionContext } from '../.antlr/msgParser';
-import { msgListener } from '../.antlr/msgListener';
+import { msgLexer } from '../msgLexer';
+import { msgParser, MsgContentContext } from '../msgParser';
+import { msgListener } from '../msgListener';
 import { ANTLRErrorListener } from 'antlr4ts/ANTLRErrorListener';
 import { Recognizer } from 'antlr4ts/Recognizer';
 import { RecognitionException } from 'antlr4ts/RecognitionException';
@@ -42,23 +42,7 @@ SYNTAX "Invalid !OW syn!5ULtax in !6(ZI) !_keyword !AZ!@AS" /fao_count=1 /error
         let parser = new msgParser(tokenStream);
         parser.removeErrorListeners();
         parser.addErrorListener(new TestMsgErrorListener());
-        let tree = parser.mainRule();
-        
-        const listener: msgListener = {
-            enterMainRule: (ctx: MainRuleContext) => { 
-                console.log(`enterMainRule: ${ctx.start.charPositionInLine}`);
-            },
-            exitMainRule: (ctx: MainRuleContext) => { 
-                console.log(`exitMainRule:`);
-            },
-            enterTitle: (ctx: TitleContext) => { 
-                console.log(`enterTitle: ${ctx.start.charPositionInLine}`);
-            },
-            exitTitle: (ctx: TitleContext) => { 
-                console.log(`exitTitle:`);
-            },
-        };
-        ParseTreeWalker.DEFAULT.walk(listener, tree);
+        let tree = parser.msgContent();
         console.log('done');
     });
 

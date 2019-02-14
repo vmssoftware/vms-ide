@@ -4,9 +4,9 @@ import * as nls from "vscode-nls";
 import { Symbol, CodeCompletionCore } from "antlr4-c3";
 import { ParseCancellationException, IntervalSet, Interval } from 'antlr4ts/misc';
 import { ParseTreeWalker, TerminalNode, ParseTree, ParseTreeListener } from 'antlr4ts/tree';
-import { msgParser, MainRuleContext } from "./.antlr/msgParser";
+import { msgParser, MsgContentContext } from "./msgParser";
 import { ANTLRInputStream, CommonTokenStream, BailErrorStrategy, DefaultErrorStrategy, ParserRuleContext, Token } from 'antlr4ts';
-import { msgLexer } from './.antlr/msgLexer';
+import { msgLexer } from './msgLexer';
 import { DiagnosticEntry, SymbolKind, Definition, SymbolInfo } from './MsgFacade';
 import { ContextErrorListener, ContextLexerErrorListener } from './ContextErrorListener';
 import { PredictionMode } from 'antlr4ts/atn/PredictionMode';
@@ -30,7 +30,7 @@ export class SourceContext {
     private lexerErrorListener: ContextLexerErrorListener = new ContextLexerErrorListener(this.diagnostics);
     private analysisDone: boolean = false; // Includes determining reference counts.
 
-    private tree?: MainRuleContext; // The root context from the last parse run.
+    private tree?: MsgContentContext; // The root context from the last parse run.
     public logFn: LogFunction;
 
     constructor(public fileName: string, logFn?: LogFunction) {
@@ -45,7 +45,7 @@ export class SourceContext {
      * This call doesn't do any expensive processing (parse() does).
      */
     public setText(source: string) {
-        let input = new ANTLRInputStream(source);
+        let input = new ANTLRInputStream(source+"\n");  // add NEWLINE to force end of last line
         let lexer = new msgLexer(input);
 
         // There won't be lexer errors actually. They are silently bubbled up and will cause parser errors.
@@ -74,14 +74,14 @@ export class SourceContext {
         this.analysisDone = false;
 
         try {
-            this.tree = this.parser.mainRule();
+            this.tree = this.parser.msgContent();
         } catch (e) {
             if (e instanceof ParseCancellationException) {
                 this.tokenStream.seek(0);
                 this.parser.reset();
                 this.parser.errorHandler = new DefaultErrorStrategy();
                 this.parser.interpreter.setPredictionMode(PredictionMode.LL);
-                this.tree = this.parser.mainRule();
+                this.tree = this.parser.msgContent();
             } else {
                 throw e;
             }
@@ -99,8 +99,8 @@ export class SourceContext {
     private runAnalysis() {
         if (!this.analysisDone) {
             this.analysisDone = true;
-
-            let listener = new AnalysisListener(this.diagnostics);
+            this.logFn(LogType.debug, () => `----- runAnalysis() -----`);
+            let listener = new AnalysisListener(this.diagnostics, this.logFn);
             ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree!);
         }
     }
@@ -156,56 +156,30 @@ export class SourceContext {
         let core = new CodeCompletionCore(this.parser);
         core.showResult = false;
         core.ignoredTokens = new Set([
-            msgLexer.T__0,
-            msgLexer.T__1,
-            msgLexer.T__2,
-            msgLexer.FAO,
-            //msgLexer.TITLE,
-            //msgLexer.IDENT,
-            //msgLexer.PAGE,
-            //msgLexer.FACILITY,
-            //msgLexer.SEVERITY,
-            //msgLexer.BASE,
-            //msgLexer.END,
-            //msgLexer.LITERAL,
-            //msgLexer.QPREFIX,
-            //msgLexer.QSHARED,
-            //msgLexer.QSYSTEM,
-            //msgLexer.QFAOCOUNT,
-            //msgLexer.QIDENTIFICATION,
-            //msgLexer.QUSERVALUE,
-            //msgLexer.QSUCCESS,
-            //msgLexer.QINFORMATIONAL,
-            //msgLexer.QWARNING,
-            //msgLexer.QERROR,
-            //msgLexer.QSEVERE,
-            //msgLexer.QFATAL,
-            //msgLexer.SUCCESS,
-            //msgLexer.INFORMATIONAL,
-            //msgLexer.WARNING,
-            //msgLexer.ERROR,
-            //msgLexer.SEVERE,
-            //msgLexer.FATAL,
-            msgLexer.WHITESPACE,
-            msgLexer.NEWLINE,
-            //msgLexer.NAME,
-            msgLexer.NUMBER,
-            msgLexer.ZNUMBER,
-            msgLexer.DQUOTA,
-            msgLexer.QUOTA,
-            msgLexer.COMMA,
-            msgLexer.EQ,
-            msgLexer.ADD,
-            msgLexer.SUB,
-            msgLexer.MUL,
-            msgLexer.DIV,
-            msgLexer.BRK_OPEN,
-            msgLexer.BRK_CLOS,
-            msgLexer.PUNCTUATION,
-            msgLexer.HEXNUM,
-            msgLexer.OCTNUM,
-            msgLexer.DECNUM,
-            msgLexer.EOF,
+            msgParser.T__0,
+            //msgParser.VAR,
+            //msgParser.IDENT,
+            msgParser.WHITESPACE,
+            msgParser.NEWLINE,
+            //msgParser.NAME,
+            msgParser.NUMBER,
+            msgParser.ZNUMBER,
+            msgParser.DQUOTA,
+            msgParser.QUOTA,
+            msgParser.COMMA,
+            //msgParser.ASSIGN,
+            //msgParser.ADD,
+            //msgParser.SUB,
+            //msgParser.MUL,
+            //msgParser.DIV,
+            //msgParser.BRK_OPEN,
+            //msgParser.BRK_CLOS,
+            msgParser.PUNCTUATION,
+            msgParser.HEXNUM,
+            msgParser.OCTNUM,
+            msgParser.DECNUM,
+            msgParser.ANY,
+            msgParser.EOF,
             -2, // Erroneously inserted. Needs fix in antlr4-c3.
         ]);
 
@@ -314,7 +288,7 @@ export class SourceContext {
                 //     break;
 
                 default: {
-                    let value = vocabulary.getDisplayName(type);
+                    let value = vocabulary.getLiteralName(type) || vocabulary.getDisplayName(type);
                     info.kind = SymbolKind.Keyword;
                     info.name = value[0] === "'" ? value.substr(1, value.length - 2) : value; // Remove quotes.
                     break;

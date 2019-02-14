@@ -48,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // const codeLensProvider = new MsgCodeLensProvider(backend);
     // context.subscriptions.push(languages.registerCodeLensProvider(MSG, codeLensProvider));
     context.subscriptions.push(languages.registerCompletionItemProvider(MSG, new MsgCompletionItemProvider(backend),
-        " ", ":", "@", "<", "{", "["));
+        ".", " "));
     // context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(MSG, new MsgFormattingProvider(backend)));
     // context.subscriptions.push(languages.registerRenameProvider(MSG, new MsgRenameProvider(backend)));
 
@@ -85,7 +85,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
                 processDiagnostic(event.document);
                 //codeLensProvider.refresh();
-            }, 1000));  // wait one second before reparse and process diagnostics
+            }, 200));  // wait before reparse and process diagnostics
         }
     });
 
