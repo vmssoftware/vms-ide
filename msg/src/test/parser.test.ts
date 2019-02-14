@@ -1,8 +1,8 @@
 import { ANTLRInputStream, CommonTokenStream, ConsoleErrorListener } from 'antlr4ts';
 import { ParseTreeWalker } from 'antlr4ts/tree/ParseTreeWalker';
-import { msgLexer } from '../msgLexer';
-import { msgParser, MainRuleContext, TitleContext, TitleDescriptionContext } from '../msgParser';
-import { msgListener } from '../msgListener';
+import { msgLexer } from '../.antlr/msgLexer';
+import { msgParser, MainRuleContext, TitleContext, TitleDescriptionContext } from '../.antlr/msgParser';
+import { msgListener } from '../.antlr/msgListener';
 import { ANTLRErrorListener } from 'antlr4ts/ANTLRErrorListener';
 import { Recognizer } from 'antlr4ts/Recognizer';
 import { RecognitionException } from 'antlr4ts/RecognitionException';

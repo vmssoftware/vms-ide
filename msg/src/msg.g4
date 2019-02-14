@@ -57,13 +57,13 @@ FAO: FAOSTART (
    );
 
 TITLE:      DOT T I T L E;
+LITERAL:    DOT L I T E R A L;
 IDENT:      DOT I D E N T;
 PAGE:       DOT P A G E;
 FACILITY:   DOT F A C I L I T Y;
 SEVERITY:   DOT S E V E R I T Y;
 BASE:       DOT B A S E;
 END:        DOT E N D;
-LITERAL:    DOT L I T E R A L;
 
 QPREFIX:    SLASH P R E F I X;
 QSHARED:    SLASH S H A R E D;
@@ -86,6 +86,7 @@ ERROR:         E R R O R;
 SEVERE:        S E V E R E;
 FATAL:         F A T A L;
 
+//WHITESPACE: (' '|'\t') -> channel(HIDDEN);
 WHITESPACE: (' '|'\t')+;
 NEWLINE: ('\r'?'\n'|'\n');
 NAME: NAMESTART NAMEREST*;
@@ -108,35 +109,40 @@ DECNUM: '^' D DIGIT+;
 ANY: .;  //must be last one
 
 mainRule: (
-      WHITESPACE? title 
-   |  WHITESPACE? ident 
-   |  WHITESPACE? page
-   |  WHITESPACE? facility
-   |  WHITESPACE? literal
+      title 
+   |  ident
+   |  page
+   |  facility
+   |  literal
    |  empty )* EOF;
 
-title: keyword=TITLE WHITESPACE name=NAME (WHITESPACE titleDescription)? NEWLINE;  //no comments in title
+title: WHITESPACE? keyword=titleKeyword WHITESPACE name=titleName (WHITESPACE titleDescription)? NEWLINE;  //no comments in title
+titleKeyword: TITLE;
+titleName: NAME;
 titleDescription: (~NEWLINE)*;
 
 separatorWithContinuation: (continuation+ | WHITESPACE) WHITESPACE?;
 endOfLineWithComment: WHITESPACE? (commentEOL | NEWLINE);
 
-ident: keyword=IDENT separatorWithContinuation identValue endOfLineWithComment;
+ident: WHITESPACE? keyword=identKeyword separatorWithContinuation identValue endOfLineWithComment;
+identKeyword: IDENT;
 identValue: NAME | simpleString;
 
 simpleString: (QUOTA ~QUOTA*? QUOTA) | (DQUOTA ~DQUOTA*? DQUOTA);
 
-page: keyword=PAGE endOfLineWithComment;
+page: WHITESPACE? keyword=pageKeyword endOfLineWithComment;
+pageKeyword: PAGE;
 
 facility: 
-   keyword=FACILITY separatorWithContinuation 
+   WHITESPACE? keyword=facilityKeyword separatorWithContinuation 
    facilityDescription    //ends with newline
-   facilityContent? 
+   facilityContent*
    WHITESPACE? end?;
+facilityKeyword: FACILITY;
 
 facilityDescription: 
    (facilityQualifier separatorWithContinuation?)* 
-   name=NAME 
+   name=facilityName 
    separatorWithContinuation?
    (WHITESPACE | COMMA)
    separatorWithContinuation?
@@ -144,43 +150,52 @@ facilityDescription:
    separatorWithContinuation?
    (facilityQualifier separatorWithContinuation?)*
    endOfLineWithComment;
+facilityName: NAME;
 
 facilityQualifier: prefixQualifier | sharedQualifier | systemQualifier ;
 
-prefixQualifier: keyword=QPREFIX separatorWithContinuation? EQ separatorWithContinuation? value=NAME;
-sharedQualifier: keyword=QSHARED;
-systemQualifier: keyword=QSYSTEM;
+prefixQualifier: keyword=prefixQualifierKeyword separatorWithContinuation? EQ separatorWithContinuation? value=prefixQualifierValue;
+prefixQualifierKeyword: QPREFIX;
+prefixQualifierValue: NAME;
+sharedQualifier: keyword=sharedQualifierKeyword;
+sharedQualifierKeyword: QSHARED;
+systemQualifier: keyword=systemQualifierKeyword;
+systemQualifierKeyword: QSYSTEM;
 
 facilityContent: 
-   (  WHITESPACE? severity
-   |  WHITESPACE? page
-   |  WHITESPACE? literal
-   |  empty
-   |  WHITESPACE? base 
-   |  WHITESPACE? message )+;
+      severity
+   |  page
+   |  literal
+   |  base 
+   |  message 
+   |  empty ;
 
-literal: keyword=LITERAL separatorWithContinuation 
+literal: WHITESPACE? keyword=literalKeyword separatorWithContinuation 
    literalDefinition 
    separatorWithContinuation?
    (COMMA separatorWithContinuation? literalDefinition separatorWithContinuation?)*
    endOfLineWithComment;
+literalKeyword: LITERAL;
 literalDefinition: name=NAME separatorWithContinuation? (EQ separatorWithContinuation? value=expression)?;
 
-severity: keyword=SEVERITY separatorWithContinuation value=severityValue endOfLineWithComment;
+severity: WHITESPACE? keyword=severityKeyword separatorWithContinuation value=severityValue endOfLineWithComment;
+severityKeyword: SEVERITY;
 severityValue: SUCCESS | INFORMATIONAL | WARNING | ERROR | SEVERE | FATAL;
 
-base: keyword=BASE separatorWithContinuation value=number endOfLineWithComment;
+base: WHITESPACE? keyword=baseKeyword separatorWithContinuation value=number endOfLineWithComment;
+baseKeyword: BASE;
 
 number: NUMBER | HEXNUM | OCTNUM | DECNUM | ZNUMBER ;
 
-end: keyword=END endOfLineWithComment;
+end: WHITESPACE? keyword=endKeyword endOfLineWithComment;
+endKeyword: END;
 
 expression : open='(' WHITESPACE? expression WHITESPACE? close=')'                     #brackets
            | left=expression WHITESPACE? sign=(MUL|DIV) WHITESPACE? right=expression   #muldiv
            | left=expression WHITESPACE? sign=(ADD|SUB) WHITESPACE? right=expression   #addsub
-           | unary=(ADD|SUB)? (number | variable=NAME)                                 #atom
+           | unary=(ADD|SUB)? (number | variable=expressionVariable)                   #atom
            ;
-
+expressionVariable: NAME;
 empty: endOfLineWithComment;
 
 commentEOL: WHITESPACE? commentSign (~NEWLINE)* NEWLINE;
@@ -189,12 +204,13 @@ commentSign: '!';
 continuation: WHITESPACE? continuationSign WHITESPACE? (commentEOL | NEWLINE);
 continuationSign: '-';
 
-message: name=NAME separatorWithContinuation? 
+message: WHITESPACE? name=messageName separatorWithContinuation? 
    (messageQualifier separatorWithContinuation?)* 
    value=messageText 
    separatorWithContinuation?
    (messageQualifier separatorWithContinuation?)* 
    endOfLineWithComment;
+messageName: NAME;
 
 messageQualifier: 
       faoCount 
@@ -210,12 +226,17 @@ severityQualifier:
    |  severe
    |  fatal;
 
-faoCount: keyword=QFAOCOUNT separatorWithContinuation? EQ separatorWithContinuation? value=faoCountValue;
+faoCount: keyword=faoCountKeyword separatorWithContinuation? EQ separatorWithContinuation? value=faoCountValue;
+faoCountKeyword: QFAOCOUNT;
 faoCountValue: NUMBER | ZNUMBER;
 
-identification: keyword=QIDENTIFICATION separatorWithContinuation? EQ separatorWithContinuation? value=NAME;
+identification: keyword=identificationKeyword separatorWithContinuation? EQ separatorWithContinuation? value=identificationValue;
+identificationKeyword: QIDENTIFICATION;
+identificationValue: NAME;
 
-userValue: keyword=QUSERVALUE separatorWithContinuation? EQ separatorWithContinuation? value=NUMBER;
+userValue: keyword=userValueKeyword separatorWithContinuation? EQ separatorWithContinuation? value=userValueValue;
+userValueKeyword: QUSERVALUE;
+userValueValue: NUMBER;
 
 success: QSUCCESS;
 informational: QINFORMATIONAL;

@@ -159,6 +159,9 @@
 							"include": "#end"
 						},
 						{
+							"include": "#page"
+						},
+						{
 							"include": "#message"
 						}
 					]

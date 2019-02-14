@@ -1,7 +1,33 @@
 import * as nls from "vscode-nls";
 
-import { msgListener } from './msgListener';
-import { FacilityContext, FacilityDescriptionContext, PrefixQualifierContext, MessageContext, LiteralDefinitionContext, AtomContext, BaseContext, TitleDescriptionContext, IdentValueContext, MessageTextContext, FaoCountContext, FaoCountValueContext, UserValueContext, IdentificationContext, SeverityContext, SeverityValueContext, SeverityQualifierContext, TitleContext, NumberContext } from './msgParser';
+import { msgListener } from './.antlr/msgListener';
+import { 
+        AtomContext, 
+        BaseContext, 
+        ExpressionVariableContext, 
+        FacilityContext, 
+        FacilityDescriptionContext, 
+        FacilityNameContext, 
+        FaoCountContext, 
+        FaoCountValueContext, 
+        IdentValueContext, 
+        IdentificationContext, 
+        IdentificationValueContext,
+        LiteralDefinitionContext, 
+        MessageContext, 
+        MessageNameContext, 
+        MessageTextContext, 
+        NumberContext, 
+        PrefixQualifierContext, 
+        PrefixQualifierValueContext, 
+        SeverityContext, 
+        SeverityQualifierContext, 
+        SeverityValueContext, 
+        TitleContext, 
+        TitleDescriptionContext, 
+        TitleNameContext, 
+        UserValueContext, 
+    } from './.antlr/msgParser';
 import { DiagnosticEntry, DiagnosticType } from './MsgFacade';
 import { Token } from "antlr4ts";
 
@@ -49,9 +75,9 @@ export class AnalysisListener implements msgListener {
         //
     }
 
-    enterTitle(ctx: TitleContext) {
-        if (ctx._name && ctx._name.text) {
-            this.testLength(ctx._name.text, 31, AnalysisListener.tooLongTitleName, ctx._name);
+    enterTitleName(ctx: TitleNameContext) {
+        if (ctx.text) {
+            this.testLength(ctx.text, 31, AnalysisListener.tooLongTitleName, ctx.start);
         } else {
             this.markToken(ctx.start, AnalysisListener.emptyTitleName);
         }
@@ -83,10 +109,10 @@ export class AnalysisListener implements msgListener {
         this.currentSeverityQualifier = "";
     }
 
-    enterFacilityDescription(ctx: FacilityDescriptionContext) {
-        if (ctx._name && ctx._name.text) {
-            if (this.testLength(ctx._name.text, 9, AnalysisListener.tooLongFacilityName, ctx._name)) {
-                this.currentFacility = ctx._name.text;
+    enterFacilityName(ctx: FacilityNameContext) {
+        if (ctx.text) {
+            if (this.testLength(ctx.text, 9, AnalysisListener.tooLongFacilityName, ctx.start)) {
+                this.currentFacility = ctx.text;
                 this.messagePrefixes.push(this.currentFacility);
             }
         } else {
@@ -94,10 +120,10 @@ export class AnalysisListener implements msgListener {
         }
     }
 
-    enterPrefixQualifier(ctx: PrefixQualifierContext) {
-        if (ctx._value && ctx._value.text) {
-            if (this.testLength(ctx._value.text, 9, AnalysisListener.tooLongFacilityPrefix, ctx._value)) {
-                this.messagePrefixes.push(ctx._value.text);
+    enterPrefixQualifierValue(ctx: PrefixQualifierValueContext) {
+        if (ctx.text) {
+            if (this.testLength(ctx.text, 9, AnalysisListener.tooLongFacilityPrefix, ctx.start)) {
+                this.messagePrefixes.push(ctx.text);
             }
         } else {
             this.markToken(ctx.start, AnalysisListener.emptyPrefixValue);
@@ -112,14 +138,14 @@ export class AnalysisListener implements msgListener {
         this.currentSeverityQualifier = ctx.text ? ctx.text.slice(1).toUpperCase() : "";
     }
 
-    enterMessage(ctx: MessageContext) {
+    enterMessageName(ctx: MessageNameContext) {
         this.currentIdenification = "";
-        if (ctx._name && ctx._name.text) {
+        if (ctx.text) {
             for (const prefix of this.messagePrefixes) {
-                const varName = prefix + ctx._name.text;
-                if (this.testLength(varName, 31, AnalysisListener.tooLongMessageName, ctx._name)) {
+                const varName = prefix + ctx.text;
+                if (this.testLength(varName, 31, AnalysisListener.tooLongMessageName, ctx.start)) {
                     if (this.symbols.has(varName.toUpperCase())) {
-                        this.markToken(ctx._name, AnalysisListener.messageSymbolAlreadyExists);
+                        this.markToken(ctx.start, AnalysisListener.messageSymbolAlreadyExists);
                         break;
                     } else {
                         this.symbols.add(varName.toUpperCase());
@@ -138,7 +164,7 @@ export class AnalysisListener implements msgListener {
 
     exitMessage(ctx: MessageContext) {
         if (!this.currentIdenification && ctx._name) {
-            this.testMessageIdent(ctx._name);
+            this.testMessageIdent(ctx._name.start);
         }
         if (!(this.currentSeverity || this.currentSeverityQualifier)) {
             this.markToken(ctx.start, AnalysisListener.emptySeverity, DiagnosticType.Warning);
@@ -146,11 +172,11 @@ export class AnalysisListener implements msgListener {
         this.currentSeverityQualifier = "";
     }
 
-    enterIdentification(ctx: IdentificationContext) {
-        if (ctx._value && ctx._value.text) {
-            if (this.testLength(ctx._value.text, 9, AnalysisListener.tooLongIdentification, ctx._value)) {
-                this.testMessageIdent(ctx._value);
-                this.currentIdenification = ctx._value.text;
+    enterIdentificationValue(ctx: IdentificationValueContext) {
+        if (ctx.text) {
+            if (this.testLength(ctx.text, 9, AnalysisListener.tooLongIdentification, ctx.start)) {
+                this.testMessageIdent(ctx.start);
+                this.currentIdenification = ctx.text;
             }
         } else {
             this.markToken(ctx.start, AnalysisListener.emptyMessageIdentification);
@@ -198,18 +224,11 @@ export class AnalysisListener implements msgListener {
         }
     }
 
-    enterAtom(ctx: AtomContext) {
+    enterExpressionVariable(ctx: ExpressionVariableContext) {
         // AtomContext may have number, so _value may be empty
-        if (ctx._variable && ctx._variable.text) {
-            if (!this.symbols.has(ctx._variable.text.toUpperCase())) {
-                let error: DiagnosticEntry = {
-                    type: DiagnosticType.Error,
-                    message: AnalysisListener.undefinedVariable,
-                    range: { 
-                        start: { column: ctx._variable.charPositionInLine, row: ctx._variable.line }, 
-                        end:   { column: ctx._variable.charPositionInLine + ctx._variable.text.length, row: ctx._variable.line }}
-                };
-                this.diagnostics.push(error);
+        if (ctx.text) {
+            if (!this.symbols.has(ctx.text.toUpperCase())) {
+                this.markText(AnalysisListener.undefinedVariable, ctx.start.charPositionInLine, ctx.start.line, ctx.text.length);
             }
         }
     }

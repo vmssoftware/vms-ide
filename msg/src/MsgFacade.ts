@@ -92,7 +92,7 @@ export class MsgFacade {
                 }
             }
 
-            let context = new SourceContext(fileName);
+            let context = new SourceContext(fileName, this.logFn);
             contextEntry = { context: context };
             this.sourceContexts.set(fileName, contextEntry);
 
