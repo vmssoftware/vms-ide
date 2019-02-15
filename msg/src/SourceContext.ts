@@ -22,6 +22,7 @@ export class SourceContext {
     public sourceId: string;
     public diagnostics: DiagnosticEntry[] = [];
     public symbolTable: ContextSymbolTable;
+    public symbolsForExpression?: Map<string, number>;     //symbol and token index after runAnalysis()
 
     // Grammar parsing infrastructure.
     private tokenStream?: CommonTokenStream;
@@ -102,6 +103,7 @@ export class SourceContext {
             this.logFn(LogType.debug, () => `----- runAnalysis() -----`);
             let listener = new AnalysisListener(this.diagnostics, this.logFn);
             ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree!);
+            this.symbolsForExpression = listener.symbols;
         }
     }
 
@@ -156,11 +158,30 @@ export class SourceContext {
         let core = new CodeCompletionCore(this.parser);
         core.showResult = false;
         core.ignoredTokens = new Set([
-            //msgParser.VAR,
-            //msgParser.IDENT,
+            // msgParser.TITLE,
+            // msgParser.IDENT,
+            // msgParser.PAGE,
+            // msgParser.LITERAL,
+            // msgParser.FACILITY,
+            // msgParser.SEVERITY,
+            // msgParser.BASE,
+            // msgParser.END,
+            // msgParser.PREFIX,
+            // msgParser.SHARED,
+            // msgParser.SYSTEM,
+            // msgParser.FAOCOUNT,
+            // msgParser.IDENTIFICATION,
+            // msgParser.USERVALUE,
+            // msgParser.SUCCESS,
+            // msgParser.INFORMATIONAL,
+            // msgParser.WARNING,
+            // msgParser.ERROR,
+            // msgParser.SEVERE,
+            // msgParser.FATAL,
+            // msgParser.FAO,
             msgParser.WHITESPACE,
             msgParser.NEWLINE,
-            //msgParser.NAME,
+            msgParser.NAME,
             msgParser.NUMBER,
             msgParser.ASSIGN,
             msgParser.ADD,
@@ -170,31 +191,72 @@ export class SourceContext {
             msgParser.SHIFT,
             msgParser.P_OPEN,
             msgParser.P_CLOS,
-            //msgParser.HEXNUM,
-            //msgParser.OCTNUM,
-            //msgParser.DECNUM,
+            // msgParser.HEXNUM,
+            // msgParser.OCTNUM,
+            // msgParser.DECNUM,
             msgParser.DOT,
             msgParser.COMMA,
             msgParser.EXCL,
+            msgParser.APOSTR,
+            msgParser.QUOTA,
+            msgParser.B_OPEN,
+            msgParser.B_CLOSE,
             msgParser.ANY,
             msgParser.EOF,
             -2, // Erroneously inserted. Needs fix in antlr4-c3.
         ]);
 
         core.preferredRules = new Set([
-            //msgParser.RULE_msgContent,
-            //msgParser.RULE_var,
-            //msgParser.RULE_varDefinition,
-            //msgParser.RULE_varName,
-            //msgParser.RULE_varValue,
-            //msgParser.RULE_ident,
-            //msgParser.RULE_identString,
-            //msgParser.RULE_expression,
+            // msgParser.RULE_msgContent,
+            // msgParser.RULE_title,
+            // msgParser.RULE_titleName,
+            // msgParser.RULE_titleDescription,
+            // msgParser.RULE_ident,
+            // msgParser.RULE_identValue,
+            // msgParser.RULE_page,
+            // msgParser.RULE_literal,
+            // msgParser.RULE_literalDefinition,
+            // msgParser.RULE_literalName,
+            // msgParser.RULE_literalValue,
+            // msgParser.RULE_facility,
+            // msgParser.RULE_facilityDescription,
+            // msgParser.RULE_facilityName,
+            // msgParser.RULE_facilityNumber,
+            // msgParser.RULE_facilityContent,
+            // msgParser.RULE_facilityQualifier,
+            // msgParser.RULE_prefixQualifier,
+            // msgParser.RULE_prefixQualifierValue,
+            // msgParser.RULE_sharedQualifier,
+            // msgParser.RULE_systemQualifier,
+            // msgParser.RULE_severity,
+            // msgParser.RULE_severityValue,
+            // msgParser.RULE_base,
+            // msgParser.RULE_baseNumber,
+            // msgParser.RULE_end,
+            // msgParser.RULE_expression,
             msgParser.RULE_expressionVariable,
-            //msgParser.RULE_number,
-            //msgParser.RULE_sep,
-            //msgParser.RULE_continuation,
-            //msgParser.RULE_eolMayComment,
+            // msgParser.RULE_number,
+            // msgParser.RULE_sep,
+            // msgParser.RULE_continuation,
+            // msgParser.RULE_eolMayComment,
+            // msgParser.RULE_message,
+            // msgParser.RULE_messageName,
+            // msgParser.RULE_messageQualifier,
+            // msgParser.RULE_severityQualifier,
+            // msgParser.RULE_faoCount,
+            // msgParser.RULE_faoCountValue,
+            // msgParser.RULE_identification,
+            // msgParser.RULE_identificationValue,
+            // msgParser.RULE_userValue,
+            // msgParser.RULE_userValueValue,
+            // msgParser.RULE_success,
+            // msgParser.RULE_informational,
+            // msgParser.RULE_warning,
+            // msgParser.RULE_error,
+            // msgParser.RULE_severe,
+            // msgParser.RULE_fatal,
+            // msgParser.RULE_messageText,
+            msgParser.RULE_fao,
         ]);
 
         // Search the token index which covers our caret position.
@@ -273,9 +335,28 @@ export class SourceContext {
 
         candidates.rules.forEach((callStack, key) => {
             switch (key) {
-                case msgParser.RULE_expressionVariable: {
-                    // TODO: add all existing varible names
-                    ["auto", "bus", "court", "divide"].forEach(symbol => {
+                case msgParser.RULE_expressionVariable:
+                    if (this.symbolsForExpression) {
+                        this.symbolsForExpression.forEach((idx, value) => {
+                            if (idx < index) {
+                                result.push(
+                                    { 
+                                        kind: SymbolKind.Other, 
+                                        name: value, 
+                                        source: this.fileName, 
+                                        definition: undefined, 
+                                        description: undefined 
+                                    }
+                                );
+                            }
+                        });
+                    }
+                    break;
+
+                case msgParser.RULE_fao:
+                    result = [];
+                    // TODO: get all from fao definition
+                    ["!!", "!_", "!^"].forEach(symbol => {
                         result.push(
                             { 
                                 kind: SymbolKind.Other, 
@@ -287,7 +368,6 @@ export class SourceContext {
                         );
                     });
                     break;
-                }
 
                 // case ANTLRv4Parser.RULE_terminalRule: { // Lexer rules.
                 //     this.symbolTable.getAllSymbols(BuiltInTokenSymbol).forEach(symbol => {

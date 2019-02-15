@@ -11,8 +11,8 @@ const localize = nls.loadMessageBundle();
 
 export class AnalysisListener implements msgListener {
 
-    public symbols = new Set<string>();
-    public messages = new Set<string>();
+    public symbols = new Map<string, number>();     //symbol and token index
+    public messages = new Map<string, number>();    //message and token index
     public messagePrefixes: string[] = [];
     public currentMessageNumber = 0;
     public currentFacility = "";
@@ -130,7 +130,7 @@ export class AnalysisListener implements msgListener {
                         this.markToken(ctx.start, AnalysisListener.messageSymbolAlreadyExists);
                         break;
                     } else {
-                        this.symbols.add(varName);
+                        this.symbols.set(varName, ctx.start.tokenIndex);
                     }
                 } else {
                     break;
@@ -191,12 +191,14 @@ export class AnalysisListener implements msgListener {
         }
     }
 
-    enterLiteralName(ctx: LiteralNameContext) {
-        if (ctx.text) {
-            if (this.symbols.has(ctx.text)) {
-                this.markToken(ctx.start, AnalysisListener.messageSymbolAlreadyExists);
+    // add current literal name only on exit
+    exitLiteralDefinition(ctx: LiteralDefinitionContext) {
+        const literalNameCtx = ctx.literalName();
+        if (literalNameCtx) {
+            if (this.symbols.has(literalNameCtx.text)) {
+                this.markToken(literalNameCtx.start, AnalysisListener.messageSymbolAlreadyExists);
             } else {
-                this.symbols.add(ctx.text);
+                this.symbols.set(literalNameCtx.text, 1 + (ctx.stop? ctx.stop.tokenIndex : literalNameCtx.start.tokenIndex));
             }
         } else {
             this.markToken(ctx.start, AnalysisListener.emptyLiteralName);
@@ -257,7 +259,7 @@ export class AnalysisListener implements msgListener {
             if (this.messages.has(messageIdent)) {
                 this.markToken(token, AnalysisListener.messageAlreadyExists);
             } else {
-                this.messages.add(messageIdent);
+                this.messages.set(messageIdent, token.tokenIndex);
                 return true;
             }
         }

@@ -125,6 +125,7 @@ end: WHITESPACE? DOT END eolMayComment;
 
 expression : 
       P_OPEN WHITESPACE? expression WHITESPACE? P_CLOS
+   |  expression WHITESPACE? (SHIFT)   WHITESPACE? expression
    |  expression WHITESPACE? (MUL|DIV) WHITESPACE? expression
    |  expression WHITESPACE? (ADD|SUB) WHITESPACE? expression
    |  (ADD|SUB)? WHITESPACE? (number | expressionVariable)
