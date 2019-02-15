@@ -45,7 +45,7 @@ export class SourceContext {
      * This call doesn't do any expensive processing (parse() does).
      */
     public setText(source: string) {
-        let input = new ANTLRInputStream(source+"\n");  // add NEWLINE to force end of last line
+        let input = new ANTLRInputStream(source.toUpperCase()+"\n");  // convert to upper case and add NEWLINE to force end of last line
         let lexer = new msgLexer(input);
 
         // There won't be lexer errors actually. They are silently bubbled up and will cause parser errors.
@@ -156,45 +156,55 @@ export class SourceContext {
         let core = new CodeCompletionCore(this.parser);
         core.showResult = false;
         core.ignoredTokens = new Set([
-            msgParser.T__0,
             //msgParser.VAR,
             //msgParser.IDENT,
             msgParser.WHITESPACE,
             msgParser.NEWLINE,
             //msgParser.NAME,
             msgParser.NUMBER,
-            msgParser.ZNUMBER,
-            msgParser.DQUOTA,
-            msgParser.QUOTA,
+            msgParser.ASSIGN,
+            msgParser.ADD,
+            msgParser.SUB,
+            msgParser.MUL,
+            msgParser.DIV,
+            msgParser.SHIFT,
+            msgParser.P_OPEN,
+            msgParser.P_CLOS,
+            //msgParser.HEXNUM,
+            //msgParser.OCTNUM,
+            //msgParser.DECNUM,
+            msgParser.DOT,
             msgParser.COMMA,
-            //msgParser.ASSIGN,
-            //msgParser.ADD,
-            //msgParser.SUB,
-            //msgParser.MUL,
-            //msgParser.DIV,
-            //msgParser.BRK_OPEN,
-            //msgParser.BRK_CLOS,
-            msgParser.PUNCTUATION,
-            msgParser.HEXNUM,
-            msgParser.OCTNUM,
-            msgParser.DECNUM,
+            msgParser.EXCL,
             msgParser.ANY,
             msgParser.EOF,
             -2, // Erroneously inserted. Needs fix in antlr4-c3.
         ]);
 
-        // core.preferredRules = new Set([
-        //     msgParser.RULE_title,
-        //     msgParser.RULE_facility,
-        //     msgParser.RULE_severity,
-        //     msgParser.RULE_ident,
-        // ]);
+        core.preferredRules = new Set([
+            //msgParser.RULE_msgContent,
+            //msgParser.RULE_var,
+            //msgParser.RULE_varDefinition,
+            //msgParser.RULE_varName,
+            //msgParser.RULE_varValue,
+            //msgParser.RULE_ident,
+            //msgParser.RULE_identString,
+            //msgParser.RULE_expression,
+            msgParser.RULE_expressionVariable,
+            //msgParser.RULE_number,
+            //msgParser.RULE_sep,
+            //msgParser.RULE_continuation,
+            //msgParser.RULE_eolMayComment,
+        ]);
 
         // Search the token index which covers our caret position.
         let index: number;
         this.tokenStream.fill();
         for (index = 0; ; ++index) {
             let token = this.tokenStream.get(index);
+            if (token.type === msgLexer.WHITESPACE) {
+                continue;
+            }
             //console.log(token.toString());
             if (token.type === Token.EOF || token.line > row) {
                 break;
@@ -207,6 +217,11 @@ export class SourceContext {
                 break;
             }
         }
+
+        //core.showDebugOutput = true;
+        core.showResult = true;
+        core.showRuleStack = true;
+        //core.debugOutputWithTransitions = true;
 
         let candidates = core.collectCandidates(index);
         let result: SymbolInfo[] = [];
@@ -227,65 +242,23 @@ export class SourceContext {
             };
 
             switch (type) {
-                // case msgLexer.ADD:
-                //     info.kind = SymbolKind.Operator;
-                //     info.name = "+";
-                //     info.description = localize("sign.add","Addition");
-                //     break;
+                case msgLexer.HEXNUM:
+                    info.kind = SymbolKind.Other;
+                    info.name = "^X";
+                    info.description = localize("hexnum","Hexadecimal number");
+                    break;
 
-                // case msgLexer.SUB:
-                //     info.kind = SymbolKind.Operator;
-                //     info.name = "-";
-                //     info.description = localize("sign.sub","Substruction");
-                //     break;
+                case msgLexer.OCTNUM:
+                    info.kind = SymbolKind.Other;
+                    info.name = "^O";
+                    info.description = localize("octnum","Octal number");
+                    break;
 
-                // case msgLexer.MUL:
-                //     info.kind = SymbolKind.Operator;
-                //     info.name = "*";
-                //     info.description = localize("sign.mul","Multiplication");
-                //     break;
-
-                // case msgLexer.DIV:
-                //     info.kind = SymbolKind.Operator;
-                //     info.name = "/";
-                //     info.description = localize("sign.div","Division");
-                //     break;
-
-                // case msgLexer.EQ:
-                //     info.kind = SymbolKind.Operator;
-                //     info.name = "=";
-                //     info.description = localize("sign.eq","Variable assignment");
-                //     break;
-                
-                // case msgLexer.BASE:
-                //     info.kind = SymbolKind.Keyword;
-                //     info.name = ".BASE";
-                //     info.description = localize("keyword.base","Base");
-                //     break;
-
-                // case msgLexer.FACILITY:
-                //     info.kind = SymbolKind.Keyword;
-                //     info.name = ".FACILITY";
-                //     info.description = localize("keyword.facility","Facility");
-                //     break;
-
-                // case msgLexer.TITLE:
-                //     info.kind = SymbolKind.Keyword;
-                //     info.name = ".TITLE";
-                //     info.description = localize("keyword.title","Title");
-                //     break;
-
-                // case msgLexer.LITERAL:
-                //     info.kind = SymbolKind.Keyword;
-                //     info.name = ".LITERAL";
-                //     info.description = localize("keyword.literal","Literal");
-                //     break;
-
-                // case msgLexer.PAGE:
-                //     info.kind = SymbolKind.Keyword;
-                //     info.name = ".PAGE";
-                //     info.description = localize("keyword.page","Page");
-                //     break;
+                case msgLexer.DECNUM:
+                    info.kind = SymbolKind.Other;
+                    info.name = "^D";
+                    info.description = localize("decnum","Decimal number");
+                    break;
 
                 default: {
                     let value = vocabulary.getLiteralName(type) || vocabulary.getDisplayName(type);
@@ -300,30 +273,21 @@ export class SourceContext {
 
         candidates.rules.forEach((callStack, key) => {
             switch (key) {
-                // case msgParser.RULE_title: {
-                //     result.push({ 
-                //         kind: SymbolKind.Other, 
-                //         name: ".title", 
-                //         source: this.fileName, 
-                //         definition: undefined, 
-                //         description: undefined });
-                //     break;
-                // }
-
-                // case ANTLRv4Parser.RULE_actionBlock: {
-                //     result.push({ 
-                //         kind: SymbolKind.Action, 
-                //         name: "{ action code }", 
-                //         source: this.fileName, 
-                //         definition: undefined, 
-                //         description: undefined });
-                //     // Include predicates only when we are in a lexer or parser element.
-                //     if (callStack[callStack.length - 1] === ANTLRv4Parser.RULE_lexerElement
-                //         || callStack[callStack.length - 1] === ANTLRv4Parser.RULE_element) {
-                //         result.push({ kind: SymbolKind.Predicate, name: "{ predicate }?", source: this.fileName, definition: undefined, description: undefined });
-                //     }
-                //     break;
-                // }
+                case msgParser.RULE_expressionVariable: {
+                    // TODO: add all existing varible names
+                    ["auto", "bus", "court", "divide"].forEach(symbol => {
+                        result.push(
+                            { 
+                                kind: SymbolKind.Other, 
+                                name: symbol, 
+                                source: this.fileName, 
+                                definition: undefined, 
+                                description: undefined 
+                            }
+                        );
+                    });
+                    break;
+                }
 
                 // case ANTLRv4Parser.RULE_terminalRule: { // Lexer rules.
                 //     this.symbolTable.getAllSymbols(BuiltInTokenSymbol).forEach(symbol => {
@@ -365,41 +329,6 @@ export class SourceContext {
                 //     ["channel", "skip", "more", "mode", "push", "pop"].forEach(symbol => {
                 //         result.push({ kind: SymbolKind.Keyword, name: symbol, source: this.fileName, definition: undefined, description: undefined });
                 //     });
-                //     break;
-                // }
-
-                // case ANTLRv4Parser.RULE_ruleref: {
-                //     this.symbolTable.getAllSymbols(RuleSymbol).forEach(symbol => {
-                //         result.push({ kind: SymbolKind.ParserRule, name: symbol.name, source: this.fileName, definition: undefined, description: undefined });
-                //     });
-                //     break;
-                // }
-
-                // case ANTLRv4Parser.RULE_identifier: {
-                //     // Identifiers can be a lot of things. We only handle special cases here.
-                //     // More concrete identifiers should be captured by rules further up in the call chain.
-                //     switch (callStack[callStack.length - 1]) {
-                //         case ANTLRv4Parser.RULE_option: {
-                //             ["superClass", "tokenVocab", "TokenLabelType", "contextSuperClass", "exportMacro"].forEach(symbol => {
-                //                 result.push({ kind: SymbolKind.Option, name: symbol, source: this.fileName, definition: undefined, description: undefined });
-                //             });
-                //             break;
-                //         }
-
-                //         case ANTLRv4Parser.RULE_namedAction: {
-                //             ["header", "members", "preinclude", "postinclude", "context", "declarations", "definitions",
-                //                 "listenerpreinclude", "listenerpostinclude", "listenerdeclarations", "listenermembers", "listenerdefinitions",
-                //                 "baselistenerpreinclude", "baselistenerpostinclude", "baselistenerdeclarations", "baselistenermembers",
-                //                 "baselistenerdefinitions", "visitorpreinclude", "visitorpostinclude", "visitordeclarations", "visitormembers",
-                //                 "visitordefinitions", "basevisitorpreinclude", "basevisitorpostinclude", "basevisitordeclarations", "basevisitormembers",
-                //                 "basevisitordefinitions"].forEach(symbol => {
-                //                     result.push({ kind: SymbolKind.Keyword, name: symbol, source: this.fileName, definition: undefined, description: undefined });
-                //                 });
-
-                //             break;
-                //         }
-                //     }
-
                 //     break;
                 // }
 

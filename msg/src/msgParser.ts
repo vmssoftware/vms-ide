@@ -28,65 +28,130 @@ import { msgVisitor } from "./msgVisitor";
 
 
 export class msgParser extends Parser {
-	public static readonly T__0 = 1;
-	public static readonly VAR = 2;
-	public static readonly IDENT = 3;
-	public static readonly WHITESPACE = 4;
-	public static readonly NEWLINE = 5;
-	public static readonly NAME = 6;
-	public static readonly NUMBER = 7;
-	public static readonly ZNUMBER = 8;
-	public static readonly DQUOTA = 9;
-	public static readonly QUOTA = 10;
-	public static readonly COMMA = 11;
-	public static readonly ASSIGN = 12;
-	public static readonly ADD = 13;
-	public static readonly SUB = 14;
-	public static readonly MUL = 15;
-	public static readonly DIV = 16;
-	public static readonly BRK_OPEN = 17;
-	public static readonly BRK_CLOS = 18;
-	public static readonly PUNCTUATION = 19;
-	public static readonly HEXNUM = 20;
-	public static readonly OCTNUM = 21;
-	public static readonly DECNUM = 22;
-	public static readonly ANY = 23;
+	public static readonly TITLE = 1;
+	public static readonly IDENT = 2;
+	public static readonly PAGE = 3;
+	public static readonly LITERAL = 4;
+	public static readonly FACILITY = 5;
+	public static readonly SEVERITY = 6;
+	public static readonly BASE = 7;
+	public static readonly END = 8;
+	public static readonly PREFIX = 9;
+	public static readonly SHARED = 10;
+	public static readonly SYSTEM = 11;
+	public static readonly FAOCOUNT = 12;
+	public static readonly IDENTIFICATION = 13;
+	public static readonly USERVALUE = 14;
+	public static readonly SUCCESS = 15;
+	public static readonly INFORMATIONAL = 16;
+	public static readonly WARNING = 17;
+	public static readonly ERROR = 18;
+	public static readonly SEVERE = 19;
+	public static readonly FATAL = 20;
+	public static readonly FAO = 21;
+	public static readonly WHITESPACE = 22;
+	public static readonly NEWLINE = 23;
+	public static readonly NAME = 24;
+	public static readonly NUMBER = 25;
+	public static readonly ASSIGN = 26;
+	public static readonly ADD = 27;
+	public static readonly SUB = 28;
+	public static readonly MUL = 29;
+	public static readonly DIV = 30;
+	public static readonly SHIFT = 31;
+	public static readonly P_OPEN = 32;
+	public static readonly P_CLOS = 33;
+	public static readonly HEXNUM = 34;
+	public static readonly OCTNUM = 35;
+	public static readonly DECNUM = 36;
+	public static readonly DOT = 37;
+	public static readonly COMMA = 38;
+	public static readonly EXCL = 39;
+	public static readonly APOSTR = 40;
+	public static readonly QUOTA = 41;
+	public static readonly B_OPEN = 42;
+	public static readonly B_CLOSE = 43;
+	public static readonly ANY = 44;
 	public static readonly RULE_msgContent = 0;
-	public static readonly RULE_var = 1;
-	public static readonly RULE_varKeyword = 2;
-	public static readonly RULE_varDefinition = 3;
-	public static readonly RULE_varName = 4;
-	public static readonly RULE_varValue = 5;
-	public static readonly RULE_ident = 6;
-	public static readonly RULE_identKeyword = 7;
-	public static readonly RULE_identString = 8;
-	public static readonly RULE_expression = 9;
-	public static readonly RULE_expressionVariable = 10;
-	public static readonly RULE_number = 11;
-	public static readonly RULE_sep = 12;
-	public static readonly RULE_continuation = 13;
-	public static readonly RULE_continuationSign = 14;
-	public static readonly RULE_eolMayComment = 15;
-	public static readonly RULE_commentSign = 16;
-	public static readonly RULE_emptyLine = 17;
+	public static readonly RULE_title = 1;
+	public static readonly RULE_titleName = 2;
+	public static readonly RULE_titleDescription = 3;
+	public static readonly RULE_ident = 4;
+	public static readonly RULE_identValue = 5;
+	public static readonly RULE_page = 6;
+	public static readonly RULE_literal = 7;
+	public static readonly RULE_literalDefinition = 8;
+	public static readonly RULE_literalName = 9;
+	public static readonly RULE_literalValue = 10;
+	public static readonly RULE_facility = 11;
+	public static readonly RULE_facilityDescription = 12;
+	public static readonly RULE_facilityName = 13;
+	public static readonly RULE_facilityNumber = 14;
+	public static readonly RULE_facilityContent = 15;
+	public static readonly RULE_facilityQualifier = 16;
+	public static readonly RULE_prefixQualifier = 17;
+	public static readonly RULE_prefixQualifierValue = 18;
+	public static readonly RULE_sharedQualifier = 19;
+	public static readonly RULE_systemQualifier = 20;
+	public static readonly RULE_severity = 21;
+	public static readonly RULE_severityValue = 22;
+	public static readonly RULE_base = 23;
+	public static readonly RULE_baseNumber = 24;
+	public static readonly RULE_end = 25;
+	public static readonly RULE_expression = 26;
+	public static readonly RULE_expressionVariable = 27;
+	public static readonly RULE_number = 28;
+	public static readonly RULE_sep = 29;
+	public static readonly RULE_continuation = 30;
+	public static readonly RULE_eolMayComment = 31;
+	public static readonly RULE_message = 32;
+	public static readonly RULE_messageName = 33;
+	public static readonly RULE_messageQualifier = 34;
+	public static readonly RULE_severityQualifier = 35;
+	public static readonly RULE_faoCount = 36;
+	public static readonly RULE_faoCountValue = 37;
+	public static readonly RULE_identification = 38;
+	public static readonly RULE_identificationValue = 39;
+	public static readonly RULE_userValue = 40;
+	public static readonly RULE_userValueValue = 41;
+	public static readonly RULE_success = 42;
+	public static readonly RULE_informational = 43;
+	public static readonly RULE_warning = 44;
+	public static readonly RULE_error = 45;
+	public static readonly RULE_severe = 46;
+	public static readonly RULE_fatal = 47;
+	public static readonly RULE_messageText = 48;
+	public static readonly RULE_fao = 49;
 	// tslint:disable:no-trailing-whitespace
 	public static readonly ruleNames: string[] = [
-		"msgContent", "var", "varKeyword", "varDefinition", "varName", "varValue", 
-		"ident", "identKeyword", "identString", "expression", "expressionVariable", 
-		"number", "sep", "continuation", "continuationSign", "eolMayComment", 
-		"commentSign", "emptyLine",
+		"msgContent", "title", "titleName", "titleDescription", "ident", "identValue", 
+		"page", "literal", "literalDefinition", "literalName", "literalValue", 
+		"facility", "facilityDescription", "facilityName", "facilityNumber", "facilityContent", 
+		"facilityQualifier", "prefixQualifier", "prefixQualifierValue", "sharedQualifier", 
+		"systemQualifier", "severity", "severityValue", "base", "baseNumber", 
+		"end", "expression", "expressionVariable", "number", "sep", "continuation", 
+		"eolMayComment", "message", "messageName", "messageQualifier", "severityQualifier", 
+		"faoCount", "faoCountValue", "identification", "identificationValue", 
+		"userValue", "userValueValue", "success", "informational", "warning", 
+		"error", "severe", "fatal", "messageText", "fao",
 	];
 
 	private static readonly _LITERAL_NAMES: Array<string | undefined> = [
-		undefined, "'!'", undefined, undefined, undefined, undefined, undefined, 
-		undefined, undefined, "'\"'", "'''", "','", "'='", "'+'", "'-'", "'*'", 
-		"'/'", "'('", "')'",
+		undefined, "'TITLE'", "'IDENT'", "'PAGE'", "'LITERAL'", "'FACILITY'", 
+		"'SEVERITY'", "'BASE'", "'END'", "'PREFIX'", "'SHARED'", "'SYSTEM'", "'FAO_COUNT'", 
+		"'IDENTIFICATION'", "'USER_VALUE'", "'SUCCESS'", "'INFORMATIONAL'", "'WARNING'", 
+		"'ERROR'", "'SEVERE'", "'FATAL'", undefined, undefined, undefined, undefined, 
+		undefined, "'='", "'+'", "'-'", "'*'", "'/'", "'@'", "'('", "')'", undefined, 
+		undefined, undefined, "'.'", "','", "'!'", "'''", "'\"'", "'<'", "'>'",
 	];
 	private static readonly _SYMBOLIC_NAMES: Array<string | undefined> = [
-		undefined, undefined, "VAR", "IDENT", "WHITESPACE", "NEWLINE", "NAME", 
-		"NUMBER", "ZNUMBER", "DQUOTA", "QUOTA", "COMMA", "ASSIGN", "ADD", "SUB", 
-		"MUL", "DIV", "BRK_OPEN", "BRK_CLOS", "PUNCTUATION", "HEXNUM", "OCTNUM", 
-		"DECNUM", "ANY",
+		undefined, "TITLE", "IDENT", "PAGE", "LITERAL", "FACILITY", "SEVERITY", 
+		"BASE", "END", "PREFIX", "SHARED", "SYSTEM", "FAOCOUNT", "IDENTIFICATION", 
+		"USERVALUE", "SUCCESS", "INFORMATIONAL", "WARNING", "ERROR", "SEVERE", 
+		"FATAL", "FAO", "WHITESPACE", "NEWLINE", "NAME", "NUMBER", "ASSIGN", "ADD", 
+		"SUB", "MUL", "DIV", "SHIFT", "P_OPEN", "P_CLOS", "HEXNUM", "OCTNUM", 
+		"DECNUM", "DOT", "COMMA", "EXCL", "APOSTR", "QUOTA", "B_OPEN", "B_CLOSE", 
+		"ANY",
 	];
 	public static readonly VOCABULARY: Vocabulary = new VocabularyImpl(msgParser._LITERAL_NAMES, msgParser._SYMBOLIC_NAMES, []);
 
@@ -118,48 +183,62 @@ export class msgParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 42;
+			this.state = 108;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << msgParser.VAR) | (1 << msgParser.IDENT) | (1 << msgParser.WHITESPACE) | (1 << msgParser.NEWLINE))) !== 0)) {
+			while (((((_la - 22)) & ~0x1F) === 0 && ((1 << (_la - 22)) & ((1 << (msgParser.WHITESPACE - 22)) | (1 << (msgParser.NEWLINE - 22)) | (1 << (msgParser.DOT - 22)) | (1 << (msgParser.EXCL - 22)))) !== 0)) {
 				{
-				this.state = 40;
+				this.state = 106;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 0, this._ctx) ) {
 				case 1:
 					{
-					this.state = 36;
-					this.var();
+					this.state = 100;
+					this.title();
 					}
 					break;
 
 				case 2:
 					{
-					this.state = 37;
+					this.state = 101;
 					this.ident();
 					}
 					break;
 
 				case 3:
 					{
-					this.state = 38;
-					this.emptyLine();
+					this.state = 102;
+					this.page();
 					}
 					break;
 
 				case 4:
 					{
-					this.state = 39;
-					this.match(msgParser.WHITESPACE);
+					this.state = 103;
+					this.literal();
+					}
+					break;
+
+				case 5:
+					{
+					this.state = 104;
+					this.facility();
+					}
+					break;
+
+				case 6:
+					{
+					this.state = 105;
+					this.eolMayComment();
 					}
 					break;
 				}
 				}
-				this.state = 44;
+				this.state = 110;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
-			this.state = 45;
+			this.state = 111;
 			this.match(msgParser.EOF);
 			}
 		}
@@ -178,69 +257,161 @@ export class msgParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public var(): VarContext {
-		let _localctx: VarContext = new VarContext(this._ctx, this.state);
-		this.enterRule(_localctx, 2, msgParser.RULE_var);
+	public title(): TitleContext {
+		let _localctx: TitleContext = new TitleContext(this._ctx, this.state);
+		this.enterRule(_localctx, 2, msgParser.RULE_title);
 		let _la: number;
 		try {
-			let _alt: number;
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 48;
+			this.state = 114;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === msgParser.WHITESPACE) {
 				{
-				this.state = 47;
+				this.state = 113;
 				this.match(msgParser.WHITESPACE);
 				}
 			}
 
-			this.state = 50;
-			this.varKeyword();
-			this.state = 51;
-			this.sep();
-			this.state = 52;
-			this.varDefinition();
-			this.state = 63;
+			this.state = 116;
+			this.match(msgParser.DOT);
+			this.state = 117;
+			this.match(msgParser.TITLE);
+			this.state = 118;
+			this.match(msgParser.WHITESPACE);
+			this.state = 119;
+			this.titleName();
+			this.state = 122;
 			this._errHandler.sync(this);
-			_alt = this.interpreter.adaptivePredict(this._input, 5, this._ctx);
-			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
-				if (_alt === 1) {
-					{
-					{
-					this.state = 54;
-					this._errHandler.sync(this);
-					_la = this._input.LA(1);
-					if (_la === msgParser.WHITESPACE || _la === msgParser.SUB) {
-						{
-						this.state = 53;
-						this.sep();
-						}
-					}
-
-					this.state = 56;
-					this.match(msgParser.COMMA);
-					this.state = 58;
-					this._errHandler.sync(this);
-					_la = this._input.LA(1);
-					if (_la === msgParser.WHITESPACE || _la === msgParser.SUB) {
-						{
-						this.state = 57;
-						this.sep();
-						}
-					}
-
-					this.state = 60;
-					this.varDefinition();
-					}
-					}
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 120;
+				this.match(msgParser.WHITESPACE);
+				this.state = 121;
+				this.titleDescription();
 				}
-				this.state = 65;
-				this._errHandler.sync(this);
-				_alt = this.interpreter.adaptivePredict(this._input, 5, this._ctx);
 			}
-			this.state = 66;
+
+			this.state = 124;
+			this.match(msgParser.NEWLINE);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public titleName(): TitleNameContext {
+		let _localctx: TitleNameContext = new TitleNameContext(this._ctx, this.state);
+		this.enterRule(_localctx, 4, msgParser.RULE_titleName);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 126;
+			this.match(msgParser.NAME);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public titleDescription(): TitleDescriptionContext {
+		let _localctx: TitleDescriptionContext = new TitleDescriptionContext(this._ctx, this.state);
+		this.enterRule(_localctx, 6, msgParser.RULE_titleDescription);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 131;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << msgParser.TITLE) | (1 << msgParser.IDENT) | (1 << msgParser.PAGE) | (1 << msgParser.LITERAL) | (1 << msgParser.FACILITY) | (1 << msgParser.SEVERITY) | (1 << msgParser.BASE) | (1 << msgParser.END) | (1 << msgParser.PREFIX) | (1 << msgParser.SHARED) | (1 << msgParser.SYSTEM) | (1 << msgParser.FAOCOUNT) | (1 << msgParser.IDENTIFICATION) | (1 << msgParser.USERVALUE) | (1 << msgParser.SUCCESS) | (1 << msgParser.INFORMATIONAL) | (1 << msgParser.WARNING) | (1 << msgParser.ERROR) | (1 << msgParser.SEVERE) | (1 << msgParser.FATAL) | (1 << msgParser.FAO) | (1 << msgParser.WHITESPACE) | (1 << msgParser.NAME) | (1 << msgParser.NUMBER) | (1 << msgParser.ASSIGN) | (1 << msgParser.ADD) | (1 << msgParser.SUB) | (1 << msgParser.MUL) | (1 << msgParser.DIV) | (1 << msgParser.SHIFT))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (msgParser.P_OPEN - 32)) | (1 << (msgParser.P_CLOS - 32)) | (1 << (msgParser.HEXNUM - 32)) | (1 << (msgParser.OCTNUM - 32)) | (1 << (msgParser.DECNUM - 32)) | (1 << (msgParser.DOT - 32)) | (1 << (msgParser.COMMA - 32)) | (1 << (msgParser.EXCL - 32)) | (1 << (msgParser.APOSTR - 32)) | (1 << (msgParser.QUOTA - 32)) | (1 << (msgParser.B_OPEN - 32)) | (1 << (msgParser.B_CLOSE - 32)) | (1 << (msgParser.ANY - 32)))) !== 0)) {
+				{
+				{
+				this.state = 128;
+				_la = this._input.LA(1);
+				if (_la <= 0 || (_la === msgParser.NEWLINE)) {
+				this._errHandler.recoverInline(this);
+				} else {
+					if (this._input.LA(1) === Token.EOF) {
+						this.matchedEOF = true;
+					}
+
+					this._errHandler.reportMatch(this);
+					this.consume();
+				}
+				}
+				}
+				this.state = 133;
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+			}
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public ident(): IdentContext {
+		let _localctx: IdentContext = new IdentContext(this._ctx, this.state);
+		this.enterRule(_localctx, 8, msgParser.RULE_ident);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 135;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 134;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 137;
+			this.match(msgParser.DOT);
+			this.state = 138;
+			this.match(msgParser.IDENT);
+			this.state = 139;
+			this.sep();
+			this.state = 140;
+			this.identValue();
+			this.state = 141;
 			this.eolMayComment();
 			}
 		}
@@ -259,14 +430,85 @@ export class msgParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public varKeyword(): VarKeywordContext {
-		let _localctx: VarKeywordContext = new VarKeywordContext(this._ctx, this.state);
-		this.enterRule(_localctx, 4, msgParser.RULE_varKeyword);
+	public identValue(): IdentValueContext {
+		let _localctx: IdentValueContext = new IdentValueContext(this._ctx, this.state);
+		this.enterRule(_localctx, 10, msgParser.RULE_identValue);
+		let _la: number;
 		try {
-			this.enterOuterAlt(_localctx, 1);
-			{
-			this.state = 68;
-			this.match(msgParser.VAR);
+			this.state = 157;
+			this._errHandler.sync(this);
+			switch (this._input.LA(1)) {
+			case msgParser.NAME:
+				this.enterOuterAlt(_localctx, 1);
+				{
+				this.state = 143;
+				this.match(msgParser.NAME);
+				}
+				break;
+			case msgParser.QUOTA:
+				this.enterOuterAlt(_localctx, 2);
+				{
+				this.state = 144;
+				this.match(msgParser.QUOTA);
+				this.state = 148;
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << msgParser.TITLE) | (1 << msgParser.IDENT) | (1 << msgParser.PAGE) | (1 << msgParser.LITERAL) | (1 << msgParser.FACILITY) | (1 << msgParser.SEVERITY) | (1 << msgParser.BASE) | (1 << msgParser.END) | (1 << msgParser.PREFIX) | (1 << msgParser.SHARED) | (1 << msgParser.SYSTEM) | (1 << msgParser.FAOCOUNT) | (1 << msgParser.IDENTIFICATION) | (1 << msgParser.USERVALUE) | (1 << msgParser.SUCCESS) | (1 << msgParser.INFORMATIONAL) | (1 << msgParser.WARNING) | (1 << msgParser.ERROR) | (1 << msgParser.SEVERE) | (1 << msgParser.FATAL) | (1 << msgParser.FAO) | (1 << msgParser.WHITESPACE) | (1 << msgParser.NEWLINE) | (1 << msgParser.NAME) | (1 << msgParser.NUMBER) | (1 << msgParser.ASSIGN) | (1 << msgParser.ADD) | (1 << msgParser.SUB) | (1 << msgParser.MUL) | (1 << msgParser.DIV) | (1 << msgParser.SHIFT))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (msgParser.P_OPEN - 32)) | (1 << (msgParser.P_CLOS - 32)) | (1 << (msgParser.HEXNUM - 32)) | (1 << (msgParser.OCTNUM - 32)) | (1 << (msgParser.DECNUM - 32)) | (1 << (msgParser.DOT - 32)) | (1 << (msgParser.COMMA - 32)) | (1 << (msgParser.EXCL - 32)) | (1 << (msgParser.APOSTR - 32)) | (1 << (msgParser.B_OPEN - 32)) | (1 << (msgParser.B_CLOSE - 32)) | (1 << (msgParser.ANY - 32)))) !== 0)) {
+					{
+					{
+					this.state = 145;
+					_la = this._input.LA(1);
+					if (_la <= 0 || (_la === msgParser.QUOTA)) {
+					this._errHandler.recoverInline(this);
+					} else {
+						if (this._input.LA(1) === Token.EOF) {
+							this.matchedEOF = true;
+						}
+
+						this._errHandler.reportMatch(this);
+						this.consume();
+					}
+					}
+					}
+					this.state = 150;
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+				this.state = 151;
+				this.match(msgParser.QUOTA);
+				}
+				break;
+			case msgParser.APOSTR:
+				this.enterOuterAlt(_localctx, 3);
+				{
+				this.state = 152;
+				this.match(msgParser.APOSTR);
+				this.state = 154;
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << msgParser.TITLE) | (1 << msgParser.IDENT) | (1 << msgParser.PAGE) | (1 << msgParser.LITERAL) | (1 << msgParser.FACILITY) | (1 << msgParser.SEVERITY) | (1 << msgParser.BASE) | (1 << msgParser.END) | (1 << msgParser.PREFIX) | (1 << msgParser.SHARED) | (1 << msgParser.SYSTEM) | (1 << msgParser.FAOCOUNT) | (1 << msgParser.IDENTIFICATION) | (1 << msgParser.USERVALUE) | (1 << msgParser.SUCCESS) | (1 << msgParser.INFORMATIONAL) | (1 << msgParser.WARNING) | (1 << msgParser.ERROR) | (1 << msgParser.SEVERE) | (1 << msgParser.FATAL) | (1 << msgParser.FAO) | (1 << msgParser.WHITESPACE) | (1 << msgParser.NEWLINE) | (1 << msgParser.NAME) | (1 << msgParser.NUMBER) | (1 << msgParser.ASSIGN) | (1 << msgParser.ADD) | (1 << msgParser.SUB) | (1 << msgParser.MUL) | (1 << msgParser.DIV) | (1 << msgParser.SHIFT))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (msgParser.P_OPEN - 32)) | (1 << (msgParser.P_CLOS - 32)) | (1 << (msgParser.HEXNUM - 32)) | (1 << (msgParser.OCTNUM - 32)) | (1 << (msgParser.DECNUM - 32)) | (1 << (msgParser.DOT - 32)) | (1 << (msgParser.COMMA - 32)) | (1 << (msgParser.EXCL - 32)) | (1 << (msgParser.QUOTA - 32)) | (1 << (msgParser.B_OPEN - 32)) | (1 << (msgParser.B_CLOSE - 32)) | (1 << (msgParser.ANY - 32)))) !== 0)) {
+					{
+					this.state = 153;
+					_la = this._input.LA(1);
+					if (_la <= 0 || (_la === msgParser.APOSTR)) {
+					this._errHandler.recoverInline(this);
+					} else {
+						if (this._input.LA(1) === Token.EOF) {
+							this.matchedEOF = true;
+						}
+
+						this._errHandler.reportMatch(this);
+						this.consume();
+					}
+					}
+				}
+
+				this.state = 156;
+				this.match(msgParser.APOSTR);
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
 			}
 		}
 		catch (re) {
@@ -284,44 +526,167 @@ export class msgParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public varDefinition(): VarDefinitionContext {
-		let _localctx: VarDefinitionContext = new VarDefinitionContext(this._ctx, this.state);
-		this.enterRule(_localctx, 6, msgParser.RULE_varDefinition);
+	public page(): PageContext {
+		let _localctx: PageContext = new PageContext(this._ctx, this.state);
+		this.enterRule(_localctx, 12, msgParser.RULE_page);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 70;
-			this.varName();
-			this.state = 79;
+			this.state = 160;
 			this._errHandler.sync(this);
-			switch ( this.interpreter.adaptivePredict(this._input, 8, this._ctx) ) {
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 159;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 162;
+			this.match(msgParser.DOT);
+			this.state = 163;
+			this.match(msgParser.PAGE);
+			this.state = 164;
+			this.eolMayComment();
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public literal(): LiteralContext {
+		let _localctx: LiteralContext = new LiteralContext(this._ctx, this.state);
+		this.enterRule(_localctx, 14, msgParser.RULE_literal);
+		let _la: number;
+		try {
+			let _alt: number;
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 167;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 166;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 169;
+			this.match(msgParser.DOT);
+			this.state = 170;
+			this.match(msgParser.LITERAL);
+			this.state = 171;
+			this.sep();
+			this.state = 172;
+			this.literalDefinition();
+			this.state = 183;
+			this._errHandler.sync(this);
+			_alt = this.interpreter.adaptivePredict(this._input, 13, this._ctx);
+			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
+				if (_alt === 1) {
+					{
+					{
+					this.state = 174;
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+					if (_la === msgParser.WHITESPACE || _la === msgParser.SUB) {
+						{
+						this.state = 173;
+						this.sep();
+						}
+					}
+
+					this.state = 176;
+					this.match(msgParser.COMMA);
+					this.state = 178;
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+					if (_la === msgParser.WHITESPACE || _la === msgParser.SUB) {
+						{
+						this.state = 177;
+						this.sep();
+						}
+					}
+
+					this.state = 180;
+					this.literalDefinition();
+					}
+					}
+				}
+				this.state = 185;
+				this._errHandler.sync(this);
+				_alt = this.interpreter.adaptivePredict(this._input, 13, this._ctx);
+			}
+			this.state = 186;
+			this.eolMayComment();
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public literalDefinition(): LiteralDefinitionContext {
+		let _localctx: LiteralDefinitionContext = new LiteralDefinitionContext(this._ctx, this.state);
+		this.enterRule(_localctx, 16, msgParser.RULE_literalDefinition);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 188;
+			this.literalName();
+			this.state = 197;
+			this._errHandler.sync(this);
+			switch ( this.interpreter.adaptivePredict(this._input, 16, this._ctx) ) {
 			case 1:
 				{
-				this.state = 72;
+				this.state = 190;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === msgParser.WHITESPACE || _la === msgParser.SUB) {
 					{
-					this.state = 71;
+					this.state = 189;
 					this.sep();
 					}
 				}
 
-				this.state = 74;
+				this.state = 192;
 				this.match(msgParser.ASSIGN);
-				this.state = 76;
+				this.state = 194;
 				this._errHandler.sync(this);
-				switch ( this.interpreter.adaptivePredict(this._input, 7, this._ctx) ) {
+				switch ( this.interpreter.adaptivePredict(this._input, 15, this._ctx) ) {
 				case 1:
 					{
-					this.state = 75;
+					this.state = 193;
 					this.sep();
 					}
 					break;
 				}
-				this.state = 78;
-				this.varValue();
+				this.state = 196;
+				this.literalValue();
 				}
 				break;
 			}
@@ -342,13 +707,13 @@ export class msgParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public varName(): VarNameContext {
-		let _localctx: VarNameContext = new VarNameContext(this._ctx, this.state);
-		this.enterRule(_localctx, 8, msgParser.RULE_varName);
+	public literalName(): LiteralNameContext {
+		let _localctx: LiteralNameContext = new LiteralNameContext(this._ctx, this.state);
+		this.enterRule(_localctx, 18, msgParser.RULE_literalName);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 81;
+			this.state = 199;
 			this.match(msgParser.NAME);
 			}
 		}
@@ -367,13 +732,13 @@ export class msgParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public varValue(): VarValueContext {
-		let _localctx: VarValueContext = new VarValueContext(this._ctx, this.state);
-		this.enterRule(_localctx, 10, msgParser.RULE_varValue);
+	public literalValue(): LiteralValueContext {
+		let _localctx: LiteralValueContext = new LiteralValueContext(this._ctx, this.state);
+		this.enterRule(_localctx, 20, msgParser.RULE_literalValue);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 83;
+			this.state = 201;
 			this.expression(0);
 			}
 		}
@@ -392,31 +757,120 @@ export class msgParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public ident(): IdentContext {
-		let _localctx: IdentContext = new IdentContext(this._ctx, this.state);
-		this.enterRule(_localctx, 12, msgParser.RULE_ident);
+	public facility(): FacilityContext {
+		let _localctx: FacilityContext = new FacilityContext(this._ctx, this.state);
+		this.enterRule(_localctx, 22, msgParser.RULE_facility);
 		let _la: number;
 		try {
+			let _alt: number;
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 86;
+			this.state = 204;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === msgParser.WHITESPACE) {
 				{
-				this.state = 85;
+				this.state = 203;
 				this.match(msgParser.WHITESPACE);
 				}
 			}
 
-			this.state = 88;
-			this.identKeyword();
-			this.state = 89;
+			this.state = 206;
+			this.match(msgParser.DOT);
+			this.state = 207;
+			this.match(msgParser.FACILITY);
+			this.state = 208;
 			this.sep();
-			this.state = 90;
-			this.identString();
-			this.state = 91;
-			this.match(msgParser.NEWLINE);
+			this.state = 215;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			while (_la === msgParser.WHITESPACE || _la === msgParser.DIV) {
+				{
+				{
+				this.state = 209;
+				this.facilityQualifier();
+				this.state = 211;
+				this._errHandler.sync(this);
+				switch ( this.interpreter.adaptivePredict(this._input, 18, this._ctx) ) {
+				case 1:
+					{
+					this.state = 210;
+					this.sep();
+					}
+					break;
+				}
+				}
+				}
+				this.state = 217;
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+			}
+			this.state = 218;
+			this.facilityDescription();
+			this.state = 220;
+			this._errHandler.sync(this);
+			switch ( this.interpreter.adaptivePredict(this._input, 20, this._ctx) ) {
+			case 1:
+				{
+				this.state = 219;
+				this.sep();
+				}
+				break;
+			}
+			this.state = 228;
+			this._errHandler.sync(this);
+			_alt = this.interpreter.adaptivePredict(this._input, 22, this._ctx);
+			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
+				if (_alt === 1) {
+					{
+					{
+					this.state = 222;
+					this.facilityQualifier();
+					this.state = 224;
+					this._errHandler.sync(this);
+					switch ( this.interpreter.adaptivePredict(this._input, 21, this._ctx) ) {
+					case 1:
+						{
+						this.state = 223;
+						this.sep();
+						}
+						break;
+					}
+					}
+					}
+				}
+				this.state = 230;
+				this._errHandler.sync(this);
+				_alt = this.interpreter.adaptivePredict(this._input, 22, this._ctx);
+			}
+			this.state = 231;
+			this.eolMayComment();
+			this.state = 235;
+			this._errHandler.sync(this);
+			_alt = this.interpreter.adaptivePredict(this._input, 23, this._ctx);
+			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
+				if (_alt === 1) {
+					{
+					{
+					this.state = 232;
+					this.facilityContent();
+					}
+					}
+				}
+				this.state = 237;
+				this._errHandler.sync(this);
+				_alt = this.interpreter.adaptivePredict(this._input, 23, this._ctx);
+			}
+			this.state = 239;
+			this._errHandler.sync(this);
+			switch ( this.interpreter.adaptivePredict(this._input, 24, this._ctx) ) {
+			case 1:
+				{
+				this.state = 238;
+				this.end();
+				}
+				break;
+			}
 			}
 		}
 		catch (re) {
@@ -434,14 +888,55 @@ export class msgParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public identKeyword(): IdentKeywordContext {
-		let _localctx: IdentKeywordContext = new IdentKeywordContext(this._ctx, this.state);
-		this.enterRule(_localctx, 14, msgParser.RULE_identKeyword);
+	public facilityDescription(): FacilityDescriptionContext {
+		let _localctx: FacilityDescriptionContext = new FacilityDescriptionContext(this._ctx, this.state);
+		this.enterRule(_localctx, 24, msgParser.RULE_facilityDescription);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 93;
-			this.match(msgParser.IDENT);
+			this.state = 241;
+			this.facilityName();
+			this.state = 243;
+			this._errHandler.sync(this);
+			switch ( this.interpreter.adaptivePredict(this._input, 25, this._ctx) ) {
+			case 1:
+				{
+				this.state = 242;
+				this.sep();
+				}
+				break;
+			}
+			this.state = 247;
+			this._errHandler.sync(this);
+			switch (this._input.LA(1)) {
+			case msgParser.WHITESPACE:
+			case msgParser.SUB:
+				{
+				this.state = 245;
+				this.sep();
+				}
+				break;
+			case msgParser.COMMA:
+				{
+				this.state = 246;
+				this.match(msgParser.COMMA);
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
+			}
+			this.state = 250;
+			this._errHandler.sync(this);
+			switch ( this.interpreter.adaptivePredict(this._input, 27, this._ctx) ) {
+			case 1:
+				{
+				this.state = 249;
+				this.sep();
+				}
+				break;
+			}
+			this.state = 252;
+			this.facilityNumber();
 			}
 		}
 		catch (re) {
@@ -459,16 +954,391 @@ export class msgParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public identString(): IdentStringContext {
-		let _localctx: IdentStringContext = new IdentStringContext(this._ctx, this.state);
-		this.enterRule(_localctx, 16, msgParser.RULE_identString);
+	public facilityName(): FacilityNameContext {
+		let _localctx: FacilityNameContext = new FacilityNameContext(this._ctx, this.state);
+		this.enterRule(_localctx, 26, msgParser.RULE_facilityName);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 254;
+			this.match(msgParser.NAME);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public facilityNumber(): FacilityNumberContext {
+		let _localctx: FacilityNumberContext = new FacilityNumberContext(this._ctx, this.state);
+		this.enterRule(_localctx, 28, msgParser.RULE_facilityNumber);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 256;
+			this.expression(0);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public facilityContent(): FacilityContentContext {
+		let _localctx: FacilityContentContext = new FacilityContentContext(this._ctx, this.state);
+		this.enterRule(_localctx, 30, msgParser.RULE_facilityContent);
+		try {
+			this.state = 264;
+			this._errHandler.sync(this);
+			switch ( this.interpreter.adaptivePredict(this._input, 28, this._ctx) ) {
+			case 1:
+				this.enterOuterAlt(_localctx, 1);
+				{
+				this.state = 258;
+				this.severity();
+				}
+				break;
+
+			case 2:
+				this.enterOuterAlt(_localctx, 2);
+				{
+				this.state = 259;
+				this.page();
+				}
+				break;
+
+			case 3:
+				this.enterOuterAlt(_localctx, 3);
+				{
+				this.state = 260;
+				this.base();
+				}
+				break;
+
+			case 4:
+				this.enterOuterAlt(_localctx, 4);
+				{
+				this.state = 261;
+				this.literal();
+				}
+				break;
+
+			case 5:
+				this.enterOuterAlt(_localctx, 5);
+				{
+				this.state = 262;
+				this.message();
+				}
+				break;
+
+			case 6:
+				this.enterOuterAlt(_localctx, 6);
+				{
+				this.state = 263;
+				this.eolMayComment();
+				}
+				break;
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public facilityQualifier(): FacilityQualifierContext {
+		let _localctx: FacilityQualifierContext = new FacilityQualifierContext(this._ctx, this.state);
+		this.enterRule(_localctx, 32, msgParser.RULE_facilityQualifier);
+		try {
+			this.state = 269;
+			this._errHandler.sync(this);
+			switch ( this.interpreter.adaptivePredict(this._input, 29, this._ctx) ) {
+			case 1:
+				this.enterOuterAlt(_localctx, 1);
+				{
+				this.state = 266;
+				this.prefixQualifier();
+				}
+				break;
+
+			case 2:
+				this.enterOuterAlt(_localctx, 2);
+				{
+				this.state = 267;
+				this.sharedQualifier();
+				}
+				break;
+
+			case 3:
+				this.enterOuterAlt(_localctx, 3);
+				{
+				this.state = 268;
+				this.systemQualifier();
+				}
+				break;
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public prefixQualifier(): PrefixQualifierContext {
+		let _localctx: PrefixQualifierContext = new PrefixQualifierContext(this._ctx, this.state);
+		this.enterRule(_localctx, 34, msgParser.RULE_prefixQualifier);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 95;
+			this.state = 272;
+			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la <= 0 || (_la === msgParser.WHITESPACE || _la === msgParser.NEWLINE)) {
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 271;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 274;
+			this.match(msgParser.DIV);
+			this.state = 275;
+			this.match(msgParser.PREFIX);
+			this.state = 277;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE || _la === msgParser.SUB) {
+				{
+				this.state = 276;
+				this.sep();
+				}
+			}
+
+			this.state = 279;
+			this.match(msgParser.ASSIGN);
+			this.state = 281;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE || _la === msgParser.SUB) {
+				{
+				this.state = 280;
+				this.sep();
+				}
+			}
+
+			this.state = 283;
+			this.prefixQualifierValue();
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public prefixQualifierValue(): PrefixQualifierValueContext {
+		let _localctx: PrefixQualifierValueContext = new PrefixQualifierValueContext(this._ctx, this.state);
+		this.enterRule(_localctx, 36, msgParser.RULE_prefixQualifierValue);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 285;
+			this.match(msgParser.NAME);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public sharedQualifier(): SharedQualifierContext {
+		let _localctx: SharedQualifierContext = new SharedQualifierContext(this._ctx, this.state);
+		this.enterRule(_localctx, 38, msgParser.RULE_sharedQualifier);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 288;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 287;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 290;
+			this.match(msgParser.DIV);
+			this.state = 291;
+			this.match(msgParser.SHARED);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public systemQualifier(): SystemQualifierContext {
+		let _localctx: SystemQualifierContext = new SystemQualifierContext(this._ctx, this.state);
+		this.enterRule(_localctx, 40, msgParser.RULE_systemQualifier);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 294;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 293;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 296;
+			this.match(msgParser.DIV);
+			this.state = 297;
+			this.match(msgParser.SYSTEM);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public severity(): SeverityContext {
+		let _localctx: SeverityContext = new SeverityContext(this._ctx, this.state);
+		this.enterRule(_localctx, 42, msgParser.RULE_severity);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 300;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 299;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 302;
+			this.match(msgParser.DOT);
+			this.state = 303;
+			this.match(msgParser.SEVERITY);
+			this.state = 304;
+			this.sep();
+			this.state = 305;
+			this.severityValue();
+			this.state = 306;
+			this.eolMayComment();
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public severityValue(): SeverityValueContext {
+		let _localctx: SeverityValueContext = new SeverityValueContext(this._ctx, this.state);
+		this.enterRule(_localctx, 44, msgParser.RULE_severityValue);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 308;
+			_la = this._input.LA(1);
+			if (!((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << msgParser.SUCCESS) | (1 << msgParser.INFORMATIONAL) | (1 << msgParser.WARNING) | (1 << msgParser.ERROR) | (1 << msgParser.SEVERE) | (1 << msgParser.FATAL))) !== 0))) {
 			this._errHandler.recoverInline(this);
 			} else {
 				if (this._input.LA(1) === Token.EOF) {
@@ -478,30 +1348,126 @@ export class msgParser extends Parser {
 				this._errHandler.reportMatch(this);
 				this.consume();
 			}
-			this.state = 99;
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public base(): BaseContext {
+		let _localctx: BaseContext = new BaseContext(this._ctx, this.state);
+		this.enterRule(_localctx, 46, msgParser.RULE_base);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 311;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << msgParser.T__0) | (1 << msgParser.VAR) | (1 << msgParser.IDENT) | (1 << msgParser.WHITESPACE) | (1 << msgParser.NAME) | (1 << msgParser.NUMBER) | (1 << msgParser.ZNUMBER) | (1 << msgParser.DQUOTA) | (1 << msgParser.QUOTA) | (1 << msgParser.COMMA) | (1 << msgParser.ASSIGN) | (1 << msgParser.ADD) | (1 << msgParser.SUB) | (1 << msgParser.MUL) | (1 << msgParser.DIV) | (1 << msgParser.BRK_OPEN) | (1 << msgParser.BRK_CLOS) | (1 << msgParser.PUNCTUATION) | (1 << msgParser.HEXNUM) | (1 << msgParser.OCTNUM) | (1 << msgParser.DECNUM) | (1 << msgParser.ANY))) !== 0)) {
+			if (_la === msgParser.WHITESPACE) {
 				{
-				{
-				this.state = 96;
-				_la = this._input.LA(1);
-				if (_la <= 0 || (_la === msgParser.NEWLINE)) {
-				this._errHandler.recoverInline(this);
-				} else {
-					if (this._input.LA(1) === Token.EOF) {
-						this.matchedEOF = true;
-					}
-
-					this._errHandler.reportMatch(this);
-					this.consume();
+				this.state = 310;
+				this.match(msgParser.WHITESPACE);
 				}
-				}
-				}
-				this.state = 101;
-				this._errHandler.sync(this);
-				_la = this._input.LA(1);
 			}
+
+			this.state = 313;
+			this.match(msgParser.DOT);
+			this.state = 314;
+			this.match(msgParser.BASE);
+			this.state = 315;
+			this.sep();
+			this.state = 316;
+			this.baseNumber();
+			this.state = 317;
+			this.eolMayComment();
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public baseNumber(): BaseNumberContext {
+		let _localctx: BaseNumberContext = new BaseNumberContext(this._ctx, this.state);
+		this.enterRule(_localctx, 48, msgParser.RULE_baseNumber);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 319;
+			_la = this._input.LA(1);
+			if (!(((((_la - 25)) & ~0x1F) === 0 && ((1 << (_la - 25)) & ((1 << (msgParser.NUMBER - 25)) | (1 << (msgParser.HEXNUM - 25)) | (1 << (msgParser.OCTNUM - 25)) | (1 << (msgParser.DECNUM - 25)))) !== 0))) {
+			this._errHandler.recoverInline(this);
+			} else {
+				if (this._input.LA(1) === Token.EOF) {
+					this.matchedEOF = true;
+				}
+
+				this._errHandler.reportMatch(this);
+				this.consume();
+			}
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public end(): EndContext {
+		let _localctx: EndContext = new EndContext(this._ctx, this.state);
+		this.enterRule(_localctx, 50, msgParser.RULE_end);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 322;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 321;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 324;
+			this.match(msgParser.DOT);
+			this.state = 325;
+			this.match(msgParser.END);
+			this.state = 326;
+			this.eolMayComment();
 			}
 		}
 		catch (re) {
@@ -531,62 +1497,61 @@ export class msgParser extends Parser {
 		let _parentState: number = this.state;
 		let _localctx: ExpressionContext = new ExpressionContext(this._ctx, _parentState);
 		let _prevctx: ExpressionContext = _localctx;
-		let _startState: number = 18;
-		this.enterRecursionRule(_localctx, 18, msgParser.RULE_expression, _p);
+		let _startState: number = 52;
+		this.enterRecursionRule(_localctx, 52, msgParser.RULE_expression, _p);
 		let _la: number;
 		try {
 			let _alt: number;
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 123;
+			this.state = 349;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case msgParser.BRK_OPEN:
+			case msgParser.P_OPEN:
 				{
-				this.state = 103;
-				this.match(msgParser.BRK_OPEN);
-				this.state = 105;
+				this.state = 329;
+				this.match(msgParser.P_OPEN);
+				this.state = 331;
 				this._errHandler.sync(this);
-				switch ( this.interpreter.adaptivePredict(this._input, 11, this._ctx) ) {
+				switch ( this.interpreter.adaptivePredict(this._input, 38, this._ctx) ) {
 				case 1:
 					{
-					this.state = 104;
+					this.state = 330;
 					this.match(msgParser.WHITESPACE);
 					}
 					break;
 				}
-				this.state = 107;
+				this.state = 333;
 				this.expression(0);
-				this.state = 109;
+				this.state = 335;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === msgParser.WHITESPACE) {
 					{
-					this.state = 108;
+					this.state = 334;
 					this.match(msgParser.WHITESPACE);
 					}
 				}
 
-				this.state = 111;
-				this.match(msgParser.BRK_CLOS);
+				this.state = 337;
+				this.match(msgParser.P_CLOS);
 				}
 				break;
 			case msgParser.WHITESPACE:
 			case msgParser.NAME:
 			case msgParser.NUMBER:
-			case msgParser.ZNUMBER:
 			case msgParser.ADD:
 			case msgParser.SUB:
 			case msgParser.HEXNUM:
 			case msgParser.OCTNUM:
 			case msgParser.DECNUM:
 				{
-				this.state = 114;
+				this.state = 340;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === msgParser.ADD || _la === msgParser.SUB) {
 					{
-					this.state = 113;
+					this.state = 339;
 					_la = this._input.LA(1);
 					if (!(_la === msgParser.ADD || _la === msgParser.SUB)) {
 					this._errHandler.recoverInline(this);
@@ -601,32 +1566,31 @@ export class msgParser extends Parser {
 					}
 				}
 
-				this.state = 117;
+				this.state = 343;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === msgParser.WHITESPACE) {
 					{
-					this.state = 116;
+					this.state = 342;
 					this.match(msgParser.WHITESPACE);
 					}
 				}
 
-				this.state = 121;
+				this.state = 347;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
 				case msgParser.NUMBER:
-				case msgParser.ZNUMBER:
 				case msgParser.HEXNUM:
 				case msgParser.OCTNUM:
 				case msgParser.DECNUM:
 					{
-					this.state = 119;
+					this.state = 345;
 					this.number();
 					}
 					break;
 				case msgParser.NAME:
 					{
-					this.state = 120;
+					this.state = 346;
 					this.expressionVariable();
 					}
 					break;
@@ -639,9 +1603,9 @@ export class msgParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			this._ctx._stop = this._input.tryLT(-1);
-			this.state = 145;
+			this.state = 371;
 			this._errHandler.sync(this);
-			_alt = this.interpreter.adaptivePredict(this._input, 22, this._ctx);
+			_alt = this.interpreter.adaptivePredict(this._input, 49, this._ctx);
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1) {
 					if (this._parseListeners != null) {
@@ -649,28 +1613,28 @@ export class msgParser extends Parser {
 					}
 					_prevctx = _localctx;
 					{
-					this.state = 143;
+					this.state = 369;
 					this._errHandler.sync(this);
-					switch ( this.interpreter.adaptivePredict(this._input, 21, this._ctx) ) {
+					switch ( this.interpreter.adaptivePredict(this._input, 48, this._ctx) ) {
 					case 1:
 						{
 						_localctx = new ExpressionContext(_parentctx, _parentState);
 						this.pushNewRecursionContext(_localctx, _startState, msgParser.RULE_expression);
-						this.state = 125;
+						this.state = 351;
 						if (!(this.precpred(this._ctx, 3))) {
 							throw new FailedPredicateException(this, "this.precpred(this._ctx, 3)");
 						}
-						this.state = 127;
+						this.state = 353;
 						this._errHandler.sync(this);
 						_la = this._input.LA(1);
 						if (_la === msgParser.WHITESPACE) {
 							{
-							this.state = 126;
+							this.state = 352;
 							this.match(msgParser.WHITESPACE);
 							}
 						}
 
-						this.state = 129;
+						this.state = 355;
 						_la = this._input.LA(1);
 						if (!(_la === msgParser.MUL || _la === msgParser.DIV)) {
 						this._errHandler.recoverInline(this);
@@ -682,17 +1646,17 @@ export class msgParser extends Parser {
 							this._errHandler.reportMatch(this);
 							this.consume();
 						}
-						this.state = 131;
+						this.state = 357;
 						this._errHandler.sync(this);
-						switch ( this.interpreter.adaptivePredict(this._input, 18, this._ctx) ) {
+						switch ( this.interpreter.adaptivePredict(this._input, 45, this._ctx) ) {
 						case 1:
 							{
-							this.state = 130;
+							this.state = 356;
 							this.match(msgParser.WHITESPACE);
 							}
 							break;
 						}
-						this.state = 133;
+						this.state = 359;
 						this.expression(4);
 						}
 						break;
@@ -701,21 +1665,21 @@ export class msgParser extends Parser {
 						{
 						_localctx = new ExpressionContext(_parentctx, _parentState);
 						this.pushNewRecursionContext(_localctx, _startState, msgParser.RULE_expression);
-						this.state = 134;
+						this.state = 360;
 						if (!(this.precpred(this._ctx, 2))) {
 							throw new FailedPredicateException(this, "this.precpred(this._ctx, 2)");
 						}
-						this.state = 136;
+						this.state = 362;
 						this._errHandler.sync(this);
 						_la = this._input.LA(1);
 						if (_la === msgParser.WHITESPACE) {
 							{
-							this.state = 135;
+							this.state = 361;
 							this.match(msgParser.WHITESPACE);
 							}
 						}
 
-						this.state = 138;
+						this.state = 364;
 						_la = this._input.LA(1);
 						if (!(_la === msgParser.ADD || _la === msgParser.SUB)) {
 						this._errHandler.recoverInline(this);
@@ -727,26 +1691,26 @@ export class msgParser extends Parser {
 							this._errHandler.reportMatch(this);
 							this.consume();
 						}
-						this.state = 140;
+						this.state = 366;
 						this._errHandler.sync(this);
-						switch ( this.interpreter.adaptivePredict(this._input, 20, this._ctx) ) {
+						switch ( this.interpreter.adaptivePredict(this._input, 47, this._ctx) ) {
 						case 1:
 							{
-							this.state = 139;
+							this.state = 365;
 							this.match(msgParser.WHITESPACE);
 							}
 							break;
 						}
-						this.state = 142;
+						this.state = 368;
 						this.expression(3);
 						}
 						break;
 					}
 					}
 				}
-				this.state = 147;
+				this.state = 373;
 				this._errHandler.sync(this);
-				_alt = this.interpreter.adaptivePredict(this._input, 22, this._ctx);
+				_alt = this.interpreter.adaptivePredict(this._input, 49, this._ctx);
 			}
 			}
 		}
@@ -767,11 +1731,11 @@ export class msgParser extends Parser {
 	// @RuleVersion(0)
 	public expressionVariable(): ExpressionVariableContext {
 		let _localctx: ExpressionVariableContext = new ExpressionVariableContext(this._ctx, this.state);
-		this.enterRule(_localctx, 20, msgParser.RULE_expressionVariable);
+		this.enterRule(_localctx, 54, msgParser.RULE_expressionVariable);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 148;
+			this.state = 374;
 			this.match(msgParser.NAME);
 			}
 		}
@@ -792,14 +1756,14 @@ export class msgParser extends Parser {
 	// @RuleVersion(0)
 	public number(): NumberContext {
 		let _localctx: NumberContext = new NumberContext(this._ctx, this.state);
-		this.enterRule(_localctx, 22, msgParser.RULE_number);
+		this.enterRule(_localctx, 56, msgParser.RULE_number);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 150;
+			this.state = 376;
 			_la = this._input.LA(1);
-			if (!((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << msgParser.NUMBER) | (1 << msgParser.ZNUMBER) | (1 << msgParser.HEXNUM) | (1 << msgParser.OCTNUM) | (1 << msgParser.DECNUM))) !== 0))) {
+			if (!(((((_la - 25)) & ~0x1F) === 0 && ((1 << (_la - 25)) & ((1 << (msgParser.NUMBER - 25)) | (1 << (msgParser.HEXNUM - 25)) | (1 << (msgParser.OCTNUM - 25)) | (1 << (msgParser.DECNUM - 25)))) !== 0))) {
 			this._errHandler.recoverInline(this);
 			} else {
 				if (this._input.LA(1) === Token.EOF) {
@@ -828,24 +1792,24 @@ export class msgParser extends Parser {
 	// @RuleVersion(0)
 	public sep(): SepContext {
 		let _localctx: SepContext = new SepContext(this._ctx, this.state);
-		this.enterRule(_localctx, 24, msgParser.RULE_sep);
+		this.enterRule(_localctx, 58, msgParser.RULE_sep);
 		try {
 			let _alt: number;
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 158;
+			this.state = 384;
 			this._errHandler.sync(this);
-			switch ( this.interpreter.adaptivePredict(this._input, 24, this._ctx) ) {
+			switch ( this.interpreter.adaptivePredict(this._input, 51, this._ctx) ) {
 			case 1:
 				{
-				this.state = 152;
+				this.state = 378;
 				this.match(msgParser.WHITESPACE);
 				}
 				break;
 
 			case 2:
 				{
-				this.state = 154;
+				this.state = 380;
 				this._errHandler.sync(this);
 				_alt = 1;
 				do {
@@ -853,7 +1817,7 @@ export class msgParser extends Parser {
 					case 1:
 						{
 						{
-						this.state = 153;
+						this.state = 379;
 						this.continuation();
 						}
 						}
@@ -861,19 +1825,19 @@ export class msgParser extends Parser {
 					default:
 						throw new NoViableAltException(this);
 					}
-					this.state = 156;
+					this.state = 382;
 					this._errHandler.sync(this);
-					_alt = this.interpreter.adaptivePredict(this._input, 23, this._ctx);
+					_alt = this.interpreter.adaptivePredict(this._input, 50, this._ctx);
 				} while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER);
 				}
 				break;
 			}
-			this.state = 161;
+			this.state = 387;
 			this._errHandler.sync(this);
-			switch ( this.interpreter.adaptivePredict(this._input, 25, this._ctx) ) {
+			switch ( this.interpreter.adaptivePredict(this._input, 52, this._ctx) ) {
 			case 1:
 				{
-				this.state = 160;
+				this.state = 386;
 				this.match(msgParser.WHITESPACE);
 				}
 				break;
@@ -897,50 +1861,25 @@ export class msgParser extends Parser {
 	// @RuleVersion(0)
 	public continuation(): ContinuationContext {
 		let _localctx: ContinuationContext = new ContinuationContext(this._ctx, this.state);
-		this.enterRule(_localctx, 26, msgParser.RULE_continuation);
+		this.enterRule(_localctx, 60, msgParser.RULE_continuation);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 164;
+			this.state = 390;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === msgParser.WHITESPACE) {
 				{
-				this.state = 163;
+				this.state = 389;
 				this.match(msgParser.WHITESPACE);
 				}
 			}
 
-			this.state = 166;
-			this.continuationSign();
-			this.state = 167;
-			this.eolMayComment();
-			}
-		}
-		catch (re) {
-			if (re instanceof RecognitionException) {
-				_localctx.exception = re;
-				this._errHandler.reportError(this, re);
-				this._errHandler.recover(this, re);
-			} else {
-				throw re;
-			}
-		}
-		finally {
-			this.exitRule();
-		}
-		return _localctx;
-	}
-	// @RuleVersion(0)
-	public continuationSign(): ContinuationSignContext {
-		let _localctx: ContinuationSignContext = new ContinuationSignContext(this._ctx, this.state);
-		this.enterRule(_localctx, 28, msgParser.RULE_continuationSign);
-		try {
-			this.enterOuterAlt(_localctx, 1);
-			{
-			this.state = 169;
+			this.state = 392;
 			this.match(msgParser.SUB);
+			this.state = 393;
+			this.eolMayComment();
 			}
 		}
 		catch (re) {
@@ -960,35 +1899,35 @@ export class msgParser extends Parser {
 	// @RuleVersion(0)
 	public eolMayComment(): EolMayCommentContext {
 		let _localctx: EolMayCommentContext = new EolMayCommentContext(this._ctx, this.state);
-		this.enterRule(_localctx, 30, msgParser.RULE_eolMayComment);
+		this.enterRule(_localctx, 62, msgParser.RULE_eolMayComment);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 172;
+			this.state = 396;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === msgParser.WHITESPACE) {
 				{
-				this.state = 171;
+				this.state = 395;
 				this.match(msgParser.WHITESPACE);
 				}
 			}
 
-			this.state = 181;
+			this.state = 405;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la === msgParser.T__0) {
+			if (_la === msgParser.EXCL) {
 				{
-				this.state = 174;
-				this.commentSign();
-				this.state = 178;
+				this.state = 398;
+				this.match(msgParser.EXCL);
+				this.state = 402;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << msgParser.T__0) | (1 << msgParser.VAR) | (1 << msgParser.IDENT) | (1 << msgParser.WHITESPACE) | (1 << msgParser.NAME) | (1 << msgParser.NUMBER) | (1 << msgParser.ZNUMBER) | (1 << msgParser.DQUOTA) | (1 << msgParser.QUOTA) | (1 << msgParser.COMMA) | (1 << msgParser.ASSIGN) | (1 << msgParser.ADD) | (1 << msgParser.SUB) | (1 << msgParser.MUL) | (1 << msgParser.DIV) | (1 << msgParser.BRK_OPEN) | (1 << msgParser.BRK_CLOS) | (1 << msgParser.PUNCTUATION) | (1 << msgParser.HEXNUM) | (1 << msgParser.OCTNUM) | (1 << msgParser.DECNUM) | (1 << msgParser.ANY))) !== 0)) {
+				while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << msgParser.TITLE) | (1 << msgParser.IDENT) | (1 << msgParser.PAGE) | (1 << msgParser.LITERAL) | (1 << msgParser.FACILITY) | (1 << msgParser.SEVERITY) | (1 << msgParser.BASE) | (1 << msgParser.END) | (1 << msgParser.PREFIX) | (1 << msgParser.SHARED) | (1 << msgParser.SYSTEM) | (1 << msgParser.FAOCOUNT) | (1 << msgParser.IDENTIFICATION) | (1 << msgParser.USERVALUE) | (1 << msgParser.SUCCESS) | (1 << msgParser.INFORMATIONAL) | (1 << msgParser.WARNING) | (1 << msgParser.ERROR) | (1 << msgParser.SEVERE) | (1 << msgParser.FATAL) | (1 << msgParser.FAO) | (1 << msgParser.WHITESPACE) | (1 << msgParser.NAME) | (1 << msgParser.NUMBER) | (1 << msgParser.ASSIGN) | (1 << msgParser.ADD) | (1 << msgParser.SUB) | (1 << msgParser.MUL) | (1 << msgParser.DIV) | (1 << msgParser.SHIFT))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (msgParser.P_OPEN - 32)) | (1 << (msgParser.P_CLOS - 32)) | (1 << (msgParser.HEXNUM - 32)) | (1 << (msgParser.OCTNUM - 32)) | (1 << (msgParser.DECNUM - 32)) | (1 << (msgParser.DOT - 32)) | (1 << (msgParser.COMMA - 32)) | (1 << (msgParser.EXCL - 32)) | (1 << (msgParser.APOSTR - 32)) | (1 << (msgParser.QUOTA - 32)) | (1 << (msgParser.B_OPEN - 32)) | (1 << (msgParser.B_CLOSE - 32)) | (1 << (msgParser.ANY - 32)))) !== 0)) {
 					{
 					{
-					this.state = 175;
+					this.state = 399;
 					_la = this._input.LA(1);
 					if (_la <= 0 || (_la === msgParser.NEWLINE)) {
 					this._errHandler.recoverInline(this);
@@ -1002,14 +1941,14 @@ export class msgParser extends Parser {
 					}
 					}
 					}
-					this.state = 180;
+					this.state = 404;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 				}
 				}
 			}
 
-			this.state = 183;
+			this.state = 407;
 			this.match(msgParser.NEWLINE);
 			}
 		}
@@ -1028,50 +1967,922 @@ export class msgParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public commentSign(): CommentSignContext {
-		let _localctx: CommentSignContext = new CommentSignContext(this._ctx, this.state);
-		this.enterRule(_localctx, 32, msgParser.RULE_commentSign);
-		try {
-			this.enterOuterAlt(_localctx, 1);
-			{
-			this.state = 185;
-			this.match(msgParser.T__0);
-			}
-		}
-		catch (re) {
-			if (re instanceof RecognitionException) {
-				_localctx.exception = re;
-				this._errHandler.reportError(this, re);
-				this._errHandler.recover(this, re);
-			} else {
-				throw re;
-			}
-		}
-		finally {
-			this.exitRule();
-		}
-		return _localctx;
-	}
-	// @RuleVersion(0)
-	public emptyLine(): EmptyLineContext {
-		let _localctx: EmptyLineContext = new EmptyLineContext(this._ctx, this.state);
-		this.enterRule(_localctx, 34, msgParser.RULE_emptyLine);
+	public message(): MessageContext {
+		let _localctx: MessageContext = new MessageContext(this._ctx, this.state);
+		this.enterRule(_localctx, 64, msgParser.RULE_message);
 		let _la: number;
 		try {
+			let _alt: number;
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 188;
+			this.state = 410;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === msgParser.WHITESPACE) {
 				{
-				this.state = 187;
+				this.state = 409;
 				this.match(msgParser.WHITESPACE);
 				}
 			}
 
-			this.state = 190;
-			this.match(msgParser.NEWLINE);
+			this.state = 412;
+			this.messageName();
+			this.state = 413;
+			this.sep();
+			this.state = 420;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			while (_la === msgParser.WHITESPACE || _la === msgParser.DIV) {
+				{
+				{
+				this.state = 414;
+				this.messageQualifier();
+				this.state = 416;
+				this._errHandler.sync(this);
+				switch ( this.interpreter.adaptivePredict(this._input, 58, this._ctx) ) {
+				case 1:
+					{
+					this.state = 415;
+					this.sep();
+					}
+					break;
+				}
+				}
+				}
+				this.state = 422;
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+			}
+			this.state = 423;
+			this.messageText();
+			this.state = 425;
+			this._errHandler.sync(this);
+			switch ( this.interpreter.adaptivePredict(this._input, 60, this._ctx) ) {
+			case 1:
+				{
+				this.state = 424;
+				this.sep();
+				}
+				break;
+			}
+			this.state = 433;
+			this._errHandler.sync(this);
+			_alt = this.interpreter.adaptivePredict(this._input, 62, this._ctx);
+			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
+				if (_alt === 1) {
+					{
+					{
+					this.state = 427;
+					this.messageQualifier();
+					this.state = 429;
+					this._errHandler.sync(this);
+					switch ( this.interpreter.adaptivePredict(this._input, 61, this._ctx) ) {
+					case 1:
+						{
+						this.state = 428;
+						this.sep();
+						}
+						break;
+					}
+					}
+					}
+				}
+				this.state = 435;
+				this._errHandler.sync(this);
+				_alt = this.interpreter.adaptivePredict(this._input, 62, this._ctx);
+			}
+			this.state = 436;
+			this.eolMayComment();
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public messageName(): MessageNameContext {
+		let _localctx: MessageNameContext = new MessageNameContext(this._ctx, this.state);
+		this.enterRule(_localctx, 66, msgParser.RULE_messageName);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 438;
+			this.match(msgParser.NAME);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public messageQualifier(): MessageQualifierContext {
+		let _localctx: MessageQualifierContext = new MessageQualifierContext(this._ctx, this.state);
+		this.enterRule(_localctx, 68, msgParser.RULE_messageQualifier);
+		try {
+			this.state = 444;
+			this._errHandler.sync(this);
+			switch ( this.interpreter.adaptivePredict(this._input, 63, this._ctx) ) {
+			case 1:
+				this.enterOuterAlt(_localctx, 1);
+				{
+				this.state = 440;
+				this.faoCount();
+				}
+				break;
+
+			case 2:
+				this.enterOuterAlt(_localctx, 2);
+				{
+				this.state = 441;
+				this.identification();
+				}
+				break;
+
+			case 3:
+				this.enterOuterAlt(_localctx, 3);
+				{
+				this.state = 442;
+				this.userValue();
+				}
+				break;
+
+			case 4:
+				this.enterOuterAlt(_localctx, 4);
+				{
+				this.state = 443;
+				this.severityQualifier();
+				}
+				break;
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public severityQualifier(): SeverityQualifierContext {
+		let _localctx: SeverityQualifierContext = new SeverityQualifierContext(this._ctx, this.state);
+		this.enterRule(_localctx, 70, msgParser.RULE_severityQualifier);
+		try {
+			this.state = 452;
+			this._errHandler.sync(this);
+			switch ( this.interpreter.adaptivePredict(this._input, 64, this._ctx) ) {
+			case 1:
+				this.enterOuterAlt(_localctx, 1);
+				{
+				this.state = 446;
+				this.success();
+				}
+				break;
+
+			case 2:
+				this.enterOuterAlt(_localctx, 2);
+				{
+				this.state = 447;
+				this.informational();
+				}
+				break;
+
+			case 3:
+				this.enterOuterAlt(_localctx, 3);
+				{
+				this.state = 448;
+				this.warning();
+				}
+				break;
+
+			case 4:
+				this.enterOuterAlt(_localctx, 4);
+				{
+				this.state = 449;
+				this.error();
+				}
+				break;
+
+			case 5:
+				this.enterOuterAlt(_localctx, 5);
+				{
+				this.state = 450;
+				this.severe();
+				}
+				break;
+
+			case 6:
+				this.enterOuterAlt(_localctx, 6);
+				{
+				this.state = 451;
+				this.fatal();
+				}
+				break;
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public faoCount(): FaoCountContext {
+		let _localctx: FaoCountContext = new FaoCountContext(this._ctx, this.state);
+		this.enterRule(_localctx, 72, msgParser.RULE_faoCount);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 455;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 454;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 457;
+			this.match(msgParser.DIV);
+			this.state = 458;
+			this.match(msgParser.FAOCOUNT);
+			this.state = 460;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE || _la === msgParser.SUB) {
+				{
+				this.state = 459;
+				this.sep();
+				}
+			}
+
+			this.state = 462;
+			this.match(msgParser.ASSIGN);
+			this.state = 464;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE || _la === msgParser.SUB) {
+				{
+				this.state = 463;
+				this.sep();
+				}
+			}
+
+			this.state = 466;
+			this.faoCountValue();
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public faoCountValue(): FaoCountValueContext {
+		let _localctx: FaoCountValueContext = new FaoCountValueContext(this._ctx, this.state);
+		this.enterRule(_localctx, 74, msgParser.RULE_faoCountValue);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 468;
+			this.match(msgParser.NUMBER);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public identification(): IdentificationContext {
+		let _localctx: IdentificationContext = new IdentificationContext(this._ctx, this.state);
+		this.enterRule(_localctx, 76, msgParser.RULE_identification);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 471;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 470;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 473;
+			this.match(msgParser.DIV);
+			this.state = 474;
+			this.match(msgParser.IDENTIFICATION);
+			this.state = 476;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE || _la === msgParser.SUB) {
+				{
+				this.state = 475;
+				this.sep();
+				}
+			}
+
+			this.state = 478;
+			this.match(msgParser.ASSIGN);
+			this.state = 480;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE || _la === msgParser.SUB) {
+				{
+				this.state = 479;
+				this.sep();
+				}
+			}
+
+			this.state = 482;
+			this.identificationValue();
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public identificationValue(): IdentificationValueContext {
+		let _localctx: IdentificationValueContext = new IdentificationValueContext(this._ctx, this.state);
+		this.enterRule(_localctx, 78, msgParser.RULE_identificationValue);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 484;
+			this.match(msgParser.NAME);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public userValue(): UserValueContext {
+		let _localctx: UserValueContext = new UserValueContext(this._ctx, this.state);
+		this.enterRule(_localctx, 80, msgParser.RULE_userValue);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 487;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 486;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 489;
+			this.match(msgParser.DIV);
+			this.state = 490;
+			this.match(msgParser.USERVALUE);
+			this.state = 492;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE || _la === msgParser.SUB) {
+				{
+				this.state = 491;
+				this.sep();
+				}
+			}
+
+			this.state = 494;
+			this.match(msgParser.ASSIGN);
+			this.state = 496;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE || _la === msgParser.SUB) {
+				{
+				this.state = 495;
+				this.sep();
+				}
+			}
+
+			this.state = 498;
+			this.userValueValue();
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public userValueValue(): UserValueValueContext {
+		let _localctx: UserValueValueContext = new UserValueValueContext(this._ctx, this.state);
+		this.enterRule(_localctx, 82, msgParser.RULE_userValueValue);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 500;
+			this.match(msgParser.NUMBER);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public success(): SuccessContext {
+		let _localctx: SuccessContext = new SuccessContext(this._ctx, this.state);
+		this.enterRule(_localctx, 84, msgParser.RULE_success);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 503;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 502;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 505;
+			this.match(msgParser.DIV);
+			this.state = 506;
+			this.match(msgParser.SUCCESS);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public informational(): InformationalContext {
+		let _localctx: InformationalContext = new InformationalContext(this._ctx, this.state);
+		this.enterRule(_localctx, 86, msgParser.RULE_informational);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 509;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 508;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 511;
+			this.match(msgParser.DIV);
+			this.state = 512;
+			this.match(msgParser.INFORMATIONAL);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public warning(): WarningContext {
+		let _localctx: WarningContext = new WarningContext(this._ctx, this.state);
+		this.enterRule(_localctx, 88, msgParser.RULE_warning);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 515;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 514;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 517;
+			this.match(msgParser.DIV);
+			this.state = 518;
+			this.match(msgParser.WARNING);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public error(): ErrorContext {
+		let _localctx: ErrorContext = new ErrorContext(this._ctx, this.state);
+		this.enterRule(_localctx, 90, msgParser.RULE_error);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 521;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 520;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 523;
+			this.match(msgParser.DIV);
+			this.state = 524;
+			this.match(msgParser.ERROR);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public severe(): SevereContext {
+		let _localctx: SevereContext = new SevereContext(this._ctx, this.state);
+		this.enterRule(_localctx, 92, msgParser.RULE_severe);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 527;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 526;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 529;
+			this.match(msgParser.DIV);
+			this.state = 530;
+			this.match(msgParser.SEVERE);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public fatal(): FatalContext {
+		let _localctx: FatalContext = new FatalContext(this._ctx, this.state);
+		this.enterRule(_localctx, 94, msgParser.RULE_fatal);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 533;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la === msgParser.WHITESPACE) {
+				{
+				this.state = 532;
+				this.match(msgParser.WHITESPACE);
+				}
+			}
+
+			this.state = 535;
+			this.match(msgParser.DIV);
+			this.state = 536;
+			this.match(msgParser.FATAL);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public messageText(): MessageTextContext {
+		let _localctx: MessageTextContext = new MessageTextContext(this._ctx, this.state);
+		this.enterRule(_localctx, 96, msgParser.RULE_messageText);
+		let _la: number;
+		try {
+			this.state = 565;
+			this._errHandler.sync(this);
+			switch (this._input.LA(1)) {
+			case msgParser.B_OPEN:
+				this.enterOuterAlt(_localctx, 1);
+				{
+				this.state = 538;
+				this.match(msgParser.B_OPEN);
+				this.state = 543;
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << msgParser.TITLE) | (1 << msgParser.IDENT) | (1 << msgParser.PAGE) | (1 << msgParser.LITERAL) | (1 << msgParser.FACILITY) | (1 << msgParser.SEVERITY) | (1 << msgParser.BASE) | (1 << msgParser.END) | (1 << msgParser.PREFIX) | (1 << msgParser.SHARED) | (1 << msgParser.SYSTEM) | (1 << msgParser.FAOCOUNT) | (1 << msgParser.IDENTIFICATION) | (1 << msgParser.USERVALUE) | (1 << msgParser.SUCCESS) | (1 << msgParser.INFORMATIONAL) | (1 << msgParser.WARNING) | (1 << msgParser.ERROR) | (1 << msgParser.SEVERE) | (1 << msgParser.FATAL) | (1 << msgParser.FAO) | (1 << msgParser.WHITESPACE) | (1 << msgParser.NEWLINE) | (1 << msgParser.NAME) | (1 << msgParser.NUMBER) | (1 << msgParser.ASSIGN) | (1 << msgParser.ADD) | (1 << msgParser.SUB) | (1 << msgParser.MUL) | (1 << msgParser.DIV) | (1 << msgParser.SHIFT))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (msgParser.P_OPEN - 32)) | (1 << (msgParser.P_CLOS - 32)) | (1 << (msgParser.HEXNUM - 32)) | (1 << (msgParser.OCTNUM - 32)) | (1 << (msgParser.DECNUM - 32)) | (1 << (msgParser.DOT - 32)) | (1 << (msgParser.COMMA - 32)) | (1 << (msgParser.EXCL - 32)) | (1 << (msgParser.APOSTR - 32)) | (1 << (msgParser.QUOTA - 32)) | (1 << (msgParser.B_OPEN - 32)) | (1 << (msgParser.ANY - 32)))) !== 0)) {
+					{
+					this.state = 541;
+					this._errHandler.sync(this);
+					switch ( this.interpreter.adaptivePredict(this._input, 80, this._ctx) ) {
+					case 1:
+						{
+						this.state = 539;
+						this.fao();
+						}
+						break;
+
+					case 2:
+						{
+						this.state = 540;
+						_la = this._input.LA(1);
+						if (_la <= 0 || (_la === msgParser.B_CLOSE)) {
+						this._errHandler.recoverInline(this);
+						} else {
+							if (this._input.LA(1) === Token.EOF) {
+								this.matchedEOF = true;
+							}
+
+							this._errHandler.reportMatch(this);
+							this.consume();
+						}
+						}
+						break;
+					}
+					}
+					this.state = 545;
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+				this.state = 546;
+				this.match(msgParser.B_CLOSE);
+				}
+				break;
+			case msgParser.QUOTA:
+				this.enterOuterAlt(_localctx, 2);
+				{
+				this.state = 547;
+				this.match(msgParser.QUOTA);
+				this.state = 552;
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << msgParser.TITLE) | (1 << msgParser.IDENT) | (1 << msgParser.PAGE) | (1 << msgParser.LITERAL) | (1 << msgParser.FACILITY) | (1 << msgParser.SEVERITY) | (1 << msgParser.BASE) | (1 << msgParser.END) | (1 << msgParser.PREFIX) | (1 << msgParser.SHARED) | (1 << msgParser.SYSTEM) | (1 << msgParser.FAOCOUNT) | (1 << msgParser.IDENTIFICATION) | (1 << msgParser.USERVALUE) | (1 << msgParser.SUCCESS) | (1 << msgParser.INFORMATIONAL) | (1 << msgParser.WARNING) | (1 << msgParser.ERROR) | (1 << msgParser.SEVERE) | (1 << msgParser.FATAL) | (1 << msgParser.FAO) | (1 << msgParser.WHITESPACE) | (1 << msgParser.NEWLINE) | (1 << msgParser.NAME) | (1 << msgParser.NUMBER) | (1 << msgParser.ASSIGN) | (1 << msgParser.ADD) | (1 << msgParser.SUB) | (1 << msgParser.MUL) | (1 << msgParser.DIV) | (1 << msgParser.SHIFT))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (msgParser.P_OPEN - 32)) | (1 << (msgParser.P_CLOS - 32)) | (1 << (msgParser.HEXNUM - 32)) | (1 << (msgParser.OCTNUM - 32)) | (1 << (msgParser.DECNUM - 32)) | (1 << (msgParser.DOT - 32)) | (1 << (msgParser.COMMA - 32)) | (1 << (msgParser.EXCL - 32)) | (1 << (msgParser.APOSTR - 32)) | (1 << (msgParser.B_OPEN - 32)) | (1 << (msgParser.B_CLOSE - 32)) | (1 << (msgParser.ANY - 32)))) !== 0)) {
+					{
+					this.state = 550;
+					this._errHandler.sync(this);
+					switch ( this.interpreter.adaptivePredict(this._input, 82, this._ctx) ) {
+					case 1:
+						{
+						this.state = 548;
+						this.fao();
+						}
+						break;
+
+					case 2:
+						{
+						this.state = 549;
+						_la = this._input.LA(1);
+						if (_la <= 0 || (_la === msgParser.QUOTA)) {
+						this._errHandler.recoverInline(this);
+						} else {
+							if (this._input.LA(1) === Token.EOF) {
+								this.matchedEOF = true;
+							}
+
+							this._errHandler.reportMatch(this);
+							this.consume();
+						}
+						}
+						break;
+					}
+					}
+					this.state = 554;
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+				this.state = 555;
+				this.match(msgParser.QUOTA);
+				}
+				break;
+			case msgParser.APOSTR:
+				this.enterOuterAlt(_localctx, 3);
+				{
+				this.state = 556;
+				this.match(msgParser.APOSTR);
+				this.state = 561;
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << msgParser.TITLE) | (1 << msgParser.IDENT) | (1 << msgParser.PAGE) | (1 << msgParser.LITERAL) | (1 << msgParser.FACILITY) | (1 << msgParser.SEVERITY) | (1 << msgParser.BASE) | (1 << msgParser.END) | (1 << msgParser.PREFIX) | (1 << msgParser.SHARED) | (1 << msgParser.SYSTEM) | (1 << msgParser.FAOCOUNT) | (1 << msgParser.IDENTIFICATION) | (1 << msgParser.USERVALUE) | (1 << msgParser.SUCCESS) | (1 << msgParser.INFORMATIONAL) | (1 << msgParser.WARNING) | (1 << msgParser.ERROR) | (1 << msgParser.SEVERE) | (1 << msgParser.FATAL) | (1 << msgParser.FAO) | (1 << msgParser.WHITESPACE) | (1 << msgParser.NEWLINE) | (1 << msgParser.NAME) | (1 << msgParser.NUMBER) | (1 << msgParser.ASSIGN) | (1 << msgParser.ADD) | (1 << msgParser.SUB) | (1 << msgParser.MUL) | (1 << msgParser.DIV) | (1 << msgParser.SHIFT))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (msgParser.P_OPEN - 32)) | (1 << (msgParser.P_CLOS - 32)) | (1 << (msgParser.HEXNUM - 32)) | (1 << (msgParser.OCTNUM - 32)) | (1 << (msgParser.DECNUM - 32)) | (1 << (msgParser.DOT - 32)) | (1 << (msgParser.COMMA - 32)) | (1 << (msgParser.EXCL - 32)) | (1 << (msgParser.QUOTA - 32)) | (1 << (msgParser.B_OPEN - 32)) | (1 << (msgParser.B_CLOSE - 32)) | (1 << (msgParser.ANY - 32)))) !== 0)) {
+					{
+					this.state = 559;
+					this._errHandler.sync(this);
+					switch ( this.interpreter.adaptivePredict(this._input, 84, this._ctx) ) {
+					case 1:
+						{
+						this.state = 557;
+						this.fao();
+						}
+						break;
+
+					case 2:
+						{
+						this.state = 558;
+						_la = this._input.LA(1);
+						if (_la <= 0 || (_la === msgParser.APOSTR)) {
+						this._errHandler.recoverInline(this);
+						} else {
+							if (this._input.LA(1) === Token.EOF) {
+								this.matchedEOF = true;
+							}
+
+							this._errHandler.reportMatch(this);
+							this.consume();
+						}
+						}
+						break;
+					}
+					}
+					this.state = 563;
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+				this.state = 564;
+				this.match(msgParser.APOSTR);
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public fao(): FaoContext {
+		let _localctx: FaoContext = new FaoContext(this._ctx, this.state);
+		this.enterRule(_localctx, 98, msgParser.RULE_fao);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 567;
+			this.match(msgParser.FAO);
 			}
 		}
 		catch (re) {
@@ -1091,7 +2902,7 @@ export class msgParser extends Parser {
 
 	public sempred(_localctx: RuleContext, ruleIndex: number, predIndex: number): boolean {
 		switch (ruleIndex) {
-		case 9:
+		case 26:
 			return this.expression_sempred(_localctx as ExpressionContext, predIndex);
 		}
 		return true;
@@ -1107,92 +2918,306 @@ export class msgParser extends Parser {
 		return true;
 	}
 
-	public static readonly _serializedATN: string =
-		"\x03\uAF6F\u8320\u479D\uB75C\u4880\u1605\u191C\uAB37\x03\x19\xC3\x04\x02" +
+	private static readonly _serializedATNSegments: number = 2;
+	private static readonly _serializedATNSegment0: string =
+		"\x03\uAF6F\u8320\u479D\uB75C\u4880\u1605\u191C\uAB37\x03.\u023C\x04\x02" +
 		"\t\x02\x04\x03\t\x03\x04\x04\t\x04\x04\x05\t\x05\x04\x06\t\x06\x04\x07" +
 		"\t\x07\x04\b\t\b\x04\t\t\t\x04\n\t\n\x04\v\t\v\x04\f\t\f\x04\r\t\r\x04" +
 		"\x0E\t\x0E\x04\x0F\t\x0F\x04\x10\t\x10\x04\x11\t\x11\x04\x12\t\x12\x04" +
-		"\x13\t\x13\x03\x02\x03\x02\x03\x02\x03\x02\x07\x02+\n\x02\f\x02\x0E\x02" +
-		".\v\x02\x03\x02\x03\x02\x03\x03\x05\x033\n\x03\x03\x03\x03\x03\x03\x03" +
-		"\x03\x03\x05\x039\n\x03\x03\x03\x03\x03\x05\x03=\n\x03\x03\x03\x07\x03" +
-		"@\n\x03\f\x03\x0E\x03C\v\x03\x03\x03\x03\x03\x03\x04\x03\x04\x03\x05\x03" +
-		"\x05\x05\x05K\n\x05\x03\x05\x03\x05\x05\x05O\n\x05\x03\x05\x05\x05R\n" +
-		"\x05\x03\x06\x03\x06\x03\x07\x03\x07\x03\b\x05\bY\n\b\x03\b\x03\b\x03" +
-		"\b\x03\b\x03\b\x03\t\x03\t\x03\n\x03\n\x07\nd\n\n\f\n\x0E\ng\v\n\x03\v" +
-		"\x03\v\x03\v\x05\vl\n\v\x03\v\x03\v\x05\vp\n\v\x03\v\x03\v\x03\v\x05\v" +
-		"u\n\v\x03\v\x05\vx\n\v\x03\v\x03\v\x05\v|\n\v\x05\v~\n\v\x03\v\x03\v\x05" +
-		"\v\x82\n\v\x03\v\x03\v\x05\v\x86\n\v\x03\v\x03\v\x03\v\x05\v\x8B\n\v\x03" +
-		"\v\x03\v\x05\v\x8F\n\v\x03\v\x07\v\x92\n\v\f\v\x0E\v\x95\v\v\x03\f\x03" +
-		"\f\x03\r\x03\r\x03\x0E\x03\x0E\x06\x0E\x9D\n\x0E\r\x0E\x0E\x0E\x9E\x05" +
-		"\x0E\xA1\n\x0E\x03\x0E\x05\x0E\xA4\n\x0E\x03\x0F\x05\x0F\xA7\n\x0F\x03" +
-		"\x0F\x03\x0F\x03\x0F\x03\x10\x03\x10\x03\x11\x05\x11\xAF\n\x11\x03\x11" +
-		"\x03\x11\x07\x11\xB3\n\x11\f\x11\x0E\x11\xB6\v\x11\x05\x11\xB8\n\x11\x03" +
-		"\x11\x03\x11\x03\x12\x03\x12\x03\x13\x05\x13\xBF\n\x13\x03\x13\x03\x13" +
-		"\x03\x13\x02\x02\x03\x14\x14\x02\x02\x04\x02\x06\x02\b\x02\n\x02\f\x02" +
-		"\x0E\x02\x10\x02\x12\x02\x14\x02\x16\x02\x18\x02\x1A\x02\x1C\x02\x1E\x02" +
-		" \x02\"\x02$\x02\x02\x07\x03\x02\x06\x07\x03\x02\x07\x07\x03\x02\x0F\x10" +
-		"\x03\x02\x11\x12\x04\x02\t\n\x16\x18\xD1\x02,\x03\x02\x02\x02\x042\x03" +
-		"\x02\x02\x02\x06F\x03\x02\x02\x02\bH\x03\x02\x02\x02\nS\x03\x02\x02\x02" +
-		"\fU\x03\x02\x02\x02\x0EX\x03\x02\x02\x02\x10_\x03\x02\x02\x02\x12a\x03" +
-		"\x02\x02\x02\x14}\x03\x02\x02\x02\x16\x96\x03\x02\x02\x02\x18\x98\x03" +
-		"\x02\x02\x02\x1A\xA0\x03\x02\x02\x02\x1C\xA6\x03\x02\x02\x02\x1E\xAB\x03" +
-		"\x02\x02\x02 \xAE\x03\x02\x02\x02\"\xBB\x03\x02\x02\x02$\xBE\x03\x02\x02" +
-		"\x02&+\x05\x04\x03\x02\'+\x05\x0E\b\x02(+\x05$\x13\x02)+\x07\x06\x02\x02" +
-		"*&\x03\x02\x02\x02*\'\x03\x02\x02\x02*(\x03\x02\x02\x02*)\x03\x02\x02" +
-		"\x02+.\x03\x02\x02\x02,*\x03\x02\x02\x02,-\x03\x02\x02\x02-/\x03\x02\x02" +
-		"\x02.,\x03\x02\x02\x02/0\x07\x02\x02\x030\x03\x03\x02\x02\x0213\x07\x06" +
-		"\x02\x0221\x03\x02\x02\x0223\x03\x02\x02\x0234\x03\x02\x02\x0245\x05\x06" +
-		"\x04\x0256\x05\x1A\x0E\x026A\x05\b\x05\x0279\x05\x1A\x0E\x0287\x03\x02" +
-		"\x02\x0289\x03\x02\x02\x029:\x03\x02\x02\x02:<\x07\r\x02\x02;=\x05\x1A" +
-		"\x0E\x02<;\x03\x02\x02\x02<=\x03\x02\x02\x02=>\x03\x02\x02\x02>@\x05\b" +
-		"\x05\x02?8\x03\x02\x02\x02@C\x03\x02\x02\x02A?\x03\x02\x02\x02AB\x03\x02" +
-		"\x02\x02BD\x03\x02\x02\x02CA\x03\x02\x02\x02DE\x05 \x11\x02E\x05\x03\x02" +
-		"\x02\x02FG\x07\x04\x02\x02G\x07\x03\x02\x02\x02HQ\x05\n\x06\x02IK\x05" +
-		"\x1A\x0E\x02JI\x03\x02\x02\x02JK\x03\x02\x02\x02KL\x03\x02\x02\x02LN\x07" +
-		"\x0E\x02\x02MO\x05\x1A\x0E\x02NM\x03\x02\x02\x02NO\x03\x02\x02\x02OP\x03" +
-		"\x02\x02\x02PR\x05\f\x07\x02QJ\x03\x02\x02\x02QR\x03\x02\x02\x02R\t\x03" +
-		"\x02\x02\x02ST\x07\b\x02\x02T\v\x03\x02\x02\x02UV\x05\x14\v\x02V\r\x03" +
-		"\x02\x02\x02WY\x07\x06\x02\x02XW\x03\x02\x02\x02XY\x03\x02\x02\x02YZ\x03" +
-		"\x02\x02\x02Z[\x05\x10\t\x02[\\\x05\x1A\x0E\x02\\]\x05\x12\n\x02]^\x07" +
-		"\x07\x02\x02^\x0F\x03\x02\x02\x02_`\x07\x05\x02\x02`\x11\x03\x02\x02\x02" +
-		"ae\n\x02\x02\x02bd\n\x03\x02\x02cb\x03\x02\x02\x02dg\x03\x02\x02\x02e" +
-		"c\x03\x02\x02\x02ef\x03\x02\x02\x02f\x13\x03\x02\x02\x02ge\x03\x02\x02" +
-		"\x02hi\b\v\x01\x02ik\x07\x13\x02\x02jl\x07\x06\x02\x02kj\x03\x02\x02\x02" +
-		"kl\x03\x02\x02\x02lm\x03\x02\x02\x02mo\x05\x14\v\x02np\x07\x06\x02\x02" +
-		"on\x03\x02\x02\x02op\x03\x02\x02\x02pq\x03\x02\x02\x02qr\x07\x14\x02\x02" +
-		"r~\x03\x02\x02\x02su\t\x04\x02\x02ts\x03\x02\x02\x02tu\x03\x02\x02\x02" +
-		"uw\x03\x02\x02\x02vx\x07\x06\x02\x02wv\x03\x02\x02\x02wx\x03\x02\x02\x02" +
-		"x{\x03\x02\x02\x02y|\x05\x18\r\x02z|\x05\x16\f\x02{y\x03\x02\x02\x02{" +
-		"z\x03\x02\x02\x02|~\x03\x02\x02\x02}h\x03\x02\x02\x02}t\x03\x02\x02\x02" +
-		"~\x93\x03\x02\x02\x02\x7F\x81\f\x05\x02\x02\x80\x82\x07\x06\x02\x02\x81" +
-		"\x80\x03\x02\x02\x02\x81\x82\x03\x02\x02\x02\x82\x83\x03\x02\x02\x02\x83" +
-		"\x85\t\x05\x02\x02\x84\x86\x07\x06\x02\x02\x85\x84\x03\x02\x02\x02\x85" +
-		"\x86\x03\x02\x02\x02\x86\x87\x03\x02\x02\x02\x87\x92\x05\x14\v\x06\x88" +
-		"\x8A\f\x04\x02\x02\x89\x8B\x07\x06\x02\x02\x8A\x89\x03\x02\x02\x02\x8A" +
-		"\x8B\x03\x02\x02\x02\x8B\x8C\x03\x02\x02\x02\x8C\x8E\t\x04\x02\x02\x8D" +
-		"\x8F\x07\x06\x02\x02\x8E\x8D\x03\x02\x02\x02\x8E\x8F\x03\x02\x02\x02\x8F" +
-		"\x90\x03\x02\x02\x02\x90\x92\x05\x14\v\x05\x91\x7F\x03\x02\x02\x02\x91" +
-		"\x88\x03\x02\x02\x02\x92\x95\x03\x02\x02\x02\x93\x91\x03\x02\x02\x02\x93" +
-		"\x94\x03\x02\x02\x02\x94\x15\x03\x02\x02\x02\x95\x93\x03\x02\x02\x02\x96" +
-		"\x97\x07\b\x02\x02\x97\x17\x03\x02\x02\x02\x98\x99\t\x06\x02\x02\x99\x19" +
-		"\x03\x02\x02\x02\x9A\xA1\x07\x06\x02\x02\x9B\x9D\x05\x1C\x0F\x02\x9C\x9B" +
-		"\x03\x02\x02\x02\x9D\x9E\x03\x02\x02\x02\x9E\x9C\x03\x02\x02\x02\x9E\x9F" +
-		"\x03\x02\x02\x02\x9F\xA1\x03\x02\x02\x02\xA0\x9A\x03\x02\x02\x02\xA0\x9C" +
-		"\x03\x02\x02\x02\xA1\xA3\x03\x02\x02\x02\xA2\xA4\x07\x06\x02\x02\xA3\xA2" +
-		"\x03\x02\x02\x02\xA3\xA4\x03\x02\x02\x02\xA4\x1B\x03\x02\x02\x02\xA5\xA7" +
-		"\x07\x06\x02\x02\xA6\xA5\x03\x02\x02\x02\xA6\xA7\x03\x02\x02\x02\xA7\xA8" +
-		"\x03\x02\x02\x02\xA8\xA9\x05\x1E\x10\x02\xA9\xAA\x05 \x11\x02\xAA\x1D" +
-		"\x03\x02\x02\x02\xAB\xAC\x07\x10\x02\x02\xAC\x1F\x03\x02\x02\x02\xAD\xAF" +
-		"\x07\x06\x02\x02\xAE\xAD\x03\x02\x02\x02\xAE\xAF\x03\x02\x02\x02\xAF\xB7" +
-		"\x03\x02\x02\x02\xB0\xB4\x05\"\x12\x02\xB1\xB3\n\x03\x02\x02\xB2\xB1\x03" +
-		"\x02\x02\x02\xB3\xB6\x03\x02\x02\x02\xB4\xB2\x03\x02\x02\x02\xB4\xB5\x03" +
-		"\x02\x02\x02\xB5\xB8\x03\x02\x02\x02\xB6\xB4\x03\x02\x02\x02\xB7\xB0\x03" +
-		"\x02\x02\x02\xB7\xB8\x03\x02\x02\x02\xB8\xB9\x03\x02\x02\x02\xB9\xBA\x07" +
-		"\x07\x02\x02\xBA!\x03\x02\x02\x02\xBB\xBC\x07\x03\x02\x02\xBC#\x03\x02" +
-		"\x02\x02\xBD\xBF\x07\x06\x02\x02\xBE\xBD\x03\x02\x02\x02\xBE\xBF\x03\x02" +
-		"\x02\x02\xBF\xC0\x03\x02\x02\x02\xC0\xC1\x07\x07\x02\x02\xC1%\x03\x02" +
-		"\x02\x02!*,28<AJNQXekotw{}\x81\x85\x8A\x8E\x91\x93\x9E\xA0\xA3\xA6\xAE" +
-		"\xB4\xB7\xBE";
+		"\x13\t\x13\x04\x14\t\x14\x04\x15\t\x15\x04\x16\t\x16\x04\x17\t\x17\x04" +
+		"\x18\t\x18\x04\x19\t\x19\x04\x1A\t\x1A\x04\x1B\t\x1B\x04\x1C\t\x1C\x04" +
+		"\x1D\t\x1D\x04\x1E\t\x1E\x04\x1F\t\x1F\x04 \t \x04!\t!\x04\"\t\"\x04#" +
+		"\t#\x04$\t$\x04%\t%\x04&\t&\x04\'\t\'\x04(\t(\x04)\t)\x04*\t*\x04+\t+" +
+		"\x04,\t,\x04-\t-\x04.\t.\x04/\t/\x040\t0\x041\t1\x042\t2\x043\t3\x03\x02" +
+		"\x03\x02\x03\x02\x03\x02\x03\x02\x03\x02\x07\x02m\n\x02\f\x02\x0E\x02" +
+		"p\v\x02\x03\x02\x03\x02\x03\x03\x05\x03u\n\x03\x03\x03\x03\x03\x03\x03" +
+		"\x03\x03\x03\x03\x03\x03\x05\x03}\n\x03\x03\x03\x03\x03\x03\x04\x03\x04" +
+		"\x03\x05\x07\x05\x84\n\x05\f\x05\x0E\x05\x87\v\x05\x03\x06\x05\x06\x8A" +
+		"\n\x06\x03\x06\x03\x06\x03\x06\x03\x06\x03\x06\x03\x06\x03\x07\x03\x07" +
+		"\x03\x07\x07\x07\x95\n\x07\f\x07\x0E\x07\x98\v\x07\x03\x07\x03\x07\x03" +
+		"\x07\x05\x07\x9D\n\x07\x03\x07\x05\x07\xA0\n\x07\x03\b\x05\b\xA3\n\b\x03" +
+		"\b\x03\b\x03\b\x03\b\x03\t\x05\t\xAA\n\t\x03\t\x03\t\x03\t\x03\t\x03\t" +
+		"\x05\t\xB1\n\t\x03\t\x03\t\x05\t\xB5\n\t\x03\t\x07\t\xB8\n\t\f\t\x0E\t" +
+		"\xBB\v\t\x03\t\x03\t\x03\n\x03\n\x05\n\xC1\n\n\x03\n\x03\n\x05\n\xC5\n" +
+		"\n\x03\n\x05\n\xC8\n\n\x03\v\x03\v\x03\f\x03\f\x03\r\x05\r\xCF\n\r\x03" +
+		"\r\x03\r\x03\r\x03\r\x03\r\x05\r\xD6\n\r\x07\r\xD8\n\r\f\r\x0E\r\xDB\v" +
+		"\r\x03\r\x03\r\x05\r\xDF\n\r\x03\r\x03\r\x05\r\xE3\n\r\x07\r\xE5\n\r\f" +
+		"\r\x0E\r\xE8\v\r\x03\r\x03\r\x07\r\xEC\n\r\f\r\x0E\r\xEF\v\r\x03\r\x05" +
+		"\r\xF2\n\r\x03\x0E\x03\x0E\x05\x0E\xF6\n\x0E\x03\x0E\x03\x0E\x05\x0E\xFA" +
+		"\n\x0E\x03\x0E\x05\x0E\xFD\n\x0E\x03\x0E\x03\x0E\x03\x0F\x03\x0F\x03\x10" +
+		"\x03\x10\x03\x11\x03\x11\x03\x11\x03\x11\x03\x11\x03\x11\x05\x11\u010B" +
+		"\n\x11\x03\x12\x03\x12\x03\x12\x05\x12\u0110\n\x12\x03\x13\x05\x13\u0113" +
+		"\n\x13\x03\x13\x03\x13\x03\x13\x05\x13\u0118\n\x13\x03\x13\x03\x13\x05" +
+		"\x13\u011C\n\x13\x03\x13\x03\x13\x03\x14\x03\x14\x03\x15\x05\x15\u0123" +
+		"\n\x15\x03\x15\x03\x15\x03\x15\x03\x16\x05\x16\u0129\n\x16\x03\x16\x03" +
+		"\x16\x03\x16\x03\x17\x05\x17\u012F\n\x17\x03\x17\x03\x17\x03\x17\x03\x17" +
+		"\x03\x17\x03\x17\x03\x18\x03\x18\x03\x19\x05\x19\u013A\n\x19\x03\x19\x03" +
+		"\x19\x03\x19\x03\x19\x03\x19\x03\x19\x03\x1A\x03\x1A\x03\x1B\x05\x1B\u0145" +
+		"\n\x1B\x03\x1B\x03\x1B\x03\x1B\x03\x1B\x03\x1C\x03\x1C\x03\x1C\x05\x1C" +
+		"\u014E\n\x1C\x03\x1C\x03\x1C\x05\x1C\u0152\n\x1C\x03\x1C\x03\x1C\x03\x1C" +
+		"\x05\x1C\u0157\n\x1C\x03\x1C\x05\x1C\u015A\n\x1C\x03\x1C\x03\x1C\x05\x1C" +
+		"\u015E\n\x1C\x05\x1C\u0160\n\x1C\x03\x1C\x03\x1C\x05\x1C\u0164\n\x1C\x03" +
+		"\x1C\x03\x1C\x05\x1C\u0168\n\x1C\x03\x1C\x03\x1C\x03\x1C\x05\x1C\u016D" +
+		"\n\x1C\x03\x1C\x03\x1C\x05\x1C\u0171\n\x1C\x03\x1C\x07\x1C\u0174\n\x1C" +
+		"\f\x1C\x0E\x1C\u0177\v\x1C\x03\x1D\x03\x1D\x03\x1E\x03\x1E\x03\x1F\x03" +
+		"\x1F\x06\x1F\u017F\n\x1F\r\x1F\x0E\x1F\u0180\x05\x1F\u0183\n\x1F\x03\x1F" +
+		"\x05\x1F\u0186\n\x1F\x03 \x05 \u0189\n \x03 \x03 \x03 \x03!\x05!\u018F" +
+		"\n!\x03!\x03!\x07!\u0193\n!\f!\x0E!\u0196\v!\x05!\u0198\n!\x03!\x03!\x03" +
+		"\"\x05\"\u019D\n\"\x03\"\x03\"\x03\"\x03\"\x05\"\u01A3\n\"\x07\"\u01A5" +
+		"\n\"\f\"\x0E\"\u01A8\v\"\x03\"\x03\"\x05\"\u01AC\n\"\x03\"\x03\"\x05\"" +
+		"\u01B0\n\"\x07\"\u01B2\n\"\f\"\x0E\"\u01B5\v\"\x03\"\x03\"\x03#\x03#\x03" +
+		"$\x03$\x03$\x03$\x05$\u01BF\n$\x03%\x03%\x03%\x03%\x03%\x03%\x05%\u01C7" +
+		"\n%\x03&\x05&\u01CA\n&\x03&\x03&\x03&\x05&\u01CF\n&\x03&\x03&\x05&\u01D3" +
+		"\n&\x03&\x03&\x03\'\x03\'\x03(\x05(\u01DA\n(\x03(\x03(\x03(\x05(\u01DF" +
+		"\n(\x03(\x03(\x05(\u01E3\n(\x03(\x03(\x03)\x03)\x03*\x05*\u01EA\n*\x03" +
+		"*\x03*\x03*\x05*\u01EF\n*\x03*\x03*\x05*\u01F3\n*\x03*\x03*\x03+\x03+" +
+		"\x03,\x05,\u01FA\n,\x03,\x03,\x03,\x03-\x05-\u0200\n-\x03-\x03-\x03-\x03" +
+		".\x05.\u0206\n.\x03.\x03.\x03.\x03/\x05/\u020C\n/\x03/\x03/\x03/\x030" +
+		"\x050\u0212\n0\x030\x030\x030\x031\x051\u0218\n1\x031\x031\x031\x032\x03" +
+		"2\x032\x072\u0220\n2\f2\x0E2\u0223\v2\x032\x032\x032\x032\x072\u0229\n" +
+		"2\f2\x0E2\u022C\v2\x032\x032\x032\x032\x072\u0232\n2\f2\x0E2\u0235\v2" +
+		"\x032\x052\u0238\n2\x033\x033\x033\x02\x02\x0364\x02\x02\x04\x02\x06\x02" +
+		"\b\x02\n\x02\f\x02\x0E\x02\x10\x02\x12\x02\x14\x02\x16\x02\x18\x02\x1A" +
+		"\x02\x1C\x02\x1E\x02 \x02\"\x02$\x02&\x02(\x02*\x02,\x02.\x020\x022\x02" +
+		"4\x026\x028\x02:\x02<\x02>\x02@\x02B\x02D\x02F\x02H\x02J\x02L\x02N\x02" +
+		"P\x02R\x02T\x02V\x02X\x02Z\x02\\\x02^\x02`\x02b\x02d\x02\x02\n\x03\x02" +
+		"\x19\x19\x03\x02++\x03\x02**\x03\x02\x11\x16\x04\x02\x1B\x1B$&\x03\x02" +
+		"\x1D\x1E\x03\x02\x1F \x03\x02--\u0271\x02n\x03\x02\x02\x02\x04t\x03\x02" +
+		"\x02\x02\x06\x80\x03\x02\x02\x02\b\x85\x03\x02\x02\x02\n\x89\x03\x02\x02" +
+		"\x02\f\x9F\x03\x02\x02\x02\x0E\xA2\x03\x02\x02\x02\x10\xA9\x03\x02\x02" +
+		"\x02\x12\xBE\x03\x02\x02\x02\x14\xC9\x03\x02\x02\x02\x16\xCB\x03\x02\x02" +
+		"\x02\x18\xCE\x03\x02\x02\x02\x1A\xF3\x03\x02\x02\x02\x1C\u0100\x03\x02" +
+		"\x02\x02\x1E\u0102\x03\x02\x02\x02 \u010A\x03\x02\x02\x02\"\u010F\x03" +
+		"\x02\x02\x02$\u0112\x03\x02\x02\x02&\u011F\x03\x02\x02\x02(\u0122\x03" +
+		"\x02\x02\x02*\u0128\x03\x02\x02\x02,\u012E\x03\x02\x02\x02.\u0136\x03" +
+		"\x02\x02\x020\u0139\x03\x02\x02\x022\u0141\x03\x02\x02\x024\u0144\x03" +
+		"\x02\x02\x026\u015F\x03\x02\x02\x028\u0178\x03\x02\x02\x02:\u017A\x03" +
+		"\x02\x02\x02<\u0182\x03\x02\x02\x02>\u0188\x03\x02\x02\x02@\u018E\x03" +
+		"\x02\x02\x02B\u019C\x03\x02\x02\x02D\u01B8\x03\x02\x02\x02F\u01BE\x03" +
+		"\x02\x02\x02H\u01C6\x03\x02\x02\x02J\u01C9\x03\x02\x02\x02L\u01D6\x03" +
+		"\x02\x02\x02N\u01D9\x03\x02\x02\x02P\u01E6\x03\x02\x02\x02R\u01E9\x03" +
+		"\x02\x02\x02T\u01F6\x03\x02\x02\x02V\u01F9\x03\x02\x02\x02X\u01FF\x03" +
+		"\x02\x02\x02Z\u0205\x03\x02\x02\x02\\\u020B\x03\x02\x02\x02^\u0211\x03" +
+		"\x02\x02\x02`\u0217\x03\x02\x02\x02b\u0237\x03\x02\x02\x02d\u0239\x03" +
+		"\x02\x02\x02fm\x05\x04\x03\x02gm\x05\n\x06\x02hm\x05\x0E\b\x02im\x05\x10" +
+		"\t\x02jm\x05\x18\r\x02km\x05@!\x02lf\x03\x02\x02\x02lg\x03\x02\x02\x02" +
+		"lh\x03\x02\x02\x02li\x03\x02\x02\x02lj\x03\x02\x02\x02lk\x03\x02\x02\x02" +
+		"mp\x03\x02\x02\x02nl\x03\x02\x02\x02no\x03\x02\x02\x02oq\x03\x02\x02\x02" +
+		"pn\x03\x02\x02\x02qr\x07\x02\x02\x03r\x03\x03\x02\x02\x02su\x07\x18\x02" +
+		"\x02ts\x03\x02\x02\x02tu\x03\x02\x02\x02uv\x03\x02\x02\x02vw\x07\'\x02" +
+		"\x02wx\x07\x03\x02\x02xy\x07\x18\x02\x02y|\x05\x06\x04\x02z{\x07\x18\x02" +
+		"\x02{}\x05\b\x05\x02|z\x03\x02\x02\x02|}\x03\x02\x02\x02}~\x03\x02\x02" +
+		"\x02~\x7F\x07\x19\x02\x02\x7F\x05\x03\x02\x02\x02\x80\x81\x07\x1A\x02" +
+		"\x02\x81\x07\x03\x02\x02\x02\x82\x84\n\x02\x02\x02\x83\x82\x03\x02\x02" +
+		"\x02\x84\x87\x03\x02\x02\x02\x85\x83\x03\x02\x02\x02\x85\x86\x03\x02\x02" +
+		"\x02\x86\t\x03\x02\x02\x02\x87\x85\x03\x02\x02\x02\x88\x8A\x07\x18\x02" +
+		"\x02\x89\x88\x03\x02\x02\x02\x89\x8A\x03\x02\x02\x02\x8A\x8B\x03\x02\x02" +
+		"\x02\x8B\x8C\x07\'\x02\x02\x8C\x8D\x07\x04\x02\x02\x8D\x8E\x05<\x1F\x02" +
+		"\x8E\x8F\x05\f\x07\x02\x8F\x90\x05@!\x02\x90\v\x03\x02\x02\x02\x91\xA0" +
+		"\x07\x1A\x02\x02\x92\x96\x07+\x02\x02\x93\x95\n\x03\x02\x02\x94\x93\x03" +
+		"\x02\x02\x02\x95\x98\x03\x02\x02\x02\x96\x94\x03\x02\x02\x02\x96\x97\x03" +
+		"\x02\x02\x02\x97\x99\x03\x02\x02\x02\x98\x96\x03\x02\x02\x02\x99\xA0\x07" +
+		"+\x02\x02\x9A\x9C\x07*\x02\x02\x9B\x9D\n\x04\x02\x02\x9C\x9B\x03\x02\x02" +
+		"\x02\x9C\x9D\x03\x02\x02\x02\x9D\x9E\x03\x02\x02\x02\x9E\xA0\x07*\x02" +
+		"\x02\x9F\x91\x03\x02\x02\x02\x9F\x92\x03\x02\x02\x02\x9F\x9A\x03\x02\x02" +
+		"\x02\xA0\r\x03\x02\x02\x02\xA1\xA3\x07\x18\x02\x02\xA2\xA1\x03\x02\x02" +
+		"\x02\xA2\xA3\x03\x02\x02\x02\xA3\xA4\x03\x02\x02\x02\xA4\xA5\x07\'\x02" +
+		"\x02\xA5\xA6\x07\x05\x02\x02\xA6\xA7\x05@!\x02\xA7\x0F\x03\x02\x02\x02" +
+		"\xA8\xAA\x07\x18\x02\x02\xA9\xA8\x03\x02\x02\x02\xA9\xAA\x03\x02\x02\x02" +
+		"\xAA\xAB\x03\x02\x02\x02\xAB\xAC\x07\'\x02\x02\xAC\xAD\x07\x06\x02\x02" +
+		"\xAD\xAE\x05<\x1F\x02\xAE\xB9\x05\x12\n\x02\xAF\xB1\x05<\x1F\x02\xB0\xAF" +
+		"\x03\x02\x02\x02\xB0\xB1\x03\x02\x02\x02\xB1\xB2\x03\x02\x02\x02\xB2\xB4" +
+		"\x07(\x02\x02\xB3\xB5\x05<\x1F\x02\xB4\xB3\x03\x02\x02\x02\xB4\xB5\x03" +
+		"\x02\x02\x02\xB5\xB6\x03\x02\x02\x02\xB6\xB8\x05\x12\n\x02\xB7\xB0\x03" +
+		"\x02\x02\x02\xB8\xBB\x03\x02\x02\x02\xB9\xB7\x03\x02\x02\x02\xB9\xBA\x03" +
+		"\x02\x02\x02\xBA\xBC\x03\x02\x02\x02\xBB\xB9\x03\x02\x02\x02\xBC\xBD\x05" +
+		"@!\x02\xBD\x11\x03\x02\x02\x02\xBE\xC7\x05\x14\v\x02\xBF\xC1\x05<\x1F" +
+		"\x02\xC0\xBF\x03\x02\x02\x02\xC0\xC1\x03\x02\x02\x02\xC1\xC2\x03\x02\x02" +
+		"\x02\xC2\xC4\x07\x1C\x02\x02\xC3\xC5\x05<\x1F\x02\xC4\xC3\x03\x02\x02" +
+		"\x02\xC4\xC5\x03\x02\x02\x02\xC5\xC6\x03\x02\x02\x02\xC6\xC8\x05\x16\f" +
+		"\x02\xC7\xC0\x03\x02\x02\x02\xC7\xC8\x03\x02\x02\x02\xC8\x13\x03\x02\x02" +
+		"\x02\xC9\xCA\x07\x1A\x02\x02\xCA\x15\x03\x02\x02\x02\xCB\xCC\x056\x1C" +
+		"\x02\xCC\x17\x03\x02\x02\x02\xCD\xCF\x07\x18\x02\x02\xCE\xCD\x03\x02\x02" +
+		"\x02\xCE\xCF\x03\x02\x02\x02\xCF\xD0\x03\x02\x02\x02\xD0\xD1\x07\'\x02" +
+		"\x02\xD1\xD2\x07\x07\x02\x02\xD2\xD9\x05<\x1F\x02\xD3\xD5\x05\"\x12\x02" +
+		"\xD4\xD6\x05<\x1F\x02\xD5\xD4\x03\x02\x02\x02\xD5\xD6\x03\x02\x02\x02" +
+		"\xD6\xD8\x03\x02\x02\x02\xD7\xD3\x03\x02\x02\x02\xD8\xDB\x03\x02\x02\x02" +
+		"\xD9\xD7\x03\x02\x02\x02\xD9\xDA\x03\x02\x02\x02\xDA\xDC\x03\x02\x02\x02" +
+		"\xDB\xD9\x03\x02\x02\x02\xDC\xDE\x05\x1A\x0E\x02\xDD\xDF\x05<\x1F\x02" +
+		"\xDE\xDD\x03\x02\x02\x02\xDE\xDF\x03\x02\x02\x02\xDF\xE6\x03\x02\x02\x02" +
+		"\xE0\xE2\x05\"\x12\x02\xE1\xE3\x05<\x1F\x02\xE2\xE1\x03\x02\x02\x02\xE2" +
+		"\xE3\x03\x02\x02\x02\xE3\xE5\x03\x02\x02\x02\xE4\xE0\x03\x02\x02\x02\xE5" +
+		"\xE8\x03\x02\x02\x02\xE6\xE4\x03\x02\x02\x02\xE6\xE7\x03\x02\x02\x02\xE7" +
+		"\xE9\x03\x02\x02\x02\xE8\xE6\x03\x02\x02\x02\xE9\xED\x05@!\x02\xEA\xEC" +
+		"\x05 \x11\x02\xEB\xEA\x03\x02\x02\x02\xEC\xEF\x03\x02\x02\x02\xED\xEB" +
+		"\x03\x02\x02\x02\xED\xEE\x03\x02\x02\x02\xEE\xF1\x03\x02\x02\x02\xEF\xED" +
+		"\x03\x02\x02\x02\xF0\xF2\x054\x1B\x02\xF1\xF0\x03\x02\x02\x02\xF1\xF2" +
+		"\x03\x02\x02\x02\xF2\x19\x03\x02\x02\x02\xF3\xF5\x05\x1C\x0F\x02\xF4\xF6" +
+		"\x05<\x1F\x02\xF5\xF4\x03\x02\x02\x02\xF5\xF6\x03\x02\x02\x02\xF6\xF9" +
+		"\x03\x02\x02\x02\xF7\xFA\x05<\x1F\x02\xF8\xFA\x07(\x02\x02\xF9\xF7\x03" +
+		"\x02\x02\x02\xF9\xF8\x03\x02\x02\x02\xFA\xFC\x03\x02\x02\x02\xFB\xFD\x05" +
+		"<\x1F\x02\xFC\xFB\x03\x02\x02\x02\xFC\xFD\x03\x02\x02\x02\xFD\xFE\x03" +
+		"\x02\x02\x02\xFE\xFF\x05\x1E\x10\x02\xFF\x1B\x03\x02\x02\x02\u0100\u0101" +
+		"\x07\x1A\x02\x02\u0101\x1D\x03\x02\x02\x02\u0102\u0103\x056\x1C\x02\u0103" +
+		"\x1F\x03\x02\x02\x02\u0104\u010B\x05,\x17\x02\u0105\u010B\x05\x0E\b\x02" +
+		"\u0106\u010B\x050\x19\x02\u0107\u010B\x05\x10\t\x02\u0108\u010B\x05B\"" +
+		"\x02\u0109\u010B\x05@!\x02\u010A\u0104\x03\x02\x02\x02\u010A\u0105\x03" +
+		"\x02\x02\x02\u010A\u0106\x03\x02\x02\x02\u010A\u0107\x03\x02\x02\x02\u010A" +
+		"\u0108\x03\x02\x02\x02\u010A\u0109\x03\x02\x02\x02\u010B!\x03\x02\x02" +
+		"\x02\u010C\u0110\x05$\x13\x02\u010D\u0110\x05(\x15\x02\u010E\u0110\x05" +
+		"*\x16\x02\u010F\u010C\x03\x02\x02\x02\u010F\u010D\x03\x02\x02\x02\u010F" +
+		"\u010E\x03\x02\x02\x02\u0110#\x03\x02\x02\x02\u0111\u0113\x07\x18\x02" +
+		"\x02\u0112\u0111\x03\x02\x02\x02\u0112\u0113\x03\x02\x02\x02\u0113\u0114" +
+		"\x03\x02\x02\x02\u0114\u0115\x07 \x02\x02\u0115\u0117\x07\v\x02\x02\u0116" +
+		"\u0118\x05<\x1F\x02\u0117\u0116\x03\x02\x02\x02\u0117\u0118\x03\x02\x02" +
+		"\x02\u0118\u0119\x03\x02\x02\x02\u0119\u011B\x07\x1C\x02\x02\u011A\u011C" +
+		"\x05<\x1F\x02\u011B\u011A\x03\x02\x02\x02\u011B\u011C\x03\x02\x02\x02" +
+		"\u011C\u011D\x03\x02\x02\x02\u011D\u011E\x05&\x14\x02\u011E%\x03\x02\x02" +
+		"\x02\u011F\u0120\x07\x1A\x02\x02\u0120\'\x03\x02\x02\x02\u0121\u0123\x07" +
+		"\x18\x02\x02\u0122\u0121\x03\x02\x02\x02\u0122\u0123\x03\x02\x02\x02\u0123" +
+		"\u0124\x03\x02\x02\x02\u0124\u0125\x07 \x02\x02\u0125\u0126\x07\f\x02" +
+		"\x02\u0126)\x03\x02\x02\x02\u0127\u0129\x07\x18\x02\x02\u0128\u0127\x03" +
+		"\x02\x02\x02\u0128\u0129\x03\x02\x02\x02\u0129\u012A\x03\x02\x02\x02\u012A" +
+		"\u012B\x07 \x02\x02\u012B\u012C\x07\r\x02\x02\u012C+\x03\x02\x02\x02\u012D" +
+		"\u012F\x07\x18\x02\x02\u012E\u012D\x03\x02\x02\x02\u012E\u012F\x03\x02" +
+		"\x02\x02\u012F\u0130\x03\x02\x02\x02\u0130\u0131\x07\'\x02\x02\u0131\u0132" +
+		"\x07\b\x02\x02\u0132\u0133\x05<\x1F\x02\u0133\u0134\x05.\x18\x02\u0134" +
+		"\u0135\x05@!\x02\u0135-\x03\x02\x02\x02\u0136\u0137\t\x05\x02\x02\u0137" +
+		"/\x03\x02\x02\x02\u0138\u013A\x07\x18\x02\x02\u0139\u0138\x03\x02\x02" +
+		"\x02\u0139\u013A\x03\x02\x02\x02\u013A\u013B\x03\x02\x02\x02\u013B\u013C" +
+		"\x07\'\x02\x02\u013C\u013D\x07\t\x02\x02\u013D\u013E\x05<\x1F\x02\u013E" +
+		"\u013F\x052\x1A\x02\u013F\u0140\x05@!\x02\u01401\x03\x02\x02\x02\u0141" +
+		"\u0142\t\x06\x02\x02\u01423\x03\x02\x02\x02\u0143\u0145\x07\x18\x02\x02" +
+		"\u0144\u0143\x03\x02\x02\x02\u0144\u0145\x03\x02\x02\x02\u0145\u0146\x03" +
+		"\x02\x02\x02\u0146\u0147\x07\'\x02\x02\u0147\u0148\x07\n\x02\x02\u0148" +
+		"\u0149\x05@!\x02\u01495\x03\x02\x02\x02\u014A\u014B\b\x1C\x01\x02\u014B" +
+		"\u014D\x07\"\x02\x02\u014C\u014E\x07\x18\x02\x02\u014D\u014C\x03\x02\x02" +
+		"\x02\u014D\u014E\x03\x02\x02\x02\u014E\u014F\x03\x02\x02\x02\u014F\u0151" +
+		"\x056\x1C\x02\u0150\u0152\x07\x18\x02\x02\u0151\u0150\x03\x02\x02\x02" +
+		"\u0151\u0152\x03\x02\x02\x02\u0152\u0153\x03\x02\x02\x02\u0153\u0154\x07" +
+		"#\x02\x02\u0154\u0160\x03\x02\x02\x02\u0155\u0157\t\x07\x02\x02\u0156" +
+		"\u0155\x03\x02\x02\x02\u0156\u0157\x03\x02\x02\x02\u0157\u0159\x03\x02" +
+		"\x02\x02\u0158\u015A\x07\x18\x02\x02\u0159\u0158\x03\x02\x02\x02\u0159" +
+		"\u015A\x03\x02\x02\x02\u015A\u015D\x03\x02\x02\x02\u015B\u015E\x05:\x1E" +
+		"\x02\u015C\u015E\x058\x1D\x02\u015D\u015B\x03\x02\x02\x02\u015D\u015C" +
+		"\x03\x02\x02\x02\u015E\u0160\x03\x02\x02\x02\u015F\u014A\x03\x02\x02\x02" +
+		"\u015F\u0156\x03\x02\x02\x02\u0160\u0175\x03\x02\x02\x02\u0161\u0163\f" +
+		"\x05\x02\x02\u0162\u0164\x07\x18\x02\x02\u0163\u0162\x03\x02\x02\x02\u0163" +
+		"\u0164\x03\x02\x02\x02\u0164\u0165\x03\x02\x02\x02\u0165\u0167\t\b\x02" +
+		"\x02\u0166\u0168\x07\x18\x02\x02\u0167\u0166\x03\x02\x02\x02\u0167\u0168" +
+		"\x03\x02\x02\x02\u0168\u0169\x03\x02\x02\x02\u0169\u0174\x056\x1C\x06" +
+		"\u016A\u016C\f\x04\x02\x02\u016B\u016D\x07\x18\x02\x02\u016C\u016B\x03" +
+		"\x02\x02\x02\u016C\u016D\x03\x02\x02\x02\u016D\u016E\x03\x02\x02\x02\u016E" +
+		"\u0170\t\x07\x02\x02\u016F\u0171\x07\x18\x02\x02\u0170\u016F\x03\x02\x02" +
+		"\x02\u0170\u0171\x03\x02\x02\x02\u0171\u0172\x03\x02\x02\x02\u0172\u0174" +
+		"\x056\x1C\x05\u0173\u0161\x03\x02\x02\x02\u0173\u016A\x03\x02\x02\x02" +
+		"\u0174\u0177\x03\x02\x02\x02\u0175\u0173\x03\x02\x02\x02\u0175\u0176\x03" +
+		"\x02\x02\x02\u01767\x03\x02\x02\x02\u0177\u0175\x03\x02\x02\x02\u0178" +
+		"\u0179\x07\x1A\x02\x02\u01799\x03\x02\x02\x02\u017A\u017B\t\x06\x02\x02" +
+		"\u017B;\x03\x02\x02\x02\u017C\u0183\x07\x18\x02\x02\u017D\u017F\x05> " +
+		"\x02\u017E\u017D\x03\x02\x02\x02\u017F\u0180\x03\x02\x02\x02\u0180\u017E" +
+		"\x03\x02\x02\x02\u0180\u0181\x03\x02\x02\x02\u0181\u0183\x03\x02\x02\x02" +
+		"\u0182\u017C\x03\x02\x02\x02\u0182\u017E\x03\x02\x02\x02\u0183\u0185\x03" +
+		"\x02\x02\x02\u0184\u0186\x07\x18\x02\x02\u0185\u0184\x03\x02\x02\x02\u0185" +
+		"\u0186\x03\x02\x02\x02\u0186=\x03\x02\x02\x02\u0187\u0189\x07\x18\x02" +
+		"\x02\u0188\u0187\x03\x02\x02\x02\u0188\u0189\x03\x02\x02\x02\u0189\u018A" +
+		"\x03\x02\x02\x02\u018A\u018B\x07\x1E\x02\x02\u018B\u018C\x05@!\x02\u018C" +
+		"?\x03\x02\x02\x02\u018D\u018F\x07\x18\x02\x02\u018E\u018D\x03\x02\x02" +
+		"\x02\u018E\u018F\x03\x02\x02\x02\u018F\u0197\x03\x02\x02\x02\u0190\u0194" +
+		"\x07)\x02\x02\u0191\u0193\n\x02\x02\x02\u0192\u0191\x03\x02\x02\x02\u0193" +
+		"\u0196\x03\x02\x02\x02\u0194\u0192\x03\x02\x02\x02\u0194\u0195\x03\x02" +
+		"\x02\x02\u0195\u0198\x03\x02\x02\x02\u0196\u0194\x03\x02\x02\x02\u0197" +
+		"\u0190\x03\x02\x02\x02\u0197\u0198\x03\x02\x02\x02\u0198\u0199\x03\x02" +
+		"\x02\x02\u0199\u019A\x07\x19\x02\x02\u019AA\x03\x02\x02\x02\u019B\u019D" +
+		"\x07\x18\x02\x02\u019C\u019B\x03\x02\x02\x02\u019C\u019D\x03\x02\x02\x02" +
+		"\u019D\u019E\x03\x02\x02\x02\u019E\u019F\x05D#\x02\u019F\u01A6\x05<\x1F" +
+		"\x02\u01A0\u01A2\x05F$\x02\u01A1\u01A3\x05<\x1F\x02\u01A2\u01A1\x03\x02" +
+		"\x02\x02\u01A2\u01A3\x03\x02\x02\x02\u01A3\u01A5\x03\x02\x02\x02\u01A4" +
+		"\u01A0\x03\x02\x02\x02\u01A5\u01A8\x03\x02\x02\x02\u01A6\u01A4\x03\x02" +
+		"\x02\x02\u01A6\u01A7\x03\x02\x02\x02\u01A7\u01A9\x03\x02\x02\x02\u01A8" +
+		"\u01A6\x03\x02\x02\x02\u01A9\u01AB\x05b2\x02\u01AA\u01AC\x05<\x1F\x02" +
+		"\u01AB\u01AA\x03\x02\x02\x02\u01AB\u01AC\x03\x02\x02\x02\u01AC\u01B3\x03" +
+		"\x02\x02\x02\u01AD\u01AF\x05F$\x02\u01AE\u01B0\x05<\x1F\x02\u01AF\u01AE" +
+		"\x03\x02\x02\x02\u01AF\u01B0\x03\x02\x02\x02\u01B0\u01B2\x03\x02\x02\x02" +
+		"\u01B1\u01AD\x03\x02\x02\x02\u01B2\u01B5\x03\x02\x02\x02\u01B3\u01B1\x03" +
+		"\x02\x02\x02\u01B3\u01B4\x03\x02\x02\x02\u01B4\u01B6\x03\x02\x02\x02\u01B5" +
+		"\u01B3\x03\x02\x02\x02\u01B6\u01B7\x05@!\x02\u01B7C\x03\x02\x02\x02\u01B8" +
+		"\u01B9\x07\x1A\x02\x02\u01B9E\x03\x02\x02\x02\u01BA\u01BF\x05J&\x02\u01BB" +
+		"\u01BF\x05N(\x02\u01BC\u01BF\x05R*\x02\u01BD\u01BF\x05H%\x02\u01BE\u01BA" +
+		"\x03\x02\x02\x02\u01BE\u01BB\x03\x02\x02\x02\u01BE\u01BC\x03\x02\x02\x02" +
+		"\u01BE\u01BD\x03\x02\x02\x02\u01BFG\x03\x02\x02\x02\u01C0\u01C7\x05V," +
+		"\x02\u01C1\u01C7\x05X-\x02\u01C2\u01C7\x05Z.\x02\u01C3\u01C7\x05\\/\x02" +
+		"\u01C4\u01C7\x05^0\x02\u01C5\u01C7\x05`1\x02\u01C6\u01C0\x03\x02\x02\x02" +
+		"\u01C6\u01C1\x03\x02\x02\x02\u01C6\u01C2\x03\x02\x02\x02\u01C6\u01C3\x03" +
+		"\x02\x02\x02\u01C6\u01C4\x03\x02\x02\x02\u01C6\u01C5\x03\x02\x02\x02\u01C7" +
+		"I\x03\x02\x02\x02\u01C8\u01CA\x07\x18\x02\x02\u01C9\u01C8\x03\x02\x02" +
+		"\x02\u01C9\u01CA\x03\x02\x02\x02\u01CA\u01CB\x03\x02\x02\x02\u01CB\u01CC" +
+		"\x07 \x02\x02\u01CC\u01CE\x07\x0E\x02\x02\u01CD\u01CF\x05<\x1F\x02\u01CE" +
+		"\u01CD\x03\x02\x02\x02\u01CE\u01CF\x03\x02\x02\x02\u01CF\u01D0\x03\x02" +
+		"\x02\x02\u01D0\u01D2\x07\x1C\x02\x02\u01D1\u01D3\x05<\x1F\x02\u01D2\u01D1" +
+		"\x03\x02\x02\x02\u01D2\u01D3\x03\x02\x02\x02\u01D3\u01D4\x03\x02\x02\x02" +
+		"\u01D4\u01D5\x05L\'\x02\u01D5K\x03\x02\x02\x02\u01D6\u01D7\x07\x1B\x02" +
+		"\x02\u01D7M\x03\x02\x02\x02\u01D8\u01DA\x07\x18\x02\x02\u01D9\u01D8\x03" +
+		"\x02\x02\x02\u01D9\u01DA\x03\x02\x02\x02\u01DA\u01DB\x03\x02\x02\x02\u01DB" +
+		"\u01DC\x07 \x02\x02\u01DC\u01DE\x07\x0F\x02\x02\u01DD\u01DF\x05<\x1F\x02" +
+		"\u01DE\u01DD\x03\x02\x02\x02\u01DE\u01DF\x03\x02\x02\x02\u01DF\u01E0\x03" +
+		"\x02\x02\x02\u01E0\u01E2\x07\x1C\x02\x02\u01E1\u01E3\x05<\x1F\x02\u01E2" +
+		"\u01E1\x03\x02\x02\x02\u01E2\u01E3\x03\x02\x02\x02\u01E3\u01E4\x03\x02" +
+		"\x02\x02\u01E4\u01E5\x05P)\x02\u01E5O\x03\x02\x02\x02\u01E6\u01E7\x07" +
+		"\x1A\x02\x02\u01E7Q\x03\x02\x02\x02\u01E8\u01EA\x07\x18\x02\x02\u01E9" +
+		"\u01E8\x03\x02\x02\x02\u01E9\u01EA\x03\x02\x02\x02\u01EA\u01EB\x03\x02" +
+		"\x02\x02\u01EB\u01EC\x07 \x02\x02\u01EC\u01EE\x07\x10\x02\x02\u01ED\u01EF" +
+		"\x05<\x1F\x02\u01EE\u01ED\x03\x02\x02\x02\u01EE\u01EF\x03\x02\x02\x02" +
+		"\u01EF\u01F0\x03\x02\x02\x02\u01F0\u01F2\x07\x1C\x02\x02\u01F1\u01F3\x05" +
+		"<\x1F\x02\u01F2\u01F1\x03\x02\x02\x02\u01F2\u01F3\x03\x02\x02\x02\u01F3" +
+		"\u01F4\x03\x02\x02\x02\u01F4\u01F5\x05T+\x02\u01F5S\x03\x02\x02\x02\u01F6" +
+		"\u01F7\x07\x1B\x02\x02\u01F7U\x03\x02\x02\x02\u01F8\u01FA\x07\x18\x02" +
+		"\x02\u01F9\u01F8\x03\x02\x02\x02\u01F9\u01FA\x03\x02\x02\x02\u01FA\u01FB" +
+		"\x03\x02\x02\x02\u01FB\u01FC\x07 \x02\x02\u01FC\u01FD\x07\x11\x02\x02" +
+		"\u01FDW\x03\x02\x02\x02\u01FE\u0200\x07\x18\x02\x02\u01FF\u01FE\x03\x02" +
+		"\x02\x02\u01FF\u0200\x03\x02\x02\x02\u0200\u0201\x03\x02\x02\x02\u0201" +
+		"\u0202\x07 \x02\x02\u0202\u0203\x07\x12\x02\x02\u0203Y\x03\x02\x02\x02" +
+		"\u0204\u0206\x07\x18\x02\x02\u0205\u0204\x03\x02\x02\x02\u0205\u0206\x03" +
+		"\x02\x02\x02\u0206\u0207\x03\x02\x02\x02\u0207\u0208\x07 \x02\x02\u0208" +
+		"\u0209\x07\x13\x02\x02\u0209[\x03\x02\x02\x02\u020A\u020C\x07\x18\x02" +
+		"\x02\u020B\u020A\x03\x02\x02\x02\u020B\u020C\x03\x02\x02\x02\u020C\u020D" +
+		"\x03\x02\x02\x02\u020D\u020E\x07 \x02\x02\u020E\u020F\x07\x14\x02\x02" +
+		"\u020F]\x03\x02\x02\x02\u0210\u0212\x07\x18\x02\x02\u0211\u0210\x03\x02" +
+		"\x02\x02\u0211\u0212\x03\x02\x02\x02\u0212\u0213\x03\x02\x02\x02\u0213" +
+		"\u0214\x07 \x02\x02\u0214\u0215\x07\x15\x02\x02\u0215_\x03\x02\x02\x02" +
+		"\u0216\u0218\x07\x18\x02\x02\u0217\u0216\x03\x02\x02\x02\u0217\u0218\x03" +
+		"\x02\x02\x02\u0218\u0219\x03\x02\x02\x02\u0219\u021A\x07 \x02\x02\u021A" +
+		"\u021B\x07\x16\x02\x02\u021Ba\x03\x02\x02\x02\u021C\u0221\x07,\x02\x02" +
+		"\u021D\u0220\x05d3\x02\u021E\u0220\n\t\x02\x02\u021F\u021D\x03\x02\x02" +
+		"\x02\u021F\u021E\x03\x02\x02\x02\u0220\u0223\x03\x02\x02\x02\u0221\u021F" +
+		"\x03\x02\x02\x02\u0221\u0222\x03\x02\x02\x02\u0222\u0224\x03\x02\x02\x02" +
+		"\u0223\u0221\x03\x02\x02\x02\u0224\u0238\x07-\x02\x02\u0225\u022A\x07" +
+		"+\x02\x02\u0226\u0229\x05d3\x02\u0227\u0229\n\x03\x02\x02\u0228\u0226" +
+		"\x03\x02\x02\x02\u0228\u0227\x03\x02\x02\x02\u0229\u022C\x03\x02\x02\x02" +
+		"\u022A\u0228\x03";
+	private static readonly _serializedATNSegment1: string =
+		"\x02\x02\x02\u022A\u022B\x03\x02\x02\x02\u022B\u022D\x03\x02\x02\x02\u022C" +
+		"\u022A\x03\x02\x02\x02\u022D\u0238\x07+\x02\x02\u022E\u0233\x07*\x02\x02" +
+		"\u022F\u0232\x05d3\x02\u0230\u0232\n\x04\x02\x02\u0231\u022F\x03\x02\x02" +
+		"\x02\u0231\u0230\x03\x02\x02\x02\u0232\u0235\x03\x02\x02\x02\u0233\u0231" +
+		"\x03\x02\x02\x02\u0233\u0234\x03\x02\x02\x02\u0234\u0236\x03\x02\x02\x02" +
+		"\u0235\u0233\x03\x02\x02\x02\u0236\u0238\x07*\x02\x02\u0237\u021C\x03" +
+		"\x02\x02\x02\u0237\u0225\x03\x02\x02\x02\u0237\u022E\x03\x02\x02\x02\u0238" +
+		"c\x03\x02\x02\x02\u0239\u023A\x07\x17\x02\x02\u023Ae\x03\x02\x02\x02Y" +
+		"lnt|\x85\x89\x96\x9C\x9F\xA2\xA9\xB0\xB4\xB9\xC0\xC4\xC7\xCE\xD5\xD9\xDE" +
+		"\xE2\xE6\xED\xF1\xF5\xF9\xFC\u010A\u010F\u0112\u0117\u011B\u0122\u0128" +
+		"\u012E\u0139\u0144\u014D\u0151\u0156\u0159\u015D\u015F\u0163\u0167\u016C" +
+		"\u0170\u0173\u0175\u0180\u0182\u0185\u0188\u018E\u0194\u0197\u019C\u01A2" +
+		"\u01A6\u01AB\u01AF\u01B3\u01BE\u01C6\u01C9\u01CE\u01D2\u01D9\u01DE\u01E2" +
+		"\u01E9\u01EE\u01F2\u01F9\u01FF\u0205\u020B\u0211\u0217\u021F\u0221\u0228" +
+		"\u022A\u0231\u0233\u0237";
+	public static readonly _serializedATN: string = Utils.join(
+		[
+			msgParser._serializedATNSegment0,
+			msgParser._serializedATNSegment1,
+		],
+		"",
+	);
 	public static __ATN: ATN;
 	public static get _ATN(): ATN {
 		if (!msgParser.__ATN) {
@@ -1206,13 +3231,13 @@ export class msgParser extends Parser {
 
 export class MsgContentContext extends ParserRuleContext {
 	public EOF(): TerminalNode { return this.getToken(msgParser.EOF, 0); }
-	public var(): VarContext[];
-	public var(i: number): VarContext;
-	public var(i?: number): VarContext | VarContext[] {
+	public title(): TitleContext[];
+	public title(i: number): TitleContext;
+	public title(i?: number): TitleContext | TitleContext[] {
 		if (i === undefined) {
-			return this.getRuleContexts(VarContext);
+			return this.getRuleContexts(TitleContext);
 		} else {
-			return this.getRuleContext(i, VarContext);
+			return this.getRuleContext(i, TitleContext);
 		}
 	}
 	public ident(): IdentContext[];
@@ -1224,22 +3249,40 @@ export class MsgContentContext extends ParserRuleContext {
 			return this.getRuleContext(i, IdentContext);
 		}
 	}
-	public emptyLine(): EmptyLineContext[];
-	public emptyLine(i: number): EmptyLineContext;
-	public emptyLine(i?: number): EmptyLineContext | EmptyLineContext[] {
+	public page(): PageContext[];
+	public page(i: number): PageContext;
+	public page(i?: number): PageContext | PageContext[] {
 		if (i === undefined) {
-			return this.getRuleContexts(EmptyLineContext);
+			return this.getRuleContexts(PageContext);
 		} else {
-			return this.getRuleContext(i, EmptyLineContext);
+			return this.getRuleContext(i, PageContext);
 		}
 	}
-	public WHITESPACE(): TerminalNode[];
-	public WHITESPACE(i: number): TerminalNode;
-	public WHITESPACE(i?: number): TerminalNode | TerminalNode[] {
+	public literal(): LiteralContext[];
+	public literal(i: number): LiteralContext;
+	public literal(i?: number): LiteralContext | LiteralContext[] {
 		if (i === undefined) {
-			return this.getTokens(msgParser.WHITESPACE);
+			return this.getRuleContexts(LiteralContext);
 		} else {
-			return this.getToken(msgParser.WHITESPACE, i);
+			return this.getRuleContext(i, LiteralContext);
+		}
+	}
+	public facility(): FacilityContext[];
+	public facility(i: number): FacilityContext;
+	public facility(i?: number): FacilityContext | FacilityContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(FacilityContext);
+		} else {
+			return this.getRuleContext(i, FacilityContext);
+		}
+	}
+	public eolMayComment(): EolMayCommentContext[];
+	public eolMayComment(i: number): EolMayCommentContext;
+	public eolMayComment(i?: number): EolMayCommentContext | EolMayCommentContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(EolMayCommentContext);
+		} else {
+			return this.getRuleContext(i, EolMayCommentContext);
 		}
 	}
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
@@ -1270,62 +3313,46 @@ export class MsgContentContext extends ParserRuleContext {
 }
 
 
-export class VarContext extends ParserRuleContext {
-	public varKeyword(): VarKeywordContext {
-		return this.getRuleContext(0, VarKeywordContext);
-	}
-	public sep(): SepContext[];
-	public sep(i: number): SepContext;
-	public sep(i?: number): SepContext | SepContext[] {
+export class TitleContext extends ParserRuleContext {
+	public DOT(): TerminalNode { return this.getToken(msgParser.DOT, 0); }
+	public TITLE(): TerminalNode { return this.getToken(msgParser.TITLE, 0); }
+	public WHITESPACE(): TerminalNode[];
+	public WHITESPACE(i: number): TerminalNode;
+	public WHITESPACE(i?: number): TerminalNode | TerminalNode[] {
 		if (i === undefined) {
-			return this.getRuleContexts(SepContext);
+			return this.getTokens(msgParser.WHITESPACE);
 		} else {
-			return this.getRuleContext(i, SepContext);
+			return this.getToken(msgParser.WHITESPACE, i);
 		}
 	}
-	public varDefinition(): VarDefinitionContext[];
-	public varDefinition(i: number): VarDefinitionContext;
-	public varDefinition(i?: number): VarDefinitionContext | VarDefinitionContext[] {
-		if (i === undefined) {
-			return this.getRuleContexts(VarDefinitionContext);
-		} else {
-			return this.getRuleContext(i, VarDefinitionContext);
-		}
+	public titleName(): TitleNameContext {
+		return this.getRuleContext(0, TitleNameContext);
 	}
-	public eolMayComment(): EolMayCommentContext {
-		return this.getRuleContext(0, EolMayCommentContext);
-	}
-	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
-	public COMMA(): TerminalNode[];
-	public COMMA(i: number): TerminalNode;
-	public COMMA(i?: number): TerminalNode | TerminalNode[] {
-		if (i === undefined) {
-			return this.getTokens(msgParser.COMMA);
-		} else {
-			return this.getToken(msgParser.COMMA, i);
-		}
+	public NEWLINE(): TerminalNode { return this.getToken(msgParser.NEWLINE, 0); }
+	public titleDescription(): TitleDescriptionContext | undefined {
+		return this.tryGetRuleContext(0, TitleDescriptionContext);
 	}
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
 	// @Override
-	public get ruleIndex(): number { return msgParser.RULE_var; }
+	public get ruleIndex(): number { return msgParser.RULE_title; }
 	// @Override
 	public enterRule(listener: msgListener): void {
-		if (listener.enterVar) {
-			listener.enterVar(this);
+		if (listener.enterTitle) {
+			listener.enterTitle(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: msgListener): void {
-		if (listener.exitVar) {
-			listener.exitVar(this);
+		if (listener.exitTitle) {
+			listener.exitTitle(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: msgVisitor<Result>): Result {
-		if (visitor.visitVar) {
-			return visitor.visitVar(this);
+		if (visitor.visitTitle) {
+			return visitor.visitTitle(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -1333,104 +3360,29 @@ export class VarContext extends ParserRuleContext {
 }
 
 
-export class VarKeywordContext extends ParserRuleContext {
-	public VAR(): TerminalNode { return this.getToken(msgParser.VAR, 0); }
-	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
-		super(parent, invokingState);
-	}
-	// @Override
-	public get ruleIndex(): number { return msgParser.RULE_varKeyword; }
-	// @Override
-	public enterRule(listener: msgListener): void {
-		if (listener.enterVarKeyword) {
-			listener.enterVarKeyword(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: msgListener): void {
-		if (listener.exitVarKeyword) {
-			listener.exitVarKeyword(this);
-		}
-	}
-	// @Override
-	public accept<Result>(visitor: msgVisitor<Result>): Result {
-		if (visitor.visitVarKeyword) {
-			return visitor.visitVarKeyword(this);
-		} else {
-			return visitor.visitChildren(this);
-		}
-	}
-}
-
-
-export class VarDefinitionContext extends ParserRuleContext {
-	public varName(): VarNameContext {
-		return this.getRuleContext(0, VarNameContext);
-	}
-	public ASSIGN(): TerminalNode | undefined { return this.tryGetToken(msgParser.ASSIGN, 0); }
-	public varValue(): VarValueContext | undefined {
-		return this.tryGetRuleContext(0, VarValueContext);
-	}
-	public sep(): SepContext[];
-	public sep(i: number): SepContext;
-	public sep(i?: number): SepContext | SepContext[] {
-		if (i === undefined) {
-			return this.getRuleContexts(SepContext);
-		} else {
-			return this.getRuleContext(i, SepContext);
-		}
-	}
-	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
-		super(parent, invokingState);
-	}
-	// @Override
-	public get ruleIndex(): number { return msgParser.RULE_varDefinition; }
-	// @Override
-	public enterRule(listener: msgListener): void {
-		if (listener.enterVarDefinition) {
-			listener.enterVarDefinition(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: msgListener): void {
-		if (listener.exitVarDefinition) {
-			listener.exitVarDefinition(this);
-		}
-	}
-	// @Override
-	public accept<Result>(visitor: msgVisitor<Result>): Result {
-		if (visitor.visitVarDefinition) {
-			return visitor.visitVarDefinition(this);
-		} else {
-			return visitor.visitChildren(this);
-		}
-	}
-}
-
-
-export class VarNameContext extends ParserRuleContext {
+export class TitleNameContext extends ParserRuleContext {
 	public NAME(): TerminalNode { return this.getToken(msgParser.NAME, 0); }
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
 	// @Override
-	public get ruleIndex(): number { return msgParser.RULE_varName; }
+	public get ruleIndex(): number { return msgParser.RULE_titleName; }
 	// @Override
 	public enterRule(listener: msgListener): void {
-		if (listener.enterVarName) {
-			listener.enterVarName(this);
+		if (listener.enterTitleName) {
+			listener.enterTitleName(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: msgListener): void {
-		if (listener.exitVarName) {
-			listener.exitVarName(this);
+		if (listener.exitTitleName) {
+			listener.exitTitleName(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: msgVisitor<Result>): Result {
-		if (visitor.visitVarName) {
-			return visitor.visitVarName(this);
+		if (visitor.visitTitleName) {
+			return visitor.visitTitleName(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -1438,31 +3390,37 @@ export class VarNameContext extends ParserRuleContext {
 }
 
 
-export class VarValueContext extends ParserRuleContext {
-	public expression(): ExpressionContext {
-		return this.getRuleContext(0, ExpressionContext);
+export class TitleDescriptionContext extends ParserRuleContext {
+	public NEWLINE(): TerminalNode[];
+	public NEWLINE(i: number): TerminalNode;
+	public NEWLINE(i?: number): TerminalNode | TerminalNode[] {
+		if (i === undefined) {
+			return this.getTokens(msgParser.NEWLINE);
+		} else {
+			return this.getToken(msgParser.NEWLINE, i);
+		}
 	}
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
 	// @Override
-	public get ruleIndex(): number { return msgParser.RULE_varValue; }
+	public get ruleIndex(): number { return msgParser.RULE_titleDescription; }
 	// @Override
 	public enterRule(listener: msgListener): void {
-		if (listener.enterVarValue) {
-			listener.enterVarValue(this);
+		if (listener.enterTitleDescription) {
+			listener.enterTitleDescription(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: msgListener): void {
-		if (listener.exitVarValue) {
-			listener.exitVarValue(this);
+		if (listener.exitTitleDescription) {
+			listener.exitTitleDescription(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: msgVisitor<Result>): Result {
-		if (visitor.visitVarValue) {
-			return visitor.visitVarValue(this);
+		if (visitor.visitTitleDescription) {
+			return visitor.visitTitleDescription(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -1471,16 +3429,17 @@ export class VarValueContext extends ParserRuleContext {
 
 
 export class IdentContext extends ParserRuleContext {
-	public identKeyword(): IdentKeywordContext {
-		return this.getRuleContext(0, IdentKeywordContext);
-	}
+	public DOT(): TerminalNode { return this.getToken(msgParser.DOT, 0); }
+	public IDENT(): TerminalNode { return this.getToken(msgParser.IDENT, 0); }
 	public sep(): SepContext {
 		return this.getRuleContext(0, SepContext);
 	}
-	public identString(): IdentStringContext {
-		return this.getRuleContext(0, IdentStringContext);
+	public identValue(): IdentValueContext {
+		return this.getRuleContext(0, IdentValueContext);
 	}
-	public NEWLINE(): TerminalNode { return this.getToken(msgParser.NEWLINE, 0); }
+	public eolMayComment(): EolMayCommentContext {
+		return this.getRuleContext(0, EolMayCommentContext);
+	}
 	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
@@ -1510,29 +3469,47 @@ export class IdentContext extends ParserRuleContext {
 }
 
 
-export class IdentKeywordContext extends ParserRuleContext {
-	public IDENT(): TerminalNode { return this.getToken(msgParser.IDENT, 0); }
+export class IdentValueContext extends ParserRuleContext {
+	public NAME(): TerminalNode | undefined { return this.tryGetToken(msgParser.NAME, 0); }
+	public QUOTA(): TerminalNode[];
+	public QUOTA(i: number): TerminalNode;
+	public QUOTA(i?: number): TerminalNode | TerminalNode[] {
+		if (i === undefined) {
+			return this.getTokens(msgParser.QUOTA);
+		} else {
+			return this.getToken(msgParser.QUOTA, i);
+		}
+	}
+	public APOSTR(): TerminalNode[];
+	public APOSTR(i: number): TerminalNode;
+	public APOSTR(i?: number): TerminalNode | TerminalNode[] {
+		if (i === undefined) {
+			return this.getTokens(msgParser.APOSTR);
+		} else {
+			return this.getToken(msgParser.APOSTR, i);
+		}
+	}
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
 	// @Override
-	public get ruleIndex(): number { return msgParser.RULE_identKeyword; }
+	public get ruleIndex(): number { return msgParser.RULE_identValue; }
 	// @Override
 	public enterRule(listener: msgListener): void {
-		if (listener.enterIdentKeyword) {
-			listener.enterIdentKeyword(this);
+		if (listener.enterIdentValue) {
+			listener.enterIdentValue(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: msgListener): void {
-		if (listener.exitIdentKeyword) {
-			listener.exitIdentKeyword(this);
+		if (listener.exitIdentValue) {
+			listener.exitIdentValue(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: msgVisitor<Result>): Result {
-		if (visitor.visitIdentKeyword) {
-			return visitor.visitIdentKeyword(this);
+		if (visitor.visitIdentValue) {
+			return visitor.visitIdentValue(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -1540,38 +3517,787 @@ export class IdentKeywordContext extends ParserRuleContext {
 }
 
 
-export class IdentStringContext extends ParserRuleContext {
+export class PageContext extends ParserRuleContext {
+	public DOT(): TerminalNode { return this.getToken(msgParser.DOT, 0); }
+	public PAGE(): TerminalNode { return this.getToken(msgParser.PAGE, 0); }
+	public eolMayComment(): EolMayCommentContext {
+		return this.getRuleContext(0, EolMayCommentContext);
+	}
 	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
-	public NEWLINE(): TerminalNode[];
-	public NEWLINE(i: number): TerminalNode;
-	public NEWLINE(i?: number): TerminalNode | TerminalNode[] {
-		if (i === undefined) {
-			return this.getTokens(msgParser.NEWLINE);
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_page; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterPage) {
+			listener.enterPage(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitPage) {
+			listener.exitPage(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitPage) {
+			return visitor.visitPage(this);
 		} else {
-			return this.getToken(msgParser.NEWLINE, i);
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class LiteralContext extends ParserRuleContext {
+	public DOT(): TerminalNode { return this.getToken(msgParser.DOT, 0); }
+	public LITERAL(): TerminalNode { return this.getToken(msgParser.LITERAL, 0); }
+	public sep(): SepContext[];
+	public sep(i: number): SepContext;
+	public sep(i?: number): SepContext | SepContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(SepContext);
+		} else {
+			return this.getRuleContext(i, SepContext);
+		}
+	}
+	public literalDefinition(): LiteralDefinitionContext[];
+	public literalDefinition(i: number): LiteralDefinitionContext;
+	public literalDefinition(i?: number): LiteralDefinitionContext | LiteralDefinitionContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(LiteralDefinitionContext);
+		} else {
+			return this.getRuleContext(i, LiteralDefinitionContext);
+		}
+	}
+	public eolMayComment(): EolMayCommentContext {
+		return this.getRuleContext(0, EolMayCommentContext);
+	}
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	public COMMA(): TerminalNode[];
+	public COMMA(i: number): TerminalNode;
+	public COMMA(i?: number): TerminalNode | TerminalNode[] {
+		if (i === undefined) {
+			return this.getTokens(msgParser.COMMA);
+		} else {
+			return this.getToken(msgParser.COMMA, i);
 		}
 	}
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
 	// @Override
-	public get ruleIndex(): number { return msgParser.RULE_identString; }
+	public get ruleIndex(): number { return msgParser.RULE_literal; }
 	// @Override
 	public enterRule(listener: msgListener): void {
-		if (listener.enterIdentString) {
-			listener.enterIdentString(this);
+		if (listener.enterLiteral) {
+			listener.enterLiteral(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: msgListener): void {
-		if (listener.exitIdentString) {
-			listener.exitIdentString(this);
+		if (listener.exitLiteral) {
+			listener.exitLiteral(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: msgVisitor<Result>): Result {
-		if (visitor.visitIdentString) {
-			return visitor.visitIdentString(this);
+		if (visitor.visitLiteral) {
+			return visitor.visitLiteral(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class LiteralDefinitionContext extends ParserRuleContext {
+	public literalName(): LiteralNameContext {
+		return this.getRuleContext(0, LiteralNameContext);
+	}
+	public ASSIGN(): TerminalNode | undefined { return this.tryGetToken(msgParser.ASSIGN, 0); }
+	public literalValue(): LiteralValueContext | undefined {
+		return this.tryGetRuleContext(0, LiteralValueContext);
+	}
+	public sep(): SepContext[];
+	public sep(i: number): SepContext;
+	public sep(i?: number): SepContext | SepContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(SepContext);
+		} else {
+			return this.getRuleContext(i, SepContext);
+		}
+	}
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_literalDefinition; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterLiteralDefinition) {
+			listener.enterLiteralDefinition(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitLiteralDefinition) {
+			listener.exitLiteralDefinition(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitLiteralDefinition) {
+			return visitor.visitLiteralDefinition(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class LiteralNameContext extends ParserRuleContext {
+	public NAME(): TerminalNode { return this.getToken(msgParser.NAME, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_literalName; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterLiteralName) {
+			listener.enterLiteralName(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitLiteralName) {
+			listener.exitLiteralName(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitLiteralName) {
+			return visitor.visitLiteralName(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class LiteralValueContext extends ParserRuleContext {
+	public expression(): ExpressionContext {
+		return this.getRuleContext(0, ExpressionContext);
+	}
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_literalValue; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterLiteralValue) {
+			listener.enterLiteralValue(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitLiteralValue) {
+			listener.exitLiteralValue(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitLiteralValue) {
+			return visitor.visitLiteralValue(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class FacilityContext extends ParserRuleContext {
+	public DOT(): TerminalNode { return this.getToken(msgParser.DOT, 0); }
+	public FACILITY(): TerminalNode { return this.getToken(msgParser.FACILITY, 0); }
+	public sep(): SepContext[];
+	public sep(i: number): SepContext;
+	public sep(i?: number): SepContext | SepContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(SepContext);
+		} else {
+			return this.getRuleContext(i, SepContext);
+		}
+	}
+	public facilityDescription(): FacilityDescriptionContext {
+		return this.getRuleContext(0, FacilityDescriptionContext);
+	}
+	public eolMayComment(): EolMayCommentContext {
+		return this.getRuleContext(0, EolMayCommentContext);
+	}
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	public facilityQualifier(): FacilityQualifierContext[];
+	public facilityQualifier(i: number): FacilityQualifierContext;
+	public facilityQualifier(i?: number): FacilityQualifierContext | FacilityQualifierContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(FacilityQualifierContext);
+		} else {
+			return this.getRuleContext(i, FacilityQualifierContext);
+		}
+	}
+	public facilityContent(): FacilityContentContext[];
+	public facilityContent(i: number): FacilityContentContext;
+	public facilityContent(i?: number): FacilityContentContext | FacilityContentContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(FacilityContentContext);
+		} else {
+			return this.getRuleContext(i, FacilityContentContext);
+		}
+	}
+	public end(): EndContext | undefined {
+		return this.tryGetRuleContext(0, EndContext);
+	}
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_facility; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterFacility) {
+			listener.enterFacility(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitFacility) {
+			listener.exitFacility(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitFacility) {
+			return visitor.visitFacility(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class FacilityDescriptionContext extends ParserRuleContext {
+	public facilityName(): FacilityNameContext {
+		return this.getRuleContext(0, FacilityNameContext);
+	}
+	public facilityNumber(): FacilityNumberContext {
+		return this.getRuleContext(0, FacilityNumberContext);
+	}
+	public sep(): SepContext[];
+	public sep(i: number): SepContext;
+	public sep(i?: number): SepContext | SepContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(SepContext);
+		} else {
+			return this.getRuleContext(i, SepContext);
+		}
+	}
+	public COMMA(): TerminalNode | undefined { return this.tryGetToken(msgParser.COMMA, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_facilityDescription; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterFacilityDescription) {
+			listener.enterFacilityDescription(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitFacilityDescription) {
+			listener.exitFacilityDescription(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitFacilityDescription) {
+			return visitor.visitFacilityDescription(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class FacilityNameContext extends ParserRuleContext {
+	public NAME(): TerminalNode { return this.getToken(msgParser.NAME, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_facilityName; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterFacilityName) {
+			listener.enterFacilityName(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitFacilityName) {
+			listener.exitFacilityName(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitFacilityName) {
+			return visitor.visitFacilityName(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class FacilityNumberContext extends ParserRuleContext {
+	public expression(): ExpressionContext {
+		return this.getRuleContext(0, ExpressionContext);
+	}
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_facilityNumber; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterFacilityNumber) {
+			listener.enterFacilityNumber(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitFacilityNumber) {
+			listener.exitFacilityNumber(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitFacilityNumber) {
+			return visitor.visitFacilityNumber(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class FacilityContentContext extends ParserRuleContext {
+	public severity(): SeverityContext | undefined {
+		return this.tryGetRuleContext(0, SeverityContext);
+	}
+	public page(): PageContext | undefined {
+		return this.tryGetRuleContext(0, PageContext);
+	}
+	public base(): BaseContext | undefined {
+		return this.tryGetRuleContext(0, BaseContext);
+	}
+	public literal(): LiteralContext | undefined {
+		return this.tryGetRuleContext(0, LiteralContext);
+	}
+	public message(): MessageContext | undefined {
+		return this.tryGetRuleContext(0, MessageContext);
+	}
+	public eolMayComment(): EolMayCommentContext | undefined {
+		return this.tryGetRuleContext(0, EolMayCommentContext);
+	}
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_facilityContent; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterFacilityContent) {
+			listener.enterFacilityContent(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitFacilityContent) {
+			listener.exitFacilityContent(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitFacilityContent) {
+			return visitor.visitFacilityContent(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class FacilityQualifierContext extends ParserRuleContext {
+	public prefixQualifier(): PrefixQualifierContext | undefined {
+		return this.tryGetRuleContext(0, PrefixQualifierContext);
+	}
+	public sharedQualifier(): SharedQualifierContext | undefined {
+		return this.tryGetRuleContext(0, SharedQualifierContext);
+	}
+	public systemQualifier(): SystemQualifierContext | undefined {
+		return this.tryGetRuleContext(0, SystemQualifierContext);
+	}
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_facilityQualifier; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterFacilityQualifier) {
+			listener.enterFacilityQualifier(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitFacilityQualifier) {
+			listener.exitFacilityQualifier(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitFacilityQualifier) {
+			return visitor.visitFacilityQualifier(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class PrefixQualifierContext extends ParserRuleContext {
+	public DIV(): TerminalNode { return this.getToken(msgParser.DIV, 0); }
+	public PREFIX(): TerminalNode { return this.getToken(msgParser.PREFIX, 0); }
+	public ASSIGN(): TerminalNode { return this.getToken(msgParser.ASSIGN, 0); }
+	public prefixQualifierValue(): PrefixQualifierValueContext {
+		return this.getRuleContext(0, PrefixQualifierValueContext);
+	}
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	public sep(): SepContext[];
+	public sep(i: number): SepContext;
+	public sep(i?: number): SepContext | SepContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(SepContext);
+		} else {
+			return this.getRuleContext(i, SepContext);
+		}
+	}
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_prefixQualifier; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterPrefixQualifier) {
+			listener.enterPrefixQualifier(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitPrefixQualifier) {
+			listener.exitPrefixQualifier(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitPrefixQualifier) {
+			return visitor.visitPrefixQualifier(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class PrefixQualifierValueContext extends ParserRuleContext {
+	public NAME(): TerminalNode { return this.getToken(msgParser.NAME, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_prefixQualifierValue; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterPrefixQualifierValue) {
+			listener.enterPrefixQualifierValue(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitPrefixQualifierValue) {
+			listener.exitPrefixQualifierValue(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitPrefixQualifierValue) {
+			return visitor.visitPrefixQualifierValue(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class SharedQualifierContext extends ParserRuleContext {
+	public DIV(): TerminalNode { return this.getToken(msgParser.DIV, 0); }
+	public SHARED(): TerminalNode { return this.getToken(msgParser.SHARED, 0); }
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_sharedQualifier; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterSharedQualifier) {
+			listener.enterSharedQualifier(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitSharedQualifier) {
+			listener.exitSharedQualifier(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitSharedQualifier) {
+			return visitor.visitSharedQualifier(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class SystemQualifierContext extends ParserRuleContext {
+	public DIV(): TerminalNode { return this.getToken(msgParser.DIV, 0); }
+	public SYSTEM(): TerminalNode { return this.getToken(msgParser.SYSTEM, 0); }
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_systemQualifier; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterSystemQualifier) {
+			listener.enterSystemQualifier(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitSystemQualifier) {
+			listener.exitSystemQualifier(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitSystemQualifier) {
+			return visitor.visitSystemQualifier(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class SeverityContext extends ParserRuleContext {
+	public DOT(): TerminalNode { return this.getToken(msgParser.DOT, 0); }
+	public SEVERITY(): TerminalNode { return this.getToken(msgParser.SEVERITY, 0); }
+	public sep(): SepContext {
+		return this.getRuleContext(0, SepContext);
+	}
+	public severityValue(): SeverityValueContext {
+		return this.getRuleContext(0, SeverityValueContext);
+	}
+	public eolMayComment(): EolMayCommentContext {
+		return this.getRuleContext(0, EolMayCommentContext);
+	}
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_severity; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterSeverity) {
+			listener.enterSeverity(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitSeverity) {
+			listener.exitSeverity(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitSeverity) {
+			return visitor.visitSeverity(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class SeverityValueContext extends ParserRuleContext {
+	public SUCCESS(): TerminalNode | undefined { return this.tryGetToken(msgParser.SUCCESS, 0); }
+	public INFORMATIONAL(): TerminalNode | undefined { return this.tryGetToken(msgParser.INFORMATIONAL, 0); }
+	public WARNING(): TerminalNode | undefined { return this.tryGetToken(msgParser.WARNING, 0); }
+	public ERROR(): TerminalNode | undefined { return this.tryGetToken(msgParser.ERROR, 0); }
+	public SEVERE(): TerminalNode | undefined { return this.tryGetToken(msgParser.SEVERE, 0); }
+	public FATAL(): TerminalNode | undefined { return this.tryGetToken(msgParser.FATAL, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_severityValue; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterSeverityValue) {
+			listener.enterSeverityValue(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitSeverityValue) {
+			listener.exitSeverityValue(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitSeverityValue) {
+			return visitor.visitSeverityValue(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class BaseContext extends ParserRuleContext {
+	public DOT(): TerminalNode { return this.getToken(msgParser.DOT, 0); }
+	public BASE(): TerminalNode { return this.getToken(msgParser.BASE, 0); }
+	public sep(): SepContext {
+		return this.getRuleContext(0, SepContext);
+	}
+	public baseNumber(): BaseNumberContext {
+		return this.getRuleContext(0, BaseNumberContext);
+	}
+	public eolMayComment(): EolMayCommentContext {
+		return this.getRuleContext(0, EolMayCommentContext);
+	}
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_base; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterBase) {
+			listener.enterBase(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitBase) {
+			listener.exitBase(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitBase) {
+			return visitor.visitBase(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class BaseNumberContext extends ParserRuleContext {
+	public NUMBER(): TerminalNode | undefined { return this.tryGetToken(msgParser.NUMBER, 0); }
+	public HEXNUM(): TerminalNode | undefined { return this.tryGetToken(msgParser.HEXNUM, 0); }
+	public OCTNUM(): TerminalNode | undefined { return this.tryGetToken(msgParser.OCTNUM, 0); }
+	public DECNUM(): TerminalNode | undefined { return this.tryGetToken(msgParser.DECNUM, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_baseNumber; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterBaseNumber) {
+			listener.enterBaseNumber(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitBaseNumber) {
+			listener.exitBaseNumber(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitBaseNumber) {
+			return visitor.visitBaseNumber(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class EndContext extends ParserRuleContext {
+	public DOT(): TerminalNode { return this.getToken(msgParser.DOT, 0); }
+	public END(): TerminalNode { return this.getToken(msgParser.END, 0); }
+	public eolMayComment(): EolMayCommentContext {
+		return this.getRuleContext(0, EolMayCommentContext);
+	}
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_end; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterEnd) {
+			listener.enterEnd(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitEnd) {
+			listener.exitEnd(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitEnd) {
+			return visitor.visitEnd(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -1580,6 +4306,7 @@ export class IdentStringContext extends ParserRuleContext {
 
 
 export class ExpressionContext extends ParserRuleContext {
+	public P_OPEN(): TerminalNode | undefined { return this.tryGetToken(msgParser.P_OPEN, 0); }
 	public expression(): ExpressionContext[];
 	public expression(i: number): ExpressionContext;
 	public expression(i?: number): ExpressionContext | ExpressionContext[] {
@@ -1589,6 +4316,7 @@ export class ExpressionContext extends ParserRuleContext {
 			return this.getRuleContext(i, ExpressionContext);
 		}
 	}
+	public P_CLOS(): TerminalNode | undefined { return this.tryGetToken(msgParser.P_CLOS, 0); }
 	public WHITESPACE(): TerminalNode[];
 	public WHITESPACE(i: number): TerminalNode;
 	public WHITESPACE(i?: number): TerminalNode | TerminalNode[] {
@@ -1671,7 +4399,6 @@ export class NumberContext extends ParserRuleContext {
 	public HEXNUM(): TerminalNode | undefined { return this.tryGetToken(msgParser.HEXNUM, 0); }
 	public OCTNUM(): TerminalNode | undefined { return this.tryGetToken(msgParser.OCTNUM, 0); }
 	public DECNUM(): TerminalNode | undefined { return this.tryGetToken(msgParser.DECNUM, 0); }
-	public ZNUMBER(): TerminalNode | undefined { return this.tryGetToken(msgParser.ZNUMBER, 0); }
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
@@ -1748,9 +4475,7 @@ export class SepContext extends ParserRuleContext {
 
 
 export class ContinuationContext extends ParserRuleContext {
-	public continuationSign(): ContinuationSignContext {
-		return this.getRuleContext(0, ContinuationSignContext);
-	}
+	public SUB(): TerminalNode { return this.getToken(msgParser.SUB, 0); }
 	public eolMayComment(): EolMayCommentContext {
 		return this.getRuleContext(0, EolMayCommentContext);
 	}
@@ -1783,35 +4508,6 @@ export class ContinuationContext extends ParserRuleContext {
 }
 
 
-export class ContinuationSignContext extends ParserRuleContext {
-	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
-		super(parent, invokingState);
-	}
-	// @Override
-	public get ruleIndex(): number { return msgParser.RULE_continuationSign; }
-	// @Override
-	public enterRule(listener: msgListener): void {
-		if (listener.enterContinuationSign) {
-			listener.enterContinuationSign(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: msgListener): void {
-		if (listener.exitContinuationSign) {
-			listener.exitContinuationSign(this);
-		}
-	}
-	// @Override
-	public accept<Result>(visitor: msgVisitor<Result>): Result {
-		if (visitor.visitContinuationSign) {
-			return visitor.visitContinuationSign(this);
-		} else {
-			return visitor.visitChildren(this);
-		}
-	}
-}
-
-
 export class EolMayCommentContext extends ParserRuleContext {
 	public NEWLINE(): TerminalNode[];
 	public NEWLINE(i: number): TerminalNode;
@@ -1823,9 +4519,7 @@ export class EolMayCommentContext extends ParserRuleContext {
 		}
 	}
 	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
-	public commentSign(): CommentSignContext | undefined {
-		return this.tryGetRuleContext(0, CommentSignContext);
-	}
+	public EXCL(): TerminalNode | undefined { return this.tryGetToken(msgParser.EXCL, 0); }
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
@@ -1854,28 +4548,56 @@ export class EolMayCommentContext extends ParserRuleContext {
 }
 
 
-export class CommentSignContext extends ParserRuleContext {
+export class MessageContext extends ParserRuleContext {
+	public messageName(): MessageNameContext {
+		return this.getRuleContext(0, MessageNameContext);
+	}
+	public sep(): SepContext[];
+	public sep(i: number): SepContext;
+	public sep(i?: number): SepContext | SepContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(SepContext);
+		} else {
+			return this.getRuleContext(i, SepContext);
+		}
+	}
+	public messageText(): MessageTextContext {
+		return this.getRuleContext(0, MessageTextContext);
+	}
+	public eolMayComment(): EolMayCommentContext {
+		return this.getRuleContext(0, EolMayCommentContext);
+	}
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	public messageQualifier(): MessageQualifierContext[];
+	public messageQualifier(i: number): MessageQualifierContext;
+	public messageQualifier(i?: number): MessageQualifierContext | MessageQualifierContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(MessageQualifierContext);
+		} else {
+			return this.getRuleContext(i, MessageQualifierContext);
+		}
+	}
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
 	// @Override
-	public get ruleIndex(): number { return msgParser.RULE_commentSign; }
+	public get ruleIndex(): number { return msgParser.RULE_message; }
 	// @Override
 	public enterRule(listener: msgListener): void {
-		if (listener.enterCommentSign) {
-			listener.enterCommentSign(this);
+		if (listener.enterMessage) {
+			listener.enterMessage(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: msgListener): void {
-		if (listener.exitCommentSign) {
-			listener.exitCommentSign(this);
+		if (listener.exitMessage) {
+			listener.exitMessage(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: msgVisitor<Result>): Result {
-		if (visitor.visitCommentSign) {
-			return visitor.visitCommentSign(this);
+		if (visitor.visitMessage) {
+			return visitor.visitMessage(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -1883,30 +4605,630 @@ export class CommentSignContext extends ParserRuleContext {
 }
 
 
-export class EmptyLineContext extends ParserRuleContext {
-	public NEWLINE(): TerminalNode { return this.getToken(msgParser.NEWLINE, 0); }
+export class MessageNameContext extends ParserRuleContext {
+	public NAME(): TerminalNode { return this.getToken(msgParser.NAME, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_messageName; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterMessageName) {
+			listener.enterMessageName(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitMessageName) {
+			listener.exitMessageName(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitMessageName) {
+			return visitor.visitMessageName(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class MessageQualifierContext extends ParserRuleContext {
+	public faoCount(): FaoCountContext | undefined {
+		return this.tryGetRuleContext(0, FaoCountContext);
+	}
+	public identification(): IdentificationContext | undefined {
+		return this.tryGetRuleContext(0, IdentificationContext);
+	}
+	public userValue(): UserValueContext | undefined {
+		return this.tryGetRuleContext(0, UserValueContext);
+	}
+	public severityQualifier(): SeverityQualifierContext | undefined {
+		return this.tryGetRuleContext(0, SeverityQualifierContext);
+	}
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_messageQualifier; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterMessageQualifier) {
+			listener.enterMessageQualifier(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitMessageQualifier) {
+			listener.exitMessageQualifier(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitMessageQualifier) {
+			return visitor.visitMessageQualifier(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class SeverityQualifierContext extends ParserRuleContext {
+	public success(): SuccessContext | undefined {
+		return this.tryGetRuleContext(0, SuccessContext);
+	}
+	public informational(): InformationalContext | undefined {
+		return this.tryGetRuleContext(0, InformationalContext);
+	}
+	public warning(): WarningContext | undefined {
+		return this.tryGetRuleContext(0, WarningContext);
+	}
+	public error(): ErrorContext | undefined {
+		return this.tryGetRuleContext(0, ErrorContext);
+	}
+	public severe(): SevereContext | undefined {
+		return this.tryGetRuleContext(0, SevereContext);
+	}
+	public fatal(): FatalContext | undefined {
+		return this.tryGetRuleContext(0, FatalContext);
+	}
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_severityQualifier; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterSeverityQualifier) {
+			listener.enterSeverityQualifier(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitSeverityQualifier) {
+			listener.exitSeverityQualifier(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitSeverityQualifier) {
+			return visitor.visitSeverityQualifier(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class FaoCountContext extends ParserRuleContext {
+	public DIV(): TerminalNode { return this.getToken(msgParser.DIV, 0); }
+	public FAOCOUNT(): TerminalNode { return this.getToken(msgParser.FAOCOUNT, 0); }
+	public ASSIGN(): TerminalNode { return this.getToken(msgParser.ASSIGN, 0); }
+	public faoCountValue(): FaoCountValueContext {
+		return this.getRuleContext(0, FaoCountValueContext);
+	}
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	public sep(): SepContext[];
+	public sep(i: number): SepContext;
+	public sep(i?: number): SepContext | SepContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(SepContext);
+		} else {
+			return this.getRuleContext(i, SepContext);
+		}
+	}
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_faoCount; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterFaoCount) {
+			listener.enterFaoCount(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitFaoCount) {
+			listener.exitFaoCount(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitFaoCount) {
+			return visitor.visitFaoCount(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class FaoCountValueContext extends ParserRuleContext {
+	public NUMBER(): TerminalNode { return this.getToken(msgParser.NUMBER, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_faoCountValue; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterFaoCountValue) {
+			listener.enterFaoCountValue(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitFaoCountValue) {
+			listener.exitFaoCountValue(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitFaoCountValue) {
+			return visitor.visitFaoCountValue(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class IdentificationContext extends ParserRuleContext {
+	public DIV(): TerminalNode { return this.getToken(msgParser.DIV, 0); }
+	public IDENTIFICATION(): TerminalNode { return this.getToken(msgParser.IDENTIFICATION, 0); }
+	public ASSIGN(): TerminalNode { return this.getToken(msgParser.ASSIGN, 0); }
+	public identificationValue(): IdentificationValueContext {
+		return this.getRuleContext(0, IdentificationValueContext);
+	}
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	public sep(): SepContext[];
+	public sep(i: number): SepContext;
+	public sep(i?: number): SepContext | SepContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(SepContext);
+		} else {
+			return this.getRuleContext(i, SepContext);
+		}
+	}
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_identification; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterIdentification) {
+			listener.enterIdentification(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitIdentification) {
+			listener.exitIdentification(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitIdentification) {
+			return visitor.visitIdentification(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class IdentificationValueContext extends ParserRuleContext {
+	public NAME(): TerminalNode { return this.getToken(msgParser.NAME, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_identificationValue; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterIdentificationValue) {
+			listener.enterIdentificationValue(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitIdentificationValue) {
+			listener.exitIdentificationValue(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitIdentificationValue) {
+			return visitor.visitIdentificationValue(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class UserValueContext extends ParserRuleContext {
+	public DIV(): TerminalNode { return this.getToken(msgParser.DIV, 0); }
+	public USERVALUE(): TerminalNode { return this.getToken(msgParser.USERVALUE, 0); }
+	public ASSIGN(): TerminalNode { return this.getToken(msgParser.ASSIGN, 0); }
+	public userValueValue(): UserValueValueContext {
+		return this.getRuleContext(0, UserValueValueContext);
+	}
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	public sep(): SepContext[];
+	public sep(i: number): SepContext;
+	public sep(i?: number): SepContext | SepContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(SepContext);
+		} else {
+			return this.getRuleContext(i, SepContext);
+		}
+	}
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_userValue; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterUserValue) {
+			listener.enterUserValue(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitUserValue) {
+			listener.exitUserValue(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitUserValue) {
+			return visitor.visitUserValue(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class UserValueValueContext extends ParserRuleContext {
+	public NUMBER(): TerminalNode { return this.getToken(msgParser.NUMBER, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_userValueValue; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterUserValueValue) {
+			listener.enterUserValueValue(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitUserValueValue) {
+			listener.exitUserValueValue(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitUserValueValue) {
+			return visitor.visitUserValueValue(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class SuccessContext extends ParserRuleContext {
+	public DIV(): TerminalNode { return this.getToken(msgParser.DIV, 0); }
+	public SUCCESS(): TerminalNode { return this.getToken(msgParser.SUCCESS, 0); }
 	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
 	// @Override
-	public get ruleIndex(): number { return msgParser.RULE_emptyLine; }
+	public get ruleIndex(): number { return msgParser.RULE_success; }
 	// @Override
 	public enterRule(listener: msgListener): void {
-		if (listener.enterEmptyLine) {
-			listener.enterEmptyLine(this);
+		if (listener.enterSuccess) {
+			listener.enterSuccess(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: msgListener): void {
-		if (listener.exitEmptyLine) {
-			listener.exitEmptyLine(this);
+		if (listener.exitSuccess) {
+			listener.exitSuccess(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: msgVisitor<Result>): Result {
-		if (visitor.visitEmptyLine) {
-			return visitor.visitEmptyLine(this);
+		if (visitor.visitSuccess) {
+			return visitor.visitSuccess(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class InformationalContext extends ParserRuleContext {
+	public DIV(): TerminalNode { return this.getToken(msgParser.DIV, 0); }
+	public INFORMATIONAL(): TerminalNode { return this.getToken(msgParser.INFORMATIONAL, 0); }
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_informational; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterInformational) {
+			listener.enterInformational(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitInformational) {
+			listener.exitInformational(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitInformational) {
+			return visitor.visitInformational(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class WarningContext extends ParserRuleContext {
+	public DIV(): TerminalNode { return this.getToken(msgParser.DIV, 0); }
+	public WARNING(): TerminalNode { return this.getToken(msgParser.WARNING, 0); }
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_warning; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterWarning) {
+			listener.enterWarning(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitWarning) {
+			listener.exitWarning(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitWarning) {
+			return visitor.visitWarning(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class ErrorContext extends ParserRuleContext {
+	public DIV(): TerminalNode { return this.getToken(msgParser.DIV, 0); }
+	public ERROR(): TerminalNode { return this.getToken(msgParser.ERROR, 0); }
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_error; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterError) {
+			listener.enterError(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitError) {
+			listener.exitError(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitError) {
+			return visitor.visitError(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class SevereContext extends ParserRuleContext {
+	public DIV(): TerminalNode { return this.getToken(msgParser.DIV, 0); }
+	public SEVERE(): TerminalNode { return this.getToken(msgParser.SEVERE, 0); }
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_severe; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterSevere) {
+			listener.enterSevere(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitSevere) {
+			listener.exitSevere(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitSevere) {
+			return visitor.visitSevere(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class FatalContext extends ParserRuleContext {
+	public DIV(): TerminalNode { return this.getToken(msgParser.DIV, 0); }
+	public FATAL(): TerminalNode { return this.getToken(msgParser.FATAL, 0); }
+	public WHITESPACE(): TerminalNode | undefined { return this.tryGetToken(msgParser.WHITESPACE, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_fatal; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterFatal) {
+			listener.enterFatal(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitFatal) {
+			listener.exitFatal(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitFatal) {
+			return visitor.visitFatal(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class MessageTextContext extends ParserRuleContext {
+	public B_OPEN(): TerminalNode | undefined { return this.tryGetToken(msgParser.B_OPEN, 0); }
+	public B_CLOSE(): TerminalNode[];
+	public B_CLOSE(i: number): TerminalNode;
+	public B_CLOSE(i?: number): TerminalNode | TerminalNode[] {
+		if (i === undefined) {
+			return this.getTokens(msgParser.B_CLOSE);
+		} else {
+			return this.getToken(msgParser.B_CLOSE, i);
+		}
+	}
+	public fao(): FaoContext[];
+	public fao(i: number): FaoContext;
+	public fao(i?: number): FaoContext | FaoContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(FaoContext);
+		} else {
+			return this.getRuleContext(i, FaoContext);
+		}
+	}
+	public QUOTA(): TerminalNode[];
+	public QUOTA(i: number): TerminalNode;
+	public QUOTA(i?: number): TerminalNode | TerminalNode[] {
+		if (i === undefined) {
+			return this.getTokens(msgParser.QUOTA);
+		} else {
+			return this.getToken(msgParser.QUOTA, i);
+		}
+	}
+	public APOSTR(): TerminalNode[];
+	public APOSTR(i: number): TerminalNode;
+	public APOSTR(i?: number): TerminalNode | TerminalNode[] {
+		if (i === undefined) {
+			return this.getTokens(msgParser.APOSTR);
+		} else {
+			return this.getToken(msgParser.APOSTR, i);
+		}
+	}
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_messageText; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterMessageText) {
+			listener.enterMessageText(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitMessageText) {
+			listener.exitMessageText(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitMessageText) {
+			return visitor.visitMessageText(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class FaoContext extends ParserRuleContext {
+	public FAO(): TerminalNode { return this.getToken(msgParser.FAO, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return msgParser.RULE_fao; }
+	// @Override
+	public enterRule(listener: msgListener): void {
+		if (listener.enterFao) {
+			listener.enterFao(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: msgListener): void {
+		if (listener.exitFao) {
+			listener.exitFao(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: msgVisitor<Result>): Result {
+		if (visitor.visitFao) {
+			return visitor.visitFao(this);
 		} else {
 			return visitor.visitChildren(this);
 		}

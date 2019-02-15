@@ -4,23 +4,55 @@
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 
 import { MsgContentContext } from "./msgParser";
-import { VarContext } from "./msgParser";
-import { VarKeywordContext } from "./msgParser";
-import { VarDefinitionContext } from "./msgParser";
-import { VarNameContext } from "./msgParser";
-import { VarValueContext } from "./msgParser";
+import { TitleContext } from "./msgParser";
+import { TitleNameContext } from "./msgParser";
+import { TitleDescriptionContext } from "./msgParser";
 import { IdentContext } from "./msgParser";
-import { IdentKeywordContext } from "./msgParser";
-import { IdentStringContext } from "./msgParser";
+import { IdentValueContext } from "./msgParser";
+import { PageContext } from "./msgParser";
+import { LiteralContext } from "./msgParser";
+import { LiteralDefinitionContext } from "./msgParser";
+import { LiteralNameContext } from "./msgParser";
+import { LiteralValueContext } from "./msgParser";
+import { FacilityContext } from "./msgParser";
+import { FacilityDescriptionContext } from "./msgParser";
+import { FacilityNameContext } from "./msgParser";
+import { FacilityNumberContext } from "./msgParser";
+import { FacilityContentContext } from "./msgParser";
+import { FacilityQualifierContext } from "./msgParser";
+import { PrefixQualifierContext } from "./msgParser";
+import { PrefixQualifierValueContext } from "./msgParser";
+import { SharedQualifierContext } from "./msgParser";
+import { SystemQualifierContext } from "./msgParser";
+import { SeverityContext } from "./msgParser";
+import { SeverityValueContext } from "./msgParser";
+import { BaseContext } from "./msgParser";
+import { BaseNumberContext } from "./msgParser";
+import { EndContext } from "./msgParser";
 import { ExpressionContext } from "./msgParser";
 import { ExpressionVariableContext } from "./msgParser";
 import { NumberContext } from "./msgParser";
 import { SepContext } from "./msgParser";
 import { ContinuationContext } from "./msgParser";
-import { ContinuationSignContext } from "./msgParser";
 import { EolMayCommentContext } from "./msgParser";
-import { CommentSignContext } from "./msgParser";
-import { EmptyLineContext } from "./msgParser";
+import { MessageContext } from "./msgParser";
+import { MessageNameContext } from "./msgParser";
+import { MessageQualifierContext } from "./msgParser";
+import { SeverityQualifierContext } from "./msgParser";
+import { FaoCountContext } from "./msgParser";
+import { FaoCountValueContext } from "./msgParser";
+import { IdentificationContext } from "./msgParser";
+import { IdentificationValueContext } from "./msgParser";
+import { UserValueContext } from "./msgParser";
+import { UserValueValueContext } from "./msgParser";
+import { SuccessContext } from "./msgParser";
+import { InformationalContext } from "./msgParser";
+import { WarningContext } from "./msgParser";
+import { ErrorContext } from "./msgParser";
+import { SevereContext } from "./msgParser";
+import { FatalContext } from "./msgParser";
+import { MessageTextContext } from "./msgParser";
+import { FaoContext } from "./msgParser";
 
 
 /**
@@ -40,59 +72,37 @@ export interface msgListener extends ParseTreeListener {
 	exitMsgContent?: (ctx: MsgContentContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `msgParser.var`.
+	 * Enter a parse tree produced by `msgParser.title`.
 	 * @param ctx the parse tree
 	 */
-	enterVar?: (ctx: VarContext) => void;
+	enterTitle?: (ctx: TitleContext) => void;
 	/**
-	 * Exit a parse tree produced by `msgParser.var`.
+	 * Exit a parse tree produced by `msgParser.title`.
 	 * @param ctx the parse tree
 	 */
-	exitVar?: (ctx: VarContext) => void;
+	exitTitle?: (ctx: TitleContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `msgParser.varKeyword`.
+	 * Enter a parse tree produced by `msgParser.titleName`.
 	 * @param ctx the parse tree
 	 */
-	enterVarKeyword?: (ctx: VarKeywordContext) => void;
+	enterTitleName?: (ctx: TitleNameContext) => void;
 	/**
-	 * Exit a parse tree produced by `msgParser.varKeyword`.
+	 * Exit a parse tree produced by `msgParser.titleName`.
 	 * @param ctx the parse tree
 	 */
-	exitVarKeyword?: (ctx: VarKeywordContext) => void;
+	exitTitleName?: (ctx: TitleNameContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `msgParser.varDefinition`.
+	 * Enter a parse tree produced by `msgParser.titleDescription`.
 	 * @param ctx the parse tree
 	 */
-	enterVarDefinition?: (ctx: VarDefinitionContext) => void;
+	enterTitleDescription?: (ctx: TitleDescriptionContext) => void;
 	/**
-	 * Exit a parse tree produced by `msgParser.varDefinition`.
+	 * Exit a parse tree produced by `msgParser.titleDescription`.
 	 * @param ctx the parse tree
 	 */
-	exitVarDefinition?: (ctx: VarDefinitionContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `msgParser.varName`.
-	 * @param ctx the parse tree
-	 */
-	enterVarName?: (ctx: VarNameContext) => void;
-	/**
-	 * Exit a parse tree produced by `msgParser.varName`.
-	 * @param ctx the parse tree
-	 */
-	exitVarName?: (ctx: VarNameContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `msgParser.varValue`.
-	 * @param ctx the parse tree
-	 */
-	enterVarValue?: (ctx: VarValueContext) => void;
-	/**
-	 * Exit a parse tree produced by `msgParser.varValue`.
-	 * @param ctx the parse tree
-	 */
-	exitVarValue?: (ctx: VarValueContext) => void;
+	exitTitleDescription?: (ctx: TitleDescriptionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `msgParser.ident`.
@@ -106,26 +116,235 @@ export interface msgListener extends ParseTreeListener {
 	exitIdent?: (ctx: IdentContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `msgParser.identKeyword`.
+	 * Enter a parse tree produced by `msgParser.identValue`.
 	 * @param ctx the parse tree
 	 */
-	enterIdentKeyword?: (ctx: IdentKeywordContext) => void;
+	enterIdentValue?: (ctx: IdentValueContext) => void;
 	/**
-	 * Exit a parse tree produced by `msgParser.identKeyword`.
+	 * Exit a parse tree produced by `msgParser.identValue`.
 	 * @param ctx the parse tree
 	 */
-	exitIdentKeyword?: (ctx: IdentKeywordContext) => void;
+	exitIdentValue?: (ctx: IdentValueContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `msgParser.identString`.
+	 * Enter a parse tree produced by `msgParser.page`.
 	 * @param ctx the parse tree
 	 */
-	enterIdentString?: (ctx: IdentStringContext) => void;
+	enterPage?: (ctx: PageContext) => void;
 	/**
-	 * Exit a parse tree produced by `msgParser.identString`.
+	 * Exit a parse tree produced by `msgParser.page`.
 	 * @param ctx the parse tree
 	 */
-	exitIdentString?: (ctx: IdentStringContext) => void;
+	exitPage?: (ctx: PageContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.literal`.
+	 * @param ctx the parse tree
+	 */
+	enterLiteral?: (ctx: LiteralContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.literal`.
+	 * @param ctx the parse tree
+	 */
+	exitLiteral?: (ctx: LiteralContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.literalDefinition`.
+	 * @param ctx the parse tree
+	 */
+	enterLiteralDefinition?: (ctx: LiteralDefinitionContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.literalDefinition`.
+	 * @param ctx the parse tree
+	 */
+	exitLiteralDefinition?: (ctx: LiteralDefinitionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.literalName`.
+	 * @param ctx the parse tree
+	 */
+	enterLiteralName?: (ctx: LiteralNameContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.literalName`.
+	 * @param ctx the parse tree
+	 */
+	exitLiteralName?: (ctx: LiteralNameContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.literalValue`.
+	 * @param ctx the parse tree
+	 */
+	enterLiteralValue?: (ctx: LiteralValueContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.literalValue`.
+	 * @param ctx the parse tree
+	 */
+	exitLiteralValue?: (ctx: LiteralValueContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.facility`.
+	 * @param ctx the parse tree
+	 */
+	enterFacility?: (ctx: FacilityContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.facility`.
+	 * @param ctx the parse tree
+	 */
+	exitFacility?: (ctx: FacilityContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.facilityDescription`.
+	 * @param ctx the parse tree
+	 */
+	enterFacilityDescription?: (ctx: FacilityDescriptionContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.facilityDescription`.
+	 * @param ctx the parse tree
+	 */
+	exitFacilityDescription?: (ctx: FacilityDescriptionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.facilityName`.
+	 * @param ctx the parse tree
+	 */
+	enterFacilityName?: (ctx: FacilityNameContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.facilityName`.
+	 * @param ctx the parse tree
+	 */
+	exitFacilityName?: (ctx: FacilityNameContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.facilityNumber`.
+	 * @param ctx the parse tree
+	 */
+	enterFacilityNumber?: (ctx: FacilityNumberContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.facilityNumber`.
+	 * @param ctx the parse tree
+	 */
+	exitFacilityNumber?: (ctx: FacilityNumberContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.facilityContent`.
+	 * @param ctx the parse tree
+	 */
+	enterFacilityContent?: (ctx: FacilityContentContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.facilityContent`.
+	 * @param ctx the parse tree
+	 */
+	exitFacilityContent?: (ctx: FacilityContentContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.facilityQualifier`.
+	 * @param ctx the parse tree
+	 */
+	enterFacilityQualifier?: (ctx: FacilityQualifierContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.facilityQualifier`.
+	 * @param ctx the parse tree
+	 */
+	exitFacilityQualifier?: (ctx: FacilityQualifierContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.prefixQualifier`.
+	 * @param ctx the parse tree
+	 */
+	enterPrefixQualifier?: (ctx: PrefixQualifierContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.prefixQualifier`.
+	 * @param ctx the parse tree
+	 */
+	exitPrefixQualifier?: (ctx: PrefixQualifierContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.prefixQualifierValue`.
+	 * @param ctx the parse tree
+	 */
+	enterPrefixQualifierValue?: (ctx: PrefixQualifierValueContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.prefixQualifierValue`.
+	 * @param ctx the parse tree
+	 */
+	exitPrefixQualifierValue?: (ctx: PrefixQualifierValueContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.sharedQualifier`.
+	 * @param ctx the parse tree
+	 */
+	enterSharedQualifier?: (ctx: SharedQualifierContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.sharedQualifier`.
+	 * @param ctx the parse tree
+	 */
+	exitSharedQualifier?: (ctx: SharedQualifierContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.systemQualifier`.
+	 * @param ctx the parse tree
+	 */
+	enterSystemQualifier?: (ctx: SystemQualifierContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.systemQualifier`.
+	 * @param ctx the parse tree
+	 */
+	exitSystemQualifier?: (ctx: SystemQualifierContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.severity`.
+	 * @param ctx the parse tree
+	 */
+	enterSeverity?: (ctx: SeverityContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.severity`.
+	 * @param ctx the parse tree
+	 */
+	exitSeverity?: (ctx: SeverityContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.severityValue`.
+	 * @param ctx the parse tree
+	 */
+	enterSeverityValue?: (ctx: SeverityValueContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.severityValue`.
+	 * @param ctx the parse tree
+	 */
+	exitSeverityValue?: (ctx: SeverityValueContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.base`.
+	 * @param ctx the parse tree
+	 */
+	enterBase?: (ctx: BaseContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.base`.
+	 * @param ctx the parse tree
+	 */
+	exitBase?: (ctx: BaseContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.baseNumber`.
+	 * @param ctx the parse tree
+	 */
+	enterBaseNumber?: (ctx: BaseNumberContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.baseNumber`.
+	 * @param ctx the parse tree
+	 */
+	exitBaseNumber?: (ctx: BaseNumberContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.end`.
+	 * @param ctx the parse tree
+	 */
+	enterEnd?: (ctx: EndContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.end`.
+	 * @param ctx the parse tree
+	 */
+	exitEnd?: (ctx: EndContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `msgParser.expression`.
@@ -183,17 +402,6 @@ export interface msgListener extends ParseTreeListener {
 	exitContinuation?: (ctx: ContinuationContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `msgParser.continuationSign`.
-	 * @param ctx the parse tree
-	 */
-	enterContinuationSign?: (ctx: ContinuationSignContext) => void;
-	/**
-	 * Exit a parse tree produced by `msgParser.continuationSign`.
-	 * @param ctx the parse tree
-	 */
-	exitContinuationSign?: (ctx: ContinuationSignContext) => void;
-
-	/**
 	 * Enter a parse tree produced by `msgParser.eolMayComment`.
 	 * @param ctx the parse tree
 	 */
@@ -205,25 +413,201 @@ export interface msgListener extends ParseTreeListener {
 	exitEolMayComment?: (ctx: EolMayCommentContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `msgParser.commentSign`.
+	 * Enter a parse tree produced by `msgParser.message`.
 	 * @param ctx the parse tree
 	 */
-	enterCommentSign?: (ctx: CommentSignContext) => void;
+	enterMessage?: (ctx: MessageContext) => void;
 	/**
-	 * Exit a parse tree produced by `msgParser.commentSign`.
+	 * Exit a parse tree produced by `msgParser.message`.
 	 * @param ctx the parse tree
 	 */
-	exitCommentSign?: (ctx: CommentSignContext) => void;
+	exitMessage?: (ctx: MessageContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `msgParser.emptyLine`.
+	 * Enter a parse tree produced by `msgParser.messageName`.
 	 * @param ctx the parse tree
 	 */
-	enterEmptyLine?: (ctx: EmptyLineContext) => void;
+	enterMessageName?: (ctx: MessageNameContext) => void;
 	/**
-	 * Exit a parse tree produced by `msgParser.emptyLine`.
+	 * Exit a parse tree produced by `msgParser.messageName`.
 	 * @param ctx the parse tree
 	 */
-	exitEmptyLine?: (ctx: EmptyLineContext) => void;
+	exitMessageName?: (ctx: MessageNameContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.messageQualifier`.
+	 * @param ctx the parse tree
+	 */
+	enterMessageQualifier?: (ctx: MessageQualifierContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.messageQualifier`.
+	 * @param ctx the parse tree
+	 */
+	exitMessageQualifier?: (ctx: MessageQualifierContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.severityQualifier`.
+	 * @param ctx the parse tree
+	 */
+	enterSeverityQualifier?: (ctx: SeverityQualifierContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.severityQualifier`.
+	 * @param ctx the parse tree
+	 */
+	exitSeverityQualifier?: (ctx: SeverityQualifierContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.faoCount`.
+	 * @param ctx the parse tree
+	 */
+	enterFaoCount?: (ctx: FaoCountContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.faoCount`.
+	 * @param ctx the parse tree
+	 */
+	exitFaoCount?: (ctx: FaoCountContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.faoCountValue`.
+	 * @param ctx the parse tree
+	 */
+	enterFaoCountValue?: (ctx: FaoCountValueContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.faoCountValue`.
+	 * @param ctx the parse tree
+	 */
+	exitFaoCountValue?: (ctx: FaoCountValueContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.identification`.
+	 * @param ctx the parse tree
+	 */
+	enterIdentification?: (ctx: IdentificationContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.identification`.
+	 * @param ctx the parse tree
+	 */
+	exitIdentification?: (ctx: IdentificationContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.identificationValue`.
+	 * @param ctx the parse tree
+	 */
+	enterIdentificationValue?: (ctx: IdentificationValueContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.identificationValue`.
+	 * @param ctx the parse tree
+	 */
+	exitIdentificationValue?: (ctx: IdentificationValueContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.userValue`.
+	 * @param ctx the parse tree
+	 */
+	enterUserValue?: (ctx: UserValueContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.userValue`.
+	 * @param ctx the parse tree
+	 */
+	exitUserValue?: (ctx: UserValueContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.userValueValue`.
+	 * @param ctx the parse tree
+	 */
+	enterUserValueValue?: (ctx: UserValueValueContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.userValueValue`.
+	 * @param ctx the parse tree
+	 */
+	exitUserValueValue?: (ctx: UserValueValueContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.success`.
+	 * @param ctx the parse tree
+	 */
+	enterSuccess?: (ctx: SuccessContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.success`.
+	 * @param ctx the parse tree
+	 */
+	exitSuccess?: (ctx: SuccessContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.informational`.
+	 * @param ctx the parse tree
+	 */
+	enterInformational?: (ctx: InformationalContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.informational`.
+	 * @param ctx the parse tree
+	 */
+	exitInformational?: (ctx: InformationalContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.warning`.
+	 * @param ctx the parse tree
+	 */
+	enterWarning?: (ctx: WarningContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.warning`.
+	 * @param ctx the parse tree
+	 */
+	exitWarning?: (ctx: WarningContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.error`.
+	 * @param ctx the parse tree
+	 */
+	enterError?: (ctx: ErrorContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.error`.
+	 * @param ctx the parse tree
+	 */
+	exitError?: (ctx: ErrorContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.severe`.
+	 * @param ctx the parse tree
+	 */
+	enterSevere?: (ctx: SevereContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.severe`.
+	 * @param ctx the parse tree
+	 */
+	exitSevere?: (ctx: SevereContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.fatal`.
+	 * @param ctx the parse tree
+	 */
+	enterFatal?: (ctx: FatalContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.fatal`.
+	 * @param ctx the parse tree
+	 */
+	exitFatal?: (ctx: FatalContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.messageText`.
+	 * @param ctx the parse tree
+	 */
+	enterMessageText?: (ctx: MessageTextContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.messageText`.
+	 * @param ctx the parse tree
+	 */
+	exitMessageText?: (ctx: MessageTextContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.fao`.
+	 * @param ctx the parse tree
+	 */
+	enterFao?: (ctx: FaoContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.fao`.
+	 * @param ctx the parse tree
+	 */
+	exitFao?: (ctx: FaoContext) => void;
 }
 

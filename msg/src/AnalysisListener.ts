@@ -1,33 +1,7 @@
 import * as nls from "vscode-nls";
 
 import { msgListener } from './msgListener';
-import { 
-        // AtomContext, 
-        // BaseContext, 
-        // ExpressionVariableContext, 
-        // FacilityContext, 
-        // FacilityDescriptionContext, 
-        // FacilityNameContext, 
-        // FaoCountContext, 
-        // FaoCountValueContext, 
-        // IdentValueContext, 
-        // IdentificationContext, 
-        // IdentificationValueContext,
-        // LiteralDefinitionContext, 
-        // MessageContext, 
-        // MessageNameContext, 
-        // MessageTextContext, 
-        NumberContext, 
-        // PrefixQualifierContext, 
-        // PrefixQualifierValueContext, 
-        // SeverityContext, 
-        // SeverityQualifierContext, 
-        // SeverityValueContext, 
-        // TitleContext, 
-        // TitleDescriptionContext, 
-        // TitleNameContext, 
-        // UserValueContext, 
-    } from './msgParser';
+import { NumberContext, TitleNameContext, TitleDescriptionContext, IdentValueContext, FacilityContext, FacilityNameContext, PrefixQualifierValueContext, SeverityValueContext, SeverityQualifierContext, MessageNameContext, MessageContext, IdentificationValueContext, MessageTextContext, FaoCountValueContext, UserValueContext, LiteralDefinitionContext, LiteralNameContext, ExpressionVariableContext, BaseContext, BaseNumberContext, UserValueValueContext } from './msgParser';
 import { DiagnosticEntry, DiagnosticType } from './MsgFacade';
 import { Token, ParserRuleContext } from "antlr4ts";
 import { LogFunction, LogType } from "@vorfol/common";
@@ -42,7 +16,7 @@ export class AnalysisListener implements msgListener {
     public messagePrefixes: string[] = [];
     public currentMessageNumber = 0;
     public currentFacility = "";
-    public currentIdenification = "";
+    public currentIdenification?: Token;    // message name or message identification qualifier
     public currentSeverity = "";
     public currentSeverityQualifier = "";
 
@@ -79,183 +53,177 @@ export class AnalysisListener implements msgListener {
         this.logFn = logFn || (() => {});
     }
 
-    enterEveryRule(ctx: ParserRuleContext) {
-        
+    enterEveryRule(ctx: ParserRuleContext) {        
         this.logFn(LogType.debug, () => `${ctx.ruleIndex}: ${ctx.text}`);
     }
 
-    // enterTitleName(ctx: TitleNameContext) {
-    //     if (ctx.text) {
-    //         this.testLength(ctx.text, 31, AnalysisListener.tooLongTitleName, ctx.start);
-    //     } else {
-    //         this.markToken(ctx.start, AnalysisListener.emptyTitleName);
-    //     }
-    // }
+    enterTitleName(ctx: TitleNameContext) {
+        if (ctx.text) {
+            this.testLength(ctx.text, 31, AnalysisListener.tooLongTitleName, ctx.start);
+        } else {
+            this.markToken(ctx.start, AnalysisListener.emptyTitleName);
+        }
+    }
 
-    // enterTitleDescription(ctx: TitleDescriptionContext) {
-    //     const length = ctx.text.trim().length;
-    //     if (length > 28) {
-    //         this.markText(AnalysisListener.tooLongTitleDescription,
-    //             ctx.start.charPositionInLine + 28,
-    //             ctx.start.line,
-    //             length - 28,
-    //             DiagnosticType.Warning);
-    //     }
-    // }
+    enterTitleDescription(ctx: TitleDescriptionContext) {
+        const length = ctx.text.trim().length;
+        if (length > 28) {
+            this.markText(AnalysisListener.tooLongTitleDescription,
+                ctx.start.charPositionInLine + 28,
+                ctx.start.line,
+                length - 28,
+                DiagnosticType.Warning);
+        }
+    }
 
-    // enterIdentValue(ctx: IdentValueContext) {
-    //     const name = ctx.NAME();
-    //     if (name) {
-    //         this.testLength(name.text, 31, AnalysisListener.tooLongIdentValue, ctx.start);
-    //     }
-    // }
+    enterIdentValue(ctx: IdentValueContext) {
+        const name = ctx.NAME();
+        if (name) {
+            this.testLength(name.text, 31, AnalysisListener.tooLongIdentValue, ctx.start);
+        }
+    }
 
-    // enterFacility(ctx: FacilityContext) {
-    //     this.messagePrefixes = [];
-    //     this.currentMessageNumber = 1;
-    //     this.currentFacility = "";
-    //     this.currentSeverity = "";
-    //     this.currentSeverityQualifier = "";
-    // }
+    enterFacility(ctx: FacilityContext) {
+        this.messagePrefixes = [];
+        this.currentMessageNumber = 1;
+        this.currentFacility = "";
+        this.currentSeverity = "";
+        this.currentSeverityQualifier = "";
+    }
 
-    // enterFacilityName(ctx: FacilityNameContext) {
-    //     if (ctx.text) {
-    //         if (this.testLength(ctx.text, 9, AnalysisListener.tooLongFacilityName, ctx.start)) {
-    //             this.currentFacility = ctx.text;
-    //             this.messagePrefixes.push(this.currentFacility);
-    //         }
-    //     } else {
-    //         this.markToken(ctx.start, AnalysisListener.emptyFacilityName);
-    //     }
-    // }
+    enterFacilityName(ctx: FacilityNameContext) {
+        if (ctx.text) {
+            if (this.testLength(ctx.text, 9, AnalysisListener.tooLongFacilityName, ctx.start)) {
+                this.currentFacility = ctx.text;
+                this.messagePrefixes.push(this.currentFacility);
+            }
+        } else {
+            this.markToken(ctx.start, AnalysisListener.emptyFacilityName);
+        }
+    }
 
-    // enterPrefixQualifierValue(ctx: PrefixQualifierValueContext) {
-    //     if (ctx.text) {
-    //         if (this.testLength(ctx.text, 9, AnalysisListener.tooLongFacilityPrefix, ctx.start)) {
-    //             this.messagePrefixes.push(ctx.text);
-    //         }
-    //     } else {
-    //         this.markToken(ctx.start, AnalysisListener.emptyPrefixValue);
-    //     }
-    // }
+    enterPrefixQualifierValue(ctx: PrefixQualifierValueContext) {
+        if (ctx.text) {
+            if (this.testLength(ctx.text, 9, AnalysisListener.tooLongFacilityPrefix, ctx.start)) {
+                this.messagePrefixes.push(ctx.text);
+            }
+        } else {
+            this.markToken(ctx.start, AnalysisListener.emptyPrefixValue);
+        }
+    }
 
-    // enterSeverityValue(ctx: SeverityValueContext) {
-    //     this.currentSeverity = ctx.text ? ctx.text.toUpperCase() : "";
-    // }
+    enterSeverityValue(ctx: SeverityValueContext) {
+        this.currentSeverity = ctx.text ? ctx.text : "";
+    }
 
-    // enterSeverityQualifier(ctx: SeverityQualifierContext) {
-    //     this.currentSeverityQualifier = ctx.text ? ctx.text.slice(1).toUpperCase() : "";
-    // }
+    enterSeverityQualifier(ctx: SeverityQualifierContext) {
+        this.currentSeverityQualifier = ctx.text ? ctx.text.trim().slice(1) : "";
+    }
 
-    // enterMessageName(ctx: MessageNameContext) {
-    //     this.currentIdenification = "";
-    //     if (ctx.text) {
-    //         for (const prefix of this.messagePrefixes) {
-    //             const varName = prefix + ctx.text;
-    //             if (this.testLength(varName, 31, AnalysisListener.tooLongMessageName, ctx.start)) {
-    //                 if (this.symbols.has(varName.toUpperCase())) {
-    //                     this.markToken(ctx.start, AnalysisListener.messageSymbolAlreadyExists);
-    //                     break;
-    //                 } else {
-    //                     this.symbols.add(varName.toUpperCase());
-    //                 }
-    //             } else {
-    //                 break;
-    //             }
-    //         }
-    //     } else {
-    //         this.markToken(ctx.start, AnalysisListener.emptyMessageName);
-    //     }
-    //     if (this.testRange(this.currentMessageNumber, 1, 4095, AnalysisListener.tooBigMessageNumber, ctx.start)) {
-    //         this.currentMessageNumber ++;
-    //     }
-    // }
+    enterMessageName(ctx: MessageNameContext) {
+        this.currentIdenification = ctx.start;
+        if (ctx.text) {
+            for (const prefix of this.messagePrefixes) {
+                const varName = prefix + ctx.text;
+                if (this.testLength(varName, 31, AnalysisListener.tooLongMessageName, ctx.start)) {
+                    if (this.symbols.has(varName)) {
+                        this.markToken(ctx.start, AnalysisListener.messageSymbolAlreadyExists);
+                        break;
+                    } else {
+                        this.symbols.add(varName);
+                    }
+                } else {
+                    break;
+                }
+            }
+        } else {
+            this.markToken(ctx.start, AnalysisListener.emptyMessageName);
+        }
+        if (this.testRange(this.currentMessageNumber, 1, 4095, AnalysisListener.tooBigMessageNumber, ctx.start)) {
+            this.currentMessageNumber ++;
+        }
+    }
 
-    // exitMessage(ctx: MessageContext) {
-    //     if (!this.currentIdenification && ctx._name) {
-    //         this.testMessageIdent(ctx._name.start);
-    //     }
-    //     if (!(this.currentSeverity || this.currentSeverityQualifier)) {
-    //         this.markToken(ctx.start, AnalysisListener.emptySeverity, DiagnosticType.Warning);
-    //     }
-    //     this.currentSeverityQualifier = "";
-    // }
+    exitMessage(ctx: MessageContext) {
+        this.testMessageIdent(this.currentIdenification);
+        if (!(this.currentSeverity || this.currentSeverityQualifier)) {
+            this.markToken(ctx.start, AnalysisListener.emptySeverity, DiagnosticType.Warning);
+        }
+        this.currentSeverityQualifier = "";
+    }
 
-    // enterIdentificationValue(ctx: IdentificationValueContext) {
-    //     if (ctx.text) {
-    //         if (this.testLength(ctx.text, 9, AnalysisListener.tooLongIdentification, ctx.start)) {
-    //             this.testMessageIdent(ctx.start);
-    //             this.currentIdenification = ctx.text;
-    //         }
-    //     } else {
-    //         this.markToken(ctx.start, AnalysisListener.emptyMessageIdentification);
-    //     }
-    // }
+    enterIdentificationValue(ctx: IdentificationValueContext) {
+        if (ctx.text) {
+            if (this.testLength(ctx.text, 9, AnalysisListener.tooLongIdentification, ctx.start)) {
+                this.currentIdenification = ctx.start;
+            }
+        } else {
+            this.markToken(ctx.start, AnalysisListener.emptyMessageIdentification);
+        }
+    }
 
-    // enterMessageText(ctx: MessageTextContext) {
-    //     if (ctx.text.length > 255+2) {
-    //         this.markText(AnalysisListener.tooLongMessageText, ctx.start.charPositionInLine + 1, ctx.start.line, ctx.text.length - 2);
-    //     } else {
-    //         const pos = ctx.text.indexOf("\n");
-    //         if (pos !== -1) {
-    //             this.markText(AnalysisListener.oneLine, ctx.start.charPositionInLine + pos, ctx.start.line, 1);
-    //         }
-    //     }
-    // }
+    enterMessageText(ctx: MessageTextContext) {
+        if (ctx.text.length > 255+2) {
+            this.markText(AnalysisListener.tooLongMessageText, ctx.start.charPositionInLine + 1, ctx.start.line, ctx.text.length - 2);
+        } else {
+            const pos = ctx.text.indexOf("\n");
+            if (pos !== -1) {
+                this.markText(AnalysisListener.oneLine, ctx.start.charPositionInLine + pos, ctx.start.line, 1);
+            }
+        }
+    }
 
-    // enterFaoCountValue(ctx: FaoCountValueContext) {
-    //     if (ctx.text) {
-    //         const value = parseInt(ctx.text, 10);
-    //         this.testRange(value, 0, 255, AnalysisListener.tooBigFaoCount, ctx.start);
-    //     } else{
-    //         this.markToken(ctx.start, AnalysisListener.emptyFaoCount);
-    //     }
-    // }
+    enterFaoCountValue(ctx: FaoCountValueContext) {
+        if (ctx.text) {
+            const value = parseInt(ctx.text, 10);
+            this.testRange(value, 0, 255, AnalysisListener.tooBigFaoCount, ctx.start);
+        } else{
+            this.markToken(ctx.start, AnalysisListener.emptyFaoCount);
+        }
+    }
 
-    // enterUserValue(ctx: UserValueContext) {
-    //     if (ctx.text) {
-    //         const value = parseInt(ctx.text, 10);
-    //         this.testRange(value, 0, 255, AnalysisListener.tooBigUserValue, ctx.start);
-    //     } else{
-    //         this.markToken(ctx.start, AnalysisListener.emptyUserValue);
-    //     }
-    // }
+    enterUserValueValue(ctx: UserValueValueContext) {
+        if (ctx.text) {
+            const value = parseInt(ctx.text, 10);
+            this.testRange(value, 0, 255, AnalysisListener.tooBigUserValue, ctx.start);
+        } else{
+            this.markToken(ctx.start, AnalysisListener.emptyUserValue);
+        }
+    }
 
-    // enterLiteralDefinition(ctx: LiteralDefinitionContext) {
-    //     if (ctx._name && ctx._name.text) {
-    //         if (this.symbols.has(ctx._name.text.toUpperCase())) {
-    //             this.markToken(ctx._name, AnalysisListener.messageSymbolAlreadyExists);
-    //         } else {
-    //             this.symbols.add(ctx._name.text.toUpperCase());
-    //         }
-    //     } else {
-    //         this.markToken(ctx.start, AnalysisListener.emptyLiteralName);
-    //     }
-    // }
+    enterLiteralName(ctx: LiteralNameContext) {
+        if (ctx.text) {
+            if (this.symbols.has(ctx.text)) {
+                this.markToken(ctx.start, AnalysisListener.messageSymbolAlreadyExists);
+            } else {
+                this.symbols.add(ctx.text);
+            }
+        } else {
+            this.markToken(ctx.start, AnalysisListener.emptyLiteralName);
+        }
+    }
 
-    // enterExpressionVariable(ctx: ExpressionVariableContext) {
-    //     // AtomContext may have number, so _value may be empty
-    //     if (ctx.text) {
-    //         if (!this.symbols.has(ctx.text.toUpperCase())) {
-    //             this.markText(AnalysisListener.undefinedVariable, ctx.start.charPositionInLine, ctx.start.line, ctx.text.length);
-    //         }
-    //     }
-    // }
+    enterExpressionVariable(ctx: ExpressionVariableContext) {
+        if (ctx.text) {
+            if (!this.symbols.has(ctx.text)) {
+                this.markText(AnalysisListener.undefinedVariable, ctx.start.charPositionInLine, ctx.start.line, ctx.text.length);
+            }
+        }
+    }
 
-    // enterBase(ctx: BaseContext) {
-    //     if (ctx._value && ctx._value.text) {
-    //         const value = this.parseNumber(ctx._value);
-    //         if (this.testRange(value, 1, 4095, AnalysisListener.tooBigMessageNumber, ctx._value.start)) {
-    //             this.currentMessageNumber = value;
-    //         }
-    //     } else{
-    //         this.markToken(ctx.start, AnalysisListener.emptyBaseValue);
-    //     }
-    // }
+    enterBaseNumber(ctx: BaseNumberContext) {
+        if (ctx.text) {
+            const value = this.parseNumber(ctx);
+            if (this.testRange(value, 1, 4095, AnalysisListener.tooBigMessageNumber, ctx.start)) {
+                this.currentMessageNumber = value;
+            }
+        } else{
+            this.markToken(ctx.start, AnalysisListener.emptyBaseValue);
+        }
+    }
 
     public parseNumber(ctx: NumberContext) {
         let nodeNumber = ctx.NUMBER();
-        nodeNumber = nodeNumber || ctx.ZNUMBER();
         if (nodeNumber) {
             return parseInt(nodeNumber.text, 10);
         }
@@ -278,8 +246,8 @@ export class AnalysisListener implements msgListener {
      * @param token 
      * @returns true if message is unique
      */
-    public testMessageIdent(token: Token) {
-        if (!token.text) {
+    public testMessageIdent(token?: Token) {
+        if (!token || !token.text) {
             return false;
         }
         if (!this.currentFacility) {
