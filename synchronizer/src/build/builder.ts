@@ -747,6 +747,28 @@ export class Builder {
                     if (cwd && file.toUpperCase().startsWith(cwd)) {
                         localFile = file.slice(cwd.length);
                     }
+                    // check MSG or CLD
+                    if (entry.facility &&
+                        (entry.facility.toUpperCase() === "MESSAGE" || entry.facility.toUpperCase() === "CDU") &&
+                        (selection.type === "release" || selection.type === "debug")) {
+                        // conver target to source
+                        const outPathLength = scopeData.ensured.projectSection.outdir.length + selection.type.length + 6;   // 6 = length of "obj" and three separators
+                        localFile = localFile.slice(outPathLength);
+                        const dotPos = localFile.indexOf(".");
+                        if (dotPos >= 0) {
+                            localFile = localFile.slice(0, dotPos);
+                            switch (entry.facility.toUpperCase()) {
+                                case "MESSAGE":
+                                    localFile += ".msg";  // we assume it is MSG
+                                    break;
+                                case "CDU":
+                                    localFile += ".cld";  // we assume it is CLD
+                                    break;
+                                default:
+                                    localFile += ".txt";  // so it might be TXT?
+                            }
+                        }
+                    }
                     // find case-insensitive
                     const found = await scopeData.localSource.findFiles(localFile);
                     if (found.length === 1) {

@@ -1,12 +1,12 @@
 {
     "name": "msg",
     "displayName": "msg",
-    "description": "msg language",
-    "version": "0.0.1",
+    "description": "msg",
+    "version": "0.0.3",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
-        "url": "git:vmssoftware"
+        "url": "git:"
     },
     "engines": {
         "vscode": "^1.28.0"
@@ -14,9 +14,10 @@
     "categories": [
         "Programming Languages"
     ],
-    "scripts": {
-        "package": "vsce package"
-    },
+    "activationEvents": [
+        "onLanguage:msg"
+    ],
+    "main": "./out/extension",
     "contributes": {
         "languages": [
             {
@@ -28,15 +29,47 @@
                 "extensions": [
                     ".msg"
                 ],
-                "configuration": "./language-configuration.json"
+                "configuration": "./msg.configuration.json"
             }
         ],
         "grammars": [
             {
                 "language": "msg",
                 "scopeName": "source.msg",
-                "path": "./syntaxes/msg.tmLanguage.json"
+                "path": "./syntaxes/msg.json"
             }
         ]
+    },
+    "scripts": {
+        "compile": "tsc",
+        "package": "vsce package",
+        "watch": "tsc -watch",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test",
+        "get-ext-api": "PowerShell copy -Path ..\\config-helper\\out\\config\\config.d.ts -Destination src\\ext-api\\",
+        "antlr4ts": "antlr4ts -o src -visitor src/msg.g4"
+    },
+    "devDependencies": {
+        "@types/mocha": "^5.2.5",
+        "@types/node": "^8.10.38",
+        "antlr4ts-cli": "^0.5.0-alpha.1",
+        "del": "^3.0.0",
+        "event-stream": "^4.0.1",
+        "gulp": "^3.9.1",
+        "gulp-sourcemaps": "^2.6.4",
+        "gulp-typescript": "^5.0.0-alpha.3",
+        "run-sequence": "^2.2.1",
+        "tslint": "^5.11.0",
+        "typescript": "^3.1.6",
+        "vsce": "^1.53.0",
+        "vscode": "^1.1.21",
+        "vscode-nls-dev": "github:vorfol/vscode-nls-dev"
+    },
+    "dependencies": {
+        "@types/ssh2": "^0.5.36",
+        "@vorfol/common": "0.0.20",
+        "antlr4-c3": "^1.1.11",
+        "antlr4ts": "^0.5.0-alpha.1",
+        "vscode-nls": "^4.0.0"
     }
 }

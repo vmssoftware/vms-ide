@@ -1,5 +1,6 @@
-# mms README
+# OpenVMS SSH
 
-The extension "vmssoftware.msg" provides the VMS MSG language support.
+This is the README for extension "MSG ANTLR".
 
------------------------------------------------------------------------------------------------------------
+## Features
+
