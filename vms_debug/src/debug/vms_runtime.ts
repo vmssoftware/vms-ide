@@ -19,6 +19,7 @@ import { GetSyncApi } from '../ext-api/get-sync-api';
 
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
+const abortKey = "R";
 
 
 export interface VMSBreakpoint
@@ -176,7 +177,7 @@ export class VMSRuntime extends EventEmitter
 			this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("error", "dbge"));
 			this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
 			this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
-			this.shell.SendCommandToQueue(this.dbgCmd.modeNoWait());
+			this.shell.SendCommandToQueue(this.dbgCmd.setAbortKey(abortKey));
 			this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
 		}
 		else//reload program
@@ -196,6 +197,8 @@ export class VMSRuntime extends EventEmitter
 		await this.setRemoteBreakpointsAll();
 
 		this.continue();
+
+		vscode.debug.activeDebugConsole.append("\n\x1B[2J\x1B[H");//clean old data from DEBUG CONSOLE
 	}
 
 	private addPrefixToArray(perfix : string, array : string[])
@@ -262,8 +265,13 @@ export class VMSRuntime extends EventEmitter
 
 	public stop()
 	{
-		this.buttonPressd = DebugButtonEvent.btnPause;
-		this.shell.SendCommandToQueue(this.dbgCmd.stop());
+		if(this.buttonPressd !== DebugButtonEvent.btnPause)
+		{
+			this.buttonPressd = DebugButtonEvent.btnPause;
+			let symbol = this.dbgCmd.getCtrlPlusSymbol(abortKey);
+			this.shell.SendData(this.dbgCmd.customCommand(symbol).getCommand());//interrupt program execution
+			this.shell.SendData(this.dbgCmd.stop().getCommand());
+		}
 	}
 
 	public exit(restart? : boolean)
@@ -272,15 +280,9 @@ export class VMSRuntime extends EventEmitter
 		//if the programm is running
 		if(this.programEnd === false && this.shell.getCurrentCommand().getBody() !== "")
 		{
-			if(this.shell.getStatusCommand() === false)
-			{
-				this.shell.SendCommand(this.dbgCmd.customCmdNoParam("0"));
-			}
-			else
-			{
-				this.shell.SendCommand(this.dbgCmd.customCmdNoParam(""));
-				this.shell.SendCommand(this.dbgCmd.customCmdNoParam("0"));
-			}
+			let symbol = this.dbgCmd.getCtrlPlusSymbol(abortKey);
+			this.shell.SendData(this.dbgCmd.customCommand(symbol).getCommand());//interrupt program execution
+			this.shell.SendCommand(this.dbgCmd.stop());
 		}
 
 		this.shell.resetParameters();
@@ -660,6 +662,7 @@ export class VMSRuntime extends EventEmitter
 				case DebugCmdVMS.dbgStep:
 				case DebugCmdVMS.dbgSelect:
 				case DebugCmdVMS.dbgSetDisplay:
+				case DebugCmdVMS.dbgHelp:
 					//don't resolve from the debug console
 					allow = false;
 					break;
@@ -1083,7 +1086,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			this.debugRun = true;
 
-			this.dbgParser.parseDebugData(this.shell.getCurrentCommand(), this.shell.getPreviousCommand(), type, data, this.sourcePaths, this.lisPaths);
+			this.dbgParser.parseDebugData(this.shell, type, data, this.sourcePaths, this.lisPaths);
 
 			let messageCommand = this.dbgParser.getCommandMessage();
 			let messageDebug = this.dbgParser.getDebugMessage();
@@ -1137,6 +1140,22 @@ export class VMSRuntime extends EventEmitter
 						break;
 				}
 			}
+			if(messageUser !== "")
+			{
+				if (this.logFn)
+				{
+					this.logFn(LogType.information, () => messageUser);
+				}
+
+				vscode.debug.activeDebugConsole.append(messageUser);
+
+				if(messageUser.includes(MessageDebuger.msgNoImage))
+				{
+					this.programEnd = true;
+					this.shell.cleanQueueCommands();
+					this.sendEvent('end');//close debugger
+				}
+			}
 			if(messageDebug !== "")
 			{
 				let showMsg : boolean = true;
@@ -1149,6 +1168,7 @@ export class VMSRuntime extends EventEmitter
 				if(messageDebug.includes(MessageDebuger.msgEnd))
 				{
 					this.programEnd = true;
+					this.shell.cleanQueueCommands();
 					this.sendEvent('end');//close debugger
 				}
 				else if(messageDebug.includes(MessageDebuger.msgNoSccess))
@@ -1202,6 +1222,7 @@ export class VMSRuntime extends EventEmitter
 				}
 				else if(messageDebug.includes(MessageDebuger.msgNoProcess))
 				{
+					this.shell.cleanQueueCommands();
 					this.sendEvent('end');//close debugger //Error loading image
 				}
 
@@ -1210,21 +1231,7 @@ export class VMSRuntime extends EventEmitter
 					vscode.debug.activeDebugConsole.append(messageDebug);
 				}
 			}
-			if(messageUser !== "")
-			{
-				if (this.logFn)
-				{
-					this.logFn(LogType.information, () => messageUser);
-				}
 
-				vscode.debug.activeDebugConsole.append(messageUser);
-
-				if(messageUser.includes(MessageDebuger.msgNoImage))
-				{
-					this.programEnd = true;
-					this.sendEvent('end');//close debugger
-				}
-			}
 
 			if(this.dbgParser.getCommandButtonStatus())
 			{
