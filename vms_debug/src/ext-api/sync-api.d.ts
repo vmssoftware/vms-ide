@@ -1,5 +1,6 @@
 import { ISource, sourceType } from "./source";
 export interface IProjectSection {
+    break: string;
     builders: string;
     exclude: string;
     headers: string;
@@ -17,6 +18,7 @@ export interface ISynchronizeSection {
     keepAlive: boolean;
     setTimeAttempts: number;
     setTimeByShell: boolean;
+    unzipCmd: string;
 }
 export interface ISyncScopeSettings {
     projectSection: IProjectSection;
