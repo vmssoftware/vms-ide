@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.49",
+    "version": "0.1.50",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -272,6 +272,12 @@
                     ],
                     "description": "Project dependencies"
                 },
+                "vmssoftware.synchronizer.project.break": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "C",
+                    "description": "%properties.project.break.description%"
+                },
                 "vmssoftware.synchronizer.project.builders": {
                     "scope": "resource",
                     "type": "string",
@@ -324,12 +330,6 @@
                     "default": "executable",
                     "description": "%properties.project.projectType.description%"
                 },
-                "vmssoftware.synchronizer.project.source": {
-                    "scope": "resource",
-                    "type": "string",
-                    "default": "*.{c,cpp}",
-                    "description": "%properties.project.source.description%"
-                },
                 "vmssoftware.synchronizer.project.resource": {
                     "scope": "resource",
                     "type": "string",
@@ -341,6 +341,12 @@
                     "type": "string",
                     "default": "project",
                     "description": "%properties.project.root.description%"
+                },
+                "vmssoftware.synchronizer.project.source": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "*.{c,cpp}",
+                    "description": "%properties.project.source.description%"
                 },
                 "vmssoftware.synchronizer.synchronize.downloadNewFiles": {
                     "scope": "resource",

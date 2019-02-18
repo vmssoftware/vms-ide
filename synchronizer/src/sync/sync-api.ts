@@ -5,6 +5,7 @@ import { ensureSettings } from "../ensure-settings";
 import { ISource, sourceType } from "./source";
 
 export interface IProjectSection {
+    break: string;
     builders: string;
     exclude: string;
     headers: string;

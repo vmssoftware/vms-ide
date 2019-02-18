@@ -13,6 +13,7 @@ export class ProjectSection implements IProjectSection, IConfigSection {
 
     public static is(candidate: any): candidate is IProjectSection {
         return !!candidate &&
+        typeof candidate.break === "string" &&
         typeof candidate.builders === "string" &&
         typeof candidate.exclude === "string" &&
         typeof candidate.headers === "string" &&
@@ -25,6 +26,7 @@ export class ProjectSection implements IProjectSection, IConfigSection {
         typeof candidate.source === "string";
     }
 
+    public break: string = "C";
     public builders: string = "*.{mms,com}";
     public exclude: string = "**/{node_modules,.vscode}/**";
     public headers: string = "*.h";
@@ -46,6 +48,7 @@ export class ProjectSection implements IProjectSection, IConfigSection {
 
     public templateToFillFrom(): IConfigData {
         return {
+            break: this.break,
             builders: this.builders,
             exclude: this.exclude,
             headers: this.headers,
@@ -61,6 +64,8 @@ export class ProjectSection implements IProjectSection, IConfigSection {
 
     public fillFrom(data: IConfigData): boolean {
         if (ProjectSection.is(data)) {
+            this.break = data.break ? data.break[0] : "C";
+            this.builders = data.builders;
             this.exclude = data.exclude;
             this.headers = data.headers;
             this.listing = data.listing;
