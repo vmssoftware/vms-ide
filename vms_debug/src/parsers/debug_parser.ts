@@ -4,7 +4,7 @@ import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
 import { Queue } from '../queue/queues';
 import { ftpPathSeparator } from '@vorfol/common';
 import { FileManagerExt } from '../ext-api/file_manager';
-import { TypeDataMessage } from '../net/shell-session';
+import { TypeDataMessage, ShellSession } from '../net/shell-session';
 import { VariableFileInfo, HolderDebugVariableInfo, ReflectKind, DebugVariable } from './debug_variable_info';
 import { WorkspaceFolder } from 'vscode';
 
@@ -66,11 +66,11 @@ export class DebugParser
 	}
 
 
-	public parseDebugData(command : CommandMessage, commandPrev : CommandMessage, type: TypeDataMessage, data : string, sourcePaths: string[], lisPaths: string[])
+	public parseDebugData(shell : ShellSession, type: TypeDataMessage, data : string, sourcePaths: string[], lisPaths: string[])
 	{
 		if(data !== "")
 		{
-			let cmd = this.splitData(command, commandPrev, type, data);
+			let cmd = this.splitData(shell.getCurrentCommand(), shell.getPreviousCommand(), type, data);
 
 			let msgLines = this.displayDataString[1].split("\n");//debugger data
 
@@ -88,6 +88,12 @@ export class DebugParser
 				case DebugCmdVMS.dbgStepOver:
 				case DebugCmdVMS.dbgStepIn:
 				case DebugCmdVMS.dbgStepReturn:
+					if(shell.getStatusCommand())
+					{
+						this.commandDone = true;
+						this.commandButtonDone = true;
+					}
+
 					for(let item of msgLines)
 					{
 						if(item !== "")
@@ -179,6 +185,7 @@ export class DebugParser
 
 	private parseEscSequence(data : string)
 	{
+		let topicMsg = false;
 		let positionOld : number = 0;
 		let escapes = data.split("\x1B");//[ESC]
 		let dataPrompt = escapes.shift();
@@ -238,7 +245,23 @@ export class DebugParser
 						{
 							if(item.charAt(index+2) === "\x0F")
 							{
-								this.topicNumberString.push(position[0]);
+								let numFind = false;
+
+								for(let item of this.topicNumberString)
+								{
+									if(item === position[0])
+									{
+										numFind = true;
+										break;
+									}
+								}
+
+								if(!numFind)
+								{
+									this.topicNumberString.push(position[0]);
+								}
+
+								topicMsg = true;
 							}
 						}
 						else//data of display
@@ -271,6 +294,14 @@ export class DebugParser
 						}
 					}
 				}
+			}
+		}
+
+		if(topicMsg)
+		{
+			for(let i = 0; i < this.topicNumberString.length; i++)
+			{
+				this.displayDataString[i] = "";
 			}
 		}
 

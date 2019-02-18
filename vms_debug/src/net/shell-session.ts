@@ -135,12 +135,7 @@ export class ShellSession
         }
         else if(data.includes("\x00") && (data.includes(this.promptCmd) || data.includes("DBG> ")))
         {
-            if(data.includes("DBG> exit"))//catch command "exit"
-            {
-                this.receiveCmd = true;
-            }
-
-            if(this.receiveCmd)
+            if(this.receiveCmd || data.includes(this.currentCmd.getBody()))
             {
                 if(data.includes("DBG> "))
                 {
@@ -148,9 +143,9 @@ export class ShellSession
                     let dataS = data.substr(0, indexEnd-1);
                     let dataP = data.substr(indexEnd-1);
                     indexEnd = dataP.indexOf(" ");
-                    let dataE = dataP.substr(indexEnd, dataP.length-1);
+                    //let dataE = dataP.substr(indexEnd, dataP.length-1);//data of next command
 
-                    this.resultData += dataS + dataE;
+                    this.resultData += dataS;// + dataE;
                     this.mode = ModeWork.debug;
                 }
                 else
@@ -171,8 +166,19 @@ export class ShellSession
 
                 if(this.resultData !== "")
                 {
-                    this.extensionDataCb(this.mode, TypeDataMessage.typeData, this.resultData);
-                    this.resultData = "";
+                    if(!this.receiveCmd)
+                    {
+                        if(this.resultData.includes(this.currentCmd.getBody()))//getCommand()
+                        {
+                            this.extensionDataCb(this.mode, TypeDataMessage.typeCmd, this.resultData);
+                            this.resultData = "";
+                        }
+                    }
+                    else
+                    {
+                        this.extensionDataCb(this.mode, TypeDataMessage.typeData, this.resultData);
+                        this.resultData = "";
+                    }
                 }
 
                 let cmd = this.currentCmd.getBody();
@@ -208,13 +214,13 @@ export class ShellSession
                 cmd.includes(DebugCmdVMS.dbgStepOver) ||
                 cmd.includes(DebugCmdVMS.dbgStepIn) ||
                 cmd.includes(DebugCmdVMS.dbgStepReturn) ||
-                cmd.includes(OsCmdVMS.osRunProgram))
+                cmd.includes(OsCmdVMS.osRunProgram) ||
+                cmd === "")
             {
                 if(this.resultData !== "")
                 {
                     this.extensionDataCb(this.mode, TypeDataMessage.typeData, this.resultData);
                     this.resultData = "";
-                    this.SendCommandFromQueue();
                 }
             }
         }
@@ -255,6 +261,11 @@ export class ShellSession
         this.disconnect = false;
         this.currentCmd = new CommandMessage("", "");
         this.previousCmd = new CommandMessage("", "");
+        this.queueCmd = new Queue<CommandMessage>();
+    }
+
+    public cleanQueueCommands()
+    {
         this.queueCmd = new Queue<CommandMessage>();
     }
 

@@ -37,8 +37,10 @@ export enum DebugCmdVMS
 	dbgSetModeNoWait = "set mode nowait",
 	dbgSetModeScreen = "set mode screen",
 	dbgSetModeNoScreen = "set mode noscreen",
+	dbgSetAbortKey = "set abort_key =",
 	dbgSelect = "select",
 	dbgSetDisplay = "display",
+	dbgHelp = "help",
 }
 
 export class CommandMessage
@@ -234,6 +236,10 @@ export class DebugCommands
 	{
 		return new CommandMessage(DebugCmdVMS.dbgSetModeScreen, "");
 	}
+	public setAbortKey(key : string) : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgSetAbortKey, "CTRL_" + key);
+	}
 	public redirectDataToDisplay(dataName : string, displayName : string) : CommandMessage
 	{
 		return new CommandMessage(DebugCmdVMS.dbgSelect, "/" + dataName + " " + displayName);
@@ -251,8 +257,15 @@ export class DebugCommands
 		return new CommandMessage(DebugCmdVMS.dbgSetDisplay, "/clear " + displayNames);
 	}
 
-	public customCmdNoParam(command : string) : CommandMessage
+	public customCommand(command : string) : CommandMessage
 	{
 		return new CommandMessage(command, "");
+	}
+
+	public getCtrlPlusSymbol(symbolAZ : string) : string
+	{
+		let code = symbolAZ.toLowerCase().charCodeAt(0) - "a".charCodeAt(0) + 1;
+
+		return String.fromCharCode(code);
 	}
 }
