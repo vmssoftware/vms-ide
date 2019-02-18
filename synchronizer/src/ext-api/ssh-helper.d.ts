@@ -8,7 +8,7 @@ export declare class SshHelper {
     logFn: LogFunction;
     constructor(logFn?: LogFunction);
     dispose(): void;
-    clearPasswordCashe(): void;
+    clearPasswordCache(): void;
     pipeFile(source: ICanCreateReadStream, dest: ICanCreateWriteStream, file: string, destFile?: string, logFn?: LogFunction): Promise<boolean>;
     memStream(): IMemoryStreamCreator;
     editSettings(scope?: string): Promise<boolean>;

@@ -89,6 +89,7 @@ async function createTerminal() : Promise<void>
 				}
 				else
 				{
+					await fileManager.clearPasswordCache();
 					terminals.start(terminal, connection.host, connection.username, connection.password);
 				}
 			}

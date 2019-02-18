@@ -1,7 +1,7 @@
 import { ftpPathSeparator } from "@vorfol/common";
 
 export const splitter = new RegExp(ftpPathSeparator, "g");
-export const vmsPathRgx = /((\w+):)?(\[((\.)?(\w+)(\.(\w+))*)\])?(((\w+)(\.(\w+)?)?)?(;(\d+))?)?/;
+export const vmsPathRgx = /(([\w_$]+):)?(\[((\.)?([\w_$]+)(\.([\w_$]+))*)\])?((([\w_$]+)(\.([\w_$]+)?)?)?(;(\d+))?)?/;
 export enum VmsPathPart {
     bareDir = 4,
     isRelative = 5,

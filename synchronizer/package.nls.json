@@ -12,6 +12,7 @@
     "command.forceSynchronized.title": "Force synchronized status",
     "command.forceBuilt.title": "Force built status",
     "command.uploadZip.title": "Upload all via Zip",
+    "command.downloadHeaders.title": "Download system headers",
     "properties.project.break.description": "Debugger break key",
     "properties.project.builders.description": "Exclude pattern",
     "properties.project.exclude.description": "Exclude pattern",

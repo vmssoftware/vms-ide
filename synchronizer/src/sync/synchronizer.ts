@@ -52,6 +52,7 @@ export class Synchronizer {
     private static instance?: Synchronizer;
 
     public logFn: LogFunction;
+    public stopIssued = false;
 
     private sshHelper?: SshHelper;
     private transferBarrier = new Barrier(10);
@@ -62,12 +63,14 @@ export class Synchronizer {
     }
 
     public enableRemote() {
+        this.stopIssued = false;
         for (const scopeData of Synchronizer.syncScopes.values()) {
             scopeData.remoteSource.enabled = true;
         }
     }
 
     public disableRemote() {
+        this.stopIssued = true;
         this.logFn(LogType.debug, () => localize("debug.disablig", "Disabling all SFTP and SHELL"));
         for (const scopeData of Synchronizer.syncScopes.values()) {
             scopeData.remoteSource.enabled = false;
@@ -108,7 +111,7 @@ export class Synchronizer {
             return undefined;
         }
         // clear password cache
-        this.sshHelper.clearPasswordCashe();
+        this.sshHelper.clearPasswordCache();
         const scope = ensured.configHelper.workspaceFolder ? ensured.configHelper.workspaceFolder.name : undefined;
         const [sftp, shell] = await Promise.all([
                 this.sshHelper.getDefaultSftp(scope),
@@ -130,7 +133,7 @@ export class Synchronizer {
         // enable
         this.enableRemote();
         // clear password cache
-        this.sshHelper!.clearPasswordCashe();
+        this.sshHelper!.clearPasswordCache();
         // get full list
         const includes = [
             ensured.projectSection.source,
@@ -194,7 +197,7 @@ export class Synchronizer {
         // enable
         this.enableRemote();
         // clear password cache
-        this.sshHelper!.clearPasswordCashe();
+        this.sshHelper!.clearPasswordCache();
         // get full list
         const includes = [
             ensured.projectSection.source,

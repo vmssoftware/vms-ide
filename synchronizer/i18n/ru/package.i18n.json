@@ -12,6 +12,7 @@
     "command.forceSynchronized.title": "Установить статус синхронизировано",
     "command.forceBuilt.title": "Установить статус постороено",
     "command.uploadZip.title": "Upload all via Zip",
+    "command.downloadHeaders.title": "Download system headers",
     "properties.project.break.description": "Debugger break key",
     "properties.project.builders.description": "Файлы для построения проекта",
     "properties.project.exclude.description": "Исключить",

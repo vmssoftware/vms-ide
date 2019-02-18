@@ -47,7 +47,7 @@ export class SshHelper {
     public dispose() {
     }
 
-    public clearPasswordCashe() {
+    public clearPasswordCache() {
         ConnectConfigResolverImpl.clearCache();
     }
 

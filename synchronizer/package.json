@@ -28,6 +28,7 @@
         "onCommand:vmssoftware.synchronizer.forceSynchronized",
         "onCommand:vmssoftware.synchronizer.forceBuilt",
         "onCommand:vmssoftware.synchronizer.uploadZip",
+        "onCommand:vmssoftware.synchronizer.downloadHeaders",
         "onUri"
     ],
     "main": "./out/extension",
@@ -241,6 +242,11 @@
             {
                 "command": "vmssoftware.synchronizer.uploadZip",
                 "title": "%command.uploadZip.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.downloadHeaders",
+                "title": "%command.downloadHeaders.title%",
                 "category": "%command.category%"
             }
         ],

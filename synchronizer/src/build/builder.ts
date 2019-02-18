@@ -127,7 +127,7 @@ export class Builder {
             return false;
         }
         // clear password cache
-        this.sshHelper!.clearPasswordCashe();
+        this.sshHelper!.clearPasswordCache();
         let buildSelection: IBuildQuickPickItem | undefined;
         if (params === undefined) {
             // get list of builders

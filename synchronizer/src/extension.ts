@@ -1,3 +1,4 @@
+import * as nls from "vscode-nls";
 import { commands, env, ExtensionContext, window, workspace, extensions } from "vscode";
 
 import { Builder } from "./build/builder";
@@ -11,9 +12,9 @@ import { SyncApi } from "./sync/sync-api";
 import { Synchronizer } from "./sync/synchronizer";
 
 import { LogFunction, LogType } from "@vorfol/common";
+import { DownloadHeaders } from "./downloadHeaders";
 
 const locale = env.language ;
-import * as nls from "vscode-nls";
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
 // tslint:disable-next-line:no-empty
@@ -105,6 +106,13 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.uploadZip", async (scope: string, clear: string) => {
         return Perform("zip", scope, syncLog, clear);
     }));
+
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.downloadHeaders", async (scope: string, params: string) => {
+        return DownloadHeaders(scope, syncLog, params);
+    }));
+
+    
+
 
     const projectDependenciesProvider = new ProjDepProvider();
     const projectDescriptionProvider = new ProjDescrProvider();

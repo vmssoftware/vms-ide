@@ -81,7 +81,7 @@ export class ShellSession
 
             if (this.sshHelper)
             {
-                this.sshHelper.clearPasswordCashe();
+                this.sshHelper.clearPasswordCache();
                 this.sshShell = await this.sshHelper.getDefaultVmsShell(this.folder ? this.folder.name : "");
 
                 if (this.sshShell)
