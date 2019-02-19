@@ -5,13 +5,13 @@ import { Symbol, CodeCompletionCore } from "antlr4-c3";
 import { ParseCancellationException, IntervalSet, Interval } from 'antlr4ts/misc';
 import { ParseTreeWalker, TerminalNode, ParseTree, ParseTreeListener } from 'antlr4ts/tree';
 import { msgParser, MsgContentContext } from "./msgParser";
-import { ANTLRInputStream, CommonTokenStream, BailErrorStrategy, DefaultErrorStrategy, ParserRuleContext, Token } from 'antlr4ts';
+import { ANTLRInputStream, CommonTokenStream, BailErrorStrategy, DefaultErrorStrategy, ParserRuleContext, Token, RuleContext } from 'antlr4ts';
 import { msgLexer } from './msgLexer';
 import { DiagnosticEntry, SymbolKind, Definition, SymbolInfo } from './MsgFacade';
 import { ContextErrorListener, ContextLexerErrorListener } from './ContextErrorListener';
 import { PredictionMode } from 'antlr4ts/atn/PredictionMode';
 import { ContextSymbolTable, OtherSymbol } from './ContextSymbolTable';
-import { AnalysisListener } from './AnalysisListener';
+import { AnalysisListener, VariableSource } from './AnalysisListener';
 import { LogFunction, LogType } from '@vorfol/common';
 
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -22,7 +22,7 @@ export class SourceContext {
     public sourceId: string;
     public diagnostics: DiagnosticEntry[] = [];
     public symbolTable: ContextSymbolTable;
-    public symbolsForExpression?: Map<string, number>;     //symbol and token index after runAnalysis()
+    public symbolsForExpression?: Map<string, VariableSource>;     //symbol and token index after runAnalysis()
 
     // Grammar parsing infrastructure.
     private tokenStream?: CommonTokenStream;
@@ -158,6 +158,37 @@ export class SourceContext {
         let core = new CodeCompletionCore(this.parser);
         core.showResult = false;
         core.ignoredTokens = new Set([
+            msgParser.T__0,
+            msgParser.T__1,
+            msgParser.T__2,
+            msgParser.T__3,
+            msgParser.T__4,
+            msgParser.T__5,
+            msgParser.T__6,
+            msgParser.T__7,
+            msgParser.T__8,
+            msgParser.T__9,
+            msgParser.T__10,
+            msgParser.T__11,
+            msgParser.T__12,
+            msgParser.T__13,
+            msgParser.T__14,
+            msgParser.T__15,
+            msgParser.T__16,
+            msgParser.T__17,
+            msgParser.T__18,
+            msgParser.T__19,
+            msgParser.T__20,
+            msgParser.T__21,
+            msgParser.T__22,
+            msgParser.T__23,
+            msgParser.T__24,
+            msgParser.T__25,
+            msgParser.T__26,
+            msgParser.T__27,
+            msgParser.T__28,
+            msgParser.T__29,
+            msgParser.T__30,
             // msgParser.TITLE,
             // msgParser.IDENT,
             // msgParser.PAGE,
@@ -281,8 +312,8 @@ export class SourceContext {
         }
 
         //core.showDebugOutput = true;
-        core.showResult = true;
-        core.showRuleStack = true;
+        //core.showResult = true;
+        //core.showRuleStack = true;
         //core.debugOutputWithTransitions = true;
 
         let candidates = core.collectCandidates(index);
@@ -337,8 +368,8 @@ export class SourceContext {
             switch (key) {
                 case msgParser.RULE_expressionVariable:
                     if (this.symbolsForExpression) {
-                        this.symbolsForExpression.forEach((idx, value) => {
-                            if (idx < index) {
+                        this.symbolsForExpression.forEach((source, value) => {
+                            if (source.visibleFrom < index) {
                                 result.push(
                                     { 
                                         kind: SymbolKind.Other, 
@@ -368,54 +399,87 @@ export class SourceContext {
                         );
                     });
                     break;
-
-                // case ANTLRv4Parser.RULE_terminalRule: { // Lexer rules.
-                //     this.symbolTable.getAllSymbols(BuiltInTokenSymbol).forEach(symbol => {
-                //         if (symbol.name !== "EOF") {
-                //             result.push({ kind: SymbolKind.BuiltInLexerToken, name: symbol.name, source: this.fileName, definition: undefined, description: undefined });
-                //         }
-                //     });
-                //     this.symbolTable.getAllSymbols(VirtualTokenSymbol).forEach(symbol => {
-                //         result.push({ kind: SymbolKind.VirtualLexerToken, name: symbol.name, source: this.fileName, definition: undefined, description: undefined });
-                //     });
-
-                //     // Include fragment rules only when referenced from a lexer rule.
-                //     if (callStack[callStack.length - 1] === ANTLRv4Parser.RULE_lexerAtom) {
-                //         this.symbolTable.getAllSymbols(FragmentTokenSymbol).forEach(symbol => {
-                //             result.push({
-                //                 kind: SymbolKind.FragmentLexerToken,
-                //                 name: symbol.name,
-                //                 source: this.fileName,
-                //                 definition: undefined,
-                //                 description: undefined
-                //             });
-                //         });
-                //     }
-
-                //     this.symbolTable.getAllSymbols(TokenSymbol).forEach(symbol => {
-                //         result.push({
-                //             kind: SymbolKind.LexerToken,
-                //             name: symbol.name,
-                //             source: this.fileName,
-                //             definition: undefined,
-                //             description: undefined
-                //         });
-                //     });
-
-                //     break;
-                // }
-
-                // case ANTLRv4Parser.RULE_lexerCommandName: {
-                //     ["channel", "skip", "more", "mode", "push", "pop"].forEach(symbol => {
-                //         result.push({ kind: SymbolKind.Keyword, name: symbol, source: this.fileName, definition: undefined, description: undefined });
-                //     });
-                //     break;
-                // }
-
             }
         });
 
         return result;
     }
 
+    public symbolAtPosition(column: number, row: number, limitToChildren: boolean): SymbolInfo | undefined {
+        let terminal = parseTreeFromPosition(this.tree!, column, row);
+        if (!terminal || !(terminal instanceof TerminalNode) || terminal.symbol.type === msgParser.WHITESPACE) {
+            return undefined;
+        }
+
+        let parent = (terminal.parent as RuleContext);
+        switch (parent.ruleIndex) {
+            case  msgParser.RULE_expressionVariable:
+                let description = "In expression...";
+                if (this.symbolsForExpression) {
+                    const source = this.symbolsForExpression.get(terminal.text);
+                    if (source) {
+                        if (source.literal) {
+                            description = "Defined in LITERAL";
+                        } else if (source.message && source.prefix) {
+                            description = `Constructed: ${source.prefix.text} + ${source.message.text}`;
+                        }
+                    }
+                }
+                return {
+                    kind: SymbolKind.Variable,
+                    name:  terminal.text,
+                    source: this.fileName,
+                    description,
+                };
+        }
+
+        return undefined;
+
+    }
+
+}
+
+/**
+ * Returns the parse tree which covers the given position or undefined if none could be found.
+ */
+function parseTreeFromPosition(root: ParseTree, column: number, row: number): ParseTree | undefined {
+    // Does the root node actually contain the position? If not we don't need to look further.
+    if (root instanceof TerminalNode) {
+        let terminal = (root as TerminalNode);
+        let token = terminal.symbol;
+        if (token.line !== row) {
+            return undefined;
+        }
+
+        let tokenStop = token.charPositionInLine + (token.stopIndex - token.startIndex + 1);
+        if (token.charPositionInLine <= column && tokenStop >= column) {
+            return terminal;
+        }
+        return undefined;
+    } else {
+        let context = (root as ParserRuleContext);
+        if (!context.start || !context.stop) { // Invalid tree?
+            return undefined;
+        }
+
+        if (context.start.line > row || (context.start.line === row && column < context.start.charPositionInLine)) {
+            return undefined;
+        }
+
+        let tokenStop = context.stop.charPositionInLine + (context.stop.stopIndex - context.stop.startIndex + 1);
+        if (context.stop.line < row || (context.stop.line === row && tokenStop < column)) {
+            return undefined;
+        }
+
+        if (context.children) {
+            for (let child of context.children) {
+                let result = parseTreeFromPosition(child, column, row);
+                if (result) {
+                    return result;
+                }
+            }
+        }
+        return context;
+
+    }
 }

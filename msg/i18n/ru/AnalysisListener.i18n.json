@@ -23,5 +23,6 @@
     "tooLongMessageText": "The text can be up to 255 bytes long.",
     "tooLongTitleDescription": "The listing title has a maximum length of 28 characters.",
     "tooLongTitleName": "The title name has a maximum length of 31 characters.",
-    "undefinedVariable": "Undefined variable."
+    "undefinedVariable": "Undefined variable.",
+    "messageFaoCountDiff": "Wrong FAO count."
 }

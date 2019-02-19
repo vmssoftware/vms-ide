@@ -6,6 +6,7 @@ import { GetConfigApi } from './ext-api/get-config-api';
 import { languages, window, workspace, TextDocument, TextDocumentChangeEvent, Range, Diagnostic, DiagnosticSeverity, TextEditorSelectionChangeEvent, TextEditor } from 'vscode';
 import { MsgFacade, DiagnosticType } from './MsgFacade';
 import { MsgCompletionItemProvider } from './CompletionProvider';
+import { MsgHoverProvider } from './MsgHoverProvider';
 
 const locale = vscode.env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -42,6 +43,8 @@ export async function activate(context: vscode.ExtensionContext) {
             processDiagnostic(document);
         }
     }
+
+    context.subscriptions.push(languages.registerHoverProvider(MSG, new MsgHoverProvider(backend)));
 
     // context.subscriptions.push(languages.registerDefinitionProvider(MSG, new MsgDefinitionProvider(backend)));
     // context.subscriptions.push(languages.registerDocumentSymbolProvider(MSG, new MsgSymbolProvider(backend)));

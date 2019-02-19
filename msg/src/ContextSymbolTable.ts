@@ -169,4 +169,4 @@ export class ContextSymbolTable extends SymbolTable {
 
 export class OperatorSymbol extends Symbol { }
 export class OtherSymbol extends Symbol { }
-
+export class VariableSymbol extends ScopedSymbol { }

@@ -53,6 +53,15 @@ import { SevereContext } from "./msgParser";
 import { FatalContext } from "./msgParser";
 import { MessageTextContext } from "./msgParser";
 import { FaoContext } from "./msgParser";
+import { FaoContentContext } from "./msgParser";
+import { FaoWidthContext } from "./msgParser";
+import { FaoRepeatContext } from "./msgParser";
+import { FaoTestContext } from "./msgParser";
+import { FaoDirContext } from "./msgParser";
+import { FaoCharContext } from "./msgParser";
+import { FaoNumContext } from "./msgParser";
+import { FaoNumSizeContext } from "./msgParser";
+import { FaoSpecContext } from "./msgParser";
 
 
 /**
@@ -609,5 +618,104 @@ export interface msgListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFao?: (ctx: FaoContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.faoContent`.
+	 * @param ctx the parse tree
+	 */
+	enterFaoContent?: (ctx: FaoContentContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.faoContent`.
+	 * @param ctx the parse tree
+	 */
+	exitFaoContent?: (ctx: FaoContentContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.faoWidth`.
+	 * @param ctx the parse tree
+	 */
+	enterFaoWidth?: (ctx: FaoWidthContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.faoWidth`.
+	 * @param ctx the parse tree
+	 */
+	exitFaoWidth?: (ctx: FaoWidthContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.faoRepeat`.
+	 * @param ctx the parse tree
+	 */
+	enterFaoRepeat?: (ctx: FaoRepeatContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.faoRepeat`.
+	 * @param ctx the parse tree
+	 */
+	exitFaoRepeat?: (ctx: FaoRepeatContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.faoTest`.
+	 * @param ctx the parse tree
+	 */
+	enterFaoTest?: (ctx: FaoTestContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.faoTest`.
+	 * @param ctx the parse tree
+	 */
+	exitFaoTest?: (ctx: FaoTestContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.faoDir`.
+	 * @param ctx the parse tree
+	 */
+	enterFaoDir?: (ctx: FaoDirContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.faoDir`.
+	 * @param ctx the parse tree
+	 */
+	exitFaoDir?: (ctx: FaoDirContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.faoChar`.
+	 * @param ctx the parse tree
+	 */
+	enterFaoChar?: (ctx: FaoCharContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.faoChar`.
+	 * @param ctx the parse tree
+	 */
+	exitFaoChar?: (ctx: FaoCharContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.faoNum`.
+	 * @param ctx the parse tree
+	 */
+	enterFaoNum?: (ctx: FaoNumContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.faoNum`.
+	 * @param ctx the parse tree
+	 */
+	exitFaoNum?: (ctx: FaoNumContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.faoNumSize`.
+	 * @param ctx the parse tree
+	 */
+	enterFaoNumSize?: (ctx: FaoNumSizeContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.faoNumSize`.
+	 * @param ctx the parse tree
+	 */
+	exitFaoNumSize?: (ctx: FaoNumSizeContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `msgParser.faoSpec`.
+	 * @param ctx the parse tree
+	 */
+	enterFaoSpec?: (ctx: FaoSpecContext) => void;
+	/**
+	 * Exit a parse tree produced by `msgParser.faoSpec`.
+	 * @param ctx the parse tree
+	 */
+	exitFaoSpec?: (ctx: FaoSpecContext) => void;
 }
 

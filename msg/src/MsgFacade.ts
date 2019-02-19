@@ -6,6 +6,7 @@ import { SourceContext } from "./SourceContext";
 export enum SymbolKind {
     Keyword,
     Operator,
+    Variable,
     Other,
 }
 
@@ -135,4 +136,8 @@ export class MsgFacade {
         return context.getCodeCompletionCandidates(column, row);
     }
 
+    public symbolInfoAtPosition(fileName: string, column: number, row: number, limitToChildren: boolean = true): SymbolInfo | undefined {
+        let context = this.getContext(fileName);
+        return context.symbolAtPosition(column, row, limitToChildren);
+    }
 }

@@ -24,25 +24,6 @@ ERROR:            'ERROR';
 SEVERE:           'SEVERE';
 FATAL:            'FATAL';
 
-fragment FAOSTART:   '!';
-fragment FAONUM:     'O' | 'X' | 'Z' | 'U' | 'S';
-fragment FAONUMSIZE: 'B' | 'W' | 'L' | 'Q' | 'A' | 'I' | 'H' | 'J';
-fragment FAOCHAR:    'AC' | 'AD' | 'AF' | 'AS' | 'AZ';
-fragment FAOSPEC:    '^' | '_' | '!' | '/' | '--' | '+' | '%S' | '%T' | '%U' | '%I' | '%D' | '%E' | '%F';
-fragment FAODIR:     '@'? (FAOCHAR | FAONUM FAONUMSIZE);
-
-FAO: FAOSTART (
-      FAODIR
-   |  NUMBER FAODIR
-   |  NUMBER '(' FAODIR ')'
-   |  NUMBER '(' NUMBER FAODIR ')'
-   |  FAOSPEC 
-   |  NUMBER '%C'
-   |  NUMBER '<'
-   |  '>' 
-   |  NUMBER '*.' 
-   );
-
 WHITESPACE: (' '|'\t')+;
 NEWLINE: ('\r'?'\n'|'\n');
 
@@ -67,6 +48,7 @@ APOSTR: '\'';
 QUOTA: '"';
 B_OPEN: '<';
 B_CLOSE: '>';
+
 ANY: .;
 
 // =============================================================================
@@ -176,4 +158,25 @@ messageText:
       B_OPEN   (fao | ~B_CLOSE)* B_CLOSE 
    |  QUOTA    (fao | ~QUOTA)*   QUOTA
    |  APOSTR   (fao | ~APOSTR)*  APOSTR;
-fao: FAO;
+
+fao: EXCL faoContent;
+faoContent:
+      faoDir
+   |  faoWidth faoDir
+   |  faoRepeat '(' faoDir ')'
+   |  faoRepeat '(' faoWidth faoDir ')'
+   |  faoSpec 
+   |  faoTest '%C'
+   |  faoWidth '<'
+   |  '>' 
+   |  faoRepeat '*.' 
+   ;
+faoWidth:   '#' | NUMBER;
+faoRepeat:  '#' | NUMBER;
+faoTest:    '#' | NUMBER;
+faoDir:     '@'? (faoChar | faoNum faoNumSize);
+faoChar:    'AC' | 'AD' | 'AF' | 'AS' | 'AZ';
+faoNum:     'O' | 'X' | 'Z' | 'U' | 'S';
+faoNumSize: 'B' | 'W' | 'L' | 'Q' | 'A' | 'I' | 'H' | 'J';
+faoSpec:    '^' | '_' | '!' | '/' | '--' | '+' | '%S' | '%T' | '%U' | '%I' | '%D' | '%E' | '%F';
+
