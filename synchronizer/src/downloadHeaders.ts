@@ -107,38 +107,52 @@ export async function DownloadHeaders(scope: string, logFn: LogFunction, params:
 
         setContext(CommandContext.isSyncronizing, true);
         // 1. extract each file (TODO: how to do it in one command?)
+        const outFolder = ensured.projectSection.outdir + ftpPathSeparator + libName;
+        const downloadList: string[] = [];
+        //let max = 5;
         for (let file of allHeaders) {
-            // TODO: how to leave extension empty?!
+            // how to leave extension empty?!
             let fileOut = file;
-            if (!file.includes(".")) {
-                fileOut = file + ".";
+            if (!file.includes(".")) {  // adding dot to the end of the file prevents LIBRARY to add weird extension
+                fileOut = file + ".";   // also BOSTON-like ftp server won't try to download .DIR instead
             }
             result = await shell.execCmd(`library/extract=${file}/output=${fileOut} sys$library:${chosen}`);
             if (!TestExecResult(result)) {
                 logFn(LogType.error, () => localize("file.extracted", "Extract failed: {0}", file));
             } else {
                 logFn(LogType.information, () => localize("file.extracted", "Extracted: {0}", file));
+                // push to download list only good files, and with "." at the end if it needs
+                downloadList.push(outFolder + ftpPathSeparator + fileOut);
             }
             if (synchronizer.stopIssued) {
                 break;
             }
+            // if (!--max) {
+            //     break;
+            // }
         }
         // 2. download it
         if (!synchronizer.stopIssued) {
-            const outFolder = ensured.projectSection.outdir + ftpPathSeparator + libName;
-            const downloadList = allHeaders.map((file) => outFolder + ftpPathSeparator + file);
             const downloaded = await synchronizer.downloadFiles(ensured, downloadList);
             if (downloaded) {
                 // 3. move to chosen folder
-                const formFolder = path.join(currentFolder.uri.fsPath, ensured.projectSection.outdir, libName);
                 const toFolder = path.join(openUris[0].fsPath, libName);
-                fs.move( formFolder, toFolder, {overwrite: true});
-                // for (const file of allHeaders) {
-                //     fs.move( path.join(formFolder, file), path.join(toFolder, file), {overwrite: true})
-                //         .catch((error) => {
-                //             logFn(LogType.error, () => String(error));
-                //         })
-                // }
+                //fs.move( formFolder, toFolder, {overwrite: true});
+                for (let file of downloadList) {
+                    const from = path.join(currentFolder.uri.fsPath, file);
+                    //remove DOT-only extension
+                    const converter = new VmsPathConverter(file);
+                    if (converter.fileExt === ".") {
+                        file = converter.fileName;
+                    } else {
+                        file = converter.file;
+                    }
+                    const to = path.join(toFolder, file);
+                    fs.move( from, to, {overwrite: true})
+                        .catch((error) => {
+                            logFn(LogType.error, () => String(error));
+                        })
+                }
             }
         }
         // 4. clean
