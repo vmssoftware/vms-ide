@@ -19,7 +19,6 @@ import { GetSyncApi } from '../ext-api/get-sync-api';
 
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
-const abortKey = "R";
 
 
 export interface VMSBreakpoint
@@ -86,6 +85,7 @@ export class VMSRuntime extends EventEmitter
 	// since we want to send breakpoint events, we will assign an id to every event
 	// so that the frontend can match events with breakpoints.
 	private breakpointId = 1;
+	private abortKey = "C";//by default
 
 
 	constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, public logFn?: LogFunction)
@@ -124,6 +124,7 @@ export class VMSRuntime extends EventEmitter
 		let localSource = await fileManager.getLocalSource();
 		let rootPath = "" + localSource!.root;
 		this.workSpacePath = rootPath.substring(0, rootPath.length - this.rootFolderName.length);
+		this.abortKey = section.break;
 
 		if(syncApi)
 		{
@@ -177,7 +178,7 @@ export class VMSRuntime extends EventEmitter
 			this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("error", "dbge"));
 			this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
 			this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
-			this.shell.SendCommandToQueue(this.dbgCmd.setAbortKey(abortKey));
+			this.shell.SendCommandToQueue(this.dbgCmd.setAbortKey(this.abortKey));
 			this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
 		}
 		else//reload program
@@ -268,7 +269,7 @@ export class VMSRuntime extends EventEmitter
 		if(this.buttonPressd !== DebugButtonEvent.btnPause)
 		{
 			this.buttonPressd = DebugButtonEvent.btnPause;
-			let symbol = this.dbgCmd.getCtrlPlusSymbol(abortKey);
+			let symbol = this.dbgCmd.getCtrlPlusSymbol(this.abortKey);
 			this.shell.SendData(this.dbgCmd.customCommand(symbol).getCommand());//interrupt program execution
 			this.shell.SendData(this.dbgCmd.stop().getCommand());
 		}
@@ -280,7 +281,7 @@ export class VMSRuntime extends EventEmitter
 		//if the programm is running
 		if(this.programEnd === false && this.shell.getCurrentCommand().getBody() !== "")
 		{
-			let symbol = this.dbgCmd.getCtrlPlusSymbol(abortKey);
+			let symbol = this.dbgCmd.getCtrlPlusSymbol(this.abortKey);
 			this.shell.SendData(this.dbgCmd.customCommand(symbol).getCommand());//interrupt program execution
 			this.shell.SendCommand(this.dbgCmd.stop());
 		}
