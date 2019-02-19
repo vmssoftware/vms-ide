@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import * as net from "net";
-import { getContext } from './common';
+import * as os from "os";
+import { LogFunction, LogType } from '@vorfol/common';
 
 interface IParams {
     command: string;
@@ -14,18 +14,31 @@ export class Task2CmdProvider implements vscode.TaskProvider {
 
     public static taskType = 'task2cmd';
 
+    public listenPath: string;
+
     private server?: net.Server;
-    private port?: number;
     private recv = "";
 
-    constructor() {
+    public logFn: LogFunction;
+
+    constructor(logFn?: LogFunction) {
+
+        this.logFn = logFn || (() => {});
+
+        this.listenPath = 'vmssoftware.socket';
+        if (os.platform() === 'win32') {
+            this.listenPath = "\\\\.\\pipe\\" + "listenPath";
+        }
+
         this.server = net.createServer((client) => {
             client.on("error", (err) => {
             });
             client.on("data", (data) => {
                 this.recv += data.toString("utf8");
                 Promise.resolve().then(() => {
-                    const params: IParams = JSON.parse(this.recv);
+                    const buff = Buffer.from(this.recv, "base64");
+                    const jsonContent = buff.toString("utf8");
+                    const params: IParams = JSON.parse(jsonContent);
                     this.recv = "";
                     if (typeof params.extension === "string") {
                         return this.activateExtension(params.extension).then(() => params);
@@ -37,30 +50,30 @@ export class Task2CmdProvider implements vscode.TaskProvider {
                             const thenable = vscode.commands.executeCommand(params.command, params.scope, params.parameter);
                             if (thenable) {
                                 thenable.then((ret) => {
-                                    if (ret) {
-                                        client.end(`Done`);
-                                    } else {
-                                        client.end(`Failed`);
-                                    }
+                                    if (!ret) {
+                                        this.logFn(LogType.error, () => `Command fails "${params.command}"`);
+                                    } 
                                 });
                             } else {
-                                client.end(`Command returns nothing "${params.command}"`);
+                                this.logFn(LogType.error, () => `Command returns nothing "${params.command}"`);
                             }        
                         } else {
-                            client.end(`No such command "${params.command}"`);
+                            this.logFn(LogType.error, () => `No such command "${params.command}"`);
                         }
                     });
                 }).catch((err) => {
-                    client.end(`Error: (${err})`);
+                    this.logFn(LogType.error, () => String(err));
                 });
             });
         });
+
         this.server.on('error', (err) => {
+            this.logFn(LogType.error, () => String(err));
             this.server = undefined;
-            this.port = undefined;
         });
-        this.server.listen(() => {
-            this.port = this.server!.address().port;
+
+        this.server.listen(this.listenPath, () => {
+            //
         });        
     }
 
@@ -68,7 +81,6 @@ export class Task2CmdProvider implements vscode.TaskProvider {
         if (this.server) {
             this.server.close();
             this.server = undefined;
-            this.port = undefined;
         }
     }
 
@@ -83,9 +95,7 @@ export class Task2CmdProvider implements vscode.TaskProvider {
 
     public provideTasks(token?: vscode.CancellationToken | undefined): vscode.ProviderResult<vscode.Task[]> {
         const retTasks: vscode.Task[] = [];
-        let context  = getContext();
-        if (context && vscode.workspace.workspaceFolders) {
-            let helperFile = path.join(context.extensionPath, "out", "client");
+        if (vscode.workspace.workspaceFolders) {
             for (const workspace of vscode.workspace.workspaceFolders) {
                 const configuration = vscode.workspace.getConfiguration("tasks", workspace.uri);
                 if (configuration) {
@@ -102,7 +112,14 @@ export class Task2CmdProvider implements vscode.TaskProvider {
                                 };
                                 const strParams = JSON.stringify(params,undefined,4);
                                 const strParams64 = Buffer.from(strParams).toString("base64");
-                                task.execution = new vscode.ShellExecution('node', [helperFile, String(this.port), strParams64]);
+                                // TODO: create command line for other platforms
+                                switch(os.platform()) {
+                                    case 'win32':
+                                        task.execution = new vscode.ShellExecution(`cmd`, [`/C`, `echo ${strParams64} >> ${this.listenPath}`]);
+                                        break;
+                                    default:
+                                        task.execution = new vscode.ShellExecution(`sh`, [`echo ${strParams64} >> ${this.listenPath}`]);
+                                }
                                 task.presentationOptions = { echo: false, focus: false, showReuseMessage: false, reveal: 2 };
                                 retTasks.push(task);
                             }

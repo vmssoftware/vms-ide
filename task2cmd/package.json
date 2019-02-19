@@ -2,7 +2,7 @@
     "name": "task2cmd",
     "displayName": "task2cmd",
     "description": "Task 2 Cmd",
-    "version": "0.1.5",
+    "version": "0.2.0",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -50,14 +50,17 @@
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "package": "vsce package"
+        "package": "vsce package",
+        "get-ext-api": "PowerShell copy -Path ..\\config-helper\\out\\config\\config.d.ts -Destination src\\ext-api\\"
     },
     "devDependencies": {
         "@types/mocha": "^2.2.42",
-        "@types/node": "^8.10.25",
-        "tslint": "^5.11.0",
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.21"
+        "@types/node": "^8.10.40",
+        "tslint": "^5.12.1",
+        "typescript": "^3.3.3",
+        "vscode": "^1.1.29"
     },
-    "dependencies": {}
+    "dependencies": {
+        "@vorfol/common": "0.0.20"
+    }
 }

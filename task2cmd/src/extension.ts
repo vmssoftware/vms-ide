@@ -1,14 +1,17 @@
-'use strict';
 import * as vscode from 'vscode';
 import { tasks } from 'vscode';
-import { setContext } from './common';
 import { Task2CmdProvider } from './task2cmd-prov';
+import { GetConfigApi } from './ext-api/get-config-api';
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 
-    setContext(context);
+    const configApi = await GetConfigApi();
+    if (!configApi) {
+        return;
+    }
+    const logFn = configApi.createLogFunction("OpenVMS Task2Cmd");
 
-    const taskProvider = new Task2CmdProvider();
+    const taskProvider = new Task2CmdProvider(logFn);
     let disposable = tasks.registerTaskProvider(Task2CmdProvider.taskType, taskProvider);
 
     context.subscriptions.push(disposable);

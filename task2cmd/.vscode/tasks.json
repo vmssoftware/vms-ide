@@ -27,6 +27,11 @@
             "type": "npm",
             "script": "package",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "get-ext-api",
+            "problemMatcher": []
         }
     ]
 }
