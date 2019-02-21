@@ -1,12 +1,10 @@
 import { HolderDebugFileInfo } from './debug_file_info';
-import { DebugFileInfo } from './debug_file_info';
 import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
 import { Queue } from '../queue/queues';
 import { ftpPathSeparator } from '@vorfol/common';
-import { FileManagerExt } from '../ext-api/file_manager';
 import { TypeDataMessage, ShellSession } from '../net/shell-session';
 import { VariableFileInfo, HolderDebugVariableInfo, ReflectKind, DebugVariable } from './debug_variable_info';
-import { WorkspaceFolder } from 'vscode';
+import { readFileSync } from 'fs';
 
 
 export enum MessageDebuger
@@ -33,6 +31,7 @@ export enum MessagePrompt
 	prmtCMD = "CMD: ",
 	prmtDBG = "DBG: ",
 	prmtUSER = "USER: ",
+	prmtINFO = "INFO: ",
 }
 
 export enum StringsPrompt
@@ -43,11 +42,11 @@ export enum StringsPrompt
 
 export class DebugParser
 {
-	private currentName : string;
 	private queueMsgDebug = new Queue<string>();
 	private queueMsgUser = new Queue<string>();
 	private queueMsgCommand = new Queue<string>();
 	private queueMsgData = new Queue<string>();
+	private queueMsgDebugInfo = new Queue<string>();
 	private fileInfo : HolderDebugFileInfo;
 	private varsInfo : HolderDebugVariableInfo;
 	private commandDone : boolean;
@@ -56,9 +55,8 @@ export class DebugParser
 	private displayDataString : string[] = ["", "", ""];
 	private framesOld = new Array<any>();
 
-	constructor(public folder: WorkspaceFolder | undefined)
+	constructor()
 	{
-		this.currentName = "";
 		this.fileInfo = new HolderDebugFileInfo();
 		this.varsInfo = new HolderDebugVariableInfo();
 		this.commandDone = false;
@@ -339,6 +337,7 @@ export class DebugParser
 		{
 			this.commandDone = true;
 			this.commandButtonDone = true;
+			this.queueMsgDebugInfo.push(MessagePrompt.prmtINFO + msgLine);
 		}
 		else if(msgLine.includes(MessageDebuger.msgKeyDbg) ||
 				msgLine.includes(MessageDebuger.msgKeySys) ||
@@ -346,69 +345,10 @@ export class DebugParser
 		{
 			this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLine);
 		}
-	}
-
-	//examples debug lines
-	//1629:   int count = 5;
-	//1631:   for(int i = 1; i < 3; i++)
-	public async parseNumberLineCodeMsg(fileName : string, msgLine: string, sourcePaths: string[], lisPaths: string[]) // : DebugFileInfo | undefined
-	{
-		let debugFileInfo : DebugFileInfo | undefined;
-
-		if(msgLine.includes(":"))
+		else
 		{
-			let lisLines : string[];
-			let currentLineNumber : number = -1;
-			//number: string of code; array[0]-number, array[1]-string of code
-			let array = msgLine.split(":");
-
-			if(fileName === "")
-			{
-				fileName = this.currentName;
-			}
-			else
-			{
-				this.currentName = fileName;
-			}
-
-			let shift = this.fileInfo.getShiftLine(fileName);
-
-			if(shift === -1)
-			{
-				let pathFile = this.findPathFileByName(fileName, sourcePaths);
-				let pathLisFile = this.findPathFileByName(fileName, lisPaths);
-
-				let indexStart = pathFile.indexOf(ftpPathSeparator);
-				let folderProject = pathFile.substr(0, indexStart);
-				indexStart = pathLisFile.indexOf(ftpPathSeparator);
-				let pathLisFileLocal = pathLisFile.substr(indexStart + 1);
-
-				let fileManager = new FileManagerExt(folderProject);
-				lisLines = await fileManager.loadContextFile(pathLisFileLocal);
-
-				//calculate shift line
-				shift = this.calculateShiftLine(msgLine, lisLines);
-
-				if(shift !== -1)//calculate successfull
-				{
-					currentLineNumber = parseInt(array[0], 10) - shift;
-					this.fileInfo.setItem(pathFile, fileName, shift, currentLineNumber);
-					debugFileInfo = this.fileInfo.getItem(fileName);
-				}
-			}
-			else
-			{
-				currentLineNumber = parseInt(array[0], 10) - shift;
-				debugFileInfo = this.fileInfo.getItem(fileName);
-
-				if(debugFileInfo)
-				{
-					debugFileInfo.currLine = currentLineNumber;
-				}
-			}
+			this.queueMsgDebugInfo.push(MessagePrompt.prmtINFO + msgLine);
 		}
-
-		return debugFileInfo;
 	}
 
 	//examples lines
@@ -439,19 +379,9 @@ export class DebugParser
 
 				if(pathFile !== "" && pathLisFile !== "")
 				{
-					let indexStart = pathFile.indexOf(ftpPathSeparator);
-					let folderProject = pathFile.substr(0, indexStart);
-					let fileManager = new FileManagerExt(folderProject);
-					let localSource = await fileManager.getLocalSource();
-
-					indexStart = pathFile.indexOf(ftpPathSeparator);
-					let pathFileLocal = pathFile.substr(indexStart + 1);
-					indexStart = pathLisFile.indexOf(ftpPathSeparator);
-					let pathLisFileLocal = pathLisFile.substr(indexStart + 1);
-
 					if(shift === -1)
 					{
-						let lisLines = await fileManager.loadContextFile(pathLisFileLocal);
+						let lisLines = this.loadFileContext(pathLisFile);
 						//get source line
 						numberLine = this.getNumberLineSourceCode(numberLineDebug, lisLines);
 						//save file info
@@ -466,7 +396,7 @@ export class DebugParser
 					frames.push({
 						index: startFrame,
 						name: `${routineName}[${startFrame}]`,
-						file: localSource!.root + ftpPathSeparator + pathFileLocal,
+						file: pathFile,
 						line: numberLine
 					});
 
@@ -1127,6 +1057,18 @@ export class DebugParser
 		return message;
 	}
 
+	public getDebugInfoMessage() : string
+	{
+		let message : string = "";
+
+		while(this.queueMsgDebugInfo.size() > 0)
+		{
+			message += this.queueMsgDebugInfo.pop() + "\n";
+		}
+
+		return message;
+	}
+
 
 	private findPathFileByName(fileName : string, paths : string[]) : string
 	{
@@ -1186,27 +1128,6 @@ export class DebugParser
 		return  name;
 	}
 
-	//examples debug lines
-	//1629:   int count = 5;
-	//1631:   for(int i = 1; i < 3; i++)
-	private calculateShiftLine(lineDbg : string, lisLines: string[]) : number
-	{
-		let shift : number = -1;
-		let LineSourceCode : number = -1;
-		let debugLine : number = -1;
-		let array = lineDbg.split(":");
-		let debugLineNumber = array[0].trim();
-
-		LineSourceCode = this.getNumberLineSourceCode(debugLineNumber, lisLines);
-
-		if(LineSourceCode > 0)
-		{
-			debugLine = parseInt(debugLineNumber, 10);
-			shift = debugLine - LineSourceCode;
-		}
-
-		return shift;
-	}
 	private getNumberLineSourceCode(debugLineNumber : string, lisLines: string[]) : number
 	{
 		let indexLine : number = 0;
@@ -1272,6 +1193,18 @@ export class DebugParser
 		}
 
 		return number;
+	}
+
+	public loadFileContext(file: string) : string[]
+	{
+		let lines : string[] = [];
+
+		if (file !== "")
+		{
+			lines = readFileSync(file).toString().split('\n');
+		}
+
+		return lines;
 	}
 }
 
