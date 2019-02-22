@@ -9,7 +9,7 @@
 
 import { ANTLRErrorListener, Recognizer, RecognitionException, Token, CommonToken } from 'antlr4ts';
 
-import { DiagnosticEntry, DiagnosticType } from './MsgFacade';
+import { DiagnosticEntry, DiagnosticType } from './Facade';
 
 export class ContextLexerErrorListener implements ANTLRErrorListener<number> {
     constructor(private errorList: DiagnosticEntry[]) {

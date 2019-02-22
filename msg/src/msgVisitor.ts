@@ -52,16 +52,6 @@ import { ErrorContext } from "./msgParser";
 import { SevereContext } from "./msgParser";
 import { FatalContext } from "./msgParser";
 import { MessageTextContext } from "./msgParser";
-import { FaoContext } from "./msgParser";
-import { FaoContentContext } from "./msgParser";
-import { FaoWidthContext } from "./msgParser";
-import { FaoRepeatContext } from "./msgParser";
-import { FaoTestContext } from "./msgParser";
-import { FaoDirContext } from "./msgParser";
-import { FaoCharContext } from "./msgParser";
-import { FaoNumContext } from "./msgParser";
-import { FaoNumSizeContext } from "./msgParser";
-import { FaoSpecContext } from "./msgParser";
 
 
 /**
@@ -414,75 +404,5 @@ export interface msgVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitMessageText?: (ctx: MessageTextContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.fao`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFao?: (ctx: FaoContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.faoContent`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFaoContent?: (ctx: FaoContentContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.faoWidth`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFaoWidth?: (ctx: FaoWidthContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.faoRepeat`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFaoRepeat?: (ctx: FaoRepeatContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.faoTest`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFaoTest?: (ctx: FaoTestContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.faoDir`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFaoDir?: (ctx: FaoDirContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.faoChar`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFaoChar?: (ctx: FaoCharContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.faoNum`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFaoNum?: (ctx: FaoNumContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.faoNumSize`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFaoNumSize?: (ctx: FaoNumSizeContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.faoSpec`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFaoSpec?: (ctx: FaoSpecContext) => Result;
 }
 

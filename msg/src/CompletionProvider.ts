@@ -1,6 +1,6 @@
 
 import { TextDocument, Position, CancellationToken, Location, CompletionItem, CompletionItemKind, ProviderResult, CompletionList } from 'vscode';
-import { MsgFacade, SymbolKind } from './MsgFacade';
+import { MsgFacade, SymbolKind } from './Facade';
 import { translateCompletionKind } from './Symbol';
 
 // Determines the sort order in the completion list. One value for each SymbolKind.

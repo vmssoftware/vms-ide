@@ -4,9 +4,11 @@ import * as nls from "vscode-nls";
 import { LogFunction, LogType } from "@vorfol/common";
 import { GetConfigApi } from './ext-api/get-config-api';
 import { languages, window, workspace, TextDocument, TextDocumentChangeEvent, Range, Diagnostic, DiagnosticSeverity, TextEditorSelectionChangeEvent, TextEditor } from 'vscode';
-import { MsgFacade, DiagnosticType } from './MsgFacade';
+import { MsgFacade, DiagnosticType } from './Facade';
 import { MsgCompletionItemProvider } from './CompletionProvider';
-import { MsgHoverProvider } from './MsgHoverProvider';
+import { MsgHoverProvider } from './HoverProvider';
+import { MsgDefinitionProvider } from './DefinitionProvider';
+import { MsgRenameProvider } from './RenameProvider';
 
 const locale = vscode.env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -45,15 +47,15 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     context.subscriptions.push(languages.registerHoverProvider(MSG, new MsgHoverProvider(backend)));
-
-    // context.subscriptions.push(languages.registerDefinitionProvider(MSG, new MsgDefinitionProvider(backend)));
+    context.subscriptions.push(languages.registerDefinitionProvider(MSG, new MsgDefinitionProvider(backend)));
+    
     // context.subscriptions.push(languages.registerDocumentSymbolProvider(MSG, new MsgSymbolProvider(backend)));
     // const codeLensProvider = new MsgCodeLensProvider(backend);
     // context.subscriptions.push(languages.registerCodeLensProvider(MSG, codeLensProvider));
     context.subscriptions.push(languages.registerCompletionItemProvider(MSG, new MsgCompletionItemProvider(backend),
         ".", " "));
     // context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(MSG, new MsgFormattingProvider(backend)));
-    // context.subscriptions.push(languages.registerRenameProvider(MSG, new MsgRenameProvider(backend)));
+    context.subscriptions.push(languages.registerRenameProvider(MSG, new MsgRenameProvider(backend)));
 
     //----- Events -----
 

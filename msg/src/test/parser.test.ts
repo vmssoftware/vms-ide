@@ -1,11 +1,11 @@
 import { ANTLRInputStream, CommonTokenStream, ConsoleErrorListener } from 'antlr4ts';
 import { ParseTreeWalker } from 'antlr4ts/tree/ParseTreeWalker';
-import { msgLexer } from '../msgLexer';
 import { msgParser, MsgContentContext } from '../msgParser';
 import { msgListener } from '../msgListener';
 import { ANTLRErrorListener } from 'antlr4ts/ANTLRErrorListener';
 import { Recognizer } from 'antlr4ts/Recognizer';
 import { RecognitionException } from 'antlr4ts/RecognitionException';
+import { msgLex } from '../msgLex';
 
 class TestMsgErrorListener implements ANTLRErrorListener<any> {
     public syntaxError<T>(
@@ -37,7 +37,7 @@ suite("Parser tests", function(this: Mocha.Suite) {
 SYNTAX "Invalid !OW syn!5ULtax in !6(ZI) !_keyword !AZ!@AS" /fao_count=1 /error
 `
         );
-        let lexer = new msgLexer(inputStream);
+        let lexer = new msgLex(inputStream);
         let tokenStream = new CommonTokenStream(lexer);
         let parser = new msgParser(tokenStream);
         parser.removeErrorListeners();

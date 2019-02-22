@@ -6,13 +6,13 @@ import { ParseCancellationException, IntervalSet, Interval } from 'antlr4ts/misc
 import { ParseTreeWalker, TerminalNode, ParseTree, ParseTreeListener } from 'antlr4ts/tree';
 import { msgParser, MsgContentContext } from "./msgParser";
 import { ANTLRInputStream, CommonTokenStream, BailErrorStrategy, DefaultErrorStrategy, ParserRuleContext, Token, RuleContext } from 'antlr4ts';
-import { msgLexer } from './msgLexer';
-import { DiagnosticEntry, SymbolKind, Definition, SymbolInfo } from './MsgFacade';
+import { DiagnosticEntry, SymbolKind, Definition, SymbolInfo } from './Facade';
 import { ContextErrorListener, ContextLexerErrorListener } from './ContextErrorListener';
 import { PredictionMode } from 'antlr4ts/atn/PredictionMode';
 import { ContextSymbolTable, OtherSymbol } from './ContextSymbolTable';
 import { AnalysisListener, VariableSource } from './AnalysisListener';
 import { LogFunction, LogType } from '@vorfol/common';
+import { msgLex } from './msgLex';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -47,7 +47,7 @@ export class SourceContext {
      */
     public setText(source: string) {
         let input = new ANTLRInputStream(source.toUpperCase()+"\n");  // convert to upper case and add NEWLINE to force end of last line
-        let lexer = new msgLexer(input);
+        let lexer = new msgLex(input);
 
         // There won't be lexer errors actually. They are silently bubbled up and will cause parser errors.
         lexer.removeErrorListeners();
@@ -100,10 +100,21 @@ export class SourceContext {
     private runAnalysis() {
         if (!this.analysisDone) {
             this.analysisDone = true;
-            this.logFn(LogType.debug, () => `----- runAnalysis() -----`);
             let listener = new AnalysisListener(this.diagnostics, this.logFn);
             ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree!);
             this.symbolsForExpression = listener.symbols;
+            let index: number;
+
+            this.logFn(LogType.debug, () => `----- TOKENS -----`);
+            this.tokenStream!.fill();
+            for (index = 0; ; ++index) {
+                let token = this.tokenStream!.get(index);
+                if (token.type === Token.EOF) {
+                    break;
+                }    
+                this.logFn(LogType.debug, () => `"${String(token.text)}": row=${token.line} col=${token.charPositionInLine} type=${token.type}`);
+            }
+    
         }
     }
 
@@ -150,6 +161,33 @@ export class SourceContext {
         return result;
     }
 
+    public getTokenIndexByPosition(row: number, column: number) {
+        if (!this.parser || !this.tokenStream) {
+            return -1;
+        }
+        // Search the token index which covers our caret position.
+        let index: number;
+        this.tokenStream.fill();
+        for (index = 0; ; ++index) {
+            let token = this.tokenStream.get(index);
+            if (token.type === msgParser.WHITESPACE) {
+                continue;
+            }
+            //console.log(token.toString());
+            if (token.type === Token.EOF || token.line > row) {
+                break;
+            }
+            if (token.line < row) {
+                continue;
+            }
+            let length = token.text ? token.text.length : 0;
+            if ((token.charPositionInLine + length) >= column) {
+                break;
+            }
+        }
+        return index;
+    }
+
     public getCodeCompletionCandidates(column: number, row: number): SymbolInfo[] {
         if (!this.parser || !this.tokenStream) {
             return [];
@@ -158,37 +196,6 @@ export class SourceContext {
         let core = new CodeCompletionCore(this.parser);
         core.showResult = false;
         core.ignoredTokens = new Set([
-            msgParser.T__0,
-            msgParser.T__1,
-            msgParser.T__2,
-            msgParser.T__3,
-            msgParser.T__4,
-            msgParser.T__5,
-            msgParser.T__6,
-            msgParser.T__7,
-            msgParser.T__8,
-            msgParser.T__9,
-            msgParser.T__10,
-            msgParser.T__11,
-            msgParser.T__12,
-            msgParser.T__13,
-            msgParser.T__14,
-            msgParser.T__15,
-            msgParser.T__16,
-            msgParser.T__17,
-            msgParser.T__18,
-            msgParser.T__19,
-            msgParser.T__20,
-            msgParser.T__21,
-            msgParser.T__22,
-            msgParser.T__23,
-            msgParser.T__24,
-            msgParser.T__25,
-            msgParser.T__26,
-            msgParser.T__27,
-            msgParser.T__28,
-            msgParser.T__29,
-            msgParser.T__30,
             // msgParser.TITLE,
             // msgParser.IDENT,
             // msgParser.PAGE,
@@ -286,29 +293,13 @@ export class SourceContext {
             // msgParser.RULE_error,
             // msgParser.RULE_severe,
             // msgParser.RULE_fatal,
-            // msgParser.RULE_messageText,
-            msgParser.RULE_fao,
+            msgParser.RULE_messageText,
         ]);
 
         // Search the token index which covers our caret position.
-        let index: number;
-        this.tokenStream.fill();
-        for (index = 0; ; ++index) {
-            let token = this.tokenStream.get(index);
-            if (token.type === msgLexer.WHITESPACE) {
-                continue;
-            }
-            //console.log(token.toString());
-            if (token.type === Token.EOF || token.line > row) {
-                break;
-            }
-            if (token.line < row) {
-                continue;
-            }
-            let length = token.text ? token.text.length : 0;
-            if ((token.charPositionInLine + length) >= column) {
-                break;
-            }
+        let index = this.getTokenIndexByPosition(row, column);
+        if (index === -1) {
+            return [];
         }
 
         //core.showDebugOutput = true;
@@ -335,19 +326,19 @@ export class SourceContext {
             };
 
             switch (type) {
-                case msgLexer.HEXNUM:
+                case msgParser.HEXNUM:
                     info.kind = SymbolKind.Other;
                     info.name = "^X";
                     info.description = localize("hexnum","Hexadecimal number");
                     break;
 
-                case msgLexer.OCTNUM:
+                case msgParser.OCTNUM:
                     info.kind = SymbolKind.Other;
                     info.name = "^O";
                     info.description = localize("octnum","Octal number");
                     break;
 
-                case msgLexer.DECNUM:
+                case msgParser.DECNUM:
                     info.kind = SymbolKind.Other;
                     info.name = "^D";
                     info.description = localize("decnum","Decimal number");
@@ -384,7 +375,7 @@ export class SourceContext {
                     }
                     break;
 
-                case msgParser.RULE_fao:
+                case msgParser.RULE_messageText:
                     result = [];
                     // TODO: get all from fao definition
                     ["!!", "!_", "!^"].forEach(symbol => {
@@ -405,7 +396,92 @@ export class SourceContext {
         return result;
     }
 
-    public symbolAtPosition(column: number, row: number, limitToChildren: boolean): SymbolInfo | undefined {
+    public getSymbolOccurences(column: number, row: number): SymbolInfo[] {
+
+        const occurances: SymbolInfo[] = [];
+        if (!this.symbolsForExpression) {
+            return occurances;
+        }
+
+        let terminal = parseTreeFromPosition(this.tree!, column, row);
+        if (!terminal || !(terminal instanceof TerminalNode) || terminal.symbol.type === msgParser.WHITESPACE) {
+            return occurances;
+        }
+
+        let parent = (terminal.parent as RuleContext);
+        switch (parent.ruleIndex) {
+            case msgParser.RULE_literalName: 
+            case msgParser.RULE_expressionVariable: {
+                const source = this.symbolsForExpression.get(terminal.text);
+                if (source && source.literal) {
+                    occurances.push(this.symbolInfoFromToken(SymbolKind.Literal, source.literal));
+                    for (const ref of source.refs) {
+                        occurances.push(this.symbolInfoFromToken(SymbolKind.Literal, ref));
+                    }
+                }
+                break;
+            }
+            case msgParser.RULE_prefixQualifierValue:
+                occurances.push(this.symbolInfoFromToken(SymbolKind.FacilityPrefix, terminal.symbol));
+                occurances.push(...this.getVariablesByPrefix(terminal.symbol));
+                break;
+            case msgParser.RULE_facilityName:
+                occurances.push(this.symbolInfoFromToken(SymbolKind.FacilityName, terminal.symbol));
+                occurances.push(...this.getVariablesByPrefix(terminal.symbol));
+                break;
+            case msgParser.RULE_messageName:
+                occurances.push(this.symbolInfoFromToken(SymbolKind.Message, terminal.symbol));
+                occurances.push(...this.getVariablesByMessage(terminal.symbol));
+        }
+        return occurances;
+    }
+
+    public getVariablesByPrefix(token: Token) {
+        const vars: SymbolInfo[] = [];
+        if (!this.symbolsForExpression) {
+            return vars;
+        }
+        // find all variables that use this facility name or prefix
+        for (const [name, source] of this.symbolsForExpression) {
+            if (source.prefix && source.prefix.tokenIndex === token.tokenIndex) {
+                for (const ref of source.refs) {
+                    const info = this.symbolInfoFromToken(SymbolKind.Variable, ref);
+                    if (info.definition) {
+                        // only facility name part of variable have to be changed
+                        info.definition.range.end.column = info.definition.range.start.column + (token.text ? token.text.length : 0);
+                    }
+                    vars.push(info);
+                }
+            }
+        }
+        return vars;
+    }
+
+    public getVariablesByMessage(token: Token) {
+        const vars: SymbolInfo[] = [];
+        if (!this.symbolsForExpression) {
+            return vars;
+        }
+        // find all variables that use this facility name or prefix
+        for (const [name, source] of this.symbolsForExpression) {
+            if (source.message && source.message.tokenIndex === token.tokenIndex) {
+                for (const ref of source.refs) {
+                    const info = this.symbolInfoFromToken(SymbolKind.Variable, ref);
+                    if (info.definition) {
+                        // only facility name part of variable have to be changed
+                        info.definition.range.start.column = info.definition.range.end.column - (token.text ? token.text.length : 0);
+                    }
+                    vars.push(info);
+                }
+            }
+        }
+        return vars;
+    }
+
+    public symbolAtPosition(column: number, row: number): SymbolInfo | undefined {
+        if (!this.symbolsForExpression) {
+            return undefined;
+        }
         let terminal = parseTreeFromPosition(this.tree!, column, row);
         if (!terminal || !(terminal instanceof TerminalNode) || terminal.symbol.type === msgParser.WHITESPACE) {
             return undefined;
@@ -413,28 +489,51 @@ export class SourceContext {
 
         let parent = (terminal.parent as RuleContext);
         switch (parent.ruleIndex) {
-            case  msgParser.RULE_expressionVariable:
-                let description = "In expression...";
-                if (this.symbolsForExpression) {
-                    const source = this.symbolsForExpression.get(terminal.text);
-                    if (source) {
-                        if (source.literal) {
-                            description = "Defined in LITERAL";
-                        } else if (source.message && source.prefix) {
-                            description = `Constructed: ${source.prefix.text} + ${source.message.text}`;
-                        }
+            case  msgParser.RULE_expressionVariable: {
+                const source = this.symbolsForExpression.get(terminal.text);
+                if (source) {
+                    if (source.literal) {
+                        const info = this.symbolInfoFromToken(SymbolKind.Literal, terminal.symbol);
+                        info.description = "Defined in literal";
+                        return info;
+                    } else if (source.message && source.prefix) {
+                        const info = this.symbolInfoFromToken(SymbolKind.Variable, terminal.symbol);
+                        info.description = `Constructed: ${source.prefix.text} + ${source.message.text}`;
+                        return info;
                     }
                 }
-                return {
-                    kind: SymbolKind.Variable,
-                    name:  terminal.text,
-                    source: this.fileName,
-                    description,
-                };
+                break;
+            }
+            case msgParser.RULE_literalName: {
+                return this.symbolInfoFromToken(SymbolKind.Literal, terminal.symbol);
+            }
+            case msgParser.RULE_messageName: {
+                return this.symbolInfoFromToken(SymbolKind.Message, terminal.symbol);
+            }
+            case msgParser.RULE_prefixQualifierValue: {
+                return this.symbolInfoFromToken(SymbolKind.FacilityPrefix, terminal.symbol);
+            }
+            case msgParser.RULE_facilityName: {
+                return this.symbolInfoFromToken(SymbolKind.FacilityName, terminal.symbol);
+            }
         }
-
         return undefined;
+    }
 
+    private symbolInfoFromToken(kind: SymbolKind, token: Token) {
+        const info: SymbolInfo = {
+            kind: kind,
+            name:  token.text || "",
+            source: this.fileName,
+        };
+        info.definition = {
+            text: token.text || "",
+            range: { 
+                start:  { row: token.line, column: token.charPositionInLine},
+                end:    { row: token.line, column: token.charPositionInLine + (token.text ? token.text.length : 0)}
+            }
+        };
+        return info;
     }
 
 }

@@ -8,6 +8,7 @@
     "emptyMessageIdentification": "The message identification cannot be empty.",
     "emptyMessageName": "The message cannot be empty.",
     "emptyPrefixValue": "The facility prefix cannot be empty.",
+    "emptyPrefixToken": "Message must have a prefix defined.",
     "emptyUserValue": "The user value cannot be empty.",
     "messageAlreadyExists": "This message already exists.",
     "messageSymbolAlreadyExists": "This message symbol already exists.",

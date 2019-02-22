@@ -10,7 +10,7 @@
             "request": "launch",
             "name": "Debug Current Grammar",
             "input": "messages.msg",
-            "startRule": "mainRule",
+            "startRule": "msgContent",
             "visualParseTree": true
         },
         {
