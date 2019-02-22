@@ -1,7 +1,7 @@
 import { SymbolTable, Symbol, ScopedSymbol, SymbolTableOptions } from "antlr4-c3";
 import { ParserRuleContext } from "antlr4ts";
 import { SourceContext } from "./SourceContext";
-import { SymbolKind, SymbolInfo } from "./MsgFacade";
+import { SymbolKind, SymbolInfo } from "./Facade";
 import { ParseTree } from "antlr4ts/tree";
 
 export class ContextSymbolTable extends SymbolTable {
@@ -169,4 +169,4 @@ export class ContextSymbolTable extends SymbolTable {
 
 export class OperatorSymbol extends Symbol { }
 export class OtherSymbol extends Symbol { }
-
+export class VariableSymbol extends ScopedSymbol { }

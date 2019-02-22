@@ -1,6 +1,6 @@
 import * as nls from "vscode-nls";
 import * as vscode from 'vscode';
-import { SymbolKind } from './MsgFacade';
+import { SymbolKind } from './Facade';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -15,7 +15,16 @@ export function symbolDescriptionFromEnum(kind: SymbolKind): string {
       return localize("keyword", "Keyword");
     case SymbolKind.Operator:
         return localize("operator", "Operator");
-
+    case SymbolKind.Literal:
+        return localize("literal", "Literal");
+    case SymbolKind.Message:
+        return localize("message", "Message");
+    case SymbolKind.Variable:
+        return localize("variable", "Variable");
+    case SymbolKind.FacilityName:
+        return localize("facility", "Facility name");
+    case SymbolKind.FacilityPrefix:
+        return localize("prefix", "Facility prefix");
     default:
       return "Unknown type";
   }

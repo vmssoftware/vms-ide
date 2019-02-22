@@ -6,6 +6,11 @@ import { SourceContext } from "./SourceContext";
 export enum SymbolKind {
     Keyword,
     Operator,
+    Variable,
+    Literal,
+    Message,
+    FacilityPrefix,
+    FacilityName,
     Other,
 }
 
@@ -30,7 +35,6 @@ export interface SymbolInfo {
     source: string;
     definition?: Definition;
     description?: string;  // Used for code completion. Provides a small description for certain symbols.
-    isPredicate?: boolean; // Used only for actions.
 }
 
 export enum DiagnosticType {
@@ -135,4 +139,13 @@ export class MsgFacade {
         return context.getCodeCompletionCandidates(column, row);
     }
 
+    public symbolInfoAtPosition(fileName: string, column: number, row: number): SymbolInfo | undefined {
+        let context = this.getContext(fileName);
+        return context.symbolAtPosition(column, row);
+    }
+
+    public getSymbolOccurences(fileName: string, column: number, row: number): SymbolInfo[] {
+        let context = this.getContext(fileName);
+        return context.getSymbolOccurences(column, row);
+    }
 }

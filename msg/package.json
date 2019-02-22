@@ -2,7 +2,7 @@
     "name": "msg",
     "displayName": "msg",
     "description": "msg",
-    "version": "0.0.4",
+    "version": "0.1.0",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -47,7 +47,8 @@
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run compile && node ./node_modules/vscode/bin/test",
         "get-ext-api": "PowerShell copy -Path ..\\config-helper\\out\\config\\config.d.ts -Destination src\\ext-api\\",
-        "antlr4ts": "antlr4ts -o src -visitor src/msg.g4"
+        "antlr4ts": "antlr4ts -o src -visitor src/msg.g4",
+        "antlr4tsLex": "antlr4ts -o src src/msgLex.g4"
     },
     "devDependencies": {
         "@types/mocha": "^5.2.5",

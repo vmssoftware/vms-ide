@@ -52,7 +52,6 @@ import { ErrorContext } from "./msgParser";
 import { SevereContext } from "./msgParser";
 import { FatalContext } from "./msgParser";
 import { MessageTextContext } from "./msgParser";
-import { FaoContext } from "./msgParser";
 
 
 /**
@@ -405,12 +404,5 @@ export interface msgVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitMessageText?: (ctx: MessageTextContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `msgParser.fao`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFao?: (ctx: FaoContext) => Result;
 }
 

@@ -122,12 +122,14 @@ export class Builder {
     }
 
     public async buildProject(ensured: IEnsured, params?: string) {
+        // clear password cache
+        if (this.sshHelper) {
+            this.sshHelper.clearPasswordCache();
+        }
         const scopeData = await this.prepareScopeData(ensured);
         if (!scopeData) {
             return false;
         }
-        // clear password cache
-        this.sshHelper!.clearPasswordCache();
         let buildSelection: IBuildQuickPickItem | undefined;
         if (params === undefined) {
             // get list of builders
@@ -205,6 +207,10 @@ export class Builder {
 
     public async cleanProject(ensured: IEnsured, params?: string) {
         let cleanSelection: IBuildQuickPickItem | undefined;
+        // clear password cache
+        if (this.sshHelper) {
+            this.sshHelper.clearPasswordCache();
+        }
         if (params === undefined) {
             const selectItems: IBuildQuickPickItem[] = [
                 {

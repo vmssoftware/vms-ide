@@ -1,24 +1,36 @@
 import * as nls from "vscode-nls";
 
 import { msgListener } from './msgListener';
-import { NumberContext, TitleNameContext, TitleDescriptionContext, IdentValueContext, FacilityContext, FacilityNameContext, PrefixQualifierValueContext, SeverityValueContext, SeverityQualifierContext, MessageNameContext, MessageContext, IdentificationValueContext, MessageTextContext, FaoCountValueContext, UserValueContext, LiteralDefinitionContext, LiteralNameContext, ExpressionVariableContext, BaseContext, BaseNumberContext, UserValueValueContext } from './msgParser';
-import { DiagnosticEntry, DiagnosticType } from './MsgFacade';
+import { NumberContext, TitleNameContext, TitleDescriptionContext, IdentValueContext, FacilityContext, FacilityNameContext, PrefixQualifierValueContext, SeverityValueContext, SeverityQualifierContext, MessageNameContext, MessageContext, IdentificationValueContext, MessageTextContext, FaoCountValueContext, LiteralDefinitionContext, ExpressionVariableContext, BaseNumberContext, UserValueValueContext, SystemQualifierContext } from './msgParser';
+import { DiagnosticEntry, DiagnosticType, SymbolKind } from './Facade';
 import { Token, ParserRuleContext } from "antlr4ts";
 import { LogFunction, LogType } from "@vorfol/common";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
+export interface VariableSource {
+    prefix?: Token;
+    message?: Token;
+    literal?: Token;
+    refs: Token[];
+    visibleFrom: number;
+    kind: SymbolKind;
+}
+
 export class AnalysisListener implements msgListener {
 
-    public symbols = new Map<string, number>();     //symbol and token index
-    public messages = new Map<string, number>();    //message and token index
-    public messagePrefixes: string[] = [];
+    public symbols = new Map<string, VariableSource>(); //symbol and source information
+    public messages = new Map<string, number>();        //message and token index which this message is visible from
+    public messagePrefixToken?: Token;
+    public messagePrefixMid = "";
     public currentMessageNumber = 0;
     public currentFacility = "";
     public currentIdenification?: Token;    // message name or message identification qualifier
     public currentSeverity = "";
     public currentSeverityQualifier = "";
+    public messageFaoExpected = 0;
+    public messageFaoProvided = 0;
 
     public static emptyBaseValue = localize("emptyBaseValue", "The base number cannot be empty.");
     public static emptySeverity = localize("emptySeverity", "You attempt to define a message without specifying a severity level");
@@ -29,6 +41,7 @@ export class AnalysisListener implements msgListener {
     public static emptyMessageIdentification = localize("emptyMessageIdentification", "The message identification cannot be empty.");
     public static emptyMessageName = localize("emptyMessageName", "The message cannot be empty.");
     public static emptyPrefixValue = localize("emptyPrefixValue", "The facility prefix cannot be empty.");
+    public static emptyPrefixToken = localize("emptyPrefixToken", "Message must have a prefix defined.");
     public static emptyUserValue = localize("emptyUserValue", "The user value cannot be empty.");
     public static messageAlreadyExists = localize("messageAlreadyExists", "This message already exists.");
     public static messageSymbolAlreadyExists = localize("messageSymbolAlreadyExists", "This message symbol already exists.");
@@ -45,6 +58,7 @@ export class AnalysisListener implements msgListener {
     public static tooLongTitleDescription = localize("tooLongTitleDescription", "The listing title has a maximum length of 28 characters.");
     public static tooLongTitleName = localize("tooLongTitleName", "The title name has a maximum length of 31 characters.");
     public static undefinedVariable = localize("undefinedVariable", "Undefined variable.");
+    public static messageFaoCountDiff = localize("messageFaoCountDiff", "Probably FAO count is invalid.");
     
     public logFn: LogFunction;
 
@@ -84,7 +98,8 @@ export class AnalysisListener implements msgListener {
     }
 
     enterFacility(ctx: FacilityContext) {
-        this.messagePrefixes = [];
+        this.messagePrefixToken = undefined;
+        this.messagePrefixMid = "";
         this.currentMessageNumber = 1;
         this.currentFacility = "";
         this.currentSeverity = "";
@@ -95,7 +110,8 @@ export class AnalysisListener implements msgListener {
         if (ctx.text) {
             if (this.testLength(ctx.text, 9, AnalysisListener.tooLongFacilityName, ctx.start)) {
                 this.currentFacility = ctx.text;
-                this.messagePrefixes.push(this.currentFacility);
+                this.messagePrefixToken = ctx.start;
+                this.messagePrefixMid = "_";
             }
         } else {
             this.markToken(ctx.start, AnalysisListener.emptyFacilityName);
@@ -105,11 +121,16 @@ export class AnalysisListener implements msgListener {
     enterPrefixQualifierValue(ctx: PrefixQualifierValueContext) {
         if (ctx.text) {
             if (this.testLength(ctx.text, 9, AnalysisListener.tooLongFacilityPrefix, ctx.start)) {
-                this.messagePrefixes.push(ctx.text);
+                this.messagePrefixToken = ctx.start;
+                this.messagePrefixMid = "";
             }
         } else {
             this.markToken(ctx.start, AnalysisListener.emptyPrefixValue);
         }
+    }
+
+    enterSystemQualifier(ctx: SystemQualifierContext) {
+        this.messagePrefixMid = "$_";
     }
 
     enterSeverityValue(ctx: SeverityValueContext) {
@@ -122,19 +143,26 @@ export class AnalysisListener implements msgListener {
 
     enterMessageName(ctx: MessageNameContext) {
         this.currentIdenification = ctx.start;
+        this.messageFaoExpected = 0;
+        this.messageFaoProvided = 0;
         if (ctx.text) {
-            for (const prefix of this.messagePrefixes) {
-                const varName = prefix + ctx.text;
+            if (this.messagePrefixToken) {
+                const varName = this.messagePrefixToken.text + this.messagePrefixMid + ctx.text;
                 if (this.testLength(varName, 31, AnalysisListener.tooLongMessageName, ctx.start)) {
                     if (this.symbols.has(varName)) {
                         this.markToken(ctx.start, AnalysisListener.messageSymbolAlreadyExists);
-                        break;
                     } else {
-                        this.symbols.set(varName, ctx.start.tokenIndex);
+                        this.symbols.set(varName, {
+                            prefix: this.messagePrefixToken,
+                            message: ctx.start,
+                            visibleFrom: ctx.start.tokenIndex,
+                            refs: [],
+                            kind: SymbolKind.Message,
+                        });
                     }
-                } else {
-                    break;
                 }
+            } else {
+                this.markToken(ctx.start, AnalysisListener.emptyPrefixToken);    
             }
         } else {
             this.markToken(ctx.start, AnalysisListener.emptyMessageName);
@@ -150,6 +178,9 @@ export class AnalysisListener implements msgListener {
             this.markToken(ctx.start, AnalysisListener.emptySeverity, DiagnosticType.Warning);
         }
         this.currentSeverityQualifier = "";
+        if (this.messageFaoExpected !== this.messageFaoProvided) {
+            this.markToken(ctx.start, AnalysisListener.messageFaoCountDiff, DiagnosticType.Warning);
+        }
     }
 
     enterIdentificationValue(ctx: IdentificationValueContext) {
@@ -176,7 +207,9 @@ export class AnalysisListener implements msgListener {
     enterFaoCountValue(ctx: FaoCountValueContext) {
         if (ctx.text) {
             const value = parseInt(ctx.text, 10);
-            this.testRange(value, 0, 255, AnalysisListener.tooBigFaoCount, ctx.start);
+            if (this.testRange(value, 0, 255, AnalysisListener.tooBigFaoCount, ctx.start)) {
+                this.messageFaoProvided = value;
+            }
         } else{
             this.markToken(ctx.start, AnalysisListener.emptyFaoCount);
         }
@@ -198,7 +231,12 @@ export class AnalysisListener implements msgListener {
             if (this.symbols.has(literalNameCtx.text)) {
                 this.markToken(literalNameCtx.start, AnalysisListener.messageSymbolAlreadyExists);
             } else {
-                this.symbols.set(literalNameCtx.text, 1 + (ctx.stop? ctx.stop.tokenIndex : literalNameCtx.start.tokenIndex));
+                this.symbols.set(literalNameCtx.text, {
+                    literal: literalNameCtx.start,
+                    visibleFrom: 1 + (ctx.stop? ctx.stop.tokenIndex : literalNameCtx.start.tokenIndex),
+                    refs: [],
+                    kind: SymbolKind.Literal,
+                });
             }
         } else {
             this.markToken(ctx.start, AnalysisListener.emptyLiteralName);
@@ -207,8 +245,11 @@ export class AnalysisListener implements msgListener {
 
     enterExpressionVariable(ctx: ExpressionVariableContext) {
         if (ctx.text) {
-            if (!this.symbols.has(ctx.text)) {
+            const source = this.symbols.get(ctx.text);
+            if (!source) {
                 this.markText(AnalysisListener.undefinedVariable, ctx.start.charPositionInLine, ctx.start.line, ctx.text.length);
+            } else {
+                source.refs.push(ctx.start);
             }
         }
     }
@@ -223,6 +264,53 @@ export class AnalysisListener implements msgListener {
             this.markToken(ctx.start, AnalysisListener.emptyBaseValue);
         }
     }
+
+    // enterFao(ctx: FaoContext) {
+    //     // console.log(ctx.text);
+    // }
+
+    // enterFaoChar(ctx: FaoCharContext) {
+    //     switch(ctx.text) {
+    //         case 'AD':
+    //         case 'AF':
+    //             this.messageFaoExpected++;  // expect two parameters, no break
+    //         default:
+    //             this.messageFaoExpected++;
+    //             break;
+    //     }
+    // }
+
+    // enterFaoNum(ctx: FaoNumContext) {
+    //     this.messageFaoExpected++;
+    // }
+
+    // enterFaoRepeat(ctx: FaoRepeatContext) {
+    //     if (ctx.text === '#') {
+    //         this.messageFaoExpected++;
+    //     }
+    // }
+
+    // enterFaoWidth(ctx: FaoWidthContext) {
+    //     if (ctx.text === '#') {
+    //         this.messageFaoExpected++;
+    //     }
+    // }
+
+    // enterFaoTest(ctx: FaoTestContext) {
+    //     if (ctx.text === '#') {
+    //         this.messageFaoExpected++;
+    //     }
+    // }
+
+    // enterFaoSpec(ctx: FaoSpecContext) {
+    //     switch(ctx.text) {
+    //         case '%D':
+    //         case '%I':
+    //         case '%T':
+    //         case '%U':
+    //             this.messageFaoExpected++;
+    //     }
+    // }
 
     public parseNumber(ctx: NumberContext) {
         let nodeNumber = ctx.NUMBER();

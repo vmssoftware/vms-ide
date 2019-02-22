@@ -1,4 +1,9 @@
 {
     "keyword": "Keyword",
-    "operator": "Operator"
+    "operator": "Operator",
+    "literal": "Literal",
+    "message": "Message",
+    "variable": "variable",
+    "facility": "Facility name",
+    "prefix": "Facility prefix"
 }

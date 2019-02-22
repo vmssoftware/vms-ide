@@ -1,75 +1,64 @@
-// Define a grammar called Hello
 grammar msg;
 
-TITLE:      'TITLE';
-IDENT:      'IDENT';
-PAGE:       'PAGE';
-LITERAL:    'LITERAL';
-FACILITY:   'FACILITY';
-SEVERITY:   'SEVERITY';
-BASE:       'BASE';
-END:        'END';
-
-PREFIX:     'PREFIX';
-SHARED:     'SHARED';
-SYSTEM:     'SYSTEM';
-
-FAOCOUNT:         'FAO_COUNT';
-IDENTIFICATION:   'IDENTIFICATION';
-USERVALUE:        'USER_VALUE';
-SUCCESS:          'SUCCESS';
-INFORMATIONAL:    'INFORMATIONAL';
-WARNING:          'WARNING';
-ERROR:            'ERROR';
-SEVERE:           'SEVERE';
-FATAL:            'FATAL';
-
-fragment FAOSTART:   '!';
-fragment FAONUM:     'O' | 'X' | 'Z' | 'U' | 'S';
-fragment FAONUMSIZE: 'B' | 'W' | 'L' | 'Q' | 'A' | 'I' | 'H' | 'J';
-fragment FAOCHAR:    'AC' | 'AD' | 'AF' | 'AS' | 'AZ';
-fragment FAOSPEC:    '^' | '_' | '!' | '/' | '--' | '+' | '%S' | '%T' | '%U' | '%I' | '%D' | '%E' | '%F';
-fragment FAODIR:     '@'? (FAOCHAR | FAONUM FAONUMSIZE);
-
-FAO: FAOSTART (
-      FAODIR
-   |  NUMBER FAODIR
-   |  NUMBER '(' FAODIR ')'
-   |  NUMBER '(' NUMBER FAODIR ')'
-   |  FAOSPEC 
-   |  NUMBER '%C'
-   |  NUMBER '<'
-   |  '>' 
-   |  NUMBER '*.' 
-   );
-
-WHITESPACE: (' '|'\t')+;
-NEWLINE: ('\r'?'\n'|'\n');
-
-NAME: [A-Z$_] [A-Z$_0-9]*;
-NUMBER: [0-9]+;
-
-ASSIGN: '=';
-ADD: '+';
-SUB: '-';
-MUL: '*';
-DIV: '/';
-SHIFT: '@';
-P_OPEN: '(';
-P_CLOS: ')';
-HEXNUM: '^X' [A-F0-9]+;
-OCTNUM: '^O' [0-7]+;
-DECNUM: '^D' [0-9]+;
-DOT: '.';
-COMMA: ',';
-EXCL: '!';
-APOSTR: '\'';
-QUOTA: '"';
-B_OPEN: '<';
-B_CLOSE: '>';
-ANY: .;
-
 // =============================================================================
+tokens { 
+TITLE,
+IDENT,
+PAGE,
+LITERAL,
+FACILITY,
+SEVERITY,
+BASE,
+END,
+PREFIX,
+SHARED,
+SYSTEM,
+FAOCOUNT,
+IDENTIFICATION,
+USERVALUE,
+SUCCESS,
+INFORMATIONAL,
+WARNING,
+ERROR,
+SEVERE,
+FATAL,
+WHITESPACE,
+NEWLINE,
+NAME,
+NUMBER,
+ASSIGN,
+ADD,
+SUB,
+MUL,
+DIV,
+SHIFT,
+SHARP,
+PERC,
+POW,
+UNDER,
+P_OPEN,
+P_CLOS,
+HEXNUM,
+OCTNUM,
+DECNUM,
+DOT,
+COMMA,
+EXCL,
+APOSTR,
+QUOTA,
+B_OPEN,
+B_CLOSE,
+ANY,
+BSTRING_CLOSE,
+BFAO,
+BTEXT,
+QSTRING_CLOSE,
+QFAO,
+QTEXT,
+ASTRING_CLOSE,
+AFAO,
+ATEXT
+}
 
 msgContent: (
       title
@@ -173,7 +162,7 @@ severe: WHITESPACE? DIV SEVERE;
 fatal: WHITESPACE? DIV FATAL;
 
 messageText: 
-      B_OPEN   (fao | ~B_CLOSE)* B_CLOSE 
-   |  QUOTA    (fao | ~QUOTA)*   QUOTA
-   |  APOSTR   (fao | ~APOSTR)*  APOSTR;
-fao: FAO;
+      B_OPEN (BFAO | BTEXT)*? BSTRING_CLOSE 
+   |  QUOTA  (QFAO | QTEXT)*? QSTRING_CLOSE 
+   |  APOSTR (AFAO | ATEXT)*? ASTRING_CLOSE 
+   ;

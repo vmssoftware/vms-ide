@@ -52,7 +52,6 @@ import { ErrorContext } from "./msgParser";
 import { SevereContext } from "./msgParser";
 import { FatalContext } from "./msgParser";
 import { MessageTextContext } from "./msgParser";
-import { FaoContext } from "./msgParser";
 
 
 /**
@@ -598,16 +597,5 @@ export interface msgListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitMessageText?: (ctx: MessageTextContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `msgParser.fao`.
-	 * @param ctx the parse tree
-	 */
-	enterFao?: (ctx: FaoContext) => void;
-	/**
-	 * Exit a parse tree produced by `msgParser.fao`.
-	 * @param ctx the parse tree
-	 */
-	exitFao?: (ctx: FaoContext) => void;
 }
 

@@ -26,6 +26,11 @@
             "type": "gulp",
             "task": "package",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "antlr4tsLex",
+            "problemMatcher": []
         }
     ]
 }
