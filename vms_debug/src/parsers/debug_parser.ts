@@ -13,9 +13,6 @@ export enum MessageDebuger
 	msgSteppedOn = "stepped on",
 	msgBreak = "break at",
 	msgBreakOn = "break on",
-	msgKeyDbg = "%DEBUG-",
-	msgKeySys = "%SYSTEM-",
-	msgKeyDcl = "%DCL-",
 	msgNoImage = "%DCL-W-ACTIMAGE, error activating image",
 	msgNoSccess = "%DEBUG-E-NOACCESSR, no read access to address",
 	msgNoFind = "%DEBUG-E-NOTRAZERO, Unable to find",
@@ -330,7 +327,14 @@ export class DebugParser
 
 	private parseLineMsg(msgLine: string, sourcePaths: string[], lisPaths: string[])
 	{
-		if(msgLine.includes(MessageDebuger.msgStepped) ||
+		const matcher = /^[-%](\w+)-([EFWIS])-(\w+)/;
+		let matches = msgLine.match(matcher);
+
+		if(matches && matches.length === 4)//debug message
+		{
+			this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLine);
+		}
+		else if(msgLine.includes(MessageDebuger.msgStepped) ||
 			msgLine.includes(MessageDebuger.msgBreak) ||
 			msgLine.includes(MessageDebuger.msgSteppedOn) ||
 			msgLine.includes(MessageDebuger.msgBreakOn))
@@ -338,12 +342,6 @@ export class DebugParser
 			this.commandDone = true;
 			this.commandButtonDone = true;
 			this.queueMsgDebugInfo.push(MessagePrompt.prmtINFO + msgLine);
-		}
-		else if(msgLine.includes(MessageDebuger.msgKeyDbg) ||
-				msgLine.includes(MessageDebuger.msgKeySys) ||
-				msgLine.includes(MessageDebuger.msgKeyDcl))//debug message
-		{
-			this.queueMsgDebug.push(MessagePrompt.prmtDBG + msgLine);
 		}
 		else
 		{
