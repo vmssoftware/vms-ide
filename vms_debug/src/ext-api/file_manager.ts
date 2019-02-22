@@ -48,7 +48,8 @@ export class FileManagerExt
 		return this.sshHelper !== undefined;
 	}
 
-	public async clearPasswordCache() {
+	public async clearPasswordCache()
+	{
 		if (await this.ensureSshHelper() && this.sshHelper)
 		{
 			this.sshHelper.clearPasswordCache();

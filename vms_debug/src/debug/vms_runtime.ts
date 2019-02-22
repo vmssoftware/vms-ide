@@ -19,7 +19,6 @@ import { GetSyncApi } from '../ext-api/get-sync-api';
 
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
-const abortKey = "R";
 
 
 export interface VMSBreakpoint
@@ -70,8 +69,8 @@ export class VMSRuntime extends EventEmitter
 
 	private sourcePaths: string[];
 	private lisPaths: string[];
-	private workSpacePath: string;
 	private rootFolderName: string;
+	private rootFolderNames = new Array<string>();
 
 	private currentFilePath: string;
 	private currentRoutine: string;
@@ -86,6 +85,7 @@ export class VMSRuntime extends EventEmitter
 	// since we want to send breakpoint events, we will assign an id to every event
 	// so that the frontend can match events with breakpoints.
 	private breakpointId = 1;
+	private abortKey = "C";//by default
 
 
 	constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, public logFn?: LogFunction)
@@ -97,11 +97,10 @@ export class VMSRuntime extends EventEmitter
 		this.rootFolderName = folder ? folder.name : "";
 		this.osCmd = new OsCommands();
 		this.dbgCmd = new DebugCommands();
-		this.dbgParser = new DebugParser(folder);
+		this.dbgParser = new DebugParser();
 		this.varsInfo = new HolderDebugVariableInfo();
 		this.debugRun = false;
 		this.programEnd = false;
-		this.workSpacePath = "";
 		this.currentFilePath = "";
 		this.currentRoutine = "";
 		this.sourcePaths = [];
@@ -122,33 +121,68 @@ export class VMSRuntime extends EventEmitter
 
 		let syncApi = await GetSyncApi();
 		let localSource = await fileManager.getLocalSource();
-		let rootPath = "" + localSource!.root;
-		this.workSpacePath = rootPath.substring(0, rootPath.length - this.rootFolderName.length);
+		this.abortKey = section.break;
 
-		if(syncApi)
+		if(vscode.workspace.workspaceFolders)
 		{
-			let listFolders = syncApi.getDepList(this.rootFolderName);
-
-			for(let folder of listFolders)
+			if(syncApi)
 			{
-				let fileM = new FileManagerExt(folder);
-				let sourcePaths = await fileM.loadPathListFiles(section.source);
-				let lisPaths = await fileM.loadPathListFiles(section.listing);
+				let listFolders = syncApi.getDepList(this.rootFolderName);
 
-				this.addPrefixToArray(folder, sourcePaths);
-				this.addPrefixToArray(folder, lisPaths);
+				for(let folder of listFolders)
+				{
+					let path = "";
 
-				this.sourcePaths = this.sourcePaths.concat(sourcePaths);
-				this.lisPaths = this.lisPaths.concat(lisPaths);
+					for(let item of vscode.workspace.workspaceFolders)
+					{
+						if(item.name === folder)
+						{
+							path = item.uri.fsPath;
+							path = path.replace(/\\/g, ftpPathSeparator);
+							this.rootFolderNames.push(path);
+							break;
+						}
+					}
+
+					if(path !== "")
+					{
+						let fileM = new FileManagerExt(folder);
+						let sourcePaths = await fileM.loadPathListFiles(section.source);
+						let lisPaths = await fileM.loadPathListFiles(section.listing);
+
+						this.addPrefixToArray(path, sourcePaths);
+						this.addPrefixToArray(path, lisPaths);
+
+						this.sourcePaths = this.sourcePaths.concat(sourcePaths);
+						this.lisPaths = this.lisPaths.concat(lisPaths);
+					}
+				}
+			}
+			else
+			{
+				let path = vscode.workspace.workspaceFolders[0].uri.fsPath;
+				path = path.replace(/\\/g, ftpPathSeparator);
+
+				if(path !== "")
+				{
+					this.sourcePaths = await fileManager.loadPathListFiles(section.source);
+					this.lisPaths = await fileManager.loadPathListFiles(section.listing);
+
+					this.addPrefixToArray(path, this.sourcePaths);
+					this.addPrefixToArray(path, this.lisPaths);
+				}
 			}
 		}
 		else
 		{
-			this.sourcePaths = await fileManager.loadPathListFiles(section.source);
-			this.lisPaths = await fileManager.loadPathListFiles(section.listing);
+			const message = localize('runtime.workspace_not_find', "Workspace Folders don't find");
+			vscode.window.showErrorMessage(message);
 
-			this.addPrefixToArray(this.rootFolderName, this.sourcePaths);
-			this.addPrefixToArray(this.rootFolderName, this.lisPaths);
+			if (this.logFn)
+			{
+				this.logFn(LogType.information, () => message + "\n");
+			}
+			return;
 		}
 
 		this.checkLisFiles(this.sourcePaths, this.lisPaths);
@@ -177,7 +211,7 @@ export class VMSRuntime extends EventEmitter
 			this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("error", "dbge"));
 			this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
 			this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
-			this.shell.SendCommandToQueue(this.dbgCmd.setAbortKey(abortKey));
+			this.shell.SendCommandToQueue(this.dbgCmd.setAbortKey(this.abortKey));
 			this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
 		}
 		else//reload program
@@ -215,20 +249,24 @@ export class VMSRuntime extends EventEmitter
 		{
 			let found = false;
 			let name = this.getNameFromPath(itemSource);
+			let folder = this.getFolderName(itemSource);
 
 			for(let itemLis of lis)
 			{
-				if(name === this.getNameFromPath(itemLis))
+				if(folder === this.getFolderName(itemLis))
 				{
-					found = true;
-					break;
+					if(name === this.getNameFromPath(itemLis))
+					{
+						found = true;
+						break;
+					}
 				}
 			}
 
 			if(!found)
 			{
-				const message = localize('runtime.lis_not_found', ".LIS file don't found for the source file");
-				vscode.window.showWarningMessage(message + " " + itemSource + "\n");
+				const message = localize('runtime.lis_not_find', ".LIS file don't find for the source file");
+				vscode.window.showWarningMessage(message + " " + itemSource);
 
 				if (this.logFn)
 				{
@@ -268,7 +306,7 @@ export class VMSRuntime extends EventEmitter
 		if(this.buttonPressd !== DebugButtonEvent.btnPause)
 		{
 			this.buttonPressd = DebugButtonEvent.btnPause;
-			let symbol = this.dbgCmd.getCtrlPlusSymbol(abortKey);
+			let symbol = this.dbgCmd.getCtrlPlusSymbol(this.abortKey);
 			this.shell.SendData(this.dbgCmd.customCommand(symbol).getCommand());//interrupt program execution
 			this.shell.SendData(this.dbgCmd.stop().getCommand());
 		}
@@ -280,7 +318,7 @@ export class VMSRuntime extends EventEmitter
 		//if the programm is running
 		if(this.programEnd === false && this.shell.getCurrentCommand().getBody() !== "")
 		{
-			let symbol = this.dbgCmd.getCtrlPlusSymbol(abortKey);
+			let symbol = this.dbgCmd.getCtrlPlusSymbol(this.abortKey);
 			this.shell.SendData(this.dbgCmd.customCommand(symbol).getCommand());//interrupt program execution
 			this.shell.SendCommand(this.dbgCmd.stop());
 		}
@@ -704,20 +742,9 @@ export class VMSRuntime extends EventEmitter
 		let notBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 		let vrfBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 
-		let fullPath = path;
-		path = path.replace(/\\/g, ftpPathSeparator);
-
-		if(this.workSpacePath === "")
-		{
-			let fileManager = new FileManagerExt(this.rootFolderName);
-			let localSource = await fileManager.getLocalSource();
-			let rootPath = "" + localSource!.root;
-			this.workSpacePath = rootPath.substring(0, rootPath.length - this.rootFolderName.length);
-		}
-
-		path = path.slice(this.workSpacePath.length);
+		path = path.charAt(0).toLowerCase() + path.replace(/\\/g, ftpPathSeparator).substring(1);
 		let fileName = this.getNameFromPath(path);
-		let key = path;
+		let key = path.toLowerCase();
 		let currBps = this.breakPoints.get(key);
 
 		for(let line of lines)
@@ -751,7 +778,7 @@ export class VMSRuntime extends EventEmitter
 					else
 					{
 						newBps.push(bpO);
-						this.sendEvent('breakpointAdd', bpO, fullPath);
+						this.sendEvent('breakpointAdd', bpO, path);
 					}
 				}
 			}
@@ -838,7 +865,7 @@ export class VMSRuntime extends EventEmitter
 	{
 		let fileName = this.getNameFromPath(path);
 		const bp = <VMSBreakpoint> { file: fileName, verified: false, line, id: this.breakpointId++ };
-		let key = path;
+		let key = path.toLowerCase();
 		let bps = this.breakPoints.get(key);
 
 		if (!bps)
@@ -856,7 +883,7 @@ export class VMSRuntime extends EventEmitter
 	// Clear breakpoint in file with given line.
 	public clearBreakPoint(path: string, line: number) : VMSBreakpoint | undefined
 	{
-		let key = path;
+		let key = path.toLowerCase();
 		let bps = this.breakPoints.get(key);
 
 		if (bps)
@@ -899,20 +926,19 @@ export class VMSRuntime extends EventEmitter
 		return item;
 	}
 
-	private getFolderName(item: string) : string //get name of the folder project, item="folder/path/file.ext"
+	private getFolderName(fullPath: string) : string //get name of the folder project, item="folder/path/file.ext"
 	{
-		let indexStart = item.indexOf(ftpPathSeparator);
-		let folderProject = item.substr(0, indexStart);
+		let folderProject = "";
+
+		for(let item of this.rootFolderNames)
+		{
+			if(fullPath.includes(item))
+			{
+				folderProject = item;
+			}
+		}
 
 		return folderProject;
-	}
-
-	private getLocalPath(item: string) : string //item="folder/path/file.ext"
-	{
-		let indexStart = item.indexOf(ftpPathSeparator);
-		let pathFile = item.substr(indexStart + 1);
-
-		return pathFile;
 	}
 
 	private findPathFileByName(fileName : string, paths : string[]) : string
@@ -939,28 +965,19 @@ export class VMSRuntime extends EventEmitter
 
 	private async loadSourceLang(file: string) : Promise<string[]>
 	{
-		let folderProject = this.getFolderName(file);
-		let fileManager = new FileManagerExt(folderProject);
-
-		let pathFile = this.getLocalPath(file);
-
-		return fileManager.loadContextFile(pathFile);
+		return this.dbgParser.loadFileContext(file);
 	}
 
 	private async loadSourceLis(file: string) : Promise<string[]>
 	{
-		let folderProject = this.getFolderName(file);
-		let fileManager = new FileManagerExt(folderProject);
-
 		let pathFileLis = this.findPathFileByName(file, this.lisPaths);
-		let pathFile = this.getLocalPath(pathFileLis);
 
-		return fileManager.loadContextFile(pathFile);
+		return this.dbgParser.loadFileContext(pathFileLis);
 	}
 
 	private async verifyBreakpoints(path: string) : Promise<void>
 	{
-		let key = path;
+		let key = path.toLowerCase();
 		let bps = this.breakPoints.get(key);
 
 		if (bps)
@@ -1011,7 +1028,7 @@ export class VMSRuntime extends EventEmitter
 
 	private async setRemoteBreakpoints(path: string) : Promise<void>
 	{
-		let key = path;
+		let key = path.toLowerCase();
 		let setBps = this.breakPointsSet.get(key);
 		let remBps = this.breakPointsRem.get(key);
 
@@ -1092,6 +1109,7 @@ export class VMSRuntime extends EventEmitter
 			let messageDebug = this.dbgParser.getDebugMessage();
 			let messageUser = this.dbgParser.getUserMessage();
 			let messageData = this.dbgParser.getDataMessage();
+			let messageDebugInfo = this.dbgParser.getDebugInfoMessage();
 
 
 			if(messageCommand !== "")
@@ -1123,7 +1141,7 @@ export class VMSRuntime extends EventEmitter
 								//get current file and routine
 								if(stack.count > 0)
 								{
-									this.currentFilePath = stack.frames[0].file.slice(this.workSpacePath.length);
+									this.currentFilePath = stack.frames[0].file;
 									this.currentRoutine = stack.frames[0].name.substr(0, stack.frames[0].name.indexOf("["));
 								}
 
@@ -1229,6 +1247,13 @@ export class VMSRuntime extends EventEmitter
 				if(showMsg)
 				{
 					vscode.debug.activeDebugConsole.append(messageDebug);
+				}
+			}
+			if(messageDebugInfo !== "")
+			{
+				if (this.logFn)
+				{
+					this.logFn(LogType.information, () => messageDebugInfo);
 				}
 			}
 
