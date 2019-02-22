@@ -74,6 +74,8 @@ export class ShellSession
                         this.logFn(LogType.error, () => `Cannot get ssh-helper api`);
                     }
 
+                    this.DisconectSession(true);
+
                     return false;
                 }
                 this.sshHelper = new sshHelperType(this.logFn);

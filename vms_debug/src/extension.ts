@@ -14,7 +14,7 @@ import { VMSNoDebugSession } from './debug/vms_debug_run';
 import { createLogFunction } from './log';
 import { LogType } from '@vorfol/common';
 import { StatusBarDebug } from './ui/status_bar';
-import { FileManagerExt } from './ext-api/file_manager';
+import { ConfigManager } from './ext-api/config_manager';
 import { TerminalVMS } from './ui/terminal';
 const { Subject } = require('await-notify');
 
@@ -45,7 +45,7 @@ let typeRunConfig : TypeRunConfig = TypeRunConfig.TypeRunNone;
 let statusConnBar : StatusBarDebug = new StatusBarDebug();
 let statusShell : StatusConnection = StatusConnection.StatusDisconnected;
 let terminals : TerminalVMS = new TerminalVMS();
-let fileManager : FileManagerExt = new FileManagerExt("");
+let configManager : ConfigManager = new ConfigManager("");
 
 
 export function activate(context: vscode.ExtensionContext)
@@ -72,12 +72,12 @@ export function deactivate()
 async function createTerminal() : Promise<void>
 {
 	if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
-		fileManager.scope = vscode.workspace.workspaceFolders[0].name;
+		configManager.scope = vscode.workspace.workspaceFolders[0].name;
 	}
 	terminals.create(nameTerminalVMS)
 	.then(async(terminal) =>
 	{
-		let connection = await fileManager.getConnectionSection();
+		let connection = await configManager.getConnectionSection();
 
 		if(terminal)
 		{
@@ -89,7 +89,7 @@ async function createTerminal() : Promise<void>
 				}
 				else
 				{
-					await fileManager.clearPasswordCache();
+					await configManager.clearPasswordCache();
 					terminals.start(terminal, connection.host, connection.username, connection.password);
 				}
 			}
@@ -193,8 +193,8 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 				{
 					if (!config.program)
 					{
-						let fileManager = new FileManagerExt(folder?folder.name:"");
-						let projectSection = await fileManager.getProjectSection();
+						let configManager = new ConfigManager(folder?folder.name:"");
+						let projectSection = await configManager.getProjectSection();
 
 						if (projectSection)
 						{
