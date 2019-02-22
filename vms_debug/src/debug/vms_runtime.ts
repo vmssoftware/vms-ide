@@ -172,6 +172,7 @@ export class VMSRuntime extends EventEmitter
 				}
 
 				this.sendEvent('end');//close debugger
+				return;
 			}
 		}
 		else
