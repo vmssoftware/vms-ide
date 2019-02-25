@@ -34,7 +34,7 @@
 			[
 				{
 					"name": "mms.comment",
-					"begin" : "!",
+					"begin" : "(!|#)",
 					"beginCaptures" : 
 					{
 					  "0" : 
@@ -174,7 +174,7 @@
 				{
 					"comment": "MMS directives",
 					"name": "keyword.control.directives.mms",
-					"match": "(?i)ACTION_STATUS|DEFAULT|ELSE|ELSIF|ENDIF|FIRST|IF|IFDEF|IGNORE|INCLUDE|LAST|SILENT|SUFFIXES|SUFFIXES_DELETE|SUFFIXES_AFTER|SUFFIXES_BEFORE"
+					"match": "(?i)ACTION_STATUS|DEFAULT|ELSE|ELSIF|ENDIF|FIRST|IFDEF|IF|IGNORE_ALL|IGNORE|INCLUDE|LAST|SILENT|SUFFIXES_DELETE|SUFFIXES_AFTER|SUFFIXES_BEFORE|SUFFIXES"
 				},
 				{
 					"comment": "wrong MMS directives",
