@@ -141,7 +141,7 @@ export class VMSNoDebugSession extends LoggingDebugSession
 	//buttons events
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void
 	{
-		this.runtime.exit();
+		this.runtime.exit(args.restart);
 		this.sendResponse(response);//disconnect or restart event
 	}
 
