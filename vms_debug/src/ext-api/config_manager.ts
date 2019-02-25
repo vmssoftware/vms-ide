@@ -3,18 +3,19 @@ import { ISource } from "./source";
 import { GetSyncApi } from './get-sync-api';
 import * as readline from 'readline';
 import { SshHelper } from './ssh-helper';
-import { GetSshHelperType } from '../ext-api/get-ssh-helper';
+import { GetSshHelperType } from './get-ssh-helper';
 import { IConnectionSection } from './api';
 import { IProjectSection, SyncApi } from './sync-api';
 
 
-export class FileManagerExt
+export class ConfigManager
 {
 	private localSource?: ISource;
 	private sshHelper?: SshHelper;
 	private syncApi?: SyncApi;
 
-	constructor(public scope: string) {
+	constructor(public scope: string)
+	{
 		//
 	}
 
@@ -67,6 +68,7 @@ export class FileManagerExt
 		if(this.sshHelper)
 		{
 			const configuredSettings = await this.sshHelper.getSettings(this.scope);
+
 			if (configuredSettings)
 			{
 				if(configuredSettings.connectionSection.password === "" &&
@@ -99,6 +101,7 @@ export class FileManagerExt
 		{
 			this.syncApi = await GetSyncApi();
 		}
+
 		if (this.syncApi)
 		{
 			const currentSettings = await this.syncApi.getSettings(this.scope);
@@ -107,6 +110,22 @@ export class FileManagerExt
 				return currentSettings.projectSection;
 			}
 		}
+
+		return undefined;
+	}
+
+	public async getDependencyList() : Promise<string[] | undefined>
+	{
+		if (!this.syncApi)
+		{
+			this.syncApi = await GetSyncApi();
+		}
+
+		if (this.syncApi)
+		{
+			return await this.syncApi.getDepList(this.scope);
+		}
+
 		return undefined;
 	}
 

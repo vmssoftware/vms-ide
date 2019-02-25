@@ -10,12 +10,11 @@ import { OsCommands } from '../command/os_commands';
 import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
 import { DebugParser, MessageDebuger, Parameters, StringsPrompt } from '../parsers/debug_parser';
 import { LogFunction, LogType, ftpPathSeparator } from '@vorfol/common';
-import { FileManagerExt } from '../ext-api/file_manager';
+import { ConfigManager } from "../ext-api/config_manager";
 import { HolderDebugVariableInfo, DebugVariable, ReflectKind, VariableFileInfo } from '../parsers/debug_variable_info';
 const { Subject } = require('await-notify');
 import * as WaitSubject from 'await-notify';
 import { Queue } from '../queue/queues';
-import { GetSyncApi } from '../ext-api/get-sync-api';
 
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
@@ -111,24 +110,29 @@ export class VMSRuntime extends EventEmitter
 	public async start(programName: string, stopOnEntry : boolean) : Promise<void>
 	{
 		this.programEnd = false;
-		let fileManager = new FileManagerExt(this.rootFolderName);
-		let section = await fileManager.getProjectSection();
+		let configManager = new ConfigManager(this.rootFolderName);
+		let section = await configManager.getProjectSection();
+		const messageSync = localize('runtime.sync_api_not_find', "Sync API don't find");
 
 		if (!section)
 		{
+			vscode.window.showErrorMessage(messageSync);
+
+			if (this.logFn)
+			{
+				this.logFn(LogType.information, () => messageSync + "\n");
+			}
+
+			this.sendEvent('end');//close debugger
 			return;
 		}
 
-		let syncApi = await GetSyncApi();
-		let localSource = await fileManager.getLocalSource();
-		this.abortKey = section.break;
-
 		if(vscode.workspace.workspaceFolders)
 		{
-			if(syncApi)
-			{
-				let listFolders = syncApi.getDepList(this.rootFolderName);
+			let listFolders = await configManager.getDependencyList();
 
+			if(listFolders)
+			{
 				for(let folder of listFolders)
 				{
 					let path = "";
@@ -146,7 +150,7 @@ export class VMSRuntime extends EventEmitter
 
 					if(path !== "")
 					{
-						let fileM = new FileManagerExt(folder);
+						let fileM = new ConfigManager(folder);
 						let sourcePaths = await fileM.loadPathListFiles(section.source);
 						let lisPaths = await fileM.loadPathListFiles(section.listing);
 
@@ -160,17 +164,15 @@ export class VMSRuntime extends EventEmitter
 			}
 			else
 			{
-				let path = vscode.workspace.workspaceFolders[0].uri.fsPath;
-				path = path.replace(/\\/g, ftpPathSeparator);
+				vscode.window.showErrorMessage(messageSync);
 
-				if(path !== "")
+				if (this.logFn)
 				{
-					this.sourcePaths = await fileManager.loadPathListFiles(section.source);
-					this.lisPaths = await fileManager.loadPathListFiles(section.listing);
-
-					this.addPrefixToArray(path, this.sourcePaths);
-					this.addPrefixToArray(path, this.lisPaths);
+					this.logFn(LogType.information, () => messageSync + "\n");
 				}
+
+				this.sendEvent('end');//close debugger
+				return;
 			}
 		}
 		else
@@ -182,11 +184,14 @@ export class VMSRuntime extends EventEmitter
 			{
 				this.logFn(LogType.information, () => message + "\n");
 			}
+
+			this.sendEvent('end');//close debugger
 			return;
 		}
 
 		this.checkLisFiles(this.sourcePaths, this.lisPaths);
 		this.shell.resetParameters();
+		this.abortKey = section.break;
 
 		if(this.shell.getModeWork() !== ModeWork.shell)
 		{
@@ -196,9 +201,10 @@ export class VMSRuntime extends EventEmitter
 		//run debugger
 		if(this.shell.getModeWork() === ModeWork.shell)
 		{
-			// run appropriate COM file, if it exists
 			const preRunFile = section.projectName + ".com";
+			let localSource = await configManager.getLocalSource();
 			const found = await localSource!.findFiles(preRunFile);
+			// run appropriate COM file, if it exists
 			if (found.length === 1)
 			{
 				const dotted_root = section.root.replace(/\//g, ".");
