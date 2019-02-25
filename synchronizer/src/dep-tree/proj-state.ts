@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { ProjDepTree } from "./proj-dep-tree";
+import { BuildType } from "./project-descr";
 
 export enum SourceState {
     modified,
@@ -12,6 +13,8 @@ export interface IProjState {
 }
 
 export class ProjectState {
+
+    public static readonly configBuildTypeSection = "buildType";
 
     public static acquire() {
         if (!ProjectState.instance) {
@@ -67,22 +70,34 @@ export class ProjectState {
     }
 
     public setSynchronized(projectName: string, status = true) {
-        const state = this.states.get(projectName);
-        if (state) {
-            state.sourceState = status ? SourceState.synchronized : SourceState.modified;
-            if (!status) {
-                const projDep = new ProjDepTree();
-                for (const dep of projDep.getMasterList(projectName)) {
-                    const depState = this.states.get(dep);
-                    if (depState) {
-                        depState.buildState.clear();
+        const projects: string[] = [];
+        if (projectName) {
+            projects.push(projectName);
+        } else {
+            projects.push(...this.states.keys());
+        }
+        let retCode = true;
+        for (const currentProject of projects) {
+            const state = this.states.get(currentProject);
+            if (state) {
+                state.sourceState = status ? SourceState.synchronized : SourceState.modified;
+                if (!status) {
+                    state.buildState.clear();
+                    const projDep = new ProjDepTree();
+                    for (const dep of projDep.getMasterList(projectName)) {
+                        const depState = this.states.get(dep);
+                        if (depState) {
+                            depState.buildState.clear();
+                        }
                     }
                 }
+            } else {
+                retCode = false;
             }
-            this.updateDescription();
-            return true;
         }
-        return false;
+        this.updateDescription();
+        return retCode;
+
     }
 
     public isBuilt(projectName: string, buildType: string) {
@@ -95,16 +110,41 @@ export class ProjectState {
     }
 
     public setBuilt(projectName: string, buildType: string, status = true) {
-        const state = this.states.get(projectName);
-        if (state) {
-            state.buildState.set(buildType.trim().toUpperCase(), status);
-            this.updateDescription();
-            return true;
+        const projects: string[] = [];
+        if (projectName) {
+            projects.push(projectName);
+        } else {
+            projects.push(...this.states.keys());
         }
-        return false;
+        buildType = buildType || this.getDefBuildType();
+        let retCode = true;
+        for (const currentProject of projects) {
+            const state = this.states.get(currentProject);
+            if (state) {
+                state.buildState.set(buildType.trim().toUpperCase(), status);
+            } else {
+                retCode = false;
+            }
+        }
+        this.updateDescription();
+        return retCode;
     }
 
     public updateDescription() {
         vscode.commands.executeCommand("vmssoftware.project-dep.projectDescription.refresh");
+    }
+
+    public getDefBuildType() {
+        const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
+        if (config.get<string>(ProjectState.configBuildTypeSection) == BuildType.release) {
+            return BuildType.release;
+        }
+        return BuildType.debug;
+    }
+
+    public setDefBuildType(buildType: BuildType) {
+        const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
+        config.update(ProjectState.configBuildTypeSection, buildType, false);
+        return true;
     }
 }

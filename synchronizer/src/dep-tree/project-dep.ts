@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { ProjDepTree } from "./proj-dep-tree";
 import { BuildType, ProjDescrProvider } from "./project-descr";
+import { ProjectState } from "./proj-state";
 
 export interface IProjectElement {
     parent?: string;
@@ -84,42 +85,21 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
 
     public build(node: IProjectElement) {
         if (this.selected) {
-            let buildType = BuildType.debug;
-            const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
-            switch (config.get(ProjDescrProvider.configBuildTypeSection)) {
-                case BuildType.release:
-                    buildType = BuildType.release;
-                    break;
-            }
-            // TODO: activate extension
+            const buildType = ProjectState.acquire().getDefBuildType();
             vscode.commands.executeCommand(ProjDepProvider.cmdBuild, this.selected.name, buildType);
         }
     }
 
     public rebuild(node: IProjectElement) {
         if (this.selected) {
-            let buildType = BuildType.debug;
-            const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
-            switch (config.get(ProjDescrProvider.configBuildTypeSection)) {
-                case BuildType.release:
-                    buildType = BuildType.release;
-                    break;
-            }
-            // TODO: activate extension
+            const buildType = ProjectState.acquire().getDefBuildType();
             vscode.commands.executeCommand(ProjDepProvider.cmdReBuild, this.selected.name, buildType);
         }
     }
 
     public clean(node: IProjectElement) {
         if (this.selected) {
-            let buildType = BuildType.debug;
-            const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
-            switch (config.get(ProjDescrProvider.configBuildTypeSection)) {
-                case BuildType.release:
-                    buildType = BuildType.release;
-                    break;
-            }
-            // TODO: activate extension
+            const buildType = ProjectState.acquire().getDefBuildType();
             vscode.commands.executeCommand(ProjDepProvider.cmdClean, this.selected.name, buildType);
         }
     }

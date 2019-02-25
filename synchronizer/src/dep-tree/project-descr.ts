@@ -46,27 +46,16 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
     public static readonly cmdChangeBuildType = "vmssoftware.project-dep.projectDescription.changeBuildType";
     public static readonly cmdEditSync = "vmssoftware.synchronizer.editProject";
     public static readonly cmdEditSsh = "vmssoftware.ssh-helper.editSettings";
-    public static readonly configBuildTypeSection = "buildType";
 
     public readonly onDidChangeTreeData: vscode.Event<string | undefined>;
     public selectedProject?: string;
     public syncScopeSettings?: ISyncScopeSettings;
     public sshScopeSettings?: ISshScopeSettings;
-    public buildType: BuildType = BuildType.debug;
 
     private didChangeTreeEmitter: vscode.EventEmitter<string | undefined> = new vscode.EventEmitter<string | undefined>();
 
     constructor() {
         this.onDidChangeTreeData = this.didChangeTreeEmitter.event;
-        const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
-        switch (config.get(ProjDescrProvider.configBuildTypeSection)) {
-            case BuildType.release:
-                this.buildType = BuildType.release;
-                break;
-            default:
-                this.buildType = BuildType.debug;
-                break;
-        }
     }
 
     public async getChildren(element?: string | undefined): Promise<string[]> {
@@ -153,7 +142,7 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
                 data = this.selectedProject;
                 break;
             case CommonFields[CommonFields.buildType]:
-                data = this.buildType;
+                data = ProjectState.acquire().getDefBuildType();
                 break;
             case CommonFields[CommonFields.sourceState]:
                 // TODO: i18n
@@ -161,7 +150,7 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
                 break;
             case CommonFields[CommonFields.bildState]:
                 // TODO: i18n
-                data = ProjectState.acquire().isBuilt(this.selectedProject, this.buildType) ? "built" : "not built";
+                data = ProjectState.acquire().isBuilt(this.selectedProject, ProjectState.acquire().getDefBuildType()) ? "built" : "not built";
                 break;
             case CommonFields[CommonFields.masters]:
                 data = new ProjDepTree().getMasterList(this.selectedProject).join(" => ");
@@ -200,13 +189,11 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
     }
 
     public changeBuildType() {
-        if (this.buildType === BuildType.debug) {
-            this.buildType = BuildType.release;
+        if (ProjectState.acquire().getDefBuildType() === BuildType.debug) {
+            ProjectState.acquire().setDefBuildType(BuildType.release);
         } else {
-            this.buildType = BuildType.debug;
+            ProjectState.acquire().setDefBuildType(BuildType.debug);
         }
-        const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
-        config.update(ProjDescrProvider.configBuildTypeSection, this.buildType, false);
         this.didChangeTreeEmitter.fire();
     }
 
