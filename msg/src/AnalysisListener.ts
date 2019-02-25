@@ -1,10 +1,11 @@
 import * as nls from "vscode-nls";
 
 import { msgListener } from './msgListener';
-import { NumberContext, TitleNameContext, TitleDescriptionContext, IdentValueContext, FacilityContext, FacilityNameContext, PrefixQualifierValueContext, SeverityValueContext, SeverityQualifierContext, MessageNameContext, MessageContext, IdentificationValueContext, MessageTextContext, FaoCountValueContext, LiteralDefinitionContext, ExpressionVariableContext, BaseNumberContext, UserValueValueContext, SystemQualifierContext } from './msgParser';
+import { NumberContext, TitleNameContext, TitleDescriptionContext, IdentValueContext, FacilityContext, FacilityNameContext, PrefixQualifierValueContext, SeverityValueContext, SeverityQualifierContext, MessageNameContext, MessageContext, IdentificationValueContext, MessageTextContext, FaoCountValueContext, LiteralDefinitionContext, ExpressionVariableContext, BaseNumberContext, UserValueValueContext, SystemQualifierContext, msgParser } from './msgParser';
 import { DiagnosticEntry, DiagnosticType, SymbolKind } from './Facade';
 import { Token, ParserRuleContext } from "antlr4ts";
 import { LogFunction, LogType } from "@vorfol/common";
+import { TerminalNode } from "antlr4ts/tree";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -202,6 +203,18 @@ export class AnalysisListener implements msgListener {
                 this.markText(AnalysisListener.oneLine, ctx.start.charPositionInLine + pos, ctx.start.line, 1);
             }
         }
+        if (ctx.children) {
+            for (const child of ctx.children) {
+                if (child instanceof TerminalNode) {
+                    switch (child.symbol.type) {
+                        case msgParser.AFAO:
+                        case msgParser.BFAO:
+                        case msgParser.QFAO:
+                            this.messageFaoExpected += this.countFao(child.text);
+                    }
+                }
+            }
+        }
     }
 
     enterFaoCountValue(ctx: FaoCountValueContext) {
@@ -311,6 +324,80 @@ export class AnalysisListener implements msgListener {
     //             this.messageFaoExpected++;
     //     }
     // }
+
+    public countFao(fao: string) {
+        let retValue = 0;
+        let fao_repeat = "";
+        let fao_width = "";
+        let fao_dir = "";
+        let fao_spec = "";
+
+        const faoTest1 = /!([1-9][0-9]*|#)?(@?)([A-Z][A-Z])/;
+        const match1 = fao.match(faoTest1);
+        if (match1) {
+            fao_width = match1[1];
+            fao_dir = match1[3];
+        }
+
+        const faoTest2 = /!([1-9][0-9]*|#)?\(([1-9][0-9]*|#)?(@?)([A-Z][A-Z])\)/;
+        const match2 = fao.match(faoTest2);
+        if (match2) {
+            fao_width = match2[2];
+            fao_repeat = match2[1];
+            fao_dir = match2[4];
+        }
+
+        const faoTest3 = /!([1-9][0-9]*|#)\*(.)/;
+        const match3 = fao.match(faoTest3);
+        if (match3) {
+            fao_repeat = match3[1];
+        }
+
+        const faoTest4 = /!([0-9]+|#)%C/;
+        const match4 = fao.match(faoTest4);
+        if (match4) {
+            fao_repeat = match4[1];
+        }
+
+        const faoTest5 = /!(\^|_|!|\/|--|\+|%S|%T|%U|%I|%D|%E|%F)/;
+        const match5 = fao.match(faoTest5);
+        if (match5) {
+            fao_spec = match5[1];
+        }
+
+        if (fao_width === '#') {
+            retValue++; 
+        }
+
+        if (fao_repeat === '#') {
+            retValue++; 
+        }
+
+        switch (fao_dir) {
+            case undefined:
+            case '':
+                break;
+            case 'AD':
+            case 'AF':
+                retValue++;  // expect two parameters, no break
+            case 'AZ':
+            case 'AC':
+            case 'AS':
+                retValue++;
+                break;
+            default:
+                retValue++; // for all number outputs
+        }
+
+        switch(fao_spec) {
+            case '%D':
+            case '%I':
+            case '%T':
+            case '%U':
+                retValue++;
+        }
+        return retValue;
+    }
 
     public parseNumber(ctx: NumberContext) {
         let nodeNumber = ctx.NUMBER();

@@ -1,32 +1,32 @@
 lexer grammar msgLex;
 
-TITLE:      'TITLE';
-IDENT:      'IDENT';
-PAGE:       'PAGE';
-LITERAL:    'LITERAL';
-FACILITY:   'FACILITY';
-SEVERITY:   'SEVERITY';
-BASE:       'BASE';
-END:        'END';
+TITLE:      [tT][iI][tT][lL][eE];
+IDENT:      [iI][dD][eE][nN][tT];
+PAGE:       [pP][aA][gG][eE];
+LITERAL:    [lL][iI][tT][eE][rR][aA][lL];
+FACILITY:   [fF][aA][cC][iI][lL][iI][tT][yY];
+SEVERITY:   [sS][eE][vV][eE][rR][iI][tT][yY];
+BASE:       [bB][aA][sS][eE];
+END:        [eE][nN][dD];
 
-PREFIX:     'PREFIX';
-SHARED:     'SHARED';
-SYSTEM:     'SYSTEM';
+PREFIX:     [pP][rR][eE][fF][iI][xX];
+SHARED:     [sS][aA][rR][eE][dD];
+SYSTEM:     [sS][yY][sS][tT][eE][mM];
 
-FAOCOUNT:         'FAO_COUNT';
-IDENTIFICATION:   'IDENTIFICATION';
-USERVALUE:        'USER_VALUE';
-SUCCESS:          'SUCCESS';
-INFORMATIONAL:    'INFORMATIONAL';
-WARNING:          'WARNING';
-ERROR:            'ERROR';
-SEVERE:           'SEVERE';
-FATAL:            'FATAL';
+FAOCOUNT:         [fF][aA][oO]'_'[cC][oO][uU][nN][tT];
+IDENTIFICATION:   [iI][dD][eE][nN][tT][iI][fF][iI][cC][aA][tT][iI][oO][nN];
+USERVALUE:        [uU][sS][eE][rR]'_'[vV][aA][lL][uU][eE];
+SUCCESS:          [sS][uU][cC][cC][eE][sS][sS];
+INFORMATIONAL:    [iI][nN][fF][oO][rR][mM][aA][tT][iI][oO][nN][aA][lL];
+WARNING:          [wW][aA][rR][nN][iI][nN][gG];
+ERROR:            [eE][rR][rR][oO][rR];
+SEVERE:           [sS][eE][vV][eE][rR][eE];
+FATAL:            [fF][aA][tT][aA][lL];
 
 WHITESPACE: (' '|'\t')+;
 NEWLINE: ('\r'?'\n'|'\n');
 
-fragment LETTERS: [A-Z];
+fragment LETTERS: [a-zA-Z];
 
 NAME: (LETTERS|[$_]) (LETTERS|[$_0-9])*;
 NUMBER: [0-9]+;
@@ -69,14 +69,14 @@ fragment FAODIR:     '@'? (FAOCHAR | FAONUM FAONUMSIZE);
 
 BFAO: FAOSTART (
       FAODIR
-   |  NUMBER FAODIR
-   |  NUMBER '(' FAODIR ')'
-   |  NUMBER '(' NUMBER FAODIR ')'
+   |  (NUMBER | '#') FAODIR
+   |  (NUMBER | '#') '(' FAODIR ')'
+   |  (NUMBER | '#') '(' (NUMBER | '#') FAODIR ')'
    |  FAOSPEC 
-   |  NUMBER '%C'
-//   |  NUMBER '<'
+   |  (NUMBER | '#') '%C'
+//   |  (NUMBER | '#') '<'   forbidden in such delimiters
 //   |  '>' 
-   |  NUMBER '*.' 
+   |  (NUMBER | '#') '*.' 
    );
 
 BTEXT: .;
@@ -87,14 +87,14 @@ QSTRING_CLOSE: '"' -> popMode;
 
 QFAO: FAOSTART (
       FAODIR
-   |  NUMBER FAODIR
-   |  NUMBER '(' FAODIR ')'
-   |  NUMBER '(' NUMBER FAODIR ')'
+   |  (NUMBER | '#') FAODIR
+   |  (NUMBER | '#') '(' FAODIR ')'
+   |  (NUMBER | '#') '(' (NUMBER | '#') FAODIR ')'
    |  FAOSPEC 
-   |  NUMBER '%C'
-   |  NUMBER '<'
+   |  (NUMBER | '#') '%C'
+   |  (NUMBER | '#') '<'
    |  '>' 
-   |  NUMBER '*.' 
+   |  (NUMBER | '#') '*.' 
    );
 
 QTEXT: .;
@@ -105,14 +105,14 @@ ASTRING_CLOSE: '\'' -> popMode;
 
 AFAO: FAOSTART (
       FAODIR
-   |  NUMBER FAODIR
-   |  NUMBER '(' FAODIR ')'
-   |  NUMBER '(' NUMBER FAODIR ')'
+   |  (NUMBER | '#') FAODIR
+   |  (NUMBER | '#') '(' FAODIR ')'
+   |  (NUMBER | '#') '(' (NUMBER | '#') FAODIR ')'
    |  FAOSPEC 
-   |  NUMBER '%C'
-   |  NUMBER '<'
+   |  (NUMBER | '#') '%C'
+   |  (NUMBER | '#') '<'
    |  '>' 
-   |  NUMBER '*.' 
+   |  (NUMBER | '#') '*.' 
    );
 
 ATEXT: .;

@@ -46,7 +46,8 @@ export class SourceContext {
      * This call doesn't do any expensive processing (parse() does).
      */
     public setText(source: string) {
-        let input = new ANTLRInputStream(source.toUpperCase()+"\n");  // convert to upper case and add NEWLINE to force end of last line
+        // let input = new ANTLRInputStream(source.toUpperCase()+"\n");  // convert to upper case and add NEWLINE to force end of last line
+        let input = new ANTLRInputStream(source + "\n");  // just add NEWLINE to force end of last line
         let lexer = new msgLex(input);
 
         // There won't be lexer errors actually. They are silently bubbled up and will cause parser errors.
@@ -342,6 +343,16 @@ export class SourceContext {
                     info.kind = SymbolKind.Other;
                     info.name = "^D";
                     info.description = localize("decnum","Decimal number");
+                    break;
+
+                case msgParser.FAOCOUNT:
+                    info.kind = SymbolKind.Other;
+                    info.name = "FAO_COUNT";
+                    break;
+
+                case msgParser.USERVALUE:
+                    info.kind = SymbolKind.Other;
+                    info.name = "USER_VALUE";
                     break;
 
                 default: {

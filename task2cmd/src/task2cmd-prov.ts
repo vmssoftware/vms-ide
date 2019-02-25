@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as net from "net";
 import * as os from "os";
+import * as path from "path";
 import { LogFunction, LogType } from '@vorfol/common';
 
 interface IParams {
@@ -26,8 +27,11 @@ export class Task2CmdProvider implements vscode.TaskProvider {
         this.logFn = logFn || (() => {});
 
         this.listenPath = 'vmssoftware.socket';
+        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length) {
+            this.listenPath = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, this.listenPath);
+        }
         if (os.platform() === 'win32') {
-            this.listenPath = "\\\\.\\pipe\\" + "listenPath";
+            this.listenPath = "\\\\.\\pipe\\" + this.listenPath;
         }
 
         this.server = net.createServer((client) => {
