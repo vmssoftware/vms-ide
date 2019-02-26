@@ -2,7 +2,7 @@
     "name": "msg",
     "displayName": "msg",
     "description": "msg",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",

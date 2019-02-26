@@ -1,7 +1,7 @@
 import * as nls from "vscode-nls";
 
 import { msgListener } from './msgListener';
-import { NumberContext, TitleNameContext, TitleDescriptionContext, IdentValueContext, FacilityContext, FacilityNameContext, PrefixQualifierValueContext, SeverityValueContext, SeverityQualifierContext, MessageNameContext, MessageContext, IdentificationValueContext, MessageTextContext, FaoCountValueContext, LiteralDefinitionContext, ExpressionVariableContext, BaseNumberContext, UserValueValueContext, SystemQualifierContext, msgParser } from './msgParser';
+import { NumberContext, TitleNameContext, TitleDescriptionContext, FacilityContext, FacilityNameContext, PrefixQualifierValueContext, SeverityValueContext, SeverityQualifierContext, MessageNameContext, MessageContext, IdentificationValueContext, MessageTextContext, FaoCountValueContext, LiteralDefinitionContext, ExpressionVariableContext, BaseNumberContext, UserValueValueContext, SystemQualifierContext, msgParser, IdentValueContext } from './msgParser';
 import { DiagnosticEntry, DiagnosticType, SymbolKind } from './Facade';
 import { Token, ParserRuleContext } from "antlr4ts";
 import { LogFunction, LogType } from "@vorfol/common";
@@ -92,7 +92,7 @@ export class AnalysisListener implements msgListener {
     }
 
     enterIdentValue(ctx: IdentValueContext) {
-        const name = ctx.NAME();
+        const name = ctx.IDENTNAME();
         if (name) {
             this.testLength(name.text, 31, AnalysisListener.tooLongIdentValue, ctx.start);
         }
@@ -150,10 +150,10 @@ export class AnalysisListener implements msgListener {
             if (this.messagePrefixToken) {
                 const varName = this.messagePrefixToken.text + this.messagePrefixMid + ctx.text;
                 if (this.testLength(varName, 31, AnalysisListener.tooLongMessageName, ctx.start)) {
-                    if (this.symbols.has(varName)) {
+                    if (this.symbols.has(varName.toUpperCase())) {
                         this.markToken(ctx.start, AnalysisListener.messageSymbolAlreadyExists);
                     } else {
-                        this.symbols.set(varName, {
+                        this.symbols.set(varName.toUpperCase(), {
                             prefix: this.messagePrefixToken,
                             message: ctx.start,
                             visibleFrom: ctx.start.tokenIndex,
@@ -241,10 +241,10 @@ export class AnalysisListener implements msgListener {
     exitLiteralDefinition(ctx: LiteralDefinitionContext) {
         const literalNameCtx = ctx.literalName();
         if (literalNameCtx) {
-            if (this.symbols.has(literalNameCtx.text)) {
+            if (this.symbols.has(literalNameCtx.text.toUpperCase())) {
                 this.markToken(literalNameCtx.start, AnalysisListener.messageSymbolAlreadyExists);
             } else {
-                this.symbols.set(literalNameCtx.text, {
+                this.symbols.set(literalNameCtx.text.toUpperCase(), {
                     literal: literalNameCtx.start,
                     visibleFrom: 1 + (ctx.stop? ctx.stop.tokenIndex : literalNameCtx.start.tokenIndex),
                     refs: [],
@@ -258,7 +258,7 @@ export class AnalysisListener implements msgListener {
 
     enterExpressionVariable(ctx: ExpressionVariableContext) {
         if (ctx.text) {
-            const source = this.symbols.get(ctx.text);
+            const source = this.symbols.get(ctx.text.toUpperCase());
             if (!source) {
                 this.markText(AnalysisListener.undefinedVariable, ctx.start.charPositionInLine, ctx.start.line, ctx.text.length);
             } else {

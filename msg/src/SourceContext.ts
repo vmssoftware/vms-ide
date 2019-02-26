@@ -236,10 +236,10 @@ export class SourceContext {
             msgParser.DOT,
             msgParser.COMMA,
             msgParser.EXCL,
-            msgParser.APOSTR,
-            msgParser.QUOTA,
-            msgParser.B_OPEN,
-            msgParser.B_CLOSE,
+            //msgParser.APOSTR,
+            //msgParser.QUOTA,
+            //msgParser.B_OPEN,
+            //msgParser.B_CLOSE,
             msgParser.ANY,
             msgParser.EOF,
             -2, // Erroneously inserted. Needs fix in antlr4-c3.
@@ -423,7 +423,7 @@ export class SourceContext {
         switch (parent.ruleIndex) {
             case msgParser.RULE_literalName: 
             case msgParser.RULE_expressionVariable: {
-                const source = this.symbolsForExpression.get(terminal.text);
+                const source = this.symbolsForExpression.get(terminal.text.toUpperCase());
                 if (source && source.literal) {
                     occurances.push(this.symbolInfoFromToken(SymbolKind.Literal, source.literal));
                     for (const ref of source.refs) {
@@ -501,7 +501,7 @@ export class SourceContext {
         let parent = (terminal.parent as RuleContext);
         switch (parent.ruleIndex) {
             case  msgParser.RULE_expressionVariable: {
-                const source = this.symbolsForExpression.get(terminal.text);
+                const source = this.symbolsForExpression.get(terminal.text.toUpperCase());
                 if (source) {
                     if (source.literal) {
                         const info = this.symbolInfoFromToken(SymbolKind.Literal, terminal.symbol);
