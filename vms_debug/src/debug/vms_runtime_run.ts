@@ -41,10 +41,17 @@ export class VMSRuntimeRun extends EventEmitter
 		this.statusProgram = true;
 	}
 
-	public exit()
+	public exit(restart?: boolean)
 	{
 		if(this.statusProgram === true)
 		{
+			this.shell.resetParameters();
+
+			if(!restart)
+			{
+				this.shell.SetDisconnectInShellSession();
+			}
+
 			this.shell.SendData(OsCmdVMS.osKillProgram);
 		}
 	}
@@ -77,6 +84,11 @@ export class VMSRuntimeRun extends EventEmitter
 			else
 			{
 				vscode.debug.activeDebugConsole.append(data);
+
+				if (this.logFn)
+				{
+					this.logFn(LogType.information, () => data);
+				}
 
 				if(this.shell.getStatusCommand() && this.statusProgram)
 				{
