@@ -1,7 +1,12 @@
 lexer grammar msgLex;
 
+fragment LETTERS: [a-zA-Z];
+fragment WS: (' '|'\t');
+fragment NL: ('\r'?'\n'|'\n');
+
 TITLE:      [tT][iI][tT][lL][eE];
-IDENT:      [iI][dD][eE][nN][tT];
+IDENT:      [iI][dD][eE][nN][tT] -> pushMode(IDENTMODE);
+
 PAGE:       [pP][aA][gG][eE];
 LITERAL:    [lL][iI][tT][eE][rR][aA][lL];
 FACILITY:   [fF][aA][cC][iI][lL][iI][tT][yY];
@@ -26,8 +31,6 @@ FATAL:            [fF][aA][tT][aA][lL];
 WHITESPACE: (' '|'\t')+;
 NEWLINE: ('\r'?'\n'|'\n');
 
-fragment LETTERS: [a-zA-Z];
-
 NAME: (LETTERS|[$_]) (LETTERS|[$_0-9])*;
 NUMBER: [0-9]+;
 
@@ -43,18 +46,26 @@ POW:  '^';
 UNDER: '_';
 P_OPEN: '(';
 P_CLOS: ')';
-HEXNUM: '^X' [A-F0-9]+;
-OCTNUM: '^O' [0-7]+;
-DECNUM: '^D' [0-9]+;
+HEXNUM: '^' [xX] [A-F0-9]+;
+OCTNUM: '^' [oO] [0-7]+;
+DECNUM: '^' [dD] [0-9]+;
 DOT: '.';
 COMMA: ',';
 EXCL: '!';
-APOSTR: '\''-> pushMode(ASTRING);
-QUOTA: '"' -> pushMode(QSTRING);
-B_OPEN: '<' -> pushMode(BSTRING);
-B_CLOSE: '>';
+ASTRING_OPEN: '\''-> pushMode(ASTRING);
+QSTRING_OPEN: '"' -> pushMode(QSTRING);
+BSTRING_OPEN: '<' -> pushMode(BSTRING);
 
 ANY: .;
+
+mode IDENTMODE;
+IDENTSEP: 
+      WS+
+   |  WS* '-' IDENTCOMMENT? NL WS*;
+IDENTNAME: (LETTERS|[$_]) (LETTERS|[$_0-9])*;
+IDENTSTRING: '"' .*? '"' | '\'' .*? '\'';
+IDENTCOMMENT: WS* '!' ~('\r'|'\n')*;
+IDENT_CLOSE: ('\r'?'\n'|'\n') -> popMode;
 
 mode BSTRING;
 

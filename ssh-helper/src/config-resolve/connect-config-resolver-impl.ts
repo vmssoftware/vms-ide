@@ -61,6 +61,25 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver<IConnec
     }
 
     /**
+     * Remove ALL entries
+     */
+    public static killCache(logFn?: LogFunction): boolean {
+        if (logFn) {
+            logFn(LogType.debug, () => `killCache: ${settingsCache.size}`);
+        }
+        for (const [key, node] of settingsCache) {
+            if (logFn) {
+                logFn(LogType.debug, () => localize("debug.clear", "killCache: delete {0}", key));
+                logFn(LogType.debug, () => inspect(node));
+            }
+            // as a precaution
+            node.lock.release();
+        }
+        settingsCache.clear();
+        return true;
+    }
+
+    /**
      * Receive feedback from one who used settings.
      * @param settings previous unresolved settings
      * @param accepted true if resolved settings was accepted
@@ -107,12 +126,22 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver<IConnec
     }
 
     public clearCache(): boolean {
-        ConnectConfigResolverImpl.clearCache(this.logFn);
-        return true;
+        return ConnectConfigResolverImpl.clearCache(this.logFn);
+    }
+
+    public killCache(): boolean {
+        return ConnectConfigResolverImpl.killCache(this.logFn);
     }
 
     public feedBack(settings: IConnectConfig, accepted: boolean): void {
-        ConnectConfigResolverImpl.feedBack(settings, accepted, this.logFn);
+        const prefilledSettings = Object.assign({}, settings);
+        // pre-fill settings in order to get correct cache string
+        if (this.settingsFillers) {
+            for (const filler of this.settingsFillers) {
+                filler.testSettings(prefilledSettings);
+            }
+        }
+        ConnectConfigResolverImpl.feedBack(prefilledSettings, accepted, this.logFn);
     }
 
     /**
@@ -124,7 +153,15 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver<IConnec
 
         let retConfig: IConnectConfig | undefined;
 
-        const cacheStr = ConnectConfigResolverImpl.buildCacheString(settings);
+        const prefilledSettings = Object.assign({}, settings);
+        // pre-fill settings in order to get correct cache string
+        if (this.settingsFillers) {
+            for (const filler of this.settingsFillers) {
+                filler.testSettings(prefilledSettings);
+            }
+        }
+
+        const cacheStr = ConnectConfigResolverImpl.buildCacheString(prefilledSettings);
         this.logFn(LogType.debug, () => localize("debug.resolve.start", "resolveConnectConfig: try {0}", cacheStr));
         let node = settingsCache.get(cacheStr);
         if (!node) {
@@ -138,7 +175,7 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver<IConnec
         if (node.accepted === undefined) {
             // no one has resolved before
             this.logFn(LogType.debug, () => localize("debug.resolve.first", "resolveConnectConfig: first call {0}", cacheStr));
-            node.settings = Object.assign({}, settings);
+            node.settings = prefilledSettings;
             if (this.settingsFillers) {
                 for (const filler of this.settingsFillers) {
                     if (!filler.testSettings(node.settings)) {
@@ -193,20 +230,18 @@ export class ConnectConfigResolverImpl implements IConnectConfigResolver<IConnec
     }
 
     testConnectConfig(settings: IConnectConfig): { settings?: IConnectConfig; state: ResolverState; } {
-        const cacheStr = ConnectConfigResolverImpl.buildCacheString(settings);
+        const prefilledSettings = Object.assign({}, settings);
+        // pre-fill settings in order to get correct cache string
+        if (this.settingsFillers) {
+            for (const filler of this.settingsFillers) {
+                filler.testSettings(prefilledSettings);
+            }
+        }
+        const cacheStr = ConnectConfigResolverImpl.buildCacheString(prefilledSettings);
         this.logFn(LogType.debug, () => localize("debug.resolve.start", "resolveConnectConfig: try {0}", cacheStr));
         let node = settingsCache.get(cacheStr);
         if (!node) {
-            const copySettings = Object.assign({}, settings);
-            // let's give a chance to the host-filler
-            if (this.settingsFillers) {
-                for (const filler of this.settingsFillers) {
-                    if (!filler.testSettings(copySettings)) {
-                        continue;
-                    }
-                }
-            }
-            return { settings: copySettings,  state: ResolverState.absent};
+            return { settings: prefilledSettings,  state: ResolverState.absent};
         } else {
             if (node.accepted === true) {
                 return { settings: node.settings, state: ResolverState.accepted };

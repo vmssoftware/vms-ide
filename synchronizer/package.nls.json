@@ -27,5 +27,6 @@
     "properties.synchronize.downloadNewFiles.description": "Download action",
     "properties.synchronize.keepAlive.description": "Keep alive",
     "properties.synchronize.setTimeAttempts.description": "Set time attempts",
-    "properties.synchronize.setTimeByShell.description": "Do or not set file time by shell"
+    "properties.synchronize.setTimeByShell.description": "Do or not set file time by shell",
+    "properties.synchronize.unzipCmd.description": "Command to unzip archive on VMS side"
 }

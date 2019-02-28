@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.53",
+    "version": "0.1.54",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -387,6 +387,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "%properties.synchronize.setTimeByShell.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.unzipCmd": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%properties.synchronize.unzipCmd.description%"
                 }
             }
         }

@@ -28,10 +28,30 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    setupWatchers(sshHelper);
+
+    vscode.workspace.onDidChangeWorkspaceFolders(() => {
+        setupWatchers(sshHelper);
+    })
+
     context.subscriptions.push(disposable);
     context.subscriptions.push(sshHelper);
 
     return SshHelper;   // class, not object
+}
+
+let watchers: vscode.Disposable[] = [];
+
+function setupWatchers(sshHelper: SshHelper) {
+    watchers.forEach((watcher) => watcher.dispose());
+    watchers = [];
+    if (vscode.workspace.workspaceFolders) {
+        for (const wf of vscode.workspace.workspaceFolders) {
+            watchers.push(sshHelper.setConfigWatcher(wf.name, () => {
+                sshHelper.killPasswordCache();
+            }));
+        }
+    }
 }
 
 export function deactivate() {
