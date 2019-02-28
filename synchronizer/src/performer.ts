@@ -108,9 +108,7 @@ export const actions: IPerform[] = [
             for (const curScope of scopes) {
                 const ensured = await ensureSettings(curScope, logFn);
                 if (ensured) {
-                    const syncronizer = Synchronizer.acquire(logFn);
-                    if (ProjectState.acquire().isSynchronized(curScope) || await syncronizer.uploadSource(ensured)) {
-                        ProjectState.acquire().setSynchronized(curScope, true);
+                    if (ProjectState.acquire().isSynchronized(curScope) || await doUpload(curScope, ensured, logFn)) {
                         if (ProjectState.acquire().isBuilt(curScope, params) || await builder.buildProject(ensured, params)) {
                             if (params) {
                                 ProjectState.acquire().setBuilt(curScope, params, true);
@@ -147,9 +145,7 @@ export const actions: IPerform[] = [
             for (const curScope of scopes) {
                 const ensured = await ensureSettings(curScope, logFn);
                 if (ensured) {
-                    const syncronizer = Synchronizer.acquire(logFn);
-                    if (await syncronizer.uploadSource(ensured)) {
-                        ProjectState.acquire().setSynchronized(curScope, true);
+                    if (await doUpload(curScope, ensured, logFn)) {
                         if (await builder.cleanProject(ensured, params) && await builder.buildProject(ensured, params)) {
                             if (params) {
                                 ProjectState.acquire().setBuilt(curScope, params, true);
@@ -330,4 +326,16 @@ export async function Perform(actionName: ActionType, scope: string, logFn: LogF
             }
             return actionResult;
         });
+}
+
+async function doUpload(scope: string, ensured: IEnsured, logFn: LogFunction) {
+    if (ensured.synchronizeSection.preferZip) {
+        const zipper = new UploadZip(logFn);
+        return zipper.perform(ensured);
+    } 
+    const syncronizer = Synchronizer.acquire(logFn);
+    if (await syncronizer.uploadSource(ensured)) {
+        return ProjectState.acquire().setSynchronized(scope, true);
+    }
+    return false;
 }

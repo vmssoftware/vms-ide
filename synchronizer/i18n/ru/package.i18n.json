@@ -28,5 +28,6 @@
     "properties.synchronize.keepAlive.description": "Держать подключения",
     "properties.synchronize.setTimeAttempts.description": "Кол-во попыток установить дату на файл",
     "properties.synchronize.setTimeByShell.description": "Использовать shell для установки даты файла",
-    "properties.synchronize.unzipCmd.description": "Command to unzip archive on VMS side"
+    "properties.synchronize.unzipCmd.description": "Command to unzip archive on VMS side",
+    "properties.synchronize.preferZip.description": "Prefer ZIP to upload source"
 }
