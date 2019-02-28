@@ -27,5 +27,6 @@
 	"properties.synchronize.downloadNewFiles.description": "Действия для более новых файлов из VMS",
 	"properties.synchronize.keepAlive.description": "Держать подключения",
 	"properties.synchronize.setTimeAttempts.description": "Кол-во попыток установить дату на файл",
-	"properties.synchronize.setTimeByShell.description": "Использовать shell для установки даты файла"
+	"properties.synchronize.setTimeByShell.description": "Использовать shell для установки даты файла",
+	"properties.synchronize.unzipCmd.description": "Command to unzip archive on VMS side"
 }

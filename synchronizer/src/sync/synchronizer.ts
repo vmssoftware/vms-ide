@@ -106,12 +106,14 @@ export class Synchronizer {
         if (type === "local" && ensured.configHelper && ensured.configHelper.workspaceFolder) {
             return new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
         }
+        // clear password cache
+        if (this.sshHelper) {
+            this.sshHelper.clearPasswordCache();
+        }
         // get ssh helper
         if (!await this.ensureSshHelper() || !this.sshHelper) {
             return undefined;
         }
-        // clear password cache
-        this.sshHelper.clearPasswordCache();
         const scope = ensured.configHelper.workspaceFolder ? ensured.configHelper.workspaceFolder.name : undefined;
         const [sftp, shell] = await Promise.all([
                 this.sshHelper.getDefaultSftp(scope),
@@ -126,14 +128,16 @@ export class Synchronizer {
     }
 
     public async syncronizeProject(ensured: IEnsured) {
+        // clear password cache
+        if (this.sshHelper) {
+            this.sshHelper.clearPasswordCache();
+        }
         const scopeData = await this.prepareScopeData(ensured);
         if (!scopeData) {
             return false;
         }
         // enable
         this.enableRemote();
-        // clear password cache
-        this.sshHelper!.clearPasswordCache();
         // get full list
         const includes = [
             ensured.projectSection.source,
@@ -190,14 +194,16 @@ export class Synchronizer {
     }
 
     public async uploadSource(ensured: IEnsured) {
+        // clear password cache
+        if (this.sshHelper) {
+            this.sshHelper.clearPasswordCache();
+        }
         const scopeData = await this.prepareScopeData(ensured);
         if (!scopeData) {
             return false;
         }
         // enable
         this.enableRemote();
-        // clear password cache
-        this.sshHelper!.clearPasswordCache();
         // get full list
         const includes = [
             ensured.projectSection.source,

@@ -14,7 +14,6 @@ import { ParseWelcomeVms } from "./stream/parse-welcome-vms";
 import { PromptCatcherVms } from "./stream/prompt-catcher-vms";
 import { PipeFile } from "./stream/pipe";
 import { MemoryStreamCreator } from "./stream/stream-creators";
-import { ConstPasswordFiller } from "./config-resolve/password-filler";
 import { KeyFiller } from "./config-resolve/key-filler";
 import { HostsSection } from "./config/sections/hosts";
 import { HostFiller } from "./config-resolve/host-filler";
@@ -48,7 +47,11 @@ export class SshHelper {
     }
 
     public clearPasswordCache() {
-        ConnectConfigResolverImpl.clearCache();
+        ConnectConfigResolverImpl.clearCache(this.logFn);
+    }
+
+    public killPasswordCache() {
+        ConnectConfigResolverImpl.killCache(this.logFn);
     }
 
     public async pipeFile(
@@ -61,7 +64,7 @@ export class SshHelper {
     }
 
     public memStream(): IMemoryStreamCreator {
-        return new MemoryStreamCreator();
+        return new MemoryStreamCreator([], undefined, this.logFn);
     }
 
     public async editSettings(scope?: string) {
