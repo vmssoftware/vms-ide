@@ -29,5 +29,6 @@
     "properties.synchronize.setTimeAttempts.description": "Set time attempts",
     "properties.synchronize.setTimeByShell.description": "Do or not set file time by shell",
     "properties.synchronize.unzipCmd.description": "Command to unzip archive on VMS side",
-    "properties.synchronize.preferZip.description": "Prefer ZIP to upload source"
+    "properties.synchronize.preferZip.description": "Prefer ZIP to upload source",
+    "properties.synchronize.purge.description": "Execute PURGE command after synchronization"
 }

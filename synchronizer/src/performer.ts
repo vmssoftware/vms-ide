@@ -1,4 +1,6 @@
-import { LogFunction, LogType } from "@vorfol/common";
+import * as nls from "vscode-nls";
+
+import { LogFunction, LogType, printLike, ftpPathSeparator } from "@vorfol/common";
 
 import { CommandContext, setContext } from "./command-context";
 import { ensureSettings, IEnsured } from "./ensure-settings";
@@ -12,8 +14,9 @@ import { ProjectState } from "./dep-tree/proj-state";
 import { onTheSameVms } from "./on-the-same-vms";
 import { Synchronizer } from "./sync/synchronizer";
 import { UploadZip } from "./upload-zip";
+import { VmsPathConverter } from "./vms/vms-path-converter";
+import { GetSshHelperType } from "./ext-api/get-ssh-helper";
 
-import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
@@ -108,7 +111,7 @@ export const actions: IPerform[] = [
             for (const curScope of scopes) {
                 const ensured = await ensureSettings(curScope, logFn);
                 if (ensured) {
-                    if (ProjectState.acquire().isSynchronized(curScope) || await doUpload(curScope, ensured, logFn)) {
+                    if (ProjectState.acquire().isSynchronized(curScope) || await doUpload(ensured, logFn)) {
                         if (ProjectState.acquire().isBuilt(curScope, params) || await builder.buildProject(ensured, params)) {
                             if (params) {
                                 ProjectState.acquire().setBuilt(curScope, params, true);
@@ -145,7 +148,7 @@ export const actions: IPerform[] = [
             for (const curScope of scopes) {
                 const ensured = await ensureSettings(curScope, logFn);
                 if (ensured) {
-                    if (await doUpload(curScope, ensured, logFn)) {
+                    if (await doUpload(ensured, logFn)) {
                         if (await builder.cleanProject(ensured, params) && await builder.buildProject(ensured, params)) {
                             if (params) {
                                 ProjectState.acquire().setBuilt(curScope, params, true);
@@ -328,14 +331,37 @@ export async function Perform(actionName: ActionType, scope: string, logFn: LogF
         });
 }
 
-async function doUpload(scope: string, ensured: IEnsured, logFn: LogFunction) {
-    if (ensured.synchronizeSection.preferZip) {
-        const zipper = new UploadZip(logFn);
-        return zipper.perform(ensured);
-    } 
-    const syncronizer = Synchronizer.acquire(logFn);
-    if (await syncronizer.uploadSource(ensured)) {
-        return ProjectState.acquire().setSynchronized(scope, true);
+const purgeCmd = printLike`purge [${"directory"}...]`;
+
+/**
+ * Uploads source using preferred way, sets synchronized and executes purge if required
+ * @param ensured 
+ * @param logFn 
+ */
+async function doUpload(ensured: IEnsured, logFn: LogFunction) {
+    let retCode = false;
+    if (ensured.scope) {
+        if (ensured.synchronizeSection.preferZip) {
+            const zipper = new UploadZip(logFn);
+            retCode = await zipper.perform(ensured);
+        } 
+        const syncronizer = Synchronizer.acquire(logFn);
+        if (await syncronizer.uploadSource(ensured)) {
+            retCode = ProjectState.acquire().setSynchronized(ensured.scope, true);
+        }
+        // this part is optional so do not return error if it occurs
+        if (retCode && ensured.synchronizeSection.purge) {
+            const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
+            const sshHelperType = await GetSshHelperType();
+            if (sshHelperType) {
+                const sshHelper = new sshHelperType(logFn);
+                const shell = await sshHelper.getDefaultVmsShell(ensured.scope);
+                if (shell) {
+                    await shell.execCmd(purgeCmd(converter.bareDirectory));
+                    shell.dispose();
+                }
+            }
+        }
     }
-    return false;
+    return retCode;
 }
