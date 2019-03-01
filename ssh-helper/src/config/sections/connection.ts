@@ -27,7 +27,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
     public store(): IConfigData {
         // do not store password
         const storeMe = this.templateToFillFrom();
-        delete storeMe.password;
+        // delete storeMe.password;
         return storeMe;
     }
 
