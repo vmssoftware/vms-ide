@@ -29,6 +29,7 @@ export enum MessagePrompt
 	prmtDBG = "DBG: ",
 	prmtUSER = "USER: ",
 	prmtINFO = "INFO: ",
+	prmtDATA = "DATA: ",
 }
 
 export enum StringsPrompt
@@ -125,6 +126,7 @@ export class DebugParser
 							{
 								this.queueMsgData.push(item);
 								this.commandDone = true;
+								this.queueMsgDebugInfo.push(MessagePrompt.prmtDATA + item);
 							}
 						}
 					}

@@ -153,7 +153,7 @@ let ExtensionReadyCb = function() : void
 	vscode.window.showInformationMessage(message);
 	statusConnBar.setMessage(messageBar);
 
-	logFn(LogType.information, () => message, false);
+	logFn(LogType.information, () => message, true);
 };
 
 let ExtensionCloseCb = function() : void
