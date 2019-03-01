@@ -152,6 +152,13 @@ export class msgParser extends Parser {
 	];
 
 	private static readonly _LITERAL_NAMES: Array<string | undefined> = [
+		undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+		undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+		undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+		undefined, undefined, undefined, undefined, "'='", "'+'", "'-'", "'*'", 
+		"'/'", "'@'", "'#'", "'%'", "'^'", "'_'", "'('", "')'", undefined, undefined, 
+		undefined, "'.'", "','", "'!'", undefined, undefined, "'<'", undefined, 
+		undefined, undefined, undefined, undefined, undefined, "'>'",
 	];
 	private static readonly _SYMBOLIC_NAMES: Array<string | undefined> = [
 		undefined, "TITLE", "IDENT", "PAGE", "LITERAL", "FACILITY", "SEVERITY", 
