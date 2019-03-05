@@ -58,7 +58,7 @@
 		"statement.define.syntax":
 		{
 			"name": "statement.define.syntax",
-			"begin" : "(?i)(syntax)\\s+([^,\\s]+)",
+			"begin" : "(?i)(syntax)",
 			"beginCaptures" : 
 			{
 			  "1" : 
@@ -73,6 +73,10 @@
 			"end" : "(?=(?i)(define|ident|module))",
 			"patterns":
 			[
+				{
+					"name":	"statement.define.syntax.name comment",
+					"match": ""
+				},
 				{
 					"include": "#statement.define.syntax.disallow"
 				},
@@ -1245,23 +1249,30 @@
 		"statement.module":
 		{
 			"name": "statement.module",
-			"begin" : "(?i)(module)\\s+([^,\\s]+)",
+			"begin" : "(?i)(module)",
 			"beginCaptures":
 			{
 				"1":
 				{
 				  "name": "statement.module.keyword markup.bold"
-				},
-				"2":
-				{
-				  "name": "statement.module.name meta.preprocessor.string"
 				}
 			},
 			"end" : "(?=(?i)(define|ident|module))",
 			"patterns": 
 			[
 				{
-					"name": "invalid.deprecated"
+					"name": "statement.module.name",
+					"begin": "\\G\\s*",
+					"end": "(?!\\G)",
+					"patterns": 
+					[
+						{
+							"include": "#name"
+						}
+					]
+				},
+				{
+					"include": "#comment"
 				}
 			]
 		},
@@ -1283,9 +1294,19 @@
 			"patterns": 
 			[
 				{
-					"name": "comment",
 					"begin": "!",
-					"end": "$"
+					"end": "\\n",
+					"name": "comment.line"
+				}
+			]
+		},
+		"name":
+		{
+			"patterns": 
+			[
+				{
+					"name": "meta.preprocessor.string",
+					"match": "[a-zA-Z$][a-zA-Z$_0-9]*"
 				}
 			]
 		}

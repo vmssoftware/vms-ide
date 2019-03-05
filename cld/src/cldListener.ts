@@ -25,6 +25,7 @@ import { KeywordValueClauseContext } from "./cldParser";
 import { VerbClauseContext } from "./cldParser";
 import { SynonymContext } from "./cldParser";
 import { ExpressionContext } from "./cldParser";
+import { EntityContext } from "./cldParser";
 
 
 /**
@@ -273,5 +274,16 @@ export interface cldListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitExpression?: (ctx: ExpressionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cldParser.entity`.
+	 * @param ctx the parse tree
+	 */
+	enterEntity?: (ctx: EntityContext) => void;
+	/**
+	 * Exit a parse tree produced by `cldParser.entity`.
+	 * @param ctx the parse tree
+	 */
+	exitEntity?: (ctx: EntityContext) => void;
 }
 

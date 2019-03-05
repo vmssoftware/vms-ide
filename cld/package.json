@@ -36,7 +36,7 @@
             {
                 "language": "cld",
                 "scopeName": "source.cld",
-                "path": "./syntaxes/msg.tmLanguage.json"
+                "path": "./syntaxes/cld.tmLanguage.json"
             }
         ]
     },

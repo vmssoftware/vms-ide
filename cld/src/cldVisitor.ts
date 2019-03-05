@@ -25,6 +25,7 @@ import { KeywordValueClauseContext } from "./cldParser";
 import { VerbClauseContext } from "./cldParser";
 import { SynonymContext } from "./cldParser";
 import { ExpressionContext } from "./cldParser";
+import { EntityContext } from "./cldParser";
 
 
 /**
@@ -188,5 +189,12 @@ export interface cldVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitExpression?: (ctx: ExpressionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cldParser.entity`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEntity?: (ctx: EntityContext) => Result;
 }
 

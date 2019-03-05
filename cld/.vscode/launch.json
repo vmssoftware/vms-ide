@@ -9,7 +9,7 @@
             "type": "antlr-debug",
             "request": "launch",
             "name": "Debug Current Grammar",
-            "input": "test.cld",
+            "input": "d:\\wrk\\openvms\\executable\\test.cld",
             "startRule": "cldContent",
             "visualParseTree": true
         },
@@ -20,7 +20,8 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}"
-            ]
+            ],
+            "preLaunchTask": "gulp: build"
         }
     ]
 }

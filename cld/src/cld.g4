@@ -3,12 +3,12 @@ grammar cld;
 fragment NAMESTART:  [a-zA-Z$];
 fragment NAMEREST:   [a-zA-Z$_0-9];
 
-DEFINE:  [dD][eE][fF][iI][nN][eE];
-IDENT:   [iI][dD][eE][nN][tT];
-MODULE:  [mM][oO][dD][uU][lL][eE];
-SYNTAX:  [sS][yY][nN][tT][aA][xX];
-TYPE:    [tT][yY][pP][eE];
-VERB:    [vV][eE][rR][bB];
+DEFINE:        [dD][eE][fF][iI][nN][eE];
+IDENT:         [iI][dD][eE][nN][tT];
+MODULE:        [mM][oO][dD][uU][lL][eE];
+SYNTAX:        [sS][yY][nN][tT][aA][xX];
+TYPE:          [tT][yY][pP][eE];
+VERB:          [vV][eE][rR][bB];
 
 NODISALLOWS:   [nN][oO][dD][iI][sS][aA][lL][lL][oO][wW][sS];
 DISALLOW:      [dD][iI][sS][aA][lL][lL][oO][wW];
@@ -65,21 +65,21 @@ DOT:     '.';
 STRING:  '"' ('""'|.)*? '"';
 
 WHITESPACE: (' '|'\t')+ -> channel(HIDDEN);
-NEWLINE:    '\r'? '\n';
-
+NEWLINE:    '\r'? '\n'  -> channel(HIDDEN);
 COMMENT:    '!' ~[\r\n]* -> channel(HIDDEN);
 
-cldContent
-   :( define
+cldContent:
+   (  define
    |  ident
    |  module
-   |  NEWLINE
+   |  COMMA
    )* EOF;
 
 define
-   :  DEFINE NEWLINE* SYNTAX NEWLINE* anyName NEWLINE* (verbClauseForSyntax ((COMMA | NEWLINE*) verbClauseForSyntax)* )? NEWLINE+
-   |  DEFINE NEWLINE* TYPE NEWLINE* anyName NEWLINE* (typeClause ((COMMA | NEWLINE*) typeClause)* )? NEWLINE+
-   |  DEFINE NEWLINE* VERB NEWLINE* anyName NEWLINE* (verbClause ((COMMA | NEWLINE*) verbClause)* )? NEWLINE+
+   :  DEFINE SYNTAX anyName (verbClauseForSyntax (COMMA? verbClauseForSyntax)* )? 
+   |  DEFINE TYPE anyName (typeClause (COMMA? typeClause)* )?
+   |  DEFINE VERB anyName (verbClause (COMMA? verbClause)* )?
+   |  COMMA
    ;
 
 anyName
@@ -123,10 +123,12 @@ anyName
    ;
 
 ident 
-   :  IDENT NEWLINE* STRING NEWLINE+;
+   :  IDENT STRING
+   ;
 
 module
-   :  MODULE NEWLINE* anyName NEWLINE+;
+   :  MODULE anyName
+   ;
 
 verbClauseForSyntax
    :  disallows
@@ -136,93 +138,112 @@ verbClauseForSyntax
    |  routine
    ;
 
-disallows:
-      NODISALLOWS
-   |  DISALLOW NEWLINE* expression;
+disallows
+   :  NODISALLOWS
+   |  DISALLOW expression
+   ;
 
-image:
-   IMAGE NEWLINE* STRING;
+image
+   :  IMAGE STRING
+   ;
 
-parameters:
-      NOPARAMETERS
-   |  PARAMETER NEWLINE* anyName ((COMMA | NEWLINE*) parameterClause )*;
+parameters
+   :  NOPARAMETERS
+   |  PARAMETER anyName (COMMA? parameterClause)*
+   ;
 
-parameterClause:
-      DEFAULT
-   |  LABEL NEWLINE* EQUAL NEWLINE* anyName
-   |  PROMPT NEWLINE* EQUAL NEWLINE* STRING
-   |  VALUE NEWLINE* (P_OPEN NEWLINE* paramValueClause (NEWLINE* COMMA  NEWLINE* paramValueClause)* NEWLINE* P_CLOSE)?;
+parameterClause
+   :  DEFAULT
+   |  LABEL EQUAL anyName
+   |  PROMPT EQUAL STRING
+   |  VALUE (P_OPEN paramValueClause (COMMA  paramValueClause)* P_CLOSE)?
+   ;
 
-paramValueClause:
-      CONCATENATE
+paramValueClause
+   :  CONCATENATE
    |  NOCONCATENATE
    |  LIST
    |  REQUIRED
-   |  DEFAULT NEWLINE* EQUAL NEWLINE* STRING
-   |  TYPE NEWLINE* EQUAL NEWLINE* anyName;
+   |  DEFAULT EQUAL STRING
+   |  TYPE EQUAL anyName
+   ;
 
-qualifiers:
-      NOQUALIFIERS
-   |  QUALIFIER anyName ((COMMA | NEWLINE*) qualifierClause)*;
+qualifiers
+   :  NOQUALIFIERS
+   |  QUALIFIER anyName (COMMA? qualifierClause)*
+   ;
 
-qualifierClause:
-      DEFAULT
+qualifierClause
+   :  DEFAULT
    |  BATCH
-   |  LABEL NEWLINE* EQUAL NEWLINE* anyName
+   |  LABEL EQUAL anyName
    |  NEGATABLE
    |  NONNEGATABLE
-   |  PLACEMENT NEWLINE* EQUAL NEWLINE* placementClause
-   |  SYNTAX NEWLINE* EQUAL NEWLINE* anyName
-   |  VALUE NEWLINE* (P_OPEN qualifierValueClause (NEWLINE* COMMA  NEWLINE* qualifierValueClause)* NEWLINE* P_CLOSE)?;
+   |  PLACEMENT EQUAL placementClause
+   |  SYNTAX EQUAL anyName
+   |  VALUE (P_OPEN qualifierValueClause (COMMA qualifierValueClause)* P_CLOSE)?
+   ;
 
-placementClause:
-      GLOBAL
+placementClause
+   :  GLOBAL
    |  LOCAL
-   |  POSITIONAL;
+   |  POSITIONAL
+   ;
 
-qualifierValueClause:
-      LIST
+qualifierValueClause
+   :  LIST
    |  REQUIRED
-   |  DEFAULT NEWLINE* EQUAL NEWLINE* STRING
-   |  TYPE NEWLINE* EQUAL NEWLINE* anyName;
+   |  DEFAULT EQUAL STRING
+   |  TYPE EQUAL anyName
+   ;
 
-routine:
-      ROUTINE NEWLINE* anyName;
+routine
+   :  ROUTINE anyName
+   ;
 
-typeClause:
-   KEYWORD NEWLINE* anyName ((COMMA | NEWLINE*) keywordClause)*;
+typeClause
+   :  KEYWORD anyName (COMMA? keywordClause)*
+   ;
 
-keywordClause:
-      DEFAULT
-   |  LABEL NEWLINE* EQUAL NEWLINE* anyName
+keywordClause
+   :  DEFAULT
+   |  LABEL EQUAL anyName
    |  NEGATABLE
    |  NONNEGATABLE
-   |  SYNTAX NEWLINE* EQUAL NEWLINE* anyName
-   |  VALUE NEWLINE* (P_OPEN keywordValueClause (NEWLINE* COMMA  NEWLINE* keywordValueClause)* NEWLINE* P_CLOSE)?;
+   |  SYNTAX EQUAL anyName
+   |  VALUE (P_OPEN keywordValueClause (COMMA keywordValueClause)* P_CLOSE)?
+   ;
 
-keywordValueClause:
-      LIST
+keywordValueClause
+   :  LIST
    |  REQUIRED
-   |  DEFAULT NEWLINE* EQUAL NEWLINE* STRING
-   |  TYPE NEWLINE* EQUAL NEWLINE* anyName;
+   |  DEFAULT EQUAL STRING
+   |  TYPE EQUAL anyName
+   ;
 
-verbClause:
-      disallows
+verbClause
+   :  disallows
    |  image
    |  parameters
    |  qualifiers
    |  routine
-   |  synonym;
+   |  synonym
+   ;
 
-synonym:
-      SYNONYM NEWLINE* anyName;
+synonym
+   :  SYNONYM anyName
+   ;
 
-expression:
-      NOT NEWLINE* P_OPEN NEWLINE* expression NEWLINE* P_CLOSE
-   |  NEG NEWLINE* P_OPEN NEWLINE* expression NEWLINE* P_CLOSE
-   |  expression NEWLINE* AND NEWLINE* expression
-   |  expression NEWLINE* OR  NEWLINE* expression
-   |  ANY2 NEWLINE* P_OPEN NEWLINE* expression (NEWLINE* COMMA NEWLINE* expression)+ NEWLINE* P_CLOSE
-   |  P_OPEN NEWLINE* expression NEWLINE* P_CLOSE
-   |  NEWLINE
-   |  (A_OPEN anyName A_CLOSE )? anyName(DOT anyName)*;
+expression
+   :  NOT entity
+   |  NOT P_OPEN entity P_CLOSE
+   |  NEG entity
+   |  expression AND expression
+   |  expression OR expression
+   |  ANY2 P_OPEN entity (COMMA entity)+ P_CLOSE
+   |  P_OPEN expression P_CLOSE
+   ;
+
+entity
+   :  (A_OPEN anyName A_CLOSE )? anyName(DOT anyName)*
+   ;
