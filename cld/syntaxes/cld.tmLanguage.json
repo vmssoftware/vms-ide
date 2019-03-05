@@ -5,6 +5,9 @@
 	[
 		{
 			"include": "#statement"
+		},
+		{
+			"include": "#comment"
 		}
 	],
 	"repository": 
@@ -46,6 +49,9 @@
 				},
 				{
 					"include": "#statement.define.verb"
+				},
+				{
+					"include": "#comment"
 				}
 			]
 		},
@@ -90,6 +96,9 @@
 				},
 				{
 					"include": "#statement.define.syntax.routine"
+				},
+				{
+					"include": "#comment"
 				}
 			]
 		},
@@ -294,6 +303,9 @@
 						},
 						{
 							"include": "#statement.define.syntax.parameter.value"
+						},
+						{
+							"include": "#comment"
 						}
 					]
 				}
@@ -459,6 +471,9 @@
 				},
 				{
 					"include": "#statement.define.syntax.parameter.value.type"
+				},
+				{
+					"include": "#comment"
 				}
 			]
 		},
@@ -590,6 +605,9 @@
 						},
 						{
 							"include": "#statement.define.syntax.qualifier.value"
+						},
+						{
+							"include": "#comment"
 						}
 					]
 				}
@@ -762,6 +780,9 @@
 				},
 				{
 					"include": "#statement.define.syntax.qualifier.value.type"
+				},
+				{
+					"include": "#comment"
 				}
 			]
 		},
@@ -922,6 +943,9 @@
 						},
 						{
 							"include": "#statement.define.type.keyword.value"
+						},
+						{
+							"include": "#comment"
 						}
 					]
 				}
@@ -1060,6 +1084,9 @@
 				},
 				{
 					"include": "#statement.define.type.keyword.value.type"
+				},
+				{
+					"include": "#comment"
 				}
 			]
 		},
@@ -1167,6 +1194,9 @@
 				},
 				{
 					"include": "#statement.define.verb.synonym"
+				},
+				{
+					"include": "#comment"
 				}
 			]
 		},
@@ -1245,6 +1275,17 @@
 				{
 					"name": "constant.character.escape.cld",
 					"match": "\"\""
+				}
+			]
+		},
+		"comment":
+		{
+			"patterns": 
+			[
+				{
+					"name": "comment",
+					"begin": "!",
+					"end": "$"
 				}
 			]
 		}

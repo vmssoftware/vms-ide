@@ -7,6 +7,26 @@
             "type": "npm",
             "script": "package",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "get-ext-api",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "build",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "compile",
+            "problemMatcher": []
         }
     ]
 }
