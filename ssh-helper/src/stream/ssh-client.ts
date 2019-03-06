@@ -92,8 +92,21 @@ export class SshClient {
         if (this.resolver) {
             let configResolved = await this.resolver.resolveConnectConfig(this.config);
             if (configResolved) {
-                //configResolved = Object.assign({ debug: (s: string) => console.log(s) }, configResolved);
-                configResolved = Object.assign({ algorithms: { serverHostKey: ['ssh-rsa', 'ssh-dss'] } }, configResolved);
+                configResolved = Object.assign(
+                    { 
+                        algorithms: 
+                        { 
+                            serverHostKey: 
+                                [
+                                    'ssh-rsa', 
+                                    'ssh-dss'
+                                ] 
+                        },
+                        // // TODO: parse debug output "DEBUG: Remote ident: 'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'"
+                        // // and looking for required version
+                        // debug: (s: string) => this.logFn(LogType.debug, () => s)
+                    }, configResolved
+                );
                 client.connect(configResolved);
             } else {
                 this.logFn(LogType.debug, () => localize("debug.resolver", "no config resolved {0}", this.tag ? " " + this.tag : ""));
