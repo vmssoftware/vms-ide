@@ -3,6 +3,9 @@
 
 import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
 
+import { DefineSyntaxContext } from "./cldParser";
+import { DefineTypeContext } from "./cldParser";
+import { DefineVerbContext } from "./cldParser";
 import { CldContentContext } from "./cldParser";
 import { DefineContext } from "./cldParser";
 import { AnyNameContext } from "./cldParser";
@@ -36,6 +39,30 @@ import { EntityContext } from "./cldParser";
  * operations with no return type.
  */
 export interface cldVisitor<Result> extends ParseTreeVisitor<Result> {
+	/**
+	 * Visit a parse tree produced by the `defineSyntax`
+	 * labeled alternative in `cldParser.define`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDefineSyntax?: (ctx: DefineSyntaxContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by the `defineType`
+	 * labeled alternative in `cldParser.define`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDefineType?: (ctx: DefineTypeContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by the `defineVerb`
+	 * labeled alternative in `cldParser.define`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDefineVerb?: (ctx: DefineVerbContext) => Result;
+
 	/**
 	 * Visit a parse tree produced by `cldParser.cldContent`.
 	 * @param ctx the parse tree

@@ -72,14 +72,12 @@ cldContent:
    (  define
    |  ident
    |  module
-   |  COMMA
    )* EOF;
 
 define
-   :  DEFINE SYNTAX anyName (verbClauseForSyntax (COMMA? verbClauseForSyntax)* )? 
-   |  DEFINE TYPE anyName (typeClause (COMMA? typeClause)* )?
-   |  DEFINE VERB anyName (verbClause (COMMA? verbClause)* )?
-   |  COMMA
+   :  DEFINE SYNTAX anyName (verbClauseForSyntax (COMMA? verbClauseForSyntax)* )? (COMMA? COMMA)? # defineSyntax
+   |  DEFINE TYPE anyName (typeClause (COMMA? typeClause)* )? (COMMA? COMMA)?                     # defineType
+   |  DEFINE VERB anyName (verbClause (COMMA? verbClause)* )? (COMMA? COMMA)?                     # defineVerb
    ;
 
 anyName
@@ -235,15 +233,15 @@ synonym
    ;
 
 expression
-   :  NOT entity
-   |  NOT P_OPEN entity P_CLOSE
-   |  NEG entity
+   :  NOT expression
    |  expression AND expression
    |  expression OR expression
-   |  ANY2 P_OPEN entity (COMMA entity)+ P_CLOSE
    |  P_OPEN expression P_CLOSE
+   |  ANY2 P_OPEN entity (COMMA entity)+ P_CLOSE
+   |  NEG entity
+   |  entity
    ;
 
 entity
-   :  (A_OPEN anyName A_CLOSE )? anyName(DOT anyName)*
+   :  (A_OPEN anyName A_CLOSE )? anyName (DOT anyName)*
    ;

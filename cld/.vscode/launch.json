@@ -9,7 +9,8 @@
             "type": "antlr-debug",
             "request": "launch",
             "name": "Debug Current Grammar",
-            "input": "d:\\wrk\\openvms\\executable\\test.cld",
+            // "input": "d:\\wrk\\openvms\\executable\\test.cld",
+            "input": "test.cld",
             "startRule": "cldContent",
             "visualParseTree": true
         },

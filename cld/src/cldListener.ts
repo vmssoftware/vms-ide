@@ -3,6 +3,9 @@
 
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 
+import { DefineSyntaxContext } from "./cldParser";
+import { DefineTypeContext } from "./cldParser";
+import { DefineVerbContext } from "./cldParser";
 import { CldContentContext } from "./cldParser";
 import { DefineContext } from "./cldParser";
 import { AnyNameContext } from "./cldParser";
@@ -33,6 +36,45 @@ import { EntityContext } from "./cldParser";
  * `cldParser`.
  */
 export interface cldListener extends ParseTreeListener {
+	/**
+	 * Enter a parse tree produced by the `defineSyntax`
+	 * labeled alternative in `cldParser.define`.
+	 * @param ctx the parse tree
+	 */
+	enterDefineSyntax?: (ctx: DefineSyntaxContext) => void;
+	/**
+	 * Exit a parse tree produced by the `defineSyntax`
+	 * labeled alternative in `cldParser.define`.
+	 * @param ctx the parse tree
+	 */
+	exitDefineSyntax?: (ctx: DefineSyntaxContext) => void;
+
+	/**
+	 * Enter a parse tree produced by the `defineType`
+	 * labeled alternative in `cldParser.define`.
+	 * @param ctx the parse tree
+	 */
+	enterDefineType?: (ctx: DefineTypeContext) => void;
+	/**
+	 * Exit a parse tree produced by the `defineType`
+	 * labeled alternative in `cldParser.define`.
+	 * @param ctx the parse tree
+	 */
+	exitDefineType?: (ctx: DefineTypeContext) => void;
+
+	/**
+	 * Enter a parse tree produced by the `defineVerb`
+	 * labeled alternative in `cldParser.define`.
+	 * @param ctx the parse tree
+	 */
+	enterDefineVerb?: (ctx: DefineVerbContext) => void;
+	/**
+	 * Exit a parse tree produced by the `defineVerb`
+	 * labeled alternative in `cldParser.define`.
+	 * @param ctx the parse tree
+	 */
+	exitDefineVerb?: (ctx: DefineVerbContext) => void;
+
 	/**
 	 * Enter a parse tree produced by `cldParser.cldContent`.
 	 * @param ctx the parse tree

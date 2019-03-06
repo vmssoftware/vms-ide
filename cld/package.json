@@ -2,7 +2,7 @@
     "name": "cld",
     "displayName": "cld",
     "description": "CLD syntax highlighting",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
