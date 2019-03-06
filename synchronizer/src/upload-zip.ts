@@ -112,8 +112,6 @@ export class UploadZip {
                             }
                         }
                     }
-                    // 3. force set synchronized
-                    ProjectState.acquire().setSynchronized(ensured.scope, true);
                     shell.dispose();
                     return true;
                 }
