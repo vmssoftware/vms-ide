@@ -441,11 +441,11 @@ export class Builder {
             ``,
             `.CLD.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    $SET COMMAND/OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
+            `    SET COMMAND/OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
             ``,
             `.MSG.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    $MESSAGE /OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
+            `    MESSAGE /OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
             ``,
         ];
 

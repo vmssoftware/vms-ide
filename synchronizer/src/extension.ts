@@ -1,24 +1,29 @@
 import * as nls from "vscode-nls";
-import { commands, env, ExtensionContext, window, workspace, extensions } from "vscode";
+import { commands, env, ExtensionContext, window, workspace, extensions, Disposable, RelativePattern } from "vscode";
+
+import micromatch from "micromatch";
 
 import { Builder } from "./build/builder";
 import { setExtensionContext } from "./context";
 import { ProjectState } from "./dep-tree/proj-state";
 import { ProjDepProvider } from "./dep-tree/project-dep";
 import { ProjDescrProvider } from "./dep-tree/project-descr";
-import { configApi, ensureConfigHelperApi } from "./ensure-settings";
+import { configApi, ensureConfigHelperApi, ensureSettings } from "./ensure-settings";
 import { Perform } from "./performer";
 import { SyncApi } from "./sync/sync-api";
 import { Synchronizer } from "./sync/synchronizer";
 
 import { LogFunction, LogType } from "@vorfol/common";
 import { DownloadHeaders } from "./downloadHeaders";
+import { collectSplittedByCommas } from "./common/find-files";
 
 const locale = env.language ;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
 // tslint:disable-next-line:no-empty
 let logFn: LogFunction = () => {};
+
+let watchers: Disposable[] = [];
 
 export async function activate(context: ExtensionContext) {
 
@@ -44,6 +49,11 @@ export async function activate(context: ExtensionContext) {
             syncLog(LogType.debug, () => `query: ${uri.query}`);
             syncLog(LogType.debug, () => `fragment: ${uri.fragment}`);
         }}));
+
+    createFsWatchers();
+    workspace.onDidChangeWorkspaceFolders((e) => {
+        createFsWatchers();
+    });
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async (scope: string) => {
         return workspace.saveAll(true)
@@ -111,9 +121,6 @@ export async function activate(context: ExtensionContext) {
         return DownloadHeaders(scope, syncLog, params);
     }));
 
-    
-
-
     const projectDependenciesProvider = new ProjDepProvider();
     const projectDescriptionProvider = new ProjDescrProvider();
 
@@ -153,5 +160,65 @@ export async function activate(context: ExtensionContext) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
+    for (const watcher of  watchers) {
+        watcher.dispose();
+    }
+    watchers = [];
     logFn(LogType.debug, () => localize("debug.deactivated", "OpenVMS extension is deactivated"));
 }
+
+async function createFsWatchers() {
+    for (const watcher of  watchers) {
+        watcher.dispose();
+    }
+    watchers = [];
+    if (workspace.workspaceFolders) {
+        for (const folder of workspace.workspaceFolders) {
+            const ensured = await ensureSettings(folder.name, logFn);
+            if (ensured) {
+                // prepare micromatch
+                const includes = [
+                    ensured.projectSection.source,
+                    ensured.projectSection.resource,
+                    ensured.projectSection.headers,
+                    ensured.projectSection.builders,
+                ];
+                const include = includes.join(",");
+                const options: micromatch.Options = {
+                    basename: true,
+                    nocase: true,
+                    nodupes: true,
+                    unixify: false,
+                };
+                const unbracedInclude = micromatch.braces(include);
+                const splittedInclude = unbracedInclude.reduce(collectSplittedByCommas, []);
+                if (ensured.projectSection.exclude) {
+                    const unbraceExclude = micromatch.braces(ensured.projectSection.exclude);
+                    const splitExclude = unbraceExclude.reduce(collectSplittedByCommas, []);
+                    options.ignore = splitExclude;
+                }
+
+                const relativePattern = new RelativePattern(folder, "**/*.*");
+                const fsWatcher = workspace.createFileSystemWatcher(relativePattern, false, false, false);
+                fsWatcher.onDidCreate((uri) => {
+                    testModifySync(folder.name, uri.fsPath, splittedInclude, options);
+                });
+                fsWatcher.onDidDelete((uri) => {
+                    testModifySync(folder.name, uri.fsPath, splittedInclude, options);
+                });
+                fsWatcher.onDidChange((uri) => {
+                    testModifySync(folder.name, uri.fsPath, splittedInclude, options);
+                });
+                watchers.push();
+            }
+        }
+    }
+}
+
+function testModifySync(scope: string, filePath: string, includes: string[], options: micromatch.Options) {
+    const list = micromatch([filePath], includes, options);
+    if (list.length) {
+        ProjectState.acquire().setSynchronized(scope, false);
+    }
+}
+
