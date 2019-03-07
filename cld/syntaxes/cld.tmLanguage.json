@@ -1,113 +1,112 @@
 {
-    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-    "name": "CLD",
-    "patterns": [
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json"
+    ,"name": "CLD"
+    ,"patterns": [
         {
             "include": "#statement"
         }
-    ],
-    "repository": {
+    ]
+    ,"repository": {
         "statement": {
             "patterns": [
                 {
                     "include": "#define"
-                },
-                {
+                }
+                ,{
                     "include": "#comment"
                 }
+                ,{
+                    "include": "#string"
+                }
             ]
-        },
-        "define": {
-            "name": "define",
-            "begin": "(?i)define",
-            "beginCaptures": {
+        }
+        ,"define": {
+            "name": "define"
+            ,"begin": "(?i)define"
+            ,"beginCaptures": {
                 "0": {
                     "name": "markup.bold"
                 }
-            },
-            "end": "(?!\\G)",
-            "patterns": [
+            }
+            ,"end": "(?=define)"
+            ,"patterns": [
                 {
                     "include": "#define.body"
                 }
             ]
-        },
-        "define.body": {
+        }
+        ,"define.body": {
             "patterns": [
                 {
-                    "include": "#define.syntax"
-                },
-                {
+                    "include": "#syntax"
+                }
+                ,{
+                    "include": "#nodisallows"
+                }
+                ,{
+                    "include": "#image"
+                }
+                ,{
                     "include": "#comment"
-                },
-                {
-                    "name": "space",
-                    "begin": "\\s+",
-                    "end": "(?i)(?<=\\S)(?=\\s)",
-                    "patterns": 
-                    [
-                        {
-                            "include": "#define.body"
-                        }
-                    ]
                 }
             ]
-        },
-        "define.syntax": {
-            "name": "syntax",
-            "begin": "(?i)syntax",
-            "beginCaptures": {
+        }
+        ,"syntax": {
+            "name": "syntax"
+            ,"begin": "(?i)syntax"
+            ,"beginCaptures": {
                 "0": {
                     "name": "constant.numeric"
                 }
-            },
-            "end": "(?!\\G)",
-            "patterns": [
-                {
-                    "include": "#define.syntax.body"
-                }
-            ]
-        },
-        "define.syntax.body": {
-            "patterns": [
+            }
+            ,"end": "(?<=\\S)(?!\\G)"
+            ,"patterns": [
                 {
                     "include": "#name"
-                },
-                {
+                }
+                ,{
                     "include": "#comment"
-                },
-                {
-                    "name": "space",
-                    "begin": "\\s+",
-                    "end": "(?i)(?<=\\S)(?=\\s)",
-                    "patterns": 
-                    [
-                        {
-                            "include": "#define.syntax.body"
-                        }
-                    ]
+                }
+                ,{
+                    "include": "#space"
                 }
             ]
-        },
-        "string": {
-            "name": "string.quoted.cld",
-            "begin": "\"",
-            "end": "\"(?=[^\"])",
-            "patterns": [
-                {
-                    "name": "constant.character.escape.cld",
-                    "match": "\"\""
-                }
-            ]
-        },
-        "name": 
+        }
+        ,"nodisallows": 
         {
             "patterns": 
             [
                 {
-                    "name": "name",
-                    "match": "(?i)[a-z$][a-z$_0-9]*",
-                    "captures": {
+                    "name": "nodisallows"
+                    ,"match": "(?i)nodisallows"
+                    ,"captures": {
+                        "0":
+                        {
+                            "name": "constant.character"
+                        }
+                    }
+                }
+            ]
+        }
+        ,"string": {
+            "name": "string.quoted.cld"
+            ,"begin": "\""
+            ,"end": "\"(?=[^\"])"
+            ,"patterns": [
+                {
+                    "name": "constant.character.escape.cld"
+                    ,"match": "\"\""
+                }
+            ]
+        }
+        ,"name": 
+        {
+            "patterns": 
+            [
+                {
+                    "name": "name"
+                    ,"match": "(?i)[a-z$][a-z$_0-9]*"
+                    ,"captures": {
                         "0":
                         {
                             "name": "markup.italic"
@@ -115,18 +114,29 @@
                     }
                 }
             ]
-        },
-        "comment": 
+        }
+        ,"comment": 
         {
             "patterns": 
             [
                 {
-                    "name": "comment.line.cld",
-                    "begin": "!",
-                    "end": "\\n"
+                    "name": "comment.line.cld"
+                    ,"begin": "!"
+                    ,"end": "\\n"
                 }
             ]
         }
-    },
-    "scopeName": "source.cld"
+        ,"space": 
+        {
+            "patterns": 
+            [
+                {
+                    "name": "space"
+                    ,"begin": "\\s"
+                    ,"end": "(?=\\S)"
+                }
+            ]
+        }
+    }
+    ,"scopeName": "source.cld"
 }
