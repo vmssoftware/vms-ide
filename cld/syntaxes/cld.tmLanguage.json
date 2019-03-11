@@ -13,13 +13,17 @@
                     "include": "#define"
                 }
                 ,{
-                    "include": "#comment"
+                    "include": "#ident"
                 }
                 ,{
-                    "include": "#string"
+                    "include": "#module"
+                }
+                ,{
+                    "include": "#comment"
                 }
             ]
         }
+
         ,"define": {
             "name": "define"
             ,"begin": "(?i)define"
@@ -31,113 +35,76 @@
             ,"end": "(?i)(?=(define|ident|module))"
             ,"patterns": [
                 {
-                    "include": "#define.body"
-                }
-            ]
-        }
-        ,"define.body": {
-            "patterns": [
-                {
                     "include": "#syntax"
                 }
                 ,{
-                    "include": "#routine"
+                    "include": "#type"
                 }
                 ,{
-                    "include": "#image"
-                }
-                ,{
-                    "include": "#nodisallows"
-                }
-                ,{
-                    "include": "#noparameters"
-                }
-                ,{
-                    "include": "#noqualifiers"
+                    "include": "#verb"
                 }
                 ,{
                     "include": "#comment"
-                }
-                ,{
-                    "include": "#disallow"
-                }
-                ,{
-                    "include": "#parameter"
-                }
-                ,{
-                    "include": "#default"
-                }
-                ,{
-                    "include": "#label"
-                }
-                ,{
-                    "include": "#prompt"
-                }
-                ,{
-                    "include": "#value"
-                }
-                ,{
-                    "include": "#qualifier"
-                }
-                ,{
-                    "include": "#batch"
-                }
-                ,{
-                    "include": "#negatable"
-                }
-                ,{
-                    "include": "#nonnegatable"
                 }
             ]
         }
         ,"syntax": {
             "name": "syntax"
-            ,"begin": "(?i)syntax"
-            ,"beginCaptures": {
-                "0": {
-                    "name": "constant.numeric"
-                }
-            }
-            ,"end": "(?i)(?<=[a-z$_0-9])(?!\\G)"
+            ,"begin": "(?i)(?=syntax)"
+            ,"end": "(?i)(?=define|ident|module)"
             ,"patterns": [
                 {
-                    "include": "#name"
+                    "begin": "(?i)syntax"
+                    ,"beginCaptures": {
+                        "0":
+                        {
+                            "name": "constant.numeric"
+                        }
+                    }
+                    ,"end": "(?i)[a-z$][a-z$_0-9]*"
+                    ,"endCaptures": {
+                        "0":
+                        {
+                            "name": "markup.italic"
+                        }
+                    }
+                    ,"patterns": [
+                        {
+                            "include": "#comment"
+                        }
+                    ]
                 }
                 ,{
-                    "include": "#comment"
+                    "include": "#syntax.clauses"
                 }
             ]
         }
-        ,"routine": {
-            "name": "routine"
-            ,"begin": "(?i)routine"
-            ,"beginCaptures": {
-                "0": {
-                    "name": "constant.numeric"
-                }
-            }
-            ,"end": "(?<=\\S)(?!\\G)"
-            ,"patterns": [
+        ,"syntax.clauses":
+        {
+            "patterns": [
                 {
-                    "include": "#name"
+                    "include": "#disallow"
                 }
                 ,{
-                    "include": "#comment"
+                    "include": "#nodisallows"
                 }
-            ]
-        }
-        ,"image": {
-            "name": "image"
-            ,"begin": "(?i)image"
-            ,"beginCaptures": {
-                "0": {
-                    "name": "constant.numeric"
+                ,{
+                    "include": "#image"
                 }
-            }
-            ,"end": "(?<=\")"
-            ,"patterns": [
-                {
-                    "include": "#string"
+                ,{
+                    "include": "#parameter"
+                }
+                ,{
+                    "include": "#noparameters"
+                }
+                ,{
+                    "include": "#qualifier"
+                }
+                ,{
+                    "include": "#noqualifiers"
+                }
+                ,{
+                    "include": "#routine"
                 }
                 ,{
                     "include": "#comment"
@@ -192,15 +159,33 @@
                 }
             ]
         }
-        ,"disallow": {
-            "name": "disallow"
-            ,"begin": "(?i)disallow"
+        ,"image": {
+            "name": "image"
+            ,"begin": "(?i)image"
             ,"beginCaptures": {
                 "0": {
                     "name": "constant.numeric"
                 }
             }
-            ,"end": "(?i)(?=(define|ident|module|syntax|routine|image|disallow|nodisallows|noparameters|noqualifiers|parameter|qualifier))"
+            ,"end": "(?<=\")"
+            ,"patterns": [
+                {
+                    "include": "#string"
+                }
+                ,{
+                    "include": "#comment"
+                }
+            ]
+        }
+        ,"routine": {
+            "name": "routine"
+            ,"begin": "(?i)routine"
+            ,"beginCaptures": {
+                "0": {
+                    "name": "constant.numeric"
+                }
+            }
+            ,"end": "(?<=\\S)(?!\\G)"
             ,"patterns": [
                 {
                     "include": "#name"
@@ -212,16 +197,49 @@
         }
         ,"parameter": {
             "name": "parameter"
-            ,"begin": "(?i)parameter"
-            ,"beginCaptures": {
-                "0": {
-                    "name": "constant.numeric"
-                }
-            }
-            ,"end": "(?<=\\S)(?!\\G)"
+            ,"begin": "(?i)(?=parameter)"
+            ,"end": "(?i)(?!\\G)(?=define|ident|module|routine|image|disallow|nodisallows|noparameters|noqualifiers|parameter|qualifier)"
             ,"patterns": [
                 {
-                    "include": "#name"
+                    "begin": "(?i)parameter"
+                    ,"beginCaptures": {
+                        "0":
+                        {
+                            "name": "constant.numeric"
+                        }
+                    }
+                    ,"end": "(?i)[a-z$][a-z$_0-9]*"
+                    ,"endCaptures": {
+                        "0":
+                        {
+                            "name": "markup.italic"
+                        }
+                    }
+                    ,"patterns": [
+                        {
+                            "include": "#comment"
+                        }
+                    ]
+                }
+                ,{
+                    "include": "#parameter.clauses"
+                }
+            ]
+        }
+        ,"parameter.clauses":
+        {
+            "patterns": [
+                {
+                    "include": "#default"
+                }
+                ,{
+                    "include": "#label"
+                }
+                ,{
+                    "include": "#prompt"
+                }
+                ,{
+                    "include": "#parameter.value"
                 }
                 ,{
                     "include": "#comment"
@@ -281,8 +299,8 @@
                 }
             ]
         }
-        ,"value": {
-            "name": "value"
+        ,"parameter.value": {
+            "name": "parameter.value"
             ,"begin": "(?i)value"
             ,"beginCaptures": {
                 "0": {
@@ -417,16 +435,61 @@
         }
         ,"qualifier": {
             "name": "qualifier"
-            ,"begin": "(?i)qualifier"
-            ,"beginCaptures": {
-                "0": {
-                    "name": "constant.numeric"
-                }
-            }
-            ,"end": "(?<=\\S)(?!\\G)"
+            ,"begin": "(?i)(?=qualifier)"
+            ,"end": "(?i)(?!\\G)(?=define|ident|module|routine|image|disallow|nodisallows|noparameters|noqualifiers|parameter|qualifier)"
             ,"patterns": [
                 {
-                    "include": "#name"
+                    "begin": "(?i)qualifier"
+                    ,"beginCaptures": {
+                        "0":
+                        {
+                            "name": "constant.numeric"
+                        }
+                    }
+                    ,"end": "(?i)[a-z$][a-z$_0-9]*"
+                    ,"endCaptures": {
+                        "0":
+                        {
+                            "name": "markup.italic"
+                        }
+                    }
+                    ,"patterns": [
+                        {
+                            "include": "#comment"
+                        }
+                    ]
+                }
+                ,{
+                    "include": "#qualifier.clauses"
+                }
+            ]
+        }
+        ,"qualifier.clauses":
+        {
+            "patterns": [
+                {
+                    "include": "#batch"
+                }
+                ,{
+                    "include": "#default"
+                }
+                ,{
+                    "include": "#label"
+                }
+                ,{
+                    "include": "#negatable"
+                }
+                ,{
+                    "include": "#nonnegatable"
+                }
+                ,{
+                    "include": "#placement"
+                }
+                ,{
+                    "include": "#qualifier.syntax"
+                }
+                ,{
+                    "include": "#qualifier.value"
                 }
                 ,{
                     "include": "#comment"
@@ -481,10 +544,153 @@
                 }
             ]
         }
+        ,"placement": 
+        {
+            "name": "placement"
+            ,"begin": "(?i)placement"
+            ,"beginCaptures": {
+                "0": {
+                    "name": "constant.character"
+                }
+            }
+            ,"end": "(?i)(?<=[a-z$_0-9])(?!\\G)"
+            ,"patterns": [
+                {
+                    "include": "#name"
+                }
+                ,{
+                    "include": "#comment"
+                }
+            ]
+        }
+        ,"qualifier.syntax": 
+        {
+            "name": "qualifier.syntax"
+            ,"begin": "(?i)syntax"
+            ,"beginCaptures": {
+                "0": {
+                    "name": "constant.character"
+                }
+            }
+            ,"end": "(?i)(?<=[a-z$_0-9])(?!\\G)"
+            ,"patterns": [
+                {
+                    "include": "#name"
+                }
+                ,{
+                    "include": "#comment"
+                }
+            ]
+        }
+        ,"qualifier.value": {
+            "name": "qualifier.value"
+            ,"begin": "(?i)value"
+            ,"beginCaptures": {
+                "0": {
+                    "name": "constant.character"
+                }
+            }
+            ,"end": "(?<=\\))"
+            ,"patterns": [
+                {
+                    "include": "#list"
+                }
+                ,{
+                    "include": "#required"
+                }
+                ,{
+                    "include": "#defstring"
+                }
+                ,{
+                    "include": "#typename"
+                }
+                ,{
+                    "include": "#comment"
+                }
+            ]
+        }
+        ,"disallow": {
+            "name": "disallow"
+            ,"begin": "(?i)disallow"
+            ,"beginCaptures": {
+                "0": {
+                    "name": "constant.numeric"
+                }
+            }
+            ,"end": "(?i)(?=(define|ident|module|routine|image|disallow|nodisallows|noparameters|noqualifiers|parameter|qualifier))"
+            ,"patterns": [
+                {
+                    "include": "#expression"
+                }
+                ,{
+                    "include": "#comment"
+                }
+            ]
+        }
+        ,"expression":
+        {
+            "patterns": [
+                {
+                    "begin": "\\("
+                    ,"end": "\\)"
+                    ,"patterns": [
+                        {
+                            "include": "#expression"
+                        }
+                        ,{
+                            "include": "#comment"
+                        }
+                    ]
+                }
+                ,{
+                    "begin": "(?i)any2"
+                    ,"beginCaptures": {
+                        "0":
+                        {
+                            "name": "constant.regexp"
+                        }
+                    }
+                    ,"end": "\\)"
+                    ,"patterns": [
+                        {
+                            "include": "#entity"
+                        }
+                        ,{
+                            "include": "#comment"
+                        }
+                    ]
+                }
+                ,{
+                    "match": "(?i)or|and|not|neg"
+                    ,"captures": {
+                        "0":
+                        {
+                            "name": "constant.regexp"
+                        }
+                    }
+                }
+                ,{
+                    "include": "#entity"
+                }
+            ]
+        }
+        ,"entity":
+        {
+            "patterns": 
+            [
+                {
+                    "name": "entity"
+                    ,"match": "(?i)(<[a-z$][a-z$_0-9]*>)?[a-z$][a-z$_0-9]*([.][a-z$][a-z$_0-9]*)*"
+                    ,"captures": {
+                        "0":
+                        {
+                            "name": "markup.italic"
+                        }
+                    }
+                }
+            ]
 
-
-
-
+        }
         ,"string": {
             "name": "string.quoted.cld"
             ,"begin": "\""
