@@ -23,7 +23,6 @@
                 }
             ]
         }
-
         ,"entity":
         {
             "patterns": 
@@ -670,16 +669,53 @@
         }
         ,"disallow": {
             "name": "cld.disallow"
-            ,"begin": "(?i)disallow"
-            ,"beginCaptures": {
-                "0": {
-                    "name": "constant.numeric"
-                }
-            }
-            ,"end": "(?i)(?=define|ident|module|routine|image|disallow|nodisallows|noparameters|noqualifiers|parameter|qualifier|synonym)"
+            ,"begin": "(?i)(?=disallow)"
+            ,"end": "(?i)(?!\\G)(?=define|ident|module|routine|image|disallow|nodisallows|noparameters|noqualifiers|parameter|qualifier|synonym)"
             ,"patterns": [
                 {
-                    "include": "#expression"
+                    "begin": "(?i)disallow"
+                    ,"beginCaptures": {
+                        "0":
+                        {
+                            "name": "constant.numeric"
+                        }
+                    }
+                    ,"end": "(?i)(?<=[a-z$_0-9\\)])(?!\\G)"
+                    ,"patterns": [
+                        {
+                            "include": "#expression"
+                        }
+                        ,{
+                            "include": "#comment"
+                        }
+                    ]
+                }
+                ,{
+                    "begin": "(?i)(?=or|and)"
+                    ,"end": "(?i)(?!\\G)(?=define|ident|module|routine|image|disallow|nodisallows|noparameters|noqualifiers|parameter|qualifier|synonym|or|and)"
+                    ,"patterns": [
+                        {
+                            "begin": "(?i)or|and"
+                            ,"beginCaptures": {
+                                "0":
+                                {
+                                    "name": "constant.regexp"
+                                }
+                            }
+                            ,"end": "(?i)(?<=[a-z$_0-9\\)])(?!\\G)"
+                            ,"patterns": [
+                                {
+                                    "include": "#expression"
+                                }
+                                ,{
+                                    "include": "#comment"
+                                }
+                            ]
+                        }
+                        ,{
+                            "include": "#comment"
+                        }
+                    ]
                 }
                 ,{
                     "include": "#comment"
@@ -694,7 +730,7 @@
                     ,"end": "\\)"
                     ,"patterns": [
                         {
-                            "include": "#expression"
+                            "include": "#enclosed"
                         }
                         ,{
                             "include": "#comment"
@@ -702,7 +738,8 @@
                     ]
                 }
                 ,{
-                    "begin": "(?i)any2"
+                    "name": "cld.expression.any2"
+                    ,"begin": "(?i)any2"
                     ,"beginCaptures": {
                         "0":
                         {
@@ -720,16 +757,74 @@
                     ]
                 }
                 ,{
-                    "match": "(?i)or|and|not|neg"
-                    ,"captures": {
+                    "include": "#prefix"
+                }
+                ,{
+                    "include": "#entity"
+                }
+            ]
+        }
+        ,"enclosed": {
+            "name": "cld.enclosed"
+            ,"begin": "(?=\\S+)"
+            ,"end": "(?i)(?=\\))"
+            ,"patterns": [
+                {
+                    "name": "cld.enclosed.left"
+                    ,"begin": "\\G"
+                    ,"end": "(?i)(?<=[a-z$_0-9\\)])(?!\\G)"
+                    ,"patterns": [
+                        {
+                            "include": "#expression"
+                        }
+                        ,{
+                            "include": "#comment"
+                        }
+                    ]
+                }
+                ,{
+                    "name": "cld.enclosed.right"
+                    ,"begin": "(?i)or|and"
+                    ,"beginCaptures": {
                         "0":
                         {
                             "name": "constant.regexp"
                         }
                     }
+                    ,"end": "(?i)(?<=[a-z$_0-9\\)])(?!\\G)"
+                    ,"patterns": [
+                        {
+                            "include": "#expression"
+                        }
+                        ,{
+                            "include": "#comment"
+                        }
+                    ]
                 }
                 ,{
-                    "include": "#entity"
+                    "include": "#comment"
+                }
+            ]
+        }
+        ,"prefix": {
+            "patterns": [
+                {
+                    "begin": "(?i)not|neg"
+                    ,"beginCaptures": {
+                        "0":
+                        {
+                            "name": "constant.regexp"
+                        }
+                    }
+                    ,"end": "(?i)(?<=[a-z$_0-9\\)])(?!\\G)"
+                    ,"patterns": [
+                        {
+                            "include": "#expression"
+                        }
+                        ,{
+                            "include": "#comment"
+                        }
+                    ]
                 }
             ]
         }
