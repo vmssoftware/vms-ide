@@ -236,7 +236,14 @@ export class VMSRuntime extends EventEmitter
 		//set breakpoint
 		await this.setRemoteBreakpointsAll();
 
-		this.continue();
+		if(stopOnEntry)
+		{
+			this.stepOver();
+		}
+		else
+		{
+			this.continue();
+		}
 
 		vscode.debug.activeDebugConsole.append("\n\x1B[2J\x1B[H");//clean old data from DEBUG CONSOLE
 	}

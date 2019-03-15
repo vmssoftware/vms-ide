@@ -29,6 +29,7 @@ export enum MessagePrompt
 	prmtDBG = "DBG: ",
 	prmtUSER = "USER: ",
 	prmtINFO = "INFO: ",
+	prmtDATA = "DATA: ",
 }
 
 export enum StringsPrompt
@@ -125,6 +126,7 @@ export class DebugParser
 							{
 								this.queueMsgData.push(item);
 								this.commandDone = true;
+								this.queueMsgDebugInfo.push(MessagePrompt.prmtDATA + item);
 							}
 						}
 					}
@@ -352,6 +354,9 @@ export class DebugParser
 	//examples lines
 	// DBG> show calls
 	// module name    routine name     line           rel PC           abs PC
+	// *REM_TEST_LONG_NAME_CALL
+	//                 rem_test_long_name_call
+	//                                    11       0000000000000011 00000000000205A1
 	// *REM            rem                12       0000000000000012 0000000000020432
 	// *HELLO          main             1648       0000000000000360 0000000000020360
 	// *HELLO          __main           1634       00000000000000E0 00000000000200E0
@@ -359,18 +364,67 @@ export class DebugParser
 	public async parseCallStackMsg(data : string, sourcePaths: string[], lisPaths: string[], startFrame: number, endFrame: number) //: any
 	{
 		let numberLine : number = -1;
+		let columns : string[] = [];
 		let frames = new Array<any>();
 		let msgLines = data.split("\n");
 
 		for(let i = 1; i < msgLines.length; i++)
 		{
-			const columns = msgLines[i].trim().split(/\s+/);
+			columns = msgLines[i].trim().split(/\s+/);
 
-			if(columns.length === 5 && columns[0].includes("*"))
+			if(columns[0].includes("*"))
 			{
-				const routineName = columns[1];
+				let routineName = "";
+				let numberLineDebug = "-1";
 				let fileName = columns[0].substring(1);//remove symbol '*'
-				let numberLineDebug = columns[2];
+
+				if(columns.length === 1)//module name is long
+				{
+					i += 1;
+					columns = msgLines[i].trim().split(/\s+/);
+					routineName = columns[0];
+
+					if(columns.length === 1)//routine name is long
+					{
+						i += 1;
+						columns = msgLines[i].trim().split(/\s+/);
+
+						if(columns.length === 3)
+						{
+							numberLineDebug = columns[0];
+						}
+					}
+					else
+					{
+						if(columns.length === 3)
+						{
+							numberLineDebug = columns[1];
+						}
+					}
+				}
+				else
+				{
+					routineName = columns[1];
+
+					if(columns.length === 2)//routine name is long
+					{
+						i += 1;
+						columns = msgLines[i].trim().split(/\s+/);
+
+						if(columns.length === 3)
+						{
+							numberLineDebug = columns[0];
+						}
+					}
+					else
+					{
+						if(columns.length === 5)
+						{
+							numberLineDebug = columns[2];
+						}
+					}
+				}
+
 				let pathFile = this.findPathFileByName(fileName, sourcePaths);
 				let pathLisFile = this.findPathFileByName(fileName, lisPaths);
 				let shift = this.fileInfo.getShiftLine(fileName);
@@ -1135,7 +1189,7 @@ export class DebugParser
 		for(let i = shiftHeader; i < lisLines.length; i++)
 		{
 			let line = lisLines[i];
-			const matcher = /^\s*\d*\t\s*(\d+)/;
+			const matcher = /^\s*\S*\s*\d*\s*\d*\t\s*(\d+)/;// (/^\s*\d*\t\s*(\d+)/; (c/c++))
 			const matches = line.match(matcher);
 
 			if(matches && matches.length === 2)
@@ -1172,7 +1226,7 @@ export class DebugParser
 		for(let i = shiftHeader; i < sourceLisLines.length; i++)
 		{
 			let line = sourceLisLines[i];
-			const matcher = /^\s*\d*\t\s*(\d+)/;
+			const matcher = /^\s*\S*\s*\d*\s*\d*\t\s*(\d+)/;// (/^\s*\d*\t\s*(\d+)/; (c/c++))
 			const matches = line.match(matcher);
 
 			if(matches && matches.length === 2)

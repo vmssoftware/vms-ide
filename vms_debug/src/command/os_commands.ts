@@ -13,6 +13,7 @@ export enum OsCmdVMS
 	osRunCC = "cc",
 	osRunCOM = "@",
 	osRunMMS = "mms/description=",
+	osVersion = "write sys$output f$getsyi(\"VERSION\")",
 }
 
 
@@ -72,5 +73,10 @@ export class OsCommands
 	public cleanMMS(fileName : string) : CommandMessage
 	{
 		return new CommandMessage(OsCmdVMS.osRunMMS, fileName + " clean");
+	}
+
+	public getVersionOS() : CommandMessage
+	{
+		return new CommandMessage(OsCmdVMS.osVersion, "");
 	}
 }
