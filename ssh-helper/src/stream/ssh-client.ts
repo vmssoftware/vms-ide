@@ -102,8 +102,15 @@ export class SshClient {
                                     'ssh-dss'
                                 ] 
                         },
-                        // // TODO: parse debug output "DEBUG: Remote ident: 'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'"
-                        // // and looking for required version
+                        // TODO: parse debug output "DEBUG: Remote ident:" 
+                        // and looking for required version
+                        // for example:
+                        // TAZAWA   'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
+                        // BOSTON   'SSH-2.0-Process Software SSH 6.1.5.0 MultiNet'
+                        // REDSOX   'SSH-2.0-Process Software SSH 6.1.5.0 MultiNet'
+                        // BILBO    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
+                        // FRODO    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
+                        // SAREK    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
                         // debug: (s: string) => this.logFn(LogType.debug, () => s)
                     }, configResolved
                 );
