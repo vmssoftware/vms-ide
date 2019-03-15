@@ -4,7 +4,17 @@ import { LogFunction, LogType } from "@vorfol/common";
 import { SourceContext } from "./SourceContext";
 
 export enum SymbolKind {
-    Other,
+    Verb,
+    Syntax,
+    Type,
+    TypeRef,
+    BuiltInType,
+    Parameter,
+    Qualifier,
+    Keyword,
+    Label,
+    Entity,
+    Unknown,
 }
 
 /**

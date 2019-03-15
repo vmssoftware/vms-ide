@@ -18,9 +18,9 @@ export class CldDefinitionProvider implements DefinitionProvider {
             );
             return new Location(Uri.file(info.source), range);
         } else {
-            // Empty for built-in entities.
-            let position = new Position(0, 0);
-            return new Location(Uri.parse(""), position);
+            // Empty for built-in entities or self-define attempts.
+            // let position = new Position(0, 0);
+            return new Location(document.uri, position);
         }
     }
 }

@@ -84,10 +84,10 @@ export class cldParser extends Parser {
 	public static readonly RULE_verbClauseForSyntax = 5;
 	public static readonly RULE_disallows = 6;
 	public static readonly RULE_image = 7;
-	public static readonly RULE_parameters = 8;
+	public static readonly RULE_parameter = 8;
 	public static readonly RULE_parameterClause = 9;
-	public static readonly RULE_paramValueClause = 10;
-	public static readonly RULE_qualifiers = 11;
+	public static readonly RULE_parameterValueClause = 10;
+	public static readonly RULE_qualifier = 11;
 	public static readonly RULE_qualifierClause = 12;
 	public static readonly RULE_placementClause = 13;
 	public static readonly RULE_qualifierValueClause = 14;
@@ -102,8 +102,8 @@ export class cldParser extends Parser {
 	// tslint:disable:no-trailing-whitespace
 	public static readonly ruleNames: string[] = [
 		"cldContent", "define", "anyName", "ident", "module", "verbClauseForSyntax", 
-		"disallows", "image", "parameters", "parameterClause", "paramValueClause", 
-		"qualifiers", "qualifierClause", "placementClause", "qualifierValueClause", 
+		"disallows", "image", "parameter", "parameterClause", "parameterValueClause", 
+		"qualifier", "qualifierClause", "placementClause", "qualifierValueClause", 
 		"routine", "typeClause", "keywordClause", "keywordValueClause", "verbClause", 
 		"synonym", "expression", "entity",
 	];
@@ -558,7 +558,7 @@ export class cldParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 131;
-				this.parameters();
+				this.parameter();
 				}
 				break;
 			case cldParser.NOQUALIFIERS:
@@ -566,7 +566,7 @@ export class cldParser extends Parser {
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 132;
-				this.qualifiers();
+				this.qualifier();
 				}
 				break;
 			case cldParser.ROUTINE:
@@ -664,9 +664,9 @@ export class cldParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public parameters(): ParametersContext {
-		let _localctx: ParametersContext = new ParametersContext(this._ctx, this.state);
-		this.enterRule(_localctx, 16, cldParser.RULE_parameters);
+	public parameter(): ParameterContext {
+		let _localctx: ParameterContext = new ParameterContext(this._ctx, this.state);
+		this.enterRule(_localctx, 16, cldParser.RULE_parameter);
 		let _la: number;
 		try {
 			let _alt: number;
@@ -743,6 +743,7 @@ export class cldParser extends Parser {
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case cldParser.DEFAULT:
+				_localctx = new ParameterDefaultContext(_localctx);
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 158;
@@ -750,6 +751,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.LABEL:
+				_localctx = new ParameterLabelContext(_localctx);
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 159;
@@ -761,6 +763,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.PROMPT:
+				_localctx = new ParameterPromptContext(_localctx);
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 162;
@@ -772,6 +775,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.VALUE:
+				_localctx = new ParameterValueContext(_localctx);
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 165;
@@ -784,7 +788,7 @@ export class cldParser extends Parser {
 					this.state = 166;
 					this.match(cldParser.P_OPEN);
 					this.state = 167;
-					this.paramValueClause();
+					this.parameterValueClause();
 					this.state = 172;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
@@ -794,7 +798,7 @@ export class cldParser extends Parser {
 						this.state = 168;
 						this.match(cldParser.COMMA);
 						this.state = 169;
-						this.paramValueClause();
+						this.parameterValueClause();
 						}
 						}
 						this.state = 174;
@@ -827,14 +831,15 @@ export class cldParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public paramValueClause(): ParamValueClauseContext {
-		let _localctx: ParamValueClauseContext = new ParamValueClauseContext(this._ctx, this.state);
-		this.enterRule(_localctx, 20, cldParser.RULE_paramValueClause);
+	public parameterValueClause(): ParameterValueClauseContext {
+		let _localctx: ParameterValueClauseContext = new ParameterValueClauseContext(this._ctx, this.state);
+		this.enterRule(_localctx, 20, cldParser.RULE_parameterValueClause);
 		try {
 			this.state = 191;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case cldParser.CONCATENATE:
+				_localctx = new ParameterValueClauseConcatenateContext(_localctx);
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 181;
@@ -842,6 +847,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.NOCONCATENATE:
+				_localctx = new ParameterValueClauseNonConcatenateContext(_localctx);
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 182;
@@ -849,6 +855,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.LIST:
+				_localctx = new ParameterValueClauseListContext(_localctx);
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 183;
@@ -856,6 +863,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.REQUIRED:
+				_localctx = new ParameterValueClauseRequiredContext(_localctx);
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 184;
@@ -863,6 +871,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.DEFAULT:
+				_localctx = new ParameterValueClauseDefaultContext(_localctx);
 				this.enterOuterAlt(_localctx, 5);
 				{
 				this.state = 185;
@@ -874,6 +883,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.TYPE:
+				_localctx = new ParameterValueClauseTypeContext(_localctx);
 				this.enterOuterAlt(_localctx, 6);
 				{
 				this.state = 188;
@@ -903,9 +913,9 @@ export class cldParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public qualifiers(): QualifiersContext {
-		let _localctx: QualifiersContext = new QualifiersContext(this._ctx, this.state);
-		this.enterRule(_localctx, 22, cldParser.RULE_qualifiers);
+	public qualifier(): QualifierContext {
+		let _localctx: QualifierContext = new QualifierContext(this._ctx, this.state);
+		this.enterRule(_localctx, 22, cldParser.RULE_qualifier);
 		let _la: number;
 		try {
 			let _alt: number;
@@ -982,6 +992,7 @@ export class cldParser extends Parser {
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case cldParser.DEFAULT:
+				_localctx = new QualifierDefaultContext(_localctx);
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 207;
@@ -989,6 +1000,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.BATCH:
+				_localctx = new QualifierBatchContext(_localctx);
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 208;
@@ -996,6 +1008,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.LABEL:
+				_localctx = new QualifierLabelContext(_localctx);
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 209;
@@ -1007,6 +1020,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.NEGATABLE:
+				_localctx = new QualifierNegContext(_localctx);
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 212;
@@ -1014,6 +1028,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.NONNEGATABLE:
+				_localctx = new QualifierNonnegContext(_localctx);
 				this.enterOuterAlt(_localctx, 5);
 				{
 				this.state = 213;
@@ -1021,6 +1036,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.PLACEMENT:
+				_localctx = new QualifierPlaceContext(_localctx);
 				this.enterOuterAlt(_localctx, 6);
 				{
 				this.state = 214;
@@ -1032,6 +1048,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.SYNTAX:
+				_localctx = new QualifierSyntaxContext(_localctx);
 				this.enterOuterAlt(_localctx, 7);
 				{
 				this.state = 217;
@@ -1043,6 +1060,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.VALUE:
+				_localctx = new QualifierValueContext(_localctx);
 				this.enterOuterAlt(_localctx, 8);
 				{
 				this.state = 220;
@@ -1142,6 +1160,7 @@ export class cldParser extends Parser {
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case cldParser.LIST:
+				_localctx = new QualifierValueClauseListContext(_localctx);
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 238;
@@ -1149,6 +1168,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.REQUIRED:
+				_localctx = new QualifierValueClauseRequiredContext(_localctx);
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 239;
@@ -1156,6 +1176,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.DEFAULT:
+				_localctx = new QualifierValueClauseDefaultContext(_localctx);
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 240;
@@ -1167,6 +1188,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.TYPE:
+				_localctx = new QualifierValueClauseTypeContext(_localctx);
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 243;
@@ -1287,6 +1309,7 @@ export class cldParser extends Parser {
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case cldParser.DEFAULT:
+				_localctx = new KeywordDefaultContext(_localctx);
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 262;
@@ -1294,6 +1317,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.LABEL:
+				_localctx = new KeywordLabelContext(_localctx);
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 263;
@@ -1305,6 +1329,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.NEGATABLE:
+				_localctx = new KeywordNegContext(_localctx);
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 266;
@@ -1312,6 +1337,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.NONNEGATABLE:
+				_localctx = new KeywordNonnegContext(_localctx);
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 267;
@@ -1319,6 +1345,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.SYNTAX:
+				_localctx = new KeywordSyntaxContext(_localctx);
 				this.enterOuterAlt(_localctx, 5);
 				{
 				this.state = 268;
@@ -1330,6 +1357,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.VALUE:
+				_localctx = new KeywordValueContext(_localctx);
 				this.enterOuterAlt(_localctx, 6);
 				{
 				this.state = 271;
@@ -1393,6 +1421,7 @@ export class cldParser extends Parser {
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case cldParser.LIST:
+				_localctx = new KeywordValueClauseListContext(_localctx);
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 287;
@@ -1400,6 +1429,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.REQUIRED:
+				_localctx = new KeywordValueClauseRequiredContext(_localctx);
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 288;
@@ -1407,6 +1437,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.DEFAULT:
+				_localctx = new KeywordValueClauseDefaultContext(_localctx);
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 289;
@@ -1418,6 +1449,7 @@ export class cldParser extends Parser {
 				}
 				break;
 			case cldParser.TYPE:
+				_localctx = new KeywordValueClauseTypeContext(_localctx);
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 292;
@@ -1474,7 +1506,7 @@ export class cldParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 299;
-				this.parameters();
+				this.parameter();
 				}
 				break;
 			case cldParser.NOQUALIFIERS:
@@ -1482,7 +1514,7 @@ export class cldParser extends Parser {
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 300;
-				this.qualifiers();
+				this.qualifier();
 				}
 				break;
 			case cldParser.ROUTINE:
@@ -1715,7 +1747,7 @@ export class cldParser extends Parser {
 				this.state = 342;
 				this.match(cldParser.A_OPEN);
 				this.state = 343;
-				this.anyName();
+				_localctx._defRoot = this.anyName();
 				this.state = 344;
 				this.match(cldParser.A_CLOSE);
 				}
@@ -2185,42 +2217,42 @@ export class DefineVerbContext extends DefineContext {
 
 export class AnyNameContext extends ParserRuleContext {
 	public NAME(): TerminalNode | undefined { return this.tryGetToken(cldParser.NAME, 0); }
+	public AND(): TerminalNode | undefined { return this.tryGetToken(cldParser.AND, 0); }
+	public ANY2(): TerminalNode | undefined { return this.tryGetToken(cldParser.ANY2, 0); }
+	public BATCH(): TerminalNode | undefined { return this.tryGetToken(cldParser.BATCH, 0); }
+	public CONCATENATE(): TerminalNode | undefined { return this.tryGetToken(cldParser.CONCATENATE, 0); }
+	public DEFAULT(): TerminalNode | undefined { return this.tryGetToken(cldParser.DEFAULT, 0); }
 	public DEFINE(): TerminalNode | undefined { return this.tryGetToken(cldParser.DEFINE, 0); }
+	public DISALLOW(): TerminalNode | undefined { return this.tryGetToken(cldParser.DISALLOW, 0); }
+	public GLOBAL(): TerminalNode | undefined { return this.tryGetToken(cldParser.GLOBAL, 0); }
 	public IDENT(): TerminalNode | undefined { return this.tryGetToken(cldParser.IDENT, 0); }
+	public IMAGE(): TerminalNode | undefined { return this.tryGetToken(cldParser.IMAGE, 0); }
+	public KEYWORD(): TerminalNode | undefined { return this.tryGetToken(cldParser.KEYWORD, 0); }
+	public LABEL(): TerminalNode | undefined { return this.tryGetToken(cldParser.LABEL, 0); }
+	public LIST(): TerminalNode | undefined { return this.tryGetToken(cldParser.LIST, 0); }
+	public LOCAL(): TerminalNode | undefined { return this.tryGetToken(cldParser.LOCAL, 0); }
 	public MODULE(): TerminalNode | undefined { return this.tryGetToken(cldParser.MODULE, 0); }
+	public NEG(): TerminalNode | undefined { return this.tryGetToken(cldParser.NEG, 0); }
+	public NEGATABLE(): TerminalNode | undefined { return this.tryGetToken(cldParser.NEGATABLE, 0); }
+	public NOCONCATENATE(): TerminalNode | undefined { return this.tryGetToken(cldParser.NOCONCATENATE, 0); }
+	public NODISALLOWS(): TerminalNode | undefined { return this.tryGetToken(cldParser.NODISALLOWS, 0); }
+	public NONNEGATABLE(): TerminalNode | undefined { return this.tryGetToken(cldParser.NONNEGATABLE, 0); }
+	public NOPARAMETERS(): TerminalNode | undefined { return this.tryGetToken(cldParser.NOPARAMETERS, 0); }
+	public NOQUALIFIERS(): TerminalNode | undefined { return this.tryGetToken(cldParser.NOQUALIFIERS, 0); }
+	public NOT(): TerminalNode | undefined { return this.tryGetToken(cldParser.NOT, 0); }
+	public OR(): TerminalNode | undefined { return this.tryGetToken(cldParser.OR, 0); }
+	public PARAMETER(): TerminalNode | undefined { return this.tryGetToken(cldParser.PARAMETER, 0); }
+	public PLACEMENT(): TerminalNode | undefined { return this.tryGetToken(cldParser.PLACEMENT, 0); }
+	public POSITIONAL(): TerminalNode | undefined { return this.tryGetToken(cldParser.POSITIONAL, 0); }
+	public PROMPT(): TerminalNode | undefined { return this.tryGetToken(cldParser.PROMPT, 0); }
+	public QUALIFIER(): TerminalNode | undefined { return this.tryGetToken(cldParser.QUALIFIER, 0); }
+	public REQUIRED(): TerminalNode | undefined { return this.tryGetToken(cldParser.REQUIRED, 0); }
+	public ROUTINE(): TerminalNode | undefined { return this.tryGetToken(cldParser.ROUTINE, 0); }
+	public SYNONYM(): TerminalNode | undefined { return this.tryGetToken(cldParser.SYNONYM, 0); }
 	public SYNTAX(): TerminalNode | undefined { return this.tryGetToken(cldParser.SYNTAX, 0); }
 	public TYPE(): TerminalNode | undefined { return this.tryGetToken(cldParser.TYPE, 0); }
-	public VERB(): TerminalNode | undefined { return this.tryGetToken(cldParser.VERB, 0); }
-	public NODISALLOWS(): TerminalNode | undefined { return this.tryGetToken(cldParser.NODISALLOWS, 0); }
-	public DISALLOW(): TerminalNode | undefined { return this.tryGetToken(cldParser.DISALLOW, 0); }
-	public IMAGE(): TerminalNode | undefined { return this.tryGetToken(cldParser.IMAGE, 0); }
-	public NOPARAMETERS(): TerminalNode | undefined { return this.tryGetToken(cldParser.NOPARAMETERS, 0); }
-	public PARAMETER(): TerminalNode | undefined { return this.tryGetToken(cldParser.PARAMETER, 0); }
-	public DEFAULT(): TerminalNode | undefined { return this.tryGetToken(cldParser.DEFAULT, 0); }
-	public LABEL(): TerminalNode | undefined { return this.tryGetToken(cldParser.LABEL, 0); }
-	public PROMPT(): TerminalNode | undefined { return this.tryGetToken(cldParser.PROMPT, 0); }
 	public VALUE(): TerminalNode | undefined { return this.tryGetToken(cldParser.VALUE, 0); }
-	public NOCONCATENATE(): TerminalNode | undefined { return this.tryGetToken(cldParser.NOCONCATENATE, 0); }
-	public CONCATENATE(): TerminalNode | undefined { return this.tryGetToken(cldParser.CONCATENATE, 0); }
-	public LIST(): TerminalNode | undefined { return this.tryGetToken(cldParser.LIST, 0); }
-	public REQUIRED(): TerminalNode | undefined { return this.tryGetToken(cldParser.REQUIRED, 0); }
-	public NOQUALIFIERS(): TerminalNode | undefined { return this.tryGetToken(cldParser.NOQUALIFIERS, 0); }
-	public QUALIFIER(): TerminalNode | undefined { return this.tryGetToken(cldParser.QUALIFIER, 0); }
-	public BATCH(): TerminalNode | undefined { return this.tryGetToken(cldParser.BATCH, 0); }
-	public NONNEGATABLE(): TerminalNode | undefined { return this.tryGetToken(cldParser.NONNEGATABLE, 0); }
-	public NEGATABLE(): TerminalNode | undefined { return this.tryGetToken(cldParser.NEGATABLE, 0); }
-	public PLACEMENT(): TerminalNode | undefined { return this.tryGetToken(cldParser.PLACEMENT, 0); }
-	public GLOBAL(): TerminalNode | undefined { return this.tryGetToken(cldParser.GLOBAL, 0); }
-	public LOCAL(): TerminalNode | undefined { return this.tryGetToken(cldParser.LOCAL, 0); }
-	public POSITIONAL(): TerminalNode | undefined { return this.tryGetToken(cldParser.POSITIONAL, 0); }
-	public ROUTINE(): TerminalNode | undefined { return this.tryGetToken(cldParser.ROUTINE, 0); }
-	public KEYWORD(): TerminalNode | undefined { return this.tryGetToken(cldParser.KEYWORD, 0); }
-	public SYNONYM(): TerminalNode | undefined { return this.tryGetToken(cldParser.SYNONYM, 0); }
-	public ANY2(): TerminalNode | undefined { return this.tryGetToken(cldParser.ANY2, 0); }
-	public NEG(): TerminalNode | undefined { return this.tryGetToken(cldParser.NEG, 0); }
-	public NOT(): TerminalNode | undefined { return this.tryGetToken(cldParser.NOT, 0); }
-	public AND(): TerminalNode | undefined { return this.tryGetToken(cldParser.AND, 0); }
-	public OR(): TerminalNode | undefined { return this.tryGetToken(cldParser.OR, 0); }
+	public VERB(): TerminalNode | undefined { return this.tryGetToken(cldParser.VERB, 0); }
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
@@ -2320,11 +2352,11 @@ export class VerbClauseForSyntaxContext extends ParserRuleContext {
 	public image(): ImageContext | undefined {
 		return this.tryGetRuleContext(0, ImageContext);
 	}
-	public parameters(): ParametersContext | undefined {
-		return this.tryGetRuleContext(0, ParametersContext);
+	public parameter(): ParameterContext | undefined {
+		return this.tryGetRuleContext(0, ParameterContext);
 	}
-	public qualifiers(): QualifiersContext | undefined {
-		return this.tryGetRuleContext(0, QualifiersContext);
+	public qualifier(): QualifierContext | undefined {
+		return this.tryGetRuleContext(0, QualifierContext);
 	}
 	public routine(): RoutineContext | undefined {
 		return this.tryGetRuleContext(0, RoutineContext);
@@ -2422,7 +2454,7 @@ export class ImageContext extends ParserRuleContext {
 }
 
 
-export class ParametersContext extends ParserRuleContext {
+export class ParameterContext extends ParserRuleContext {
 	public NOPARAMETERS(): TerminalNode | undefined { return this.tryGetToken(cldParser.NOPARAMETERS, 0); }
 	public PARAMETER(): TerminalNode | undefined { return this.tryGetToken(cldParser.PARAMETER, 0); }
 	public anyName(): AnyNameContext | undefined {
@@ -2450,23 +2482,23 @@ export class ParametersContext extends ParserRuleContext {
 		super(parent, invokingState);
 	}
 	// @Override
-	public get ruleIndex(): number { return cldParser.RULE_parameters; }
+	public get ruleIndex(): number { return cldParser.RULE_parameter; }
 	// @Override
 	public enterRule(listener: cldListener): void {
-		if (listener.enterParameters) {
-			listener.enterParameters(this);
+		if (listener.enterParameter) {
+			listener.enterParameter(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: cldListener): void {
-		if (listener.exitParameters) {
-			listener.exitParameters(this);
+		if (listener.exitParameter) {
+			listener.exitParameter(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: cldVisitor<Result>): Result {
-		if (visitor.visitParameters) {
-			return visitor.visitParameters(this);
+		if (visitor.visitParameter) {
+			return visitor.visitParameter(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -2475,23 +2507,112 @@ export class ParametersContext extends ParserRuleContext {
 
 
 export class ParameterClauseContext extends ParserRuleContext {
-	public DEFAULT(): TerminalNode | undefined { return this.tryGetToken(cldParser.DEFAULT, 0); }
-	public LABEL(): TerminalNode | undefined { return this.tryGetToken(cldParser.LABEL, 0); }
-	public EQUAL(): TerminalNode | undefined { return this.tryGetToken(cldParser.EQUAL, 0); }
-	public anyName(): AnyNameContext | undefined {
-		return this.tryGetRuleContext(0, AnyNameContext);
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
 	}
-	public PROMPT(): TerminalNode | undefined { return this.tryGetToken(cldParser.PROMPT, 0); }
-	public STRING(): TerminalNode | undefined { return this.tryGetToken(cldParser.STRING, 0); }
-	public VALUE(): TerminalNode | undefined { return this.tryGetToken(cldParser.VALUE, 0); }
-	public P_OPEN(): TerminalNode | undefined { return this.tryGetToken(cldParser.P_OPEN, 0); }
-	public paramValueClause(): ParamValueClauseContext[];
-	public paramValueClause(i: number): ParamValueClauseContext;
-	public paramValueClause(i?: number): ParamValueClauseContext | ParamValueClauseContext[] {
-		if (i === undefined) {
-			return this.getRuleContexts(ParamValueClauseContext);
+	// @Override
+	public get ruleIndex(): number { return cldParser.RULE_parameterClause; }
+	public copyFrom(ctx: ParameterClauseContext): void {
+		super.copyFrom(ctx);
+	}
+}
+export class ParameterDefaultContext extends ParameterClauseContext {
+	public DEFAULT(): TerminalNode { return this.getToken(cldParser.DEFAULT, 0); }
+	constructor(ctx: ParameterClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterParameterDefault) {
+			listener.enterParameterDefault(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitParameterDefault) {
+			listener.exitParameterDefault(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitParameterDefault) {
+			return visitor.visitParameterDefault(this);
 		} else {
-			return this.getRuleContext(i, ParamValueClauseContext);
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class ParameterLabelContext extends ParameterClauseContext {
+	public LABEL(): TerminalNode { return this.getToken(cldParser.LABEL, 0); }
+	public EQUAL(): TerminalNode { return this.getToken(cldParser.EQUAL, 0); }
+	public anyName(): AnyNameContext {
+		return this.getRuleContext(0, AnyNameContext);
+	}
+	constructor(ctx: ParameterClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterParameterLabel) {
+			listener.enterParameterLabel(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitParameterLabel) {
+			listener.exitParameterLabel(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitParameterLabel) {
+			return visitor.visitParameterLabel(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class ParameterPromptContext extends ParameterClauseContext {
+	public PROMPT(): TerminalNode { return this.getToken(cldParser.PROMPT, 0); }
+	public EQUAL(): TerminalNode { return this.getToken(cldParser.EQUAL, 0); }
+	public STRING(): TerminalNode { return this.getToken(cldParser.STRING, 0); }
+	constructor(ctx: ParameterClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterParameterPrompt) {
+			listener.enterParameterPrompt(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitParameterPrompt) {
+			listener.exitParameterPrompt(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitParameterPrompt) {
+			return visitor.visitParameterPrompt(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class ParameterValueContext extends ParameterClauseContext {
+	public VALUE(): TerminalNode { return this.getToken(cldParser.VALUE, 0); }
+	public P_OPEN(): TerminalNode | undefined { return this.tryGetToken(cldParser.P_OPEN, 0); }
+	public parameterValueClause(): ParameterValueClauseContext[];
+	public parameterValueClause(i: number): ParameterValueClauseContext;
+	public parameterValueClause(i?: number): ParameterValueClauseContext | ParameterValueClauseContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(ParameterValueClauseContext);
+		} else {
+			return this.getRuleContext(i, ParameterValueClauseContext);
 		}
 	}
 	public P_CLOSE(): TerminalNode | undefined { return this.tryGetToken(cldParser.P_CLOSE, 0); }
@@ -2504,27 +2625,26 @@ export class ParameterClauseContext extends ParserRuleContext {
 			return this.getToken(cldParser.COMMA, i);
 		}
 	}
-	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
-		super(parent, invokingState);
+	constructor(ctx: ParameterClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
 	}
 	// @Override
-	public get ruleIndex(): number { return cldParser.RULE_parameterClause; }
-	// @Override
 	public enterRule(listener: cldListener): void {
-		if (listener.enterParameterClause) {
-			listener.enterParameterClause(this);
+		if (listener.enterParameterValue) {
+			listener.enterParameterValue(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: cldListener): void {
-		if (listener.exitParameterClause) {
-			listener.exitParameterClause(this);
+		if (listener.exitParameterValue) {
+			listener.exitParameterValue(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: cldVisitor<Result>): Result {
-		if (visitor.visitParameterClause) {
-			return visitor.visitParameterClause(this);
+		if (visitor.visitParameterValue) {
+			return visitor.visitParameterValue(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -2532,39 +2652,179 @@ export class ParameterClauseContext extends ParserRuleContext {
 }
 
 
-export class ParamValueClauseContext extends ParserRuleContext {
-	public CONCATENATE(): TerminalNode | undefined { return this.tryGetToken(cldParser.CONCATENATE, 0); }
-	public NOCONCATENATE(): TerminalNode | undefined { return this.tryGetToken(cldParser.NOCONCATENATE, 0); }
-	public LIST(): TerminalNode | undefined { return this.tryGetToken(cldParser.LIST, 0); }
-	public REQUIRED(): TerminalNode | undefined { return this.tryGetToken(cldParser.REQUIRED, 0); }
-	public DEFAULT(): TerminalNode | undefined { return this.tryGetToken(cldParser.DEFAULT, 0); }
-	public EQUAL(): TerminalNode | undefined { return this.tryGetToken(cldParser.EQUAL, 0); }
-	public STRING(): TerminalNode | undefined { return this.tryGetToken(cldParser.STRING, 0); }
-	public TYPE(): TerminalNode | undefined { return this.tryGetToken(cldParser.TYPE, 0); }
-	public anyName(): AnyNameContext | undefined {
-		return this.tryGetRuleContext(0, AnyNameContext);
-	}
+export class ParameterValueClauseContext extends ParserRuleContext {
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
 	// @Override
-	public get ruleIndex(): number { return cldParser.RULE_paramValueClause; }
+	public get ruleIndex(): number { return cldParser.RULE_parameterValueClause; }
+	public copyFrom(ctx: ParameterValueClauseContext): void {
+		super.copyFrom(ctx);
+	}
+}
+export class ParameterValueClauseConcatenateContext extends ParameterValueClauseContext {
+	public CONCATENATE(): TerminalNode { return this.getToken(cldParser.CONCATENATE, 0); }
+	constructor(ctx: ParameterValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
 	// @Override
 	public enterRule(listener: cldListener): void {
-		if (listener.enterParamValueClause) {
-			listener.enterParamValueClause(this);
+		if (listener.enterParameterValueClauseConcatenate) {
+			listener.enterParameterValueClauseConcatenate(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: cldListener): void {
-		if (listener.exitParamValueClause) {
-			listener.exitParamValueClause(this);
+		if (listener.exitParameterValueClauseConcatenate) {
+			listener.exitParameterValueClauseConcatenate(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: cldVisitor<Result>): Result {
-		if (visitor.visitParamValueClause) {
-			return visitor.visitParamValueClause(this);
+		if (visitor.visitParameterValueClauseConcatenate) {
+			return visitor.visitParameterValueClauseConcatenate(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class ParameterValueClauseNonConcatenateContext extends ParameterValueClauseContext {
+	public NOCONCATENATE(): TerminalNode { return this.getToken(cldParser.NOCONCATENATE, 0); }
+	constructor(ctx: ParameterValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterParameterValueClauseNonConcatenate) {
+			listener.enterParameterValueClauseNonConcatenate(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitParameterValueClauseNonConcatenate) {
+			listener.exitParameterValueClauseNonConcatenate(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitParameterValueClauseNonConcatenate) {
+			return visitor.visitParameterValueClauseNonConcatenate(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class ParameterValueClauseListContext extends ParameterValueClauseContext {
+	public LIST(): TerminalNode { return this.getToken(cldParser.LIST, 0); }
+	constructor(ctx: ParameterValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterParameterValueClauseList) {
+			listener.enterParameterValueClauseList(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitParameterValueClauseList) {
+			listener.exitParameterValueClauseList(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitParameterValueClauseList) {
+			return visitor.visitParameterValueClauseList(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class ParameterValueClauseRequiredContext extends ParameterValueClauseContext {
+	public REQUIRED(): TerminalNode { return this.getToken(cldParser.REQUIRED, 0); }
+	constructor(ctx: ParameterValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterParameterValueClauseRequired) {
+			listener.enterParameterValueClauseRequired(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitParameterValueClauseRequired) {
+			listener.exitParameterValueClauseRequired(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitParameterValueClauseRequired) {
+			return visitor.visitParameterValueClauseRequired(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class ParameterValueClauseDefaultContext extends ParameterValueClauseContext {
+	public DEFAULT(): TerminalNode { return this.getToken(cldParser.DEFAULT, 0); }
+	public EQUAL(): TerminalNode { return this.getToken(cldParser.EQUAL, 0); }
+	public STRING(): TerminalNode { return this.getToken(cldParser.STRING, 0); }
+	constructor(ctx: ParameterValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterParameterValueClauseDefault) {
+			listener.enterParameterValueClauseDefault(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitParameterValueClauseDefault) {
+			listener.exitParameterValueClauseDefault(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitParameterValueClauseDefault) {
+			return visitor.visitParameterValueClauseDefault(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class ParameterValueClauseTypeContext extends ParameterValueClauseContext {
+	public TYPE(): TerminalNode { return this.getToken(cldParser.TYPE, 0); }
+	public EQUAL(): TerminalNode { return this.getToken(cldParser.EQUAL, 0); }
+	public anyName(): AnyNameContext {
+		return this.getRuleContext(0, AnyNameContext);
+	}
+	constructor(ctx: ParameterValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterParameterValueClauseType) {
+			listener.enterParameterValueClauseType(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitParameterValueClauseType) {
+			listener.exitParameterValueClauseType(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitParameterValueClauseType) {
+			return visitor.visitParameterValueClauseType(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -2572,7 +2832,7 @@ export class ParamValueClauseContext extends ParserRuleContext {
 }
 
 
-export class QualifiersContext extends ParserRuleContext {
+export class QualifierContext extends ParserRuleContext {
 	public NOQUALIFIERS(): TerminalNode | undefined { return this.tryGetToken(cldParser.NOQUALIFIERS, 0); }
 	public QUALIFIER(): TerminalNode | undefined { return this.tryGetToken(cldParser.QUALIFIER, 0); }
 	public anyName(): AnyNameContext | undefined {
@@ -2600,23 +2860,23 @@ export class QualifiersContext extends ParserRuleContext {
 		super(parent, invokingState);
 	}
 	// @Override
-	public get ruleIndex(): number { return cldParser.RULE_qualifiers; }
+	public get ruleIndex(): number { return cldParser.RULE_qualifier; }
 	// @Override
 	public enterRule(listener: cldListener): void {
-		if (listener.enterQualifiers) {
-			listener.enterQualifiers(this);
+		if (listener.enterQualifier) {
+			listener.enterQualifier(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: cldListener): void {
-		if (listener.exitQualifiers) {
-			listener.exitQualifiers(this);
+		if (listener.exitQualifier) {
+			listener.exitQualifier(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: cldVisitor<Result>): Result {
-		if (visitor.visitQualifiers) {
-			return visitor.visitQualifiers(this);
+		if (visitor.visitQualifier) {
+			return visitor.visitQualifier(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -2625,21 +2885,218 @@ export class QualifiersContext extends ParserRuleContext {
 
 
 export class QualifierClauseContext extends ParserRuleContext {
-	public DEFAULT(): TerminalNode | undefined { return this.tryGetToken(cldParser.DEFAULT, 0); }
-	public BATCH(): TerminalNode | undefined { return this.tryGetToken(cldParser.BATCH, 0); }
-	public LABEL(): TerminalNode | undefined { return this.tryGetToken(cldParser.LABEL, 0); }
-	public EQUAL(): TerminalNode | undefined { return this.tryGetToken(cldParser.EQUAL, 0); }
-	public anyName(): AnyNameContext | undefined {
-		return this.tryGetRuleContext(0, AnyNameContext);
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
 	}
-	public NEGATABLE(): TerminalNode | undefined { return this.tryGetToken(cldParser.NEGATABLE, 0); }
-	public NONNEGATABLE(): TerminalNode | undefined { return this.tryGetToken(cldParser.NONNEGATABLE, 0); }
-	public PLACEMENT(): TerminalNode | undefined { return this.tryGetToken(cldParser.PLACEMENT, 0); }
-	public placementClause(): PlacementClauseContext | undefined {
-		return this.tryGetRuleContext(0, PlacementClauseContext);
+	// @Override
+	public get ruleIndex(): number { return cldParser.RULE_qualifierClause; }
+	public copyFrom(ctx: QualifierClauseContext): void {
+		super.copyFrom(ctx);
 	}
-	public SYNTAX(): TerminalNode | undefined { return this.tryGetToken(cldParser.SYNTAX, 0); }
-	public VALUE(): TerminalNode | undefined { return this.tryGetToken(cldParser.VALUE, 0); }
+}
+export class QualifierDefaultContext extends QualifierClauseContext {
+	public DEFAULT(): TerminalNode { return this.getToken(cldParser.DEFAULT, 0); }
+	constructor(ctx: QualifierClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterQualifierDefault) {
+			listener.enterQualifierDefault(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitQualifierDefault) {
+			listener.exitQualifierDefault(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitQualifierDefault) {
+			return visitor.visitQualifierDefault(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class QualifierBatchContext extends QualifierClauseContext {
+	public BATCH(): TerminalNode { return this.getToken(cldParser.BATCH, 0); }
+	constructor(ctx: QualifierClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterQualifierBatch) {
+			listener.enterQualifierBatch(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitQualifierBatch) {
+			listener.exitQualifierBatch(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitQualifierBatch) {
+			return visitor.visitQualifierBatch(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class QualifierLabelContext extends QualifierClauseContext {
+	public LABEL(): TerminalNode { return this.getToken(cldParser.LABEL, 0); }
+	public EQUAL(): TerminalNode { return this.getToken(cldParser.EQUAL, 0); }
+	public anyName(): AnyNameContext {
+		return this.getRuleContext(0, AnyNameContext);
+	}
+	constructor(ctx: QualifierClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterQualifierLabel) {
+			listener.enterQualifierLabel(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitQualifierLabel) {
+			listener.exitQualifierLabel(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitQualifierLabel) {
+			return visitor.visitQualifierLabel(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class QualifierNegContext extends QualifierClauseContext {
+	public NEGATABLE(): TerminalNode { return this.getToken(cldParser.NEGATABLE, 0); }
+	constructor(ctx: QualifierClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterQualifierNeg) {
+			listener.enterQualifierNeg(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitQualifierNeg) {
+			listener.exitQualifierNeg(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitQualifierNeg) {
+			return visitor.visitQualifierNeg(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class QualifierNonnegContext extends QualifierClauseContext {
+	public NONNEGATABLE(): TerminalNode { return this.getToken(cldParser.NONNEGATABLE, 0); }
+	constructor(ctx: QualifierClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterQualifierNonneg) {
+			listener.enterQualifierNonneg(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitQualifierNonneg) {
+			listener.exitQualifierNonneg(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitQualifierNonneg) {
+			return visitor.visitQualifierNonneg(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class QualifierPlaceContext extends QualifierClauseContext {
+	public PLACEMENT(): TerminalNode { return this.getToken(cldParser.PLACEMENT, 0); }
+	public EQUAL(): TerminalNode { return this.getToken(cldParser.EQUAL, 0); }
+	public placementClause(): PlacementClauseContext {
+		return this.getRuleContext(0, PlacementClauseContext);
+	}
+	constructor(ctx: QualifierClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterQualifierPlace) {
+			listener.enterQualifierPlace(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitQualifierPlace) {
+			listener.exitQualifierPlace(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitQualifierPlace) {
+			return visitor.visitQualifierPlace(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class QualifierSyntaxContext extends QualifierClauseContext {
+	public SYNTAX(): TerminalNode { return this.getToken(cldParser.SYNTAX, 0); }
+	public EQUAL(): TerminalNode { return this.getToken(cldParser.EQUAL, 0); }
+	public anyName(): AnyNameContext {
+		return this.getRuleContext(0, AnyNameContext);
+	}
+	constructor(ctx: QualifierClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterQualifierSyntax) {
+			listener.enterQualifierSyntax(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitQualifierSyntax) {
+			listener.exitQualifierSyntax(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitQualifierSyntax) {
+			return visitor.visitQualifierSyntax(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class QualifierValueContext extends QualifierClauseContext {
+	public VALUE(): TerminalNode { return this.getToken(cldParser.VALUE, 0); }
 	public P_OPEN(): TerminalNode | undefined { return this.tryGetToken(cldParser.P_OPEN, 0); }
 	public qualifierValueClause(): QualifierValueClauseContext[];
 	public qualifierValueClause(i: number): QualifierValueClauseContext;
@@ -2660,27 +3117,26 @@ export class QualifierClauseContext extends ParserRuleContext {
 			return this.getToken(cldParser.COMMA, i);
 		}
 	}
-	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
-		super(parent, invokingState);
+	constructor(ctx: QualifierClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
 	}
 	// @Override
-	public get ruleIndex(): number { return cldParser.RULE_qualifierClause; }
-	// @Override
 	public enterRule(listener: cldListener): void {
-		if (listener.enterQualifierClause) {
-			listener.enterQualifierClause(this);
+		if (listener.enterQualifierValue) {
+			listener.enterQualifierValue(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: cldListener): void {
-		if (listener.exitQualifierClause) {
-			listener.exitQualifierClause(this);
+		if (listener.exitQualifierValue) {
+			listener.exitQualifierValue(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: cldVisitor<Result>): Result {
-		if (visitor.visitQualifierClause) {
-			return visitor.visitQualifierClause(this);
+		if (visitor.visitQualifierValue) {
+			return visitor.visitQualifierValue(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -2721,36 +3177,124 @@ export class PlacementClauseContext extends ParserRuleContext {
 
 
 export class QualifierValueClauseContext extends ParserRuleContext {
-	public LIST(): TerminalNode | undefined { return this.tryGetToken(cldParser.LIST, 0); }
-	public REQUIRED(): TerminalNode | undefined { return this.tryGetToken(cldParser.REQUIRED, 0); }
-	public DEFAULT(): TerminalNode | undefined { return this.tryGetToken(cldParser.DEFAULT, 0); }
-	public EQUAL(): TerminalNode | undefined { return this.tryGetToken(cldParser.EQUAL, 0); }
-	public STRING(): TerminalNode | undefined { return this.tryGetToken(cldParser.STRING, 0); }
-	public TYPE(): TerminalNode | undefined { return this.tryGetToken(cldParser.TYPE, 0); }
-	public anyName(): AnyNameContext | undefined {
-		return this.tryGetRuleContext(0, AnyNameContext);
-	}
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
 	// @Override
 	public get ruleIndex(): number { return cldParser.RULE_qualifierValueClause; }
+	public copyFrom(ctx: QualifierValueClauseContext): void {
+		super.copyFrom(ctx);
+	}
+}
+export class QualifierValueClauseListContext extends QualifierValueClauseContext {
+	public LIST(): TerminalNode { return this.getToken(cldParser.LIST, 0); }
+	constructor(ctx: QualifierValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
 	// @Override
 	public enterRule(listener: cldListener): void {
-		if (listener.enterQualifierValueClause) {
-			listener.enterQualifierValueClause(this);
+		if (listener.enterQualifierValueClauseList) {
+			listener.enterQualifierValueClauseList(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: cldListener): void {
-		if (listener.exitQualifierValueClause) {
-			listener.exitQualifierValueClause(this);
+		if (listener.exitQualifierValueClauseList) {
+			listener.exitQualifierValueClauseList(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: cldVisitor<Result>): Result {
-		if (visitor.visitQualifierValueClause) {
-			return visitor.visitQualifierValueClause(this);
+		if (visitor.visitQualifierValueClauseList) {
+			return visitor.visitQualifierValueClauseList(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class QualifierValueClauseRequiredContext extends QualifierValueClauseContext {
+	public REQUIRED(): TerminalNode { return this.getToken(cldParser.REQUIRED, 0); }
+	constructor(ctx: QualifierValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterQualifierValueClauseRequired) {
+			listener.enterQualifierValueClauseRequired(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitQualifierValueClauseRequired) {
+			listener.exitQualifierValueClauseRequired(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitQualifierValueClauseRequired) {
+			return visitor.visitQualifierValueClauseRequired(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class QualifierValueClauseDefaultContext extends QualifierValueClauseContext {
+	public DEFAULT(): TerminalNode { return this.getToken(cldParser.DEFAULT, 0); }
+	public EQUAL(): TerminalNode { return this.getToken(cldParser.EQUAL, 0); }
+	public STRING(): TerminalNode { return this.getToken(cldParser.STRING, 0); }
+	constructor(ctx: QualifierValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterQualifierValueClauseDefault) {
+			listener.enterQualifierValueClauseDefault(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitQualifierValueClauseDefault) {
+			listener.exitQualifierValueClauseDefault(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitQualifierValueClauseDefault) {
+			return visitor.visitQualifierValueClauseDefault(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class QualifierValueClauseTypeContext extends QualifierValueClauseContext {
+	public TYPE(): TerminalNode { return this.getToken(cldParser.TYPE, 0); }
+	public EQUAL(): TerminalNode { return this.getToken(cldParser.EQUAL, 0); }
+	public anyName(): AnyNameContext {
+		return this.getRuleContext(0, AnyNameContext);
+	}
+	constructor(ctx: QualifierValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterQualifierValueClauseType) {
+			listener.enterQualifierValueClauseType(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitQualifierValueClauseType) {
+			listener.exitQualifierValueClauseType(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitQualifierValueClauseType) {
+			return visitor.visitQualifierValueClauseType(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -2843,16 +3387,160 @@ export class TypeClauseContext extends ParserRuleContext {
 
 
 export class KeywordClauseContext extends ParserRuleContext {
-	public DEFAULT(): TerminalNode | undefined { return this.tryGetToken(cldParser.DEFAULT, 0); }
-	public LABEL(): TerminalNode | undefined { return this.tryGetToken(cldParser.LABEL, 0); }
-	public EQUAL(): TerminalNode | undefined { return this.tryGetToken(cldParser.EQUAL, 0); }
-	public anyName(): AnyNameContext | undefined {
-		return this.tryGetRuleContext(0, AnyNameContext);
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
 	}
-	public NEGATABLE(): TerminalNode | undefined { return this.tryGetToken(cldParser.NEGATABLE, 0); }
-	public NONNEGATABLE(): TerminalNode | undefined { return this.tryGetToken(cldParser.NONNEGATABLE, 0); }
-	public SYNTAX(): TerminalNode | undefined { return this.tryGetToken(cldParser.SYNTAX, 0); }
-	public VALUE(): TerminalNode | undefined { return this.tryGetToken(cldParser.VALUE, 0); }
+	// @Override
+	public get ruleIndex(): number { return cldParser.RULE_keywordClause; }
+	public copyFrom(ctx: KeywordClauseContext): void {
+		super.copyFrom(ctx);
+	}
+}
+export class KeywordDefaultContext extends KeywordClauseContext {
+	public DEFAULT(): TerminalNode { return this.getToken(cldParser.DEFAULT, 0); }
+	constructor(ctx: KeywordClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterKeywordDefault) {
+			listener.enterKeywordDefault(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitKeywordDefault) {
+			listener.exitKeywordDefault(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitKeywordDefault) {
+			return visitor.visitKeywordDefault(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class KeywordLabelContext extends KeywordClauseContext {
+	public LABEL(): TerminalNode { return this.getToken(cldParser.LABEL, 0); }
+	public EQUAL(): TerminalNode { return this.getToken(cldParser.EQUAL, 0); }
+	public anyName(): AnyNameContext {
+		return this.getRuleContext(0, AnyNameContext);
+	}
+	constructor(ctx: KeywordClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterKeywordLabel) {
+			listener.enterKeywordLabel(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitKeywordLabel) {
+			listener.exitKeywordLabel(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitKeywordLabel) {
+			return visitor.visitKeywordLabel(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class KeywordNegContext extends KeywordClauseContext {
+	public NEGATABLE(): TerminalNode { return this.getToken(cldParser.NEGATABLE, 0); }
+	constructor(ctx: KeywordClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterKeywordNeg) {
+			listener.enterKeywordNeg(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitKeywordNeg) {
+			listener.exitKeywordNeg(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitKeywordNeg) {
+			return visitor.visitKeywordNeg(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class KeywordNonnegContext extends KeywordClauseContext {
+	public NONNEGATABLE(): TerminalNode { return this.getToken(cldParser.NONNEGATABLE, 0); }
+	constructor(ctx: KeywordClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterKeywordNonneg) {
+			listener.enterKeywordNonneg(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitKeywordNonneg) {
+			listener.exitKeywordNonneg(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitKeywordNonneg) {
+			return visitor.visitKeywordNonneg(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class KeywordSyntaxContext extends KeywordClauseContext {
+	public SYNTAX(): TerminalNode { return this.getToken(cldParser.SYNTAX, 0); }
+	public EQUAL(): TerminalNode { return this.getToken(cldParser.EQUAL, 0); }
+	public anyName(): AnyNameContext {
+		return this.getRuleContext(0, AnyNameContext);
+	}
+	constructor(ctx: KeywordClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterKeywordSyntax) {
+			listener.enterKeywordSyntax(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitKeywordSyntax) {
+			listener.exitKeywordSyntax(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitKeywordSyntax) {
+			return visitor.visitKeywordSyntax(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class KeywordValueContext extends KeywordClauseContext {
+	public VALUE(): TerminalNode { return this.getToken(cldParser.VALUE, 0); }
 	public P_OPEN(): TerminalNode | undefined { return this.tryGetToken(cldParser.P_OPEN, 0); }
 	public keywordValueClause(): KeywordValueClauseContext[];
 	public keywordValueClause(i: number): KeywordValueClauseContext;
@@ -2873,27 +3561,26 @@ export class KeywordClauseContext extends ParserRuleContext {
 			return this.getToken(cldParser.COMMA, i);
 		}
 	}
-	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
-		super(parent, invokingState);
+	constructor(ctx: KeywordClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
 	}
 	// @Override
-	public get ruleIndex(): number { return cldParser.RULE_keywordClause; }
-	// @Override
 	public enterRule(listener: cldListener): void {
-		if (listener.enterKeywordClause) {
-			listener.enterKeywordClause(this);
+		if (listener.enterKeywordValue) {
+			listener.enterKeywordValue(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: cldListener): void {
-		if (listener.exitKeywordClause) {
-			listener.exitKeywordClause(this);
+		if (listener.exitKeywordValue) {
+			listener.exitKeywordValue(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: cldVisitor<Result>): Result {
-		if (visitor.visitKeywordClause) {
-			return visitor.visitKeywordClause(this);
+		if (visitor.visitKeywordValue) {
+			return visitor.visitKeywordValue(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -2902,36 +3589,124 @@ export class KeywordClauseContext extends ParserRuleContext {
 
 
 export class KeywordValueClauseContext extends ParserRuleContext {
-	public LIST(): TerminalNode | undefined { return this.tryGetToken(cldParser.LIST, 0); }
-	public REQUIRED(): TerminalNode | undefined { return this.tryGetToken(cldParser.REQUIRED, 0); }
-	public DEFAULT(): TerminalNode | undefined { return this.tryGetToken(cldParser.DEFAULT, 0); }
-	public EQUAL(): TerminalNode | undefined { return this.tryGetToken(cldParser.EQUAL, 0); }
-	public STRING(): TerminalNode | undefined { return this.tryGetToken(cldParser.STRING, 0); }
-	public TYPE(): TerminalNode | undefined { return this.tryGetToken(cldParser.TYPE, 0); }
-	public anyName(): AnyNameContext | undefined {
-		return this.tryGetRuleContext(0, AnyNameContext);
-	}
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
 	// @Override
 	public get ruleIndex(): number { return cldParser.RULE_keywordValueClause; }
+	public copyFrom(ctx: KeywordValueClauseContext): void {
+		super.copyFrom(ctx);
+	}
+}
+export class KeywordValueClauseListContext extends KeywordValueClauseContext {
+	public LIST(): TerminalNode { return this.getToken(cldParser.LIST, 0); }
+	constructor(ctx: KeywordValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
 	// @Override
 	public enterRule(listener: cldListener): void {
-		if (listener.enterKeywordValueClause) {
-			listener.enterKeywordValueClause(this);
+		if (listener.enterKeywordValueClauseList) {
+			listener.enterKeywordValueClauseList(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: cldListener): void {
-		if (listener.exitKeywordValueClause) {
-			listener.exitKeywordValueClause(this);
+		if (listener.exitKeywordValueClauseList) {
+			listener.exitKeywordValueClauseList(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: cldVisitor<Result>): Result {
-		if (visitor.visitKeywordValueClause) {
-			return visitor.visitKeywordValueClause(this);
+		if (visitor.visitKeywordValueClauseList) {
+			return visitor.visitKeywordValueClauseList(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class KeywordValueClauseRequiredContext extends KeywordValueClauseContext {
+	public REQUIRED(): TerminalNode { return this.getToken(cldParser.REQUIRED, 0); }
+	constructor(ctx: KeywordValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterKeywordValueClauseRequired) {
+			listener.enterKeywordValueClauseRequired(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitKeywordValueClauseRequired) {
+			listener.exitKeywordValueClauseRequired(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitKeywordValueClauseRequired) {
+			return visitor.visitKeywordValueClauseRequired(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class KeywordValueClauseDefaultContext extends KeywordValueClauseContext {
+	public DEFAULT(): TerminalNode { return this.getToken(cldParser.DEFAULT, 0); }
+	public EQUAL(): TerminalNode { return this.getToken(cldParser.EQUAL, 0); }
+	public STRING(): TerminalNode { return this.getToken(cldParser.STRING, 0); }
+	constructor(ctx: KeywordValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterKeywordValueClauseDefault) {
+			listener.enterKeywordValueClauseDefault(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitKeywordValueClauseDefault) {
+			listener.exitKeywordValueClauseDefault(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitKeywordValueClauseDefault) {
+			return visitor.visitKeywordValueClauseDefault(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class KeywordValueClauseTypeContext extends KeywordValueClauseContext {
+	public TYPE(): TerminalNode { return this.getToken(cldParser.TYPE, 0); }
+	public EQUAL(): TerminalNode { return this.getToken(cldParser.EQUAL, 0); }
+	public anyName(): AnyNameContext {
+		return this.getRuleContext(0, AnyNameContext);
+	}
+	constructor(ctx: KeywordValueClauseContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: cldListener): void {
+		if (listener.enterKeywordValueClauseType) {
+			listener.enterKeywordValueClauseType(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cldListener): void {
+		if (listener.exitKeywordValueClauseType) {
+			listener.exitKeywordValueClauseType(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cldVisitor<Result>): Result {
+		if (visitor.visitKeywordValueClauseType) {
+			return visitor.visitKeywordValueClauseType(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -2946,11 +3721,11 @@ export class VerbClauseContext extends ParserRuleContext {
 	public image(): ImageContext | undefined {
 		return this.tryGetRuleContext(0, ImageContext);
 	}
-	public parameters(): ParametersContext | undefined {
-		return this.tryGetRuleContext(0, ParametersContext);
+	public parameter(): ParameterContext | undefined {
+		return this.tryGetRuleContext(0, ParameterContext);
 	}
-	public qualifiers(): QualifiersContext | undefined {
-		return this.tryGetRuleContext(0, QualifiersContext);
+	public qualifier(): QualifierContext | undefined {
+		return this.tryGetRuleContext(0, QualifierContext);
 	}
 	public routine(): RoutineContext | undefined {
 		return this.tryGetRuleContext(0, RoutineContext);
@@ -3083,6 +3858,7 @@ export class ExpressionContext extends ParserRuleContext {
 
 
 export class EntityContext extends ParserRuleContext {
+	public _defRoot?: AnyNameContext;
 	public anyName(): AnyNameContext[];
 	public anyName(i: number): AnyNameContext;
 	public anyName(i?: number): AnyNameContext | AnyNameContext[] {

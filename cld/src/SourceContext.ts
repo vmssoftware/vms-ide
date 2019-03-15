@@ -12,6 +12,9 @@ import { ContextErrorListener, ContextLexerErrorListener } from './ContextErrorL
 import { PredictionMode } from 'antlr4ts/atn/PredictionMode';
 import { AnalysisListener} from './AnalysisListener';
 import { LogFunction, LogType } from '@vorfol/common';
+import { VerbSymbol, TypeSymbol, TypeRefSymbol, SyntaxSymbol, BuiltInTypeSymbol, ParameterSymbol, QualifierSymbol, KeywordSymbol, ContextSymbolTable, LabelSymbol, EntitySymbol } from './ContextSymbolTable';
+import { BuiltInValueTypes, symbolDescriptionFromEnum } from './Symbol';
+import { DetailsListener } from './DetailsListener';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -31,10 +34,21 @@ export class SourceContext {
     private tree?: CldContentContext; // The root context from the last parse run.
     public logFn: LogFunction;
 
+    public symbolTable: ContextSymbolTable;
+    public static globalSymbols = new ContextSymbolTable("Global Symbols", { allowDuplicateSymbols: false });
+
     constructor(public fileName: string, logFn?: LogFunction) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
         this.sourceId = path.basename(fileName, path.extname(fileName));
+        this.symbolTable =  new ContextSymbolTable(this.sourceId, { allowDuplicateSymbols: true }, this);
+
+        if (!SourceContext.globalSymbols.resolve("EOF")) {
+            SourceContext.globalSymbols.addNewSymbolOfType(Symbol, undefined, "EOF");
+            for (const builtintype of BuiltInValueTypes) {
+                SourceContext.globalSymbols.addNewSymbolOfType(BuiltInTypeSymbol, undefined, builtintype);
+            }
+        }
     }
 
     /**
@@ -70,6 +84,8 @@ export class SourceContext {
 
         this.diagnostics.length = 0;
         this.analysisDone = false;
+        this.symbolTable.clear();
+        this.symbolTable.addDependencies(SourceContext.globalSymbols);
 
         try {
             this.tree = this.parser.cldContent();
@@ -85,6 +101,10 @@ export class SourceContext {
             }
         }
 
+        this.symbolTable.tree = this.tree;
+        let listener: DetailsListener = new DetailsListener(this.symbolTable);
+        ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree);
+
         this.runAnalysis();
     }
 
@@ -97,61 +117,21 @@ export class SourceContext {
     private runAnalysis() {
         if (!this.analysisDone) {
             this.analysisDone = true;
-            let listener = new AnalysisListener(this.diagnostics, this.logFn);
+            let listener = new AnalysisListener(this.diagnostics, this.symbolTable, this.logFn);
             ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree!);
 
-            let index: number;
-            this.logFn(LogType.debug, () => `----- TOKENS -----`);
-            this.tokenStream!.fill();
-            for (index = 0; ; ++index) {
-                let token = this.tokenStream!.get(index);
-                if (token.type === Token.EOF) {
-                    break;
-                }    
-                this.logFn(LogType.debug, () => `"${String(token.text)}": row=${token.line} col=${token.charPositionInLine} type=${token.type}`);
-            }
+            // let index: number;
+            // this.logFn(LogType.debug, () => `----- TOKENS -----`);
+            // this.tokenStream!.fill();
+            // for (index = 0; ; ++index) {
+            //     let token = this.tokenStream!.get(index);
+            //     if (token.type === Token.EOF) {
+            //         break;
+            //     }    
+            //     this.logFn(LogType.debug, () => `"${String(token.text)}": row=${token.line} col=${token.charPositionInLine} type=${token.type}`);
+            // }
     
         }
-    }
-
-    public static getKindFromSymbol(symbol: Symbol): SymbolKind {
-        return SymbolKind.Other;
-    }
-    /**
-     * Returns the definition info for the given rule context. Public, as it is required by listeners.
-     */
-    public static definitionForContext(ctx: ParseTree | undefined, keepQuotes: boolean): Definition | undefined {
-        if (!ctx) {
-            return undefined;
-        }
-
-        var result: Definition = {
-            text: "",
-            range: {
-                start: { column: 0, row: 0 },
-                end: { column: 0, row: 0 }
-            }
-        };
-
-        if (ctx instanceof ParserRuleContext) {
-            let range = <Interval> { a: ctx.start.startIndex, b: ctx.stop!.stopIndex };
-
-            result.range.start.column = ctx.start.charPositionInLine;
-            result.range.start.row = ctx.start.line;
-            result.range.end.column = ctx.stop!.charPositionInLine;
-            result.range.end.row = ctx.stop!.line;
-
-            let cs = ctx.start.tokenSource!.inputStream;
-            result.text = cs!.getText(range);
-        } else if (ctx instanceof TerminalNode) {
-            result.text = ctx.text;
-
-            result.range.start.column = ctx.symbol.charPositionInLine;
-            result.range.start.row = ctx.symbol.line;
-            result.range.end.column = ctx.symbol.charPositionInLine + result.text.length;
-            result.range.end.row = ctx.symbol.line;
-        }
-        return result;
     }
 
     public getTokenIndexByPosition(row: number, column: number) {
@@ -220,7 +200,7 @@ export class SourceContext {
 
         candidates.tokens.forEach((following: number[], type: number) => {
             const info: SymbolInfo = {
-                kind: SymbolKind.Other,
+                kind: SymbolKind.Unknown,
                 name: "",
                 source: this.fileName,
             };
@@ -228,7 +208,7 @@ export class SourceContext {
             switch (type) {
                 default: {
                     let value = vocabulary.getLiteralName(type) || vocabulary.getDisplayName(type);
-                    info.kind = SymbolKind.Other;
+                    info.kind = SymbolKind.Unknown;
                     info.name = value[0] === "'" ? value.substr(1, value.length - 2) : value; // Remove quotes.
                     break;
                 }
@@ -253,6 +233,16 @@ export class SourceContext {
     }
 
     public symbolAtPosition(column: number, row: number): SymbolInfo | undefined {
+        if (this.tree) {
+            const context = parseTreeFromPosition(this.tree, column, row);
+            // we found a terminal rule, so get its parent to find symbol (because context of symbols is always ParserRule not TerminalNode)
+            if (context && context.parent) {
+                const symbol = this.symbolTable.symbolWithContext(context.parent);
+                if (symbol) {
+                    return this.symbolTable.getSymbolInfo(symbol);
+                }
+            }
+        }
         return undefined;
     }
 

@@ -109,10 +109,10 @@ module
 verbClauseForSyntax
 disallows
 image
-parameters
+parameter
 parameterClause
-paramValueClause
-qualifiers
+parameterValueClause
+qualifier
 qualifierClause
 placementClause
 qualifierValueClause

@@ -1,5 +1,5 @@
 import { TextDocument, Position, CancellationToken, Range, Location, Uri, ProviderResult, WorkspaceEdit, RenameProvider } from 'vscode';
-import { CldFacade, SymbolKind, SymbolInfo } from './Facade';
+import { CldFacade } from './Facade';
 
 export class CldRenameProvider implements RenameProvider {
     constructor(private backend: CldFacade) { }
