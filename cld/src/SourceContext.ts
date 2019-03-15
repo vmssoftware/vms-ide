@@ -228,19 +228,23 @@ export class SourceContext {
     }
 
     public getSymbolOccurences(column: number, row: number): SymbolInfo[] {
-        const occurances: SymbolInfo[] = [];
-        return occurances;
+        const symbol = this.symbolAtPosition(column, row);
+        if (symbol) {
+            return this.symbolTable.getSymbolOccurences(symbol, false);
+        }
+        return [];
     }
 
-    public symbolAtPosition(column: number, row: number): SymbolInfo | undefined {
+    public symbolInfoAtPosition(column: number, row: number): SymbolInfo | undefined {
+        return this.symbolTable.getSymbolInfo(this.symbolAtPosition(column, row));
+    }
+
+    public symbolAtPosition(column: number, row: number): Symbol | undefined {
         if (this.tree) {
             const context = parseTreeFromPosition(this.tree, column, row);
             // we found a terminal rule, so get its parent to find symbol (because context of symbols is always ParserRule not TerminalNode)
             if (context && context.parent) {
-                const symbol = this.symbolTable.symbolWithContext(context.parent);
-                if (symbol) {
-                    return this.symbolTable.getSymbolInfo(symbol);
-                }
+                return this.symbolTable.symbolWithContext(context.parent);
             }
         }
         return undefined;

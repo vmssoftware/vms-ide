@@ -31,6 +31,8 @@ export function symbolDescriptionFromEnum(kind: SymbolKind): string {
             return "Label";
         case SymbolKind.Entity:
             return "Entity";
+        case SymbolKind.Routine:
+            return "Routine";
         default:
             return "Unknown type";
     }
@@ -61,6 +63,8 @@ export function translateSymbolKind(kind: SymbolKind): vscode.SymbolKind {
             return vscode.SymbolKind.Method;
         case SymbolKind.Entity:
             return vscode.SymbolKind.Variable;
+        case SymbolKind.Routine:
+            return vscode.SymbolKind.Variable;
         default:
             return vscode.SymbolKind.Null;
     }
@@ -90,6 +94,8 @@ export function translateCompletionKind(kind: SymbolKind): vscode.CompletionItem
         case SymbolKind.Label:
             return vscode.CompletionItemKind.Method;
         case SymbolKind.Entity:
+            return vscode.CompletionItemKind.Variable;
+        case SymbolKind.Routine:
             return vscode.CompletionItemKind.Variable;
         default:
             return vscode.CompletionItemKind.Text;

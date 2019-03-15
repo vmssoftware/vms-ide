@@ -18,6 +18,7 @@ import {
     TypeSymbol,
     VerbSymbol,
     EntitySymbol,
+    RoutineSymbol,
 } from './ContextSymbolTable';
 
 import { SourceContext } from './SourceContext';
@@ -43,6 +44,7 @@ import {
     EntityContext,
     QualifierSyntaxContext,
     KeywordSyntaxContext,
+    RoutineContext,
 } from './cldParser';
 
 export class DetailsListener implements cldListener {
@@ -205,6 +207,11 @@ export class DetailsListener implements cldListener {
 
     enterKeywordSyntax(ctx: KeywordSyntaxContext) {
         const symbol = this.symbolTable.addNewSymbolOfType(EntitySymbol, this.currentSymbol as ScopedSymbol, ctx.anyName().text.toUpperCase());
+        symbol.context = ctx.anyName();
+    }
+
+    enterRoutine(ctx: RoutineContext) {
+        const symbol = this.symbolTable.addNewSymbolOfType(RoutineSymbol, this.currentSymbol as ScopedSymbol, ctx.anyName().text.toUpperCase());
         symbol.context = ctx.anyName();
     }
 

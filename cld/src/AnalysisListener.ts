@@ -207,6 +207,11 @@ export class AnalysisListener implements cldListener {
                 // set scope to defRoot
                 currentSymbol = this.symbolTable.resolve(ctx._defRoot.text.toUpperCase(), false) as EntityCollection;
                 contextToMark = ctx._defRoot;
+                // save definition symbol for root
+                let entitySymbol = this.symbolTable.symbolWithContext(ctx._defRoot);
+                if (entitySymbol && entitySymbol instanceof EntitySymbol) {
+                    this.symbolTable.linkSymbols(currentSymbol, entitySymbol);
+                }
             }
             if (!currentSymbol) {
                 this.markToken(contextToMark.start, AnalysisListener.cannotFindDefine);
@@ -228,7 +233,7 @@ export class AnalysisListener implements cldListener {
                     // save definition symbol
                     let entitySymbol = this.symbolTable.symbolWithContext(entityCtx);
                     if (entitySymbol && entitySymbol instanceof EntitySymbol) {
-                        entitySymbol.definitionSymbol = entityDefinition.entity;
+                        this.symbolTable.linkSymbols(entityDefinition.entity, entitySymbol);
                     }
                     let deepCount = 7;
                     // go through 7 nested levels
@@ -255,7 +260,7 @@ export class AnalysisListener implements cldListener {
                                 // save definition symbol
                                 let entitySymbol = this.symbolTable.symbolWithContext(entityCtx);
                                 if (entitySymbol && entitySymbol instanceof EntitySymbol) {
-                                    entitySymbol.definitionSymbol = entityDefinition.entity;
+                                    this.symbolTable.linkSymbols(entityDefinition.entity, entitySymbol);
                                 }
                             }
                         }
@@ -364,30 +369,6 @@ export class AnalysisListener implements cldListener {
         }
     }
 
-    // /**
-    //  * 
-    //  * @param symbol 
-    //  */
-    // public isSymbolEntity(symbol?: Symbol) {
-    //     if (!symbol) {
-    //         return false;
-    //     }
-    //     if (symbol instanceof ParameterSymbol) {
-    //         return true;
-    //     }
-    //     if (symbol instanceof QualifierSymbol) {
-    //         return true;
-    //     }
-    //     if (symbol instanceof KeywordSymbol) {
-    //         return true;
-    //     }
-    //     if (symbol instanceof LabelSymbol) {
-    //         return true;
-    //     }
-    //     return false;
-    // }
-
-
     /**
      * 
      * @param ctx 
@@ -419,7 +400,7 @@ export class AnalysisListener implements cldListener {
             if (definitionSymbol) {
                 const entitySymbol = this.symbolTable.symbolWithContext(entityCtx);
                 if (entitySymbol && entitySymbol instanceof EntitySymbol) {
-                    entitySymbol.definitionSymbol = definitionSymbol;
+                    this.symbolTable.linkSymbols(definitionSymbol, entitySymbol);
                     return true;
                 }
             }
@@ -439,7 +420,7 @@ export class AnalysisListener implements cldListener {
             if (definitionSymbol) {
                 const entitySymbol = this.symbolTable.symbolWithContext(entityCtx);
                 if (entitySymbol && entitySymbol instanceof EntitySymbol) {
-                    entitySymbol.definitionSymbol = definitionSymbol;
+                    this.symbolTable.linkSymbols(definitionSymbol, entitySymbol);
                     return true;
                 }
             }

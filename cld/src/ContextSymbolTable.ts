@@ -15,17 +15,18 @@ import { SourceContext } from './SourceContext';
 import { ParseTree } from 'antlr4ts/tree';
 import { symbolDescriptionFromEnum } from './Symbol';
 
-type SymbolStore = Map<SymbolKind, Map<string, ParserRuleContext | undefined>>;
-
 export class ContextSymbolTable extends SymbolTable {
 
     public tree?: ParserRuleContext; // Set by the owning source context after each parse run.
+
+    public references: Map<Symbol, Set<Symbol>> = new Map<Symbol, Set<Symbol>>();
 
     constructor(name: string, options: SymbolTableOptions, public owner?: SourceContext) {
         super(name, options);
     }
 
     public clear() {
+        this.references.clear();
         super.clear();
     }
 
@@ -62,6 +63,9 @@ export class ContextSymbolTable extends SymbolTable {
             case SymbolKind.Entity:
                 symbol = this.addNewSymbolOfType(EntitySymbol, undefined, name);
                 break;
+            case SymbolKind.Routine:
+                symbol = this.addNewSymbolOfType(RoutineSymbol, undefined, name);
+                break;
         }
         if (symbol) {
             symbol.context = ctx;
@@ -80,7 +84,10 @@ export class ContextSymbolTable extends SymbolTable {
         return symbol.context;
     }
 
-    public getSymbolInfo(symbol: string | Symbol): SymbolInfo | undefined {
+    public getSymbolInfo(symbol: string | Symbol | undefined): SymbolInfo | undefined {
+        if (!symbol) {
+            return undefined;
+        }
         if (!(symbol instanceof Symbol)) {
             let temp = this.resolve(symbol);
             if (!temp) {
@@ -99,7 +106,8 @@ export class ContextSymbolTable extends SymbolTable {
             kind: kind,
             name: name,
             source: (symbol.context && symbolTable && symbolTable.owner) ? symbolTable.owner.fileName : "CLD runtime",
-            definition: this.definitionFromSymbol(definitionSymbol),
+            definition: this.definitionFromSymbol(symbol),
+            masterDefinition: this.definitionFromSymbol(definitionSymbol),
         };
         if (definitionSymbol) {
             result.description = symbolDescriptionFromEnum(ContextSymbolTable.getKindFromSymbol(definitionSymbol));
@@ -145,43 +153,56 @@ export class ContextSymbolTable extends SymbolTable {
         return undefined;
     }
 
-    private symbolsOfType<T extends Symbol>(t: new (...args: any[]) => T, localOnly: boolean = false): SymbolInfo[] {
-        var result: SymbolInfo[] = [];
-
-        let symbols = this.getAllSymbols(t, localOnly);
-        for (let symbol of symbols) {
-            let root = symbol.root as ContextSymbolTable;
-            result.push({
-                kind: ContextSymbolTable.getKindFromSymbol(symbol),
-                name: symbol.name,
-                source: root.owner ? root.owner.fileName : "CLD runtime",
-                definition: this.definitionForContext(symbol.context),
-                description: undefined
-            });
+    public linkSymbols(master: Symbol, slave: EntitySymbol) {
+        let slaves = this.references.get(master);
+        if (!slaves) {
+            slaves = new Set<Symbol>();
+            this.references.set(master, slaves);
         }
-        return result;
+        slaves.add(slave);
+        slave.definitionSymbol = master;
     }
 
-    public listTopLevelSymbols(localOnly: boolean): SymbolInfo[] {
-        let result: SymbolInfo[] = [];
-
-        result.push(...this.symbolsOfType(VerbSymbol, localOnly));
-        result.push(...this.symbolsOfType(SyntaxSymbol, localOnly));
-        result.push(...this.symbolsOfType(TypeSymbol, localOnly));
-        //result.push(...this.symbolsOfType(BuiltInTypeSymbol, localOnly));
-
-        return result;
-    }
-
-    public getReferenceCount(topSymbolName: string): number {
-        // get symbol by name
-        // than get refernese count
+    /**
+     * Only for master definition
+     * @param master 
+     */
+    public getReferenceCount(master: Symbol): number {
+        let slaves = this.references.get(master);
+        if (slaves) {
+            return slaves.size;
+        }
         return 0;
     }
 
+    /**
+     * 
+     * @param symbol 
+     * @param localOnly 
+     */
     public getSymbolOccurences(symbol: Symbol, localOnly: boolean): SymbolInfo[] {
         let result: SymbolInfo[] = [];
+        let master = symbol;
+        
+        if (symbol instanceof EntitySymbol && symbol.definitionSymbol) {
+            master = symbol.definitionSymbol;
+        }
 
+        let slaves = this.references.get(master);
+        if (slaves) {
+            // add to result
+            slaves.forEach(slave => {
+                const info = this.getSymbolInfo(slave);
+                if (info) {
+                    result.push(info);
+                }
+            });
+        }
+        // add master (or this)
+        const info = this.getSymbolInfo(master);
+        if (info) {
+            result.push(info);
+        }
         return result;
     }
 
@@ -207,6 +228,8 @@ export class ContextSymbolTable extends SymbolTable {
                 return this.resolve(name, localOnly) as LabelSymbol;
             case SymbolKind.Entity:
                 return this.resolve(name, localOnly) as EntitySymbol;
+            case SymbolKind.Routine:
+                return this.resolve(name, localOnly) as RoutineSymbol;
         }
 
         return undefined;
@@ -244,6 +267,9 @@ export class ContextSymbolTable extends SymbolTable {
         if (symbol instanceof EntitySymbol) {
             return SymbolKind.Entity;
         }
+        if (symbol instanceof RoutineSymbol) {
+            return SymbolKind.Routine;
+        }
         return SymbolKind.Unknown;
     }
 
@@ -268,3 +294,4 @@ export class ParameterSymbol extends ScopedSymbol { }
 export class QualifierSymbol extends ScopedSymbol { }
 export class KeywordSymbol extends ScopedSymbol { }
 export class LabelSymbol extends Symbol { }
+export class RoutineSymbol extends Symbol { }

@@ -14,6 +14,7 @@ export enum SymbolKind {
     Keyword,
     Label,
     Entity,
+    Routine,
     Unknown,
 }
 
@@ -37,6 +38,7 @@ export interface SymbolInfo {
     name: string;
     source: string;
     definition?: Definition;
+    masterDefinition?: Definition;
     description?: string;  // Used for code completion. Provides a small description for certain symbols.
 }
 
@@ -144,7 +146,7 @@ export class CldFacade {
 
     public symbolInfoAtPosition(fileName: string, column: number, row: number): SymbolInfo | undefined {
         let context = this.getContext(fileName);
-        return context.symbolAtPosition(column, row);
+        return context.symbolInfoAtPosition(column, row);
     }
 
     public getSymbolOccurences(fileName: string, column: number, row: number): SymbolInfo[] {

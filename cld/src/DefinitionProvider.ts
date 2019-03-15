@@ -11,10 +11,10 @@ export class CldDefinitionProvider implements DefinitionProvider {
             return undefined;
         }
 
-        if (info.definition) {
+        if (info.masterDefinition) {
             let range = new Range(
-                info.definition.range.start.row - 1, info.definition.range.start.column,
-                info.definition.range.end.row - 1, info.definition.range.end.column
+                info.masterDefinition.range.start.row - 1, info.masterDefinition.range.start.column,
+                info.masterDefinition.range.end.row - 1, info.masterDefinition.range.end.column
             );
             return new Location(Uri.file(info.source), range);
         } else {
