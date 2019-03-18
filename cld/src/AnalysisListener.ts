@@ -5,8 +5,28 @@ import { DiagnosticEntry, DiagnosticType, SymbolKind } from './Facade';
 import { Token, ParserRuleContext, RuleContext } from "antlr4ts";
 import { LogFunction, LogType } from "@vorfol/common";
 import { TerminalNode } from "antlr4ts/tree";
-import { ImageContext, ParameterContext, VerbClauseContext, VerbClauseForSyntaxContext, DefineSyntaxContext, DefineVerbContext, ParameterClauseContext, ParameterPromptContext, ParameterValueContext, ParameterValueClauseRequiredContext, ParameterValueClauseDefaultContext, ParameterValueClauseTypeContext, AnyNameContext, QualifierContext, IdentContext, DefineTypeContext, TypeClauseContext, QualifierSyntaxContext, KeywordSyntaxContext, QualifierValueClauseTypeContext, KeywordValueClauseTypeContext, EntityContext } from "./cldParser";
-import { ContextSymbolTable, QualifierSymbol, VerbSymbol, SyntaxSymbol, TypeSymbol, KeywordSymbol, ParameterSymbol, TypeRefSymbol, EntityCollection, LabelSymbol, INestedEntity, EntitySymbol } from "./ContextSymbolTable";
+import { 
+    AnyNameContext,
+    DefineSyntaxContext,
+    DefineTypeContext,
+    DefineVerbContext,
+    EntityContext,
+    IdentContext,
+    ImageContext,
+    KeywordSyntaxContext,
+    KeywordValueClauseTypeContext,
+    ParameterContext,
+    ParameterPromptContext,
+    ParameterValueClauseContext,
+    ParameterValueClauseTypeContext,
+    QualifierContext,
+    QualifierSyntaxContext,
+    QualifierValueClauseTypeContext,
+    TypeClauseContext,
+    QualifierValueClauseContext,
+    KeywordValueClauseContext,
+} from "./cldParser";
+import { ContextSymbolTable, QualifierSymbol, VerbSymbol, SyntaxSymbol, TypeSymbol, KeywordSymbol, ParameterSymbol, TypeRefSymbol, EntityCollection, LabelSymbol, INestedEntity, EntitySymbol, WithTypeReference } from "./ContextSymbolTable";
 import { Symbol, ScopedSymbol } from "antlr4-c3";
 
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -43,7 +63,6 @@ export class AnalysisListener implements cldListener {
     public logFn: LogFunction;
 
     private parameterNumber = 0;
-    private parameterValueDefOrReq = false;
     private qualifiers = 0;
     private keywords = 0;
 
@@ -121,23 +140,16 @@ export class AnalysisListener implements cldListener {
         this.testLength(ctx.STRING().text, 31, AnalysisListener.imageStringTooLong, ctx.STRING().symbol);
     }
 
-    enterParameterValue(ctx: ParameterValueContext) {
-        this.parameterValueDefOrReq = false;
+    enterParameterValueClause(ctx: ParameterValueClauseContext) {
+        this.testValueDefReq(ctx.REQUIRED(), ctx.DEFAULT(), ctx.STRING());
     }
 
-    enterParameterValueClauseDefault(ctx: ParameterValueClauseDefaultContext) {
-        if (this.parameterValueDefOrReq) {
-            this.markToken(ctx.start, AnalysisListener.mutualDefOrReq);
-        }
-        this.parameterValueDefOrReq = true;
-        this.testLength(ctx.STRING().text, 94, AnalysisListener.parameterValueDefaultStringTooLong, ctx.STRING().symbol);
+    enterQualifierValueClause(ctx: QualifierValueClauseContext) {
+        this.testValueDefReq(ctx.REQUIRED(), ctx.DEFAULT(), ctx.STRING());
     }
 
-    enterParameterValueClauseRequired(ctx: ParameterValueClauseRequiredContext) {
-        if (this.parameterValueDefOrReq) {
-            this.markToken(ctx.start, AnalysisListener.mutualDefOrReq);
-        }
-        this.parameterValueDefOrReq = true;
+    enterKeywordValueClause(ctx: KeywordValueClauseContext) {
+        this.testValueDefReq(ctx.REQUIRED(), ctx.DEFAULT(), ctx.STRING());
     }
 
     enterParameterValueClauseType(ctx: ParameterValueClauseTypeContext) {
@@ -195,10 +207,11 @@ export class AnalysisListener implements cldListener {
     }
 
     enterEntity(ctx: EntityContext) {
-        let defineCtx = this.findDefineContext(ctx);
+        let defineCtx = findDefineNameForContext(ctx);
         if (!defineCtx) {
             this.markToken(ctx.start, AnalysisListener.entityOutside);
         } else {
+            // currentSymbol: the EntityCollection where the current name have to be defined
             let currentSymbol: EntityCollection = this.symbolTable.symbolWithContext(defineCtx) as EntityCollection;
             let contextToMark: ParserRuleContext = defineCtx;
             let index = 0;
@@ -221,9 +234,11 @@ export class AnalysisListener implements cldListener {
                     currentSymbol.unambigousEntities = this.collectUnambigousEntities(currentSymbol);
                 }
                 const names = ctx.anyName();
+                // entityCtx: context of entity at the current position
                 // get name of the first entity
                 let entityCtx = names[index];
                 ++index;
+                // entityDefinition: the initial definition for this entity, its source
                 // find it in collection, despite the nested level
                 let entityDefinition = currentSymbol.unambigousEntities.get(entityCtx.text.toUpperCase());
                 // test
@@ -240,17 +255,24 @@ export class AnalysisListener implements cldListener {
                     while(deepCount > 0 && entityDefinition && index < names.length)
                     {
                         --deepCount;
+                        // get next context
                         entityCtx = names[index];
                         ++index;
+                        // entityToProcess: if we were at the name that pointed to a label then we have to process label's parent to find unambigous entities
+                        let entityToProcess = entityDefinition.entity;
+                        if (entityToProcess instanceof LabelSymbol && entityToProcess.parent) {
+                            entityToProcess = entityToProcess.parent;
+                        }
                         // try to find from this unambigous first-level entities
-                        if (!(entityDefinition.entity instanceof ScopedSymbol)) {
+                        if (!(entityToProcess instanceof ScopedSymbol)) {
                             // mark the parent of current entity
                             this.markToken(names[index-2].start, AnalysisListener.entityHasNoChildren);
                             break;
                         } else {
-                            // this is not a DEFINE, where we keep unambigous entities, so just get entities and drop them
+                            // ensure that entity alrady processed
                             const entities = new Map<string, INestedEntity | undefined>();
-                            this.processEntity(entityDefinition.entity as ScopedSymbol, entities);
+                            this.processEntity(entityToProcess, entities);
+                            // get entityDefinition for current name
                             entityDefinition = entities.get(entityCtx.text.toUpperCase());
                             // allow only the first level nesting
                             if (!entityDefinition || entityDefinition.nested !== 1 ) {
@@ -270,6 +292,28 @@ export class AnalysisListener implements cldListener {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Test if DEFAULT and REQUIRED do not present at the same time.
+     * Also test DEFINE string length.
+     * @param req 
+     * @param def 
+     * @param defStr 
+     */
+    public testValueDefReq(req?: TerminalNode, def?: TerminalNode, defStr?: TerminalNode) {
+        if (req && def) {
+            let mark = req;
+            // mark the last definition
+            if (def.symbol.tokenIndex > req.symbol.tokenIndex) {
+                mark = def;
+            }
+            this.markToken(mark.symbol, AnalysisListener.mutualDefOrReq);
+        }
+        if (def && defStr)
+        {
+            this.testLength(defStr.text, 94, AnalysisListener.parameterValueDefaultStringTooLong, defStr.symbol);
         }
     }
 
@@ -314,7 +358,7 @@ export class AnalysisListener implements cldListener {
      * @param entities unambigous entities to update
      * @param typeStack stack to prevent circular references
      */
-    public processEntity(currentEntity: ScopedSymbol, entities: Map<string, INestedEntity | undefined>, typeStack?: Map<string, Symbol> ) {
+    public processEntity(currentEntity: WithTypeReference, entities: Map<string, INestedEntity | undefined>, typeStack?: Map<string, Symbol> ) {
         // set entity as parameter
         let entityToSave: Symbol = currentEntity;
         const labels = currentEntity.getSymbolsOfType(LabelSymbol);
@@ -349,6 +393,8 @@ export class AnalysisListener implements cldListener {
                             typeStack.delete(currentEntity.parent.name.toUpperCase());
                         }
                     }
+                    // save reference to the type
+                    currentEntity.typeReference = typeSymbol;
                     // go through nested entities and add
                     for(const [name, nestedEntity] of typeSymbol.unambigousEntities) {
                         if (nestedEntity ) {
@@ -367,24 +413,6 @@ export class AnalysisListener implements cldListener {
                 }
             }
         }
-    }
-
-    /**
-     * 
-     * @param ctx 
-     */
-    public findDefineContext(ctx: ParserRuleContext) {
-        let currentCtx: ParserRuleContext | undefined = ctx;
-        while(  currentCtx &&
-              !(currentCtx instanceof DefineSyntaxContext) &&
-              !(currentCtx instanceof DefineVerbContext) && 
-              !(currentCtx instanceof DefineTypeContext)) {
-            currentCtx = currentCtx.parent;
-        }
-        if (currentCtx) {
-            return currentCtx.anyName();
-        }
-        return undefined;
     }
 
     /**
@@ -512,3 +540,22 @@ export class AnalysisListener implements cldListener {
         this.diagnostics.push(error);
     }
 }
+
+/**
+ * 
+ * @param ctx 
+ */
+export function findDefineNameForContext(ctx: ParserRuleContext) {
+    let currentCtx: ParserRuleContext | undefined = ctx;
+    while(  currentCtx &&
+            !(currentCtx instanceof DefineSyntaxContext) &&
+            !(currentCtx instanceof DefineVerbContext) && 
+            !(currentCtx instanceof DefineTypeContext)) {
+        currentCtx = currentCtx.parent;
+    }
+    if (currentCtx) {
+        return currentCtx.anyName();
+    }
+    return undefined;
+}
+

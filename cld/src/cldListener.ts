@@ -3,60 +3,37 @@
 
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 
-import { ParameterDefaultContext } from "./cldParser";
-import { ParameterLabelContext } from "./cldParser";
-import { ParameterPromptContext } from "./cldParser";
-import { ParameterValueContext } from "./cldParser";
-import { KeywordValueClauseListContext } from "./cldParser";
-import { KeywordValueClauseRequiredContext } from "./cldParser";
-import { KeywordValueClauseDefaultContext } from "./cldParser";
-import { KeywordValueClauseTypeContext } from "./cldParser";
-import { QualifierValueClauseListContext } from "./cldParser";
-import { QualifierValueClauseRequiredContext } from "./cldParser";
-import { QualifierValueClauseDefaultContext } from "./cldParser";
-import { QualifierValueClauseTypeContext } from "./cldParser";
-import { KeywordDefaultContext } from "./cldParser";
-import { KeywordLabelContext } from "./cldParser";
-import { KeywordNegContext } from "./cldParser";
-import { KeywordNonnegContext } from "./cldParser";
-import { KeywordSyntaxContext } from "./cldParser";
-import { KeywordValueContext } from "./cldParser";
-import { ParameterValueClauseConcatenateContext } from "./cldParser";
-import { ParameterValueClauseNonConcatenateContext } from "./cldParser";
-import { ParameterValueClauseListContext } from "./cldParser";
-import { ParameterValueClauseRequiredContext } from "./cldParser";
-import { ParameterValueClauseDefaultContext } from "./cldParser";
-import { ParameterValueClauseTypeContext } from "./cldParser";
 import { DefineSyntaxContext } from "./cldParser";
 import { DefineTypeContext } from "./cldParser";
 import { DefineVerbContext } from "./cldParser";
-import { QualifierDefaultContext } from "./cldParser";
-import { QualifierBatchContext } from "./cldParser";
-import { QualifierLabelContext } from "./cldParser";
-import { QualifierNegContext } from "./cldParser";
-import { QualifierNonnegContext } from "./cldParser";
-import { QualifierPlaceContext } from "./cldParser";
-import { QualifierSyntaxContext } from "./cldParser";
-import { QualifierValueContext } from "./cldParser";
 import { CldContentContext } from "./cldParser";
 import { DefineContext } from "./cldParser";
 import { AnyNameContext } from "./cldParser";
 import { IdentContext } from "./cldParser";
 import { ModuleContext } from "./cldParser";
 import { VerbClauseForSyntaxContext } from "./cldParser";
-import { DisallowsContext } from "./cldParser";
+import { DisallowContext } from "./cldParser";
 import { ImageContext } from "./cldParser";
 import { ParameterContext } from "./cldParser";
 import { ParameterClauseContext } from "./cldParser";
+import { ParameterLabelContext } from "./cldParser";
+import { ParameterPromptContext } from "./cldParser";
 import { ParameterValueClauseContext } from "./cldParser";
+import { ParameterValueClauseTypeContext } from "./cldParser";
 import { QualifierContext } from "./cldParser";
 import { QualifierClauseContext } from "./cldParser";
+import { QualifierLabelContext } from "./cldParser";
+import { QualifierSyntaxContext } from "./cldParser";
 import { PlacementClauseContext } from "./cldParser";
 import { QualifierValueClauseContext } from "./cldParser";
+import { QualifierValueClauseTypeContext } from "./cldParser";
 import { RoutineContext } from "./cldParser";
 import { TypeClauseContext } from "./cldParser";
 import { KeywordClauseContext } from "./cldParser";
+import { KeywordLabelContext } from "./cldParser";
+import { KeywordSyntaxContext } from "./cldParser";
 import { KeywordValueClauseContext } from "./cldParser";
+import { KeywordValueClauseTypeContext } from "./cldParser";
 import { VerbClauseContext } from "./cldParser";
 import { SynonymContext } from "./cldParser";
 import { ExpressionContext } from "./cldParser";
@@ -68,318 +45,6 @@ import { EntityContext } from "./cldParser";
  * `cldParser`.
  */
 export interface cldListener extends ParseTreeListener {
-	/**
-	 * Enter a parse tree produced by the `parameterDefault`
-	 * labeled alternative in `cldParser.parameterClause`.
-	 * @param ctx the parse tree
-	 */
-	enterParameterDefault?: (ctx: ParameterDefaultContext) => void;
-	/**
-	 * Exit a parse tree produced by the `parameterDefault`
-	 * labeled alternative in `cldParser.parameterClause`.
-	 * @param ctx the parse tree
-	 */
-	exitParameterDefault?: (ctx: ParameterDefaultContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `parameterLabel`
-	 * labeled alternative in `cldParser.parameterClause`.
-	 * @param ctx the parse tree
-	 */
-	enterParameterLabel?: (ctx: ParameterLabelContext) => void;
-	/**
-	 * Exit a parse tree produced by the `parameterLabel`
-	 * labeled alternative in `cldParser.parameterClause`.
-	 * @param ctx the parse tree
-	 */
-	exitParameterLabel?: (ctx: ParameterLabelContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `parameterPrompt`
-	 * labeled alternative in `cldParser.parameterClause`.
-	 * @param ctx the parse tree
-	 */
-	enterParameterPrompt?: (ctx: ParameterPromptContext) => void;
-	/**
-	 * Exit a parse tree produced by the `parameterPrompt`
-	 * labeled alternative in `cldParser.parameterClause`.
-	 * @param ctx the parse tree
-	 */
-	exitParameterPrompt?: (ctx: ParameterPromptContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `parameterValue`
-	 * labeled alternative in `cldParser.parameterClause`.
-	 * @param ctx the parse tree
-	 */
-	enterParameterValue?: (ctx: ParameterValueContext) => void;
-	/**
-	 * Exit a parse tree produced by the `parameterValue`
-	 * labeled alternative in `cldParser.parameterClause`.
-	 * @param ctx the parse tree
-	 */
-	exitParameterValue?: (ctx: ParameterValueContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `keywordValueClauseList`
-	 * labeled alternative in `cldParser.keywordValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterKeywordValueClauseList?: (ctx: KeywordValueClauseListContext) => void;
-	/**
-	 * Exit a parse tree produced by the `keywordValueClauseList`
-	 * labeled alternative in `cldParser.keywordValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitKeywordValueClauseList?: (ctx: KeywordValueClauseListContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `keywordValueClauseRequired`
-	 * labeled alternative in `cldParser.keywordValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterKeywordValueClauseRequired?: (ctx: KeywordValueClauseRequiredContext) => void;
-	/**
-	 * Exit a parse tree produced by the `keywordValueClauseRequired`
-	 * labeled alternative in `cldParser.keywordValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitKeywordValueClauseRequired?: (ctx: KeywordValueClauseRequiredContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `keywordValueClauseDefault`
-	 * labeled alternative in `cldParser.keywordValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterKeywordValueClauseDefault?: (ctx: KeywordValueClauseDefaultContext) => void;
-	/**
-	 * Exit a parse tree produced by the `keywordValueClauseDefault`
-	 * labeled alternative in `cldParser.keywordValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitKeywordValueClauseDefault?: (ctx: KeywordValueClauseDefaultContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `keywordValueClauseType`
-	 * labeled alternative in `cldParser.keywordValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterKeywordValueClauseType?: (ctx: KeywordValueClauseTypeContext) => void;
-	/**
-	 * Exit a parse tree produced by the `keywordValueClauseType`
-	 * labeled alternative in `cldParser.keywordValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitKeywordValueClauseType?: (ctx: KeywordValueClauseTypeContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `qualifierValueClauseList`
-	 * labeled alternative in `cldParser.qualifierValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterQualifierValueClauseList?: (ctx: QualifierValueClauseListContext) => void;
-	/**
-	 * Exit a parse tree produced by the `qualifierValueClauseList`
-	 * labeled alternative in `cldParser.qualifierValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitQualifierValueClauseList?: (ctx: QualifierValueClauseListContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `qualifierValueClauseRequired`
-	 * labeled alternative in `cldParser.qualifierValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterQualifierValueClauseRequired?: (ctx: QualifierValueClauseRequiredContext) => void;
-	/**
-	 * Exit a parse tree produced by the `qualifierValueClauseRequired`
-	 * labeled alternative in `cldParser.qualifierValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitQualifierValueClauseRequired?: (ctx: QualifierValueClauseRequiredContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `qualifierValueClauseDefault`
-	 * labeled alternative in `cldParser.qualifierValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterQualifierValueClauseDefault?: (ctx: QualifierValueClauseDefaultContext) => void;
-	/**
-	 * Exit a parse tree produced by the `qualifierValueClauseDefault`
-	 * labeled alternative in `cldParser.qualifierValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitQualifierValueClauseDefault?: (ctx: QualifierValueClauseDefaultContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `qualifierValueClauseType`
-	 * labeled alternative in `cldParser.qualifierValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterQualifierValueClauseType?: (ctx: QualifierValueClauseTypeContext) => void;
-	/**
-	 * Exit a parse tree produced by the `qualifierValueClauseType`
-	 * labeled alternative in `cldParser.qualifierValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitQualifierValueClauseType?: (ctx: QualifierValueClauseTypeContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `keywordDefault`
-	 * labeled alternative in `cldParser.keywordClause`.
-	 * @param ctx the parse tree
-	 */
-	enterKeywordDefault?: (ctx: KeywordDefaultContext) => void;
-	/**
-	 * Exit a parse tree produced by the `keywordDefault`
-	 * labeled alternative in `cldParser.keywordClause`.
-	 * @param ctx the parse tree
-	 */
-	exitKeywordDefault?: (ctx: KeywordDefaultContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `keywordLabel`
-	 * labeled alternative in `cldParser.keywordClause`.
-	 * @param ctx the parse tree
-	 */
-	enterKeywordLabel?: (ctx: KeywordLabelContext) => void;
-	/**
-	 * Exit a parse tree produced by the `keywordLabel`
-	 * labeled alternative in `cldParser.keywordClause`.
-	 * @param ctx the parse tree
-	 */
-	exitKeywordLabel?: (ctx: KeywordLabelContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `keywordNeg`
-	 * labeled alternative in `cldParser.keywordClause`.
-	 * @param ctx the parse tree
-	 */
-	enterKeywordNeg?: (ctx: KeywordNegContext) => void;
-	/**
-	 * Exit a parse tree produced by the `keywordNeg`
-	 * labeled alternative in `cldParser.keywordClause`.
-	 * @param ctx the parse tree
-	 */
-	exitKeywordNeg?: (ctx: KeywordNegContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `keywordNonneg`
-	 * labeled alternative in `cldParser.keywordClause`.
-	 * @param ctx the parse tree
-	 */
-	enterKeywordNonneg?: (ctx: KeywordNonnegContext) => void;
-	/**
-	 * Exit a parse tree produced by the `keywordNonneg`
-	 * labeled alternative in `cldParser.keywordClause`.
-	 * @param ctx the parse tree
-	 */
-	exitKeywordNonneg?: (ctx: KeywordNonnegContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `keywordSyntax`
-	 * labeled alternative in `cldParser.keywordClause`.
-	 * @param ctx the parse tree
-	 */
-	enterKeywordSyntax?: (ctx: KeywordSyntaxContext) => void;
-	/**
-	 * Exit a parse tree produced by the `keywordSyntax`
-	 * labeled alternative in `cldParser.keywordClause`.
-	 * @param ctx the parse tree
-	 */
-	exitKeywordSyntax?: (ctx: KeywordSyntaxContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `keywordValue`
-	 * labeled alternative in `cldParser.keywordClause`.
-	 * @param ctx the parse tree
-	 */
-	enterKeywordValue?: (ctx: KeywordValueContext) => void;
-	/**
-	 * Exit a parse tree produced by the `keywordValue`
-	 * labeled alternative in `cldParser.keywordClause`.
-	 * @param ctx the parse tree
-	 */
-	exitKeywordValue?: (ctx: KeywordValueContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `parameterValueClauseConcatenate`
-	 * labeled alternative in `cldParser.parameterValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterParameterValueClauseConcatenate?: (ctx: ParameterValueClauseConcatenateContext) => void;
-	/**
-	 * Exit a parse tree produced by the `parameterValueClauseConcatenate`
-	 * labeled alternative in `cldParser.parameterValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitParameterValueClauseConcatenate?: (ctx: ParameterValueClauseConcatenateContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `parameterValueClauseNonConcatenate`
-	 * labeled alternative in `cldParser.parameterValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterParameterValueClauseNonConcatenate?: (ctx: ParameterValueClauseNonConcatenateContext) => void;
-	/**
-	 * Exit a parse tree produced by the `parameterValueClauseNonConcatenate`
-	 * labeled alternative in `cldParser.parameterValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitParameterValueClauseNonConcatenate?: (ctx: ParameterValueClauseNonConcatenateContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `parameterValueClauseList`
-	 * labeled alternative in `cldParser.parameterValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterParameterValueClauseList?: (ctx: ParameterValueClauseListContext) => void;
-	/**
-	 * Exit a parse tree produced by the `parameterValueClauseList`
-	 * labeled alternative in `cldParser.parameterValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitParameterValueClauseList?: (ctx: ParameterValueClauseListContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `parameterValueClauseRequired`
-	 * labeled alternative in `cldParser.parameterValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterParameterValueClauseRequired?: (ctx: ParameterValueClauseRequiredContext) => void;
-	/**
-	 * Exit a parse tree produced by the `parameterValueClauseRequired`
-	 * labeled alternative in `cldParser.parameterValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitParameterValueClauseRequired?: (ctx: ParameterValueClauseRequiredContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `parameterValueClauseDefault`
-	 * labeled alternative in `cldParser.parameterValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterParameterValueClauseDefault?: (ctx: ParameterValueClauseDefaultContext) => void;
-	/**
-	 * Exit a parse tree produced by the `parameterValueClauseDefault`
-	 * labeled alternative in `cldParser.parameterValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitParameterValueClauseDefault?: (ctx: ParameterValueClauseDefaultContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `parameterValueClauseType`
-	 * labeled alternative in `cldParser.parameterValueClause`.
-	 * @param ctx the parse tree
-	 */
-	enterParameterValueClauseType?: (ctx: ParameterValueClauseTypeContext) => void;
-	/**
-	 * Exit a parse tree produced by the `parameterValueClauseType`
-	 * labeled alternative in `cldParser.parameterValueClause`.
-	 * @param ctx the parse tree
-	 */
-	exitParameterValueClauseType?: (ctx: ParameterValueClauseTypeContext) => void;
-
 	/**
 	 * Enter a parse tree produced by the `defineSyntax`
 	 * labeled alternative in `cldParser.define`.
@@ -418,110 +83,6 @@ export interface cldListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitDefineVerb?: (ctx: DefineVerbContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `qualifierDefault`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	enterQualifierDefault?: (ctx: QualifierDefaultContext) => void;
-	/**
-	 * Exit a parse tree produced by the `qualifierDefault`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	exitQualifierDefault?: (ctx: QualifierDefaultContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `qualifierBatch`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	enterQualifierBatch?: (ctx: QualifierBatchContext) => void;
-	/**
-	 * Exit a parse tree produced by the `qualifierBatch`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	exitQualifierBatch?: (ctx: QualifierBatchContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `qualifierLabel`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	enterQualifierLabel?: (ctx: QualifierLabelContext) => void;
-	/**
-	 * Exit a parse tree produced by the `qualifierLabel`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	exitQualifierLabel?: (ctx: QualifierLabelContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `qualifierNeg`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	enterQualifierNeg?: (ctx: QualifierNegContext) => void;
-	/**
-	 * Exit a parse tree produced by the `qualifierNeg`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	exitQualifierNeg?: (ctx: QualifierNegContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `qualifierNonneg`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	enterQualifierNonneg?: (ctx: QualifierNonnegContext) => void;
-	/**
-	 * Exit a parse tree produced by the `qualifierNonneg`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	exitQualifierNonneg?: (ctx: QualifierNonnegContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `qualifierPlace`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	enterQualifierPlace?: (ctx: QualifierPlaceContext) => void;
-	/**
-	 * Exit a parse tree produced by the `qualifierPlace`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	exitQualifierPlace?: (ctx: QualifierPlaceContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `qualifierSyntax`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	enterQualifierSyntax?: (ctx: QualifierSyntaxContext) => void;
-	/**
-	 * Exit a parse tree produced by the `qualifierSyntax`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	exitQualifierSyntax?: (ctx: QualifierSyntaxContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `qualifierValue`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	enterQualifierValue?: (ctx: QualifierValueContext) => void;
-	/**
-	 * Exit a parse tree produced by the `qualifierValue`
-	 * labeled alternative in `cldParser.qualifierClause`.
-	 * @param ctx the parse tree
-	 */
-	exitQualifierValue?: (ctx: QualifierValueContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cldParser.cldContent`.
@@ -590,15 +151,15 @@ export interface cldListener extends ParseTreeListener {
 	exitVerbClauseForSyntax?: (ctx: VerbClauseForSyntaxContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cldParser.disallows`.
+	 * Enter a parse tree produced by `cldParser.disallow`.
 	 * @param ctx the parse tree
 	 */
-	enterDisallows?: (ctx: DisallowsContext) => void;
+	enterDisallow?: (ctx: DisallowContext) => void;
 	/**
-	 * Exit a parse tree produced by `cldParser.disallows`.
+	 * Exit a parse tree produced by `cldParser.disallow`.
 	 * @param ctx the parse tree
 	 */
-	exitDisallows?: (ctx: DisallowsContext) => void;
+	exitDisallow?: (ctx: DisallowContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cldParser.image`.
@@ -634,6 +195,28 @@ export interface cldListener extends ParseTreeListener {
 	exitParameterClause?: (ctx: ParameterClauseContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `cldParser.parameterLabel`.
+	 * @param ctx the parse tree
+	 */
+	enterParameterLabel?: (ctx: ParameterLabelContext) => void;
+	/**
+	 * Exit a parse tree produced by `cldParser.parameterLabel`.
+	 * @param ctx the parse tree
+	 */
+	exitParameterLabel?: (ctx: ParameterLabelContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cldParser.parameterPrompt`.
+	 * @param ctx the parse tree
+	 */
+	enterParameterPrompt?: (ctx: ParameterPromptContext) => void;
+	/**
+	 * Exit a parse tree produced by `cldParser.parameterPrompt`.
+	 * @param ctx the parse tree
+	 */
+	exitParameterPrompt?: (ctx: ParameterPromptContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `cldParser.parameterValueClause`.
 	 * @param ctx the parse tree
 	 */
@@ -643,6 +226,17 @@ export interface cldListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitParameterValueClause?: (ctx: ParameterValueClauseContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cldParser.parameterValueClauseType`.
+	 * @param ctx the parse tree
+	 */
+	enterParameterValueClauseType?: (ctx: ParameterValueClauseTypeContext) => void;
+	/**
+	 * Exit a parse tree produced by `cldParser.parameterValueClauseType`.
+	 * @param ctx the parse tree
+	 */
+	exitParameterValueClauseType?: (ctx: ParameterValueClauseTypeContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cldParser.qualifier`.
@@ -667,6 +261,28 @@ export interface cldListener extends ParseTreeListener {
 	exitQualifierClause?: (ctx: QualifierClauseContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `cldParser.qualifierLabel`.
+	 * @param ctx the parse tree
+	 */
+	enterQualifierLabel?: (ctx: QualifierLabelContext) => void;
+	/**
+	 * Exit a parse tree produced by `cldParser.qualifierLabel`.
+	 * @param ctx the parse tree
+	 */
+	exitQualifierLabel?: (ctx: QualifierLabelContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cldParser.qualifierSyntax`.
+	 * @param ctx the parse tree
+	 */
+	enterQualifierSyntax?: (ctx: QualifierSyntaxContext) => void;
+	/**
+	 * Exit a parse tree produced by `cldParser.qualifierSyntax`.
+	 * @param ctx the parse tree
+	 */
+	exitQualifierSyntax?: (ctx: QualifierSyntaxContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `cldParser.placementClause`.
 	 * @param ctx the parse tree
 	 */
@@ -687,6 +303,17 @@ export interface cldListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitQualifierValueClause?: (ctx: QualifierValueClauseContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cldParser.qualifierValueClauseType`.
+	 * @param ctx the parse tree
+	 */
+	enterQualifierValueClauseType?: (ctx: QualifierValueClauseTypeContext) => void;
+	/**
+	 * Exit a parse tree produced by `cldParser.qualifierValueClauseType`.
+	 * @param ctx the parse tree
+	 */
+	exitQualifierValueClauseType?: (ctx: QualifierValueClauseTypeContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cldParser.routine`.
@@ -722,6 +349,28 @@ export interface cldListener extends ParseTreeListener {
 	exitKeywordClause?: (ctx: KeywordClauseContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `cldParser.keywordLabel`.
+	 * @param ctx the parse tree
+	 */
+	enterKeywordLabel?: (ctx: KeywordLabelContext) => void;
+	/**
+	 * Exit a parse tree produced by `cldParser.keywordLabel`.
+	 * @param ctx the parse tree
+	 */
+	exitKeywordLabel?: (ctx: KeywordLabelContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cldParser.keywordSyntax`.
+	 * @param ctx the parse tree
+	 */
+	enterKeywordSyntax?: (ctx: KeywordSyntaxContext) => void;
+	/**
+	 * Exit a parse tree produced by `cldParser.keywordSyntax`.
+	 * @param ctx the parse tree
+	 */
+	exitKeywordSyntax?: (ctx: KeywordSyntaxContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `cldParser.keywordValueClause`.
 	 * @param ctx the parse tree
 	 */
@@ -731,6 +380,17 @@ export interface cldListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitKeywordValueClause?: (ctx: KeywordValueClauseContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cldParser.keywordValueClauseType`.
+	 * @param ctx the parse tree
+	 */
+	enterKeywordValueClauseType?: (ctx: KeywordValueClauseTypeContext) => void;
+	/**
+	 * Exit a parse tree produced by `cldParser.keywordValueClauseType`.
+	 * @param ctx the parse tree
+	 */
+	exitKeywordValueClauseType?: (ctx: KeywordValueClauseTypeContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cldParser.verbClause`.

@@ -129,14 +129,14 @@ module
    ;
 
 verbClauseForSyntax
-   :  disallows
+   :  disallow
    |  image
    |  parameter
    |  qualifier
    |  routine
    ;
 
-disallows
+disallow
    :  NODISALLOWS
    |  DISALLOW expression
    ;
@@ -151,20 +151,25 @@ parameter
    ;
 
 parameterClause
-   :  DEFAULT                                                                       # parameterDefault
-   |  LABEL EQUAL anyName                                                           # parameterLabel
-   |  PROMPT EQUAL STRING                                                           # parameterPrompt
-   |  VALUE (P_OPEN parameterValueClause (COMMA  parameterValueClause)* P_CLOSE)?   # parameterValue
+   :  DEFAULT
+   |  parameterLabel
+   |  parameterPrompt
+   |  VALUE (P_OPEN parameterValueClause (COMMA  parameterValueClause)* P_CLOSE)?
    ;
 
+parameterLabel: LABEL EQUAL anyName;
+parameterPrompt: PROMPT EQUAL STRING;
+
 parameterValueClause
-   :  CONCATENATE             # parameterValueClauseConcatenate
-   |  NOCONCATENATE           # parameterValueClauseNonConcatenate
-   |  LIST                    # parameterValueClauseList
-   |  REQUIRED                # parameterValueClauseRequired
-   |  DEFAULT EQUAL STRING    # parameterValueClauseDefault
-   |  TYPE EQUAL anyName      # parameterValueClauseType
+   :  CONCATENATE         
+   |  NOCONCATENATE       
+   |  LIST                
+   |  REQUIRED            
+   |  DEFAULT EQUAL STRING
+   |  parameterValueClauseType
    ;
+
+parameterValueClauseType: TYPE EQUAL anyName;
 
 qualifier
    :  NOQUALIFIERS
@@ -172,15 +177,18 @@ qualifier
    ;
 
 qualifierClause
-   :  DEFAULT                                                                       # qualifierDefault
-   |  BATCH                                                                         # qualifierBatch
-   |  LABEL EQUAL anyName                                                           # qualifierLabel
-   |  NEGATABLE                                                                     # qualifierNeg
-   |  NONNEGATABLE                                                                  # qualifierNonneg
-   |  PLACEMENT EQUAL placementClause                                               # qualifierPlace
-   |  SYNTAX EQUAL anyName                                                          # qualifierSyntax
-   |  VALUE (P_OPEN qualifierValueClause (COMMA qualifierValueClause)* P_CLOSE)?    # qualifierValue
+   :  DEFAULT                                                                       
+   |  BATCH                                                                         
+   |  qualifierLabel
+   |  NEGATABLE                                                                     
+   |  NONNEGATABLE                                                                  
+   |  PLACEMENT EQUAL placementClause                                               
+   |  qualifierSyntax
+   |  VALUE (P_OPEN qualifierValueClause (COMMA qualifierValueClause)* P_CLOSE)?
    ;
+
+qualifierLabel: LABEL EQUAL anyName;
+qualifierSyntax: SYNTAX EQUAL anyName;
 
 placementClause
    :  GLOBAL
@@ -189,11 +197,13 @@ placementClause
    ;
 
 qualifierValueClause
-   :  LIST                    # qualifierValueClauseList
-   |  REQUIRED                # qualifierValueClauseRequired
-   |  DEFAULT EQUAL STRING    # qualifierValueClauseDefault
-   |  TYPE EQUAL anyName      # qualifierValueClauseType
+   :  LIST                
+   |  REQUIRED            
+   |  DEFAULT EQUAL STRING
+   |  qualifierValueClauseType
    ;
+
+qualifierValueClauseType: TYPE EQUAL anyName;
 
 routine
    :  ROUTINE anyName
@@ -204,23 +214,28 @@ typeClause
    ;
 
 keywordClause
-   :  DEFAULT                                                                 # keywordDefault
-   |  LABEL EQUAL anyName                                                     # keywordLabel
-   |  NEGATABLE                                                               # keywordNeg
-   |  NONNEGATABLE                                                            # keywordNonneg
-   |  SYNTAX EQUAL anyName                                                    # keywordSyntax
-   |  VALUE (P_OPEN keywordValueClause (COMMA keywordValueClause)* P_CLOSE)?  # keywordValue
+   :  DEFAULT                                                                 
+   |  keywordLabel
+   |  NEGATABLE                                                               
+   |  NONNEGATABLE                                                            
+   |  keywordSyntax
+   |  VALUE (P_OPEN keywordValueClause (COMMA keywordValueClause)* P_CLOSE)?
    ;
+
+keywordLabel: LABEL EQUAL anyName;
+keywordSyntax: SYNTAX EQUAL anyName;
 
 keywordValueClause
-   :  LIST                    #keywordValueClauseList
-   |  REQUIRED                #keywordValueClauseRequired
-   |  DEFAULT EQUAL STRING    #keywordValueClauseDefault
-   |  TYPE EQUAL anyName      #keywordValueClauseType
+   :  LIST                    
+   |  REQUIRED                
+   |  DEFAULT EQUAL STRING    
+   |  keywordValueClauseType
    ;
 
+keywordValueClauseType: TYPE EQUAL anyName;
+
 verbClause
-   :  disallows
+   :  disallow
    |  image
    |  parameter
    |  qualifier

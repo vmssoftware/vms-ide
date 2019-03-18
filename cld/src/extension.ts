@@ -21,7 +21,7 @@ export async function activate(context: ExtensionContext) {
         return;
     }
 
-    const logFn = configApi.createLogFunction("OpenVMS MSG");
+    const logFn = configApi.createLogFunction("OpenVMS CLD");
 
     const backend = new CldFacade(logFn);
     const diagnosticCollection = languages.createDiagnosticCollection(CLD.language);
@@ -45,7 +45,7 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(languages.registerDefinitionProvider(CLD, new CldDefinitionProvider(backend)));
     
     context.subscriptions.push(languages.registerCompletionItemProvider(CLD, new CldCompletionItemProvider(backend),
-        ".", " "));
+        ".", " ", "<", ">", "=", "("));
     context.subscriptions.push(languages.registerRenameProvider(CLD, new CldRenameProvider(backend)));
 
     //----- Events -----

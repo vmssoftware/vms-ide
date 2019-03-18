@@ -31,45 +31,8 @@ export class ContextSymbolTable extends SymbolTable {
     }
 
     public addNewSymbol(kind: SymbolKind, name: string, ctx: ParserRuleContext) {
-        let symbol: Symbol | undefined;
-        switch (kind) {
-            case SymbolKind.Verb:
-                symbol = this.addNewSymbolOfType(VerbSymbol, undefined, name);
-                break;
-            case SymbolKind.Syntax:
-                symbol = this.addNewSymbolOfType(SyntaxSymbol, undefined, name);
-                break;
-            case SymbolKind.Type:
-                symbol = this.addNewSymbolOfType(TypeSymbol, undefined, name);
-                break;
-            case SymbolKind.BuiltInType:
-                symbol = this.addNewSymbolOfType(BuiltInTypeSymbol, undefined, name);
-                break;
-            case SymbolKind.TypeRef:
-                symbol = this.addNewSymbolOfType(TypeRefSymbol, undefined, name);
-                break;
-            case SymbolKind.Parameter:
-                symbol = this.addNewSymbolOfType(ParameterSymbol, undefined, name);
-                break;
-            case SymbolKind.Qualifier:
-                symbol = this.addNewSymbolOfType(QualifierSymbol, undefined, name);
-                break;
-            case SymbolKind.Keyword:
-                symbol = this.addNewSymbolOfType(KeywordSymbol, undefined, name);
-                break;
-            case SymbolKind.Label:
-                symbol = this.addNewSymbolOfType(LabelSymbol, undefined, name);
-                break;
-            case SymbolKind.Entity:
-                symbol = this.addNewSymbolOfType(EntitySymbol, undefined, name);
-                break;
-            case SymbolKind.Routine:
-                symbol = this.addNewSymbolOfType(RoutineSymbol, undefined, name);
-                break;
-        }
-        if (symbol) {
-            symbol.context = ctx;
-        }
+        const symbol = this.addNewSymbolOfType(ContextSymbolTable.getSymbolFromKind(kind), undefined, name);
+        symbol.context = ctx;
     }
 
     public symbolExists(name: string, kind: SymbolKind, localOnly: boolean): boolean {
@@ -207,32 +170,39 @@ export class ContextSymbolTable extends SymbolTable {
     }
 
     public getSymbolOfType(name: string, kind: SymbolKind, localOnly: boolean): Symbol | undefined {
+        const resolved = this.resolve(name, localOnly);
+        if (resolved && ContextSymbolTable.getKindFromSymbol(resolved) === kind) {
+            return resolved;
+        }
+        return undefined;
+    }
+
+    public static getSymbolFromKind(kind: SymbolKind) {
         switch (kind) {
             case SymbolKind.Verb:
-                return this.resolve(name, localOnly) as VerbSymbol;
+                return VerbSymbol;
             case SymbolKind.Syntax:
-                return this.resolve(name, localOnly) as SyntaxSymbol;
+                return SyntaxSymbol;
             case SymbolKind.Type:
-                return this.resolve(name, localOnly) as TypeSymbol;
+                return TypeSymbol;
             case SymbolKind.BuiltInType:
-                return this.resolve(name, localOnly) as BuiltInTypeSymbol;
+                return BuiltInTypeSymbol;
             case SymbolKind.TypeRef:
-                return this.resolve(name, localOnly) as TypeRefSymbol;
+                return TypeRefSymbol;
             case SymbolKind.Parameter:
-                return this.resolve(name, localOnly) as ParameterSymbol;
+                return ParameterSymbol;
             case SymbolKind.Qualifier:
-                return this.resolve(name, localOnly) as QualifierSymbol;
+                return QualifierSymbol;
             case SymbolKind.Keyword:
-                return this.resolve(name, localOnly) as KeywordSymbol;
+                return KeywordSymbol;
             case SymbolKind.Label:
-                return this.resolve(name, localOnly) as LabelSymbol;
+                return LabelSymbol;
             case SymbolKind.Entity:
-                return this.resolve(name, localOnly) as EntitySymbol;
+                return EntitySymbol;
             case SymbolKind.Routine:
-                return this.resolve(name, localOnly) as RoutineSymbol;
+                return RoutineSymbol;
         }
-
-        return undefined;
+        return Symbol;
     }
 
     public static getKindFromSymbol(symbol: Symbol): SymbolKind {
@@ -282,6 +252,9 @@ export interface INestedEntity {
 export class EntityCollection extends NamespaceSymbol { 
     public unambigousEntities?: Map<string, INestedEntity | undefined>;  // strings in upper case
 }
+export class WithTypeReference extends ScopedSymbol { 
+    public typeReference?: EntityCollection;
+}
 export class EntitySymbol extends Symbol { 
     public definitionSymbol?: Symbol;
 }
@@ -290,8 +263,8 @@ export class SyntaxSymbol extends EntityCollection { }
 export class TypeSymbol extends EntityCollection { }
 export class BuiltInTypeSymbol extends Symbol { }
 export class TypeRefSymbol extends EntitySymbol { }
-export class ParameterSymbol extends ScopedSymbol { }
-export class QualifierSymbol extends ScopedSymbol { }
-export class KeywordSymbol extends ScopedSymbol { }
+export class ParameterSymbol extends WithTypeReference { }
+export class QualifierSymbol extends WithTypeReference { }
+export class KeywordSymbol extends WithTypeReference { }
 export class LabelSymbol extends Symbol { }
 export class RoutineSymbol extends Symbol { }
