@@ -409,7 +409,7 @@ export class SourceContext {
             let nextDefSymbol: EntityCollection | undefined = undefined;
             const nameTest = nameStack[nameIdx];
             for (const [name, value] of defSymbol.unambigousEntities) {
-                if (value && (allowNestedEntities || value.nested === 0)) {
+                if (value && (allowNestedEntities || value.nestedLevel === 0)) {
                     if (name === nameTest) {
                         if (value.entity instanceof EntityCollection) {
                             nextDefSymbol = value.entity;
@@ -430,7 +430,7 @@ export class SourceContext {
 
         if (defSymbol && defSymbol.unambigousEntities) {
             for (const [name, value] of defSymbol.unambigousEntities) {
-                if (value && (allowNestedEntities || value.nested === 0)) {
+                if (value && (allowNestedEntities || value.nestedLevel === 0)) {
                     result.push(value.entity);
                 }
             }

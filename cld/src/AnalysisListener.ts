@@ -273,18 +273,19 @@ export class AnalysisListener implements cldListener {
                             const entities = new Map<string, INestedEntity | undefined>();
                             this.processEntity(entityToProcess, entities);
                             // get entityDefinition for current name
-                            entityDefinition = entities.get(entityCtx.text.toUpperCase());
+                            const newEntityDefinition = entities.get(entityCtx.text.toUpperCase());
                             // allow only the first level nesting
-                            if (!entityDefinition || entityDefinition.nested !== 1 ) {
+                            if (!newEntityDefinition || newEntityDefinition.nestedLevel !== 1 ) {
                                 // mark current entity
                                 this.markToken(entityCtx.start, AnalysisListener.cannotFindEntity);
                             } else {
                                 // save definition symbol
                                 let entitySymbol = this.symbolTable.symbolWithContext(entityCtx);
                                 if (entitySymbol && entitySymbol instanceof EntitySymbol) {
-                                    this.symbolTable.linkSymbols(entityDefinition.entity, entitySymbol);
+                                    this.symbolTable.linkSymbols(newEntityDefinition.entity, entitySymbol);
                                 }
                             }
+                            entityDefinition = newEntityDefinition;
                         }
                     }
                     if (index < names.length) {
@@ -374,7 +375,7 @@ export class AnalysisListener implements cldListener {
             entities.set(entityToSave.name.toUpperCase(), undefined);
         } else {
             // save entity
-            entities.set(entityToSave.name.toUpperCase(), { entity: entityToSave, nested: 0 });
+            entities.set(entityToSave.name.toUpperCase(), { entity: entityToSave, nestedLevel: 0 });
             // find types in parameter, not entity
             const typeRefs = currentEntity.getSymbolsOfType(TypeRefSymbol);
             if (typeRefs.length === 1) {
@@ -401,7 +402,7 @@ export class AnalysisListener implements cldListener {
                             if (entities.has(name)) {
                                 entities.set(name, undefined);
                             } else {
-                                entities.set(name, {entity: nestedEntity.entity, nested: nestedEntity.nested + 1});
+                                entities.set(name, {entity: nestedEntity.entity, nestedLevel: nestedEntity.nestedLevel + 1});
                             }
                         }
                     }

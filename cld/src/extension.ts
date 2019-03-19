@@ -7,6 +7,7 @@ import { CldHoverProvider } from "./HoverProvider";
 import { CldRenameProvider } from "./RenameProvider";
 import { CldCompletionItemProvider } from "./CompletionProvider";
 import { CldDefinitionProvider } from "./DefinitionProvider";
+import { CldReferenceProvider } from "./ReferenceProvider";
 
 const locale = env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -47,6 +48,7 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(languages.registerCompletionItemProvider(CLD, new CldCompletionItemProvider(backend),
         ".", " ", "<", ">", "=", "("));
     context.subscriptions.push(languages.registerRenameProvider(CLD, new CldRenameProvider(backend)));
+    context.subscriptions.push(languages.registerReferenceProvider(CLD, new CldReferenceProvider(backend)));
 
     //----- Events -----
 

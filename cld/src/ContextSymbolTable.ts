@@ -110,7 +110,7 @@ export class ContextSymbolTable extends SymbolTable {
 
         const symbol = this.symbolWithContext(ctx);
         if (symbol && symbol instanceof EntitySymbol) {
-            return symbol.definitionSymbol;
+            return symbol.masterSymbol;
         }
 
         return undefined;
@@ -123,7 +123,7 @@ export class ContextSymbolTable extends SymbolTable {
             this.references.set(master, slaves);
         }
         slaves.add(slave);
-        slave.definitionSymbol = master;
+        slave.masterSymbol = master;
     }
 
     /**
@@ -147,8 +147,14 @@ export class ContextSymbolTable extends SymbolTable {
         let result: SymbolInfo[] = [];
         let master = symbol;
         
-        if (symbol instanceof EntitySymbol && symbol.definitionSymbol) {
-            master = symbol.definitionSymbol;
+        if (symbol instanceof EntitySymbol && symbol.masterSymbol) {
+            master = symbol.masterSymbol;
+        }
+
+        // add master (or this)
+        const info = this.getSymbolInfo(master);
+        if (info) {
+            result.push(info);
         }
 
         let slaves = this.references.get(master);
@@ -161,11 +167,7 @@ export class ContextSymbolTable extends SymbolTable {
                 }
             });
         }
-        // add master (or this)
-        const info = this.getSymbolInfo(master);
-        if (info) {
-            result.push(info);
-        }
+        
         return result;
     }
 
@@ -247,7 +249,7 @@ export class ContextSymbolTable extends SymbolTable {
 
 export interface INestedEntity { 
     entity: Symbol; 
-    nested: number; 
+    nestedLevel: number; 
 }
 export class EntityCollection extends NamespaceSymbol { 
     public unambigousEntities?: Map<string, INestedEntity | undefined>;  // strings in upper case
@@ -256,7 +258,7 @@ export class WithTypeReference extends ScopedSymbol {
     public typeReference?: EntityCollection;
 }
 export class EntitySymbol extends Symbol { 
-    public definitionSymbol?: Symbol;
+    public masterSymbol?: Symbol;
 }
 export class VerbSymbol extends EntityCollection { }
 export class SyntaxSymbol extends EntityCollection { }
