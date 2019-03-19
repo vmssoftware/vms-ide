@@ -2,7 +2,7 @@
     "name": "task2cmd",
     "displayName": "task2cmd",
     "description": "Task 2 Cmd",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",

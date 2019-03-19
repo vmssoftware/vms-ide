@@ -122,7 +122,7 @@ export class Task2CmdProvider implements vscode.TaskProvider {
                                         task.execution = new vscode.ShellExecution(`cmd`, [`/C`, `echo ${strParams64} >> ${this.listenPath}`]);
                                         break;
                                     default:
-                                        task.execution = new vscode.ShellExecution(`sh`, [`echo ${strParams64} >> ${this.listenPath}`]);
+                                        task.execution = new vscode.ShellExecution(`sh`, [`-c`, `"echo ${strParams64} >> ${this.listenPath}"`]);
                                 }
                                 task.presentationOptions = { echo: false, focus: false, showReuseMessage: false, reveal: 2 };
                                 retTasks.push(task);
