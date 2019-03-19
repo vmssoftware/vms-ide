@@ -46,9 +46,10 @@ export const actions: IPerform[] = [
             const wait: Array<Promise<boolean>> = [];
             for (const curScope of scopes) {
                 wait.push( (async () => {
-                    if (ProjectState.acquire().isSynchronized(curScope)) {
-                        return true;
-                    }
+                    // Feature #769 - Give the user ability to synchronize files several times using command "OpenVMS: Synchronize project files with VMS"
+                    // if (ProjectState.acquire().isSynchronized(curScope)) {
+                    //     return true;
+                    // }
                     const ensured = await ensureSettings(curScope, logFn);
                     if (ensured) {
                         const syncronizer = Synchronizer.acquire(logFn);
