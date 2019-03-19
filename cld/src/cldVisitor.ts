@@ -16,12 +16,14 @@ import { DisallowContext } from "./cldParser";
 import { ImageContext } from "./cldParser";
 import { ParameterContext } from "./cldParser";
 import { ParameterClauseContext } from "./cldParser";
+import { ParameterValueContext } from "./cldParser";
 import { ParameterLabelContext } from "./cldParser";
 import { ParameterPromptContext } from "./cldParser";
 import { ParameterValueClauseContext } from "./cldParser";
 import { ParameterValueClauseTypeContext } from "./cldParser";
 import { QualifierContext } from "./cldParser";
 import { QualifierClauseContext } from "./cldParser";
+import { QualifierValueContext } from "./cldParser";
 import { QualifierLabelContext } from "./cldParser";
 import { QualifierSyntaxContext } from "./cldParser";
 import { PlacementClauseContext } from "./cldParser";
@@ -30,6 +32,7 @@ import { QualifierValueClauseTypeContext } from "./cldParser";
 import { RoutineContext } from "./cldParser";
 import { TypeClauseContext } from "./cldParser";
 import { KeywordClauseContext } from "./cldParser";
+import { KeywordValueContext } from "./cldParser";
 import { KeywordLabelContext } from "./cldParser";
 import { KeywordSyntaxContext } from "./cldParser";
 import { KeywordValueClauseContext } from "./cldParser";
@@ -143,6 +146,13 @@ export interface cldVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitParameterClause?: (ctx: ParameterClauseContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cldParser.parameterValue`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitParameterValue?: (ctx: ParameterValueContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cldParser.parameterLabel`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -183,6 +193,13 @@ export interface cldVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitQualifierClause?: (ctx: QualifierClauseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cldParser.qualifierValue`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitQualifierValue?: (ctx: QualifierValueContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cldParser.qualifierLabel`.
@@ -239,6 +256,13 @@ export interface cldVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitKeywordClause?: (ctx: KeywordClauseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cldParser.keywordValue`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitKeywordValue?: (ctx: KeywordValueContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cldParser.keywordLabel`.

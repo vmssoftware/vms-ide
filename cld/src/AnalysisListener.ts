@@ -25,6 +25,12 @@ import {
     TypeClauseContext,
     QualifierValueClauseContext,
     KeywordValueClauseContext,
+    VerbClauseContext,
+    RoutineContext,
+    DisallowContext,
+    ParameterValueContext,
+    QualifierValueContext,
+    KeywordValueContext,
 } from "./cldParser";
 import { ContextSymbolTable, QualifierSymbol, VerbSymbol, SyntaxSymbol, TypeSymbol, KeywordSymbol, ParameterSymbol, TypeRefSymbol, EntityCollection, LabelSymbol, INestedEntity, EntitySymbol, WithTypeReference } from "./ContextSymbolTable";
 import { Symbol, ScopedSymbol } from "antlr4-c3";
@@ -46,8 +52,11 @@ export class AnalysisListener implements cldListener {
     public static imageStringTooLong = localize("imageStringTooLong", "The image-string is a maximum of 63 characters.");
     public static invalidParameterName = localize("invalidParameterName", "The parameter name must be in the form Pn, where n is the position of the parameter.");
     public static invalidParameterNumber = localize("invalidParameterNumber", "The parameter names must be numbered consecutively from P1 to P8.");
-    public static mutualDefOrReq = localize("mutualDefOrReq", "The DEFAULT clause and the REQUIRED clause are mutually exclusive.");
+    public static mutualDefaultOrRequired = localize("mutualDefaultOrRequired", "The DEFAULT clause and the REQUIRED clause are mutually exclusive.");
+    public static mutualImageOrRoutine = localize("mutualImageOrRoutine", "Only one ROUTINE or IMAGE clause is allowed.");
     public static mutualQual = localize("mutualQual", "The NOQUALIFIERS clause and the QUALIFIER clause are mutually exclusive.");
+    public static mutualDisallow = localize("mutualDisallow", "The NODISALLOWS clause and the DISALLOW clause are mutually exclusive.");
+    public static mutualParameter = localize("mutualParameter", "The NOPARAMETERS clause and the PARAMETER clause are mutually exclusive.");
     public static nameTooLong = localize("nameTooLong", "The name is a maximum of 31 characters.");
     public static parameterPromptTooLong = localize("parameterPromptTooLong", "The parameter prompt is a maximum of 31 characters.");
     public static parameterValueDefaultStringTooLong = localize("parameterValueDefaultStringTooLong", "The parameter default value is a maximum of 94 characters.");
@@ -62,23 +71,80 @@ export class AnalysisListener implements cldListener {
 
     public logFn: LogFunction;
 
-    private parameterNumber = 0;
-    private qualifiers = 0;
+    private parameter = 0;
+    private noparameters = 0;
     private keywords = 0;
+    private imageORroutine = 0;
+    private disallow = 0;
+    private nodisallows = 0;
+    private qualifier = 0;
+    private noqualifiers = 0;
+    private default = 0;
+    private required = 0;
 
     constructor(public diagnostics: DiagnosticEntry[], public symbolTable: ContextSymbolTable, logFn?: LogFunction) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
     }
 
+    enterParameterValue(ctx: ParameterValueContext) {
+        this.default = 0;
+        this.required = 0;
+    }
+
+    enterQualifierValue(ctx: QualifierValueContext) {
+        this.default = 0;
+        this.required = 0;
+    }
+
+    enterKeywordValue(ctx: KeywordValueContext) {
+        this.default = 0;
+        this.required = 0;
+    }
+
     enterImage(ctx: ImageContext) {
+        if (this.imageORroutine > 0) {
+            this.markToken(ctx.IMAGE().symbol, AnalysisListener.mutualImageOrRoutine);
+        }
+        ++this.imageORroutine;
         const imageStringNode = ctx.STRING();
         this.testLength(imageStringNode.text, 63, AnalysisListener.imageStringTooLong, imageStringNode.symbol);
     }
 
+    enterRoutine(ctx: RoutineContext) {
+        if (this.imageORroutine > 0) {
+            this.markToken(ctx.ROUTINE().symbol, AnalysisListener.mutualImageOrRoutine);
+        }
+        ++this.imageORroutine;
+    }
+
+    enterDisallow(ctx: DisallowContext) {
+        const nodisallowsNode = ctx.NODISALLOWS();
+        if (nodisallowsNode) {
+            if (this.disallow > 0) {
+                this.markToken(nodisallowsNode.symbol, AnalysisListener.mutualDisallow);
+            }
+            ++this.nodisallows;
+            return;
+        }
+        const disallowNode = ctx.DISALLOW();
+        if (disallowNode) {
+            if (this.nodisallows > 0) {
+                this.markToken(disallowNode.symbol, AnalysisListener.mutualDisallow);
+            }
+            ++this.disallow;
+        }
+    }
+
     enterDefineSyntax(ctx: DefineSyntaxContext) {
-        this.parameterNumber = 1;
-        this.qualifiers = 0;
+        this.parameter = 0;
+        this.noparameters = 0;
+        this.qualifier = 0;
+        this.noqualifiers = 0;
+        this.imageORroutine = 0;
+        this.disallow = 0;
+        this.nodisallows = 0;
+
         const syntaxName = ctx.anyName();
         if (syntaxName) {
             this.testFullNameIsUnique(SyntaxSymbol, ctx, syntaxName.start);
@@ -86,8 +152,14 @@ export class AnalysisListener implements cldListener {
     }
 
     enterDefineVerb(ctx: DefineVerbContext) {
-        this.parameterNumber = 1;
-        this.qualifiers = 0;
+        this.parameter = 0;
+        this.noparameters = 0;
+        this.qualifier = 0;
+        this.noqualifiers = 0;
+        this.imageORroutine = 0;
+        this.disallow = 0;
+        this.nodisallows = 0;
+
         const verbName = ctx.anyName();
         if (verbName) {
             this.testFourLetters(VerbSymbol, ctx, verbName.start);
@@ -106,7 +178,7 @@ export class AnalysisListener implements cldListener {
         const keywordName = ctx.anyName();
         if (keywordName) {
             this.testFullNameIsUnique(KeywordSymbol, ctx, keywordName.start);
-            this.keywords ++;
+            ++this.keywords;
             if (this.keywords > 255) {
                 this.markToken(keywordName.start, AnalysisListener.tooManyKeywords);
             }
@@ -114,23 +186,33 @@ export class AnalysisListener implements cldListener {
     }
 
     enterParameter(ctx: ParameterContext) {
-        if (ctx.NOPARAMETERS()) {
+        const noparamNode = ctx.NOPARAMETERS();
+        if (noparamNode) {
+            if (this.parameter > 0) {
+                this.markToken(noparamNode.symbol, AnalysisListener.mutualParameter);
+            }
+            ++this.noparameters;
             return;
         }
-        const nameCtx = ctx.anyName();
-        if (!nameCtx) {
-            this.markToken(ctx.start, AnalysisListener.emptyParameterName);
-        } else {
-            const name = nameCtx.text;
-            const match = name.match(AnalysisListener.rgParameterName);
-            if (!match) {
-                this.markToken(nameCtx.start, AnalysisListener.invalidParameterName);
+        const paramNode = ctx.PARAMETER();
+        if (paramNode) {
+            if (this.noparameters > 0) {
+                this.markToken(paramNode.symbol, AnalysisListener.mutualParameter);
+            }
+            ++this.parameter;
+            const nameCtx = ctx.anyName();
+            if (!nameCtx) {
+                this.markToken(ctx.start, AnalysisListener.emptyParameterName);
             } else {
-                const num = parseInt(match[1], 10);
-                if (num !== this.parameterNumber) {
-                    this.markToken(nameCtx.start, AnalysisListener.invalidParameterNumber);
+                const name = nameCtx.text;
+                const match = name.match(AnalysisListener.rgParameterName);
+                if (!match) {
+                    this.markToken(nameCtx.start, AnalysisListener.invalidParameterName);
                 } else {
-                    this.parameterNumber ++;
+                    const num = parseInt(match[1], 10);
+                    if (num !== this.parameter) {
+                        this.markToken(nameCtx.start, AnalysisListener.invalidParameterNumber);
+                    }
                 }
             }
         }
@@ -169,20 +251,20 @@ export class AnalysisListener implements cldListener {
     }
 
     enterQualifier(ctx: QualifierContext) {
-        const noQualNode = ctx.NOQUALIFIERS();
-        if (noQualNode) {
-            if (this.qualifiers > 0) {
-                this.markToken(noQualNode.symbol, AnalysisListener.mutualQual, DiagnosticType.Warning);
+        const noqualNode = ctx.NOQUALIFIERS();
+        if (noqualNode) {
+            if (this.qualifier > 0) {
+                this.markToken(noqualNode.symbol, AnalysisListener.mutualQual);
             }
-            this.qualifiers = -1;
+            ++this.noqualifiers;
         } else {
             const qualNode = ctx.QUALIFIER();
             if (qualNode) {
-                if (this.qualifiers === -1) {
-                    this.markToken(qualNode.symbol, AnalysisListener.mutualQual, DiagnosticType.Warning);
+                if (this.noqualifiers > 0) {
+                    this.markToken(qualNode.symbol, AnalysisListener.mutualQual);
                 } else {
-                    this.qualifiers ++;
-                    if (this.qualifiers > 255) {
+                    ++this.qualifier;
+                    if (this.qualifier > 255) {
                         this.markToken(qualNode.symbol, AnalysisListener.tooManyQualifiers);
                     }
                 }
@@ -204,6 +286,19 @@ export class AnalysisListener implements cldListener {
 
     enterIdent(ctx: IdentContext) {
         this.testLength(ctx.STRING().text, 31, AnalysisListener.identStringTooLong, ctx.start);
+    }
+
+    enterVerbClause(ctx: VerbClauseContext) {
+        const routineRule = ctx.routine();
+        const imageRule = ctx.image();
+        if (routineRule && imageRule) {
+            let mark: ParserRuleContext = routineRule;
+            // mark the last definition
+            if (imageRule.start.tokenIndex > routineRule.start.tokenIndex) {
+                mark = imageRule;
+            }
+            this.markToken(mark.start, AnalysisListener.mutualImageOrRoutine);
+        }
     }
 
     enterEntity(ctx: EntityContext) {
@@ -297,20 +392,24 @@ export class AnalysisListener implements cldListener {
     }
 
     /**
-     * Test if DEFAULT and REQUIRED do not present at the same time.
+     * Test if DEFAULT and REQUIRED do not present in its parent at the same time.
      * Also test DEFINE string length.
      * @param req 
      * @param def 
      * @param defStr 
      */
     public testValueDefReq(req?: TerminalNode, def?: TerminalNode, defStr?: TerminalNode) {
-        if (req && def) {
-            let mark = req;
-            // mark the last definition
-            if (def.symbol.tokenIndex > req.symbol.tokenIndex) {
-                mark = def;
+        if (req) {
+            if (this.default > 0) {
+                this.markToken(req.symbol, AnalysisListener.mutualDefaultOrRequired);
             }
-            this.markToken(mark.symbol, AnalysisListener.mutualDefOrReq);
+            ++this.required;
+        }
+        if (def) {
+            if (this.required > 0) {
+                this.markToken(def.symbol, AnalysisListener.mutualDefaultOrRequired);
+            }
+            ++this.default;
         }
         if (def && defStr)
         {

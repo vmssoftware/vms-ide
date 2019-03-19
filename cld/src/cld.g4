@@ -154,9 +154,10 @@ parameterClause
    :  DEFAULT
    |  parameterLabel
    |  parameterPrompt
-   |  VALUE (P_OPEN parameterValueClause (COMMA  parameterValueClause)* P_CLOSE)?
+   |  parameterValue
    ;
 
+parameterValue: VALUE (P_OPEN parameterValueClause (COMMA  parameterValueClause)* P_CLOSE)?;
 parameterLabel: LABEL EQUAL anyName;
 parameterPrompt: PROMPT EQUAL STRING;
 
@@ -184,9 +185,10 @@ qualifierClause
    |  NONNEGATABLE                                                                  
    |  PLACEMENT EQUAL placementClause                                               
    |  qualifierSyntax
-   |  VALUE (P_OPEN qualifierValueClause (COMMA qualifierValueClause)* P_CLOSE)?
+   |  qualifierValue
    ;
 
+qualifierValue: VALUE (P_OPEN qualifierValueClause (COMMA qualifierValueClause)* P_CLOSE)?;
 qualifierLabel: LABEL EQUAL anyName;
 qualifierSyntax: SYNTAX EQUAL anyName;
 
@@ -219,9 +221,10 @@ keywordClause
    |  NEGATABLE                                                               
    |  NONNEGATABLE                                                            
    |  keywordSyntax
-   |  VALUE (P_OPEN keywordValueClause (COMMA keywordValueClause)* P_CLOSE)?
+   |  keywordValue
    ;
 
+keywordValue: VALUE (P_OPEN keywordValueClause (COMMA keywordValueClause)* P_CLOSE)?;
 keywordLabel: LABEL EQUAL anyName;
 keywordSyntax: SYNTAX EQUAL anyName;
 
