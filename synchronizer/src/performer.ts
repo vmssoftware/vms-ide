@@ -107,7 +107,7 @@ export const actions: IPerform[] = [
             }
             let scopes: string[] = [scope];
             scopes = new ProjDepTree().getDepList(scope).reverse();
-            params = params || "DEBUG";
+            params = params || ProjectState.acquire().getDefBuildType();
             const builder = Builder.acquire(logFn);
             for (const curScope of scopes) {
                 const ensured = await ensureSettings(curScope, logFn);
@@ -144,13 +144,15 @@ export const actions: IPerform[] = [
             }
             let scopes: string[] = [scope];
             scopes = new ProjDepTree().getDepList(scope).reverse();
-            params = params || "DEBUG";
+            params = params || ProjectState.acquire().getDefBuildType();
             const builder = Builder.acquire(logFn);
             for (const curScope of scopes) {
                 const ensured = await ensureSettings(curScope, logFn);
                 if (ensured) {
                     if (await doUpload(ensured, logFn)) {
-                        if (await builder.cleanProject(ensured, params) && await builder.buildProject(ensured, params)) {
+                        // just do clean, despite result
+                        await builder.cleanProject(ensured, params);
+                        if (await builder.buildProject(ensured, params)) {
                             if (params) {
                                 ProjectState.acquire().setBuilt(curScope, params, true);
                             }
@@ -186,7 +188,7 @@ export const actions: IPerform[] = [
                 wait.push( (async () => {
                     const ensured = await ensureSettings(curScope, logFn);
                     if (ensured) {
-                        params = params || "DEBUG";
+                        params = params || ProjectState.acquire().getDefBuildType();
                         const builder = Builder.acquire(logFn);
                         return builder.cleanProject(ensured, params)
                             .then(async (result) => {

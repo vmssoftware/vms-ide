@@ -415,11 +415,13 @@ export class Builder {
         `TYPE_DIR=debug`,
         `CXXFLAGS = ${cxxDebugFlags}`,
         `CCFLAGS = ${cxxDebugFlags}`,
+        `BLISSFLAGS = ${cxxDebugFlags}`,
         `LINKFLAGS = /DEBUG/MAP=$(MMS$TARGET_NAME)${linkCommonFlags}`,
         `.ELSE`,
         `TYPE_DIR=release`,
         `CXXFLAGS = ${cxxCommonFlags}`,
         `CCFLAGS = ${cxxCommonFlags}`,
+        `BLISSFLAGS = ${cxxCommonFlags}`,
         `LINKFLAGS = ${linkCommonFlags}`,
         `.ENDIF`,
         ];
@@ -429,7 +431,7 @@ export class Builder {
             `OUT_DIR = .$(OUTDIR).$(TYPE_DIR)`,
             `OBJ_DIR = $(OUT_DIR).obj`,
             `.SUFFIXES`,
-            `.SUFFIXES .OBJ .CPP .C .CLD .MSG`,
+            `.SUFFIXES .OBJ .CPP .C .CLD .MSG .BLI`,
             `.CPP.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    $(CXX) $(CXXFLAGS) $(MMS$SOURCE)`,
@@ -446,6 +448,9 @@ export class Builder {
             `.MSG.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    MESSAGE /OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
+            `.BLI.OBJ`,
+            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+            `    BLISS $(BLISSFLAGS) $(MMS$SOURCE)`,
             ``,
         ];
 
