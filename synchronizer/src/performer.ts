@@ -268,7 +268,7 @@ export const actions: IPerform[] = [
             for (const curScope of scopes) {
                 const ensured = await ensureSettings(curScope, logFn);
                 if (ensured) {
-                    wait.push(doUpload(ensured, logFn, true));
+                    wait.push(doUpload(ensured, logFn, true, clear));
                 }
             }
             return Promise.all(wait).then((all) => {
@@ -338,12 +338,12 @@ const purgeCmd = printLike`purge [${"directory"}...]`;
  * @param ensured 
  * @param logFn 
  */
-async function doUpload(ensured: IEnsured, logFn: LogFunction, forceZip = false) {
+async function doUpload(ensured: IEnsured, logFn: LogFunction, forceZip = false, clear?: string) {
     let retCode = false;
     if (ensured.scope) {
         if (forceZip || ensured.synchronizeSection.preferZip) {
             const zipper = new UploadZip(logFn);
-            retCode = await zipper.perform(ensured);
+            retCode = await zipper.perform(ensured, clear);
         } else {
             const syncronizer = Synchronizer.acquire(logFn);
             retCode = await syncronizer.uploadSource(ensured);
