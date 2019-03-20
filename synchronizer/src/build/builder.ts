@@ -413,13 +413,13 @@ export class Builder {
         const flagLines = [
         `.IF DEBUG`,
         `TYPE_DIR=debug`,
-        `CXXFLAGS = ${cxxDebugFlags}`,
+        `CXXFLAGS = ${cxxDebugFlags}/STANDARD=LATEST`,
         `CCFLAGS = ${cxxDebugFlags}`,
         `BLISSFLAGS = ${cxxDebugFlags}`,
         `LINKFLAGS = /DEBUG/MAP=$(MMS$TARGET_NAME)${linkCommonFlags}`,
         `.ELSE`,
         `TYPE_DIR=release`,
-        `CXXFLAGS = ${cxxCommonFlags}`,
+        `CXXFLAGS = ${cxxCommonFlags}/STANDARD=LATEST`,
         `CCFLAGS = ${cxxCommonFlags}`,
         `BLISSFLAGS = ${cxxCommonFlags}`,
         `LINKFLAGS = ${linkCommonFlags}`,
@@ -465,9 +465,9 @@ export class Builder {
                 mainModuleLines.push(objectLine);
             }
             if (optLines.length) {
-                mainModuleLines.push(`    LINK $(LINKFLAGS) $(MMS$SOURCE_LIST),[]$(NAME)/OPT`);
+                mainModuleLines.push(`    CXXLINK $(LINKFLAGS) $(MMS$SOURCE_LIST),[]$(NAME)/OPT`);
             } else {
-                mainModuleLines.push(`    LINK $(LINKFLAGS) $(MMS$SOURCE_LIST)`);
+                mainModuleLines.push(`    CXXLINK $(LINKFLAGS) $(MMS$SOURCE_LIST)`);
             }
             mainModuleLines.push(``);
         }
