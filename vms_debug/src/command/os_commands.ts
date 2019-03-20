@@ -14,6 +14,8 @@ export enum OsCmdVMS
 	osRunCOM = "@",
 	osRunMMS = "mms/description=",
 	osVersion = "write sys$output f$getsyi(\"VERSION\")",
+	osTerminalType = "set terminal/device=",
+	osTerminalWidth = "set terminal/width=",
 }
 
 
@@ -78,5 +80,15 @@ export class OsCommands
 	public getVersionOS() : CommandMessage
 	{
 		return new CommandMessage(OsCmdVMS.osVersion, "");
+	}
+
+	public setTerminalType(type : string) : CommandMessage
+	{
+		return new CommandMessage(OsCmdVMS.osTerminalType, type);
+	}
+
+	public setTerminalWidth(width : string) : CommandMessage
+	{
+		return new CommandMessage(OsCmdVMS.osTerminalWidth, width);
 	}
 }

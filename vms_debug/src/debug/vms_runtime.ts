@@ -211,6 +211,9 @@ export class VMSRuntime extends EventEmitter
 				const pathToPreRunFile = `[.${dotted_root}]${preRunFile} DEBUG`;
 				this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
 			}
+			//set vms terminal
+			this.shell.SendCommandToQueue(this.osCmd.setTerminalType("vt102"));
+			this.shell.SendCommandToQueue(this.osCmd.setTerminalWidth("160"));
 			//config debugger
 			this.shell.SendCommandToQueue(this.osCmd.runDebug());
 			this.shell.SendCommandToQueue(this.dbgCmd.setDisplay("dbge", "q1", "output"));
