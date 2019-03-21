@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.63",
+    "version": "0.1.64",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -20,6 +20,8 @@
         "onCommand:vmssoftware.synchronizer.stopSync",
         "onCommand:vmssoftware.synchronizer.buildProject",
         "onCommand:vmssoftware.synchronizer.reBuildProject",
+        "onCommand:vmssoftware.synchronizer.buildOnlyProject",
+        "onCommand:vmssoftware.synchronizer.reBuildOnlyProject",
         "onCommand:vmssoftware.synchronizer.createMMS",
         "onCommand:vmssoftware.synchronizer.cleanProject",
         "onCommand:vmssoftware.synchronizer.syncProject",
@@ -57,11 +59,11 @@
         "menus": {
             "commandPalette": [
                 {
-                    "command": "vmssoftware.project-dep.projectState.didSynchronize",
+                    "command": "vmssoftware.project-dep.projectState.forceSynchronized",
                     "when": "vmssoftware.project-dep.projectState:never"
                 },
                 {
-                    "command": "vmssoftware.project-dep.projectState.didBuild",
+                    "command": "vmssoftware.project-dep.projectState.forceBuilt",
                     "when": "vmssoftware.project-dep.projectState:never"
                 },
                 {
@@ -75,6 +77,14 @@
                 {
                     "command": "vmssoftware.synchronizer.reBuildProject",
                     "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.buildOnlyProject",
+                    "when": "vmssoftware.synchronizer:never"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.reBuildOnlyProject",
+                    "when": "vmssoftware.synchronizer:never"
                 },
                 {
                     "command": "vmssoftware.synchronizer.cleanProject",
@@ -94,6 +104,10 @@
                 },
                 {
                     "command": "vmssoftware.synchronizer.uploadZip",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.cleanProject",
                     "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 }
             ],
@@ -123,6 +137,14 @@
                     "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
                 },
                 {
+                    "command": "vmssoftware.project-dep.projectDependencies.buildOnly",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.rebuildOnly",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
                     "command": "vmssoftware.project-dep.projectDependencies.clean",
                     "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
                 },
@@ -139,7 +161,7 @@
         "commands": [
             {
                 "command": "vmssoftware.project-dep.projectDependencies.refresh",
-                "title": "Refresh",
+                "title": "%command.projectDependencies.refresh.title%",
                 "icon": {
                     "light": "resources/light/refresh.svg",
                     "dark": "resources/dark/refresh.svg"
@@ -147,27 +169,35 @@
             },
             {
                 "command": "vmssoftware.project-dep.projectDependencies.add",
-                "title": "Add in dependencies to selected"
+                "title": "%command.projectDependencies.add.title%"
             },
             {
                 "command": "vmssoftware.project-dep.projectDependencies.build",
-                "title": "Build with dependencies"
+                "title": "%command.projectDependencies.build.title%"
             },
             {
                 "command": "vmssoftware.project-dep.projectDependencies.rebuild",
-                "title": "Rebuild with dependencies"
+                "title": "%command.projectDependencies.rebuild.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.buildOnly",
+                "title": "%command.projectDependencies.buildOnly.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.rebuildOnly",
+                "title": "%command.projectDependencies.rebuildOnly.title%"
             },
             {
                 "command": "vmssoftware.project-dep.projectDependencies.clean",
-                "title": "Clean this only"
+                "title": "%command.projectDependencies.clean.title%"
             },
             {
                 "command": "vmssoftware.project-dep.projectDependencies.remove",
-                "title": "Remove from dependencies"
+                "title": "%command.projectDependencies.remove.title%"
             },
             {
                 "command": "vmssoftware.project-dep.projectDescription.refresh",
-                "title": "Refresh",
+                "title": "%command.projectDescription.refresh.title%",
                 "icon": {
                     "light": "resources/light/refresh.svg",
                     "dark": "resources/dark/refresh.svg"
@@ -175,19 +205,19 @@
             },
             {
                 "command": "vmssoftware.project-dep.projectDescription.select",
-                "title": "Select"
+                "title": "%command.projectDescription.select.title%"
             },
             {
                 "command": "vmssoftware.project-dep.projectDescription.edit",
-                "title": "Edit"
+                "title": "%command.projectDescription.edit.title%"
             },
             {
-                "command": "vmssoftware.project-dep.projectState.didSynchronize",
-                "title": "vmssoftware.project-dep.projectState.didSynchronize"
+                "command": "vmssoftware.project-dep.projectState.forceSynchronized",
+                "title": "%command.projectDescription.forceSynchronized.title%"
             },
             {
-                "command": "vmssoftware.project-dep.projectState.didBuild",
-                "title": "vmssoftware.project-dep.projectState.didBuild"
+                "command": "vmssoftware.project-dep.projectState.forceBuilt",
+                "title": "%command.projectDescription.forceBuilt.title%"
             },
             {
                 "command": "vmssoftware.synchronizer.stopSync",
@@ -207,6 +237,16 @@
             {
                 "command": "vmssoftware.synchronizer.reBuildProject",
                 "title": "%command.reBuildProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.buildOnlyProject",
+                "title": "%command.buildOnlyProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.reBuildOnlyProject",
+                "title": "%command.reBuildOnlyProject.title%",
                 "category": "%command.category%"
             },
             {
@@ -288,7 +328,7 @@
                     "scope": "resource",
                     "type": "string",
                     "default": "*.{mms,com}",
-                    "description": "Builders"
+                    "description": "%properties.project.builders.description%"
                 },
                 "vmssoftware.synchronizer.project.exclude": {
                     "scope": "resource",
@@ -363,9 +403,9 @@
                         "edit"
                     ],
                     "enumDescriptions": [
-                        "Overwrite older files",
-                        "Skip files with newer version",
-                        "Download and edit"
+                        "%properties.synchronize.downloadNewFiles.overwrite.description%",
+                        "%properties.synchronize.downloadNewFiles.skip.description%",
+                        "%properties.synchronize.downloadNewFiles.edit.description%"
                     ],
                     "default": "edit",
                     "description": "%properties.synchronize.downloadNewFiles.description%"

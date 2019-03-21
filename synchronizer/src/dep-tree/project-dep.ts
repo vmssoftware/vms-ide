@@ -19,6 +19,8 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
     public static readonly cmdDescrSelect = "vmssoftware.project-dep.projectDescription.select";
     public static readonly cmdBuild = "vmssoftware.synchronizer.buildProject";
     public static readonly cmdReBuild = "vmssoftware.synchronizer.reBuildProject";
+    public static readonly cmdBuildOnly = "vmssoftware.synchronizer.buildOnlyProject";
+    public static readonly cmdReBuildOnly = "vmssoftware.synchronizer.reBuildOnlyProject";
     public static readonly cmdClean = "vmssoftware.synchronizer.cleanProject";
 
     public readonly onDidChangeTreeData: vscode.Event<IProjectElement | undefined>;
@@ -94,6 +96,20 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
         if (this.selected) {
             const buildType = ProjectState.acquire().getDefBuildType();
             vscode.commands.executeCommand(ProjDepProvider.cmdReBuild, this.selected.name, buildType);
+        }
+    }
+
+    public buildOnly(node: IProjectElement) {
+        if (this.selected) {
+            const buildType = ProjectState.acquire().getDefBuildType();
+            vscode.commands.executeCommand(ProjDepProvider.cmdBuildOnly, this.selected.name, buildType);
+        }
+    }
+
+    public rebuildOnly(node: IProjectElement) {
+        if (this.selected) {
+            const buildType = ProjectState.acquire().getDefBuildType();
+            vscode.commands.executeCommand(ProjDepProvider.cmdReBuildOnly, this.selected.name, buildType);
         }
     }
 

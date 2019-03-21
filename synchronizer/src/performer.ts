@@ -22,7 +22,7 @@ const localize = nls.loadMessageBundle();
 
 export type AsyncAction = (scope: string, logFn: LogFunction, params?: string) => Promise<boolean>;
 
-export type ActionType = "synchronize" | "build" | "rebuild" | "clean" | "crlf" | "edit settings" | "create mms" | "zip";
+export type ActionType = "synchronize" | "build" | "rebuild" | "buildOnly" | "rebuildOnly" | "clean" | "crlf" | "edit settings" | "create mms" | "zip";
 
 export interface IPerform {
     actionFunc: AsyncAction;
@@ -75,29 +75,6 @@ export const actions: IPerform[] = [
         status: localize("synchronizing.status", "$(sync) Synchronizing..."),
         success: localize("synchronizing.success", "Synchronizing ok"),
     },
-    // {
-    //     actionFunc: async (scope: string, ensured: IEnsured, logFn: LogFunction) => {
-    //         const api = await ensureProjApi();
-    //         if (api && api.isSynchronized(scope)) {
-    //             return true;
-    //         }
-    //         const syncronizer = Synchronizer.acquire(logFn);
-    //         return syncronizer.uploadSource(ensured)
-    //             .then(async (result) => {
-    //                 if (result) {
-    //                     if (api) {
-    //                         api.setSynchronized(scope, true);
-    //                     }
-    //                 }
-    //                 return result;
-    //             });
-    //     },
-    //     actionName: "upload source",
-    //     context: CommandContext.isBuilding,
-    //     fail: localize("upload.source.fail", "Upload source failed"),
-    //     status: localize("upload.source.status", "$(sync) Uploading source..."),
-    //     success: localize("upload.source.success", "Upload source ok"),
-    // },
     {
         // build
         actionFunc: async (scope: string, logFn: LogFunction, params?: string) => {
@@ -136,6 +113,35 @@ export const actions: IPerform[] = [
         success: localize("buiding.success", "Building ok"),
     },
     {
+        // build only
+        actionFunc: async (scope: string, logFn: LogFunction, params?: string) => {
+            params = params || ProjectState.acquire().getDefBuildType();
+            const builder = Builder.acquire(logFn);
+            const ensured = await ensureSettings(scope, logFn);
+            if (ensured) {
+                if (ProjectState.acquire().isSynchronized(scope) || await doUpload(ensured, logFn)) {
+                    if (ProjectState.acquire().isBuilt(scope, params) || await builder.buildProject(ensured, params)) {
+                        if (params) {
+                            ProjectState.acquire().setBuilt(scope, params, true);
+                        }
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+            return true;
+        },
+        actionName: "buildOnly",
+        context: CommandContext.isBuilding,
+        fail: localize("building.fail", "Building failed"),
+        status: localize("building.status", "$(tools) Building..."),
+        success: localize("buiding.success", "Building ok"),
+    },
+    {
         // re-build
         actionFunc: async (scope: string, logFn: LogFunction, params?: string) => {
             if (!await onTheSameVms(scope, logFn)) {
@@ -150,7 +156,7 @@ export const actions: IPerform[] = [
                 const ensured = await ensureSettings(curScope, logFn);
                 if (ensured) {
                     if (await doUpload(ensured, logFn)) {
-                        // just do clean, despite result
+                        // just do clean, ignore result
                         await builder.cleanProject(ensured, params);
                         if (await builder.buildProject(ensured, params)) {
                             if (params) {
@@ -169,6 +175,37 @@ export const actions: IPerform[] = [
             return true;
         },
         actionName: "rebuild",
+        context: CommandContext.isBuilding,
+        fail: localize("building.fail", "Building failed"),
+        status: localize("building.status", "$(tools) Building..."),
+        success: localize("buiding.success", "Building ok"),
+    },
+    {
+        // re-build only
+        actionFunc: async (scope: string, logFn: LogFunction, params?: string) => {
+            params = params || ProjectState.acquire().getDefBuildType();
+            const builder = Builder.acquire(logFn);
+            const ensured = await ensureSettings(scope, logFn);
+            if (ensured) {
+                if (await doUpload(ensured, logFn)) {
+                    // just do clean, ignore result
+                    await builder.cleanProject(ensured, params);
+                    if (await builder.buildProject(ensured, params)) {
+                        if (params) {
+                            ProjectState.acquire().setBuilt(scope, params, true);
+                        }
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+            return true;
+        },
+        actionName: "rebuildOnly",
         context: CommandContext.isBuilding,
         fail: localize("building.fail", "Building failed"),
         status: localize("building.status", "$(tools) Building..."),

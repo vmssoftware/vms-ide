@@ -552,7 +552,7 @@ export class Synchronizer {
                             if (Math.abs(diff) > 1000) {
                                 const newDate = new Date(date.valueOf() + diff);
                                 const retCode = await to.setDate(file, newDate);
-                                // const lastDate = await to.getDate(file);
+                                const lastDate = await to.getDate(file);
                                 return retCode;
                             } else {
                                 return true;

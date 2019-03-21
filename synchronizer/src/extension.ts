@@ -85,6 +85,26 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildOnlyProject", async (scope: string, params: string) => {
+        return workspace.saveAll(true)
+            .then((saved) => {
+                if (saved) {
+                    return Perform("buildOnly", scope, buildLog, params);
+                }
+                return saved;
+            });
+    }));
+
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildOnlyProject", async (scope: string, params: string) => {
+        return workspace.saveAll(true)
+            .then((saved) => {
+                if (saved) {
+                    return Perform("rebuildOnly", scope, buildLog, params);
+                }
+                return saved;
+            });
+    }));
+
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope: string, buildType: string) => {
         return Perform("clean", scope, buildLog, buildType);
     }));
@@ -129,10 +149,14 @@ export async function activate(context: ExtensionContext) {
         (element) => projectDependenciesProvider.select(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.add",
         (element) => projectDependenciesProvider.add(element)) );
-    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.build",
+        context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.build",
         (element) => projectDependenciesProvider.build(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.rebuild",
         (element) => projectDependenciesProvider.rebuild(element)) );
+        context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.buildOnly",
+        (element) => projectDependenciesProvider.buildOnly(element)) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.rebuildOnly",
+        (element) => projectDependenciesProvider.rebuildOnly(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.clean",
         (element) => projectDependenciesProvider.clean(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.remove",
@@ -150,9 +174,9 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDescription.changeBuildType",
         () => projectDescriptionProvider.changeBuildType()) );
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectState.didSynchronize",
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectState.forceSynchronized",
         (folderName: string) => ProjectState.acquire().setSynchronized(folderName)) );
-    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectState.didBuild",
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectState.forceBuilt",
         (folderName: string, buildType: string) => ProjectState.acquire().setBuilt(folderName, buildType)) );
 
     return new SyncApi();
