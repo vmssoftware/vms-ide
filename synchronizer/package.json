@@ -2,7 +2,7 @@
     "name": "synchronizer",
     "displayName": "OpenVMS IDE synchronizer",
     "description": "",
-    "version": "0.1.64",
+    "version": "0.1.66",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -58,14 +58,6 @@
         },
         "menus": {
             "commandPalette": [
-                {
-                    "command": "vmssoftware.project-dep.projectState.forceSynchronized",
-                    "when": "vmssoftware.project-dep.projectState:never"
-                },
-                {
-                    "command": "vmssoftware.project-dep.projectState.forceBuilt",
-                    "when": "vmssoftware.project-dep.projectState:never"
-                },
                 {
                     "command": "vmssoftware.synchronizer.stopSync",
                     "when": "vmssoftware.synchronizer.isSync"
@@ -210,14 +202,6 @@
             {
                 "command": "vmssoftware.project-dep.projectDescription.edit",
                 "title": "%command.projectDescription.edit.title%"
-            },
-            {
-                "command": "vmssoftware.project-dep.projectState.forceSynchronized",
-                "title": "%command.projectDescription.forceSynchronized.title%"
-            },
-            {
-                "command": "vmssoftware.project-dep.projectState.forceBuilt",
-                "title": "%command.projectDescription.forceBuilt.title%"
             },
             {
                 "command": "vmssoftware.synchronizer.stopSync",

@@ -174,11 +174,6 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDescription.changeBuildType",
         () => projectDescriptionProvider.changeBuildType()) );
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectState.forceSynchronized",
-        (folderName: string) => ProjectState.acquire().setSynchronized(folderName)) );
-    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectState.forceBuilt",
-        (folderName: string, buildType: string) => ProjectState.acquire().setBuilt(folderName, buildType)) );
-
     return new SyncApi();
 }
 

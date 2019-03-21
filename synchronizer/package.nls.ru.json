@@ -26,8 +26,6 @@
 	"command.projectDescription.refresh.title": "Обновить",
 	"command.projectDescription.select.title": "Выбрать",
 	"command.projectDescription.edit.title": "Редактировать",
-	"command.projectDescription.forceSynchronized.title": "Force synchronized",
-	"command.projectDescription.forceBuilt.title": "Force built",
 	"properties.project.break.description": "Клавиша останова дебаггера",
 	"properties.project.builders.description": "Файлы для построения проекта",
 	"properties.project.exclude.description": "Исключить",

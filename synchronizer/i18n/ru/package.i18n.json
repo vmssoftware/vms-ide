@@ -16,8 +16,6 @@
     "command.uploadZip.title": "Выгрузить с помощью ZIP",
     "command.downloadHeaders.title": "Загрузить системные заголовочные файлы",
     "command.projectDependencies.add.title": "Добавить в зависимости к текущему",
-    "command.projectDependencies.forceSynchronized.title": "Did synch",
-    "command.projectDependencies.forceBuilt.title": "Did synch",
     "command.projectDependencies.build.title": "Построить проект с зависимостями",
     "command.projectDependencies.rebuild.title": "Перестроить проект с зависимостями",
     "command.projectDependencies.buildOnly.title": "Построить только этот проект",

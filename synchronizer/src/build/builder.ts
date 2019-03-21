@@ -690,17 +690,17 @@ export class Builder {
         if (output) {
             let retCode = true;
             if (selection.type === "com" || selection.type === "mms") {
-                // just output as is
+                // just output as is, do not download listings
                 for (const line of output) {
                     this.logFn(LogType.information, () => line);
                 }
             } else {
                 // parse
                 retCode = await this.parseProblems(scopeData, output, selection);
-            }
-            if (retCode) {
-                // get listings
-                retCode = await Synchronizer.acquire(this.logFn).downloadListings(scopeData.ensured);
+                if (retCode) {
+                    // get listings. valid only for DEBUG or RELEASE types
+                    retCode = await Synchronizer.acquire(this.logFn).downloadListings(scopeData.ensured);
+                }
             }
             return retCode;
         } else {

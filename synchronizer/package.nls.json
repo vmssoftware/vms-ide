@@ -26,8 +26,6 @@
     "command.projectDescription.refresh.title": "Refresh",
     "command.projectDescription.select.title": "Select",
     "command.projectDescription.edit.title": "Edit",
-    "command.projectDescription.forceSynchronized.title": "Force synchronized",
-    "command.projectDescription.forceBuilt.title": "Force built",
     "properties.project.break.description": "Debugger break key",
     "properties.project.builders.description": "Builders",
     "properties.project.exclude.description": "Exclude pattern",
