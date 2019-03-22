@@ -19,6 +19,7 @@ export interface DebugVariable
 	kind: ReflectKind;
 	value: string;
 	info: string;
+	prefix: string;
 	len: number;
 	children: DebugVariable[];
 	unreadable: string;
@@ -29,11 +30,13 @@ export interface VariableFileInfo
 {
 	filePath: string;
 	fileName: string;
+	wrapName: string;//wrap function name
 	functionName: string;//if "" => global variable
 	variableName: string;
 	variableType: string;
 	variableValue: string;
 	variableInfo: string;
+	variablePrefix: string;
 	variableAddress: number;
 	variableKind: ReflectKind;
 }

@@ -8,7 +8,7 @@ import { EventEmitter } from 'events';
 import { ShellSession, ModeWork, TypeDataMessage } from '../net/shell-session';
 import { OsCommands } from '../command/os_commands';
 import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
-import { DebugParser, MessageDebuger, Parameters, StringsPrompt } from '../parsers/debug_parser';
+import { DebugParser, MessageDebuger, Parameters } from '../parsers/debug_parser';
 import { LogFunction, LogType, ftpPathSeparator } from '@vorfol/common';
 import { ConfigManager } from "../ext-api/config_manager";
 import { HolderDebugVariableInfo, DebugVariable, ReflectKind, VariableFileInfo } from '../parsers/debug_variable_info';
@@ -446,7 +446,9 @@ export class VMSRuntime extends EventEmitter
 
 		if(nameVar.length > 0)
 		{
-			if(nameVar.charAt(0) === "&" || nameVar.charAt(0) === "*")
+			if(nameVar.charAt(0) === "&" ||
+				nameVar.charAt(0) === "*" ||
+				nameVar.charAt(0) === ".") //for BLISS
 			{
 				nameVar = nameVar.substr(1);
 			}
@@ -456,22 +458,45 @@ export class VMSRuntime extends EventEmitter
 
 			if(vars)
 			{
+				let wrapFunctionName = "";
+
 				for(let item of vars)
 				{
-					if(item.variableName === nameVar)
+					if(item.functionName === this.currentRoutine)
+					{
+						if(item.wrapName)
+						{
+							wrapFunctionName = item.wrapName;
+							break;
+						}
+					}
+				}
+
+				for(let item of vars)
+				{
+					if(item.variableName.toLowerCase() === nameVar.toLowerCase())
 					{
 						if(item.functionName === this.currentRoutine ||
-							item.functionName === "")
+							item.functionName === "" ||
+							item.functionName === wrapFunctionName)
 						{
-							if(item.variableType.includes("pointer to"))
+							if(item.variableType.includes("pointer to") ||
+								item.variableType.includes("pointer type"))
 							{
 								nameVar = "*" + nameVar;
 							}
-							else if(item.variableType.includes("typedef string"))
+							else if(item.variableType.includes("basic_string"))
 							{
 								if(item.variableAddress && item.variableAddress !== 0)
 								{
-									nameVar = "*" + nameVar + StringsPrompt.cppString;
+									if(item.variablePrefix)
+									{
+										nameVar = "*" + nameVar + item.variablePrefix;
+									}
+									else
+									{
+										nameVar = "*" + nameVar;
+									}
 								}
 							}
 
@@ -505,6 +530,7 @@ export class VMSRuntime extends EventEmitter
 								kind: item.variableKind,
 								value: item.variableValue,
 								info: item.variableInfo,
+								prefix: item.variablePrefix,
 								len: 0,
 								unreadable: "",
 								fullyQualifiedName: "",
@@ -582,9 +608,12 @@ export class VMSRuntime extends EventEmitter
 					{
 						if(item.functionName === funcName)
 						{
-							if(!item.variableValue && !item.variableInfo && item.variableAddress !== 0)//check a value of variable
+							if(item.variableAddress)
 							{
-								nameVars = this.addVariableToString(nameVars, item);
+								if(!item.variableValue && !item.variableInfo && item.variableAddress !== 0)//check a value of variable
+								{
+									nameVars = this.addVariableToString(nameVars, item);
+								}
 							}
 						}
 					}
@@ -626,6 +655,7 @@ export class VMSRuntime extends EventEmitter
 								kind: item.variableKind,
 								value: item.variableValue,
 								info: item.variableInfo,
+								prefix: item.variablePrefix,
 								len: 0,
 								unreadable: "",
 								fullyQualifiedName: "",
@@ -647,7 +677,8 @@ export class VMSRuntime extends EventEmitter
 			variables += ",";
 		}
 
-		if(item.variableType.includes("pointer to"))
+		if(item.variableType.includes("pointer to") ||
+			item.variableType.includes("pointer type"))
 		{
 			if(item.variableAddress)
 			{
@@ -672,11 +703,18 @@ export class VMSRuntime extends EventEmitter
 				}
 			}
 		}
-		else if(item.variableType.includes("typedef string"))
+		else if(item.variableType.includes("basic_string"))
 		{
 			if(item.variableAddress && item.variableAddress !== 0)
 			{
-				variables += "*" + item.variableName + StringsPrompt.cppString;
+				if(item.variablePrefix)
+				{
+					variables += "*" + item.variableName + item.variablePrefix;
+				}
+				else
+				{
+					variables += "*" + item.variableName;
+				}
 			}
 			else
 			{

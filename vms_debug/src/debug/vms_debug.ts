@@ -17,7 +17,6 @@ import { Queue } from '../queue/queues';
 import { LogFunction } from '@vorfol/common';
 import { WorkspaceFolder } from 'vscode';
 import { DebugVariable, ReflectKind } from '../parsers/debug_variable_info';
-import { StringsPrompt } from '../parsers/debug_parser';
 const { Subject } = require('await-notify');
 
 
@@ -262,6 +261,7 @@ export class VMSDebugSession extends LoggingDebugSession
 				kind: 0,
 				value: "",
 				info: "",
+				prefix: "",
 				len: 0,
 				children: locals,
 				unreadable: "",
@@ -303,10 +303,10 @@ export class VMSDebugSession extends LoggingDebugSession
 				let { result, variablesReference } = this.convertDebugVariableToProtocolVariable(v, i);
 
 				return {
-					name: "[" + i + "]",
+					name: v.name,
 					value: result,
 					type: v.type,
-					evaluateName: vari.fullyQualifiedName + "[" + i + "]",
+					evaluateName: vari.fullyQualifiedName + v.name,
 					variablesReference
 				};
 			});
@@ -394,7 +394,14 @@ export class VMSDebugSession extends LoggingDebugSession
 				{
 					if(item.kind === ReflectKind.String)
 					{
-						fullName = "*" + args.name + StringsPrompt.cppString;
+						if(item.prefix)
+						{
+							fullName = "*" + args.name + item.prefix;
+						}
+						else
+						{
+							fullName = "*" + args.name;
+						}
 					}
 					break;
 				}

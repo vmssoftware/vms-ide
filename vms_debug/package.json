@@ -1,7 +1,7 @@
 {
 	"name": "vms-debug",
 	"displayName": "VMS Debugger",
-	"version": "0.29.6",
+	"version": "0.29.7",
 	"publisher": "vmssoftware",
 	"description": "The extension for developing debug adapters for VS Code.",
 	"author": {
@@ -83,12 +83,60 @@
 				"category": "%command.category%"
 			}
 		],
+		"languages": [
+			{
+				"id": "bliss",
+				"extensions": [
+					".bli"
+				]
+			},
+			{
+				"id": "basic",
+				"extensions": [
+					".bas"
+				]
+			},
+			{
+				"id": "cobol",
+				"extensions": [
+					".cob"
+				]
+			},
+			{
+				"id": "fortran",
+				"extensions": [
+					".f77",
+					".f90"
+				]
+			},
+			{
+				"id": "pascal",
+				"extensions": [
+					".pas"
+				]
+			}
+		],
 		"breakpoints": [
 			{
 				"language": "c"
 			},
 			{
 				"language": "cpp"
+			},
+			{
+				"language": "bliss"
+			},
+			{
+				"language": "basic"
+			},
+			{
+				"language": "cobol"
+			},
+			{
+				"language": "fortran"
+			},
+			{
+				"language": "pascal"
 			}
 		],
 		"debuggers": [

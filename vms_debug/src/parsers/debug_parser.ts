@@ -20,7 +20,7 @@ export enum MessageDebuger
 	msgNotAct = "%DEBUG-W-SYMNOTACT",
 	msgNoSymbol = "%DEBUG-E-NOSYMBOL, symbol",
 	msgNoProcess = "%DEBUG-E-NOPROCESSES, the current command is targetted at an empty process set",
-	msgEnd = "%DEBUG-I-EXITSTATUS, is '%SYSTEM-S-NORMAL, normal successful completion",
+	msgEnd = "%DEBUG-I-EXITSTATUS, is",
 }
 
 export enum MessagePrompt
@@ -30,11 +30,6 @@ export enum MessagePrompt
 	prmtUSER = "USER: ",
 	prmtINFO = "INFO: ",
 	prmtDATA = "DATA: ",
-}
-
-export enum StringsPrompt
-{
-	cppString = "._C_data",
 }
 
 
@@ -49,6 +44,7 @@ export class DebugParser
 	private varsInfo : HolderDebugVariableInfo;
 	private commandDone : boolean;
 	private commandButtonDone : boolean;
+	private typeBracketsSquare : boolean;
 	private topicNumberString : Array<number> = new Array<number>();
 	private displayDataString : string[] = ["", "", ""];
 	private framesOld = new Array<any>();
@@ -499,6 +495,7 @@ export class DebugParser
 			if(type[0] === "data" || type[0] === "record")
 			{
 				let fileName : string = "";
+				let wrapName : string = "";
 				let functionName : string = "";
 				let variableName : string = "";
 				const matcherR = /^\S+\s*(\S+)::(\S+)/;
@@ -527,8 +524,20 @@ export class DebugParser
 				{
 					let infoData = info.split("\\");
 					fileName = infoData[0];
-					functionName = infoData[1];
+					functionName = infoData[infoData.length-2];
 					variableName = infoData[infoData.length-1];
+
+					if(infoData.length === 4)
+					{
+						if(infoData[infoData.length-2].includes("%LINE "))//MAIN\R\%LINE 30\IDX:    200
+						{
+							functionName = infoData[infoData.length-3];
+						}
+						else
+						{
+							wrapName = infoData[infoData.length-3];
+						}
+					}
 
 					if(infoData.length === 2)
 					{
@@ -541,17 +550,19 @@ export class DebugParser
 					filePath = this.findPathFileByName(fileName, sourcePaths);
 				}
 
-				if(variableName !== "__func__" && variableName !== "")
+				if(variableName !== "__func__" &&
+					!variableName.includes(".") &&
+					variableName !== "")
 				{
 					let variableType : string = "";
 
 					while(i < (msgLines.length-1))
 					{
-						let arrayData = msgLines[++i].trim();
+						let arrayData = msgLines[++i];
 
-						if(!arrayData.includes("\\") && !arrayData.includes("::"))
+						if(arrayData.charAt(0) === " ")
 						{
-							variableType += arrayData + "\n   ";//full data info
+							variableType += arrayData.trim() + "\n   ";//full data info
 						}
 						else
 						{
@@ -561,7 +572,7 @@ export class DebugParser
 						}
 					}
 
-					let variable = <VariableFileInfo> { filePath, fileName, functionName, variableName, variableType };
+					let variable = <VariableFileInfo> { filePath, fileName, wrapName, functionName, variableName, variableType };
 
 					variableInfo.push(variable);
 				}
@@ -609,6 +620,7 @@ export class DebugParser
 		{
 			for(let i = 0; i < msgLines.length; i++)
 			{
+				let typeArray = false;
 				let nameFunc : string;
 				let nameVar : string;
 				const matcherS = /^\s*(\S+)::(\S+)\\(\S+)\:/;//class::func\var: val
@@ -638,44 +650,57 @@ export class DebugParser
 						}
 						else //local variable
 						{
-							nameFunc = info[1];
+							if(msgLines[i].includes("%LINE "))//MAIN\R\%LINE 30\IDX:    00000200
+							{
+								nameFunc = info[info.length-3];
+							}
+							else
+							{
+								nameFunc = info[info.length-2];
+							}
 						}
 
-						nameVar = info[info.length-1].split(":")[0].trim();
+						let matcherArray = /^\s*(\S+)[\(\[](\d+):(\d+)[\)\]]/;
+						let matches = info[info.length-1].match(matcherArray);
 
-						if(nameVar.includes(StringsPrompt.cppString))
+						if(matches)
 						{
-							nameVar = nameVar.replace(StringsPrompt.cppString, "");
+							typeArray = true;
+							nameVar = matches[1];
 						}
-					}
-
-					if(nameVar.includes("["))//array
-					{
-						nameVar = nameVar.split("[")[0];
+						else
+						{
+							nameVar = info[info.length-1].split(":")[0].trim();
+						}
 					}
 
 					for(let item of variableInfo)
 					{
+						if(item.variablePrefix && nameVar.includes(item.variablePrefix))//for string variable
+						{
+							nameVar = nameVar.replace(item.variablePrefix, "");
+						}
+
 						if(item.functionName === nameFunc &&
 							item.variableName === nameVar)
 						{
-							if(info[info.length-1].includes("["))//array
+							if(typeArray)
 							{
 								item.variableKind = ReflectKind.Array;
 							}
 							else
 							{
-								const matcherS = /^\s*(\S+):\s*(\S+)/;//Struct name: 23
+								const matcherS = /^\s*(\S+):\s*(.*)/;//Struct name: 23
 								let matches = info[info.length-1].match(matcherS);
 
-								if(item.variableType.includes("pointer to"))
+								if(item.variableType.includes("pointer to") ||
+									item.variableType.includes("pointer type"))
 								{
 									if(matches)
 									{
 										if(info[0].charAt(0) === "*")//it is value
 										{
-											let indexStart = info[info.length-1].indexOf(":");
-                        					item.variableValue = info[info.length-1].substr(indexStart+1).trim();
+											item.variableValue = matches[matches.length-1];
 										}
 										else//it is address
 										{
@@ -694,44 +719,57 @@ export class DebugParser
 											}
 											else
 											{
-												let indexStart = info[info.length-1].indexOf(":");
-												item.variableInfo = info[info.length-1].substr(indexStart+1).trim();
+												item.variableInfo = matches[matches.length-1];
 											}
 										}
 									}
 
 									item.variableKind = ReflectKind.Pointer;
 								}
-								else if(item.variableType.includes("typedef string"))
+								else if(item.variableType.includes("basic_string"))
 								{
 									if(matches)
 									{
 										if(item.variableAddress && item.variableAddress !== 0)
 										{
-											let indexStart = info[info.length-1].indexOf(":");
-                        					item.variableValue = info[info.length-1].substr(indexStart+1).trim();
+											item.variableValue = matches[matches.length-1];
 										}
 										else
 										{
-											let value : string = "";
+											let addrString : string = "";
+											item.variablePrefix = "";
 
 											while(i < (msgLines.length-1))
 											{
 												let arrayData = msgLines[++i];
 
-												if(!arrayData.includes("\\"))
+												if(arrayData.charAt(0) === " ")
 												{
-													value += arrayData + "\n";
+													const matcherAddress = /^\s*(\S+):\s*(\d+)/;//name: 23
+													let matchesAddress = arrayData.match(matcherAddress);
+
+													if(matchesAddress)
+													{
+														item.variablePrefix += "." + matchesAddress[1];
+														addrString = matchesAddress[matchesAddress.length-1];
+													}
+													else
+													{
+														let matchesData = arrayData.match(matcherS);
+
+														if(matchesData)
+														{
+															item.variablePrefix += "." + matchesData[1];
+														}
+													}
 												}
 												else
 												{
 													--i;
-													break;
+												 	break;
 												}
 											}
 
-											let indexStart = value.indexOf(":");
-                        					let addrString = value.substr(indexStart+1);
 											let addr = parseInt(addrString, 10);
 
 											if(!Number.isNaN(addr))
@@ -754,12 +792,12 @@ export class DebugParser
 										item.variableKind = ReflectKind.String;
 									}
 								}
-								else if(item.variableType.includes("record type"))
+								else if(item.variableType.includes("record type") ||
+									item.variableType.includes("struct"))
 								{
 									if(matches)
 									{
-										let indexStart = info[info.length-1].indexOf(":");
-										item.variableInfo = info[info.length-1].substr(indexStart+1).trim();
+										item.variableInfo = matches[matches.length-1];
 									}
 
 									item.variableKind = ReflectKind.Struct;
@@ -768,8 +806,7 @@ export class DebugParser
 								{
 									if(matches)//simple variable
 									{
-										let indexStart = info[info.length-1].indexOf(":");
-                        				item.variableValue = info[info.length-1].substr(indexStart+1).trim();
+										item.variableValue = matches[matches.length-1];
 										item.variableKind = ReflectKind.Atomic;
 									}
 									else //stucture
@@ -788,7 +825,7 @@ export class DebugParser
 								{
 									let arrayData = msgLines[++i];
 
-									if(arrayData !== "" && !arrayData.includes("\\"))
+									if(arrayData !== "" && arrayData.charAt(0) === " ")
 									{
 										values += arrayData + "\n";
 									}
@@ -808,6 +845,8 @@ export class DebugParser
 									item.variableValue = "";
 								}
 							}
+
+							break;
 						}
 					}
 				}
@@ -821,8 +860,8 @@ export class DebugParser
 		let countItems : number = 0;
 		let childs : DebugVariable[] = [];
 		let items = variable.variableValue.split("\n");
-		const matcherA = /^\s*\[(\d+)\](\-\[(\d+)\])?:\s*(\S+)/;//Array ([0]-[2]: 23)
-		const matcherS = /^\s*(\S+):\s*(\S+)/;//Struct (name: 23)
+		const matcherA = /^\s*[\[\(](\d+)[\]\)](\-[\[\(](\d+)[\]\)])?:\s*(.*)/;//Array ( [0]-[2]: 23 or (0)-(2): 23 )
+		const matcherS = /^\s*(\S+):\s*(.*)/;//Struct (name: 23)
 
 		while(prm.counter < items.length)
 		{
@@ -844,7 +883,14 @@ export class DebugParser
 					return childs;
 				}
 
-				if(v.includes("["))//array
+				let typeVar = this.getKindVariable(v);
+
+				if(typeVar === ReflectKind.Invalid)
+				{
+					kind = ReflectKind.Invalid;
+					continue;
+				}
+				else if(typeVar === ReflectKind.Array) //array
 				{
 					matches = v.match(matcherA);
 
@@ -858,8 +904,7 @@ export class DebugParser
 							if(itemLevelNext > itemLevel)
 							{
 								kind = this.getKindVariable(items[prm.counter]);
-								let indexStart = v.indexOf(":");
-								itemInfo = v.substr(indexStart+1).trim();
+								itemInfo = matches[matches.length-1];
 							}
 							else
 							{
@@ -876,6 +921,13 @@ export class DebugParser
 					else if((prm.counter) < items.length)
 					{
 						kind = this.getKindVariable(items[prm.counter]);
+
+						if(kind === ReflectKind.Invalid)//???
+						{
+							itemInfo = items[prm.counter].trim();
+							prm.counter++;
+							kind = this.getKindVariable(items[prm.counter]);
+						}
 					}
 					else
 					{
@@ -896,8 +948,7 @@ export class DebugParser
 							if(itemLevelNext > itemLevel)
 							{
 								kind = this.getKindVariable(items[prm.counter]);
-								let indexStart = v.indexOf(":");
-								itemInfo = v.substr(indexStart+1).trim();
+								itemInfo = matches[matches.length-1];
 							}
 							else
 							{
@@ -914,6 +965,13 @@ export class DebugParser
 					else if((prm.counter) < items.length)
 					{
 						kind = this.getKindVariable(items[prm.counter]);
+
+						if(kind === ReflectKind.Invalid)//???
+						{
+							itemInfo = items[prm.counter].trim();
+							prm.counter++;
+							kind = this.getKindVariable(items[prm.counter]);
+						}
 					}
 					else
 					{
@@ -950,13 +1008,25 @@ export class DebugParser
 						{
 							count = 1;
 						}
+
+						if(countItems === 0)
+						{
+							countItems = parseInt(matches[1], 10);
+						}
 					}
 
 					for(let i = 0; i < count; i++)
 					{
 						if(matches.length === 5)
 						{
-							name =  "[" + countItems++ + "]";
+							if(this.typeBracketsSquare === true)
+							{
+								name =  "[" + countItems++ + "]";
+							}
+							else
+							{
+								name =  "(" + countItems++ + ")";
+							}
 						}
 
 						let child = <DebugVariable>
@@ -967,6 +1037,7 @@ export class DebugParser
 							kind: ReflectKind.Atomic,
 							value: value,
 							info: "",
+							prefix: "",
 							len: 0,
 							unreadable: "",
 							fullyQualifiedName: "",
@@ -1007,6 +1078,7 @@ export class DebugParser
 							kind: kind,
 							value: value,
 							info: itemInfo,
+							prefix: "",
 							len: 0,
 							unreadable: "",
 							fullyQualifiedName: "",
@@ -1030,13 +1102,35 @@ export class DebugParser
 
 	private getKindVariable(item : string) : ReflectKind
 	{
-		if(item.includes("["))//array
+		const matcherArrayType = /^\s*[\[\(](\d+)[\]\)]\s*(.*)/;//[2] or (2)
+		const matcherInfoType = /^\s*[\[\(](.*)[\]\)]\s*(.*)/;//[info] or (info)
+		let matches = item.match(matcherArrayType);
+
+		if(matches)//array
 		{
+			if(item.includes("["))
+			{
+				this.typeBracketsSquare = true;
+			}
+			else
+			{
+				this.typeBracketsSquare = false;
+			}
+
 			return ReflectKind.Array;
 		}
 		else //struct
 		{
-			return ReflectKind.Struct;
+			let matchesInfo = item.match(matcherInfoType);
+
+			if(matchesInfo)
+			{
+				return ReflectKind.Invalid;
+			}
+			else
+			{
+				return ReflectKind.Struct;
+			}
 		}
 	}
 
