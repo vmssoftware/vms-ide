@@ -1,0 +1,16 @@
+{
+    "debug.disposing": "Освобождение источников",
+    "quick.build.file": "Компиляция с использованием {0}",
+    "quick.build.release": "Построить release версию",
+    "quick.build.debug": "Построить debug версию",
+    "quick.clean.release": "Очистить release версию",
+    "quick.clean.debug": "Очистить debug версию",
+    "quick.clean.both": "Очистить всё",
+    "mms_exist": "Предыдущий MMS файл переименован в {0}",
+    "opt_exist": "Предыдущий OPT файл переименован в {0}",
+    "com_exist": "Предыдущий COM файл переименован в {0}",
+    "output.cannot_exec": "Не удалось запустить {0}",
+    "debug.cannot_get_ssh_helper": "Не удалось загрузить ssh-helper API",
+    "output.install_ssh": "Установите плагин 'vmssoftware.ssh-helper'",
+    "debug.create_shell": "Создание shell для компиляции"
+}

@@ -1,0 +1,13 @@
+{
+    "rules": {
+        "max-line-length": false,
+		"no-unused-expression": true,
+		"no-duplicate-variable": true,
+		"curly": true,
+		"class-name": true,
+		"semicolon": [ true ],
+		"triple-equals": true,
+		"no-var-keyword": true,
+		"no-bitwise": true
+    }
+}

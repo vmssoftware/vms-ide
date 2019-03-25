@@ -1,0 +1,679 @@
+{
+    "name": "vms-ide",
+    "displayName": "vms-ide",
+    "description": "VMS IDE",
+    "version": "0.0.1",
+    "publisher": "vmssoftware",
+    "repository": {
+        "type": "git",
+        "url": "git:"
+    },
+    "engines": {
+        "vscode": "^1.28.0"
+    },
+    "categories": [
+        "Debuggers",
+        "Other"
+    ],
+    "icon": "images/vms_128x128_v2.png",
+    "activationEvents": [
+        "onView:vmssoftware.project-dep.projectDependencies",
+        "onView:vmssoftware.project-dep.projectDescription",
+        "onCommand:vmssoftware.ssh-helper.editSettings",
+        "onCommand:vmssoftware.synchronizer.stopSync",
+        "onCommand:vmssoftware.synchronizer.buildProject",
+        "onCommand:vmssoftware.synchronizer.reBuildProject",
+        "onCommand:vmssoftware.synchronizer.buildOnlyProject",
+        "onCommand:vmssoftware.synchronizer.reBuildOnlyProject",
+        "onCommand:vmssoftware.synchronizer.createMMS",
+        "onCommand:vmssoftware.synchronizer.cleanProject",
+        "onCommand:vmssoftware.synchronizer.syncProject",
+        "onCommand:vmssoftware.synchronizer.editProject",
+        "onCommand:vmssoftware.synchronizer.changeCRLF",
+        "onCommand:vmssoftware.synchronizer.forceSynchronized",
+        "onCommand:vmssoftware.synchronizer.forceBuilt",
+        "onCommand:vmssoftware.synchronizer.uploadZip",
+        "onCommand:vmssoftware.synchronizer.downloadHeaders",
+        "onDebug",
+        "onCommand:extension.vms-debug.terminal"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "keybindings": [
+            {
+                "command": "extension.vms-debug.terminal",
+                "key": "Ctrl+F6"
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "project-explorer",
+                    "title": "Project Explorer",
+                    "icon": "media/dep.svg"
+                }
+            ]
+        },
+        "views": {
+            "project-explorer": [
+                {
+                    "id": "vmssoftware.project-dep.projectDependencies",
+                    "name": "Project Dependencies"
+                },
+                {
+                    "id": "vmssoftware.project-dep.projectDescription",
+                    "name": "Project description"
+                }
+            ]
+        },
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "vmssoftware.config-helper.test",
+                    "when": "vmssoftware.config-helper.test:enabled"
+                },
+                {
+                    "command": "vmssoftware.ssh-helper.editSettings"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.stopSync",
+                    "when": "vmssoftware.synchronizer.isSync"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.buildProject",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.reBuildProject",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.buildOnlyProject",
+                    "when": "vmssoftware.synchronizer:never"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.reBuildOnlyProject",
+                    "when": "vmssoftware.synchronizer:never"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.cleanProject",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.syncProject",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.editProject",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.changeCRLF",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.uploadZip",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.cleanProject",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.refresh",
+                    "when": "view == vmssoftware.project-dep.projectDependencies",
+                    "group": "navigation"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDescription.refresh",
+                    "when": "view == vmssoftware.project-dep.projectDescription",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.add",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.build",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.rebuild",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.buildOnly",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.rebuildOnly",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.clean",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.remove",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == depends"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDescription.edit",
+                    "when": "view == vmssoftware.project-dep.projectDescription && viewItem == editable"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "extension.vms-debug.terminal",
+                "title": "%vms_debug.extension.vms_terminal%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.config-helper.test",
+                "title": "%config-helper.command.test.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.ssh-helper.editSettings",
+                "title": "%ssh-helper.command.edit.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.refresh",
+                "title": "%synchronizer.command.projectDependencies.refresh.title%",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.add",
+                "title": "%synchronizer.command.projectDependencies.add.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.build",
+                "title": "%synchronizer.command.projectDependencies.build.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.rebuild",
+                "title": "%synchronizer.command.projectDependencies.rebuild.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.buildOnly",
+                "title": "%synchronizer.command.projectDependencies.buildOnly.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.rebuildOnly",
+                "title": "%synchronizer.command.projectDependencies.rebuildOnly.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.clean",
+                "title": "%synchronizer.command.projectDependencies.clean.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.remove",
+                "title": "%synchronizer.command.projectDependencies.remove.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDescription.refresh",
+                "title": "%synchronizer.command.projectDescription.refresh.title%",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDescription.select",
+                "title": "%synchronizer.command.projectDescription.select.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDescription.edit",
+                "title": "%synchronizer.command.projectDescription.edit.title%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.stopSync",
+                "title": "%synchronizer.command.stopSync.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.createMMS",
+                "title": "%synchronizer.command.createMMS.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.buildProject",
+                "title": "%synchronizer.command.buildProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.reBuildProject",
+                "title": "%synchronizer.command.reBuildProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.buildOnlyProject",
+                "title": "%synchronizer.command.buildOnlyProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.reBuildOnlyProject",
+                "title": "%synchronizer.command.reBuildOnlyProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.cleanProject",
+                "title": "%synchronizer.command.cleanProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.syncProject",
+                "title": "%synchronizer.command.syncProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.editProject",
+                "title": "%synchronizer.command.editProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.changeCRLF",
+                "title": "%synchronizer.command.changeCRLF.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.forceSynchronized",
+                "title": "%synchronizer.command.forceSynchronized.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.forceBuilt",
+                "title": "%synchronizer.command.forceBuilt.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.uploadZip",
+                "title": "%synchronizer.command.uploadZip.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.downloadHeaders",
+                "title": "%synchronizer.command.downloadHeaders.title%",
+                "category": "%command.category%"
+            }
+        ],
+        "configuration": {
+            "title": "%configuration.title%",
+            "properties": {
+                "vmssoftware.config-helper.settings.using": {
+                    "scope": "resource",
+                    "type": "string",
+                    "enum": [
+                        "VSC",
+                        "FS",
+                        "VFS"
+                    ],
+                    "enumDescriptions": [
+                        "%config-helper.configuration.vsc.description%",
+                        "%config-helper.configuration.fs.description%",
+                        "%config-helper.configuration.vfs.description%"
+                    ],
+                    "default": "FS",
+                    "description": "%config-helper.configuration.type.description%"
+                },
+                "vmssoftware.config-helper.settings.test": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "test",
+                    "description": "%config-helper.configuration.test.description%"
+                },
+                "vmssoftware.config-helper.settings.debug": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%config-helper.configuration.debug.description%"
+                },
+                "vmssoftware.config-helper.settings.addCalleeInfo": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%config-helper.configuration.addCalleeInfo.description%"
+                },
+                "vmssoftware.ssh-helper.connection.host": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "host",
+                    "description": "%ssh-helper.configuration.host%"
+                },
+                "vmssoftware.ssh-helper.connection.port": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 22,
+                    "description": "%ssh-helper.configuration.port%"
+                },
+                "vmssoftware.ssh-helper.connection.username": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%ssh-helper.configuration.username%"
+                },
+                "vmssoftware.ssh-helper.connection.password": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%ssh-helper.configuration.password%"
+                },
+                "vmssoftware.ssh-helper.connection.keyFile": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%ssh-helper.configuration.keyFile%"
+                },
+                "vmssoftware.ssh-helper.timeouts.cmdTimeout": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 0,
+                    "description": "%ssh-helper.configuration.timeouts.command%"
+                },
+                "vmssoftware.ssh-helper.timeouts.feedbackTimeout": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 0,
+                    "description": "%ssh-helper.configuration.timeouts.feedback%"
+                },
+                "vmssoftware.ssh-helper.timeouts.welcomeTimeout": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 0,
+                    "description": "%ssh-helper.configuration.timeouts.welcome%"
+                },
+                "vmssoftware.ssh-helper.host-collection.hosts": {
+                    "scope": "resource",
+                    "type": "array",
+                    "default": [
+                        {
+                            "label": "",
+                            "host": "",
+                            "port": 22,
+                            "username": "",
+                            "password": "",
+                            "keyFile": ""
+                        }
+                    ],
+                    "description": "%ssh-helper.configuration.hosts-collection%"
+                },
+                "vmssoftware.project-dep.buildType": {
+                    "scope": "resource",
+                    "type": "string",
+                    "enum": [
+                        "DEBUG",
+                        "RELEASE"
+                    ],
+                    "enumDescriptions": [
+                        "Debug",
+                        "Release"
+                    ]
+                },
+                "vmssoftware.project-dep.dependencies": {
+                    "scope": "resource",
+                    "type": "array",
+                    "default": [
+                        {
+                            "folder": "",
+                            "depends": [
+                                ""
+                            ]
+                        }
+                    ],
+                    "description": "Project dependencies"
+                },
+                "vmssoftware.synchronizer.project.break": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "C",
+                    "description": "%synchronizer.properties.project.break.description%"
+                },
+                "vmssoftware.synchronizer.project.builders": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "*.{mms,com}",
+                    "description": "%synchronizer.properties.project.builders.description%"
+                },
+                "vmssoftware.synchronizer.project.exclude": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "**/{.vscode,node-modules}",
+                    "description": "%synchronizer.properties.project.exclude.description%"
+                },
+                "vmssoftware.synchronizer.project.headers": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "*.{h,hpp}",
+                    "description": "%synchronizer.properties.project.headers.description%"
+                },
+                "vmssoftware.synchronizer.project.listing": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "*.lis",
+                    "description": "%synchronizer.properties.project.listing.description%"
+                },
+                "vmssoftware.synchronizer.project.outdir": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "out",
+                    "description": "%synchronizer.properties.project.outdir.description%"
+                },
+                "vmssoftware.synchronizer.project.projectName": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "project",
+                    "description": "%synchronizer.properties.project.projectName.description%"
+                },
+                "vmssoftware.synchronizer.project.projectType": {
+                    "scope": "resource",
+                    "type": "string",
+                    "enum": [
+                        "executable",
+                        "library",
+                        "shareable"
+                    ],
+                    "enumDescriptions": [
+                        "Executable",
+                        "Static library",
+                        "Shareable image"
+                    ],
+                    "default": "executable",
+                    "description": "%synchronizer.properties.project.projectType.description%"
+                },
+                "vmssoftware.synchronizer.project.resource": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "**/resource/**/*.*",
+                    "description": "%synchronizer.properties.project.resource.description%"
+                },
+                "vmssoftware.synchronizer.project.root": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "project",
+                    "description": "%synchronizer.properties.project.root.description%"
+                },
+                "vmssoftware.synchronizer.project.source": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "*.{c,cpp}",
+                    "description": "%synchronizer.properties.project.source.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.downloadNewFiles": {
+                    "scope": "resource",
+                    "type": "string",
+                    "enum": [
+                        "overwrite",
+                        "skip",
+                        "edit"
+                    ],
+                    "enumDescriptions": [
+                        "%synchronizer.properties.synchronize.downloadNewFiles.overwrite.description%",
+                        "%synchronizer.properties.synchronize.downloadNewFiles.skip.description%",
+                        "%synchronizer.properties.synchronize.downloadNewFiles.edit.description%"
+                    ],
+                    "default": "edit",
+                    "description": "%synchronizer.properties.synchronize.downloadNewFiles.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.keepAlive": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%synchronizer.properties.synchronize.keepAlive.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.setTimeAttempts": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 3,
+                    "description": "%synchronizer.properties.synchronize.setTimeAttempts.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.setTimeByShell": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%synchronizer.properties.synchronize.setTimeByShell.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.unzipCmd": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%synchronizer.properties.synchronize.unzipCmd.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.preferZip": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%synchronizer.properties.synchronize.preferZip.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.purge": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%synchronizer.properties.synchronize.purge.description%"
+                }
+            }
+        },
+        "breakpoints": [
+            {
+                "language": "c"
+            },
+            {
+                "language": "cpp"
+            }
+        ],
+        "debuggers": [
+            {
+                "type": "vms_dbg",
+                "label": "%vms_debug.extension.vms_c_debug%",
+                "program": "./out/debugAdapter.js",
+                "runtime": "node",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "program"
+                        ],
+                        "properties": {
+                            "program": {
+                                "type": "string",
+                                "description": "Path from home directory to EXE file.",
+                                "default": ""
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "description": "Automatically stop after launch.",
+                                "default": true
+                            },
+                            "trace": {
+                                "type": "boolean",
+                                "description": "Enable logging of the Debug Adapter Protocol.",
+                                "default": true
+                            },
+                            "typeRun": {
+                                "type": "string",
+                                "enum": [
+                                    "DEBUG",
+                                    "RUN"
+                                ],
+                                "enumDescriptions": [
+                                    "Use for run Debuger",
+                                    "Use for run Program"
+                                ],
+                                "default": "DEBUG",
+                                "description": "Type of runing"
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "vms_dbg",
+                        "request": "launch",
+                        "name": "Settings Debug",
+                        "program": "",
+                        "stopOnEntry": true,
+                        "typeRun": "DEBUG"
+                    },
+                    {
+                        "type": "vms_dbg",
+                        "request": "launch",
+                        "name": "Settings Run",
+                        "program": "",
+                        "typeRun": "RUN"
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "VMS C Debug: Launch",
+                        "description": "A new configuration for 'debugging'",
+                        "body": {
+                            "type": "vms_dbg",
+                            "request": "launch",
+                            "name": "Settings Name",
+                            "program": "[.path]name",
+                            "stopOnEntry": true,
+                            "typeRun": "DEBUG"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    "scripts": {
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "devDependencies": {
+        "@types/micromatch": "^3.1.0",
+        "@types/mocha": "^5.x.x",
+        "@types/node": "^8.10.38",
+        "del": "^3.0.0",
+        "event-stream": "^4.0.1",
+        "gulp": "^3.9.1",
+        "gulp-sourcemaps": "^2.6.4",
+        "gulp-typescript": "^5.0.0-alpha.3",
+        "run-sequence": "^2.2.1",
+        "tslint": "^5.11.0",
+        "typescript": "^3.1.6",
+        "vsce": "^1.53.0",
+        "vscode": "^1.1.21",
+        "vscode-nls-dev": "github:vorfol/vscode-nls-dev"
+    },
+    "dependencies": {
+        "vscode-nls": "^4.0.0",
+        "@types/ssh2": "^0.5.36",
+        "fs-extra": "^7.0.1",
+        "micromatch": "^3.1.10",
+        "vscode-debugadapter": "^1.32.1",
+        "vscode-debugadapter-testsupport": "1.27.0",
+        "await-notify": "^1.0.1",
+        "net": "^1.0.2",
+        "ssh2": "^0.6.1"
+    }
+}
