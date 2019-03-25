@@ -92,8 +92,28 @@ export class SshClient {
         if (this.resolver) {
             let configResolved = await this.resolver.resolveConnectConfig(this.config);
             if (configResolved) {
-                //configResolved = Object.assign({ debug: (s: string) => console.log(s) }, configResolved);
-                configResolved = Object.assign({ algorithms: { serverHostKey: ['ssh-rsa', 'ssh-dss'] } }, configResolved);
+                configResolved = Object.assign(
+                    { 
+                        algorithms: 
+                        { 
+                            serverHostKey: 
+                                [
+                                    'ssh-rsa', 
+                                    'ssh-dss'
+                                ] 
+                        },
+                        // TODO: parse debug output "DEBUG: Remote ident:" 
+                        // and looking for required version
+                        // for example:
+                        // TAZAWA   'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
+                        // BOSTON   'SSH-2.0-Process Software SSH 6.1.5.0 MultiNet'
+                        // REDSOX   'SSH-2.0-Process Software SSH 6.1.5.0 MultiNet'
+                        // BILBO    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
+                        // FRODO    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
+                        // SAREK    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
+                        // debug: (s: string) => this.logFn(LogType.debug, () => s)
+                    }, configResolved
+                );
                 client.connect(configResolved);
             } else {
                 this.logFn(LogType.debug, () => localize("debug.resolver", "no config resolved {0}", this.tag ? " " + this.tag : ""));

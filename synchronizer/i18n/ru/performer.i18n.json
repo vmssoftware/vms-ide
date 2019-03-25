@@ -15,7 +15,7 @@
     "crlf.fail": "Замена CrLf неудачна",
     "crlf.status": "$(search) Замена...",
     "crlf.success": "Замена CrLf удачна",
-    "zip.fail": "Zip failed",
+    "zip.fail": "Zip неудачно",
     "zip.status": "$(search) Zipping...",
     "zip.success": "Zip done",
     "edit.fail": "Редактирование настроек неудачно",

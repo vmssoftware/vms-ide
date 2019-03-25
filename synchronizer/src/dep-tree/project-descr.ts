@@ -32,7 +32,7 @@ export enum CommonFields {
     folder,
     buildType,
     sourceState,
-    bildState,
+    buildState,
     masters,
 }
 
@@ -148,7 +148,7 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
                 // TODO: i18n
                 data = ProjectState.acquire().isSynchronized(this.selectedProject) ? "synchronized" : "modified";
                 break;
-            case CommonFields[CommonFields.bildState]:
+            case CommonFields[CommonFields.buildState]:
                 // TODO: i18n
                 data = ProjectState.acquire().isBuilt(this.selectedProject, ProjectState.acquire().getDefBuildType()) ? "built" : "not built";
                 break;

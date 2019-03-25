@@ -4,6 +4,7 @@ import { ShellParser } from "./shell-parser";
 import { IParseWelcome } from "../api";
 
 import * as nls from "vscode-nls";
+import { SshShell } from "./ssh-shell";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
@@ -33,7 +34,10 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
     ];
 
     private _width = 132;
-    private _setWidth = printLike`\x1B[24;${this._width}R`;
+    private _setWidth = printLike`\x1B[24;${80}R`;
+    private _typeSet = false;
+
+    public static setType = printLike`SET TERM/DEV=VT100/WIDTH=${80}`;
 
     constructor(timeout?: number, logFn?: LogFunction, tag?: string, width?: number) {
         super(timeout, logFn, tag);
@@ -51,12 +55,19 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
             if (promptIdx >= 0) {
                 this.prompt = chunk.slice(promptIdx + 1).toString("utf8");
                 this.logFn(LogType.debug, () => localize("debug.prompt", "vms parse: found prompt '{0}'", this.prompt)); 
-                this.setReady();
+                if (!this._typeSet) {
+                    this.push(ParseWelcomeVms.setType(this._width) + SshShell.eol);
+                    this.logFn(LogType.debug, () => localize("debug.terminal", "vms parse: setup terminal and wait next prompt")); 
+                    this._typeSet = true;
+                } else {
+                    this.setReady();
+                }
             }
             // speed up shell :)
             this.ttCmd.some((tt, idx) => {
                 if (chunk.includes(tt.if)) {
                     this.logFn(LogType.debug, () => localize("debug.tt", "vms parse: found tt {0}", idx)); 
+                    this._typeSet = true;
                     this.push(tt.then);
                     return true;
                 }

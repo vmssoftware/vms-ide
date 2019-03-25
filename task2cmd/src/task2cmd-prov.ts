@@ -15,7 +15,8 @@ export class Task2CmdProvider implements vscode.TaskProvider {
 
     public static taskType = 'task2cmd';
 
-    public listenPath: string;
+    public listenPath: string = "";
+    public listenPort: number = 0;
 
     private server?: net.Server;
     private recv = "";
@@ -26,12 +27,13 @@ export class Task2CmdProvider implements vscode.TaskProvider {
 
         this.logFn = logFn || (() => {});
 
-        this.listenPath = 'vmssoftware.socket';
-        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length) {
-            this.listenPath = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, this.listenPath);
-        }
         if (os.platform() === 'win32') {
+            this.listenPath = 'vmssoftware.socket';
+            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length) {
+                this.listenPath = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, this.listenPath);
+            }
             this.listenPath = "\\\\.\\pipe\\" + this.listenPath;
+            this.logFn(LogType.debug, () => `Built listen path: "${this.listenPath}"`);
         }
 
         this.server = net.createServer((client) => {
@@ -76,9 +78,19 @@ export class Task2CmdProvider implements vscode.TaskProvider {
             this.server = undefined;
         });
 
-        this.server.listen(this.listenPath, () => {
-            //
-        });        
+        switch(os.platform()) {
+            default:
+                this.server.listen(() => {
+                    this.listenPort = this.server!.address().port;
+                    this.logFn(LogType.debug, () => `Listen port: "${this.listenPort}"`);
+                });
+                break;
+            case 'win32':
+                this.server.listen(this.listenPath, () => {
+                    this.logFn(LogType.debug, () => `Listen path: "${this.listenPath}"`);
+                });
+                break;
+        }
     }
 
     public dispose() {
@@ -120,9 +132,12 @@ export class Task2CmdProvider implements vscode.TaskProvider {
                                 switch(os.platform()) {
                                     case 'win32':
                                         task.execution = new vscode.ShellExecution(`cmd`, [`/C`, `echo ${strParams64} >> ${this.listenPath}`]);
+                                        this.logFn(LogType.debug, () => `Execute ECHO`);
                                         break;
                                     default:
-                                        task.execution = new vscode.ShellExecution(`sh`, [`echo ${strParams64} >> ${this.listenPath}`]);
+                                        task.execution = new vscode.ShellExecution(`sh`, [`-c`, `"echo ${strParams64} | nc localhost ${this.listenPort}"`]);
+                                        this.logFn(LogType.debug, () => `Execute NC`);
+                                        break;
                                 }
                                 task.presentationOptions = { echo: false, focus: false, showReuseMessage: false, reveal: 2 };
                                 retTasks.push(task);

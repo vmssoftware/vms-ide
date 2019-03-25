@@ -83,7 +83,7 @@ async function createTerminal() : Promise<void>
 		{
 			if(connection && connection.username)
 			{
-				if(connection.keyFile !== "")
+				if(connection.keyFile)
 				{
 					terminals.startByKey(terminal, connection.host, connection.username, connection.keyFile);
 				}

@@ -75,7 +75,8 @@ export async function findFiles(canReadDir: IReadDirectory,
      */
     async function walk(walkDir: string) {
         walkDir = walkDir.trim();
-        walkDir = walkDir.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
+        // walkDir = walkDir.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
+        walkDir = walkDir.replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
         const fileEntries = await canReadDir.readDirectory(walkDir);
         const cancel = progress ? progress.addProgress(DirectoryToken, 1) : false;
         if (!cancel && fileEntries) {

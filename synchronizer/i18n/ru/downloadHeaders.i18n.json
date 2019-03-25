@@ -1,11 +1,11 @@
 {
-    "ssh-helper.failed": "The extension vmssoftware.ssh-helper isn't found.",
-    "shell.failed": "Cannot create remote shell.",
-    "no-result": "Cannot execute command to get TLB files",
-    "no-tlb": "No *.TLB files found in SYS$LIBRARY",
-    "cd.failed": "Cannot set default directory.",
-    "create.failed": "Cannot create output directory.",
-    "file.extracted": "Extracted: {0}",
-    "del.failed": "Cannot delete intermediate files: {0}",
-    "done": "Well done."
+    "ssh-helper.failed": "Расширение vmssoftware.ssh-helper не найдено.",
+    "shell.failed": "Невозможно создать удалённый SHELL.",
+    "no-result": "Не удалось выполнить команду для получения списка TLB файлов",
+    "no-tlb": "Не найдены *.TLB файлы в папке SYS$LIBRARY",
+    "cd.failed": "Не удалось установить директорию",
+    "create.failed": "Не удалось создать директорию",
+    "file.extracted": "Распакован: {0}",
+    "del.failed": "Не удалось удалить временные файлы: {0}",
+    "done": "Успешное завершение."
 }

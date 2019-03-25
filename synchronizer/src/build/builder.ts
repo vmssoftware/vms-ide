@@ -415,11 +415,13 @@ export class Builder {
         `TYPE_DIR=debug`,
         `CXXFLAGS = ${cxxDebugFlags}`,
         `CCFLAGS = ${cxxDebugFlags}`,
+        `BLISSFLAGS = ${cxxDebugFlags}`,
         `LINKFLAGS = /DEBUG/MAP=$(MMS$TARGET_NAME)${linkCommonFlags}`,
         `.ELSE`,
         `TYPE_DIR=release`,
         `CXXFLAGS = ${cxxCommonFlags}`,
         `CCFLAGS = ${cxxCommonFlags}`,
+        `BLISSFLAGS = ${cxxCommonFlags}`,
         `LINKFLAGS = ${linkCommonFlags}`,
         `.ENDIF`,
         ];
@@ -429,7 +431,7 @@ export class Builder {
             `OUT_DIR = .$(OUTDIR).$(TYPE_DIR)`,
             `OBJ_DIR = $(OUT_DIR).obj`,
             `.SUFFIXES`,
-            `.SUFFIXES .OBJ .CPP .C .CLD .MSG`,
+            `.SUFFIXES .OBJ .CPP .C .CLD .MSG .BLI`,
             `.CPP.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    $(CXX) $(CXXFLAGS) $(MMS$SOURCE)`,
@@ -441,11 +443,14 @@ export class Builder {
             ``,
             `.CLD.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    $SET COMMAND/OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
+            `    SET COMMAND/OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
             ``,
             `.MSG.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    $MESSAGE /OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
+            `    MESSAGE /OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
+            `.BLI.OBJ`,
+            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+            `    BLISS $(BLISSFLAGS) $(MMS$SOURCE)`,
             ``,
         ];
 
@@ -460,9 +465,9 @@ export class Builder {
                 mainModuleLines.push(objectLine);
             }
             if (optLines.length) {
-                mainModuleLines.push(`    LINK $(LINKFLAGS) $(MMS$SOURCE_LIST),[]$(NAME)/OPT`);
+                mainModuleLines.push(`    CXXLINK $(LINKFLAGS) $(MMS$SOURCE_LIST),[]$(NAME)/OPT`);
             } else {
-                mainModuleLines.push(`    LINK $(LINKFLAGS) $(MMS$SOURCE_LIST)`);
+                mainModuleLines.push(`    CXXLINK $(LINKFLAGS) $(MMS$SOURCE_LIST)`);
             }
             mainModuleLines.push(``);
         }
@@ -685,17 +690,17 @@ export class Builder {
         if (output) {
             let retCode = true;
             if (selection.type === "com" || selection.type === "mms") {
-                // just output as is
+                // just output as is, do not download listings
                 for (const line of output) {
                     this.logFn(LogType.information, () => line);
                 }
             } else {
                 // parse
                 retCode = await this.parseProblems(scopeData, output, selection);
-            }
-            if (retCode) {
-                // get listings
-                retCode = await Synchronizer.acquire(this.logFn).downloadListings(scopeData.ensured);
+                if (retCode) {
+                    // get listings. valid only for DEBUG or RELEASE types
+                    retCode = await Synchronizer.acquire(this.logFn).downloadListings(scopeData.ensured);
+                }
             }
             return retCode;
         } else {
@@ -746,7 +751,8 @@ export class Builder {
                 }
                 const file = String(entry.file);
                 let uri = Uri.file(file);
-                if (entry.file !== undefined &&
+                if (!entry.external &&
+                    entry.file !== undefined &&
                     workspace.workspaceFolders) {
                     let localFile = file;
                     // cut cwd

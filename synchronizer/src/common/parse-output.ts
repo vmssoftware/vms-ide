@@ -16,6 +16,7 @@ interface IDiagnostics {
     severity: VmsSeverity;
     message: string;
     type: string;
+    external: boolean;
 }
 
 type IPartialDiagnostics = Partial<IDiagnostics>;
@@ -36,7 +37,8 @@ interface IParseRgx {
 const rgxMsg = /^((%|-)(\S+)-(\S)-(\S*)),\s(.*)$/;
 
 const rgxMsgCXX = /^((%|-)(CXX|CC)-(\S)-(\S*)),\s(.*)$/;
-const rgxPlaceCXX = /^at line number (\d.*) in file (.*)$/;
+const rgxPlaceCXX = /^at line number (\d+) in file (.*)$/;
+const rgxPlaceCXX_TLB = /^at line number (\d+) in module (\S+) of text library (.*)$/;
 const rgxMsgPosCXX = /^(\.*)\^/;
 
 const parseRgxMSG: IParseRgx = {
@@ -188,6 +190,15 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                     diagnostic.file = converter.initial;
                     break;
                 } else {
+                    const nextLineMathed_TLB = nextLine.match(rgxPlaceCXX_TLB);
+                    if (nextLineMathed_TLB) {
+                        diagnostic.line = parseInt(nextLineMathed_TLB[1], 10);
+                        diagnostic.file = nextLineMathed_TLB[2];
+                        const converter = VmsPathConverter.fromVms(diagnostic.file);
+                        diagnostic.file = converter.initial;
+                        diagnostic.external = true;
+                        break;
+                    }
                     diagnostic.message += nextLine;
                     idx++;
                     consume++;

@@ -6,13 +6,23 @@
 	"version": "0.2.0",
     "configurations": [
         {
+            "type": "antlr-debug",
+            "request": "launch",
+            "name": "Debug Current Grammar",
+            // "input": "d:\\wrk\\openvms\\executable\\test.cld",
+            "input": "test.cld",
+            "startRule": "cldContent",
+            "visualParseTree": true
+        },
+        {
             "name": "Extension",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}"
-            ]
+            ],
+            "preLaunchTask": "gulp: build"
         }
     ]
 }

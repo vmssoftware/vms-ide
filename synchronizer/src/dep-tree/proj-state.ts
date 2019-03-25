@@ -29,20 +29,6 @@ export class ProjectState {
 
     private constructor() {
         this.create();
-        vscode.workspace.onDidChangeTextDocument((event) => {
-            const workspaceFolder = vscode.workspace.getWorkspaceFolder(event.document.uri);
-            if (workspaceFolder) {
-                this.setSynchronized(workspaceFolder.name, false);
-            }
-        });
-        vscode.workspace.onDidChangeWorkspaceFolders((event) => {
-            for (const folder of event.added) {
-                this.addFolder(folder);
-            }
-            for (const folder of event.removed) {
-                this.states.delete(folder.name);
-            }
-        });
     }
 
     public create() {

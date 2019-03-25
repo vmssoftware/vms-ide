@@ -25,7 +25,9 @@ export interface ISynchronizeSection  {
     keepAlive: boolean;
     setTimeAttempts: number;
     setTimeByShell: boolean;
-    unzipCmd: string
+    unzipCmd: string;
+    preferZip: boolean;
+    purge: boolean;
 }
 
 export interface ISyncScopeSettings {

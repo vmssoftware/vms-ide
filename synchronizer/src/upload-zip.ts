@@ -85,6 +85,7 @@ export class UploadZip {
                     const answer = await shell.execCmd(cd);
                     if (!answer || answer.length === 0) {
                         this.logFn(LogType.error, () => localize("zip.cd.failed", "Cannot set default directory."));
+                        shell.dispose();
                         return false;
                     }
                     // overwrite always, use current time for timestamping, wait 3sec before rejecting
@@ -98,6 +99,7 @@ export class UploadZip {
                         if (unzipResult && unzipResult.length) {
                             this.logFn(LogType.error, () => localize("zip.unzip.error_output", "Unzip command output:\n {0}", unzipResult.join("\n")));
                         }
+                        shell.dispose();
                         return false;
                     } else {
                         // parse unzip result
@@ -105,12 +107,12 @@ export class UploadZip {
                             if (unzipResult.some((s) => s.startsWith("%DCL-W-IVVERB"))) {
                                 this.logFn(LogType.error, () => localize("zip.unzip.not.installed", "It seems 'unzip' isn't installed" ));
                                 this.logFn(LogType.error, () => localize("zip.unzip.error_output", "Unzip command output:\n {0}", unzipResult.join("\n")));
+                                shell.dispose();
                                 return false;
                             }
                         }
                     }
-                    // 3. force set synchronized
-                    ProjectState.acquire().setSynchronized(ensured.scope, true);
+                    shell.dispose();
                     return true;
                 }
             } else {
