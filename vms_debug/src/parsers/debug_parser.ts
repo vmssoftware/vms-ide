@@ -13,6 +13,8 @@ export enum MessageDebuger
 	msgSteppedOn = "stepped on",
 	msgBreak = "break at",
 	msgBreakOn = "break on",
+	msgInitial = "%DEBUG-I-INITIAL, Language:",
+	msgGoMain = "%DEBUG-I-NOTATMAIN, Type GO to reach MAIN program",
 	msgNoImage = "%DCL-W-ACTIMAGE, error activating image",
 	msgNoSccess = "%DEBUG-E-NOACCESSR, no read access to address",
 	msgNoFind = "%DEBUG-E-NOTRAZERO, Unable to find",

@@ -57,6 +57,7 @@ export class VMSRuntime extends EventEmitter
 	private dbgCmd : DebugCommands;
 	private dbgParser : DebugParser;
 	private varsInfo : HolderDebugVariableInfo;
+	private stopOnEntry : boolean;
 	private debugRun : boolean;
 	private programEnd : boolean;
 	private waitSymbols = new Subject();
@@ -109,6 +110,7 @@ export class VMSRuntime extends EventEmitter
 	// Start executing the given program.
 	public async start(programName: string, stopOnEntry : boolean) : Promise<void>
 	{
+		this.stopOnEntry = stopOnEntry;
 		this.programEnd = false;
 		let configManager = new ConfigManager(this.rootFolderName);
 		let section = await configManager.getProjectSection();
@@ -238,15 +240,6 @@ export class VMSRuntime extends EventEmitter
 		}
 		//set breakpoint
 		await this.setRemoteBreakpointsAll();
-
-		if(stopOnEntry)
-		{
-			this.stepOver();
-		}
-		else
-		{
-			this.continue();
-		}
 
 		vscode.debug.activeDebugConsole.append("\n\x1B[2J\x1B[H");//clean old data from DEBUG CONSOLE
 	}
@@ -1296,6 +1289,24 @@ export class VMSRuntime extends EventEmitter
 				{
 					this.shell.cleanQueueCommands();
 					this.sendEvent('end');//close debugger //Error loading image
+				}
+				else if(messageDebug.includes(MessageDebuger.msgInitial))
+				{
+					if(this.stopOnEntry)
+					{
+						if(messageDebug.includes(MessageDebuger.msgGoMain))
+						{
+							this.continue();
+						}
+						else
+						{
+							this.stepOver();
+						}
+					}
+					else
+					{
+						this.continue();
+					}
 				}
 
 				if(showMsg)

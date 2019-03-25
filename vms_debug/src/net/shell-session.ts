@@ -35,6 +35,7 @@ export class ShellSession
     private extensionCloseCb : Function;
     private queueCmd = new Queue<CommandMessage>();
     private readyCmd : boolean;
+    private completeCmd : boolean;
     private receiveCmd : boolean;
     private disconnect : boolean;
     private currentCmd : CommandMessage;
@@ -133,6 +134,7 @@ export class ShellSession
         {
             this.promptCmd = this.sshShell!.prompt!;//set prompt
             this.readyCmd = true;
+            this.completeCmd = true;
             this.extensionReadyCb();
         }
         else if(data.includes("\x00") && (data.includes(this.promptCmd) || data.includes("DBG> ")))
@@ -195,6 +197,7 @@ export class ShellSession
                     this.currentCmd = new CommandMessage("", "");
                 }
 
+                this.completeCmd = true;
                 this.SendCommandFromQueue();
             }
         }
@@ -259,6 +262,7 @@ export class ShellSession
     {
         this.resultData = "";
         this.readyCmd = true;
+        this.completeCmd = true;
         this.receiveCmd = false;
         this.disconnect = false;
         this.currentCmd = new CommandMessage("", "");
@@ -317,6 +321,7 @@ export class ShellSession
             this.currentCmd = command;
             this.receiveCmd = false;
             this.readyCmd = false;
+            this.completeCmd = false;
 
             result = this.shellParser.push(command.getCommand() + '\r\n');
         }
@@ -326,7 +331,7 @@ export class ShellSession
 
     public SendCommandFromQueue() : void
     {
-        if(this.readyCmd === true)
+        if(this.completeCmd === true)
         {
             if(this.queueCmd.size() > 0)
             {
@@ -339,11 +344,13 @@ export class ShellSession
                     if(!result)
                     {
                         this.readyCmd = true;
+                        this.completeCmd = true;
                     }
                     else
                     {
                         this.queueCmd.pop();
                         this.readyCmd = false;
+                        this.completeCmd = false;
                     }
                 }
             }
