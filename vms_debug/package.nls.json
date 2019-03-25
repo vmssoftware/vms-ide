@@ -1,6 +1,0 @@
-{
-	"extension.vms_c_debug": "VMS Debugger",
-	"extension.vms_connect": "Connect to server",
-	"extension.vms_terminal": "Terminal",
-    "command.category": "OpenVMS"
-}

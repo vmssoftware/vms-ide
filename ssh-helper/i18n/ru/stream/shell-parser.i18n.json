@@ -1,8 +1,0 @@
-{
-    "debug.closed": "ShellParser{0}: закрыт",
-    "debug.error": "ShellParser{1}: ошибка {0}",
-    "debug.chunk": "ShellParser{0}: получены данные",
-    "debug.nobuf": "ShellParser{0}: данные не Buffer",
-    "debug.ready": "ShellParser{0}: готов",
-    "debug.timeout": "ShellParser{0}: таймаут" 
-}
