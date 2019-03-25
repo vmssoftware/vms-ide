@@ -751,7 +751,8 @@ export class Builder {
                 }
                 const file = String(entry.file);
                 let uri = Uri.file(file);
-                if (entry.file !== undefined &&
+                if (!entry.external &&
+                    entry.file !== undefined &&
                     workspace.workspaceFolders) {
                     let localFile = file;
                     // cut cwd
