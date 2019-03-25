@@ -18,7 +18,7 @@ export class ShellParser extends Transform {
 	 */
 	constructor(public dataCb?: (data: string) => void,
 				public closeCb?: (code?: any, signal?: any) => void,
-				public errorCb?: (err) => void,
+				public errorCb?: (err: any) => void,
 				public debugLog?: LogFunction, public tag?: string) {
         super();
         this.on("close", () => {

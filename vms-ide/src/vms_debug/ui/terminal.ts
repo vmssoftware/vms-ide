@@ -39,7 +39,7 @@ export class TerminalVMS
 
 		if((<any>terminal).onDidWriteData)
 		{
-			(<any>terminal).onDidWriteData(data =>
+			(<any>terminal).onDidWriteData((data: any) =>
 			{
 				if(data.includes(this.prompt))
 				{

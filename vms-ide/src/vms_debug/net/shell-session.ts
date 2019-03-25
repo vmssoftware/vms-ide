@@ -1,4 +1,3 @@
-<<<<<<< HEAD:vms-ide/src/vms_debug/net/shell-session.ts
 import { LogFunction, LogType } from "../../common/main";
 
 import { WorkspaceFolder } from "vscode";
@@ -9,16 +8,6 @@ import { SshHelper } from "../../ssh-helper/ssh-helper";
 import { CommandMessage, DebugCmdVMS } from "../command/debug_commands";
 import { Queue } from "../queue/queues";
 import { ShellParser } from "./shell-parser";
-=======
-import { WorkspaceFolder } from 'vscode';
-import { Queue } from '../queue/queues';
-import { DebugCmdVMS, CommandMessage } from '../command/debug_commands';
-import { SshHelper } from '../ext-api/ssh-helper';
-import { LogType, LogFunction } from '@vorfol/common';
-import { GetSshHelperType } from '../ext-api/get-ssh-helper';
-import { ISshShell } from '../ext-api/api';
-import { ShellParser } from './shell-parser';
->>>>>>> 49b7110fc170676e856fc50270442dc2195e513f:vms_debug/src/net/shell-session.ts
 import { OsCmdVMS, OsCommands } from '../command/os_commands';
 
 export enum ModeWork
@@ -42,18 +31,18 @@ export class ShellSession
 {
     private promptCmd : string;
     private mode : ModeWork;
-    private resultData : string;
+    private resultData : string = "";
     private extensionDataCb : Function;
     private extensionReadyCb : Function;
     private extensionCloseCb : Function;
     private queueCmd = new Queue<CommandMessage>();
-    private readyCmd : boolean;
-    private completeCmd : boolean;
-    private receiveCmd : boolean;
-    private disconnect : boolean;
+    private readyCmd : boolean = false;
+    private completeCmd : boolean = false;
+    private receiveCmd : boolean = false;
+    private disconnect : boolean = false;
     private checkVersion : number;
-    private currentCmd : CommandMessage;
-    private previousCmd : CommandMessage;
+    private currentCmd : CommandMessage = new CommandMessage("", "");
+    private previousCmd : CommandMessage = new CommandMessage("", "");
 
     private sshHelper?: SshHelper;
     private sshShell?: ISshShell;
@@ -352,7 +341,7 @@ export class ShellSession
         }
     }
 
-    private ClientErrorCb = (err) : void =>
+    private ClientErrorCb = (err: any) : void =>
     {
         if (this.logFn)
         {

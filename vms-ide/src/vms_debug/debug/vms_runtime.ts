@@ -2,7 +2,6 @@
  * Copyright (C) VMS Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-<<<<<<< HEAD:vms-ide/src/vms_debug/debug/vms_runtime.ts
 import { ftpPathSeparator, LogFunction, LogType } from "../../common/main";
 
 import { EventEmitter } from "events";
@@ -13,19 +12,9 @@ import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { DebugCmdVMS, DebugCommands } from "../command/debug_commands";
 import { OsCommands } from "../command/os_commands";
-=======
-import * as vscode from 'vscode';
-import * as nls from 'vscode-nls';
-import { EventEmitter } from 'events';
-import { ShellSession, ModeWork, TypeDataMessage } from '../net/shell-session';
-import { OsCommands } from '../command/os_commands';
-import { DebugCommands, DebugCmdVMS } from '../command/debug_commands';
-import { DebugParser, MessageDebuger, Parameters } from '../parsers/debug_parser';
-import { LogFunction, LogType, ftpPathSeparator } from '@vorfol/common';
->>>>>>> 49b7110fc170676e856fc50270442dc2195e513f:vms_debug/src/debug/vms_runtime.ts
 import { ConfigManager } from "../ext-api/config_manager";
 import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
-import { DebugParser, MessageDebuger, Parameters, StringsPrompt } from "../parsers/debug_parser";
+import { DebugParser, MessageDebuger, Parameters } from "../parsers/debug_parser";
 import { DebugVariable, HolderDebugVariableInfo, ReflectKind, VariableFileInfo } from "../parsers/debug_variable_info";
 import { Queue } from "../queue/queues";
 
@@ -70,16 +59,12 @@ export class VMSRuntime extends EventEmitter
 	private dbgCmd : DebugCommands;
 	private dbgParser : DebugParser;
 	private varsInfo : HolderDebugVariableInfo;
-<<<<<<< HEAD:vms-ide/src/vms_debug/debug/vms_runtime.ts
 	private stopOnEntry : boolean = false;
-=======
-	private stopOnEntry : boolean;
->>>>>>> 49b7110fc170676e856fc50270442dc2195e513f:vms_debug/src/debug/vms_runtime.ts
 	private debugRun : boolean;
 	private programEnd : boolean;
 	private waitSymbols = new Subject();
 	private waitShellMode = new Subject();
-	private queueWaitVar = new Queue<Subject>();
+	private queueWaitVar = new Queue<any>();
 
 	private stackStartFrame: number = 0;
 	private stackEndFrame: number = 0;
@@ -470,7 +455,6 @@ export class VMSRuntime extends EventEmitter
 			{
 				let wrapFunctionName = "";
 
-<<<<<<< HEAD:vms-ide/src/vms_debug/debug/vms_runtime.ts
 				for(let item of vars)
 				{
 					if(item.functionName === this.currentRoutine)
@@ -485,22 +469,6 @@ export class VMSRuntime extends EventEmitter
 
 				for(let item of vars)
 				{
-=======
-				for(let item of vars)
-				{
-					if(item.functionName === this.currentRoutine)
-					{
-						if(item.wrapName)
-						{
-							wrapFunctionName = item.wrapName;
-							break;
-						}
-					}
-				}
-
-				for(let item of vars)
-				{
->>>>>>> 49b7110fc170676e856fc50270442dc2195e513f:vms_debug/src/debug/vms_runtime.ts
 					if(item.variableName.toLowerCase() === nameVar.toLowerCase())
 					{
 						if(item.functionName === this.currentRoutine ||

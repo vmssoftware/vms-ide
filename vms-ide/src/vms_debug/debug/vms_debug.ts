@@ -2,28 +2,9 @@
  * Copyright (C) VMS Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-<<<<<<< HEAD:vms-ide/src/vms_debug/debug/vms_debug.ts
 import { LogFunction } from "../../common/main";
 
 import { basename } from "path";
-=======
-import {
-	Logger, logger,
-	LoggingDebugSession,
-	InitializedEvent, TerminatedEvent, StoppedEvent, BreakpointEvent, OutputEvent,
-	Thread, StackFrame, Scope, Source, Handles, Breakpoint
-} from 'vscode-debugadapter';
-import { DebugProtocol } from 'vscode-debugprotocol';
-import { basename } from 'path';
-import { VMSRuntime, VMSBreakpoint } from './vms_runtime';
-import { ShellSession, ModeWork, TypeDataMessage } from '../net/shell-session';
-import { DebugCmdVMS } from '../command/debug_commands';
-import { Queue } from '../queue/queues';
-import { LogFunction } from '@vorfol/common';
-import { WorkspaceFolder } from 'vscode';
-import { DebugVariable, ReflectKind } from '../parsers/debug_variable_info';
-const { Subject } = require('await-notify');
->>>>>>> 49b7110fc170676e856fc50270442dc2195e513f:vms_debug/src/debug/vms_debug.ts
 
 const { Subject } = require("await-notify");
 
@@ -37,7 +18,6 @@ import {
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DebugCmdVMS } from "../command/debug_commands";
 import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
-import { StringsPrompt } from "../parsers/debug_parser";
 import { DebugVariable, ReflectKind } from "../parsers/debug_variable_info";
 import { Queue } from "../queue/queues";
 import { VMSBreakpoint, VMSRuntime } from "./vms_runtime";
@@ -92,7 +72,7 @@ export class VMSDebugSession extends LoggingDebugSession
 			let response = this.responseStackTrace.pop();
 
 			response.body = {
-				stackFrames: stack.frames.map(f => new StackFrame(f.index, f.name, this.createSource(f.file), this.convertDebuggerLineToClient(f.line))),
+				stackFrames: stack.frames.map((f:any) => new StackFrame(f.index, f.name, this.createSource(f.file), this.convertDebuggerLineToClient(f.line))),
 				totalFrames: stack.count
 			};
 			this.sendResponse(response);

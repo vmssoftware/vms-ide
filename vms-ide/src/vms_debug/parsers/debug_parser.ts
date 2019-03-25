@@ -49,7 +49,7 @@ export class DebugParser
 	private varsInfo : HolderDebugVariableInfo;
 	private commandDone : boolean;
 	private commandButtonDone : boolean;
-	private typeBracketsSquare : boolean;
+	private typeBracketsSquare : boolean = false;
 	private topicNumberString : Array<number> = new Array<number>();
 	private displayDataString : string[] = ["", "", ""];
 	private framesOld = new Array<any>();
