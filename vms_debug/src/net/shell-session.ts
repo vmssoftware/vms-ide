@@ -6,7 +6,7 @@ import { LogType, LogFunction } from '@vorfol/common';
 import { GetSshHelperType } from '../ext-api/get-ssh-helper';
 import { ISshShell } from '../ext-api/api';
 import { ShellParser } from './shell-parser';
-import { OsCmdVMS } from '../command/os_commands';
+import { OsCmdVMS, OsCommands } from '../command/os_commands';
 
 export enum ModeWork
 {
@@ -38,6 +38,7 @@ export class ShellSession
     private completeCmd : boolean;
     private receiveCmd : boolean;
     private disconnect : boolean;
+    private checkVersion : number;
     private currentCmd : CommandMessage;
     private previousCmd : CommandMessage;
 
@@ -46,8 +47,9 @@ export class ShellSession
 
     private shellParser: ShellParser;
 
-    constructor(public folder: WorkspaceFolder | undefined, ExtensionDataCb: (mode: ModeWork, type: TypeDataMessage, data: string) => void, ExtensionReadyCb: () => void, ExtensionCloseCb: () => void, public logFn?: LogFunction)
+    constructor(public folder: WorkspaceFolder | undefined, ExtensionDataCb: (mode: ModeWork, type: TypeDataMessage, data: string) => void, ExtensionReadyCb: () => void, ExtensionCloseCb: (reasonMessage: string) => void, public logFn?: LogFunction)
     {
+        this.checkVersion = -1;
         this.promptCmd = "";
         this.mode = ModeWork.shell;
         this.extensionDataCb = ExtensionDataCb;
@@ -75,7 +77,7 @@ export class ShellSession
                         this.logFn(LogType.error, () => `Cannot get ssh-helper api`);
                     }
 
-                    this.DisconectSession(true);
+                    this.DisconectSession(true, ": Cannot get ssh-helper api");
 
                     return false;
                 }
@@ -104,6 +106,8 @@ export class ShellSession
         }
         catch(error)
         {
+            let messageErr : string;
+
             if (error instanceof Error)
             {
                 if (this.logFn)
@@ -115,6 +119,8 @@ export class ShellSession
                     this.sshShell.dispose();
                     this.sshShell = undefined;
                 }
+
+                messageErr = error.message;
             }
             else
             {
@@ -122,21 +128,100 @@ export class ShellSession
                 {
                     this.logFn(LogType.debug, () => String(error));
                 }
+
+                messageErr = error;
             }
 
-            this.extensionCloseCb();
+            this.extensionCloseCb(": " + messageErr);
         }
     }
 
     private DataCb = (data: string) : void =>
     {
-        if(this.promptCmd === "")
+        if(this.promptCmd === "" || this.checkVersion !== 0)
         {
-            this.promptCmd = this.sshShell!.prompt!;//set prompt
-            this.readyCmd = true;
-            this.completeCmd = true;
-            this.extensionReadyCb();
+            if(this.checkVersion !== 0 && this.promptCmd !== "")
+            {
+                if(this.checkVersion === 2)
+                {
+                    let check = false;
+                    let matcher = /^[V](\d+).(\d+)-?(\w+)?\s*/;
+                    let matches = data.trim().match(matcher);
+
+                    if(matches && matches.length === 3)//Vx.y
+                    {
+                        let number1 = parseInt(matches[1], 10);
+                        let number2 = parseInt(matches[2], 10);
+
+                        if(number1 > 8)
+                        {
+                            check = true;
+                        }
+                        else if(number1 === 8 && number2 > 4)
+                        {
+                            check = true;
+                        }
+                    }
+                    else if(matches && matches.length === 4)//Vx.y-z
+                    {
+                        let number1 = parseInt(matches[1], 10);
+                        let number2 = parseInt(matches[2], 10);
+
+                        if(number1 > 8)
+                        {
+                            check = true;
+                        }
+                        else if(number1 === 8)
+                        {
+                            if(number2 > 4)
+                            {
+                                check = true;
+                            }
+                            else if(number2 === 4 && matches[3] !== "")
+                            {
+                                check = true;
+                            }
+                        }
+                    }
+
+                    if(check)
+                    {
+                        this.checkVersion = 0;
+                        this.extensionReadyCb();
+                    }
+                    else
+                    {
+                        this.checkVersion = -1;
+                        this.DisconectSession(true, ": OS don't support");
+                    }
+                }
+
+                if(data.includes(this.currentCmd.getBody()))
+                {
+                    this.checkVersion = 2;
+                }
+            }
+            else
+            {
+                this.promptCmd = this.sshShell!.prompt!;//set prompt
+                this.readyCmd = true;
+                this.completeCmd = true;
+
+                if(this.checkVersion === -1)
+                {
+                    this.checkVersion = 1;
+                    let  osCmd = new OsCommands();
+                    this.SendCommand(osCmd.getVersionOS());
+                }
+            }
         }
+        // if(this.promptCmd === "")
+        // {
+        //     this.promptCmd = this.sshShell!.prompt!;//set prompt
+        //     this.readyCmd = true;
+        //     this.completeCmd = true;
+        //     this.extensionReadyCb();
+        // }
         else if(data.includes("\x00") && (data.includes(this.promptCmd) || data.includes("DBG> ")))
         {
             if(this.receiveCmd || data.includes(this.currentCmd.getBody()))
@@ -162,7 +247,7 @@ export class ShellSession
 
                     if (this.disconnect)
                     {
-                        this.DisconectSession(true);//close SSH session
+                        this.DisconectSession(true, ": The program complete");//close SSH session
                     }
                 }
 
@@ -244,7 +329,14 @@ export class ShellSession
             this.logFn(LogType.debug, () => "Connection was closed");
         }
 
-        this.extensionCloseCb();
+        if(code)
+        {
+            this.extensionCloseCb(": code: " + String(code));
+        }
+        else
+        {
+            this.extensionCloseCb("");
+        }
     }
 
     private ClientErrorCb = (err) : void =>
@@ -254,7 +346,7 @@ export class ShellSession
             this.logFn(LogType.error, () => String(err));
         }
 
-        this.extensionCloseCb();
+        this.extensionCloseCb(": " + String(err));
     }
 
 
@@ -364,7 +456,7 @@ export class ShellSession
         this.SendCommandFromQueue();
     }
 
-    public DisconectSession(callCloseCb : boolean)
+    public DisconectSession(callCloseCb : boolean, reasonMessage: string)
     {
         if(this.sshShell)
         {
@@ -375,7 +467,7 @@ export class ShellSession
 
         if(callCloseCb)
         {
-            this.extensionCloseCb();
+            this.extensionCloseCb(reasonMessage);
         }
     }
 

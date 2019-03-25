@@ -65,7 +65,7 @@ export function deactivate()
 {
 	// nothing to do
 	terminals.exit(nameTerminalVMS);
-	shell.DisconectSession(false);
+	shell.DisconectSession(false, "");
 }
 
 
@@ -156,13 +156,13 @@ let ExtensionReadyCb = function() : void
 	logFn(LogType.information, () => message, true);
 };
 
-let ExtensionCloseCb = function() : void
+let ExtensionCloseCb = function(reasonMessage: string) : void
 {
 	statusShell = StatusConnection.StatusDisconnected;
 
 	const message = localize('extention.closed', "Connection is closed");
 	const messageBar = localize('extention.bar.disconnected', "Disconnected");
-	vscode.window.showWarningMessage(message);
+	vscode.window.showWarningMessage(message + reasonMessage);
 	statusConnBar.setMessage(messageBar);
 
 	logFn(LogType.information, () => message, false);
