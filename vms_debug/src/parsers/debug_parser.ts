@@ -17,6 +17,7 @@ export enum MessageDebuger
 	msgGoMain = "%DEBUG-I-NOTATMAIN, Type GO to reach MAIN program",
 	msgNoImage = "%DCL-W-ACTIMAGE, error activating image",
 	msgNoSccess = "%DEBUG-E-NOACCESSR, no read access to address",
+	msgNullPtr = "%DEBUG-W-NULLPTR, cannot dereference null pointer",
 	msgNoFind = "%DEBUG-E-NOTRAZERO, Unable to find",
 	msgUnAlloc = "%DEBUG-W-UNALLOCATED",
 	msgNotAct = "%DEBUG-W-SYMNOTACT",
