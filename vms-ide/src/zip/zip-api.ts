@@ -1,8 +1,8 @@
 import * as fs from "fs";
 import * as arch from "archiver";
 
-import { LogFunction }      from "@vorfol/common";
-import { LogType }          from "@vorfol/common";
+import { LogFunction }      from "../common/main";
+import { LogType }          from "../common/main";
 
 export type Resolve<T> = ((value?: T | PromiseLike<T> | undefined) => void);
 
@@ -52,12 +52,12 @@ export class ZipApi {
             this.clear(true);
         });
 
-        this.archive = arch("zip", {
+        this.archive = arch.create("zip", {
             zlib: { level: 9 }
         });
         
         // good practice to catch warnings (ie stat failures and other non-blocking errors)
-        this.archive.on('warning', (err) => {
+        this.archive.on('warning', (err: any) => {
             if (err.code === 'ENOENT') {
                 // log warning
                 this.logFn(LogType.warning, () => err.message);
@@ -70,7 +70,7 @@ export class ZipApi {
         });
 
         // good practice to catch this error explicitly
-        this.archive.on('error', (err) => {
+        this.archive.on('error', (err: any) => {
             // log err
             this.logFn(LogType.error, () => err.message);
             this.clear(false);
