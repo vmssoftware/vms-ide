@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "vms-ide",
     "description": "VMS IDE",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -37,10 +37,39 @@
         "onCommand:vmssoftware.synchronizer.downloadHeaders",
         "onDebug",
         "onCommand:extension.vms-debug.terminal",
-        "onLanguage:cld"
+        "onLanguage:cld",
+        "onLanguage:msg",
+        "onLanguage:mms",
+        "onCommand:workbench.action.tasks.runTask"
     ],
     "main": "./out/extension",
     "contributes": {
+        "taskDefinitions": [
+            {
+                "type": "task2cmd",
+                "required": [
+                    "command"
+                ],
+                "properties": {
+                    "command": {
+                        "type": "string",
+                        "description": "Command to execute"
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "Label to display"
+                    },
+                    "extension": {
+                        "type": "string",
+                        "description": "Extension which executes command"
+                    },
+                    "parameter": {
+                        "type": "string",
+                        "description": "One string parameter"
+                    }
+                }
+            }
+        ],
         "languages": [
             {
                 "id": "mms",

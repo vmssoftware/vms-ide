@@ -12,12 +12,14 @@ import {activate as SynchronizerExtension} from "./synchronizer/extension";
 import {activate as DebuggerExtension} from "./vms_debug/extension";
 import {activate as CldExtension} from "./cld/extension";
 import {activate as MsgExtension} from "./msg/extension";
+import {activate as Task2CmdExtension} from "./task2cmd/extension";
 
 import {deactivate as deSshHelperExtension} from "./ssh-helper/extension";
 import {deactivate as deSynchronizerExtension} from "./synchronizer/extension";
 import {deactivate as deDebuggerExtension} from "./vms_debug/extension";
 import {deactivate as deCldExtension} from "./cld/extension";
 import {deactivate as deMsgExtension} from "./msg/extension";
+import {deactivate as deTask2CmdExtension} from "./task2cmd/extension";
 
 export async function activate(context: ExtensionContext) {
 
@@ -35,9 +37,12 @@ export async function activate(context: ExtensionContext) {
     await CldExtension(context);
 
     await MsgExtension(context);
+
+    await Task2CmdExtension(context);
 }
 
 export async function deactivate() {
+    await deTask2CmdExtension();
     await deMsgExtension();
     await deCldExtension();
     await deDebuggerExtension();
