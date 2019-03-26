@@ -108,7 +108,7 @@ export class VMSRuntime extends EventEmitter
 	}
 
 	// Start executing the given program.
-	public async start(programName: string, stopOnEntry : boolean) : Promise<void>
+	public async start(programName : string, programArgs : string, stopOnEntry : boolean) : Promise<void>
 	{
 		this.stopOnEntry = stopOnEntry;
 		this.programEnd = false;
@@ -223,7 +223,7 @@ export class VMSRuntime extends EventEmitter
 			this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
 			this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
 			this.shell.SendCommandToQueue(this.dbgCmd.setAbortKey(this.abortKey));
-			this.shell.SendCommandToQueue(this.dbgCmd.run(programName));
+			this.shell.SendCommandToQueue(this.dbgCmd.run(programName, programArgs));
 		}
 		else//reload program
 		{

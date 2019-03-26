@@ -9,6 +9,7 @@ export enum OsCmdVMS
 	osKillProgram = "\x03",
 
 	osRunProgram = "run /nodebug",
+	osRunProgramArgs = "MCR",
 	osRunDbg = "debug /keep",
 	osRunCC = "cc",
 	osRunCOM = "@",
@@ -47,9 +48,16 @@ export class OsCommands
 	}
 
 
-	public runProgram(programName : string) : CommandMessage
+	public runProgram(programName : string, args: string) : CommandMessage
 	{
-		return new CommandMessage(OsCmdVMS.osRunProgram, programName);
+		if(args && args !== "")
+		{
+			return new CommandMessage(OsCmdVMS.osRunProgramArgs, programName + " " + args);
+		}
+		else
+		{
+			return new CommandMessage(OsCmdVMS.osRunProgram, programName);
+		}
 	}
 
 	public runDebug() : CommandMessage

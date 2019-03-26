@@ -276,7 +276,8 @@ export class ShellSession
                     cmd.includes(DebugCmdVMS.dbgStepOver) ||
                     cmd.includes(DebugCmdVMS.dbgStepIn) ||
                     cmd.includes(DebugCmdVMS.dbgStepReturn) ||
-                    cmd.includes(OsCmdVMS.osRunProgram)))
+                    cmd.includes(OsCmdVMS.osRunProgram) ||
+                    cmd.includes(OsCmdVMS.osRunProgramArgs)))
                 {
                     this.previousCmd = this.currentCmd;
                     this.currentCmd = new CommandMessage("", "");
@@ -305,6 +306,7 @@ export class ShellSession
                 cmd.includes(DebugCmdVMS.dbgStepIn) ||
                 cmd.includes(DebugCmdVMS.dbgStepReturn) ||
                 cmd.includes(OsCmdVMS.osRunProgram) ||
+                cmd.includes(OsCmdVMS.osRunProgramArgs) ||
                 cmd === "")
             {
                 if(this.resultData !== "")

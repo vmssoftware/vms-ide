@@ -28,11 +28,13 @@ import { VMSBreakpoint, VMSRuntime } from "./vms_runtime";
  */
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments
 {
-	/** An absolute path to the "program" to debug. */
+	// An absolute path to the "program" to debug.
 	program: string;
-	/** Automatically stop target after launch. If not specified, target does not stop. */
+	// arguments of program
+	arguments: string;
+	// Automatically stop target after launch. If not specified, target does not stop.
 	stopOnEntry?: boolean;
-	/** enable logging the Debug Adapter Protocol */
+	// enable logging the Debug Adapter Protocol
 	trace?: boolean;
 }
 
@@ -180,7 +182,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		await this.configurationDone.wait(1000);
 
 		// start the program in the runtime
-		await this.runtime.start(args.program, !!args.stopOnEntry);
+		await this.runtime.start(args.program, args.arguments, !!args.stopOnEntry);
 
 		this.sendResponse(response);
 	}

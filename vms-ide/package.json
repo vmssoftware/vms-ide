@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "vms-ide",
     "description": "VMS IDE",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -715,6 +715,11 @@
                                 "description": "Path from home directory to EXE file.",
                                 "default": ""
                             },
+                            "arguments": {
+                                "type": "string",
+                                "description": "Arguments of program.",
+                                "default": ""
+                            },
                             "stopOnEntry": {
                                 "type": "boolean",
                                 "description": "Automatically stop after launch.",
@@ -747,6 +752,7 @@
                         "request": "launch",
                         "name": "Settings Debug",
                         "program": "",
+                        "arguments": "",
                         "stopOnEntry": true,
                         "typeRun": "DEBUG"
                     },
@@ -755,6 +761,7 @@
                         "request": "launch",
                         "name": "Settings Run",
                         "program": "",
+                        "arguments": "",
                         "typeRun": "RUN"
                     }
                 ],
@@ -767,6 +774,7 @@
                             "request": "launch",
                             "name": "Settings Name",
                             "program": "[.path]name",
+                            "arguments": "arg1 arg2 arg3",
                             "stopOnEntry": true,
                             "typeRun": "DEBUG"
                         }

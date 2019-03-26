@@ -33,11 +33,11 @@ export class VMSRuntimeRun extends EventEmitter
 	}
 
 	// Start executing the given program.
-	public start(programName: string)
+	public start(programName: string, programArgs : string)
 	{
 		this.shell.resetParameters();
 		this.shell.SetDisconnectInShellSession();
-		this.shell.SendCommandToQueue(this.osCmd.runProgram(programName));
+		this.shell.SendCommandToQueue(this.osCmd.runProgram(programName, programArgs));
 		this.statusProgram = true;
 	}
 

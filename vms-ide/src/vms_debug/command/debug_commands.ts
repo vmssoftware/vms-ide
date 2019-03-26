@@ -79,9 +79,16 @@ export class CommandMessage
 export class DebugCommands
 {
 	//general
-	public run(fileName : string) : CommandMessage
+	public run(fileName : string, args: string) : CommandMessage
 	{
-		return new CommandMessage(DebugCmdVMS.dbgRunExe, fileName);
+		if(args && args !== "")
+		{
+			return new CommandMessage(DebugCmdVMS.dbgRunExe, `/arguments=\"${args}\" ` + fileName);
+		}
+		else
+		{
+			return new CommandMessage(DebugCmdVMS.dbgRunExe, fileName);
+		}		
 	}
 
 	public rerun() : CommandMessage
