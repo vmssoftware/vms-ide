@@ -13,6 +13,7 @@
     },
     "categories": [
         "Debuggers",
+        "Programming Languages",
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
@@ -35,10 +36,64 @@
         "onCommand:vmssoftware.synchronizer.uploadZip",
         "onCommand:vmssoftware.synchronizer.downloadHeaders",
         "onDebug",
-        "onCommand:extension.vms-debug.terminal"
+        "onCommand:extension.vms-debug.terminal",
+        "onLanguage:cld"
     ],
     "main": "./out/extension",
     "contributes": {
+        "languages": [
+            {
+                "id": "mms",
+                "aliases": [
+                    "MMS",
+                    "mms"
+                ],
+                "extensions": [
+                    ".mms"
+                ],
+                "configuration": "mms.language-configuration.json"
+            },
+            {
+                "id": "cld",
+                "aliases": [
+                    "CLD",
+                    "cld"
+                ],
+                "extensions": [
+                    ".cld"
+                ],
+                "configuration": "cld.language-configuration.json"
+            },
+            {
+                "id": "msg",
+                "aliases": [
+                    "MSG",
+                    "msg"
+                ],
+                "extensions": [
+                    ".msg"
+                ],
+                "configuration": "msg.language-configuration.json"
+            }
+
+        ],
+        "grammars": [
+            {
+                "language": "mms",
+                "scopeName": "source.mms",
+                "path": "syntaxes/mms.tmLanguage.json"
+            },
+            {
+                "language": "cld",
+                "scopeName": "source.cld",
+                "path": "syntaxes/cld.tmLanguage.json"
+            },
+            {
+                "language": "msg",
+                "scopeName": "source.msg",
+                "path": "syntaxes/msg.tmLanguage.json"
+            }
+        ],
         "keybindings": [
             {
                 "command": "extension.vms-debug.terminal",
@@ -647,7 +702,10 @@
         ]
     },
     "scripts": {
-        "postinstall": "node ./node_modules/vscode/bin/install"
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "CLD.antlr4ts": "antlr4ts -o src/cld -visitor src/cld/cld.g4",
+        "MSG.antlr4ts": "antlr4ts -o src/msg -visitor src/msg/msg.g4",
+        "MSG.antlr4tsLex": "antlr4ts -o src/msg src/msg/msgLex.g4"
     },
     "devDependencies": {
         "@types/micromatch": "^3.1.0",
@@ -663,6 +721,7 @@
         "typescript": "^3.1.6",
         "vsce": "^1.53.0",
         "vscode": "^1.1.21",
+        "antlr4ts-cli": "^0.5.0-alpha.1",
         "vscode-nls-dev": "github:vorfol/vscode-nls-dev"
     },
     "dependencies": {
@@ -674,6 +733,8 @@
         "vscode-debugadapter-testsupport": "1.27.0",
         "await-notify": "^1.0.1",
         "net": "^1.0.2",
+        "antlr4-c3": "^1.1.11",
+        "antlr4ts": "^0.5.0-alpha.1",
         "ssh2": "^0.6.1"
     }
 }

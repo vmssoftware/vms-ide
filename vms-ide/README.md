@@ -2,22 +2,14 @@
 
 Combined extension "vms-ide".
 
-# Config-helper README
-
-Extension "config-helper".
-
-## Features
+## Config-helper Features
 
 Provides easy way to keep settings in different places, such as:
 - local file system ("FS")
 - visual studio code configuration ("VSC")
 - visual studio code virtual file system ("VFS")
 
-## Requirements
-
-Lates "**common/main**" NPM module.
-
-## Extension Settings
+## Config-helper Settings
 
 To choose where keep the settings, select one of:
 
@@ -27,22 +19,14 @@ To choose where keep the settings, select one of:
 
 -----------------------------------------------------------------------------------------------------------
 
-# OpenVMS SSH
+# SSH-helper Features
 
-This is the README for extension "OpenVms SSH".
-
-## Features
-
-Use command palette to launch **OpenVMS** SSH commands:
+Use command palette to launch **VMS-IDE** SSH commands:
 
 - OpenVMS SSH settings
-    - To fill all suitable [settings](#SSH-Extension-Settings). Unfortunately, user must open **Extensions\OpenVMS SSH** himself. Or type "VMS" in the search line and select **OpenVMS SSH** in results.
+    - To fill all suitable [settings](#SSH-Extension-Settings). User should open **Extensions\VMS-IDE** himself. Or type "VMS" in the search line and select **VMS-IDE** in results.
 
-## Requirements
-
-Latest "**vmssoftware.config-helper**" extension is required. Also latest "**common/main**" NPM module is required.
-
-## SSH Extension Settings
+## SSH-helper Settings
 
 This extension contributes the following settings:
 
@@ -63,16 +47,16 @@ This extension contributes the following settings:
 
 -----------------------------------------------------------------------------------------------------------
 
-# OpenVMS synchronizer
+# Synchronizer
 
 This is the README for extension "OpenVms synchronizer".
 
 ## Features
 
-Use command palette to launch **OpenVMS** synchronizer commands:
+Use command palette to launch **VMS-IDE** synchronizer commands:
 
 - OpenVMS Synchronizer settings
-    - To fill all suitable [settings](#Sync-Extension-Settings). Unfortunately, user must open **Extensions\OpenVMS synchronize** himself. Or type "VMS" in the search line and select **OpenVMS synchronize** in results.
+    - To fill all suitable [settings](#Sync-Extension-Settings). Unfortunately, user must open **Extensions\VMS-IDE** himself. Or type "VMS" in the search line and select **VMS-IDE** in results.
 - Syncronize project files with VMS
     - To syncronize project files with VMS. If password in OpenVMS SSH settings isn't present, the **enter password** dialog will be shown. 
 - Build project files on VMS

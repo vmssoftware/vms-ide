@@ -4,10 +4,10 @@
 		"no-unused-expression": true,
 		"no-duplicate-variable": true,
 		"curly": true,
-		"class-name": true,
+		"class-name": false,
 		"semicolon": [ true ],
 		"triple-equals": true,
 		"no-var-keyword": true,
-		"no-bitwise": true
+		"no-bitwise": false
     }
 }

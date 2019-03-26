@@ -1,0 +1,781 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "MMS",
+	"patterns": 
+	[
+		{
+			"include": "#comment"
+		},
+		{
+			"include": "#rule"
+		},
+		{
+			"include": "#dependency"
+		},
+		{
+			"include": "#mms-directive"
+		},
+		{
+			"include": "#macro-definition"
+		},
+		{
+			"include": "#action-line"
+		},
+		{
+			"match": ".",
+			"name": "invalid.deprecated"
+		}
+	],
+	"repository": 
+	{
+		"comment": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "mms.comment",
+					"begin" : "(!|#)",
+					"beginCaptures" : 
+					{
+					  "0" : 
+					  {
+						"name" : "comment.block.exclamation.mms"
+					  }
+					},
+					"comment": "ends only if no continuation symbol is at the end of the line (may followed by spaces)",
+					"end" : "(.*[^-\\\\\\s])?(?=\\s*$\\n)",
+					"endCaptures" : 
+					{
+						"1" : 
+						{
+							"name" : "comment.block.1.mms"
+						}
+					},
+					"patterns": 
+					[
+						{
+							"comment": "comments with continuation (may followed by spaces)",
+							"match": "(.*([-\\\\]))?\\s*$\\n",
+							"captures": 
+							{
+								"1": 
+								{
+									"name" : "comment.block.2.mms"
+								},
+								"2": 
+								{
+									"name" : "comment.block.continuation.mms"
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		"rule": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "mms.rule",
+					"match": "^(\\.)([^.\\s]+)(\\.)([^.\\s]+)",
+					"captures": 
+					{
+						"1": 
+						{
+							"name": "keyword.control.rule.begin.mms"
+						},
+						"2":
+						{
+							"name": "keyword.control.rule.extension.mms"
+						},
+						"3": 
+						{
+							"name": "keyword.control.rule.begin.mms"
+						},
+						"4":
+						{
+							"name": "keyword.control.rule.extension.mms"
+						}
+					}
+				}
+			]
+		},
+		"mms-directive": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "mms.directive",
+					"begin": "^(\\.)(\\S+)",
+					"beginCaptures": {
+						"1": 
+						{
+							"name": "keyword.control.directives.begin.mms"
+						},
+						"2":
+						{
+							"patterns": 
+							[
+								{
+									"include": "#mms-directive-name"
+								}
+							]
+						}
+					},
+					"comment": "ends only if no continuation symbol is at the end of the line (may followed by spaces and comment)",
+					"end" : "([^!]*[^-\\s!])?(?=\\s*(!.*)?$\\n)",
+					"endCaptures" : 
+					{
+						"1" : 
+						{
+							"patterns": 
+							[
+								{
+									"include" : "#mms-directive-value"
+								}
+							]
+						}
+					},
+					"patterns": 
+					[
+						{
+							"comment": "directive with continuation (may followed by spaces and comment)",
+							"match": "([^!]*([-]))?\\s*(!.*)?$\\n",
+							"captures": 
+							{
+								"1": 
+								{
+									"patterns": 
+									[
+										{
+											"include" : "#mms-directive-value"
+										}
+									]
+								},
+								"2": 
+								{
+									"name" : "markup.italic.directive.continuation.mms"
+								},
+								"3": 
+								{
+									"name" : "comment.block.3.mms"
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		"mms-directive-name": 
+		{
+			"patterns": 
+			[
+				{
+					"comment": "MMS directives",
+					"name": "keyword.control.directives.mms",
+					"match": "(?i)ACTION_STATUS|DEFAULT|ELSE|ELSIF|ENDIF|FIRST|IFDEF|IF|IGNORE_ALL|IGNORE|INCLUDE|LAST|SILENT|SUFFIXES_DELETE|SUFFIXES_AFTER|SUFFIXES_BEFORE|SUFFIXES"
+				},
+				{
+					"comment": "wrong MMS directives",
+					"name": "invalid.illegal.directive.mms",
+					"match": "[\\S]+"
+				}
+			]
+		},
+		"mms-directive-value": 
+		{
+			"patterns": 
+			[
+				{
+					"name" : "markup.italic.directive.value.mms",
+					"match": ".*",
+					"captures":
+					{
+						"0":
+						{
+							"patterns": 
+							[
+								{
+									"include": "#macro-substitution"
+								},
+								{
+									"include": "#string"
+								},
+								{
+									"match": "[-](?=\\s*(!.*)?$)",
+									"name": "markup.italic.directive.continuation.mms"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		"macro-definition":
+		{
+			"patterns": 
+			[
+				{
+					"name": "mms.macro-definition",
+					"begin": "(?i)^([_.a-z$][.$\\w]*)\\s*(=)",
+					"beginCaptures": {
+						"1": 
+						{
+							"patterns": 
+							[
+								{
+									"include": "#macro-name"
+								}
+							]
+						},
+						"2": 
+						{
+							"name": "keyword.operator.macro-define.mms"
+						}
+					},
+					"comment": "ends only if no continuation symbol is at the end of the line (may followed by spaces and comment)",
+					"end" : "([^!]*[^-\\s!])?(?=\\s*(!.*)?$\\n)",
+					"endCaptures": 
+					{
+						"1" : 
+						{
+							"patterns": 
+							[
+								{
+									"include": "#macro-value"
+								}
+							]
+						}
+					},
+					"patterns": 
+					[
+						{
+							"comment": "macro with continuation (may followed by spaces and comment)",
+							"match": "([^!]*([-]))?\\s*(!.*)?$\\n",
+							"captures": 
+							{
+								"1": 
+								{
+									"patterns": 
+									[
+										{
+											"include": "#macro-value"
+										}
+									]
+								},
+								"2": 
+								{
+									"name" : "constant.character.macro-value.continuation.mms"
+								},
+								"3": 
+								{
+									"name" : "comment.block.4.mms"
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		"macro-name":
+		{
+			"patterns": 
+			[
+				{
+					"match": "(?i)[_.a-z$][.$\\w]*",
+					"name": "meta.preprocessor.string.macro-name.mms"
+				}
+			]
+		},
+		"macro-value":
+		{
+			"patterns": 
+			[
+				{
+					"name" : "constant.character.macro-value.mms",
+					"match": ".*",
+					"captures":
+					{
+						"0":
+						{
+							"patterns": 
+							[
+								{
+									"include": "#macro-substitution"
+								},
+								{
+									"include": "#string"
+								},
+								{
+									"match": "[-](?=\\s*(!.*)?$)",
+									"name": "constant.character.macro-value.continuation.mms"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		"action-line": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "mms.action-line",
+					"begin": "(^\\s+)(?=([^!\\s])+)",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "markup.bold.action-line.start.mms"
+						}
+					},
+					"comment": "ends only if no continuation symbol is at the end of the line (may followed by spaces and comment)",
+					"end" : "([^!]*[^-\\s!])?(?=\\s*(!.*)?$\\n)",
+					"endCaptures" : 
+					{
+						"1" : 
+						{
+							"patterns": 
+							[
+								{
+									"include": "#action-with-directives"
+								}
+							]
+						}
+					},
+					"patterns": 
+					[
+						{
+							"comment": "macro with continuation (may followed by spaces and comment)",
+							"match": "([^!]*([-]))?\\s*(!.*)?$\\n",
+							"captures": 
+							{
+								"1": 
+								{
+									"patterns": 
+									[
+										{
+											"include": "#action-with-directives"
+										}
+									]
+								},
+								"2": 
+								{
+									"name" : "markup.bold.action-line.continuation.mms"
+								},
+								"3": 
+								{
+									"name" : "comment.block.5.mms"
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		"action-with-directives": 
+		{
+			"patterns": 
+			[
+				{
+					"match": "([-@\\?]+(?=\\s))",
+					"captures": 
+					{
+						"1": 
+						{
+							"patterns": 
+							[
+								{
+									"include": "#action-directives"
+								}
+							]
+						}
+					}
+				},
+				{
+					"match": "(.*)",
+					"captures": 
+					{
+						"1": 
+						{
+							"patterns": 
+							[
+								{
+									"include": "#action"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		"action-directives": 
+		{
+			"patterns": 
+			[
+				{
+					"match": "-\\?@(\\S+)?|-@\\?(\\S+)?|@-\\?(\\S+)?|@\\?-(\\S+)?|\\?-@(\\S+)?|\\?@-(\\S+)?|-@(\\S+)?|-\\?(\\S+)?|@-(\\S+)?|@\\?(\\S+)?|\\?-(\\S+)?|\\?@(\\S+)?|-(\\S+)?|@(\\S+)?|\\?(\\S+)?",
+					"name": "keyword.control.action.directives.mms",
+					"captures": 
+					{
+						"1":
+						{
+							"name": "invalid.illegal"
+						},
+						"2":
+						{
+							"name": "invalid.illegal"
+						},
+						"3":
+						{
+							"name": "invalid.illegal"
+						},
+						"4":
+						{
+							"name": "invalid.illegal"
+						},
+						"5":
+						{
+							"name": "invalid.illegal"
+						},
+						"6":
+						{
+							"name": "invalid.illegal"
+						},
+						"7":
+						{
+							"name": "invalid.illegal"
+						},
+						"8":
+						{
+							"name": "invalid.illegal"
+						},
+						"9":
+						{
+							"name": "invalid.illegal"
+						},
+						"10":
+						{
+							"name": "invalid.illegal"
+						},
+						"11":
+						{
+							"name": "invalid.illegal"
+						},
+						"12":
+						{
+							"name": "invalid.illegal"
+						},
+						"13":
+						{
+							"name": "invalid.illegal"
+						},
+						"14":
+						{
+							"name": "invalid.illegal"
+						},
+						"15":
+						{
+							"name": "invalid.illegal"
+						}
+					}
+				}
+			]
+		},
+		"action": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "markup.bold.action-line.mms",
+					"match": ".*",
+					"captures":
+					{
+						"0":
+						{
+							"patterns": 
+							[
+								{
+									"include": "#macro-substitution"
+								},
+								{
+									"include": "#string"
+								},
+								{
+									"match": "[-](?=\\s*(!.*)?$)",
+									"name": "markup.bold.action-line.continuation.mms"
+								}												
+							]
+						}
+					}
+				}
+			]
+		},
+		"macro-substitution": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "mms.macro-substitution.simple",
+					"match": "(?i)(\\$\\()([_.a-z$][.$\\w]*)(\\))",
+					"captures": 
+					{
+						"1": 
+						{
+							"name": "constant.regexp.macro-subst.start"
+						},
+						"2": 
+						{
+							"name": "entity.name.class.macro-subst.body"
+						},
+						"3": 
+						{
+							"name": "constant.regexp.macro-subst.end"
+						}
+					}
+				},
+				{
+					"name": "mms.macro-substitution.complex",
+					"begin": "\\$\\(",
+					"beginCaptures": 
+					{
+						"0": 
+						{
+							"name": "constant.regexp.macro-subst.start"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": 
+					{
+						"0":
+						{
+							"name": "constant.regexp.macro-subst.end"
+						}
+					},
+					"patterns": 
+					[
+						{
+							"name": "entity.name.class.macro-subst.body",
+							"begin": "\\S+",
+							"beginCaptures": 
+							{
+								"0":
+								{
+									"patterns": 
+									[
+										{
+											"include": "#text-function"
+										},
+										{
+											"include": "#file-function"
+										},
+										{
+											"include": "#other-function"
+										},
+										{
+											"include": "#illegal-function"
+										}
+									]
+								}
+							},
+							"end": "(?=\\))",
+							"endCaptures": 
+							{
+								"0":
+								{
+									"name": "constant.regexp.macro-subst.end"
+								}
+							},
+							"patterns": 
+							[
+								{
+									"include": "#macro-substitution"
+								},
+								{
+									"include": "#string"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		"text-function": 
+		{
+			"patterns": 
+			[
+				{
+					"comment": "text functions",
+					"name": "entity.name.tag.macro-subst.function",
+					"match": "(?i)ADDPREFIX|ADDSUFFIX|FILTER-OUT|FILTER|FINDSTRING|FIRSTWORD|FOREACH|JOIN|PATSUBST|SORT|STRIP|SUBST|WORD|WORDS"
+				}
+			]
+		},
+		"file-function": 
+		{
+			"patterns": 
+			[
+				{
+					"comment": "functions to work with files",
+					"name": "entity.name.tag.macro-subst.function",
+					"match": "(?i)BASENAME|DIR|FILETYPE|FILEVERSION|NOTDIR|WILDCARD"
+				}
+			]
+		},
+		"other-function": 
+		{
+			"patterns": 
+			[
+				{
+					"comment": "special function",
+					"name": "entity.name.tag.macro-subst.function",
+					"match": "(?i)ORIGIN"
+				}
+			]
+		},
+		"illegal-function": 
+		{
+			"patterns": 
+			[
+				{
+					"comment": "illegal function",
+					"name": "invalid.illegal.macro-subst.function",
+					"match": "[^!]"
+				}
+			]
+		},
+		"dependency": 
+		{
+			"patterns": 
+			[
+				{
+					"name": "mms.dependency",
+					"comment": "TARGET : SOURCE",
+					"begin": "(?i)^([^!.\\s].*)(\\bDEPENDS_ON\\b|\\bADDITIONALLY_DEPENDS_ON\\b|\\s::(?=\\s)|\\s:(?=\\s))",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"patterns":
+							[
+								{
+									"include": "#target"
+								}
+							]
+						},
+						"2":
+						{
+							"name": "strong.depend"
+						}
+					},
+					"end": "([^!]*[^-\\s!])?(?=\\s*(!.*)?$\\n)",
+					"endCaptures": 
+					{
+						"1":
+						{
+							"patterns":
+							[
+								{
+									"include": "#source"
+								}
+							]
+						}
+					},
+					"patterns":
+					[
+						{
+							"comment": "source with continuation (may followed by spaces and comment)",
+							"match": "([^!]*([-]))?\\s*(!.*)?$\\n",
+							"captures": 
+							{
+								"1": 
+								{
+									"patterns": 
+									[
+										{
+											"include": "#source"
+										}
+									]
+								},
+								"2": 
+								{
+									"name" : "constant.character.source.continuation.mms"
+								},
+								"3": 
+								{
+									"name" : "comment.block.6.mms"
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		"target":
+		{
+			"patterns":
+			[
+				{
+					"name": "constant.character.target.mms",
+					"match": ".*",
+					"captures": 
+					{
+						"0":
+						{
+							"patterns": 
+							[
+								{
+									"include": "#macro-substitution"
+								},
+								{
+									"include": "#string"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		"source":
+		{
+			"patterns":
+			[
+				{
+					"name": "constant.character.source.mms",
+					"match": ".*",
+					"captures": 
+					{
+						"0":
+						{
+							"patterns": 
+							[
+								{
+									"include": "#macro-substitution"
+								},
+								{
+									"include": "#string"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		"string": 
+		{
+			"name": "string.quoted.$1.mms",
+			"begin": "(\"|')",
+			"end": "\\1",
+			"patterns": 
+			[
+				{
+					"name": "constant.character.escape.mms",
+					"match": "\\\\."
+				}
+			]
+		}
+	},
+	"scopeName": "source.mms"
+}

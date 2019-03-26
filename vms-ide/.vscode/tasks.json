@@ -12,6 +12,21 @@
             "type": "gulp",
             "task": "package",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "CLD.antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "MSG.antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "MSG.antlr4tsLex",
+            "problemMatcher": []
         }
     ]
 }
