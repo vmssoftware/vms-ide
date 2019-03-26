@@ -5,10 +5,8 @@
 'use strict';
 
 import { LogFunction, LogType } from "../common/main";
-
 const { Subject } = require("await-notify");
 import * as Net from "net";
-
 import { CancellationToken, DebugConfiguration, ProviderResult, WorkspaceFolder } from "vscode";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
@@ -19,7 +17,6 @@ import { createLogFunction } from "./log";
 import { ModeWork, ShellSession, TypeDataMessage } from "./net/shell-session";
 import { StatusBarDebug } from "./ui/status_bar";
 import { TerminalVMS } from "./ui/terminal";
-
 
 
 export enum TypeRunConfig

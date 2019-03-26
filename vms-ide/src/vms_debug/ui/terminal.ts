@@ -1,5 +1,4 @@
 const { Subject } = require("await-notify");
-
 import * as vscode from "vscode";
 import { OsCmdVMS } from "../command/os_commands";
 

@@ -11,15 +11,15 @@ export class StatusBarDebug
 	{
 		this.barMessage.text = `$(bug) ${message}`;
 		this.barMessage.show();
-    }
+	}
 
 	public hideMessage()
 	{
 		this.barMessage.hide();
-    }
+	}
 
 	dispose()
 	{
-        this.barMessage.dispose();
-    }
-}
+		this.barMessage.dispose();
+	}
+}	

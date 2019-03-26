@@ -3,7 +3,6 @@
  *--------------------------------------------------------*/
 
 const { Subject } = require("await-notify");
-
 import {
     InitializedEvent, Logger,
     logger,
@@ -14,7 +13,6 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { LogFunction } from "../../common/main";
 import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
 import { VMSRuntimeRun } from "./vms_runtime_run";
-
 
 
 //This interface describes the vms-nodebug specific launch attributes

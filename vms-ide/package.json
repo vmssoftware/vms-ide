@@ -104,7 +104,6 @@
                 ],
                 "configuration": "msg.language-configuration.json"
             }
-
         ],
         "grammars": [
             {

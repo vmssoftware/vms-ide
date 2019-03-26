@@ -3,11 +3,8 @@
  *--------------------------------------------------------*/
 
 import { LogFunction } from "../../common/main";
-
 import { basename } from "path";
-
 const { Subject } = require("await-notify");
-
 import { WorkspaceFolder } from "vscode";
 import {
     Breakpoint, BreakpointEvent,
@@ -21,6 +18,7 @@ import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
 import { DebugVariable, ReflectKind } from "../parsers/debug_variable_info";
 import { Queue } from "../queue/queues";
 import { VMSBreakpoint, VMSRuntime } from "./vms_runtime";
+
 
 /**
  * This interface describes the vms-debug specific launch attributes

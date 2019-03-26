@@ -3,11 +3,8 @@
  *--------------------------------------------------------*/
 
 import { ftpPathSeparator, LogFunction, LogType } from "../../common/main";
-
 import { EventEmitter } from "events";
-
 const { Subject } = require("await-notify");
-
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { DebugCmdVMS, DebugCommands } from "../command/debug_commands";
@@ -59,7 +56,7 @@ export class VMSRuntime extends EventEmitter
 	private dbgCmd : DebugCommands;
 	private dbgParser : DebugParser;
 	private varsInfo : HolderDebugVariableInfo;
-	private stopOnEntry : boolean = false;
+	private stopOnEntry : boolean;
 	private debugRun : boolean;
 	private programEnd : boolean;
 	private waitSymbols = new Subject();
@@ -101,6 +98,7 @@ export class VMSRuntime extends EventEmitter
 		this.dbgCmd = new DebugCommands();
 		this.dbgParser = new DebugParser();
 		this.varsInfo = new HolderDebugVariableInfo();
+		this.stopOnEntry = false;
 		this.debugRun = false;
 		this.programEnd = false;
 		this.currentFilePath = "";

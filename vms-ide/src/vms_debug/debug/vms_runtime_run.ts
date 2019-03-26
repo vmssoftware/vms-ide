@@ -3,13 +3,13 @@
  *--------------------------------------------------------*/
 
 import { LogFunction, LogType } from "../../common/main";
-
 import { EventEmitter } from "events";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { OsCmdVMS, OsCommands } from "../command/os_commands";
 import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
 import { MessagePrompt } from "../parsers/debug_parser";
+
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
 
