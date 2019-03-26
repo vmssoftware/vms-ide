@@ -4,7 +4,7 @@ import * as path from "path";
 import { GetSshHelperType } from "../ext-api/ext-api";
 import { ProjectState } from "./dep-tree/proj-state";
 import { IEnsured } from "./ensure-settings";
-import { GetZipHelperType } from "./ext-api/get-zip-helper";
+import { GetZipApi } from "../ext-api/ext-api";
 import { FsSource } from "./sync/fs-source";
 import { Synchronizer } from "./sync/synchronizer";
 import { VmsPathConverter } from "./vms/vms-path-converter";
@@ -28,7 +28,7 @@ export class UploadZip {
     public async perform(ensured: IEnsured, clear?: string) {
         if (ensured.scope &&
             ensured.configHelper.workspaceFolder) {
-            const ZipApiType = await GetZipHelperType();
+            const ZipApiType = await GetZipApi();
             if (!ZipApiType) {
                 this.logFn(LogType.error, () => localize("zip.missed", "The extension vmssoftware.zip-helper isn't found."));
                 return false;
