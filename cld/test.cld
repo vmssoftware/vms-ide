@@ -1,3 +1,0 @@
-define 	
-	syntax 		set_disk_syntax
-	disallow 	(<file>active.add or qqq) and ( w and not ( q or any2 (s, w, r, q) or neg p ) ) or not qqq
