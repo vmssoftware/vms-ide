@@ -1,9 +1,10 @@
 export enum DebugCmdVMS
 {
 	dbgRunExe = "run",
-	dbgRerunExe = "rerun/nosave",
+	dbgRerunExe = "rerun",
 	dbgStop = "stop",//pause debuging
 	dbgExit = "exit",//exit from debuging
+	dbgQuit = "quit",
 
 	dbgGo = "go",
 	dbgStep = "step",

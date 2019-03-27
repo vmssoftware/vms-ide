@@ -734,15 +734,17 @@ export class VMSRuntime extends EventEmitter
 		else//enter bebug command
 		{
 			let allow : boolean = true;
-			let command = data.toLowerCase();
+			let command = data.toLowerCase().trim();
 			let parts = command.split(/\s+/);
+			let cmd = parts[0].split(/\//);
 
-			switch(parts[0])
+			switch(cmd[0])
 			{
 				case DebugCmdVMS.dbgRunExe:
 				case DebugCmdVMS.dbgRerunExe:
 				case DebugCmdVMS.dbgStop:
 				case DebugCmdVMS.dbgExit:
+				case DebugCmdVMS.dbgQuit:
 				case DebugCmdVMS.dbgGo:
 				case DebugCmdVMS.dbgStep:
 				case DebugCmdVMS.dbgSelect:
