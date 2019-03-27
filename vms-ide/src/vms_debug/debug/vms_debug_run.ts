@@ -3,7 +3,6 @@
  *--------------------------------------------------------*/
 
 const { Subject } = require("await-notify");
-
 import {
     InitializedEvent, Logger,
     logger,
@@ -16,12 +15,13 @@ import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
 import { VMSRuntimeRun } from "./vms_runtime_run";
 
 
-
 //This interface describes the vms-nodebug specific launch attributes
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments
 {
 	// An absolute path to the "program" to debug.
 	program: string;
+	// arguments of program
+	arguments: string;
 	// enable logging the Debug Adapter Protocol
 	trace?: boolean;
 }
@@ -94,7 +94,7 @@ export class VMSNoDebugSession extends LoggingDebugSession
 		await this.configurationDone.wait(1000);
 
 		// start the program in the runtime
-		this.runtime.start(args.program);
+		this.runtime.start(args.program, args.arguments);
 
 		this.sendResponse(response);
 	}

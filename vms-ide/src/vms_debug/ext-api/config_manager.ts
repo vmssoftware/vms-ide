@@ -1,5 +1,4 @@
 import { IFileEntry, Lock } from "../../common/main";
-
 import * as readline from "readline";
 import { GetSshHelperType } from "../../ext-api/ext-api";
 import { GetSyncApi } from "../../ext-api/ext-api";

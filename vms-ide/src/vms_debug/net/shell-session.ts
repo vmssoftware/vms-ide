@@ -1,7 +1,5 @@
 import { LogFunction, LogType } from "../../common/main";
-
 import { WorkspaceFolder } from "vscode";
-
 import { GetSshHelperType } from "../../ext-api/ext-api";
 import { ISshShell } from "../../ssh-helper/api";
 import { SshHelper } from "../../ssh-helper/ssh-helper";
@@ -9,6 +7,10 @@ import { CommandMessage, DebugCmdVMS } from "../command/debug_commands";
 import { Queue } from "../queue/queues";
 import { ShellParser } from "./shell-parser";
 import { OsCmdVMS, OsCommands } from '../command/os_commands';
+import * as nls from "vscode-nls";
+
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
 
 export enum ModeWork
 {
@@ -21,10 +23,6 @@ export enum TypeDataMessage
     typeCmd = 1,
     typeData,
 }
-
-import * as nls from "vscode-nls";
-nls.config({messageFormat: nls.MessageFormat.both});
-const localize = nls.loadMessageBundle();
 
 
 export class ShellSession
@@ -278,7 +276,8 @@ export class ShellSession
                     cmd.includes(DebugCmdVMS.dbgStepOver) ||
                     cmd.includes(DebugCmdVMS.dbgStepIn) ||
                     cmd.includes(DebugCmdVMS.dbgStepReturn) ||
-                    cmd.includes(OsCmdVMS.osRunProgram)))
+                    cmd.includes(OsCmdVMS.osRunProgram) ||
+                    cmd.includes(OsCmdVMS.osRunProgramArgs)))
                 {
                     this.previousCmd = this.currentCmd;
                     this.currentCmd = new CommandMessage("", "");
@@ -307,6 +306,7 @@ export class ShellSession
                 cmd.includes(DebugCmdVMS.dbgStepIn) ||
                 cmd.includes(DebugCmdVMS.dbgStepReturn) ||
                 cmd.includes(OsCmdVMS.osRunProgram) ||
+                cmd.includes(OsCmdVMS.osRunProgramArgs) ||
                 cmd === "")
             {
                 if(this.resultData !== "")

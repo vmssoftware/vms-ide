@@ -3,13 +3,13 @@
  *--------------------------------------------------------*/
 
 import { LogFunction, LogType } from "../../common/main";
-
 import { EventEmitter } from "events";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { OsCmdVMS, OsCommands } from "../command/os_commands";
 import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
 import { MessagePrompt } from "../parsers/debug_parser";
+
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
 
@@ -33,11 +33,11 @@ export class VMSRuntimeRun extends EventEmitter
 	}
 
 	// Start executing the given program.
-	public start(programName: string)
+	public start(programName: string, programArgs : string)
 	{
 		this.shell.resetParameters();
 		this.shell.SetDisconnectInShellSession();
-		this.shell.SendCommandToQueue(this.osCmd.runProgram(programName));
+		this.shell.SendCommandToQueue(this.osCmd.runProgram(programName, programArgs));
 		this.statusProgram = true;
 	}
 

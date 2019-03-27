@@ -103,7 +103,38 @@
                     ".msg"
                 ],
                 "configuration": "msg.language-configuration.json"
-            }
+            },
+            {
+				"id": "bliss",
+				"extensions": [
+					".bli"
+				]
+			},
+			{
+				"id": "basic",
+				"extensions": [
+					".bas"
+				]
+			},
+			{
+				"id": "cobol",
+				"extensions": [
+					".cob"
+				]
+			},
+			{
+				"id": "fortran",
+				"extensions": [
+					".f77",
+					".f90"
+				]
+			},
+			{
+				"id": "pascal",
+				"extensions": [
+					".pas"
+				]
+			}
         ],
         "grammars": [
             {
@@ -650,7 +681,22 @@
             },
             {
                 "language": "cpp"
-            }
+            },
+			{
+				"language": "bliss"
+			},
+			{
+				"language": "basic"
+			},
+			{
+				"language": "cobol"
+			},
+			{
+				"language": "fortran"
+			},
+			{
+				"language": "pascal"
+			}
         ],
         "debuggers": [
             {
@@ -667,6 +713,11 @@
                             "program": {
                                 "type": "string",
                                 "description": "Path from home directory to EXE file.",
+                                "default": ""
+                            },
+                            "arguments": {
+                                "type": "string",
+                                "description": "Arguments of program.",
                                 "default": ""
                             },
                             "stopOnEntry": {
@@ -701,6 +752,7 @@
                         "request": "launch",
                         "name": "Settings Debug",
                         "program": "",
+                        "arguments": "",
                         "stopOnEntry": true,
                         "typeRun": "DEBUG"
                     },
@@ -709,6 +761,7 @@
                         "request": "launch",
                         "name": "Settings Run",
                         "program": "",
+                        "arguments": "",
                         "typeRun": "RUN"
                     }
                 ],
@@ -721,6 +774,7 @@
                             "request": "launch",
                             "name": "Settings Name",
                             "program": "[.path]name",
+                            "arguments": "arg1 arg2 arg3",
                             "stopOnEntry": true,
                             "typeRun": "DEBUG"
                         }

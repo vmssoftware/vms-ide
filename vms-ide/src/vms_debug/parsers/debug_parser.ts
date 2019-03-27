@@ -1,12 +1,10 @@
 import { ftpPathSeparator } from "../../common/main";
-
 import { readFileSync } from "fs";
 import { CommandMessage, DebugCmdVMS } from "../command/debug_commands";
 import { ShellSession, TypeDataMessage } from "../net/shell-session";
 import { Queue } from "../queue/queues";
 import { HolderDebugFileInfo } from "./debug_file_info";
 import { DebugVariable, HolderDebugVariableInfo, ReflectKind, VariableFileInfo } from "./debug_variable_info";
-
 
 
 export enum MessageDebuger
