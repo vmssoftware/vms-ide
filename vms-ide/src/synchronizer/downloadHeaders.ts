@@ -16,7 +16,7 @@ import { VmsPathConverter } from "./vms/vms-path-converter";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export async function DownloadHeaders(scope: string, logFn: LogFunction, params: string) {
+export async function DownloadHeaders(scope: string, logFn: LogFunction) {
     // tslint:disable-next-line:no-empty
     logFn = logFn || (() => {});
     if (!scope) {
@@ -40,6 +40,7 @@ export async function DownloadHeaders(scope: string, logFn: LogFunction, params:
             return false;
         }
         const sshHelper = new sshHelperType(logFn);
+        sshHelper.clearPasswordCache();
         const shell = await sshHelper.getDefaultVmsShell(ensured.scope);
         if (!shell) {
             logFn(LogType.error, () => localize("shell.failed", "Cannot create remote shell."));

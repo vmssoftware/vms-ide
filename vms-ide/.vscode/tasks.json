@@ -12,6 +12,11 @@
             "type": "npm",
             "script": "VSCE",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "vscode:prepublish",
+            "problemMatcher": []
         }
     ]
 }

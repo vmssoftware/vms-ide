@@ -16,13 +16,14 @@ import { onTheSameVms } from "./on-the-same-vms";
 import { Synchronizer } from "./sync/synchronizer";
 import { UploadZip } from "./upload-zip";
 import { VmsPathConverter } from "./vms/vms-path-converter";
+import { DownloadHeaders } from "./downloadHeaders";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export type AsyncAction = (scope: string, logFn: LogFunction, params?: string) => Promise<boolean>;
 
-export type ActionType = "synchronize" | "build" | "rebuild" | "buildOnly" | "rebuildOnly" | "clean" | "crlf" | "edit settings" | "create mms" | "zip";
+export type ActionType = "synchronize" | "build" | "rebuild" | "buildOnly" | "rebuildOnly" | "clean" | "crlf" | "edit settings" | "create mms" | "zip" | "headers";
 
 export interface IPerform {
     actionFunc: AsyncAction;
@@ -338,6 +339,17 @@ export const actions: IPerform[] = [
         fail: localize("edit.fail", "Edit settings failed"),
         status: localize("edit.status", "Edit settings..."),
         success: localize("edit.success", "Edit settings done"),
+    },
+    {
+        // headers
+        actionFunc: async (scope: string, logFn: LogFunction) => {
+            return DownloadHeaders(scope, logFn);
+        },
+        actionName: "headers",
+        context: CommandContext.isHeaders,
+        fail: localize("headers.fail", "Downloading headers failed"),
+        status: localize("headers.status", "Downloading headers..."),
+        success: localize("headers.success", "Downloading headers done"),
     },
 ];
 
