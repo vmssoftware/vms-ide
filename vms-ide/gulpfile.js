@@ -20,6 +20,7 @@ const tsProject = ts.createProject('tsconfig.json', { typescript });
 const inlineMap = true;
 const inlineSource = false;
 const outDest = 'out';
+const distDest = 'dist';
 
 // If all VS Code langaues are support you can use nls.coreLanguages
 const languages = [{id: 'ru'}];
@@ -28,21 +29,21 @@ gulp.task('default', function(callback) {
 	runSequence('build', callback);
 });
 
-gulp.task('compile', function(callback) {
-	runSequence('clean', 'internal-compile', callback);
-});
+// gulp.task('compile', function(callback) {
+// 	runSequence('clean', 'internal-compile', callback);
+// });
 
 gulp.task('build', function(callback) {
 	runSequence('clean', 'internal-nls-compile', 'add-i18n', callback);
 });
 
-gulp.task('publish', function(callback) {
-	runSequence('build', 'vsce:publish', callback);
-});
+// gulp.task('publish', function(callback) {
+// 	runSequence('build', 'vsce:publish', callback);
+// });
 
-gulp.task('package', function(callback) {
-	runSequence('build', 'vsce:package', callback);
-});
+// gulp.task('package', function(callback) {
+// 	runSequence('build', 'vsce:package', callback);
+// });
 
 gulp.task('clean', function() {
 	return del(['out/**', 'package.nls.*.json', 'i18n-sample*.vsix']);
@@ -54,10 +55,11 @@ function compile(buildNls) {
 	var r = tsProject.src()
 		.pipe(sourcemaps.init())
 		.pipe(tsProject());
-	r.dts.pipe(gulp.dest(outDest));
+	r.dts.pipe(gulp.dest(outDest));	//output d.ts
 	r = r.js
 		.pipe(buildNls ? nls.rewriteLocalizeCalls() : es.through())
 		.pipe(buildNls ? nls.createAdditionalLanguageFiles(languages, 'i18n') : es.through());
+	
 
 	if (inlineMap && inlineSource) {
 		r = r.pipe(sourcemaps.write());
@@ -87,10 +89,10 @@ gulp.task('add-i18n', function() {
 		.pipe(gulp.dest('.'));
 });
 
-gulp.task('vsce:publish', function() {
-	return vsce.publish();
-});
+// gulp.task('vsce:publish', function() {
+// 	return vsce.publish();
+// });
 
-gulp.task('vsce:package', function() {
-	return vsce.createVSIX();
-});
+// gulp.task('vsce:package', function() {
+// 	return vsce.createVSIX();
+// });
