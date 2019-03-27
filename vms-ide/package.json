@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "vms-ide",
     "description": "VMS IDE",
-    "version": "0.0.6",
+    "version": "0.0.8",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",

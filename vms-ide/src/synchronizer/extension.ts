@@ -13,11 +13,10 @@ import { configApi, ensureConfigHelperApi, ensureSettings } from "./ensure-setti
 import { Perform } from "./performer";
 import { SyncApi } from "./sync/sync-api";
 import { Synchronizer } from "./sync/synchronizer";
-
 import { LogFunction, LogType } from "../common/main";
-
 import { collectSplittedByCommas } from "./common/find-files";
-import { DownloadHeaders } from "./downloadHeaders";
+import { GetSshHelperType } from "../ext-api/ext-api";
+import { SshHelper } from "../ssh-helper/ssh-helper";
 
 const locale = env.language ;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -194,6 +193,11 @@ async function createFsWatchers() {
     }
     watchers = [];
     if (workspace.workspaceFolders) {
+        const SshHelperType = GetSshHelperType();
+        let sshHelper: SshHelper | undefined;
+        if (SshHelperType) {
+            sshHelper = new SshHelperType();
+        }
         for (const folder of workspace.workspaceFolders) {
             const ensured = await ensureSettings(folder.name, logFn);
             if (ensured) {
@@ -230,7 +234,13 @@ async function createFsWatchers() {
                 fsWatcher.onDidChange((uri) => {
                     testModifySync(folder.name, uri.fsPath, splittedInclude, options);
                 });
-                watchers.push();
+                watchers.push(fsWatcher);
+
+                if (sshHelper) {
+                    watchers.push(sshHelper.setConfigWatcher(folder.name, () => {
+                        commands.executeCommand("vmssoftware.project-dep.projectDescription.refresh");
+                    }));
+                }
             }
         }
     }
