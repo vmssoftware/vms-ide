@@ -24,7 +24,7 @@
 	"synchronizer.command.buildOnlyProject.title": "Построить только этот проект",
 	"synchronizer.command.reBuildOnlyProject.title": "Перестроить только этот проект",
 	"synchronizer.command.cleanProject.title": "Очистить проект",
-	"synchronizer.command.editProject.title": "Редактировать настройки OpenVMS проекта",
+	"synchronizer.command.editProject.title": "Редактировать настройки VMS проекта",
 	"synchronizer.command.syncProject.title": "Синхронизировать проект с VMS",
 	"synchronizer.command.stopSync.title": "Остановить синхронизацию",
 	"synchronizer.command.createMMS.title": "Создать MMS",

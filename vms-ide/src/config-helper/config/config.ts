@@ -80,12 +80,12 @@ export interface IConfig {
     /**
      * Load configuration from outer storage
      */
-    load(): Promise<CSAResult>;
+    load(storageT?: IConfigStorage): Promise<CSAResult>;
 
     /*
      * Save configuration to outer storage
      */
-    save(): Promise<CSAResult>;
+    save(storageT?: IConfigStorage): Promise<CSAResult>;
 
 }
 

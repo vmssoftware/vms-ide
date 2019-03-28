@@ -32,14 +32,14 @@ export async function activate(context: ExtensionContext) {
         return undefined;
     }
 
-    const syncLog = configApi.createLogFunction("OpenVMS synchronizer");
-    const buildLog = configApi.createLogFunction("OpenVMS builder");
+    const syncLog = configApi.createLogFunction("VMS-IDE Sync");
+    const buildLog = configApi.createLogFunction("VMS-IDE Build");
 
     logFn = syncLog;
 
     setExtensionContext(context);
 
-    syncLog(LogType.debug, () => localize("debug.activated", "OpenVMS extension is activated"));
+    syncLog(LogType.debug, () => localize("debug.activated", "VMS-IDE Sync extension is activated"));
 
     context.subscriptions.push(Synchronizer.acquire(syncLog));
     context.subscriptions.push(Builder.acquire(buildLog));
@@ -184,7 +184,7 @@ export function deactivate() {
         watcher.dispose();
     }
     watchers = [];
-    logFn(LogType.debug, () => localize("debug.deactivated", "OpenVMS extension is deactivated"));
+    logFn(LogType.debug, () => localize("debug.deactivated", "VMS-IDE Sync extension is deactivated"));
 }
 
 async function createFsWatchers() {
@@ -201,6 +201,7 @@ async function createFsWatchers() {
         for (const folder of workspace.workspaceFolders) {
             const ensured = await ensureSettings(folder.name, logFn);
             if (ensured) {
+                // 1. Setup source file watcher 
                 // prepare micromatch
                 const includes = [
                     ensured.projectSection.source,
@@ -236,11 +237,18 @@ async function createFsWatchers() {
                 });
                 watchers.push(fsWatcher);
 
+                // 2. Setup SSH settings watcher 
                 if (sshHelper) {
                     watchers.push(sshHelper.setConfigWatcher(folder.name, () => {
                         commands.executeCommand("vmssoftware.project-dep.projectDescription.refresh");
+                        ProjectState.acquire().setSynchronized(folder.name, false);
                     }));
                 }
+
+                // 3. Setup Project settings watcher 
+                watchers.push(ensured.configHelper.getConfig().onDidLoad(() => {
+                    ProjectState.acquire().setSynchronized(folder.name, false);
+                }));
             }
         }
     }

@@ -24,7 +24,7 @@
     "synchronizer.command.buildOnlyProject.title": "Build only this project",
     "synchronizer.command.reBuildOnlyProject.title": "Re-build only this project",
     "synchronizer.command.cleanProject.title": "Clean project",
-    "synchronizer.command.editProject.title": "Edit OpenVMS project settings",
+    "synchronizer.command.editProject.title": "Edit VMS project settings",
     "synchronizer.command.syncProject.title": "Syncronize project files with VMS",
     "synchronizer.command.stopSync.title": "Stop syncronization",
     "synchronizer.command.createMMS.title": "Create MMS",

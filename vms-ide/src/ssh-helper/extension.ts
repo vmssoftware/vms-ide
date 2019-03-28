@@ -14,7 +14,7 @@ export async function activate(context: vscode.ExtensionContext) {
         return undefined;
     }
 
-    const sshHelper = new SshHelper(configApi.createLogFunction("OpenVMS: SSH"));
+    const sshHelper = new SshHelper(configApi.createLogFunction("VMS-IDE SSH"));
 
     const disposable = vscode.commands.registerCommand("vmssoftware.ssh-helper.editSettings", (scope: string) => {
         let scopes = [scope];

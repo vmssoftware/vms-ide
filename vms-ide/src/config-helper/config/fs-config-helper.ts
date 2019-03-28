@@ -130,7 +130,7 @@ export class FSConfigHelper implements IConfigHelper {
         });
     }
 
-    protected createConcreteFS_Storage(uri: Uri) {
+    protected createConcreteFS_Storage(uri: Uri): IConfigStorage {
         // TODO: test URI and return appropriate FS
         return new FSConfigStorage(uri.fsPath, this.logFn);
     }

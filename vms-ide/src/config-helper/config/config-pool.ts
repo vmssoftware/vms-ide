@@ -88,20 +88,21 @@ export class ConfigPool implements IConfig {
         });
     }
 
-    public load(): Promise<CSAResult> {
+    public load(storageT?: IConfigStorage): Promise<CSAResult> {
+        const storage = storageT || this.storage;
         this.logFn(LogType.debug, () => "load =");
         if (!this.loadPromise) {
             let changed = false;
             this.loadPromise = new Promise<CSAResult>(async (resolve) => {
                 // do load
-                this.storage.fillStart().then(async (started) => {
+                storage.fillStart().then(async (started) => {
                     if (started === CSAResult.ok) {
                         let retCode = CSAResult.ok;
                         for (const [sectionName, cfg] of this.pool) {
                             if (cfg.name() === sectionName) {
                                 const data = cfg.templateToFillFrom();
                                 try {
-                                    const r = await this.storage.fillData(sectionName, data);
+                                    const r = await storage.fillData(sectionName, data);
                                     if (r === CSAResult.ok) {
                                         changed = cfg.fillFrom(data) || changed;
                                     } else {
@@ -116,7 +117,7 @@ export class ConfigPool implements IConfig {
                                 }
                             }
                         }
-                        this.storage.fillEnd().then((ended) => {
+                        storage.fillEnd().then((ended) => {
                             // tslint:disable-next-line:no-bitwise
                             retCode |= ended;
                             resolve(retCode);
@@ -139,12 +140,13 @@ export class ConfigPool implements IConfig {
         return this.loadPromise;
     }
 
-    public save(): Promise<CSAResult> {
+    public save(storageT?: IConfigStorage): Promise<CSAResult> {
+        const storage = storageT || this.storage;
         this.logFn(LogType.debug, () => "save =");
         if (!this.savePromise) {
             this.savePromise = new Promise<CSAResult>(async (resolve) => {
                 // do save
-                this.storage.storeStart().then( async (started) => {
+                storage.storeStart().then( async (started) => {
                     if (started === CSAResult.ok) {
                         let retCode = CSAResult.ok;
                         for (const [sectionName, cfg] of this.pool) {
@@ -152,7 +154,7 @@ export class ConfigPool implements IConfig {
                                 const data = cfg.store();
                                 try {
                                     // tslint:disable-next-line:no-bitwise
-                                    retCode |= await this.storage.storeData(sectionName, data);
+                                    retCode |= await storage.storeData(sectionName, data);
                                 } catch (err) {
                                     this.logFn(LogType.debug, () => localize("config.storedata.failed", "storing data('{0}') failed", sectionName));
                                     this.logFn(LogType.error, () => String(err));
@@ -161,7 +163,7 @@ export class ConfigPool implements IConfig {
                                 }
                             }
                         }
-                        this.storage.storeEnd().then((ended) => {
+                        storage.storeEnd().then((ended) => {
                             // tslint:disable-next-line:no-bitwise
                             retCode |= ended;
                             resolve(retCode);
