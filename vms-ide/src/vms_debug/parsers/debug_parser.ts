@@ -663,7 +663,7 @@ export class DebugParser
 							}
 						}
 
-						let matcherArray = /^\s*(\S+)[\(\[](\d+):(\d+)[\)\]]/;
+						let matcherArray = /^\s*(\S+)[\(\[]([0-9,:]*)[\)\]]/;
 						let matches = info[info.length-1].match(matcherArray);
 
 						if(matches)
@@ -860,10 +860,9 @@ export class DebugParser
 	public parseStructValues(variable: VariableFileInfo, prm : Parameters) : DebugVariable[]
 	{
 		const shiftLevel : number = 4;
-		let countItems : number = 0;
 		let childs : DebugVariable[] = [];
 		let items = variable.variableValue.split("\n");
-		const matcherA = /^\s*[\[\(](\d+)[\]\)](\-[\[\(](\d+)[\]\)])?:\s*(.*)/;//Array ( [0]-[2]: 23 or (0)-(2): 23 )
+		const matcherA = /^\s*[\[\(]([0-9,]*)[\]\)](-[\[\(]([0-9,]*)[\]\)])?:\s*(.*)/;//Array ( [0,2, ...]-[2,5, ...]: 23 or (0)-(2): 23 )
 		const matcherS = /^\s*(\S+):\s*(.*)/;//Struct (name: 23)
 
 		while(prm.counter < items.length)
@@ -991,50 +990,24 @@ export class DebugParser
 
 				if(matches && !goNextLevel)//add item
 				{
-					let count : number = 0;
-					let name : string = "";
+					let itemsArray : string[] = [];
 					let value = matches[matches.length-1];
 					prm.level = itemLevel;
 
 					if(matches.length === 3)//struct info
 					{
-						count = 1;
-						name = matches[1];
+						itemsArray.push(matches[1]);
 					}
 					else if(matches.length === 5)//array  info
 					{
-						if(matches[3])
-						{
-							count = parseInt(matches[3], 10) - parseInt(matches[1], 10) + 1;
-						}
-						else
-						{
-							count = 1;
-						}
-
-						if(countItems === 0)
-						{
-							countItems = parseInt(matches[1], 10);
-						}
+						itemsArray = this.parseItemsArray(v, variable.variableType);
 					}
 
-					for(let i = 0; i < count; i++)
+					for(let nameItem of itemsArray)
 					{
-						if(matches.length === 5)
-						{
-							if(this.typeBracketsSquare === true)
-							{
-								name =  "[" + countItems++ + "]";
-							}
-							else
-							{
-								name =  "(" + countItems++ + ")";
-							}
-						}
-
 						let child = <DebugVariable>
 						{
-							name: name,
+							name: nameItem,
 							addr: 0,
 							type: "atomic",
 							kind: ReflectKind.Atomic,
@@ -1105,7 +1078,7 @@ export class DebugParser
 
 	private getKindVariable(item : string) : ReflectKind
 	{
-		const matcherArrayType = /^\s*[\[\(](\d+)[\]\)]\s*(.*)/;//[2] or (2)
+		const matcherArrayType = /^\s*[\[\(]([0-9,]*)[\]\)]\s*(.*)/;//[2, ...] or (2, ....)
 		const matcherInfoType = /^\s*[\[\(](.*)[\]\)]\s*(.*)/;//[info] or (info)
 		let matches = item.match(matcherArrayType);
 
@@ -1137,11 +1110,111 @@ export class DebugParser
 		}
 	}
 
+	private parseItemsArray(data : string, dimenshen : string) : string[]//[2,10, ...]-[3,2, ...]: 235, bounds: [1:10,1:10, ...]
+	{
+		let parse = true;
+		let itemsStart : number[] = [];
+		let itemsEnd : number[] = [];
+		let itemsMin : number[] = [];
+		let itemsMax : number[] = [];
+		let itemsArray : string[] = [];
+
+		const matcherA = /^\s*[\[\(]([0-9,]*)[\]\)](-[\[\(]([0-9,]*)[\]\)])?:\s*(.*)/;//Array ( [2,10]-[3,2]: 23)
+		const matcherD = /^.*bounds: [\[\(]([0-9,:]*)[\]\)]/;//bounds: [1:10,1:10]
+		let matches = data.match(matcherA);
+		let matchesDim = dimenshen.match(matcherD);
+
+		if(matches && matchesDim && matches.length === 5)
+		{
+			if(!matches[2])
+			{
+				itemsArray.push(data.split(":")[0].trim());
+			}
+			else
+			{
+				let numsStart = matches[1].split(",");
+				let numsEnd = matches[3].split(",");
+				let dimMinMax = matchesDim[1].split(",");
+
+				for(let i = 0; i < numsStart.length; i ++)
+				{
+					itemsStart.push(parseInt(numsStart[i], 10));
+					itemsEnd.push(parseInt(numsEnd[i], 10));
+
+					let dims = dimMinMax[i].split(":");
+					itemsMin.push(parseInt(dims[0], 10));
+					itemsMax.push(parseInt(dims[1], 10));
+				}
+
+				itemsArray.push(this.createItemLabelArray(itemsStart));
+
+				while(parse)
+				{
+					for(let i = itemsStart.length-1; i > -1; i --)
+					{
+						itemsStart[i]++;
+
+						if(itemsStart[i] > itemsMax[i])
+						{
+							itemsStart[i] = itemsMin[i];					
+						}
+						else
+						{
+							break;
+						}
+					}
+
+					parse = false;
+
+					for(let i = 0; i < itemsStart.length; i ++)
+					{
+						if(itemsStart[i] !== itemsEnd[i])
+						{
+							parse = true;
+						}
+					}
+
+					itemsArray.push(this.createItemLabelArray(itemsStart));
+				}
+			}
+		}
+
+		return itemsArray;
+	}
+
+	private createItemLabelArray(itemsStart : number[]) : string
+	{
+		let item : string = "";
+
+		for(let i = 0; i < itemsStart.length; i ++)
+		{
+			if(item === "")
+			{
+				item += String(itemsStart[i]);
+			}
+			else
+			{
+				item += "," + String(itemsStart[i]);
+			}					
+		}
+
+		if(this.typeBracketsSquare === true)
+		{
+			item = "[" + item + "]";
+		}
+		else
+		{
+			item = "(" + item + ")";
+		}
+
+		return item;
+	}
+
+
 	public getVariableFileInfo() : HolderDebugVariableInfo
 	{
 		return this.varsInfo;
 	}
-
 
 	public getCommandStatus() : boolean
 	{
@@ -1150,6 +1223,7 @@ export class DebugParser
 
 		return status;
 	}
+
 	public getCommandButtonStatus() : boolean
 	{
 		let status = this.commandButtonDone;
