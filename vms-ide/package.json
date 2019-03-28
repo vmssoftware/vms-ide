@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "vms-ide",
     "description": "VMS IDE",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -17,7 +17,7 @@
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
-    "main": "./out/extension",
+    "main": "./out/index",
     "activationEvents": [
         "onView:vmssoftware.project-dep.projectDependencies",
         "onView:vmssoftware.project-dep.projectDescription",

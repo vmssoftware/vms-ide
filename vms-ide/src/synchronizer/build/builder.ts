@@ -17,6 +17,7 @@ import { FsSource } from "../sync/fs-source";
 import { ISource } from "../sync/source";
 import { Synchronizer } from "../sync/synchronizer";
 import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
+import { ProjectState } from "../dep-tree/proj-state";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -629,7 +630,13 @@ export class Builder {
                         if (foundCom.length !== 0) {
                             files.push(localComFile);
                         }
-                        return Synchronizer.acquire(this.logFn).uploadFiles(scopeData.ensured, files);
+                        return Synchronizer.acquire(this.logFn).uploadFiles(scopeData.ensured, files)
+                            .then((result) => {
+                                if (result) {
+                                    ProjectState.acquire().setSynchronized(scopeData.ensured.scope!, true);
+                                }
+                                return result;
+                            });
                     }
                     return ok;
                 });
