@@ -1,5 +1,6 @@
 import { commands, Disposable, env, ExtensionContext, extensions, RelativePattern, window, workspace } from "vscode";
 import * as nls from "vscode-nls";
+import * as path from "path";
 
 import micromatch from "micromatch";
 
@@ -139,7 +140,7 @@ export async function activate(context: ExtensionContext) {
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.downloadHeaders", async (scope: string, params: string) => {
-        return DownloadHeaders(scope, syncLog, params);
+        return Perform("headers", scope, syncLog, params);
     }));
 
     const projectDependenciesProvider = new ProjDepProvider();

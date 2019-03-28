@@ -6,6 +6,7 @@ export enum CommandContext {
     isSaving = "vmssoftware.synchronizer.isSaving",
     isCrLf = "vmssoftware.synchronizer.isCrLf",
     isEdit = "vmssoftware.synchronizer.isEdit",
+    isHeaders = "vmssoftware.synchronizer.isHeaders",
 }
 
 export function setContext(context: CommandContext, state: boolean) {

@@ -21,5 +21,8 @@
     "edit.fail": "Редактирование настроек неудачно",
     "edit.status": "Редактирование настроек...",
     "edit.success": "Редактирование настроек завершено",
+    "headers.fail": "Downloading headers failed",
+    "headers.status": "Downloading headers...",
+    "headers.success": "Downloading headers done",
     "error.no_action": "Отсутсвует действие: {0}"
 }

@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "vms-ide",
     "description": "VMS IDE",
-    "version": "0.0.4",
+    "version": "0.0.6",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -17,6 +17,7 @@
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
+    "main": "./out/index",
     "activationEvents": [
         "onView:vmssoftware.project-dep.projectDependencies",
         "onView:vmssoftware.project-dep.projectDescription",
@@ -42,7 +43,6 @@
         "onLanguage:mms",
         "onCommand:workbench.action.tasks.runTask"
     ],
-    "main": "./out/extension",
     "contributes": {
         "taskDefinitions": [
             {
@@ -105,36 +105,36 @@
                 "configuration": "msg.language-configuration.json"
             },
             {
-				"id": "bliss",
-				"extensions": [
-					".bli"
-				]
-			},
-			{
-				"id": "basic",
-				"extensions": [
-					".bas"
-				]
-			},
-			{
-				"id": "cobol",
-				"extensions": [
-					".cob"
-				]
-			},
-			{
-				"id": "fortran",
-				"extensions": [
-					".f77",
-					".f90"
-				]
-			},
-			{
-				"id": "pascal",
-				"extensions": [
-					".pas"
-				]
-			}
+                "id": "bliss",
+                "extensions": [
+                    ".bli"
+                ]
+            },
+            {
+                "id": "basic",
+                "extensions": [
+                    ".bas"
+                ]
+            },
+            {
+                "id": "cobol",
+                "extensions": [
+                    ".cob"
+                ]
+            },
+            {
+                "id": "fortran",
+                "extensions": [
+                    ".f77",
+                    ".f90"
+                ]
+            },
+            {
+                "id": "pascal",
+                "extensions": [
+                    ".pas"
+                ]
+            }
         ],
         "grammars": [
             {
@@ -682,21 +682,21 @@
             {
                 "language": "cpp"
             },
-			{
-				"language": "bliss"
-			},
-			{
-				"language": "basic"
-			},
-			{
-				"language": "cobol"
-			},
-			{
-				"language": "fortran"
-			},
-			{
-				"language": "pascal"
-			}
+            {
+                "language": "bliss"
+            },
+            {
+                "language": "basic"
+            },
+            {
+                "language": "cobol"
+            },
+            {
+                "language": "fortran"
+            },
+            {
+                "language": "pascal"
+            }
         ],
         "debuggers": [
             {
@@ -787,7 +787,9 @@
         "postinstall": "node ./node_modules/vscode/bin/install",
         "CLD.antlr4ts": "antlr4ts -o src/cld -visitor src/cld/cld.g4",
         "MSG.antlr4ts": "antlr4ts -o src/msg -visitor src/msg/msg.g4",
-        "MSG.antlr4tsLex": "antlr4ts -o src/msg src/msg/msgLex.g4"
+        "MSG.antlr4tsLex": "antlr4ts -o src/msg src/msg/msgLex.g4",
+        "vscode:prepublish": "webpack --mode production",
+        "VSCE": "vsce package"
     },
     "devDependencies": {
         "@types/archiver": "^2.1.2",
@@ -801,11 +803,14 @@
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^5.0.0-alpha.3",
         "run-sequence": "^2.2.1",
+        "ts-loader": "^5.3.3",
         "tslint": "^5.11.0",
         "typescript": "^3.1.6",
         "vsce": "^1.53.0",
         "vscode": "^1.1.21",
-        "vscode-nls-dev": "github:vorfol/vscode-nls-dev"
+        "vscode-nls-dev": "github:vorfol/vscode-nls-dev",
+        "webpack": "^4.29.6",
+        "webpack-cli": "^3.3.0"
     },
     "dependencies": {
         "@types/ssh2": "^0.5.36",
@@ -819,6 +824,6 @@
         "ssh2": "^0.6.1",
         "vscode-debugadapter": "^1.32.1",
         "vscode-debugadapter-testsupport": "1.27.0",
-        "vscode-nls": "^4.0.0"
+        "vscode-nls": "github:vorfol/vscode-nls"
     }
 }
