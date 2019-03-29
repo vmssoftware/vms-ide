@@ -1,7 +1,7 @@
 {
     "name": "vms-ide",
     "displayName": "VMS IDE",
-    "description": "OpenVMS IDE extension",
+    "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
     "version": "0.0.10",
     "publisher": "vmssoftware",
     "repository": {
@@ -183,10 +183,6 @@
         "menus": {
             "commandPalette": [
                 {
-                    "command": "vmssoftware.config-helper.test",
-                    "when": "vmssoftware.config-helper.test:enabled"
-                },
-                {
                     "command": "vmssoftware.ssh-helper.editSettings"
                 },
                 {
@@ -289,11 +285,6 @@
             {
                 "command": "extension.vms-debug.terminal",
                 "title": "%vms_debug.extension.vms_terminal%",
-                "category": "%command.category%"
-            },
-            {
-                "command": "vmssoftware.config-helper.test",
-                "title": "%config-helper.command.test.title%",
                 "category": "%command.category%"
             },
             {
@@ -442,12 +433,6 @@
                     ],
                     "default": "FS",
                     "description": "%config-helper.configuration.type.description%"
-                },
-                "vmssoftware.config-helper.settings.test": {
-                    "scope": "resource",
-                    "type": "string",
-                    "default": "test",
-                    "description": "%config-helper.configuration.test.description%"
                 },
                 "vmssoftware.config-helper.settings.debug": {
                     "scope": "resource",
