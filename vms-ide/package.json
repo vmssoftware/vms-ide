@@ -232,6 +232,10 @@
                 {
                     "command": "vmssoftware.synchronizer.cleanProject",
                     "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.downloadHeaders",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld && !vmssoftware.synchronizer.isHeaders"
                 }
             ],
             "view/title": [
