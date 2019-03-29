@@ -17,7 +17,7 @@
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
-    "main": "./out/index",
+    "main": "./out/extension",
     "activationEvents": [
         "onView:vmssoftware.project-dep.projectDependencies",
         "onView:vmssoftware.project-dep.projectDescription",
@@ -767,7 +767,7 @@
                 ],
                 "configurationSnippets": [
                     {
-                        "label": "VMS C Debug: Launch",
+                        "label": "VMS-IDE: Launch",
                         "description": "A new configuration for 'debugging'",
                         "body": {
                             "type": "vms_dbg",

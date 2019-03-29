@@ -80,6 +80,7 @@ export class VMSRuntime extends EventEmitter
 	private breakPointsRem = new Map<string, VMSBreakpoint[]>();
 	// maps of VSM watchpoints
 	private watchPoints = new Map<string, VMSWatchpoint[]>();
+	private watchPointsSet = new Map<string, VMSWatchpoint[]>();
 
 	// since we want to send breakpoint events, we will assign an id to every event
 	// so that the frontend can match events with breakpoints.
@@ -366,7 +367,37 @@ export class VMSRuntime extends EventEmitter
 			let wpChanged = false;
 			let wpIndex = -1;
 			let currWps = this.watchPoints.get("keyWatchPoints");
+			let setWps = this.watchPointsSet.get("keyWatchPointsSet");
+
 			params = params.toLowerCase();
+
+			if(params.includes("()"))
+			{
+				if(!setWps)
+				{
+					setWps = new Array<VMSWatchpoint>();
+				}
+
+				const wp = <VMSWatchpoint> { name: nameVar, params: params };
+
+				for(let wps of setWps)//finding watchpoint
+				{
+					if(wps.name === nameVar)
+					{
+						wpFound = true;
+						break;
+					}
+				}
+
+				if(!wpFound)
+				{
+					setWps.push(wp);
+					this.watchPointsSet.delete("keyWatchPointsSet");
+					this.watchPointsSet.set("keyWatchPointsSet", setWps);
+				}				
+			}
+
+			wpFound = false;
 
 			if (currWps)
 			{
@@ -431,6 +462,54 @@ export class VMSRuntime extends EventEmitter
 				}
 			}
 		}
+	}
+
+	private checkWatchPoints() : void
+	{
+		let verWps : VMSWatchpoint[] = [];
+		let currWps = this.watchPoints.get("keyWatchPoints");
+		let setWps = this.watchPointsSet.get("keyWatchPointsSet");
+
+		if(!setWps)
+		{
+			if (currWps)
+			{
+				for(let wp of currWps)
+				{
+					this.shell.SendCommandToQueue(this.dbgCmd.watchPointRemove(wp.name));
+				}
+
+				this.watchPoints.delete("keyWatchPoints");
+			}
+		}
+		else if (currWps)
+		{
+			let wpFind : boolean;
+
+			for(let wpc of currWps)
+			{
+				wpFind = false;
+
+				for(let wps of setWps)
+				{
+					if(wpc.name === wps.name)
+					{
+						verWps.push(wpc);
+						wpFind = true;
+						break;
+					}
+				}
+				
+				if(!wpFind)
+				{
+					this.shell.SendCommandToQueue(this.dbgCmd.watchPointRemove(wpc.name));
+				}				
+			}
+		}
+
+		this.watchPoints.delete("keyWatchPoints");
+		this.watchPoints.set("keyWatchPoints", verWps);
+		this.watchPointsSet.delete("keyWatchPointsSet");
 	}
 
 	public async getVariable(nameVar : string) : Promise<Array<DebugVariable>>
@@ -542,6 +621,9 @@ export class VMSRuntime extends EventEmitter
 	public async getVariables(id : string) : Promise<Array<DebugVariable>>
 	{
 		const variables = new Array<DebugVariable>();
+
+		//check watch points
+		this.checkWatchPoints();
 
 		if (id !== null)
 		{
