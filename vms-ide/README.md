@@ -8,24 +8,24 @@ The extension allows to upload/download project to/from OpenVMS machine, keep so
 
 ## Commands
 
-| Command name | Description |
-| --- | --- |
-| `extension.vms-debug.terminal` | Open VMS terminal |
-| `vmssoftware.ssh-helper.editSettings` | Edit connection settings |
-| `vmssoftware.synchronizer.stopSync` | Stop syncronization |
-| `vmssoftware.synchronizer.createMMS` | Create default MMS |
-| `vmssoftware.synchronizer.buildProject` | Build project on VMS with its dependencies |
-| `vmssoftware.synchronizer.reBuildProject` | Re-build project on VMS with its dependencies |
-| `vmssoftware.synchronizer.buildOnlyProject` | Build only this project |
-| `vmssoftware.synchronizer.reBuildOnlyProject` | Re-build only this project |
-| `vmssoftware.synchronizer.cleanProject` | Clean project, delete files from output folder |
-| `vmssoftware.synchronizer.syncProject` | Syncronize project files with VMS |
-| `vmssoftware.synchronizer.editProject` | Edit project settings |
-| `vmssoftware.synchronizer.changeCRLF` | Change CR/LF to LF for all source files |
-| `vmssoftware.synchronizer.forceSynchronized` | Force synchronized status |
-| `vmssoftware.synchronizer.forceBuilt` | Force built status |
-| `vmssoftware.synchronizer.uploadZip` | Upload project files using Zip |
-| `vmssoftware.synchronizer.downloadHeaders` | Download system headers from VMS |
+| Command path | Command name | Description |
+| --- | --- | --- |
+| `extension.vms-debug.terminal` | Terminal | Open VMS terminal |
+| `vmssoftware.ssh-helper.editSettings` | Edit ssh-helper settings | Edit connection settings |
+| `vmssoftware.synchronizer.stopSync` | Stop syncronization | Stop syncronization |
+| `vmssoftware.synchronizer.createMMS` | Create MMS | Create default MMS |
+| `vmssoftware.synchronizer.buildProject` | Build on VMS | Build project on VMS with its dependencies |
+| `vmssoftware.synchronizer.reBuildProject` | Re-build on VMS | Re-build project on VMS with its dependencies |
+| `vmssoftware.synchronizer.buildOnlyProject` | Build only this project | Build only this project, without dependencies |
+| `vmssoftware.synchronizer.reBuildOnlyProject` | Re-build only this project | Re-build only this project, without dependencies |
+| `vmssoftware.synchronizer.cleanProject` | Clean project | Clean project, delete files from output folder |
+| `vmssoftware.synchronizer.syncProject` | Syncronize project files with VMS | Syncronize project files with VMS |
+| `vmssoftware.synchronizer.editProject` | Edit VMS project settings | Edit project settings |
+| `vmssoftware.synchronizer.changeCRLF` | Change CRLF to LF for all source files | Change CRLF to LF for all source files |
+| `vmssoftware.synchronizer.forceSynchronized` | Force synchronized status | Force synchronized status |
+| `vmssoftware.synchronizer.forceBuilt` | Force build status | Force build status |
+| `vmssoftware.synchronizer.uploadZip` | Upload all via Zip | Upload project files using Zip |
+| `vmssoftware.synchronizer.downloadHeaders` | Download system headers | Download system headers from VMS |
 
 ## Settings
 

@@ -1,8 +1,8 @@
 {
     "name": "vms-ide",
-    "displayName": "vms-ide",
-    "description": "VMS IDE",
-    "version": "0.0.9",
+    "displayName": "VMS IDE",
+    "description": "OpenVMS IDE extension",
+    "version": "0.0.10",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
