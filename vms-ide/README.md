@@ -66,13 +66,13 @@ The extension allows to upload/download project to/from OpenVMS machine, keep so
 | `vmssoftware.synchronizer.synchronize.purge` | Synchronizer › Synchronize: Purge | boolean | Execute PURGE command after uploding |
 -----------------------------------------------------------------------------------------------------------
 
-## Place
+### Place
 
 * `FS` - save settings in local JSON files.
 * `VFS` - save setting in VS Code virtual file system.
 * `VCS` - manage settings using VS Code provided API.
 
-## Host-collection
+### Host-collection
 
 Array of host connections settings with unique labels. Each has to have a host name or an ip address and an user name. Additionally they may have a port number, a password or a path to the key file.
 
