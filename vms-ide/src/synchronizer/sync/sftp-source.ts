@@ -42,16 +42,17 @@ export class SftpSource implements ISource {
 
     public findFiles(include: string, exclude: string, progress?: IProgress): Promise<IFileEntry[]> {
         // we sure the root exists
-        return findFiles(this.sftp, this.root!, include, exclude, this.logFn, progress).then((list) => {
-            let pos = this.root!.length;
-            if (pos > 0) {
-                pos += ftpPathSeparator.length;
-                for (const file of list) {
-                    file.filename = file.filename.slice(pos);
-                }
-            }
-            return list;
-        });
+        return findFiles(this.sftp, this.root!, include, exclude, this.logFn, progress);
+            // .then((list) => {
+            //     let pos = this.root!.length;
+            //     if (pos > 0) {
+            //         pos += ftpPathSeparator.length;
+            //         for (const file of list) {
+            //             file.filename = file.filename.slice(pos);
+            //         }
+            //     }
+            //     return list;
+            // });
     }
 
     public async getDate(filename: string): Promise<Date | undefined> {

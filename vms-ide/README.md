@@ -45,7 +45,7 @@
 
 | Section name | Name | Type | Description |
 | --- | --- | --- | --- |
-| `vmssoftware.config-helper.settings.using` | Config-helper › Settings: Using	| `FS`, `VFS` or `VCS` | Place where extension settings will be kept |
+| `vmssoftware.config-helper.settings.using` | Config-helper › Settings: Using	| `FS`, `VFS` or `VCS` | [Place](#configuration-storage-options) where extension settings will be kept |
 | `vmssoftware.config-helper.settings.test` | Test | string | For testing purposes, do not change |
 | `vmssoftware.config-helper.settings.debug` | Config-helper › Settings: Debug | string |  Debug output to, 'console' or folder |
 | `vmssoftware.config-helper.settings.addCalleeInfo` | Config-helper › Settings: Add Callee Info| boolean | Whether or not to add callee info to debug output |
