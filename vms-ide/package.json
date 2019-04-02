@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "OpenVMS IDE extension",
-    "version": "0.0.10",
+    "version": "0.0.12",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
