@@ -62,6 +62,7 @@ export const actions: IPerform[] = [
                                 return result;
                             });
                     } else {
+                        logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", curScope));
                         return false;
                     }
                 })() );
@@ -102,6 +103,7 @@ export const actions: IPerform[] = [
                         return false;
                     }
                 } else {
+                    logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", curScope));
                     return false;
                 }
             }
@@ -132,6 +134,7 @@ export const actions: IPerform[] = [
                     return false;
                 }
             } else {
+                logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", scope));
                 return false;
             }
             return true;
@@ -170,6 +173,7 @@ export const actions: IPerform[] = [
                         return false;
                     }
                 } else {
+                    logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", curScope));
                     return false;
                 }
             }
@@ -199,9 +203,11 @@ export const actions: IPerform[] = [
                         return false;
                     }
                 } else {
+                    logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", scope));
                     return false;
                 }
             } else {
+                logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", scope));
                 return false;
             }
             return true;
@@ -238,6 +244,7 @@ export const actions: IPerform[] = [
                                 return result;
                             });
                     } else {
+                        logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", curScope));
                         return false;
                     }
                 })() );
@@ -255,12 +262,28 @@ export const actions: IPerform[] = [
     {
         // create MMS
         actionFunc: async (scope: string, logFn: LogFunction, params?: string) => {
-            const ensured = await ensureSettings(scope, logFn);
-            if (!ensured) {
-                return false;
+            let scopes: string[] = [scope];
+            if (!scope) {
+                if (workspace.workspaceFolders) {
+                    scopes = workspace.workspaceFolders.map((wf) => wf.name);
+                }
             }
-            const builder = Builder.acquire(logFn);
-            return builder.createMmsFiles(ensured);
+            const wait: Array<Promise<boolean>> = [];
+            for (const curScope of scopes) {
+                wait.push( (async () => {
+                    const ensured = await ensureSettings(curScope, logFn);
+                    if (ensured) {
+                        const builder = Builder.acquire(logFn);
+                        return builder.createMmsFiles(ensured);
+                    } else {
+                        logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", curScope));
+                        return false;
+                    }
+                })() );
+            }
+            return Promise.all(wait).then((all) => {
+                return all.reduce((res, cur) => res && cur, true);
+            });
         },
         actionName: "create mms",
         context: CommandContext.isBuilding,

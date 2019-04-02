@@ -22,21 +22,21 @@ export function activate(context: ExtensionContext) {
         setContext(CommandContext.isSingleRoot, (workspace.workspaceFolders !== undefined && workspace.workspaceFolders.length === 1));
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.config-helper.test", async () => {
-        //
-        const configHelper = configApi.getConfigHelper("vmssoftware.config-helper");
-        if (configHelper) {
-            let test = await configHelper.getConfig().get(ConfigHelperSection.section);
-            if (!ConfigHelperSection.is(test)) {
-                configHelper.getConfig().add(new ConfigHelperSection());
-                test = await configHelper.getConfig().get(ConfigHelperSection.section);
-            }
-            if (ConfigHelperSection.is(test)) {
-                test.test = "passed";
-                configHelper.getConfig().save();
-            }
-        }
-    }));
+    // context.subscriptions.push( commands.registerCommand("vmssoftware.config-helper.test", async () => {
+    //     //
+    //     const configHelper = configApi.getConfigHelper("vmssoftware.config-helper");
+    //     if (configHelper) {
+    //         let test = await configHelper.getConfig().get(ConfigHelperSection.section);
+    //         if (!ConfigHelperSection.is(test)) {
+    //             configHelper.getConfig().add(new ConfigHelperSection());
+    //             test = await configHelper.getConfig().get(ConfigHelperSection.section);
+    //         }
+    //         if (ConfigHelperSection.is(test)) {
+    //             test.test = "passed";
+    //             configHelper.getConfig().save();
+    //         }
+    //     }
+    // }));
 
     return configApi;
 }

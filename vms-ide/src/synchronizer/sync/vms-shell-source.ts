@@ -16,8 +16,6 @@ const setFileDates = printLike`set file ${"_file_"} /attributes=(mod="${"_date_"
 
 export class VmsShellSource extends SftpSource {
 
-    // private timeOffsetInSeconds?: number;   // between local local_time and remote local_time in dependency of actual file date
-    // private timeOffetLock = new Lock();
 
     constructor(sftp: ISftpClient,
                 protected shell: ISshShell,
@@ -37,43 +35,7 @@ export class VmsShellSource extends SftpSource {
         const strCmd = setFileDates(converter.fullPath, dateString, dateString);
         const timeSet = await this.tryExec(strCmd, setFileErrorResponse);
         return timeSet;
-        // if (timeSet) {
-        //     const dateActual = await this.getDate(filename);
-        //     if (dateActual !== undefined) {
-        //         // if they still are not the same, do correct offset
-        //         const diff = (date.valueOf() - dateActual.valueOf()) / 1000;
-        //         if (Math.abs(diff) > 1) {
-        //             if (this.timeOffsetInSeconds === undefined) {
-        //                 this.timeOffsetInSeconds = Math.round(diff);
-        //             }
-        //             const dateFinal = new Date(dateTry.valueOf() + diff * 1000);
-        //             dateString = VmsAbsoluteDateString(dateFinal);
-        //             this.logFn(LogType.debug, () => `=== SECOND TRY set time for "${filename}" when offset is <${this.timeOffsetInSeconds}> and diff is <${diff}>`);
-        //             strCmd = setFileDates(converter.fullPath, dateString, dateString);
-        //             return this.tryExec(strCmd, setFileErrorResponse);
-        //         }
-        //         return true;
-        //     }
-        // }
-        // return false;
     }
-
-    // /**
-    //  * Also change file record format when finished
-    //  * @param filename file
-    //  */
-    // public createWriteStream(filename: string) {
-    //     const streamPromise = super.createWriteStream(filename);
-    //     // streamPromise.then((stream) => {
-    //     //     if (stream) {
-    //     //         stream.once("finish", () => {
-    //     //             const converter = new VmsPathConverter(this.root + ftpPathSeparator + filename);
-    //     //             this.tryExec(setFileFormatSTM + converter.fullPath, setFileErrorResponse);
-    //     //         });
-    //     //     }
-    //     // });
-    //     return streamPromise;
-    // }
 
     private async tryExec(command: string, errorResponse: string) {
         let attempts = this.attempts || 3;
@@ -94,27 +56,4 @@ export class VmsShellSource extends SftpSource {
         return false;
     }
 
-    // private async ensureTimeOffset() {
-    //     await this.timeOffetLock.acquire();
-    //     if (this.timeOffsetInSeconds !== undefined) {
-    //         this.timeOffetLock.release();
-    //         return true;
-    //     }
-    //     const result = await this.shell.execCmd(cmdGetTimeOffset);
-    //     if (!result) {
-    //         this.timeOffetLock.release();
-    //         return false;
-    //     }
-    //     result.some((line) => {
-    //         const time = Number.parseInt(line, 10);
-    //         if (typeof time === "number" &&
-    //             Number.isInteger(time)) {
-    //             this.timeOffsetInSeconds = time;
-    //             return true;
-    //         }
-    //         return false;
-    //     });
-    //     this.timeOffetLock.release();
-    //     return this.timeOffsetInSeconds !== undefined;
-    // }
 }

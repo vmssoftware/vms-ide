@@ -52,7 +52,8 @@ export async function findFiles(canReadDir: IReadDirectory,
         const splitExclude = unbraceExclude.reduce(collectSplittedByCommas, []);
         options.ignore = splitExclude;
     }
-    return walk(rootDir);
+    rootDir = rootDir.trim().replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
+    return walk("");
 
     function separateFilesAndDirsAndMatch(acc: ISepFileDir, fileEntry: IFileEntry): ISepFileDir {
         if (fileEntry.isDirectory) {
@@ -74,10 +75,8 @@ export async function findFiles(canReadDir: IReadDirectory,
      * @param walkDir start dir
      */
     async function walk(walkDir: string) {
-        walkDir = walkDir.trim();
-        // walkDir = walkDir.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
-        walkDir = walkDir.replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
-        const fileEntries = await canReadDir.readDirectory(walkDir);
+        const readDir = rootDir + (walkDir? ftpPathSeparator + walkDir: "");
+        const fileEntries = await canReadDir.readDirectory(readDir);
         const cancel = progress ? progress.addProgress(DirectoryToken, 1) : false;
         if (!cancel && fileEntries) {
             const separated = fileEntries.map(addWalkDir).reduce(separateFilesAndDirsAndMatch, {files: [], dirs: []});

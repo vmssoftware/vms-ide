@@ -1,16 +1,50 @@
-import { IFileEntry } from "../../common/main";
+import { IFileEntry, ftpPathSeparator } from "../../common/main";
 
 import { Readable, Writable } from "stream";
 import { IInputAttributes, ISftpClient, IStats } from "../../ssh-helper/api";
 
 export class VmsSftpClient implements ISftpClient {
 
+    public static rgCaret = /\^/g;
+
     /**
      * Adjust readDirectory: removes ".DIR;*" from directories and ";*" from files, also remains only latest version of file.
+     * Also add/remove "." for files without extension
      * @param sftp SFTP
      */
     constructor(public sftp: ISftpClient) {
 
+    }
+
+    /**
+     * Add a dot if extension is empty
+     * @param name 
+     */
+    public fixLocalName(name: string) {
+        if (name) {
+            const dirP = name.lastIndexOf(ftpPathSeparator);
+            const extP = name.lastIndexOf(".");
+            if (extP === -1 || extP < dirP) {
+                name += ".";
+            }
+        }
+        return name;
+    }
+
+    /**
+     * 1. Remove last dot
+     * 2. Remove any "^" symbols.
+     * @param name 
+     */
+    public fixremoteName(name: string) {
+        if (name) {
+            const l = name.length;
+            if (l > 0 && name[l - 1] === ".") {
+                name = name.slice(0, l - 1);
+            }
+            name = name.replace(VmsSftpClient.rgCaret, "");
+        }
+        return name;
     }
 
     public get enabled(): boolean {
@@ -22,19 +56,19 @@ export class VmsSftpClient implements ISftpClient {
     }
 
     public createReadStream(file: string): Promise<Readable | undefined> {
-        return this.sftp.createReadStream(file);
+        return this.sftp.createReadStream(this.fixLocalName(file));
     }
 
     public createWriteStream(file: string): Promise<Writable | undefined> {
-        return this.sftp.createWriteStream(file);
+        return this.sftp.createWriteStream(this.fixLocalName(file));
     }
 
     public getStat(file: string): Promise<IStats | undefined> {
-        return this.sftp.getStat(file);
+        return this.sftp.getStat(this.fixLocalName(file));
     }
 
     public setStat(file: string, stat: IInputAttributes): Promise<void> {
-        return this.sftp.setStat(file, stat);
+        return this.sftp.setStat(this.fixLocalName(file), stat);
     }
 
     public async readDirectory(directory: string): Promise<IFileEntry[] | undefined> {
@@ -53,6 +87,7 @@ export class VmsSftpClient implements ISftpClient {
                         entry.filename = entry.filename.slice(0, verSemicolon);
                     }
                 }
+                entry.filename = this.fixremoteName(entry.filename);
                 return entry;
             });
             // remain only those entries, for which there are no entries with the same filename and newer date

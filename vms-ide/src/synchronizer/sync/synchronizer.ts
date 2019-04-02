@@ -171,7 +171,7 @@ export class Synchronizer {
                 break;
             case "edit":
                 for (const downloadFile of compareResult.download) {
-                    waitAll.push(this.editFile(scopeData.remoteSource!, downloadFile.filename));
+                    waitAll.push(this.editFile(scopeData, downloadFile.filename));
                 }
                 if (compareResult.download.length > 0) {
                     this.logFn(LogType.information, () => localize("output.edit_count", "Please edit and save {0} files manually", compareResult.download.length));
@@ -307,52 +307,41 @@ export class Synchronizer {
 
     /**
      * Edit file in compare view
-     * @param source source to get file from
+     * @param scopeData scope data. uses remoteSource
      * @param file file name
      */
-    private async editFile(source: ISource, file: string) {
-        const memoryStream = this.sshHelper!.memStream();
+    private async editFile(scopeData: IScopeSyncData, file: string) {
+        if (!this.sshHelper || !scopeData.localSource.root) {
+            return false;
+        }
+        const memoryStream = this.sshHelper.memStream();
         let content: string | undefined;
         let localUri: vscode.Uri | undefined;
-        return this.sshHelper!.pipeFile(source, memoryStream, file, "", this.logFn)
-            .then(async (ok) => {
-                if (ok && memoryStream.writeStream && vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
-                    content = Buffer.concat(memoryStream.writeStream.chunks).toString("utf8");
-                    const workspaceUri = vscode.workspace.workspaceFolders[0].uri;
-                    localUri = vscode.Uri.file(path.join(workspaceUri.fsPath, file));
-                    return vscode.workspace.openTextDocument(localUri)
-                        .then(async (localDoc) => {
-                            return [localDoc, await vscode.workspace.openTextDocument({content, language: "mms"})];
-                        }).then(([localDoc, remoteDoc]) => {
-                            const title = localize("title.rem_loc", "Remote {0} <-> Local", file);
-                            return vscode.commands.executeCommand("vscode.diff", remoteDoc.uri, localDoc.uri, title, { preview: false });
-                        }).then(() => true);
-                } else {
-                    return false;
-                }
-            }).catch((errPipeOrAfter) => {
-                this.logFn(LogType.debug, () => errPipeOrAfter);
-                if (localUri && content) {
-                    return createFile(localUri, content)
-                        .then((ok) => {
-                            if (ok) {
-                                return vscode.window.showTextDocument(localUri!, { preview: false })
-                                    .then(() => true);
-                            } else {
-                                return false;
-                            }
-                        }).catch((errCreateOrShow) => {
-                            this.logFn(LogType.debug, () => errCreateOrShow);
-                            return false;
-                        });
-                } else {
-                    this.logFn(LogType.debug, () => localize("debug.nothing", "Nothing to show"));
-                    return false;
-                }
-            }).catch((errLast) => {
-                this.logFn(LogType.error, () => errLast);
-                return false;
-            });
+        let piped = false;
+        try {
+            piped = await this.sshHelper.pipeFile(scopeData.remoteSource, memoryStream, file, "", this.logFn);
+        } catch(err) {
+            this.logFn(LogType.error, () => err);
+        }
+        if (piped && memoryStream.writeStream) {
+            content = Buffer.concat(memoryStream.writeStream.chunks).toString("utf8");
+            localUri = vscode.Uri.file(path.join(scopeData.localSource.root, file));
+            const found = await vscode.workspace.findFiles(new vscode.RelativePattern(scopeData.localSource.root, file));
+            if (found.length === 0) {
+                localUri = localUri.with({scheme: "untitled"});
+            }
+            try {
+                const localDoc = await vscode.workspace.openTextDocument(localUri);
+                const remoteDoc = await vscode.workspace.openTextDocument({content});
+                const title = localize("title.rem_loc", "Remote {0} <-> Local", file);
+                const result = await vscode.commands.executeCommand("vscode.diff", remoteDoc.uri, localDoc.uri, title, { preview: false });
+                return true;
+            } catch (err) {
+                this.logFn(LogType.error, () => err);
+            }
+        } 
+        return false;
+
     }
 
     /**

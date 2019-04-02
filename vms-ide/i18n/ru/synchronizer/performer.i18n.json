@@ -1,4 +1,5 @@
 {
+    "ensure.settings": "Cannot get settings for: {0}",
     "synchronizing.fail": "Синхронизация неудачна",
     "synchronizing.status": "Синхронизация...",
     "synchronizing.success": "Синхронизация удачна",
