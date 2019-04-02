@@ -8,6 +8,7 @@
     "debug.download_listing.error": "Ошибка при загрузке листинга {0}",
     "debug.download.error": "Ошибка при загрузке {0}",
     "debug.upload.error": "Ошибка при выгрузке {0}",
+    "file-like-bin": "Файл скорее всего бинарный: {0}",
     "title.rem_loc": "Удалённый {0} <-> Локальный",
     "debug.no_remote": "Нет удалённого файла {0} => выгрузить",
     "debug.local_is_newer": "Локальный файл {0} новее => выгрузить",
