@@ -1124,7 +1124,25 @@ export class DebugParser
 		let matches = data.match(matcherA);
 		let matchesDim = dimenshen.match(matcherD);
 
-		if(matches && matchesDim && matches.length === 5)
+		if(matches && !matches[1].includes(","))// simple items array [2]-[3]: 23
+		{
+			if(!matches[2])
+			{
+				itemsArray.push(data.split(":")[0].trim());
+			}
+			else
+			{
+				itemsStart.push(parseInt(matches[1], 10));
+				itemsEnd.push(parseInt(matches[3], 10));
+
+				for(let i = itemsStart[0]; i <= itemsEnd[0]; i ++)
+				{
+					itemsArray.push(this.createItemLabelArray(itemsStart));
+					itemsStart[0]++;					
+				}
+			}
+		}
+		else if(matches && matchesDim && matches.length === 5)
 		{
 			if(!matches[2])
 			{
