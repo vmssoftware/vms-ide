@@ -1,6 +1,8 @@
 import * as vscode from "vscode";
 import { ProjDepTree } from "./proj-dep-tree";
 import { BuildType } from "./project-descr";
+import { LogFunction } from "../../common/main";
+import { LogType } from "../../common/main";
 
 export enum SourceState {
     modified,
@@ -27,8 +29,15 @@ export class ProjectState {
 
     private states!: Map<string, IProjState>;
 
+    public logFn: LogFunction;
+
     private constructor() {
+        this.logFn = (() => {});
         this.create();
+    }
+
+    public setLogFn(logFn: LogFunction) {
+        this.logFn = logFn;
     }
 
     public create() {
@@ -55,34 +64,44 @@ export class ProjectState {
         return false;    // always modified
     }
 
+    /**
+     * Actually set TRUE flag after 300 delay, set FALSE flag after 0 delay, but returns true immediatly
+     * @param projectName 
+     * @param status 
+     */
     public setSynchronized(projectName: string, status = true) {
-        const projects: string[] = [];
-        if (projectName) {
-            projects.push(projectName);
-        } else {
-            projects.push(...this.states.keys());
-        }
-        let retCode = true;
-        for (const currentProject of projects) {
-            const state = this.states.get(currentProject);
-            if (state) {
-                state.sourceState = status ? SourceState.synchronized : SourceState.modified;
-                if (!status) {
-                    state.buildState.clear();
-                    const projDep = new ProjDepTree();
-                    for (const dep of projDep.getMasterList(projectName)) {
-                        const depState = this.states.get(dep);
-                        if (depState) {
-                            depState.buildState.clear();
+        this.logFn(LogType.debug, () => `call setSynchronized: ${projectName} is ${status}` );
+        const timeOut = status? 300 : 0;
+        setTimeout(() => {
+            this.logFn(LogType.debug, () => `set setSynchronized: ${projectName} is ${status}` );
+            const projects: string[] = [];
+            if (projectName) {
+                projects.push(projectName);
+            } else {
+                projects.push(...this.states.keys());
+            }
+            let retCode = true;
+            for (const currentProject of projects) {
+                const state = this.states.get(currentProject);
+                if (state) {
+                    state.sourceState = status ? SourceState.synchronized : SourceState.modified;
+                    if (!status) {
+                        state.buildState.clear();
+                        const projDep = new ProjDepTree();
+                        for (const dep of projDep.getMasterList(projectName)) {
+                            const depState = this.states.get(dep);
+                            if (depState) {
+                                depState.buildState.clear();
+                            }
                         }
                     }
+                } else {
+                    retCode = false;
                 }
-            } else {
-                retCode = false;
             }
-        }
-        this.updateDescription();
-        return retCode;
+            this.updateDescription();
+        }, timeOut);
+        return true;
 
     }
 
@@ -96,6 +115,7 @@ export class ProjectState {
     }
 
     public setBuilt(projectName: string, buildType: string, status = true) {
+        this.logFn(LogType.debug, () => `setBuilt: ${projectName} is ${status}` );
         const projects: string[] = [];
         if (projectName) {
             projects.push(projectName);
@@ -122,7 +142,7 @@ export class ProjectState {
 
     public getDefBuildType() {
         const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
-        if (config.get<string>(ProjectState.configBuildTypeSection) == BuildType.release) {
+        if (config.get<string>(ProjectState.configBuildTypeSection) === BuildType.release) {
             return BuildType.release;
         }
         return BuildType.debug;

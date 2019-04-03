@@ -35,6 +35,8 @@ export async function activate(context: ExtensionContext) {
     const syncLog = configApi.createLogFunction("VMS-IDE Sync");
     const buildLog = configApi.createLogFunction("VMS-IDE Build");
 
+    ProjectState.acquire().setLogFn(syncLog);
+
     logFn = syncLog;
 
     setExtensionContext(context);
