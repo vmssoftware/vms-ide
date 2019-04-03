@@ -301,6 +301,20 @@ export class DebugParser
 			}
 		}
 
+		for(let i = 0; i < this.displayDataString.length; i++)
+		{
+			if(this.displayDataString[i].includes("\x0E\x60\x0F"))
+			{
+				let pieces = this.displayDataString[i].split("\x0E\x60\x0F\n");
+				this.displayDataString[i] = "";
+
+				for(let j = 0; j < pieces.length; j++)
+				{
+					this.displayDataString[i] += pieces[j];
+				}
+			}
+		}
+
 		if(this.displayDataString[0] !== "")
 		{
 			this.queueMsgDebug.push(MessagePrompt.prmtDBG + this.displayDataString[0]);
