@@ -324,7 +324,13 @@ export class Synchronizer {
             this.logFn(LogType.error, () => err);
         }
         if (piped && memoryStream.writeStream) {
-            content = Buffer.concat(memoryStream.writeStream.chunks).toString("utf8");
+            const buffer = Buffer.concat(memoryStream.writeStream.chunks);
+            content = buffer.toString("utf8");
+            const reBuffer = Buffer.from(content, "utf8");
+            if (buffer.compare(reBuffer) !== 0) {
+                this.logFn(LogType.error, () => localize("file-like-bin", "The file seems like binary: {0}", file));
+                return false;
+            }
             localUri = vscode.Uri.file(path.join(scopeData.localSource.root, file));
             const found = await vscode.workspace.findFiles(new vscode.RelativePattern(scopeData.localSource.root, file));
             if (found.length === 0) {
