@@ -572,6 +572,7 @@ export class DebugParser
 					variableName !== "")
 				{
 					let variableType : string = "";
+					let variableAddress : string = "";
 
 					while(i < (msgLines.length-1))
 					{
@@ -579,12 +580,19 @@ export class DebugParser
 
 						if(arrayData.charAt(0) === " ")
 						{
-							variableType += arrayData.trim() + "\n   ";//full data info
+							if(arrayData.includes("address:") || arrayData.includes("constant:"))
+							{
+								variableAddress = ", " + arrayData.trim();
+							}
+							else
+							{
+								variableType += arrayData + "\n";//full data info
+							}
 						}
 						else
 						{
 							--i;
-							variableType = variableType.trim();
+							variableType = variableType.trim() + variableAddress;
 							break;
 						}
 					}

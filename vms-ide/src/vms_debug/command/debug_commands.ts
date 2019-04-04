@@ -31,7 +31,7 @@ export enum DebugCmdVMS
 
 	dbgCallStack = "show calls",
 	dbgStack = "show stack",
-	dbgSymbol = "show symbol/type * in",
+	dbgSymbol = "show symbol/address/type * in",
 
 	dbgDump = "dump",
 

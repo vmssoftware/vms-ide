@@ -655,7 +655,9 @@ export class VMSRuntime extends EventEmitter
 
 				for(let item of vars)//create string of variables
 				{
-					if(item.functionName === funcName)
+					if(item.functionName === funcName &&
+						!item.variableType.includes("constant:") &&
+						!item.variableType.includes("address: (no value"))
 					{
 						nameVars = this.addVariableToString(nameVars, item);
 					}
@@ -681,7 +683,9 @@ export class VMSRuntime extends EventEmitter
 
 					for(let item of vars)//create string of pointers
 					{
-						if(item.functionName === funcName)
+						if(item.functionName === funcName &&
+							!item.variableType.includes("constant:") &&
+							!item.variableType.includes("address: (no value"))
 						{
 							if(item.variableAddress)
 							{
