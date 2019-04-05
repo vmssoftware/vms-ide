@@ -22,6 +22,7 @@ export enum MessageDebuger
 	msgUnAlloc = "%DEBUG-W-UNALLOCATED",
 	msgNotAct = "%DEBUG-W-SYMNOTACT",
 	msgNoSymbol = "%DEBUG-E-NOSYMBOL, symbol",
+	msgMisplaced = "%DEBUG-E-MISOPEMIS, misplaced operator",
 	msgNoProcess = "%DEBUG-E-NOPROCESSES, the current command is targetted at an empty process set",
 	msgEnd = "%DEBUG-I-EXITSTATUS, is",
 }

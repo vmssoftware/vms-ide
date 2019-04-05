@@ -1365,7 +1365,8 @@ export class VMSRuntime extends EventEmitter
 						messageDebug.includes(MessageDebuger.msgUnAlloc) ||
 						messageDebug.includes(MessageDebuger.msgNoSymbol) ||
 						messageDebug.includes(MessageDebuger.msgNotAct) ||
-						messageDebug.includes(MessageDebuger.msgNullPtr))
+						messageDebug.includes(MessageDebuger.msgNullPtr)||
+						messageDebug.includes(MessageDebuger.msgMisplaced))
 				{
 					if(this.queueWaitVar.size() > 0)
 					{
