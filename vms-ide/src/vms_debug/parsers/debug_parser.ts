@@ -301,6 +301,20 @@ export class DebugParser
 			}
 		}
 
+		for(let i = 0; i < this.displayDataString.length; i++)
+		{
+			if(this.displayDataString[i].includes("\x0E\x60\x0F"))
+			{
+				let pieces = this.displayDataString[i].split("\x0E\x60\x0F\n");
+				this.displayDataString[i] = "";
+
+				for(let j = 0; j < pieces.length; j++)
+				{
+					this.displayDataString[i] += pieces[j];
+				}
+			}
+		}
+
 		if(this.displayDataString[0] !== "")
 		{
 			this.queueMsgDebug.push(MessagePrompt.prmtDBG + this.displayDataString[0]);
@@ -558,6 +572,7 @@ export class DebugParser
 					variableName !== "")
 				{
 					let variableType : string = "";
+					let variableAddress : string = "";
 
 					while(i < (msgLines.length-1))
 					{
@@ -565,12 +580,19 @@ export class DebugParser
 
 						if(arrayData.charAt(0) === " ")
 						{
-							variableType += arrayData.trim() + "\n   ";//full data info
+							if(arrayData.includes("address:") || arrayData.includes("constant:"))
+							{
+								variableAddress = ", " + arrayData.trim();
+							}
+							else
+							{
+								variableType += arrayData + "\n";//full data info
+							}
 						}
 						else
 						{
 							--i;
-							variableType = variableType.trim();
+							variableType = variableType.trim() + variableAddress;
 							break;
 						}
 					}
@@ -861,6 +883,7 @@ export class DebugParser
 	{
 		const shiftLevel : number = 4;
 		let childs : DebugVariable[] = [];
+		let dimensions : string = "";
 		let items = variable.variableValue.split("\n");
 		const matcherA = /^\s*[\[\(]([0-9,]*)[\]\)](-[\[\(]([0-9,]*)[\]\)])?:\s*(.*)/;//Array ( [0,2, ...]-[2,5, ...]: 23 or (0)-(2): 23 )
 		const matcherS = /^\s*(\S+):\s*(.*)/;//Struct (name: 23)
@@ -1000,7 +1023,12 @@ export class DebugParser
 					}
 					else if(matches.length === 5)//array  info
 					{
-						itemsArray = this.parseItemsArray(v, variable.variableType);
+						if(dimensions === "" && matches[1].includes(","))// [1,3,2]
+						{
+							dimensions = this.defineDimensionsArray(prm.counter, items, matches, matcherA);
+						}
+						
+						itemsArray = this.parseItemsArray(v, dimensions);
 					}
 
 					for(let nameItem of itemsArray)
@@ -1110,7 +1138,60 @@ export class DebugParser
 		}
 	}
 
-	private parseItemsArray(data : string, dimenshen : string) : string[]//[2,10, ...]-[3,2, ...]: 235, bounds: [1:10,1:10, ...]
+	//  ARRAY
+	//      (1,1)-(1,2):        0
+	//      (1,3):              10
+	//      (1,4)-(3,10):       0
+	//  DATA
+	private defineDimensionsArray(indexItem : number, items: string[], matches : RegExpMatchArray, matcherRegExp: RegExp) : string
+	{
+		let dimensions : string = "";
+		let nextIndex = indexItem;
+		let matchesArr : RegExpMatchArray | null = matches;
+		let startIndexes : string = matches[1];
+		let endIndexis : string = "";
+
+		do
+		{
+			if(matchesArr)
+			{
+				if(matchesArr[3])
+				{
+					endIndexis = matchesArr[3];
+				}
+				else
+				{
+					endIndexis = matchesArr[1];
+				}									
+			}
+
+			let itemNext = items[nextIndex];
+			matchesArr = itemNext.match(matcherRegExp);
+			nextIndex++;
+
+		} while(matchesArr);
+
+		let numsStart = startIndexes.split(",");
+		let numsEnd = endIndexis.split(",");
+
+		for(let i = 0; i < numsStart.length; i ++)
+		{
+			if(dimensions === "")
+			{
+				dimensions += numsStart[i] + ":" + numsEnd[i];
+			}
+			else
+			{
+				dimensions += "," + numsStart[i] + ":" + numsEnd[i];
+			}
+		}
+
+		dimensions = "bounds: [" + dimensions + "]";
+
+		return dimensions;
+	}
+
+	private parseItemsArray(data : string, dimension : string) : string[]//[2,10, ...]-[3,2, ...]: 235, bounds: [1:10,1:10, ...]
 	{
 		let parse = true;
 		let itemsStart : number[] = [];
@@ -1122,7 +1203,7 @@ export class DebugParser
 		const matcherA = /^\s*[\[\(]([0-9,]*)[\]\)](-[\[\(]([0-9,]*)[\]\)])?:\s*(.*)/;//Array ( [2,10]-[3,2]: 23)
 		const matcherD = /^.*bounds: [\[\(]([0-9,:]*)[\]\)]/;//bounds: [1:10,1:10]
 		let matches = data.match(matcherA);
-		let matchesDim = dimenshen.match(matcherD);
+		let matchesDim = dimension.match(matcherD);
 
 		if(matches && !matches[1].includes(","))// simple items array [2]-[3]: 23
 		{
