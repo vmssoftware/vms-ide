@@ -86,6 +86,7 @@ export class VMSRuntime extends EventEmitter
 	// so that the frontend can match events with breakpoints.
 	private breakpointId = 1;
 	private abortKey = "C";//by default
+	private language = "";
 
 
 	constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, public logFn?: LogFunction)
@@ -1326,8 +1327,6 @@ export class VMSRuntime extends EventEmitter
 				}
 				else if(messageDebug.includes(MessageDebuger.msgNoSccess))
 				{
-					showMsg = false;
-
 					let indexStart = messageDebug.indexOf(":");
 					let addressStr = messageDebug.substr(indexStart+1).replace(MessageDebuger.msgNoSccess, "");
 					let address = parseInt(addressStr, 16);
@@ -1346,6 +1345,7 @@ export class VMSRuntime extends EventEmitter
 									{
 										if(item.variableAddress === address)
 										{
+											showMsg = false;
 											item.variableAddress = 0;
 										}
 									}
@@ -1382,6 +1382,14 @@ export class VMSRuntime extends EventEmitter
 				}
 				else if(messageDebug.includes(MessageDebuger.msgInitial))
 				{
+					const matcherLang = /^.*Language: (\S+),/;
+					let matches = messageDebug.match(matcherLang);
+
+					if(matches && matches.length === 2)
+					{
+						this.language = matches[1];
+					}
+
 					if(this.stopOnEntry)
 					{
 						if(messageDebug.includes(MessageDebuger.msgGoMain))
@@ -1455,5 +1463,10 @@ export class VMSRuntime extends EventEmitter
 				}
 			}
 		}
+	}
+
+	public getLanguage() : string
+	{
+		return this.language;
 	}
 }
