@@ -425,8 +425,6 @@ export class VMSDebugSession extends LoggingDebugSession
 		{
 			const variable = await this.runtime.getVariable(args.expression);
 
-			this.addFullyQualifiedName(variable);
-
 			variable.map((v, i) =>
 			{
 				response.body = this.convertDebugVariableToProtocolVariable(v, 0);
@@ -462,8 +460,6 @@ export class VMSDebugSession extends LoggingDebugSession
 
 			this.runtime.setWatchVariable(varName, params);
 			const variable = await this.runtime.getVariable(varName);
-
-			this.addFullyQualifiedName(variable);
 
 			variable.map((v, i) =>
 			{

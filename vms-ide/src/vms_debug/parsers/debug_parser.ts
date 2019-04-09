@@ -1108,7 +1108,9 @@ export class DebugParser
 	private getKindVariable(item : string) : ReflectKind
 	{
 		const matcherArrayType = /^\s*[\[\(]([0-9,]*)[\]\)]\s*(.*)/;//[2, ...] or (2, ....)
+		const matcherStructType = /^\s*(\S+): \s*(.*)/;//structure
 		const matcherInfoType = /^\s*[\[\(](.*)[\]\)]\s*(.*)/;//[info] or (info)
+
 		let matches = item.match(matcherArrayType);
 
 		if(matches)//array
@@ -1134,7 +1136,17 @@ export class DebugParser
 			}
 			else
 			{
-				return ReflectKind.Struct;
+				let matchesStruct = item.match(matcherStructType);
+				let items = item.trim().split(" ");
+
+				if(matchesStruct || items.length === 1)
+				{
+					return ReflectKind.Struct;
+				}
+				else
+				{
+					return ReflectKind.Invalid;					
+				}
 			}
 		}
 	}
