@@ -929,8 +929,26 @@ export class DebugParser
 
 							if(itemLevelNext > itemLevel)
 							{
-								kind = this.getKindVariable(items[prm.counter]);
 								itemInfo = matches[matches.length-1];
+
+								do
+								{
+									kind = this.getKindVariable(items[prm.counter]);
+
+									if(kind === ReflectKind.Invalid)
+									{
+										if(itemInfo === "")
+										{
+											itemInfo = items[prm.counter].trim();
+										}
+										else
+										{
+											itemInfo += "\n" + items[prm.counter].trim();
+										}
+										prm.counter++;
+									}
+
+								} while(kind === ReflectKind.Invalid && prm.counter < items.length);
 							}
 							else
 							{
@@ -946,14 +964,26 @@ export class DebugParser
 					}
 					else if((prm.counter) < items.length)
 					{
-						kind = this.getKindVariable(items[prm.counter]);
+						itemInfo = "";
 
-						if(kind === ReflectKind.Invalid)//???
+						do
 						{
-							itemInfo = items[prm.counter].trim();
-							prm.counter++;
 							kind = this.getKindVariable(items[prm.counter]);
-						}
+
+							if(kind === ReflectKind.Invalid)
+							{
+								if(itemInfo === "")
+								{
+									itemInfo = items[prm.counter].trim();
+								}
+								else
+								{
+									itemInfo += "\n" + items[prm.counter].trim();
+								}								
+								prm.counter++;
+							}
+
+						} while(kind === ReflectKind.Invalid && prm.counter < items.length);						
 					}
 					else
 					{
@@ -973,8 +1003,26 @@ export class DebugParser
 
 							if(itemLevelNext > itemLevel)
 							{
-								kind = this.getKindVariable(items[prm.counter]);
 								itemInfo = matches[matches.length-1];
+
+								do
+								{
+									kind = this.getKindVariable(items[prm.counter]);
+		
+									if(kind === ReflectKind.Invalid)
+									{
+										if(itemInfo === "")
+										{
+											itemInfo = items[prm.counter].trim();
+										}
+										else
+										{
+											itemInfo += "\n" + items[prm.counter].trim();
+										}										
+										prm.counter++;
+									}
+		
+								} while(kind === ReflectKind.Invalid && prm.counter < items.length);	
 							}
 							else
 							{
@@ -990,14 +1038,26 @@ export class DebugParser
 					}
 					else if((prm.counter) < items.length)
 					{
-						kind = this.getKindVariable(items[prm.counter]);
+						itemInfo = "";
 
-						if(kind === ReflectKind.Invalid)//???
+						do
 						{
-							itemInfo = items[prm.counter].trim();
-							prm.counter++;
 							kind = this.getKindVariable(items[prm.counter]);
-						}
+
+							if(kind === ReflectKind.Invalid)
+							{
+								if(itemInfo === "")
+								{
+									itemInfo = items[prm.counter].trim();
+								}
+								else
+								{
+									itemInfo += "\n" + items[prm.counter].trim();
+								}								
+								prm.counter++;
+							}
+
+						} while(kind === ReflectKind.Invalid && prm.counter < items.length);						
 					}
 					else
 					{
