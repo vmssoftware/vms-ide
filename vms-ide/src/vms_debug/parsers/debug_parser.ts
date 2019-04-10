@@ -637,7 +637,7 @@ export class DebugParser
 	// 		dataAdc:    0
 	// 		buffer:     ""
 	// battery:    54828
-	public parseVariableValuesMsg(currentPath: string, data: string) : void
+	public parseVariableValuesMsg(currentPath: string, data: string, pointerDereferencing : string) : void
 	{
 		let variableInfo = this.varsInfo.getVariableFile(currentPath);
 		let msgLines = data.split("\n");
@@ -724,7 +724,7 @@ export class DebugParser
 								{
 									if(matches)
 									{
-										if(info[0].charAt(0) === "*")//it is value
+										if(info[0].charAt(0) === pointerDereferencing || pointerDereferencing === "")//it is value
 										{
 											item.variableValue = matches[matches.length-1];
 										}

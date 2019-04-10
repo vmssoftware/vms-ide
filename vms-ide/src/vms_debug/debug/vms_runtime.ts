@@ -86,7 +86,10 @@ export class VMSRuntime extends EventEmitter
 	// so that the frontend can match events with breakpoints.
 	private breakpointId = 1;
 	private abortKey = "C";//by default
-	private language = "";
+	private language = "";	
+	private variablePeriod = ".";//"::"
+	private pointerPeriod = "->";//"->", "^."
+	private pointerDereferencing = ".";//"*", "^."
 
 
 	constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, public logFn?: LogFunction)
@@ -521,7 +524,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			if(nameVar.charAt(0) === "&" ||
 				nameVar.charAt(0) === "*" ||
-				nameVar.charAt(0) === ".") //for BLISS
+				nameVar.charAt(0) === ".")
 			{
 				nameVar = nameVar.substr(1);
 			}
@@ -556,7 +559,7 @@ export class VMSRuntime extends EventEmitter
 							if(item.variableType.includes("pointer to") ||
 								item.variableType.includes("pointer type"))
 							{
-								nameVar = "*" + nameVar;
+								nameVar = this.pointerDereferencing + nameVar;
 							}
 							else if(item.variableType.includes("basic_string"))
 							{
@@ -564,11 +567,11 @@ export class VMSRuntime extends EventEmitter
 								{
 									if(item.variablePrefix)
 									{
-										nameVar = "*" + nameVar + item.variablePrefix;
+										nameVar = this.pointerDereferencing + nameVar + item.variablePrefix;
 									}
 									else
 									{
-										nameVar = "*" + nameVar;
+										nameVar = this.pointerDereferencing + nameVar;
 									}
 								}
 							}
@@ -764,7 +767,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				if(item.variableAddress !== 0)
 				{
-					variables += "*" + item.variableName;
+					variables += this.pointerDereferencing + item.variableName;
 				}
 				else
 				{
@@ -775,7 +778,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				if(item.variableName === "this")
 				{
-					variables += "*" + item.variableName;
+					variables += this.pointerDereferencing + item.variableName;
 				}
 				else
 				{
@@ -789,11 +792,11 @@ export class VMSRuntime extends EventEmitter
 			{
 				if(item.variablePrefix)
 				{
-					variables += "*" + item.variableName + item.variablePrefix;
+					variables += this.pointerDereferencing + item.variableName + item.variablePrefix;
 				}
 				else
 				{
-					variables += "*" + item.variableName;
+					variables += this.pointerDereferencing + item.variableName;
 				}
 			}
 			else
@@ -1260,7 +1263,7 @@ export class VMSRuntime extends EventEmitter
 				switch(this.shell.getCurrentCommand().getBody())
 				{
 					case DebugCmdVMS.dbgExamine:
-						this.dbgParser.parseVariableValuesMsg(this.currentFilePath, messageData);
+						this.dbgParser.parseVariableValuesMsg(this.currentFilePath, messageData, this.pointerDereferencing);
 
 						if(this.queueWaitVar.size() > 0)
 						{
@@ -1388,6 +1391,7 @@ export class VMSRuntime extends EventEmitter
 					if(matches && matches.length === 2)
 					{
 						this.language = matches[1];
+						this.setDelimiters(this.language);
 					}
 
 					if(this.stopOnEntry)
@@ -1468,5 +1472,51 @@ export class VMSRuntime extends EventEmitter
 	public getLanguage() : string
 	{
 		return this.language;
+	}
+
+	public getVariablePeriod() : string
+	{
+		return this.variablePeriod;
+	}
+
+	public getPointerPeriod() : string
+	{
+		return this.pointerPeriod;
+	}
+
+	public getPointerDereferencing() : string
+	{
+		return this.pointerDereferencing;
+	}
+
+	private setDelimiters(language : string)
+	{
+		switch(language)
+		{
+			case "C":
+			case "C++":
+			case "BLISS":
+				this.variablePeriod = ".";
+				this.pointerPeriod = "->";
+				this.pointerDereferencing = ".";
+				break;
+			case "BASIC":
+				this.variablePeriod = "::";
+				this.pointerPeriod = "->";
+				this.pointerDereferencing = ".";
+				break;
+			case "FORTRAN":
+				this.variablePeriod = ".";
+				this.pointerPeriod = ".";
+				this.pointerDereferencing = "";
+				break;
+			case "PASCAL":
+				this.variablePeriod = ".";
+				this.pointerPeriod = "^.";
+				this.pointerDereferencing = ".";
+				break;
+			case "COBOL":
+				break;
+		}
 	}
 }

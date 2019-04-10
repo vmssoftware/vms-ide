@@ -344,7 +344,7 @@ export class VMSDebugSession extends LoggingDebugSession
 
 				if (v.fullyQualifiedName === undefined)
 				{
-					v.fullyQualifiedName = vari.fullyQualifiedName + "." + v.name;
+					v.fullyQualifiedName = vari.fullyQualifiedName + this.runtime.getVariablePeriod() + v.name;
 				}
 
 				return {
@@ -375,17 +375,17 @@ export class VMSDebugSession extends LoggingDebugSession
 		}
 		else if(variable.kind === ReflectKind.Struct)
 		{
-			fullName = variable.fullyQualifiedName + "." + args.name;
+			fullName = variable.fullyQualifiedName + this.runtime.getVariablePeriod() + args.name;
 		}
 		else if(variable.kind === ReflectKind.Pointer)
 		{
 			if(variable.type.includes("atomic type"))
 			{
-				fullName = "*" + variable.fullyQualifiedName;
+				fullName = this.runtime.getPointerDereferencing() + variable.fullyQualifiedName;
 			}
 			else
 			{
-				fullName = variable.fullyQualifiedName + "->" + args.name;
+				fullName = variable.fullyQualifiedName + this.runtime.getPointerPeriod() + args.name;
 			}
 		}
 		else
@@ -398,11 +398,11 @@ export class VMSDebugSession extends LoggingDebugSession
 					{
 						if(item.prefix)
 						{
-							fullName = "*" + args.name + item.prefix;
+							fullName = this.runtime.getPointerDereferencing() + args.name + item.prefix;
 						}
 						else
 						{
-							fullName = "*" + args.name;
+							fullName = this.runtime.getPointerDereferencing() + args.name;
 						}
 					}
 					break;
@@ -602,6 +602,9 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	private addChildQualifiedName(variable: DebugVariable)
 	{
+		let varPeriod = this.runtime.getVariablePeriod();
+		let ptrPeriod = this.runtime.getPointerPeriod();
+
 		variable.children.forEach(child =>
 		{
 			if(variable.kind === ReflectKind.Array)
@@ -610,11 +613,11 @@ export class VMSDebugSession extends LoggingDebugSession
 			}
 			else if(variable.kind === ReflectKind.Struct)
 			{
-				child.fullyQualifiedName = variable.fullyQualifiedName + "." + child.name;
+				child.fullyQualifiedName = variable.fullyQualifiedName + varPeriod + child.name;
 			}
 			else if(variable.kind === ReflectKind.Pointer)
 			{
-				child.fullyQualifiedName = variable.fullyQualifiedName + "->" + child.name;
+				child.fullyQualifiedName = variable.fullyQualifiedName + ptrPeriod + child.name;
 			}
 
 			this.addChildQualifiedName(child);
