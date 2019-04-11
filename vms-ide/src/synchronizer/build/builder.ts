@@ -174,11 +174,13 @@ export class Builder {
                         const projectName = ensured.configHelper.workspaceFolder.name;
                         const modifiedList = ProjectState.acquire().getModifiedList(projectName);
                         if (modifiedList.length > 0) {
-                            //if (ensured.synchronizeSection.smartClean)
-                                this.smartClean(scopeData, modifiedList, cfg);
+                            this.smartClean(scopeData, modifiedList, cfg);
                             if (await Synchronizer.acquire().uploadFiles(ensured, modifiedList)) {
                                 ProjectState.acquire().clearModified(projectName);
                             }
+                            if (scopeData.ensured.synchronizeSection.purge) {
+                                await scopeData.shell.execCmd("purge [...]");
+                            }                    
                         }
                     }
                     return this.runRemoteBuild(scopeData, cfg, cmd);
