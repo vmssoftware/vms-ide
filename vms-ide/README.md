@@ -1,4 +1,4 @@
-**VMS IDE** is an extension that enables you to quickly and easily develop comprehensive applications for OpenVMS system. It provides a set of tools for developing, building, and debugging OpenVMS projects.
+**VMS IDE** is an extension that enables you to quickly and easily develop comprehensive applications for OpenVMS systems. It provides a set of tools for developing, building, and debugging OpenVMS projects.
 
 ## Features
 
@@ -30,7 +30,7 @@
 | `VMS-IDE: Terminal` | Open VMS terminal (`Ctrl+F6`)|
 | `VMS-IDE: Edit ssh-helper settings` | Edit SSH connection settings |
 | `VMS-IDE: Edit OpenVMS project settings` | Edit project settings |
-| `VMS-IDE: Change CR/LF for all source files` | Change CRLF to LF for all source files |
+| `VMS-IDE: Change CR/LF for all source files` | Change CR/LF to LF for all source files |
 | `VMS-IDE: Create MMS` | Create default MMS |
 | `VMS-IDE: Build on VMS` | Build project on OpenVMS with its dependencies |
 | `VMS-IDE: Re-build on VMS` | Rebuild project on OpenVMS with its dependencies |
@@ -54,8 +54,8 @@
 | `vmssoftware.ssh-helper.connection.username` | Ssh-helper › Connection: Username | string | User name |
 | `vmssoftware.ssh-helper.connection.password` | Ssh-helper › Connection: Password | string | Password |
 | `vmssoftware.ssh-helper.connection.keyFile` | Ssh-helper › Connection: Key File | string | Path to SSH key file or leave it empty to use password authentication. |
-| `vmssoftware.ssh-helper.timeouts.cmdTimeout` | Ssh-helper › Timeouts: Cmd Timeout | number | Timeout for shell commands answer (not implemented yet). |
-| `vmssoftware.ssh-helper.timeouts.feedbackTimeout` | Ssh-helper › Timeouts: Feedback Timeout | number | Timeout for connection feedback. If connection doesn't feedback in this period, connection settings will be refused. |
+| `vmssoftware.ssh-helper.timeouts.cmdTimeout` | Ssh-helper › Timeouts: Cmd Timeout | number | Timeout for shell commands answer (not yet implemented). |
+| `vmssoftware.ssh-helper.timeouts.feedbackTimeout` | Ssh-helper › Timeouts: Feedback Timeout | number | Timeout for connection feedback. If connection doesn't respond in this period, connection settings will be refused. |
 | `vmssoftware.ssh-helper.timeouts.welcomeTimeout` | Ssh-helper › Timeouts: Welcome Timeout | number | Timeout for shell welcome banner parsing. |
 | `vmssoftware.ssh-helper.host-collection.hosts` | Ssh-helper › Host-collection: Hosts | object | Host-collection |
 | `vmssoftware.project-dep.buildType` | Project-dep: Build Type | `DEBUG` or `RELEASE` | Type of build |
