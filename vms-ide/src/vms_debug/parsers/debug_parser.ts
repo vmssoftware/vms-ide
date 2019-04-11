@@ -702,9 +702,18 @@ export class DebugParser
 
 					for(let item of variableInfo)
 					{
-						if(item.variablePrefix && nameVar.includes(item.variablePrefix))//for string variable
+						let symbols = "^.*";
+
+						for(let i = 0; i < symbols.length; i++)//remove tail from variable
 						{
-							nameVar = nameVar.replace(item.variablePrefix, "");
+							let symbol = symbols.charAt(i);
+							let index = nameVar.indexOf(symbol);
+
+							if(index > 0)
+							{
+								nameVar = nameVar.substring(0, index);
+								break;
+							}
 						}
 
 						if(item.functionName === nameFunc &&
@@ -724,7 +733,8 @@ export class DebugParser
 								{
 									if(matches)
 									{
-										if(info[0].charAt(0) === pointerDereferencing || pointerDereferencing === "")//it is value
+										if((item.variableAddress && item.variableAddress !== 0) ||
+											pointerDereferencing === "")
 										{
 											item.variableValue = matches[matches.length-1];
 										}
