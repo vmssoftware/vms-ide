@@ -576,19 +576,7 @@ export class VMSRuntime extends EventEmitter
 								}
 							}
 
-							this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVar));
-
-							let wait = new Subject();
-							this.queueWaitVar.push(wait);
-							await wait.wait(5000);
-
-							if(wait.message === undefined)//no answer
-							{
-								if(this.queueWaitVar.size() > 0)
-								{
-									this.queueWaitVar.pop();
-								}
-							}
+							await this.requestVariables(nameVar);
 
 							let childs : DebugVariable[] = [];
 
@@ -656,6 +644,7 @@ export class VMSRuntime extends EventEmitter
 			if(vars)
 			{
 				let nameVars : string = "";
+				let namePtrs : string = "";
 
 				for(let item of vars)//create string of variables
 				{
@@ -663,58 +652,50 @@ export class VMSRuntime extends EventEmitter
 						!item.variableType.includes("constant:") &&
 						!item.variableType.includes("address: (no value"))
 					{
-						nameVars = this.addVariableToString(nameVars, item);
+						if(item.variableType.includes("pointer to") ||
+							item.variableType.includes("pointer type"))
+						{
+							namePtrs = this.addVariableToString(namePtrs, item);
+						}
+						else
+						{
+							nameVars = this.addVariableToString(nameVars, item);
+						}
 					}
 				}
 
-				if(nameVars !== "")
+				if(nameVars !== "" || namePtrs !== "")
 				{
-					this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of variables
-
-					let wait = new Subject();
-					this.queueWaitVar.push(wait);
-					await wait.wait(5000);
-
-					if(wait.message === undefined)//no answer
+					if(nameVars !== "")
 					{
-						if(this.queueWaitVar.size() > 0)
-						{
-							this.queueWaitVar.pop();
-						}
+						await this.requestVariables(nameVars);//request values of variables
 					}
 
-					nameVars = "";
-
-					for(let item of vars)//create string of pointers
+					if(namePtrs !== "")
 					{
-						if(item.functionName === funcName &&
-							!item.variableType.includes("constant:") &&
-							!item.variableType.includes("address: (no value"))
+						await this.requestVariables(namePtrs);//request address of pointers
+
+						namePtrs = "";
+
+						for(let item of vars)//create string of variables without value
 						{
-							if(item.variableAddress)
+							if(item.functionName === funcName &&
+								!item.variableType.includes("constant:") &&
+								!item.variableType.includes("address: (no value"))
 							{
-								if(!item.variableValue && !item.variableInfo && item.variableAddress !== 0)//check a value of variable
+								if(item.variableAddress)
 								{
-									nameVars = this.addVariableToString(nameVars, item);
+									if(!item.variableValue && !item.variableInfo && item.variableAddress !== 0)//check a value of pointers
+									{
+										namePtrs = this.addVariableToString(namePtrs, item);
+									}
 								}
 							}
 						}
-					}
 
-					if(nameVars !== "")
-					{
-						this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of pointers
-
-						let wait = new Subject();
-						this.queueWaitVar.push(wait);
-						await wait.wait(5000);
-
-						if(wait.message === undefined)//no answer
+						if(namePtrs !== "")
 						{
-							if(this.queueWaitVar.size() > 0)
-							{
-								this.queueWaitVar.pop();
-							}
+							await this.requestVariables(namePtrs);//request values of pointers
 						}
 					}
 
@@ -751,6 +732,23 @@ export class VMSRuntime extends EventEmitter
 		}
 
 		return variables;
+	}
+
+	private async requestVariables(nameVars : string) : Promise<void>
+	{
+		this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of variables
+
+		let wait = new Subject();
+		this.queueWaitVar.push(wait);
+		await wait.wait(5000);
+
+		if(wait.message === undefined)//no answer
+		{
+			if(this.queueWaitVar.size() > 0)
+			{
+				this.queueWaitVar.pop();
+			}
+		}
 	}
 
 	private addVariableToString(variables : string, item : VariableFileInfo) : string
