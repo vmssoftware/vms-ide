@@ -34,6 +34,13 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
         this.onDidChangeTreeData = this.didChangeTreeEmitter.event;
     }
 
+    public selectedProject(): string | undefined {
+        if (this.selected) {
+            return this.selected.name;
+        }
+        return undefined;
+    }
+
     public getChildren(element?: IProjectElement | undefined): vscode.ProviderResult<IProjectElement[]> {
         const ret: IProjectElement[] = [];
         if (!element) {

@@ -1,6 +1,6 @@
 
 import { ProjDepTree } from "../dep-tree/proj-dep-tree";
-import { ProjectState } from "../dep-tree/proj-state";
+import { ProjectState, SourceState } from "../dep-tree/proj-state";
 import { ensureSettings } from "../ensure-settings";
 import { ISource, sourceType } from "./source";
 
@@ -63,7 +63,7 @@ export class SyncApi {
     }
 
     public isSynchronized(projectName: string) {
-        return ProjectState.acquire().isSynchronized(projectName);
+        return ProjectState.acquire().sourceState(projectName) === SourceState.synchronized;
     }
 
     public isBuilt(projectName: string, buildType: string) {

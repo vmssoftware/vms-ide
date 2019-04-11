@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "0.0.13",
+    "version": "0.0.14",
     "publisher": "vmssoftware",
     "repository": {
         "type": "git",
@@ -35,6 +35,7 @@
         "onCommand:vmssoftware.synchronizer.forceSynchronized",
         "onCommand:vmssoftware.synchronizer.forceBuilt",
         "onCommand:vmssoftware.synchronizer.uploadZip",
+        "onCommand:vmssoftware.synchronizer.upload",
         "onCommand:vmssoftware.synchronizer.downloadHeaders",
         "onDebug",
         "onCommand:extension.vms-debug.terminal",
@@ -187,7 +188,7 @@
                 },
                 {
                     "command": "vmssoftware.synchronizer.stopSync",
-                    "when": "vmssoftware.synchronizer.isSync"
+                    "when": "vmssoftware.synchronizer.isSync || vmssoftware.synchronizer.isBuld"
                 },
                 {
                     "command": "vmssoftware.synchronizer.buildProject",
@@ -199,11 +200,11 @@
                 },
                 {
                     "command": "vmssoftware.synchronizer.buildOnlyProject",
-                    "when": "vmssoftware.synchronizer:never"
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 },
                 {
                     "command": "vmssoftware.synchronizer.reBuildOnlyProject",
-                    "when": "vmssoftware.synchronizer:never"
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 },
                 {
                     "command": "vmssoftware.synchronizer.cleanProject",
@@ -223,6 +224,10 @@
                 },
                 {
                     "command": "vmssoftware.synchronizer.uploadZip",
+                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.upload",
                     "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
                 },
                 {
@@ -407,6 +412,11 @@
             {
                 "command": "vmssoftware.synchronizer.uploadZip",
                 "title": "%synchronizer.command.uploadZip.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.upload",
+                "title": "%synchronizer.command.upload.title%",
                 "category": "%command.category%"
             },
             {

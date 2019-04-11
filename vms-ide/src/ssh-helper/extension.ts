@@ -16,26 +16,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const sshHelper = new SshHelper(configApi.createLogFunction("VMS-IDE SSH"));
 
-    const disposable = vscode.commands.registerCommand("vmssoftware.ssh-helper.editSettings", (scope: string) => {
-        let scopes = [scope];
-        if (scope === undefined) {
-            // TODO: get sorted by dependencies list of scopes
-            if (vscode.workspace.workspaceFolders) {
-                scopes = vscode.workspace.workspaceFolders.map((wf) => wf.name);
-            }
-        }
-        for (const curScope of scopes) {
-            sshHelper.editSettings(curScope);
-        }
-    });
-
     setupWatchers(sshHelper);
 
     vscode.workspace.onDidChangeWorkspaceFolders(() => {
         setupWatchers(sshHelper);
     });
 
-    context.subscriptions.push(disposable);
     context.subscriptions.push(sshHelper);
 
     return SshHelper;   // class, not object
