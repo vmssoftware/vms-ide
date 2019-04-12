@@ -1,4 +1,5 @@
 {
     "debug.activated": "Расширение 'VMS синхронизация' активировано",
+    "scope.undefined": "There is no selected scope in Project explorer",
     "debug.deactivated": "Расширение 'VMS синхронизация' выгружено"
 }
