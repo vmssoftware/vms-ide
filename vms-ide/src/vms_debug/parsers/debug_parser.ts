@@ -22,6 +22,7 @@ export enum MessageDebuger
 	msgUnAlloc = "%DEBUG-W-UNALLOCATED",
 	msgNotAct = "%DEBUG-W-SYMNOTACT",
 	msgNoSymbol = "%DEBUG-E-NOSYMBOL, symbol",
+	msgMisplaced = "%DEBUG-E-MISOPEMIS, misplaced operator",
 	msgNoProcess = "%DEBUG-E-NOPROCESSES, the current command is targetted at an empty process set",
 	msgEnd = "%DEBUG-I-EXITSTATUS, is",
 }
@@ -636,7 +637,7 @@ export class DebugParser
 	// 		dataAdc:    0
 	// 		buffer:     ""
 	// battery:    54828
-	public parseVariableValuesMsg(currentPath: string, data: string) : void
+	public parseVariableValuesMsg(currentPath: string, data: string, pointerDereferencing : string) : void
 	{
 		let variableInfo = this.varsInfo.getVariableFile(currentPath);
 		let msgLines = data.split("\n");
@@ -701,9 +702,18 @@ export class DebugParser
 
 					for(let item of variableInfo)
 					{
-						if(item.variablePrefix && nameVar.includes(item.variablePrefix))//for string variable
+						let symbols = "^.*";
+
+						for(let i = 0; i < symbols.length; i++)//remove tail from variable
 						{
-							nameVar = nameVar.replace(item.variablePrefix, "");
+							let symbol = symbols.charAt(i);
+							let index = nameVar.indexOf(symbol);
+
+							if(index > 0)
+							{
+								nameVar = nameVar.substring(0, index);
+								break;
+							}
 						}
 
 						if(item.functionName === nameFunc &&
@@ -723,7 +733,8 @@ export class DebugParser
 								{
 									if(matches)
 									{
-										if(info[0].charAt(0) === "*")//it is value
+										if((item.variableAddress && item.variableAddress !== 0) ||
+											pointerDereferencing === "")
 										{
 											item.variableValue = matches[matches.length-1];
 										}
@@ -928,8 +939,26 @@ export class DebugParser
 
 							if(itemLevelNext > itemLevel)
 							{
-								kind = this.getKindVariable(items[prm.counter]);
 								itemInfo = matches[matches.length-1];
+
+								do
+								{
+									kind = this.getKindVariable(items[prm.counter]);
+
+									if(kind === ReflectKind.Invalid)
+									{
+										if(itemInfo === "")
+										{
+											itemInfo = items[prm.counter].trim();
+										}
+										else
+										{
+											itemInfo += "\n" + items[prm.counter].trim();
+										}
+										prm.counter++;
+									}
+
+								} while(kind === ReflectKind.Invalid && prm.counter < items.length);
 							}
 							else
 							{
@@ -945,14 +974,26 @@ export class DebugParser
 					}
 					else if((prm.counter) < items.length)
 					{
-						kind = this.getKindVariable(items[prm.counter]);
+						itemInfo = "";
 
-						if(kind === ReflectKind.Invalid)//???
+						do
 						{
-							itemInfo = items[prm.counter].trim();
-							prm.counter++;
 							kind = this.getKindVariable(items[prm.counter]);
-						}
+
+							if(kind === ReflectKind.Invalid)
+							{
+								if(itemInfo === "")
+								{
+									itemInfo = items[prm.counter].trim();
+								}
+								else
+								{
+									itemInfo += "\n" + items[prm.counter].trim();
+								}								
+								prm.counter++;
+							}
+
+						} while(kind === ReflectKind.Invalid && prm.counter < items.length);						
 					}
 					else
 					{
@@ -972,8 +1013,26 @@ export class DebugParser
 
 							if(itemLevelNext > itemLevel)
 							{
-								kind = this.getKindVariable(items[prm.counter]);
 								itemInfo = matches[matches.length-1];
+
+								do
+								{
+									kind = this.getKindVariable(items[prm.counter]);
+		
+									if(kind === ReflectKind.Invalid)
+									{
+										if(itemInfo === "")
+										{
+											itemInfo = items[prm.counter].trim();
+										}
+										else
+										{
+											itemInfo += "\n" + items[prm.counter].trim();
+										}										
+										prm.counter++;
+									}
+		
+								} while(kind === ReflectKind.Invalid && prm.counter < items.length);	
 							}
 							else
 							{
@@ -989,14 +1048,26 @@ export class DebugParser
 					}
 					else if((prm.counter) < items.length)
 					{
-						kind = this.getKindVariable(items[prm.counter]);
+						itemInfo = "";
 
-						if(kind === ReflectKind.Invalid)//???
+						do
 						{
-							itemInfo = items[prm.counter].trim();
-							prm.counter++;
 							kind = this.getKindVariable(items[prm.counter]);
-						}
+
+							if(kind === ReflectKind.Invalid)
+							{
+								if(itemInfo === "")
+								{
+									itemInfo = items[prm.counter].trim();
+								}
+								else
+								{
+									itemInfo += "\n" + items[prm.counter].trim();
+								}								
+								prm.counter++;
+							}
+
+						} while(kind === ReflectKind.Invalid && prm.counter < items.length);						
 					}
 					else
 					{
@@ -1107,7 +1178,9 @@ export class DebugParser
 	private getKindVariable(item : string) : ReflectKind
 	{
 		const matcherArrayType = /^\s*[\[\(]([0-9,]*)[\]\)]\s*(.*)/;//[2, ...] or (2, ....)
+		const matcherStructType = /^\s*(\S+): \s*(.*)/;//structure
 		const matcherInfoType = /^\s*[\[\(](.*)[\]\)]\s*(.*)/;//[info] or (info)
+
 		let matches = item.match(matcherArrayType);
 
 		if(matches)//array
@@ -1133,7 +1206,17 @@ export class DebugParser
 			}
 			else
 			{
-				return ReflectKind.Struct;
+				let matchesStruct = item.match(matcherStructType);
+				let items = item.trim().split(" ");
+
+				if(matchesStruct || items.length === 1)
+				{
+					return ReflectKind.Struct;
+				}
+				else
+				{
+					return ReflectKind.Invalid;					
+				}
 			}
 		}
 	}

@@ -32,6 +32,7 @@ export enum DebugCmdVMS
 	dbgCallStack = "show calls",
 	dbgStack = "show stack",
 	dbgSymbol = "show symbol/address/type * in",
+	dbgSetScope = "set scope",
 
 	dbgDump = "dump",
 
@@ -213,6 +214,10 @@ export class DebugCommands
 	public showSymbols(nameFile : string) : CommandMessage
 	{
 		return new CommandMessage(DebugCmdVMS.dbgSymbol, " " + nameFile.toUpperCase());
+	}
+	public setScope(nameModule : string, nameRoutine : string) : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgSetScope, " " + nameModule.toUpperCase() + "\\" + nameRoutine);
 	}
 
 	//dump

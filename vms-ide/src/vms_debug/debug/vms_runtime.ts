@@ -86,6 +86,10 @@ export class VMSRuntime extends EventEmitter
 	// so that the frontend can match events with breakpoints.
 	private breakpointId = 1;
 	private abortKey = "C";//by default
+	private language = "";	
+	private variablePeriod = ".";//"::"
+	private pointerPeriod = "->";//"->", "^."
+	private pointerDereferencing = ".";//"*", "^."
 
 
 	constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, public logFn?: LogFunction)
@@ -520,7 +524,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			if(nameVar.charAt(0) === "&" ||
 				nameVar.charAt(0) === "*" ||
-				nameVar.charAt(0) === ".") //for BLISS
+				nameVar.charAt(0) === ".")
 			{
 				nameVar = nameVar.substr(1);
 			}
@@ -555,7 +559,7 @@ export class VMSRuntime extends EventEmitter
 							if(item.variableType.includes("pointer to") ||
 								item.variableType.includes("pointer type"))
 							{
-								nameVar = "*" + nameVar;
+								nameVar = this.pointerDereferencing + nameVar;
 							}
 							else if(item.variableType.includes("basic_string"))
 							{
@@ -563,28 +567,16 @@ export class VMSRuntime extends EventEmitter
 								{
 									if(item.variablePrefix)
 									{
-										nameVar = "*" + nameVar + item.variablePrefix;
+										nameVar = this.pointerDereferencing + nameVar + item.variablePrefix;
 									}
 									else
 									{
-										nameVar = "*" + nameVar;
+										nameVar = this.pointerDereferencing + nameVar;
 									}
 								}
 							}
 
-							this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVar));
-
-							let wait = new Subject();
-							this.queueWaitVar.push(wait);
-							await wait.wait(5000);
-
-							if(wait.message === undefined)//no answer
-							{
-								if(this.queueWaitVar.size() > 0)
-								{
-									this.queueWaitVar.pop();
-								}
-							}
+							await this.requestVariables(nameVar);
 
 							let childs : DebugVariable[] = [];
 
@@ -652,6 +644,7 @@ export class VMSRuntime extends EventEmitter
 			if(vars)
 			{
 				let nameVars : string = "";
+				let namePtrs : string = "";
 
 				for(let item of vars)//create string of variables
 				{
@@ -659,58 +652,50 @@ export class VMSRuntime extends EventEmitter
 						!item.variableType.includes("constant:") &&
 						!item.variableType.includes("address: (no value"))
 					{
-						nameVars = this.addVariableToString(nameVars, item);
+						if(item.variableType.includes("pointer to") ||
+							item.variableType.includes("pointer type"))
+						{
+							namePtrs = this.addVariableToString(namePtrs, item);
+						}
+						else
+						{
+							nameVars = this.addVariableToString(nameVars, item);
+						}
 					}
 				}
 
-				if(nameVars !== "")
+				if(nameVars !== "" || namePtrs !== "")
 				{
-					this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of variables
-
-					let wait = new Subject();
-					this.queueWaitVar.push(wait);
-					await wait.wait(5000);
-
-					if(wait.message === undefined)//no answer
+					if(nameVars !== "")
 					{
-						if(this.queueWaitVar.size() > 0)
-						{
-							this.queueWaitVar.pop();
-						}
+						await this.requestVariables(nameVars);//request values of variables
 					}
 
-					nameVars = "";
-
-					for(let item of vars)//create string of pointers
+					if(namePtrs !== "")
 					{
-						if(item.functionName === funcName &&
-							!item.variableType.includes("constant:") &&
-							!item.variableType.includes("address: (no value"))
+						await this.requestVariables(namePtrs);//request address of pointers
+
+						namePtrs = "";
+
+						for(let item of vars)//create string of variables without value
 						{
-							if(item.variableAddress)
+							if(item.functionName === funcName &&
+								!item.variableType.includes("constant:") &&
+								!item.variableType.includes("address: (no value"))
 							{
-								if(!item.variableValue && !item.variableInfo && item.variableAddress !== 0)//check a value of variable
+								if(item.variableAddress)
 								{
-									nameVars = this.addVariableToString(nameVars, item);
+									if(!item.variableValue && !item.variableInfo && item.variableAddress !== 0)//check a value of pointers
+									{
+										namePtrs = this.addVariableToString(namePtrs, item);
+									}
 								}
 							}
 						}
-					}
 
-					if(nameVars !== "")
-					{
-						this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of pointers
-
-						let wait = new Subject();
-						this.queueWaitVar.push(wait);
-						await wait.wait(5000);
-
-						if(wait.message === undefined)//no answer
+						if(namePtrs !== "")
 						{
-							if(this.queueWaitVar.size() > 0)
-							{
-								this.queueWaitVar.pop();
-							}
+							await this.requestVariables(namePtrs);//request values of pointers
 						}
 					}
 
@@ -749,6 +734,24 @@ export class VMSRuntime extends EventEmitter
 		return variables;
 	}
 
+	private async requestVariables(nameVars : string) : Promise<void>
+	{
+		this.shell.SendCommandToQueue(this.dbgCmd.setScope(this.getNameFromPath(this.currentFilePath), this.currentRoutine));
+		this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of variables
+
+		let wait = new Subject();
+		this.queueWaitVar.push(wait);
+		await wait.wait(5000);
+
+		if(wait.message === undefined)//no answer
+		{
+			if(this.queueWaitVar.size() > 0)
+			{
+				this.queueWaitVar.pop();
+			}
+		}
+	}
+
 	private addVariableToString(variables : string, item : VariableFileInfo) : string
 	{
 		if(variables !== "")
@@ -763,7 +766,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				if(item.variableAddress !== 0)
 				{
-					variables += "*" + item.variableName;
+					variables += this.pointerDereferencing + item.variableName;
 				}
 				else
 				{
@@ -774,7 +777,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				if(item.variableName === "this")
 				{
-					variables += "*" + item.variableName;
+					variables += this.pointerDereferencing + item.variableName;
 				}
 				else
 				{
@@ -788,11 +791,11 @@ export class VMSRuntime extends EventEmitter
 			{
 				if(item.variablePrefix)
 				{
-					variables += "*" + item.variableName + item.variablePrefix;
+					variables += this.pointerDereferencing + item.variableName + item.variablePrefix;
 				}
 				else
 				{
-					variables += "*" + item.variableName;
+					variables += this.pointerDereferencing + item.variableName;
 				}
 			}
 			else
@@ -1259,7 +1262,7 @@ export class VMSRuntime extends EventEmitter
 				switch(this.shell.getCurrentCommand().getBody())
 				{
 					case DebugCmdVMS.dbgExamine:
-						this.dbgParser.parseVariableValuesMsg(this.currentFilePath, messageData);
+						this.dbgParser.parseVariableValuesMsg(this.currentFilePath, messageData, this.pointerDereferencing);
 
 						if(this.queueWaitVar.size() > 0)
 						{
@@ -1326,8 +1329,6 @@ export class VMSRuntime extends EventEmitter
 				}
 				else if(messageDebug.includes(MessageDebuger.msgNoSccess))
 				{
-					showMsg = false;
-
 					let indexStart = messageDebug.indexOf(":");
 					let addressStr = messageDebug.substr(indexStart+1).replace(MessageDebuger.msgNoSccess, "");
 					let address = parseInt(addressStr, 16);
@@ -1346,6 +1347,7 @@ export class VMSRuntime extends EventEmitter
 									{
 										if(item.variableAddress === address)
 										{
+											showMsg = false;
 											item.variableAddress = 0;
 										}
 									}
@@ -1365,7 +1367,8 @@ export class VMSRuntime extends EventEmitter
 						messageDebug.includes(MessageDebuger.msgUnAlloc) ||
 						messageDebug.includes(MessageDebuger.msgNoSymbol) ||
 						messageDebug.includes(MessageDebuger.msgNotAct) ||
-						messageDebug.includes(MessageDebuger.msgNullPtr))
+						messageDebug.includes(MessageDebuger.msgNullPtr)||
+						messageDebug.includes(MessageDebuger.msgMisplaced))
 				{
 					if(this.queueWaitVar.size() > 0)
 					{
@@ -1381,6 +1384,15 @@ export class VMSRuntime extends EventEmitter
 				}
 				else if(messageDebug.includes(MessageDebuger.msgInitial))
 				{
+					const matcherLang = /^.*Language: (\S+),/;
+					let matches = messageDebug.match(matcherLang);
+
+					if(matches && matches.length === 2)
+					{
+						this.language = matches[1];
+						this.setDelimiters(this.language);
+					}
+
 					if(this.stopOnEntry)
 					{
 						if(messageDebug.includes(MessageDebuger.msgGoMain))
@@ -1453,6 +1465,57 @@ export class VMSRuntime extends EventEmitter
 						break;
 				}
 			}
+		}
+	}
+
+	public getLanguage() : string
+	{
+		return this.language;
+	}
+
+	public getVariablePeriod() : string
+	{
+		return this.variablePeriod;
+	}
+
+	public getPointerPeriod() : string
+	{
+		return this.pointerPeriod;
+	}
+
+	public getPointerDereferencing() : string
+	{
+		return this.pointerDereferencing;
+	}
+
+	private setDelimiters(language : string)
+	{
+		switch(language)
+		{
+			case "C":
+			case "C++":
+			case "BLISS":
+				this.variablePeriod = ".";
+				this.pointerPeriod = "->";
+				this.pointerDereferencing = ".";
+				break;
+			case "BASIC":
+				this.variablePeriod = "::";
+				this.pointerPeriod = "->";
+				this.pointerDereferencing = ".";
+				break;
+			case "FORTRAN":
+				this.variablePeriod = ".";
+				this.pointerPeriod = ".";
+				this.pointerDereferencing = "";
+				break;
+			case "PASCAL":
+				this.variablePeriod = ".";
+				this.pointerPeriod = "^.";
+				this.pointerDereferencing = ".";
+				break;
+			case "COBOL":
+				break;
 		}
 	}
 }
