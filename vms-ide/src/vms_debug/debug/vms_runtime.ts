@@ -736,6 +736,7 @@ export class VMSRuntime extends EventEmitter
 
 	private async requestVariables(nameVars : string) : Promise<void>
 	{
+		this.shell.SendCommandToQueue(this.dbgCmd.setScope(this.getNameFromPath(this.currentFilePath), this.currentRoutine));
 		this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of variables
 
 		let wait = new Subject();
