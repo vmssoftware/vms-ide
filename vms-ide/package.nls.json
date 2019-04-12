@@ -32,6 +32,7 @@
     "synchronizer.command.forceSynchronized.title": "Force synchronized status",
     "synchronizer.command.forceBuilt.title": "Force build status",
     "synchronizer.command.uploadZip.title": "Upload all via Zip",
+    "synchronizer.command.upload.title": "Upload all",
     "synchronizer.command.downloadHeaders.title": "Download system headers",
     "synchronizer.command.projectDependencies.add.title": "Add to dependencies of selected",
     "synchronizer.command.projectDependencies.build.title": "Build with dependencies",

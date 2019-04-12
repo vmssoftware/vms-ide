@@ -1,4 +1,4 @@
-import { commands, Disposable, env, ExtensionContext, extensions, RelativePattern, window, workspace } from "vscode";
+import { commands, Disposable, env, ExtensionContext, extensions, RelativePattern, window, workspace, WorkspaceFolder } from "vscode";
 import * as nls from "vscode-nls";
 import * as path from "path";
 
@@ -24,7 +24,7 @@ const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })()
 // tslint:disable-next-line:no-empty
 let logFn: LogFunction = () => {};
 
-let watchers: Disposable[] = [];
+let watchers: Map<string, Disposable[]> = new Map<string, Disposable[]>();
 
 export async function activate(context: ExtensionContext) {
 
@@ -34,6 +34,8 @@ export async function activate(context: ExtensionContext) {
 
     const syncLog = configApi.createLogFunction("VMS-IDE Sync");
     const buildLog = configApi.createLogFunction("VMS-IDE Build");
+
+    ProjectState.acquire().setLogFn(syncLog);
 
     logFn = syncLog;
 
@@ -56,7 +58,11 @@ export async function activate(context: ExtensionContext) {
         createFsWatchers();
     });
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async (scope: string) => {
+    const projectDependenciesProvider = new ProjDepProvider();
+    const projectDescriptionProvider = new ProjDescrProvider();
+
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async (scope?: string) => {
+        scope = scope || projectDependenciesProvider.selectedProject();
         return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
@@ -66,7 +72,8 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async (scope: string, params: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async (scope?: string, params?: string) => {
+        scope = scope || projectDependenciesProvider.selectedProject();
         return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
@@ -76,7 +83,8 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildProject", async (scope: string, params: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildProject", async (scope?: string, params?: string) => {
+        scope = scope || projectDependenciesProvider.selectedProject();
         return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
@@ -86,7 +94,8 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildOnlyProject", async (scope: string, params: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildOnlyProject", async (scope?: string, params?: string) => {
+        scope = scope || projectDependenciesProvider.selectedProject();
         return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
@@ -96,7 +105,8 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildOnlyProject", async (scope: string, params: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildOnlyProject", async (scope?: string, params?: string) => {
+        scope = scope || projectDependenciesProvider.selectedProject();
         return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
@@ -106,11 +116,13 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope: string, buildType: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope?: string, buildType?: string) => {
+        scope = scope || projectDependenciesProvider.selectedProject();
         return Perform("clean", scope, buildLog, buildType);
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.createMMS", async (scope: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.createMMS", async (scope?: string) => {
+        scope = scope || projectDependenciesProvider.selectedProject();
         return Perform("create mms", scope, buildLog);
     }));
 
@@ -118,32 +130,43 @@ export async function activate(context: ExtensionContext) {
         return Synchronizer.acquire().disableRemote();
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async (scope: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async (scope?: string) => {
+        scope = scope || projectDependenciesProvider.selectedProject();
         return Perform("edit settings", scope, syncLog);
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.changeCRLF", async (scope: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.ssh-helper.editSettings", (scope?: string) => {
+        scope = scope || projectDependenciesProvider.selectedProject();
+        return Perform("edit ssh settings", scope, syncLog);
+    }));
+
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.changeCRLF", async (scope?: string) => {
         return Perform("crlf", scope, syncLog);
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.forceSynchronized", async (scope: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.forceSynchronized", async (scope?: string) => {
+        scope = scope || projectDependenciesProvider.selectedProject();
         return ProjectState.acquire().setSynchronized(scope, true);
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.forceBuilt", async (scope: string, buildType: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.forceBuilt", async (scope?: string, buildType?: string) => {
+        scope = scope || projectDependenciesProvider.selectedProject();
         return ProjectState.acquire().setBuilt(scope, buildType, true);
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.uploadZip", async (scope: string, clear: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.uploadZip", async (scope?: string, clear?: string) => {
+        scope = scope || projectDependenciesProvider.selectedProject();
         return Perform("zip", scope, syncLog, clear);
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.downloadHeaders", async (scope: string, params: string) => {
-        return Perform("headers", scope, syncLog, params);
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.upload", async (scope?: string) => {
+        scope = scope || projectDependenciesProvider.selectedProject();
+        return Perform("upload", scope, syncLog);
     }));
 
-    const projectDependenciesProvider = new ProjDepProvider();
-    const projectDescriptionProvider = new ProjDescrProvider();
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.downloadHeaders", async (scope?: string, params?: string) => {
+        return Perform("headers", scope, syncLog, params);
+    }));
 
     context.subscriptions.push( window.registerTreeDataProvider("vmssoftware.project-dep.projectDependencies", projectDependenciesProvider) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.select",
@@ -180,83 +203,96 @@ export async function activate(context: ExtensionContext) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    for (const watcher of  watchers) {
-        watcher.dispose();
+    for (const [scope, scopeWatchers] of  watchers) {
+        scopeWatchers.forEach(w => w.dispose());
     }
-    watchers = [];
+    watchers.clear();
     logFn(LogType.debug, () => localize("debug.deactivated", "VMS-IDE Sync extension is deactivated"));
 }
 
 async function createFsWatchers() {
-    for (const watcher of  watchers) {
-        watcher.dispose();
+    for (const [scope, scopeWatchers] of  watchers) {
+        scopeWatchers.forEach(w => w.dispose());
     }
-    watchers = [];
+    watchers.clear();
     if (workspace.workspaceFolders) {
         const SshHelperType = GetSshHelperType();
-        let sshHelper: SshHelper | undefined;
-        if (SshHelperType) {
-            sshHelper = new SshHelperType();
+        if (!SshHelperType) {
+            return;
         }
+        let sshHelper = new SshHelperType();
         for (const folder of workspace.workspaceFolders) {
-            const ensured = await ensureSettings(folder.name, logFn);
-            if (ensured) {
-                // 1. Setup source file watcher 
-                // prepare micromatch
-                const includes = [
-                    ensured.projectSection.source,
-                    ensured.projectSection.resource,
-                    ensured.projectSection.headers,
-                    ensured.projectSection.builders,
-                ];
-                const include = includes.join(",");
-                const options: micromatch.Options = {
-                    basename: true,
-                    nocase: true,
-                    nodupes: true,
-                    unixify: false,
-                };
-                const unbracedInclude = micromatch.braces(include);
-                const splittedInclude = unbracedInclude.reduce(collectSplittedByCommas, []);
-                if (ensured.projectSection.exclude) {
-                    const unbraceExclude = micromatch.braces(ensured.projectSection.exclude);
-                    const splitExclude = unbraceExclude.reduce(collectSplittedByCommas, []);
-                    options.ignore = splitExclude;
-                }
-
-                const relativePattern = new RelativePattern(folder, "**/*.*");
-                const fsWatcher = workspace.createFileSystemWatcher(relativePattern, false, false, false);
-                fsWatcher.onDidCreate((uri) => {
-                    testModifySync(folder.name, uri.fsPath, splittedInclude, options);
-                });
-                fsWatcher.onDidDelete((uri) => {
-                    testModifySync(folder.name, uri.fsPath, splittedInclude, options);
-                });
-                fsWatcher.onDidChange((uri) => {
-                    testModifySync(folder.name, uri.fsPath, splittedInclude, options);
-                });
-                watchers.push(fsWatcher);
-
-                // 2. Setup SSH settings watcher 
-                if (sshHelper) {
-                    watchers.push(sshHelper.setConfigWatcher(folder.name, () => {
-                        commands.executeCommand("vmssoftware.project-dep.projectDescription.refresh");
-                        ProjectState.acquire().setSynchronized(folder.name, false);
-                    }));
-                }
-
-                // 3. Setup Project settings watcher 
-                watchers.push(ensured.configHelper.getConfig().onDidLoad(() => {
-                    ProjectState.acquire().setSynchronized(folder.name, false);
-                }));
-            }
+            createScopeFsWatchers(folder, sshHelper);
         }
     }
+}
+
+async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelper) {
+    const scopeWatchers: Disposable[] = [];
+    const ensured = await ensureSettings(folder.name, logFn);
+    if (ensured) {
+        // 1. Setup source file watcher 
+        // prepare micromatch
+        const includes = [
+            ensured.projectSection.source,
+            ensured.projectSection.resource,
+            ensured.projectSection.headers,
+            ensured.projectSection.builders,
+        ];
+        const include = includes.join(",");
+        const options: micromatch.Options = {
+            basename: true,
+            nocase: true,
+            nodupes: true,
+            unixify: false,
+        };
+        const unbracedInclude = micromatch.braces(include);
+        const splittedInclude = unbracedInclude.reduce(collectSplittedByCommas, []);
+        if (ensured.projectSection.exclude) {
+            const unbraceExclude = micromatch.braces(ensured.projectSection.exclude);
+            const splitExclude = unbraceExclude.reduce(collectSplittedByCommas, []);
+            options.ignore = splitExclude;
+        }
+
+        const relativePattern = new RelativePattern(folder, "**/*.*");
+        const fsWatcher = workspace.createFileSystemWatcher(relativePattern, false, false, false);
+        const rootLength = folder.uri.fsPath.length + 1;
+        fsWatcher.onDidCreate((uri) => {
+            testModifySync(folder.name, uri.fsPath.slice(rootLength), splittedInclude, options);
+        });
+        fsWatcher.onDidDelete((uri) => {
+            testModifySync(folder.name, uri.fsPath.slice(rootLength), splittedInclude, options);
+        });
+        fsWatcher.onDidChange((uri) => {
+            testModifySync(folder.name, uri.fsPath.slice(rootLength), splittedInclude, options);
+        });
+        scopeWatchers.push(fsWatcher);
+
+        // 2. Setup SSH settings watcher 
+        if (sshHelper) {
+            scopeWatchers.push(sshHelper.setConfigWatcher(folder.name, () => {
+                commands.executeCommand("vmssoftware.project-dep.projectDescription.refresh");
+                ProjectState.acquire().setSynchronized(folder.name, false);
+            }));
+        }
+
+        // 3. Setup Project settings watcher 
+        scopeWatchers.push(ensured.configHelper.getConfig().onDidLoad(() => {
+            ProjectState.acquire().setSynchronized(folder.name, false);
+            // recreate watchers for this folder
+            createScopeFsWatchers(folder, sshHelper);
+        }));
+    }
+    const prevWatchers = watchers.get(folder.name);
+    if (prevWatchers) {
+        prevWatchers.forEach(w => w.dispose());
+    }
+    watchers.set(folder.name, scopeWatchers);
 }
 
 function testModifySync(scope: string, filePath: string, includes: string[], options: micromatch.Options) {
     const list = micromatch([filePath], includes, options);
     if (list.length) {
-        ProjectState.acquire().setSynchronized(scope, false);
+        ProjectState.acquire().addModified(scope, filePath);
     }
 }

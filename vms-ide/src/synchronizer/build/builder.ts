@@ -1,7 +1,7 @@
 
 import fs from "fs-extra";
 import path from "path";
-import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, QuickPickItem, Range, Uri, window, workspace } from "vscode";
+import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, languages, Range, Uri, workspace } from "vscode";
 
 import { IFileEntry, LogFunction, LogType } from "../../common/main";
 import { printLike } from "../../common/main";
@@ -18,12 +18,18 @@ import { ISource } from "../sync/source";
 import { Synchronizer } from "../sync/synchronizer";
 import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
 import { ProjectState } from "../dep-tree/proj-state";
-
 import * as nls from "vscode-nls";
+
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-type BuildType = "com" | "mms" | "debug" | "release" | "both" | "undefined";
+enum BuildConfiguration {
+    unknown,
+    debug,
+    release,
+    mms,
+    com,
+}
 
 enum MmsLineType {
     nothing,
@@ -31,11 +37,7 @@ enum MmsLineType {
     sources,
 }
 
-interface IBuildQuickPickItem extends QuickPickItem {
-    type: BuildType;
-}
-
-function iFileEntryToVmsPath(file: IFileEntry) {
+function convertIFileEntryToVmsPath(file: IFileEntry) {
     const conv = new VmsPathConverter(file.filename);
     return conv.fullPath;
 }
@@ -68,17 +70,21 @@ export class Builder {
         return Builder.instance;
     }
 
-    private static readonly defMmsFileName = "resource/default.mms";
     private static readonly mmsUserCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}`;
     private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}")`;
+
+    private static readonly cleanDEBUG = printLike`del/tree [.${"outdir"}.DEBUG...]*.*;*`;
+    private static readonly cleanRELEASE = printLike`del/tree [.${"outdir"}.RELEASE...]*.*;*`;
+
+    private static readonly cleanSuffix = " CLEAN";
+
     private static readonly mmsExt = ".mms";
     private static readonly optExt = ".opt";
     private static readonly comExt = ".com";
+
     private static readonly defRange = new Range(0, 0, 0, 0);
+
     private static readonly getShellRootCmd = `WRITE SYS$OUTPUT F$TRNLNM("SYS$LOGIN")`;
-    private static readonly labelDebug = "DEBUG";
-    private static readonly labelRelease = "RELEASE";
-    private static readonly labelBoth = "BOTH";
     private static readonly rgFile = /^([-_$a-z][-_$a-z0-9]*)(\.[-_$a-z0-9]*)?/;
     private static readonly includesLine = "INCLUDES=";
     private static readonly sourcesLine = "SOURCES=";
@@ -122,6 +128,34 @@ export class Builder {
         }
     }
 
+    /**
+     * Parse parameter and returns BuildConfiguration
+     * @param params 
+     */
+    private parseParams(params?: string): [BuildConfiguration, string] {
+        params = params || ProjectState.acquire().getDefBuildType();
+        switch(params.toLowerCase()) {
+            case BuildConfiguration[BuildConfiguration.debug].toLowerCase():
+                return [BuildConfiguration.debug, ""];
+            case BuildConfiguration[BuildConfiguration.release].toLowerCase():
+                return [BuildConfiguration.release, ""];
+        }
+        const match = params.trim().toLowerCase().match(Builder.rgFile);
+        if (match && match[1] && match[2]) {
+            if ( match[2] === Builder.mmsExt) {
+                return [BuildConfiguration.mms, params.trim()];
+            } else if ( match[2] === Builder.comExt) {
+                return [BuildConfiguration.com, params.trim()];
+            }
+        }
+        return [BuildConfiguration.unknown, ""];
+    }
+
+    /**
+     * Fast build, 
+     * @param ensured scope settings
+     * @param params build type or user defined MMS or COM
+     */
     public async buildProject(ensured: IEnsured, params?: string) {
         // clear password cache
         if (this.sshHelper) {
@@ -131,160 +165,65 @@ export class Builder {
         if (!scopeData) {
             return false;
         }
-        let buildSelection: IBuildQuickPickItem | undefined;
-        if (params === undefined) {
-            // get list of builders
-            const items = await scopeData.localSource.findFiles(ensured.projectSection.builders, ensured.projectSection.exclude);
-            // build selection list, excluding own mms
-            const selectItems = items.filter((file) => file.filename.toUpperCase() !== (ensured.projectSection.projectName + Builder.mmsExt).toUpperCase())
-                .map((file) => {
-                    let type: BuildType = "com";
-                    const extPos = file.filename.lastIndexOf(".");
-                    if (extPos > 0 && file.filename.slice(extPos).toLowerCase() === Builder.mmsExt) {
-                        type = "mms";
+        const [cfg, cmd] = this.parseParams(params);
+        return this.ensureMmsCreated(scopeData, cfg)
+            .then(async (result) => {
+                if (result) {
+                    if (ensured.configHelper.workspaceFolder) {
+                        // upload modified only list
+                        const projectName = ensured.configHelper.workspaceFolder.name;
+                        const modifiedList = ProjectState.acquire().getModifiedList(projectName);
+                        if (modifiedList.length > 0) {
+                            //if (ensured.synchronizeSection.smartClean)
+                                this.smartClean(scopeData, modifiedList, cfg);
+                            if (await Synchronizer.acquire().uploadFiles(ensured, modifiedList)) {
+                                ProjectState.acquire().clearModified(projectName);
+                            }
+                        }
                     }
-                    const ret: IBuildQuickPickItem = {
-                        description: localize("quick.build.file", "Build using {0} [{1}]", file.filename, ensured.configHelper.workspaceFolder!.name),
-                        label: file.filename,
-                        type,
-                    };
-                    return ret;
-                });
-            selectItems.unshift({
-                    description: localize("quick.build.release", "Build release version [{0}]", ensured.configHelper.workspaceFolder!.name),
-                    label: Builder.labelRelease,
-                    type: "release",
-                });
-            selectItems.unshift({
-                description: localize("quick.build.debug", "Build debug version [{0}]", ensured.configHelper.workspaceFolder!.name),
-                label: Builder.labelDebug,
-                type: "debug",
-            });
-            // select one
-            buildSelection = await window.showQuickPick(selectItems, { ignoreFocusOut: true, canPickMany: false});
-        } else if (typeof params === "string") {
-            buildSelection = {
-                label: "",
-                type: "undefined",
-            };
-            switch (params.trim().toUpperCase()) {
-                case Builder.labelDebug.toUpperCase():
-                    buildSelection.type = "debug";
-                    break;
-                case Builder.labelRelease.toUpperCase():
-                    buildSelection.type = "release";
-                    break;
-            }
-            if (buildSelection.type === "undefined") {
-                const match = params.trim().toLowerCase().match(Builder.rgFile);
-                if (match && match[1] && match[2]) {
-                    if ( match[2] === Builder.mmsExt) {
-                        buildSelection.type = "mms";
-                        buildSelection.label = params.trim();
-                    } else if ( match[2] === Builder.comExt) {
-                        buildSelection.type = "com";
-                        buildSelection.label = params.trim();
-                    }
+                    return this.runRemoteBuild(scopeData, cfg, cmd);
+                } else {
+                    this.logFn(LogType.error, () => localize("create.mms.first", "Please first (re)create MMS."));
                 }
-            }
+                return result;
+            })
+            .then((result) => {
+                this.decideDispose(scopeData);
+                return result;
+            });
+    }
+
+    protected async smartClean(scopeData: IScopeBuildData, files: string[], cfg: BuildConfiguration) {
+        if (cfg !== BuildConfiguration.debug && cfg !== BuildConfiguration.release) {
+            return;
         }
-        if (buildSelection !== undefined && buildSelection.type !== "undefined") {
-            return this.ensureMmsCreated(scopeData, buildSelection)
-                .then((ok) => {
-                    if (ok) {
-                        return this.runRemoteBuild(scopeData, buildSelection!)
-                            .then((result) => {
-                                // TODO: deside if we want to keep it alive
-                                this.decideDispose(scopeData);
-                                return result;
-                            });
-                    }
-                    return ok;
-                });
-        } else {
-            return false;
+        for (const file of files) {
+            const vms = new VmsPathConverter(file);
+            const objDir = scopeData.ensured.projectSection.outdir + "." + BuildConfiguration[cfg] + ".obj";
+            const command = "del [." + objDir + vms.bareDirectory + "]" + vms.fileName + ".*;*";
+            const out = await scopeData.shell.execCmd(command);
+            if (!out) {
+                this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute > {0}", command));
+            }
         }
     }
 
     public async cleanProject(ensured: IEnsured, params?: string) {
-        let cleanSelection: IBuildQuickPickItem | undefined;
         // clear password cache
         if (this.sshHelper) {
             this.sshHelper.clearPasswordCache();
         }
-        if (params === undefined) {
-            const selectItems: IBuildQuickPickItem[] = [
-                {
-                    description: localize("quick.clean.release", "Clean release version [{0}]", ensured.configHelper.workspaceFolder!.name),
-                    label: Builder.labelRelease,
-                    type: "release",
-                },
-                {
-                    description: localize("quick.clean.debug", "Clean debug version [{0}]", ensured.configHelper.workspaceFolder!.name),
-                    label: Builder.labelDebug,
-                    type: "debug",
-                },
-                {
-                    description: localize("quick.clean.both", "Clean all [{0}]", ensured.configHelper.workspaceFolder!.name),
-                    label: Builder.labelBoth,
-                    type: "both",
-                },
-            ];
-            // select one
-            cleanSelection = await window.showQuickPick(selectItems, { ignoreFocusOut: true, canPickMany: false});
-        } else if (typeof params === "string") {
-            cleanSelection = {
-                label: "",
-                type: "undefined",
-            };
-            switch (params.trim().toUpperCase()) {
-                case Builder.labelDebug.toUpperCase():
-                    cleanSelection.type = "debug";
-                    break;
-                case Builder.labelRelease.toLocaleUpperCase():
-                    cleanSelection.type = "release";
-                    break;
-                case Builder.labelBoth.toLocaleUpperCase():
-                    cleanSelection.type = "both";
-                    break;
-            }
-        }
-        if (cleanSelection !== undefined && cleanSelection.type !== "undefined") {
-            return this.runRemoteClean(ensured, cleanSelection);
-        } else {
+        const scopeData = await this.prepareScopeData(ensured);
+        if (!scopeData) {
             return false;
         }
+        const [cfg, cmd] = this.parseParams(params);
+        return this.runRemoteClean(scopeData, cfg, cmd)
+            .then((result) => {
+                this.decideDispose(scopeData);
+                return result;
+        });
     }
-
-    // public async createMms(scopeData: IScopeBuildData) {
-    //     const localMmsFile = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
-    //     const foundMms = await scopeData.localSource.findFiles(localMmsFile);
-    //     if (foundMms.length === 0) {
-    //         // TODO: check project type: [exe, olb, shareable]
-    //         // TODO: add dependencies
-    //         const defMmsPath = contextSaved!.asAbsolutePath(Builder.defMmsFileName);
-    //         const [content, headres, sources] = await Promise.all([
-    //             fs.readFile(defMmsPath, "utf8"),
-    //             scopeData.localSource.findFiles(scopeData.ensured.projectSection.headers, scopeData.ensured.projectSection.exclude),
-    //             scopeData.localSource.findFiles(scopeData.ensured.projectSection.source, scopeData.ensured.projectSection.exclude)]);
-    //         // add files to the lists
-    //         let newContent = `OUTDIR=${scopeData.ensured.projectSection.outdir}\n`
-    //                         + `NAME=${scopeData.ensured.projectSection.projectName}\n`
-    //                         + `INCLUDES=${headres.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
-    //                         + `SOURCES=${sources.map(iFileEntryToVmsPath).join(" -\n\t")}\n`
-    //                         + content;
-    //         // add "source -> obj" dependency for each source
-    //         for (const source of sources) {
-    //             const vms = new VmsPathConverter(source.filename);
-    //             const sourceDependencyLine = "[$(OBJ_DIR)" + vms.bareDirectory + "]" + vms.fileName + ".obj : " + vms.fullPath + " $(INCLUDES)";
-    //             newContent += sourceDependencyLine + "\n";
-    //         }
-    //         await fs.writeFile(scopeData.localSource.root + ftpPathSeparator + localMmsFile, newContent);
-    //         return Synchronizer.acquire(this.logFn).uploadFiles(scopeData.ensured, [localMmsFile]);
-    //     } else {
-    //         return true;
-    //     }
-    // }
 
     public async createMmsFiles(ensured: IEnsured) {
         const content = await this.createMmsContent(ensured);
@@ -343,12 +282,12 @@ export class Builder {
         const includeLines = [Builder.includesLine];
         for (const inc of headers) {
             includeLines[includeLines.length - 1] = includeLines[includeLines.length - 1] + " -";    // continuation
-            includeLines.push(iFileEntryToVmsPath(inc));
+            includeLines.push(convertIFileEntryToVmsPath(inc));
         }
         const sourceLines = [Builder.sourcesLine];
         for (const src of sources) {
             sourceLines[sourceLines.length - 1] = sourceLines[sourceLines.length - 1] + " -";        // continuation
-            sourceLines.push(iFileEntryToVmsPath(src));
+            sourceLines.push(convertIFileEntryToVmsPath(src));
         }
 
         const objectDependenciesLines: string[] = [];
@@ -603,8 +542,8 @@ export class Builder {
         return false;
     }
 
-    private async ensureMmsCreated(scopeData: IScopeBuildData, selection: IBuildQuickPickItem) {
-        if (!(selection.type === "debug" || selection.type === "release" || selection.type === "both")) {
+    private async ensureMmsCreated(scopeData: IScopeBuildData, cfg: BuildConfiguration, autoCreate = false) {
+        if (!(cfg === BuildConfiguration.debug || cfg === BuildConfiguration.release)) {
             return true;
         }
 
@@ -616,99 +555,86 @@ export class Builder {
             createMMS = await this.checkMmsContent(scopeData.ensured, (await fs.readFile(localMmsPath)).toString("utf8"));
         }
         if (createMMS) {
-            return this.createMmsFiles(scopeData.ensured)
-                .then(async (ok) => {
-                    if (ok) {
-                        const files = [localMmsFile];
-                        const localOptFile = scopeData.ensured.projectSection.projectName + Builder.optExt;
-                        const foundOpt = await scopeData.localSource.findFiles(localOptFile);
-                        if (foundOpt.length !== 0) {
-                            files.push(localOptFile);
-                        }
-                        const localComFile = scopeData.ensured.projectSection.projectName + Builder.comExt;
-                        const foundCom = await scopeData.localSource.findFiles(localComFile);
-                        if (foundCom.length !== 0) {
-                            files.push(localComFile);
-                        }
-                        return Synchronizer.acquire(this.logFn).uploadFiles(scopeData.ensured, files)
-                            .then((result) => {
-                                if (result) {
-                                    ProjectState.acquire().setSynchronized(scopeData.ensured.scope!, true);
-                                }
-                                return result;
-                            });
-                    }
-                    return ok;
-                });
+            if (autoCreate) {
+                return this.createMmsFiles(scopeData.ensured);
+            }
+            return false;
         }
         return true;
     }
 
-    private async runRemoteClean(ensured: IEnsured, selection: IBuildQuickPickItem) {
-        const scopeData = await this.prepareScopeData(ensured);
-        if (!scopeData) {
-            return false;
-        }
+    private async runRemoteClean(scopeData: IScopeBuildData, cfg: BuildConfiguration, cmd: string) {
         // decide what to clean
-        let command = `del/tree [.${ensured.projectSection.outdir}...]*.*;*`;
-        switch (selection.type) {
-            case "debug":
-                command = `del/tree [.${ensured.projectSection.outdir}.DEBUG...]*.*;*`;
+        let command = "";
+        switch (cfg) {
+            case BuildConfiguration.unknown:
+                return false;
+            case BuildConfiguration.debug:
+                command = Builder.cleanDEBUG(scopeData.ensured.projectSection.outdir);
                 break;
-            case "release":
-                command = `del/tree [.${ensured.projectSection.outdir}.RELEASE...]*.*;*`;
+            case BuildConfiguration.release:
+                command = Builder.cleanRELEASE(scopeData.ensured.projectSection.outdir);
+                break;
+            case BuildConfiguration.com:
+                command = '@' + cmd + Builder.cleanSuffix;
+                break;
+            case BuildConfiguration.mms:
+                command = Builder.mmsUserCmd(cmd) + Builder.cleanSuffix;
                 break;
         }
         // run if decided
         const output = await scopeData.shell.execCmd(command);
         if (output) {
-            // parse?
-            this.decideDispose(scopeData);
+            switch (cfg) {
+                case BuildConfiguration.com:
+                case BuildConfiguration.mms:
+                    this.logFn(LogType.information, () => output.join("\n"));
+                    break;
+            }
             return true;
         } else {
             this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute > {0}", command));
-            this.disposeScopeData(scopeData, true);
             return false;
         }
     }
 
-    private async runRemoteBuild(scopeData: IScopeBuildData, selection: IBuildQuickPickItem) {
-        // decide how to run
-        let command = "@" + selection.label;    // COM
-        switch (selection.type) {
-            case "mms":
-                command = Builder.mmsUserCmd(selection.label);
+    private async runRemoteBuild(scopeData: IScopeBuildData, cfg: BuildConfiguration, cmd: string) {
+        let command = "";
+        let debugDefine = "";
+        switch (cfg) {
+            case BuildConfiguration.unknown:
+                return false;
+            case BuildConfiguration.debug:
+                debugDefine = "1";
+            case BuildConfiguration.release:
+                command = 
+                    Builder.mmsCmd(scopeData.ensured.projectSection.projectName + Builder.mmsExt,
+                        debugDefine,
+                        scopeData.ensured.projectSection.outdir,
+                        scopeData.ensured.projectSection.projectName);
                 break;
-            case "debug":
-                command = Builder.mmsCmd(scopeData.ensured.projectSection.projectName + Builder.mmsExt,
-                                        "1",
-                                        scopeData.ensured.projectSection.outdir,
-                                        scopeData.ensured.projectSection.projectName);
+            case BuildConfiguration.com:
+                command = '@' + cmd;
                 break;
-            case "release":
-                command = Builder.mmsCmd(scopeData.ensured.projectSection.projectName + Builder.mmsExt,
-                                        "",
-                                        scopeData.ensured.projectSection.outdir,
-                                        scopeData.ensured.projectSection.projectName);
+            case BuildConfiguration.mms:
+                command = Builder.mmsUserCmd(cmd);
                 break;
         }
         // run if decided
         const output = await scopeData.shell.execCmd(command);
         if (output) {
             let retCode = true;
-            if (selection.type === "com" || selection.type === "mms") {
-                // just output as is, do not download listings
-                for (const line of output) {
-                    this.logFn(LogType.information, () => line);
-                }
-            } else {
-                // parse
-                retCode = await this.parseProblems(scopeData, output, selection);
-                if (retCode) {
-                    // get listings. valid only for DEBUG or RELEASE types
-                    retCode = await Synchronizer.acquire(this.logFn).downloadListings(scopeData.ensured);
-                }
+            switch (cfg) {
+                case BuildConfiguration.com:
+                case BuildConfiguration.mms:
+                    this.logFn(LogType.information, () => output.join("\n"));
+                    break;
+                default:
+                    retCode = await this.parseProblems(scopeData, output, cfg, cmd);
+                    break;
             }
+            // always try to download listing, for all configurations
+            await Synchronizer.acquire(this.logFn).downloadListings(scopeData.ensured);
             return retCode;
         } else {
             this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute > {0}", command));
@@ -716,7 +642,7 @@ export class Builder {
         }
     }
 
-    private async parseProblems(scopeData: IScopeBuildData, output: string[], selection: IBuildQuickPickItem) {
+    private async parseProblems(scopeData: IScopeBuildData, output: string[], cfg: BuildConfiguration, cmd: string) {
         const result = parseVmsOutput(output, scopeData.shell.width);
         for (const line of result.lines) {
             this.logFn(LogType.warning, () => line);
@@ -749,8 +675,8 @@ export class Builder {
                 }
                 if (!entry.file) {
                     if (entry.facility && entry.facility.toUpperCase() === "MMS") {
-                        if (selection.type === "mms") {
-                            entry.file = selection.label;
+                        if (cfg === BuildConfiguration.mms) {
+                            entry.file = cmd;
                         } else {
                             entry.file = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
                         }
@@ -769,9 +695,9 @@ export class Builder {
                     // check MSG or CLD
                     if (entry.facility &&
                         (entry.facility.toUpperCase() === "MESSAGE" || entry.facility.toUpperCase() === "CDU") &&
-                        (selection.type === "release" || selection.type === "debug")) {
+                        (cfg === BuildConfiguration.release || cfg === BuildConfiguration.debug)) {
                         // conver target to source
-                        const outPathLength = scopeData.ensured.projectSection.outdir.length + selection.type.length + 6;   // 6 = length of "obj" and three separators
+                        const outPathLength = scopeData.ensured.projectSection.outdir.length + BuildConfiguration[cfg].length + 6;   // 6 = length of "obj" and three separators
                         localFile = localFile.slice(outPathLength);
                         const dotPos = localFile.indexOf(".");
                         if (dotPos >= 0) {

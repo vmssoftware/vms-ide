@@ -16,7 +16,7 @@ import { VmsPathConverter } from "./vms/vms-path-converter";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export async function DownloadHeaders(scope: string, logFn: LogFunction) {
+export async function DownloadHeaders(scope: string | undefined, logFn: LogFunction) {
     // tslint:disable-next-line:no-empty
     logFn = logFn || (() => {});
     if (!scope) {

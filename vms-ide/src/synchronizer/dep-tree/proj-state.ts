@@ -1,15 +1,19 @@
 import * as vscode from "vscode";
 import { ProjDepTree } from "./proj-dep-tree";
 import { BuildType } from "./project-descr";
+import { LogFunction } from "../../common/main";
+import { LogType } from "../../common/main";
 
 export enum SourceState {
-    modified,
+    unknown,
     synchronized,
+    modified,
 }
 
 export interface IProjState {
-    buildState: Map<string, boolean>;
-    sourceState: SourceState;
+    isBuilt: Map<string, boolean>;
+    isSync: boolean;
+    modifiedList: Map<string, boolean>;
 }
 
 export class ProjectState {
@@ -27,8 +31,15 @@ export class ProjectState {
 
     private states!: Map<string, IProjState>;
 
+    public logFn: LogFunction;
+
     private constructor() {
+        this.logFn = (() => {});
         this.create();
+    }
+
+    public setLogFn(logFn: LogFunction) {
+        this.logFn = logFn;
     }
 
     public create() {
@@ -42,60 +53,103 @@ export class ProjectState {
 
     public addFolder(folder: vscode.WorkspaceFolder) {
         this.states.set(folder.name, {
-            buildState: new Map(),
-            sourceState: SourceState.modified,
+            isBuilt: new Map(),
+            isSync: false,
+            modifiedList: new Map(),
         });
     }
 
-    public isSynchronized(projectName: string) {
+    public sourceState(projectName: string): SourceState {
         const state = this.states.get(projectName);
         if (state) {
-            return state.sourceState === SourceState.synchronized;
+            if (state.isSync === true) {
+                if (state.modifiedList.size === 0) {
+                    return SourceState.synchronized;
+                }
+                return SourceState.modified;
+            }
+            return SourceState.unknown;
         }
-        return false;    // always modified
+        return SourceState.unknown;
     }
 
-    public setSynchronized(projectName: string, status = true) {
-        const projects: string[] = [];
-        if (projectName) {
-            projects.push(projectName);
-        } else {
-            projects.push(...this.states.keys());
+    public addModified(projectName: string, file: string) {
+        const state = this.states.get(projectName);
+        if (state) {
+            state.modifiedList.set(file, true);
+            this.updateDescription();
         }
-        let retCode = true;
-        for (const currentProject of projects) {
-            const state = this.states.get(currentProject);
-            if (state) {
-                state.sourceState = status ? SourceState.synchronized : SourceState.modified;
-                if (!status) {
-                    state.buildState.clear();
-                    const projDep = new ProjDepTree();
-                    for (const dep of projDep.getMasterList(projectName)) {
-                        const depState = this.states.get(dep);
-                        if (depState) {
-                            depState.buildState.clear();
+    }
+
+    public clearModified(projectName: string) {
+        const state = this.states.get(projectName);
+        if (state) {
+            state.modifiedList.clear();
+            this.updateDescription();
+        }
+    }
+
+    public getModifiedList(projectName: string) {
+        const list: string[] = [];
+        const state = this.states.get(projectName);
+        if (state) {
+            list.push(...state.modifiedList.keys());
+        }
+        return list;
+    }
+
+    /**
+     * Actually set TRUE flag after 300 delay, set FALSE flag after 0 delay, but returns true immediatly
+     * Is TRUE only after suxxessful UPLOAD or SYNCHRONIZE
+     * Is FALSE only in initial state, or after ANY configuration is changed
+     * @param projectName 
+     * @param status 
+     */
+    public setSynchronized(projectName: string | undefined, status = true) {
+        const timeOut = status? 300 : 0;
+        setTimeout(() => {
+            const projects: string[] = [];
+            if (projectName) {
+                projects.push(projectName);
+            } else {
+                projects.push(...this.states.keys());
+            }
+            for (const currentProject of projects) {
+                const state = this.states.get(currentProject);
+                if (state) {
+                    if (status) {
+                        state.isSync = true;
+                        state.modifiedList.clear();
+                    } else {
+                        state.isSync = false;
+                        state.isBuilt.clear();
+                        const projDep = new ProjDepTree();
+                        for (const dep of projDep.getMasterList(projectName)) {
+                            const depState = this.states.get(dep);
+                            if (depState) {
+                                depState.isBuilt.clear();
+                            }
                         }
                     }
                 }
-            } else {
-                retCode = false;
             }
-        }
-        this.updateDescription();
-        return retCode;
+            this.updateDescription();
+        }, timeOut);
+        return true;
 
     }
 
     public isBuilt(projectName: string, buildType: string) {
         const state = this.states.get(projectName);
         if (state) {
-            const buildState = state.buildState.get(buildType.trim().toUpperCase());
+            const buildState = state.isBuilt.get(buildType.trim().toUpperCase());
             return !!buildState;
         }
         return false;    // always unbuilt
     }
 
-    public setBuilt(projectName: string, buildType: string, status = true) {
+    public setBuilt(projectName: string | undefined, buildType: string | undefined, status = true) {
+        this.logFn(LogType.debug, () => `setBuilt: ${projectName} is ${status}` );
         const projects: string[] = [];
         if (projectName) {
             projects.push(projectName);
@@ -107,7 +161,7 @@ export class ProjectState {
         for (const currentProject of projects) {
             const state = this.states.get(currentProject);
             if (state) {
-                state.buildState.set(buildType.trim().toUpperCase(), status);
+                state.isBuilt.set(buildType.trim().toUpperCase(), status);
             } else {
                 retCode = false;
             }
@@ -122,7 +176,7 @@ export class ProjectState {
 
     public getDefBuildType() {
         const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
-        if (config.get<string>(ProjectState.configBuildTypeSection) == BuildType.release) {
+        if (config.get<string>(ProjectState.configBuildTypeSection) === BuildType.release) {
             return BuildType.release;
         }
         return BuildType.debug;

@@ -1,10 +1,14 @@
+import * as nls from "vscode-nls";
 import * as vscode from "vscode";
 import { GetSshHelperType } from "../../ext-api/ext-api";
 import { ISshScopeSettings } from "../../ssh-helper/api";
 import { ensureSettings } from "../ensure-settings";
 import { ISyncScopeSettings } from "../sync/sync-api";
 import { ProjDepTree } from "./proj-dep-tree";
-import { ProjectState } from "./proj-state";
+import { ProjectState, SourceState } from "./proj-state";
+
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
 
 export enum ContextType {
     sync = "sync",
@@ -103,13 +107,13 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
             return new vscode.TreeItem(element, vscode.TreeItemCollapsibleState.None);
         }
         if (element === Fields[Fields.SshFields] && this.sshScopeSettings) {
-            return new vscode.TreeItem(`SSH`, vscode.TreeItemCollapsibleState.Expanded);
+            return new vscode.TreeItem(localize("SSH", "SSH"), vscode.TreeItemCollapsibleState.Expanded);
         }
         if (element === Fields[Fields.ProjectFields] && this.syncScopeSettings) {
-            return new vscode.TreeItem(`Project`, vscode.TreeItemCollapsibleState.Expanded);
+            return new vscode.TreeItem(localize("Project", "Project"), vscode.TreeItemCollapsibleState.Expanded);
         }
         if (element === Fields[Fields.CommonFields]) {
-            return new vscode.TreeItem(`Local`, vscode.TreeItemCollapsibleState.Expanded);
+            return new vscode.TreeItem(localize("Local", "Local"), vscode.TreeItemCollapsibleState.Expanded);
         }
         let data = "";
         let editable = false;
@@ -145,12 +149,20 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
                 data = ProjectState.acquire().getDefBuildType();
                 break;
             case CommonFields[CommonFields.sourceState]:
-                // TODO: i18n
-                data = ProjectState.acquire().isSynchronized(this.selectedProject) ? "synchronized" : "modified";
+                data = localize("unknown", "Unknown");
+                switch (ProjectState.acquire().sourceState(this.selectedProject)) {
+                    case SourceState.modified:
+                        data = localize("modified", "Modified");
+                        break;
+                    case SourceState.synchronized:
+                        data = localize("synchronized", "Synchronized");
+                        break;
+                }
                 break;
             case CommonFields[CommonFields.buildState]:
-                // TODO: i18n
-                data = ProjectState.acquire().isBuilt(this.selectedProject, ProjectState.acquire().getDefBuildType()) ? "built" : "not built";
+                data = ProjectState.acquire().isBuilt(this.selectedProject, ProjectState.acquire().getDefBuildType()) 
+                    ? localize("built", "Built")
+                    : localize("not.built", "Not built");
                 break;
             case CommonFields[CommonFields.masters]:
                 data = new ProjDepTree().getMasterList(this.selectedProject).join(" => ");
@@ -161,7 +173,7 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
             item.contextValue = "editable";
         }
         if (element === CommonFields[CommonFields.buildType]) {
-            item.tooltip = "Click to change build type";
+            item.tooltip = localize("tooltip.type", "Click to change build type");
             item.command = {
                 arguments: [],
                 command: ProjDescrProvider.cmdChangeBuildType,

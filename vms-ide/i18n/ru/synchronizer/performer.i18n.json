@@ -4,6 +4,7 @@
     "synchronizing.status": "Синхронизация...",
     "synchronizing.success": "Синхронизация удачна",
     "error.depend.vms": "Зависимые проекты должны быть на одном и том же VMS компьютере",
+    "do.upload.first": "Вероятно вам следует сперва выполнить Выгрузку или Синхронизацию для: {0}",
     "building.fail": "Построение неудачно",
     "building.status": "Построение...",
     "buiding.success": "Построение удачно",
@@ -25,5 +26,8 @@
     "headers.fail": "Downloading headers failed",
     "headers.status": "Downloading headers...",
     "headers.success": "Downloading headers done",
+    "upload.fail": "Выгрузка неудачна",
+    "upload.status": "Выгрузка...",
+    "upload.success": "Выгрузка завершена",
     "error.no_action": "Отсутсвует действие: {0}"
 }
