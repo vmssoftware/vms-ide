@@ -382,7 +382,6 @@ export class Builder {
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    $(CC) $(CCFLAGS) $(MMS$SOURCE)`,
             ``,
-            ``,
             `.CLD.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    SET COMMAND/OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
@@ -390,9 +389,13 @@ export class Builder {
             `.MSG.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    MESSAGE /OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
+            ``,
             `.BLI.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    BLISS $(BLISSFLAGS) $(MMS$SOURCE)`,
+            ``,
+            `.DEFAULT`,
+            `    ! Source $(MMS$TARGET) not yet added`,
             ``,
         ];
 
