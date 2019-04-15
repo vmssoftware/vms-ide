@@ -14,6 +14,7 @@ export enum ReflectKind
 export interface DebugVariable
 {
 	name: string;
+	nameFull: string;
 	addr: number;
 	type: string;
 	kind: ReflectKind;
@@ -33,6 +34,7 @@ export interface VariableFileInfo
 	wrapName: string;//wrap function name
 	functionName: string;//if "" => global variable
 	variableName: string;
+	variableNameFull: string;
 	variableType: string;
 	variableValue: string;
 	variableInfo: string;

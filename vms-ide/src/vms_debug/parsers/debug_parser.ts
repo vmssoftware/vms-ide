@@ -117,6 +117,7 @@ export class DebugParser
 				case DebugCmdVMS.dbgCallStack:
 				case DebugCmdVMS.dbgStack:
 				case DebugCmdVMS.dbgSymbol:
+				case DebugCmdVMS.dbgShowScope:
 				case DebugCmdVMS.dbgDump:
 					for(let item of msgLines)
 					{
@@ -516,6 +517,7 @@ export class DebugParser
 				let wrapName : string = "";
 				let functionName : string = "";
 				let variableName : string = "";
+				let variableNameFull : string = "";
 				const matcherR = /^\S+\s*(\S+)::(\S+)/;
 				const matcherS = /^\s*(\S+)::(\S+)\\(\S+)/;//class::member\field
 				let info = msgLines[i].substr(type[0].length+1);
@@ -544,6 +546,7 @@ export class DebugParser
 					fileName = infoData[0];
 					functionName = infoData[infoData.length-2];
 					variableName = infoData[infoData.length-1];
+					variableNameFull = info;
 
 					if(infoData.length === 4)
 					{
@@ -598,7 +601,7 @@ export class DebugParser
 						}
 					}
 
-					let variable = <VariableFileInfo> { filePath, fileName, wrapName, functionName, variableName, variableType };
+					let variable = <VariableFileInfo> { filePath, fileName, wrapName, functionName, variableName, variableNameFull , variableType };
 
 					variableInfo.push(variable);
 				}
@@ -717,7 +720,8 @@ export class DebugParser
 						}
 
 						if(item.functionName === nameFunc &&
-							item.variableName === nameVar)
+							item.variableName === nameVar &&
+							msgLines[i].includes(item.variableNameFull))
 						{
 							if(typeArray)
 							{
@@ -1107,6 +1111,7 @@ export class DebugParser
 						let child = <DebugVariable>
 						{
 							name: nameItem,
+							nameFull: "",
 							addr: 0,
 							type: "atomic",
 							kind: ReflectKind.Atomic,
@@ -1148,6 +1153,7 @@ export class DebugParser
 						let child = <DebugVariable>
 						{
 							name: name,
+							nameFull: "",
 							addr: 0,
 							type: typeName,
 							kind: kind,
@@ -1392,6 +1398,30 @@ export class DebugParser
 		return item;
 	}
 
+	// scope:
+    // 0 [ = HELLO\main ] or 0 [ = HELLO\main\%LINE 1645 ]
+	public parseScopeMsg(data: string) : string
+	{
+		let result = "";
+		let msgLines = data.split("\n");
+
+		for(let item of msgLines)
+		{
+			result = this.findNumberLineScope(item);
+
+			if(result !== "-1")
+			{
+				break;
+			}
+			else
+			{
+				result = "";
+			}
+		}
+
+		return result;
+	}
+
 
 	public getVariableFileInfo() : HolderDebugVariableInfo
 	{
@@ -1598,6 +1628,36 @@ export class DebugParser
 		}
 
 		return number;
+	}
+
+	//module\routine\%LINE NUMBER\variable
+	public findNumberLineScope(dataLine : string) : string
+	{
+		let number = "-1";
+		const matcher = /^.*\\%LINE (\d+)/;// ^\S+\\%LINE (\d+)\\
+		let matches = dataLine.match(matcher);
+
+		if(matches && matches.length === 2)
+		{
+			number = matches[1];
+		}
+
+		return number;
+	}
+
+	public getNumberLineScope(fileName : string, fullVariableName : string) : number
+	{
+		let numberLine = -1;
+
+		let info = this.fileInfo.getItem(fileName);
+
+		if(info)
+		{
+			let varNumberLine = parseInt(this.findNumberLineScope(fullVariableName), 10);
+			numberLine = varNumberLine - this.fileInfo.getShiftLine(fileName);
+		}
+
+		return numberLine;
 	}
 
 	public loadFileContext(file: string) : string[]
