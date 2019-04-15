@@ -258,6 +258,7 @@ export class VMSDebugSession extends LoggingDebugSession
 
 			let localVariables = {
 				name: "Local",
+				nameFull: "",
 				addr: 0,
 				type: "",
 				kind: 0,
@@ -271,6 +272,7 @@ export class VMSDebugSession extends LoggingDebugSession
 			};
 			// let globalVariables = {
 			// 	name: "Global",
+			//	nameFull: "",
 			// 	addr: 0,
 			// 	type: "",
 			// 	kind: 0,
@@ -404,6 +406,10 @@ export class VMSDebugSession extends LoggingDebugSession
 						{
 							fullName = this.runtime.getPointerDereferencing() + args.name;
 						}
+					}
+					else
+					{
+						fullName = args.name;
 					}
 					break;
 				}

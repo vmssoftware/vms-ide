@@ -60,6 +60,7 @@ export class VMSRuntime extends EventEmitter
 	private debugRun : boolean;
 	private programEnd : boolean;
 	private waitSymbols = new Subject();
+	private waitScope = new Subject();
 	private waitShellMode = new Subject();
 	private queueWaitVar = new Queue<any>();
 
@@ -73,6 +74,7 @@ export class VMSRuntime extends EventEmitter
 
 	private currentFilePath: string;
 	private currentRoutine: string;
+	private currentScope: string;
 
 	// maps from sourceFile to array of VMS breakpoints
 	private breakPoints = new Map<string, VMSBreakpoint[]>();
@@ -108,6 +110,7 @@ export class VMSRuntime extends EventEmitter
 		this.programEnd = false;
 		this.currentFilePath = "";
 		this.currentRoutine = "";
+		this.currentScope = "";
 		this.sourcePaths = [];
 		this.lisPaths = [];
 	}
@@ -229,6 +232,7 @@ export class VMSRuntime extends EventEmitter
 			this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
 			this.shell.SendCommandToQueue(this.dbgCmd.setAbortKey(this.abortKey));
 			this.shell.SendCommandToQueue(this.dbgCmd.run(programName, programArgs));
+			this.shell.SendCommandToQueue(this.dbgCmd.setScopeBase());
 		}
 		else//reload program
 		{
@@ -556,51 +560,55 @@ export class VMSRuntime extends EventEmitter
 							item.functionName === "" ||
 							item.functionName === wrapFunctionName)
 						{
-							if(item.variableType.includes("pointer to") ||
-								item.variableType.includes("pointer type"))
+							if(this.checkVariableInScope(item))
 							{
-								nameVar = this.pointerDereferencing + nameVar;
-							}
-							else if(item.variableType.includes("basic_string"))
-							{
-								if(item.variableAddress && item.variableAddress !== 0)
+								if(item.variableType.includes("pointer to") ||
+									item.variableType.includes("pointer type"))
 								{
-									if(item.variablePrefix)
+									nameVar = this.pointerDereferencing + nameVar;
+								}
+								else if(item.variableType.includes("basic_string"))
+								{
+									if(item.variableAddress && item.variableAddress !== 0)
 									{
-										nameVar = this.pointerDereferencing + nameVar + item.variablePrefix;
-									}
-									else
-									{
-										nameVar = this.pointerDereferencing + nameVar;
+										if(item.variablePrefix)
+										{
+											nameVar = this.pointerDereferencing + nameVar + item.variablePrefix;
+										}
+										else
+										{
+											nameVar = this.pointerDereferencing + nameVar;
+										}
 									}
 								}
+
+								await this.requestVariables(nameVar);
+
+								let childs : DebugVariable[] = [];
+
+								if(item.variableKind === ReflectKind.Array ||
+									item.variableKind === ReflectKind.Struct ||
+									item.variableKind === ReflectKind.Pointer)
+								{
+									childs = this.dbgParser.parseStructValues(item, new Parameters());
+								}
+
+								variables.push({
+									name: item.variableName,
+									nameFull: item.variableNameFull,
+									addr: item.variableAddress,
+									type: item.variableType,
+									kind: item.variableKind,
+									value: item.variableValue,
+									info: item.variableInfo,
+									prefix: item.variablePrefix,
+									len: 0,
+									unreadable: "",
+									fullyQualifiedName: "",
+									children : childs
+								});
+								break;
 							}
-
-							await this.requestVariables(nameVar);
-
-							let childs : DebugVariable[] = [];
-
-							if(item.variableKind === ReflectKind.Array ||
-								item.variableKind === ReflectKind.Struct ||
-								item.variableKind === ReflectKind.Pointer)
-							{
-								childs = this.dbgParser.parseStructValues(item, new Parameters());
-							}
-
-							variables.push({
-								name: item.variableName,
-								addr: item.variableAddress,
-								type: item.variableType,
-								kind: item.variableKind,
-								value: item.variableValue,
-								info: item.variableInfo,
-								prefix: item.variablePrefix,
-								len: 0,
-								unreadable: "",
-								fullyQualifiedName: "",
-								children : childs
-							});
-							break;
 						}
 					}
 				}
@@ -645,6 +653,9 @@ export class VMSRuntime extends EventEmitter
 			{
 				let nameVars : string = "";
 				let namePtrs : string = "";
+
+				this.shell.SendCommandToQueue(this.dbgCmd.showScope());
+				await this.waitScope.wait(5000);
 
 				for(let item of vars)//create string of variables
 				{
@@ -701,7 +712,8 @@ export class VMSRuntime extends EventEmitter
 
 					for(let item of vars)
 					{
-						if(item.functionName === funcName)
+						if(item.functionName === funcName &&
+							this.checkVariableInScope(item))
 						{
 							let childs : DebugVariable[] = [];
 
@@ -714,6 +726,7 @@ export class VMSRuntime extends EventEmitter
 
 							variables.push({
 								name: item.variableName,
+								nameFull: item.variableNameFull,
 								addr: item.variableAddress,
 								type: item.variableType,
 								kind: item.variableKind,
@@ -736,7 +749,6 @@ export class VMSRuntime extends EventEmitter
 
 	private async requestVariables(nameVars : string) : Promise<void>
 	{
-		this.shell.SendCommandToQueue(this.dbgCmd.setScope(this.getNameFromPath(this.currentFilePath), this.currentRoutine));
 		this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of variables
 
 		let wait = new Subject();
@@ -754,61 +766,89 @@ export class VMSRuntime extends EventEmitter
 
 	private addVariableToString(variables : string, item : VariableFileInfo) : string
 	{
-		if(variables !== "")
+		if(this.checkVariableInScope(item))
 		{
-			variables += ",";
-		}
+			let nameVar = "";
 
-		if(item.variableType.includes("pointer to") ||
-			item.variableType.includes("pointer type"))
-		{
-			if(item.variableAddress)
+			if(variables !== "")
 			{
-				if(item.variableAddress !== 0)
+				variables += ",";
+			}
+
+			nameVar = item.variableName;
+
+			if(item.variableType.includes("pointer to") ||
+				item.variableType.includes("pointer type"))
+			{
+				if(item.variableAddress)
 				{
-					variables += this.pointerDereferencing + item.variableName;
+					if(item.variableAddress !== 0)
+					{
+						variables += this.pointerDereferencing + nameVar;
+					}
+					else
+					{
+						variables += nameVar;
+					}
 				}
 				else
 				{
-					variables += item.variableName;
+					if(item.variableName === "this")
+					{
+						variables += this.pointerDereferencing + nameVar;
+					}
+					else
+					{
+						variables += nameVar;
+					}
+				}
+			}
+			else if(item.variableType.includes("basic_string"))
+			{
+				if(item.variableAddress && item.variableAddress !== 0)
+				{
+					if(item.variablePrefix)
+					{
+						variables += this.pointerDereferencing + nameVar + item.variablePrefix;
+					}
+					else
+					{
+						variables += this.pointerDereferencing + nameVar;
+					}
+				}
+				else
+				{
+					variables += nameVar;
 				}
 			}
 			else
 			{
-				if(item.variableName === "this")
-				{
-					variables += this.pointerDereferencing + item.variableName;
-				}
-				else
-				{
-					variables += item.variableName;
-				}
+				variables += nameVar;
 			}
-		}
-		else if(item.variableType.includes("basic_string"))
-		{
-			if(item.variableAddress && item.variableAddress !== 0)
-			{
-				if(item.variablePrefix)
-				{
-					variables += this.pointerDereferencing + item.variableName + item.variablePrefix;
-				}
-				else
-				{
-					variables += this.pointerDereferencing + item.variableName;
-				}
-			}
-			else
-			{
-				variables += item.variableName;
-			}
-		}
-		else
-		{
-			variables += item.variableName;
 		}
 
 		return variables;
+	}
+
+	private checkVariableInScope(variable : VariableFileInfo) : boolean
+	{
+		let check = true;
+
+		if(variable.variableNameFull.includes("%LINE "))//module\routine\%LINE NUM\variable: data
+		{
+			let scopeVariable = this.dbgParser.findNumberLineScope(variable.variableNameFull);
+
+			if(scopeVariable === this.currentScope)
+			{
+				check = true;
+			}
+			else
+			{
+				check = false;
+			}
+		}
+
+		return check;
 	}
 
 	public sendDataToProgram(data : string) : boolean
@@ -1290,6 +1330,11 @@ export class VMSRuntime extends EventEmitter
 					case DebugCmdVMS.dbgSymbol:
 						this.dbgParser.parseVariableMsg(this.sourcePaths, messageData);
 						this.waitSymbols.notify();
+						break;
+
+					case DebugCmdVMS.dbgShowScope:
+						this.currentScope = this.dbgParser.parseScopeMsg(messageData);
+						this.waitScope.notify();
 						break;
 
 					default:

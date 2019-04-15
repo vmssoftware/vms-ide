@@ -33,6 +33,7 @@ export enum DebugCmdVMS
 	dbgStack = "show stack",
 	dbgSymbol = "show symbol/address/type * in",
 	dbgSetScope = "set scope",
+	dbgShowScope = "show scope",
 
 	dbgDump = "dump",
 
@@ -218,6 +219,14 @@ export class DebugCommands
 	public setScope(nameModule : string, nameRoutine : string) : CommandMessage
 	{
 		return new CommandMessage(DebugCmdVMS.dbgSetScope, " " + nameModule.toUpperCase() + "\\" + nameRoutine);
+	}
+	public setScopeBase() : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgSetScope, " 0");
+	}
+	public showScope() : CommandMessage
+	{
+		return new CommandMessage(DebugCmdVMS.dbgShowScope, "");
 	}
 
 	//dump
