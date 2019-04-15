@@ -96,6 +96,8 @@ export class Builder {
     private collection?: DiagnosticCollection;
     private sshHelper?: SshHelper;
 
+    public  stopIssued = false;
+
     /**
      * Execute build command on VMS
      * @param context vscode context
@@ -165,6 +167,7 @@ export class Builder {
         if (!scopeData) {
             return false;
         }
+        this.enableRemote();
         const [cfg, cmd] = this.parseParams(params);
         return this.ensureMmsCreated(scopeData, cfg)
             .then(async (result) => {
@@ -175,6 +178,11 @@ export class Builder {
                         const modifiedList = ProjectState.acquire().getModifiedList(projectName);
                         if (modifiedList.length > 0) {
                             this.smartClean(scopeData, modifiedList, cfg);
+                            if (this.stopIssued) {
+                                Synchronizer.acquire().disableRemote();
+                            } else {
+                                Synchronizer.acquire().enableRemote();
+                            }
                             if (await Synchronizer.acquire().uploadFiles(ensured, modifiedList)) {
                                 ProjectState.acquire().clearModified(projectName);
                             }
@@ -210,6 +218,20 @@ export class Builder {
         }
     }
 
+    public enableRemote() {
+        this.stopIssued = false;
+        for (const buildScopeData of Builder.buildScopes.values()) {
+            buildScopeData.shell.enabled = true;
+        }
+    }
+
+    public disableRemote() {
+        this.stopIssued = true;
+        for (const buildScopeData of Builder.buildScopes.values()) {
+            buildScopeData.shell.enabled = false;
+        }
+    }
+
     public async cleanProject(ensured: IEnsured, params?: string) {
         // clear password cache
         if (this.sshHelper) {
@@ -219,6 +241,7 @@ export class Builder {
         if (!scopeData) {
             return false;
         }
+        this.enableRemote();
         const [cfg, cmd] = this.parseParams(params);
         return this.runRemoteClean(scopeData, cfg, cmd)
             .then((result) => {

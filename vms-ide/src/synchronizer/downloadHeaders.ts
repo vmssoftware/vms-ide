@@ -7,7 +7,7 @@ import { OpenDialogOptions, window, workspace } from "vscode";
 import { ftpPathSeparator, LogFunction, LogType } from "../common/main";
 
 import { GetSshHelperType } from "../ext-api/ext-api";
-import { CommandContext, setContext } from "./command-context";
+// import { CommandContext, setContext } from "./command-context";
 import { TestExecResult } from "./common/TestExecResult";
 import { ensureSettings } from "./ensure-settings";
 import { Synchronizer } from "./sync/synchronizer";
@@ -109,7 +109,7 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
             return false;
         }
 
-        setContext(CommandContext.isSyncronizing, true);
+        // setContext(CommandContext.isHeaders, true); should be done by performer
         // 1. extract each file (TODO: how to do it in one command?)
         const outFolder = ensured.projectSection.outdir + ftpPathSeparator + libName;
         const downloadList: string[] = [];
@@ -174,7 +174,7 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
             logFn(LogType.information, () => localize("del.failed", "Cannot delete intermediate files: {0}", `[${ensured.projectSection.outdir}.${libName}]`));
         }
         logFn(LogType.information, () => localize("done", "Done."));
-        setContext(CommandContext.isSyncronizing, false);
+        // setContext(CommandContext.isHeaders, false); should be done by performer
         shell.dispose();
         return true;
     }

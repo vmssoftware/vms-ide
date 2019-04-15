@@ -123,8 +123,9 @@ export async function activate(context: ExtensionContext) {
         return Perform("create mms", scope, logFn);
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopSync", async () => {
-        return Synchronizer.acquire().disableRemote();
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopAction", async () => {
+        Synchronizer.acquire().disableRemote();
+        Builder.acquire().disableRemote();
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async (scope?: string) => {
