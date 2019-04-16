@@ -32,26 +32,23 @@ export async function activate(context: ExtensionContext) {
         return undefined;
     }
 
-    const syncLog = configApi.createLogFunction("VMS-IDE Sync");
-    const buildLog = configApi.createLogFunction("VMS-IDE Build");
+    logFn = configApi.createLogFunction("VMS-IDE Build");
 
-    ProjectState.acquire().setLogFn(syncLog);
-
-    logFn = syncLog;
+    ProjectState.acquire().setLogFn(logFn);
 
     setExtensionContext(context);
 
-    syncLog(LogType.debug, () => localize("debug.activated", "VMS-IDE Sync extension is activated"));
+    logFn(LogType.debug, () => localize("debug.activated", "VMS-IDE Sync extension is activated"));
 
-    context.subscriptions.push(Synchronizer.acquire(syncLog));
-    context.subscriptions.push(Builder.acquire(buildLog));
+    context.subscriptions.push(Synchronizer.acquire(logFn));
+    context.subscriptions.push(Builder.acquire(logFn));
 
-    context.subscriptions.push( window.registerUriHandler({
-        handleUri(uri) {
-            syncLog(LogType.debug, () => `command: ${uri.path}`);
-            syncLog(LogType.debug, () => `query: ${uri.query}`);
-            syncLog(LogType.debug, () => `fragment: ${uri.fragment}`);
-        }}));
+    // context.subscriptions.push( window.registerUriHandler({
+    //     handleUri(uri) {
+    //         logFn(LogType.debug, () => `command: ${uri.path}`);
+    //         logFn(LogType.debug, () => `query: ${uri.query}`);
+    //         logFn(LogType.debug, () => `fragment: ${uri.fragment}`);
+    //     }}));
 
     createFsWatchers();
     workspace.onDidChangeWorkspaceFolders((e) => {
@@ -62,110 +59,111 @@ export async function activate(context: ExtensionContext) {
     const projectDescriptionProvider = new ProjDescrProvider();
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async (scope?: string) => {
-        scope = scope || projectDependenciesProvider.selectedProject();
+        scope = checkScope(scope);
         return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
-                    return Perform("synchronize", scope, syncLog);
+                    return Perform("synchronize", scope, logFn);
                 }
                 return saved;
             });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async (scope?: string, params?: string) => {
-        scope = scope || projectDependenciesProvider.selectedProject();
+        scope = checkScope(scope);
         return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
-                    return Perform("build", scope, buildLog, params);
+                    return Perform("build", scope, logFn, params);
                 }
                 return saved;
             });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildProject", async (scope?: string, params?: string) => {
-        scope = scope || projectDependenciesProvider.selectedProject();
+        scope = checkScope(scope);
         return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
-                    return Perform("rebuild", scope, buildLog, params);
+                    return Perform("rebuild", scope, logFn, params);
                 }
                 return saved;
             });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildOnlyProject", async (scope?: string, params?: string) => {
-        scope = scope || projectDependenciesProvider.selectedProject();
+        scope = checkScope(scope);
         return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
-                    return Perform("buildOnly", scope, buildLog, params);
+                    return Perform("buildOnly", scope, logFn, params);
                 }
                 return saved;
             });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildOnlyProject", async (scope?: string, params?: string) => {
-        scope = scope || projectDependenciesProvider.selectedProject();
+        scope = checkScope(scope);
         return workspace.saveAll(true)
             .then((saved) => {
                 if (saved) {
-                    return Perform("rebuildOnly", scope, buildLog, params);
+                    return Perform("rebuildOnly", scope, logFn, params);
                 }
                 return saved;
             });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope?: string, buildType?: string) => {
-        scope = scope || projectDependenciesProvider.selectedProject();
-        return Perform("clean", scope, buildLog, buildType);
+        scope = checkScope(scope);
+        return Perform("clean", scope, logFn, buildType);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.createMMS", async (scope?: string) => {
-        scope = scope || projectDependenciesProvider.selectedProject();
-        return Perform("create mms", scope, buildLog);
+        scope = checkScope(scope);
+        return Perform("create mms", scope, logFn);
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopSync", async () => {
-        return Synchronizer.acquire().disableRemote();
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopAction", async () => {
+        Synchronizer.acquire().disableRemote();
+        Builder.acquire().disableRemote();
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async (scope?: string) => {
-        scope = scope || projectDependenciesProvider.selectedProject();
-        return Perform("edit settings", scope, syncLog);
+        scope = checkScope(scope);
+        return Perform("edit settings", scope, logFn);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.ssh-helper.editSettings", (scope?: string) => {
-        scope = scope || projectDependenciesProvider.selectedProject();
-        return Perform("edit ssh settings", scope, syncLog);
+        scope = checkScope(scope);
+        return Perform("edit ssh settings", scope, logFn);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.changeCRLF", async (scope?: string) => {
-        return Perform("crlf", scope, syncLog);
+        return Perform("crlf", scope, logFn);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.forceSynchronized", async (scope?: string) => {
-        scope = scope || projectDependenciesProvider.selectedProject();
+        scope = checkScope(scope);
         return ProjectState.acquire().setSynchronized(scope, true);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.forceBuilt", async (scope?: string, buildType?: string) => {
-        scope = scope || projectDependenciesProvider.selectedProject();
+        scope = checkScope(scope);
         return ProjectState.acquire().setBuilt(scope, buildType, true);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.uploadZip", async (scope?: string, clear?: string) => {
-        scope = scope || projectDependenciesProvider.selectedProject();
-        return Perform("zip", scope, syncLog, clear);
+        scope = checkScope(scope);
+        return Perform("zip", scope, logFn, clear);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.upload", async (scope?: string) => {
-        scope = scope || projectDependenciesProvider.selectedProject();
-        return Perform("upload", scope, syncLog);
+        scope = checkScope(scope);
+        return Perform("upload", scope, logFn);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.downloadHeaders", async (scope?: string, params?: string) => {
-        return Perform("headers", scope, syncLog, params);
+        return Perform("headers", scope, logFn, params);
     }));
 
     context.subscriptions.push( window.registerTreeDataProvider("vmssoftware.project-dep.projectDependencies", projectDependenciesProvider) );
@@ -199,6 +197,18 @@ export async function activate(context: ExtensionContext) {
         () => projectDescriptionProvider.changeBuildType()) );
 
     return new SyncApi();
+
+    function checkScope(scope: string | undefined) {
+        if (!scope) {
+            const selectedScope = projectDependenciesProvider.selectedProject();
+            if (!selectedScope) {
+                logFn(LogType.warning, () => localize("scope.undefined", "There is no selected scope in Project explorer"));
+            }
+            return selectedScope;
+        }
+        return scope;
+    }
+    
 }
 
 // this method is called when your extension is deactivated

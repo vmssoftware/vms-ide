@@ -96,6 +96,8 @@ export class Builder {
     private collection?: DiagnosticCollection;
     private sshHelper?: SshHelper;
 
+    public  stopIssued = false;
+
     /**
      * Execute build command on VMS
      * @param context vscode context
@@ -165,6 +167,7 @@ export class Builder {
         if (!scopeData) {
             return false;
         }
+        this.enableRemote();
         const [cfg, cmd] = this.parseParams(params);
         return this.ensureMmsCreated(scopeData, cfg)
             .then(async (result) => {
@@ -174,11 +177,18 @@ export class Builder {
                         const projectName = ensured.configHelper.workspaceFolder.name;
                         const modifiedList = ProjectState.acquire().getModifiedList(projectName);
                         if (modifiedList.length > 0) {
-                            //if (ensured.synchronizeSection.smartClean)
-                                this.smartClean(scopeData, modifiedList, cfg);
+                            this.smartClean(scopeData, modifiedList, cfg);
+                            if (this.stopIssued) {
+                                Synchronizer.acquire().disableRemote();
+                            } else {
+                                Synchronizer.acquire().enableRemote();
+                            }
                             if (await Synchronizer.acquire().uploadFiles(ensured, modifiedList)) {
                                 ProjectState.acquire().clearModified(projectName);
                             }
+                            if (scopeData.ensured.synchronizeSection.purge) {
+                                await scopeData.shell.execCmd("purge [...]");
+                            }                    
                         }
                     }
                     return this.runRemoteBuild(scopeData, cfg, cmd);
@@ -208,6 +218,20 @@ export class Builder {
         }
     }
 
+    public enableRemote() {
+        this.stopIssued = false;
+        for (const buildScopeData of Builder.buildScopes.values()) {
+            buildScopeData.shell.enabled = true;
+        }
+    }
+
+    public disableRemote() {
+        this.stopIssued = true;
+        for (const buildScopeData of Builder.buildScopes.values()) {
+            buildScopeData.shell.enabled = false;
+        }
+    }
+
     public async cleanProject(ensured: IEnsured, params?: string) {
         // clear password cache
         if (this.sshHelper) {
@@ -217,6 +241,7 @@ export class Builder {
         if (!scopeData) {
             return false;
         }
+        this.enableRemote();
         const [cfg, cmd] = this.parseParams(params);
         return this.runRemoteClean(scopeData, cfg, cmd)
             .then((result) => {
@@ -380,7 +405,6 @@ export class Builder {
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    $(CC) $(CCFLAGS) $(MMS$SOURCE)`,
             ``,
-            ``,
             `.CLD.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    SET COMMAND/OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
@@ -388,9 +412,13 @@ export class Builder {
             `.MSG.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    MESSAGE /OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
+            ``,
             `.BLI.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    BLISS $(BLISSFLAGS) $(MMS$SOURCE)`,
+            ``,
+            `.DEFAULT`,
+            `    ! Source $(MMS$TARGET) not yet added`,
             ``,
         ];
 

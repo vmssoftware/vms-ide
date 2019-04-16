@@ -26,7 +26,7 @@
 	"synchronizer.command.cleanProject.title": "Очистить проект",
 	"synchronizer.command.editProject.title": "Редактировать настройки VMS проекта",
 	"synchronizer.command.syncProject.title": "Синхронизировать проект с VMS",
-	"synchronizer.command.stopSync.title": "Остановить синхронизацию",
+	"synchronizer.command.stopAction.title": "Остановить действие",
 	"synchronizer.command.createMMS.title": "Создать MMS",
 	"synchronizer.command.changeCRLF.title": "Сменить CR/LF для всех файлов",
 	"synchronizer.command.forceSynchronized.title": "Установить статус синхронизировано",

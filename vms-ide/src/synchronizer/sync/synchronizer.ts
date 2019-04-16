@@ -23,6 +23,7 @@ import { SftpSource } from "./sftp-source";
 import { IProgress, ISource } from "./source";
 import { VmsSftpClient } from "./vms-sftp-client";
 import { VmsShellSource } from "./vms-shell-source";
+import { Builder } from "../../synchronizer/build/builder";
 
 interface IScopeSyncData {
     ensured: IEnsured;      // saved settings
@@ -64,16 +65,15 @@ export class Synchronizer {
 
     public enableRemote() {
         this.stopIssued = false;
-        for (const scopeData of Synchronizer.syncScopes.values()) {
-            scopeData.remoteSource.enabled = true;
+        for (const synchScopeData of Synchronizer.syncScopes.values()) {
+            synchScopeData.remoteSource.enabled = true;
         }
     }
 
     public disableRemote() {
         this.stopIssued = true;
-        this.logFn(LogType.debug, () => localize("debug.disablig", "Disabling all SFTP and SHELL"));
-        for (const scopeData of Synchronizer.syncScopes.values()) {
-            scopeData.remoteSource.enabled = false;
+        for (const synchScopeData of Synchronizer.syncScopes.values()) {
+            synchScopeData.remoteSource.enabled = false;
         }
     }
 

@@ -2,8 +2,8 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "0.0.14",
-    "publisher": "vmssoftware",
+    "version": "0.0.16",
+    "publisher": "VMSSoftwareInc",
     "repository": {
         "type": "git",
         "url": "git:"
@@ -22,7 +22,7 @@
         "onView:vmssoftware.project-dep.projectDependencies",
         "onView:vmssoftware.project-dep.projectDescription",
         "onCommand:vmssoftware.ssh-helper.editSettings",
-        "onCommand:vmssoftware.synchronizer.stopSync",
+        "onCommand:vmssoftware.synchronizer.stopAction",
         "onCommand:vmssoftware.synchronizer.buildProject",
         "onCommand:vmssoftware.synchronizer.reBuildProject",
         "onCommand:vmssoftware.synchronizer.buildOnlyProject",
@@ -187,56 +187,56 @@
                     "command": "vmssoftware.ssh-helper.editSettings"
                 },
                 {
-                    "command": "vmssoftware.synchronizer.stopSync",
-                    "when": "vmssoftware.synchronizer.isSync || vmssoftware.synchronizer.isBuld"
+                    "command": "vmssoftware.synchronizer.stopAction",
+                    "when": "vmssoftware.synchronizer.isInAction"
                 },
                 {
                     "command": "vmssoftware.synchronizer.buildProject",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
                     "command": "vmssoftware.synchronizer.reBuildProject",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
                     "command": "vmssoftware.synchronizer.buildOnlyProject",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
                     "command": "vmssoftware.synchronizer.reBuildOnlyProject",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
                     "command": "vmssoftware.synchronizer.cleanProject",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
                     "command": "vmssoftware.synchronizer.syncProject",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
                     "command": "vmssoftware.synchronizer.editProject",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
                     "command": "vmssoftware.synchronizer.changeCRLF",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
                     "command": "vmssoftware.synchronizer.uploadZip",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
                     "command": "vmssoftware.synchronizer.upload",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
                     "command": "vmssoftware.synchronizer.cleanProject",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld"
+                    "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
                     "command": "vmssoftware.synchronizer.downloadHeaders",
-                    "when": "!vmssoftware.synchronizer.isSync && !vmssoftware.synchronizer.isBuld && !vmssoftware.synchronizer.isHeaders"
+                    "when": "!vmssoftware.synchronizer.isInAction"
                 }
             ],
             "view/title": [
@@ -350,8 +350,8 @@
                 "title": "%synchronizer.command.projectDescription.edit.title%"
             },
             {
-                "command": "vmssoftware.synchronizer.stopSync",
-                "title": "%synchronizer.command.stopSync.title%",
+                "command": "vmssoftware.synchronizer.stopAction",
+                "title": "%synchronizer.command.stopAction.title%",
                 "category": "%command.category%"
             },
             {

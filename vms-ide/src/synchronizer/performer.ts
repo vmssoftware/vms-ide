@@ -41,7 +41,6 @@ export type ActionType =
 export interface IPerform {
     actionFunc: AsyncAction;
     actionName: ActionType;
-    context: CommandContext;
     status: string;
     success: string;
     fail: string;
@@ -87,7 +86,6 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "synchronize",
-        context: CommandContext.isSyncronizing,
         fail: localize("synchronizing.fail", "Synchronizing failed"),
         status: localize("synchronizing.status", "$(sync) Synchronizing..."),
         success: localize("synchronizing.success", "Synchronizing ok"),
@@ -121,7 +119,6 @@ export const actions: IPerform[] = [
             return retCode;
         },
         actionName: "build",
-        context: CommandContext.isBuilding,
         fail: localize("building.fail", "Building failed"),
         status: localize("building.status", "$(tools) Building..."),
         success: localize("buiding.success", "Building ok"),
@@ -145,7 +142,6 @@ export const actions: IPerform[] = [
             }
         },
         actionName: "buildOnly",
-        context: CommandContext.isBuilding,
         fail: localize("building.fail", "Building failed"),
         status: localize("building.status", "$(tools) Building..."),
         success: localize("buiding.success", "Building ok"),
@@ -180,7 +176,6 @@ export const actions: IPerform[] = [
             return retCode;
         },
         actionName: "rebuild",
-        context: CommandContext.isBuilding,
         fail: localize("building.fail", "Building failed"),
         status: localize("building.status", "$(tools) Building..."),
         success: localize("buiding.success", "Building ok"),
@@ -206,7 +201,6 @@ export const actions: IPerform[] = [
             }
         },
         actionName: "rebuildOnly",
-        context: CommandContext.isBuilding,
         fail: localize("building.fail", "Building failed"),
         status: localize("building.status", "$(tools) Building..."),
         success: localize("buiding.success", "Building ok"),
@@ -245,7 +239,6 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "clean",
-        context: CommandContext.isBuilding,
         fail: localize("clean.fail", "Clean failed"),
         status: localize("clean.status", "$(trashcan) Clean..."),
         success: localize("clean.success", "Clean ok"),
@@ -279,7 +272,6 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "create mms",
-        context: CommandContext.isBuilding,
         fail: localize("mms.fail", "Create MMS failed"),
         status: localize("mms.status", "Creating MMS..."),
         success: localize("mms.success", "Create MMS ok"),
@@ -308,7 +300,6 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "crlf",
-        context: CommandContext.isCrLf,
         fail: localize("crlf.fail", "Change CrLf failed"),
         status: localize("crlf.status", "$(search) Changing..."),
         success: localize("crlf.success", "Change CrLf done"),
@@ -336,7 +327,6 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "zip",
-        context: CommandContext.isCrLf,
         fail: localize("zip.fail", "Uploading via Zip failed"),
         status: localize("zip.status", "$(file-zip) Uploading via Zip..."),
         success: localize("zip.success", "Uploading via Zip done"),
@@ -355,7 +345,6 @@ export const actions: IPerform[] = [
             return false;
         },
         actionName: "edit settings",
-        context: CommandContext.isEdit,
         fail: localize("edit.fail", "Edit settings failed"),
         status: localize("edit.status", "Edit settings..."),
         success: localize("edit.success", "Edit settings done"),
@@ -371,7 +360,6 @@ export const actions: IPerform[] = [
             return false;
         },
         actionName: "edit ssh settings",
-        context: CommandContext.isEdit,
         fail: localize("edit.fail", "Edit settings failed"),
         status: localize("edit.status", "Edit settings..."),
         success: localize("edit.success", "Edit settings done"),
@@ -382,7 +370,6 @@ export const actions: IPerform[] = [
             return DownloadHeaders(scope, logFn);
         },
         actionName: "headers",
-        context: CommandContext.isHeaders,
         fail: localize("headers.fail", "Downloading headers failed"),
         status: localize("headers.status", "Downloading headers..."),
         success: localize("headers.success", "Downloading headers done"),
@@ -410,7 +397,6 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "upload",
-        context: CommandContext.isSyncronizing,
         fail: localize("upload.fail", "Upload failed"),
         status: localize("upload.status", "Upload..."),
         success: localize("upload.success", "Upload done"),
@@ -423,7 +409,7 @@ export async function Perform(actionName: ActionType, scope: string | undefined,
         logFn(LogType.debug, () => localize("error.no_action", "Cannot find action: {0}", actionName));
         return false;
     }
-    setContext(actionToDo.context, true);
+    setContext(CommandContext.isInAction, true);
     const scopeStr = scope ? ` [${scope}]` : ` [All]`;
     const msg = window.setStatusBarMessage(actionToDo.status + scopeStr);
     return actionToDo.actionFunc(scope, logFn, params)
@@ -431,7 +417,7 @@ export async function Perform(actionName: ActionType, scope: string | undefined,
             logFn(LogType.error, () => err);
             return false;
         }).then((actionResult) => {
-            setContext(actionToDo.context, false);
+            setContext(CommandContext.isInAction, false);
             msg.dispose();
             if (actionResult) {
                 const str = actionToDo.success + scopeStr;
