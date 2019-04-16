@@ -226,17 +226,19 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 					if(config.typeRun === "DEBUG")
 					{
 						typeRunConfig = TypeRunConfig.TypeRunDebug;
-						// start port listener on launch of first debug session
-						if (!this.serverDbg)
+
+						if (this.serverDbg)
 						{
-							// start listening on a random port
-							this.serverDbg = Net.createServer(socket =>
-							{
-								session = new VMSDebugSession(folder, shell, logFn);
-								session.setRunAsServer(true);
-								session.start(<NodeJS.ReadableStream>socket, socket);
-							}).listen(0);
+							this.serverDbg.close();
+							this.serverDbg = undefined;
 						}
+						// start listening on a random port
+						this.serverDbg = Net.createServer(socket =>
+						{
+							session = new VMSDebugSession(folder, shell, logFn);
+							session.setRunAsServer(true);
+							session.start(<NodeJS.ReadableStream>socket, socket);
+						}).listen(0);
 
 						// make VS Code connect to debug server instead of launching debug adapter
 						config.debugServer = this.serverDbg.address().port;
@@ -245,17 +247,19 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 					{
 						config.noDebug = true;
 						typeRunConfig = TypeRunConfig.TypeRunRun;
-						// start port listener on launch of first debug session
-						if (!this.serverNoDbg)
+
+						if (this.serverNoDbg)
 						{
-							// start listening on a random port
-							this.serverNoDbg = Net.createServer(socket =>
-							{
-								sessionRun = new VMSNoDebugSession(shell, logFn);
-								sessionRun.setRunAsServer(true);
-								sessionRun.start(<NodeJS.ReadableStream>socket, socket);
-							}).listen(0);
+							this.serverNoDbg.close();
+							this.serverNoDbg = undefined;
 						}
+						// start listening on a random port
+						this.serverNoDbg = Net.createServer(socket =>
+						{
+							sessionRun = new VMSNoDebugSession(shell, logFn);
+							sessionRun.setRunAsServer(true);
+							sessionRun.start(<NodeJS.ReadableStream>socket, socket);
+						}).listen(0);
 
 						// make VS Code connect to debug server instead of launching debug adapter
 						config.debugServer = this.serverNoDbg.address().port;
