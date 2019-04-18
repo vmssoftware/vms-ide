@@ -38,6 +38,9 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
         if (this.selected) {
             return this.selected.name;
         }
+        if (this.projects.root.children.size) {
+            return this.projects.root.children.keys().next().value;
+        }
         return undefined;
     }
 

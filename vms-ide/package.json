@@ -19,6 +19,7 @@
     "icon": "images/vms_128x128_v2.png",
     "main": "./out/index",
     "activationEvents": [
+        "*",
         "onView:vmssoftware.project-dep.projectDependencies",
         "onView:vmssoftware.project-dep.projectDescription",
         "onCommand:vmssoftware.ssh-helper.editSettings",
@@ -158,6 +159,14 @@
             {
                 "command": "extension.vms-debug.terminal",
                 "key": "Ctrl+F6"
+            },
+            {
+                "command": "vmssoftware.synchronizer.buildProject",
+                "key": "Ctrl+F7"
+            },
+            {
+                "command": "vmssoftware.synchronizer.buildOnlyProject",
+                "key": "Ctrl+Alt+F7"
             }
         ],
         "viewsContainers": {
