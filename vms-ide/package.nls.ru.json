@@ -34,6 +34,8 @@
 	"synchronizer.command.uploadZip.title": "Выгрузить с помощью ZIP",
 	"synchronizer.command.upload.title": "Выгрузить",
 	"synchronizer.command.downloadHeaders.title": "Загрузить системные заголовочные файлы",
+	"synchronizer.command.projectDependencies.syncProject.title": "Синхронизировать",
+	"synchronizer.command.projectDependencies.upload.title": "Выгрузить",
 	"synchronizer.command.projectDependencies.add.title": "Добавить в зависимости к текущему",
 	"synchronizer.command.projectDependencies.build.title": "Построить проект с зависимостями",
 	"synchronizer.command.projectDependencies.rebuild.title": "Перестроить проект с зависимостями",

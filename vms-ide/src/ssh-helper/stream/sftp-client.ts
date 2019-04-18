@@ -214,6 +214,7 @@ export class SftpClient extends SshClient {
             delete this.sftpEnd;
         }
         delete this.sftp;
+        this.emit("cleanSftp");
     }
 
     private async sftpConnect() {
