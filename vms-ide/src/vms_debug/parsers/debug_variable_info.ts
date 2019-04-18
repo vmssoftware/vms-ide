@@ -1,7 +1,9 @@
 export enum ReflectKind
 {
+	Value = -1,
 	Invalid = 0,
 	Atomic,
+	Block,
 	Array,
 	Class,
 	Func,
