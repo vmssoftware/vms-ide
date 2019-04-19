@@ -2,8 +2,9 @@ import { IFileEntry, ftpPathSeparator } from "../../common/main";
 
 import { Readable, Writable } from "stream";
 import { IInputAttributes, ISftpClient, IStats } from "../../ssh-helper/api";
+import { EventEmitter } from "events";
 
-export class VmsSftpClient implements ISftpClient {
+export class VmsSftpClient extends EventEmitter implements ISftpClient {
 
     public static rgCaret = /\^/g;
 
@@ -13,7 +14,10 @@ export class VmsSftpClient implements ISftpClient {
      * @param sftp SFTP
      */
     constructor(public sftp: ISftpClient) {
-
+        super();
+        sftp.on("cleanSftp", () => {
+            this.emit("cleanSftp");
+        });
     }
 
     /**

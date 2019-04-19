@@ -1,4 +1,5 @@
 
+import micromatch from "micromatch";
 import fs from "fs-extra";
 import path from "path";
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, languages, Range, Uri, workspace } from "vscode";
@@ -6,7 +7,7 @@ import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, languages, Range,
 import { IFileEntry, LogFunction, LogType } from "../../common/main";
 import { printLike } from "../../common/main";
 import { ftpPathSeparator } from "../../common/main";
-import { GetSshHelperType } from "../../ext-api/ext-api";
+import { GetSshHelperType, GetZipApi } from "../../ext-api/ext-api";
 import { ISshShell } from "../../ssh-helper/api";
 import { IDispose, SshHelper } from "../../ssh-helper/ssh-helper";
 import { parseVmsOutput } from "../common/parse-output";
@@ -81,6 +82,10 @@ export class Builder {
     private static readonly mmsExt = ".mms";
     private static readonly optExt = ".opt";
     private static readonly comExt = ".com";
+
+    private static readonly zipName = "lists";
+    private static readonly zipExt = ".zip";
+    private static readonly zipCmd = printLike`zip "-r" ${"zipName"} *.* -i ${"zipList"}`;
 
     private static readonly defRange = new Range(0, 0, 0, 0);
 
@@ -662,7 +667,54 @@ export class Builder {
                     break;
             }
             // always try to download listing, for all configurations
-            await Synchronizer.acquire(this.logFn).downloadListings(scopeData.ensured);
+            let downloadedByZip = false;
+            if (scopeData.ensured.synchronizeSection.preferZip) {
+                // get and save current folder
+                let currentPath: VmsPathConverter | undefined;
+                let answer = await scopeData.shell.execCmd('show default');
+                if (answer && answer.length !== 0) {
+                    currentPath = VmsPathConverter.fromVms(answer[0].trim());
+                }
+                // go to folder for zipping files
+                const zipFolder = 
+                    scopeData.shellRootConverter.initial
+                    + scopeData.ensured.projectSection.root
+                    + ftpPathSeparator
+                    + scopeData.ensured.projectSection.outdir
+                    + ftpPathSeparator
+                    + "debug"
+                    + ftpPathSeparator;
+                const zipFolderConverter = new VmsPathConverter(zipFolder);
+                let cd = `set def ${zipFolderConverter.directory}`;
+                answer = await scopeData.shell.execCmd(cd);
+                // create zip file 
+                let lists = scopeData.ensured.projectSection.listing;
+                lists = lists || "*.lis";
+                const unbracedList = micromatch.braces(lists).join(" ");
+                const zipCmd = Builder.zipCmd(Builder.zipName, unbracedList);
+                answer = await scopeData.shell.execCmd(zipCmd);
+                // download zip file
+                const relZipName = scopeData.ensured.projectSection.outdir + "/debug/" + Builder.zipName + Builder.zipExt;
+                const downloaded = await Synchronizer.acquire(this.logFn).downloadFiles(scopeData.ensured, [relZipName]);
+                if (downloaded) {
+                    // unzip it
+                    const zipApi = GetZipApi();
+                    if (zipApi && scopeData.ensured.configHelper.workspaceFolder) {
+                        const fullZipName = path.join(scopeData.ensured.configHelper.workspaceFolder.uri.fsPath, relZipName);
+                        downloadedByZip = await new zipApi(this.logFn).unzip(fullZipName);
+                    }
+                }
+                // delete zip file on OpenVMS side
+                answer = await scopeData.shell.execCmd(`del ${Builder.zipName + Builder.zipExt};*`);
+                // go back to saved current folder
+                if (currentPath) {
+                    cd = `set def ${currentPath.directory}`;
+                    answer = await scopeData.shell.execCmd(cd);
+                }
+            }
+            if (!downloadedByZip) {
+                await Synchronizer.acquire(this.logFn).downloadListings(scopeData.ensured);
+            }
             return retCode;
         } else {
             this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute > {0}", command));
@@ -800,6 +852,12 @@ export class Builder {
             if (!shell) {
                 return undefined;
             }
+            shell.on("cleanClient", () => {
+                markInvalid();
+            });
+            shell.on("cleanChannel", () => {
+                markInvalid();
+            });
             // get root of shell (home folder)
             let answer = await shell.execCmd(Builder.getShellRootCmd);
             if (!answer || answer.length === 0) {

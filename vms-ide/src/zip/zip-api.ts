@@ -1,7 +1,9 @@
-import * as fs from "fs";
+import * as fs from "fs-extra";
 import * as arch from "archiver";
+import * as path from "path";
+import {Zlib} from "unzipt";
 
-import { LogFunction }      from "../common/main";
+import { LogFunction, ftpPathSeparator }      from "../common/main";
 import { LogType }          from "../common/main";
 
 export type Resolve<T> = ((value?: T | PromiseLike<T> | undefined) => void);
@@ -19,8 +21,32 @@ export class ZipApi {
         this.logFn = logFn || (() => {});
     }
 
+    /**
+     * 
+     * @param file full path
+     */
+    public async unzip(file: string) {
+        try {
+            const dir = path.dirname(file);
+            const data = await fs.readFile(file);
+            const unzip = new Zlib.Unzip(data, undefined);
+            const names = unzip.getFilenames();
+            for (const name of names) {
+                const decompressed = unzip.decompress(name);
+                const fullName = path.join(dir, name);
+                await fs.ensureDir(path.dirname(fullName));
+                await fs.writeFile(fullName, decompressed);
+                this.logFn(LogType.information, () => name);
+            }
+            return true;
+        } catch (e) {
+            this.logFn(LogType.error, () => String(e));
+        }
+        return false;
+    }
+
     public start(file: string, logFn?: LogFunction): Promise<boolean> | undefined {
-        if (this.output) {
+        if (this.output || this.archiveResolver) {
             return undefined;
         }
 

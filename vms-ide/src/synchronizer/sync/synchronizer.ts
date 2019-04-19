@@ -238,7 +238,7 @@ export class Synchronizer {
         const localRoot = scopeData.localSource.root;
         scopeData.localSource.root += ftpPathSeparator + outdir;     // download exactly in output directory
         const [remoteList, localList] = await Promise.all(
-            [scopeData.remoteSource.findFiles(ensured.projectSection.listing),
+                [scopeData.remoteSource.findFiles(ensured.projectSection.listing),
                 scopeData.localSource.findFiles(ensured.projectSection.listing)]);
         // compare them
         const compareResult = this.compareLists(localList, remoteList);
@@ -411,12 +411,21 @@ export class Synchronizer {
             if (!sftp) {
                 return undefined;
             }
+            sftp.on("cleanSftp", () => {
+                markInvalid();
+            });
             const remoteSource = await (async (sshHelper) => {
                 if (ensured.synchronizeSection.setTimeByShell) {
                     const shell = await sshHelper.getDefaultVmsShell(scope);
                     if (!shell) {
                         return undefined;
                     }
+                    shell.on("cleanClient", () => {
+                        markInvalid();
+                    });
+                    shell.on("cleanChannel", () => {
+                        markInvalid();
+                    });
                     return new VmsShellSource(new VmsSftpClient(sftp), shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
                 } else {
                     return new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);

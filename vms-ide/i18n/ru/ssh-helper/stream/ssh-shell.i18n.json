@@ -8,13 +8,13 @@
     "debug.written": "shell{1} команда записана: {0}",
     "debug.unpiped": "shell{0} парсер конца команды отсоединён",
     "debug.undef": "shell{0} канал неопределён при попытке отсоединения парсера конца команды",
+    "debug.welcome": "shell{0} создание парсера приветствия по-умолчанию",
+    "debug.prompt": "shell{0} создание парсера конца команды по-умолчанию",
+    "debug.prompt.set": "shell{1} установка промпта '{0}' в парсер конца команды",
     "operation.connect": "создание shell{0}",
     "debug.operation.error": "{0} ошибка: {1}",
     "debug.ready": "shell{0} готов",
     "debug.close": "shell{0} закрыт",
     "debug.exit": "shell{1} вышел {0}",
-    "debug.cleaned": "Shell{0} очищен",
-    "debug.welcome": "shell{0} создание парсера приветствия по-умолчанию",
-    "debug.prompt": "shell{0} создание парсера конца команды по-умолчанию",
-    "debug.prompt.set": "shell{1} установка промпта '{0}' в парсер конца команды"
+    "debug.cleaned": "Shell{0} очищен"
 }

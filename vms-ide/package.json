@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "0.0.16",
+    "version": "0.0.17",
     "publisher": "VMSSoftwareInc",
     "repository": {
         "type": "git",
@@ -266,6 +266,14 @@
                     "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
                 },
                 {
+                    "command": "vmssoftware.project-dep.projectDependencies.syncProject",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.upload",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
                     "command": "vmssoftware.project-dep.projectDependencies.build",
                     "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
                 },
@@ -317,6 +325,14 @@
             {
                 "command": "vmssoftware.project-dep.projectDependencies.add",
                 "title": "%synchronizer.command.projectDependencies.add.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.syncProject",
+                "title": "%synchronizer.command.projectDependencies.syncProject.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.upload",
+                "title": "%synchronizer.command.projectDependencies.upload.title%"
             },
             {
                 "command": "vmssoftware.project-dep.projectDependencies.build",
@@ -830,6 +846,7 @@
         "micromatch": "^3.1.10",
         "net": "^1.0.2",
         "ssh2": "^0.6.1",
+        "unzipt": "0.0.4",
         "vscode-debugadapter": "^1.32.1",
         "vscode-debugadapter-testsupport": "1.27.0",
         "vscode-nls": "github:vorfol/vscode-nls"

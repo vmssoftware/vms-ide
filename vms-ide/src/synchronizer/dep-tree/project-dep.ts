@@ -17,6 +17,8 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
 
     public static readonly cmdSelect = "vmssoftware.project-dep.projectDependencies.select";
     public static readonly cmdDescrSelect = "vmssoftware.project-dep.projectDescription.select";
+    public static readonly cmdSyncProject = "vmssoftware.synchronizer.syncProject";
+    public static readonly cmdUpload = "vmssoftware.synchronizer.upload";
     public static readonly cmdBuild = "vmssoftware.synchronizer.buildProject";
     public static readonly cmdReBuild = "vmssoftware.synchronizer.reBuildProject";
     public static readonly cmdBuildOnly = "vmssoftware.synchronizer.buildOnlyProject";
@@ -95,39 +97,37 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
         }
     }
 
+    public syncProject(node: IProjectElement) {
+        vscode.commands.executeCommand(ProjDepProvider.cmdSyncProject, this.selectedProject());
+    }
+
+    public upload(node: IProjectElement) {
+        vscode.commands.executeCommand(ProjDepProvider.cmdUpload, this.selectedProject());
+    }
+
     public build(node: IProjectElement) {
-        if (this.selected) {
-            const buildType = ProjectState.acquire().getDefBuildType();
-            vscode.commands.executeCommand(ProjDepProvider.cmdBuild, this.selected.name, buildType);
-        }
+        const buildType = ProjectState.acquire().getDefBuildType();
+        vscode.commands.executeCommand(ProjDepProvider.cmdBuild, this.selectedProject(), buildType);
     }
 
     public rebuild(node: IProjectElement) {
-        if (this.selected) {
-            const buildType = ProjectState.acquire().getDefBuildType();
-            vscode.commands.executeCommand(ProjDepProvider.cmdReBuild, this.selected.name, buildType);
-        }
+        const buildType = ProjectState.acquire().getDefBuildType();
+        vscode.commands.executeCommand(ProjDepProvider.cmdReBuild, this.selectedProject(), buildType);
     }
 
     public buildOnly(node: IProjectElement) {
-        if (this.selected) {
-            const buildType = ProjectState.acquire().getDefBuildType();
-            vscode.commands.executeCommand(ProjDepProvider.cmdBuildOnly, this.selected.name, buildType);
-        }
+        const buildType = ProjectState.acquire().getDefBuildType();
+        vscode.commands.executeCommand(ProjDepProvider.cmdBuildOnly, this.selectedProject(), buildType);
     }
 
     public rebuildOnly(node: IProjectElement) {
-        if (this.selected) {
-            const buildType = ProjectState.acquire().getDefBuildType();
-            vscode.commands.executeCommand(ProjDepProvider.cmdReBuildOnly, this.selected.name, buildType);
-        }
+        const buildType = ProjectState.acquire().getDefBuildType();
+        vscode.commands.executeCommand(ProjDepProvider.cmdReBuildOnly, this.selectedProject(), buildType);
     }
 
     public clean(node: IProjectElement) {
-        if (this.selected) {
-            const buildType = ProjectState.acquire().getDefBuildType();
-            vscode.commands.executeCommand(ProjDepProvider.cmdClean, this.selected.name, buildType);
-        }
+        const buildType = ProjectState.acquire().getDefBuildType();
+        vscode.commands.executeCommand(ProjDepProvider.cmdClean, this.selectedProject(), buildType);
     }
 
     public remove(node: IProjectElement) {

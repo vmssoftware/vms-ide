@@ -1,16 +1,15 @@
+import * as nls from "vscode-nls";
 import { Client } from "ssh2";
-
 import { Lock } from "../../common/main";
 import { LogFunction, LogType } from "../../common/main";
 import { IUnSubscribe, Subscribe } from "../../common/main";
-
 import { IConnectConfig, IConnectConfigResolver } from "../api";
+import { EventEmitter } from "events";
 
-import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export class SshClient {
+export class SshClient extends EventEmitter {
     public enabled: boolean;
     public logFn: LogFunction;
 
@@ -31,6 +30,7 @@ export class SshClient {
                 public resolver?: IConnectConfigResolver<IConnectConfig>,
                 logFn?: LogFunction,
                 public tag?: string) {
+        super();
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
         this.enabled = true;
@@ -57,6 +57,7 @@ export class SshClient {
             delete this.clientEnd;
         }
         delete this.client;
+        this.emit("cleanClient");
     }
 
     protected async ensureClient() {
@@ -86,6 +87,8 @@ export class SshClient {
             this.logFn(LogType.error, () => localize("debug.error", "client{1} error: {0}", String(err), this.tag ? " " + this.tag : ""));
             if (!this.client) {
                 waitClient.release();
+            } else {
+                this.cleanClient();
             }
         });
         // resolve config now and there

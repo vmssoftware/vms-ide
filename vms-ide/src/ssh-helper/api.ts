@@ -1,6 +1,7 @@
 import { IFileEntry, LogFunction, LogType, MemoryReadStream, MemoryWriteStream } from "../common/main";
 
 import { Readable, Transform, Writable } from "stream";
+import { EventEmitter } from "events";
 
 export interface ICanCreateReadStream {
     createReadStream(file: string): Promise<Readable | undefined>;
@@ -65,7 +66,7 @@ export interface IParseWelcome extends IShellParser {
     width?: number;
 }
 
-export interface ISftpClient {
+export interface ISftpClient extends EventEmitter {
     enabled: boolean;
     createReadStream(file: string): Promise<Readable | undefined>;
     createWriteStream(file: string): Promise<Writable | undefined>;
@@ -76,7 +77,7 @@ export interface ISftpClient {
     dispose(): void;
 }
 
-export interface ISshShell {
+export interface ISshShell extends EventEmitter {
     enabled: boolean;
     prompt?: string;
     width?: number;

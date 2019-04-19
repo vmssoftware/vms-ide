@@ -1,3 +1,5 @@
+import * as nls from "vscode-nls";
+
 import { ClientChannel } from "ssh2";
 import { Transform } from "stream";
 
@@ -12,7 +14,6 @@ import { ParseWelcome } from "./parse-welcome";
 import { PromptCatcher } from "./prompt-catcher";
 import { SshClient } from "./ssh-client";
 
-import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
@@ -61,11 +62,13 @@ export class SshShell extends SshClient implements ISshShell {
 
     public dispose() {
         this.waitOperation.release();
+        this.logFn(LogType.debug, () => "waitOperation.release() on dispose()");
         super.dispose();
         this.cleanChannel();
     }
 
     public async attachUser(user: Transform) {
+        this.logFn(LogType.debug, () => "waitOperation.acquire() on attachUser()");
         await this.waitOperation.acquire();
         if (await this.ensureChannel()) {
             if (this.channel &&
@@ -86,6 +89,7 @@ export class SshShell extends SshClient implements ISshShell {
         }
         delete this.userStream;
         this.waitOperation.release();
+        this.logFn(LogType.debug, () => "waitOperation.release() on detachUser()");
     }
 
     /**
@@ -95,6 +99,7 @@ export class SshShell extends SshClient implements ISshShell {
     public async execCmd(command: string, timeout?: number) {
         let contentRet: string[] | undefined;
         this.lastError = undefined;
+        this.logFn(LogType.debug, () => "waitOperation.acquire() on execCmd()");
         await this.waitOperation.acquire();
         if (await this.ensureChannel()) {
             if (this.channel &&
@@ -156,10 +161,12 @@ export class SshShell extends SshClient implements ISshShell {
                     this.logFn(LogType.debug, () => localize("debug.channel.exit", "shell{0} channel suddenly exited", this.tag ? " " + this.tag : ""));
                 });
                 this.promptCatcher.prepare();
-                this.channel.write(trimmedCommand + SshShell.eol);
-                this.logFn(LogType.debug, () => localize("debug.written", "shell{1} command written: {0}", trimmedCommand, this.tag ? " " + this.tag : ""));
-                this.channel.pipe(this.promptCatcher);
-                await waitReady.acquire();
+                const written = this.channel.write(trimmedCommand + SshShell.eol);
+                if (written) {
+                    this.logFn(LogType.debug, () => localize("debug.written", "shell{1} command written: {0}", trimmedCommand, this.tag ? " " + this.tag : ""));
+                    this.channel.pipe(this.promptCatcher);
+                    await waitReady.acquire();
+                }
                 onReady.unsubscribe();
                 onClose.unsubscribe();
                 onExit.unsubscribe();
@@ -181,6 +188,7 @@ export class SshShell extends SshClient implements ISshShell {
             }
         }
         this.waitOperation.release();
+        this.logFn(LogType.debug, () => "waitOperation.release() on execCmd()");
         return contentRet;
 
     }
@@ -239,7 +247,11 @@ export class SshShell extends SshClient implements ISshShell {
                             setImmediate(() => this.cleanChannel());
                         });
                         this.shellExit = Subscribe(this.channel, "exit", (exitCode) => {
-                            this.logFn(LogType.debug, () => localize("debug.exit", "shell{1} exit {0}", exitCode, this.tag ? " " + this.tag : ""));
+                            this.logFn(LogType.debug, () => localize("debug.exit", "shell{1} exit {0}", String(exitCode), this.tag ? " " + this.tag : ""));
+                            setImmediate(() => this.cleanChannel());
+                        });
+                        this.shellExit = Subscribe(this.channel, "error", (error) => {
+                            this.logFn(LogType.debug, () => localize("debug.exit", "shell{1} error {0}", String(error), this.tag ? " " + this.tag : ""));
                             setImmediate(() => this.cleanChannel());
                         });
                     }
@@ -252,9 +264,11 @@ export class SshShell extends SshClient implements ISshShell {
 
     private cleanChannel() {
         this.waitOperation.release();
+        this.logFn(LogType.debug, () => "waitOperation.release() on cleanChannel()");
         // check and clean userStream
         if (this.userStream) {
             this.userStream.emit("error", new Error(localize("debug.cleaned", "Shell{0} cleaned", this.tag ? " " + this.tag : "")));
+            delete this.userStream;
         }
         if (this.shellClose) {
             this.shellClose.unsubscribe();
@@ -266,7 +280,10 @@ export class SshShell extends SshClient implements ISshShell {
         }
         delete this.channel;
         delete this.promptGiven;
-        delete this.userStream;
+        
+        this.cleanClient();
+
+        this.emit("cleanChannel");
     }
 
     private async ensureChannel() {
