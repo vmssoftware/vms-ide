@@ -171,7 +171,7 @@ export async function activate(context: ExtensionContext) {
         (element) => projectDependenciesProvider.select(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.add",
         (element) => projectDependenciesProvider.add(element)) );
-    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.synchronize",
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.syncProject",
         (element) => projectDependenciesProvider.syncProject(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.upload",
         (element) => projectDependenciesProvider.upload(element)) );
