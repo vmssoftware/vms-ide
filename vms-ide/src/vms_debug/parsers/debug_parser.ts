@@ -649,7 +649,7 @@ export class DebugParser
 		{
 			for(let i = 0; i < msgLines.length; i++)
 			{
-				let typeArray = false;
+				let typeArray : ReflectKind = ReflectKind.Invalid;
 				let nameFunc : string;
 				let nameVar : string;
 				const matcherS = /^\s*(\S+)::(\S+)\\(\S+)\:/;//class::func\var: val
@@ -692,10 +692,18 @@ export class DebugParser
 						let matcherArray = /^\s*(\S+)[\(\[]([0-9,:]*)[\)\]]/;
 						let matches = info[info.length-1].match(matcherArray);
 
-						if(matches)
+						if(matches && matches.length === 3)
 						{
-							typeArray = true;
 							nameVar = matches[1];
+
+							if(matches[2] === "")//it is Block
+							{
+								typeArray = ReflectKind.Block;
+							}
+							else
+							{
+								typeArray = ReflectKind.Array;
+							}
 						}
 						else
 						{
@@ -723,7 +731,7 @@ export class DebugParser
 							item.variableName === nameVar &&
 							msgLines[i].includes(item.variableNameFull))
 						{
-							if(typeArray)
+							if(typeArray === ReflectKind.Array)
 							{
 								item.variableKind = ReflectKind.Array;
 							}
@@ -732,7 +740,19 @@ export class DebugParser
 								const matcherS = /^\s*(\S+):\s*(.*)/;//Struct name: 23
 								let matches = info[info.length-1].match(matcherS);
 
-								if(item.variableType.includes("pointer to") ||
+								if(typeArray === ReflectKind.Block)
+								{
+									if(matches)
+									{
+										item.variableValue = matches[matches.length-1];
+										item.variableKind = ReflectKind.Block;
+									}
+									else
+									{
+										item.variableKind = ReflectKind.Struct;
+									}								
+								}
+								else if(item.variableType.includes("pointer to") ||
 									item.variableType.includes("pointer type"))
 								{
 									if(matches)
@@ -857,6 +877,7 @@ export class DebugParser
 							}
 
 							if(item.variableKind !== ReflectKind.Atomic &&
+								item.variableKind !== ReflectKind.Block &&
 								item.variableKind !== ReflectKind.String)
 							{
 								let values : string = "";
@@ -996,6 +1017,15 @@ export class DebugParser
 								}								
 								prm.counter++;
 							}
+							else if(kind === ReflectKind.Value)
+							{
+								v += ": " + items[prm.counter];
+								matches = v.match(matcherA);
+								
+								kind = ReflectKind.Array;
+								goNextLevel = false;
+								prm.counter++;
+							}
 
 						} while(kind === ReflectKind.Invalid && prm.counter < items.length);						
 					}
@@ -1068,6 +1098,15 @@ export class DebugParser
 								{
 									itemInfo += "\n" + items[prm.counter].trim();
 								}								
+								prm.counter++;
+							}							
+							else if(kind === ReflectKind.Value)
+							{
+								v += ": " + items[prm.counter];
+								matches = v.match(matcherS);
+								
+								kind = ReflectKind.Struct;
+								goNextLevel = false;
 								prm.counter++;
 							}
 
@@ -1215,7 +1254,11 @@ export class DebugParser
 				let matchesStruct = item.match(matcherStructType);
 				let items = item.trim().split(" ");
 
-				if(matchesStruct || items.length === 1)
+				if(!Number.isNaN(parseInt(items[0], 16)))
+				{
+					return ReflectKind.Value;
+				}
+				else if(matchesStruct || items.length === 1)
 				{
 					return ReflectKind.Struct;
 				}
