@@ -582,7 +582,10 @@ export class VMSRuntime extends EventEmitter
 									}
 								}
 
-								await this.requestVariables(nameVar);
+								if(this.checkVariableToRequest(item))
+								{
+									await this.requestVariables(nameVar);
+								}
 
 								let childs : DebugVariable[] = [];
 
@@ -660,8 +663,7 @@ export class VMSRuntime extends EventEmitter
 				for(let item of vars)//create string of variables
 				{
 					if(item.functionName === funcName &&
-						!item.variableType.includes("constant:") &&
-						!item.variableType.includes("address: (no value"))
+						this.checkVariableToRequest(item))
 					{
 						if(item.variableType.includes("pointer to") ||
 							item.variableType.includes("pointer type"))
@@ -691,8 +693,7 @@ export class VMSRuntime extends EventEmitter
 						for(let item of vars)//create string of variables without value
 						{
 							if(item.functionName === funcName &&
-								!item.variableType.includes("constant:") &&
-								!item.variableType.includes("address: (no value"))
+								this.checkVariableToRequest(item))
 							{
 								if(item.variableAddress)
 								{
@@ -713,7 +714,8 @@ export class VMSRuntime extends EventEmitter
 					for(let item of vars)
 					{
 						if(item.functionName === funcName &&
-							this.checkVariableInScope(item))
+							this.checkVariableInScope(item) &&
+							this.checkVariableToRequest(item))
 						{
 							let childs : DebugVariable[] = [];
 
@@ -849,6 +851,20 @@ export class VMSRuntime extends EventEmitter
 		}
 
 		return check;
+	}
+
+	private checkVariableToRequest(varInfo : VariableFileInfo) : boolean
+	{
+		let result = true;
+
+		if(varInfo.variableType.includes("constant:") ||
+			varInfo.variableType.includes("address: (no value") ||
+			varInfo.variableType.includes("bliss field type"))
+		{
+			result = false;
+		}
+
+		return result;
 	}
 
 	public sendDataToProgram(data : string) : boolean
