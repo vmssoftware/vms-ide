@@ -1,7 +1,7 @@
 export interface DebugFileInfo
 {
 	filePath: string;
-	fileName: string;
+	moduleName: string;
 	shitfLine: number;
 	currLine: number;
 }
@@ -15,13 +15,13 @@ export class HolderDebugFileInfo
 		return this.fileInfo.length;
 	}
 
-	public getShiftLine(fileName : string) : number
+	public getShiftLine(moduleName : string) : number
 	{
-		fileName = fileName.toLowerCase();
+		moduleName = moduleName.toLowerCase();
 
 		for (let item of this.fileInfo)
 		{
-			if(item.fileName === fileName)
+			if(item.moduleName === moduleName)
 			{
 				return item.shitfLine;
 			}
@@ -30,16 +30,16 @@ export class HolderDebugFileInfo
 		return -1;
 	}
 
-	public getIndexItem(fileName : string) : number
+	public getIndexItem(moduleName : string) : number
 	{
 		let index : number = -1;
-		fileName = fileName.toLowerCase();
+		moduleName = moduleName.toLowerCase();
 
 		for (let item of this.fileInfo)
 		{
 			index++;
 
-			if(item.fileName === fileName)
+			if(item.moduleName === moduleName)
 			{
 				return index;
 			}
@@ -48,13 +48,13 @@ export class HolderDebugFileInfo
 		return index;
 	}
 
-	public getItem(fileName : string) : DebugFileInfo | undefined
+	public getItem(moduleName : string) : DebugFileInfo | undefined
 	{
-		fileName = fileName.toLowerCase();
+		moduleName = moduleName.toLowerCase();
 
 		for (let item of this.fileInfo)
 		{
-			if(item.fileName === fileName)
+			if(item.moduleName === moduleName)
 			{
 				return item;
 			}
@@ -63,11 +63,11 @@ export class HolderDebugFileInfo
 		return undefined;
 	}
 
-	public setItem(filePath: string, fileName : string, shitfLine : number, currLine: number) : number
+	public setItem(filePath: string, moduleName : string, shitfLine : number, currLine: number) : number
 	{
-		fileName = fileName.toLowerCase();
+		moduleName = moduleName.toLowerCase();
 
-		let item = <DebugFileInfo> { filePath, fileName, shitfLine, currLine };
+		let item = <DebugFileInfo> { filePath, moduleName, shitfLine, currLine };
 
 		return this.fileInfo.push(item);
 	}

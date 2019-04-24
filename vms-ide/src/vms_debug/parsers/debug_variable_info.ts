@@ -32,7 +32,7 @@ export interface DebugVariable
 export interface VariableFileInfo
 {
 	filePath: string;
-	fileName: string;
+	moduleName: string;
 	wrapName: string;//wrap function name
 	functionName: string;//if "" => global variable
 	variableName: string;

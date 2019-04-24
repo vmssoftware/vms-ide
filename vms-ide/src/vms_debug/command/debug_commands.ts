@@ -127,13 +127,13 @@ export class DebugCommands
 	}
 
 	//break points
-	public breakPointSet(fileName : string, numberLine : number) : CommandMessage
+	public breakPointSet(moduleName : string, numberLine : number) : CommandMessage
 	{
-		return new CommandMessage(DebugCmdVMS.dbgBreakPointSet, fileName.toUpperCase()  + "\\%line " + numberLine.toString());
+		return new CommandMessage(DebugCmdVMS.dbgBreakPointSet, moduleName.toUpperCase()  + "\\%line " + numberLine.toString());
 	}
-	public breakPointRemove(fileName : string, numberLine : number) : CommandMessage
+	public breakPointRemove(moduleName : string, numberLine : number) : CommandMessage
 	{
-		return new CommandMessage(DebugCmdVMS.dbgBreakPointRemove, fileName.toUpperCase()  + "\\%line " + numberLine.toString());
+		return new CommandMessage(DebugCmdVMS.dbgBreakPointRemove, moduleName.toUpperCase()  + "\\%line " + numberLine.toString());
 	}
 	public breakPointsRemove() : CommandMessage
 	{
@@ -147,17 +147,17 @@ export class DebugCommands
 	{
 		return new CommandMessage(DebugCmdVMS.dbgBreakPointActivate, "/all");
 	}
-	public breakPointActivate(fileName : string, numberLine : number) : CommandMessage
+	public breakPointActivate(moduleName : string, numberLine : number) : CommandMessage
 	{
-		return new CommandMessage(DebugCmdVMS.dbgBreakPointActivate, fileName.toUpperCase()  + "\\%line " + numberLine.toString());
+		return new CommandMessage(DebugCmdVMS.dbgBreakPointActivate, moduleName.toUpperCase()  + "\\%line " + numberLine.toString());
 	}
 	public breakPointsDeactivate() : CommandMessage
 	{
 		return new CommandMessage(DebugCmdVMS.dbgBreakPointDeactivate, "/all");
 	}
-	public breakPointDeactivate(fileName : string, numberLine : number) : CommandMessage
+	public breakPointDeactivate(moduleName : string, numberLine : number) : CommandMessage
 	{
-		return new CommandMessage(DebugCmdVMS.dbgBreakPointDeactivate, fileName.toUpperCase()  + "\\%line " + numberLine.toString());
+		return new CommandMessage(DebugCmdVMS.dbgBreakPointDeactivate, moduleName.toUpperCase()  + "\\%line " + numberLine.toString());
 	}
 
 	//watch points
@@ -212,13 +212,13 @@ export class DebugCommands
 		return new CommandMessage(DebugCmdVMS.dbgStack, "");
 	}
 	//show variables, types
-	public showSymbols(nameFile : string) : CommandMessage
+	public showSymbols(moduleName : string) : CommandMessage
 	{
-		return new CommandMessage(DebugCmdVMS.dbgSymbol, " " + nameFile.toUpperCase());
+		return new CommandMessage(DebugCmdVMS.dbgSymbol, " " + moduleName.toUpperCase());
 	}
-	public setScope(nameModule : string, nameRoutine : string) : CommandMessage
+	public setScope(moduleName : string, routineName : string) : CommandMessage
 	{
-		return new CommandMessage(DebugCmdVMS.dbgSetScope, " " + nameModule.toUpperCase() + "\\" + nameRoutine);
+		return new CommandMessage(DebugCmdVMS.dbgSetScope, " " + moduleName.toUpperCase() + "\\" + routineName);
 	}
 	public setScopeBase() : CommandMessage
 	{

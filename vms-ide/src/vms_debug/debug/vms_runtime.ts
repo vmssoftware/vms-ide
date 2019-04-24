@@ -14,6 +14,7 @@ import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
 import { DebugParser, MessageDebuger, Parameters } from "../parsers/debug_parser";
 import { DebugVariable, HolderDebugVariableInfo, ReflectKind, VariableFileInfo } from "../parsers/debug_variable_info";
 import { Queue } from "../queue/queues";
+import { HolderModuleInfo } from "../parsers/debug_module_info";
 
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
@@ -22,7 +23,7 @@ const localize = nls.loadMessageBundle();
 export interface VMSBreakpoint
 {
 	id: number;
-	file: string;
+	path: string;
 	line: number;
 	verified: boolean;
 }
@@ -67,6 +68,7 @@ export class VMSRuntime extends EventEmitter
 	private stackStartFrame: number = 0;
 	private stackEndFrame: number = 0;
 
+	private modulesHolder: HolderModuleInfo;
 	private sourcePaths: string[];
 	private lisPaths: string[];
 	private rootFolderName: string;
@@ -105,6 +107,7 @@ export class VMSRuntime extends EventEmitter
 		this.dbgCmd = new DebugCommands();
 		this.dbgParser = new DebugParser();
 		this.varsInfo = new HolderDebugVariableInfo();
+		this.modulesHolder = new HolderModuleInfo();
 		this.stopOnEntry = false;
 		this.debugRun = false;
 		this.programEnd = false;
@@ -200,6 +203,7 @@ export class VMSRuntime extends EventEmitter
 		}
 
 		this.checkLisFiles(this.sourcePaths, this.lisPaths);
+		this.modulesHolder = await this.getModuleInfo(this.sourcePaths, this.lisPaths);
 		this.shell.resetParameters();
 		this.abortKey = section.break;
 
@@ -292,6 +296,39 @@ export class VMSRuntime extends EventEmitter
 				}
 			}
 		}
+	}
+
+	private async getModuleInfo(sourcePaths: string[], lisPaths: string[]) : Promise<HolderModuleInfo>
+	{
+		const matcher = /^(\S+)\s*Source.*Listing/;
+		let info : HolderModuleInfo = new HolderModuleInfo();
+
+		for(let path of sourcePaths)
+		{
+			let listingPath = this.findPathFileByName(path, lisPaths);
+			let sourceLines = await this.dbgParser.loadFileContext(listingPath);
+
+			for(let line of sourceLines)
+			{
+				let matches = line.match(matcher);
+
+				if(matches && matches.length === 2)
+				{
+					let sourcePath = path;
+					let moduleName = matches[1];
+
+					if(moduleName.includes("$BLK"))
+					{
+						moduleName = moduleName.replace("$BLK", "");
+					}
+
+					info.setItem(moduleName, sourcePath, listingPath);
+					break;
+				}
+			}
+		}
+		
+		return info;
 	}
 
 	//Continue execution to the end/beginning.
@@ -636,8 +673,8 @@ export class VMSRuntime extends EventEmitter
 
 			if(!vars)//request variables info
 			{
-				let nameFile = this.getNameFromPath(this.currentFilePath);
-				this.shell.SendCommandToQueue(this.dbgCmd.showSymbols(nameFile));
+				let moduleName = this.modulesHolder.getItemByPath(this.currentFilePath).moduleName;
+				this.shell.SendCommandToQueue(this.dbgCmd.showSymbols(moduleName));
 				await this.waitSymbols.wait(5000);
 
 				vars = this.varsInfo.getVariableFile(this.currentFilePath);
@@ -937,13 +974,12 @@ export class VMSRuntime extends EventEmitter
 		let vrfBps : VMSBreakpoint[] = new Array<VMSBreakpoint>();
 
 		path = path.charAt(0).toLowerCase() + path.replace(/\\/g, ftpPathSeparator).substring(1);
-		let fileName = this.getNameFromPath(path);
 		let key = path.toLowerCase();
 		let currBps = this.breakPoints.get(key);
 
 		for(let line of lines)
 		{
-			const bp = <VMSBreakpoint> { file: fileName, verified: false, line, id: this.breakpointId++ };
+			const bp = <VMSBreakpoint> { path, verified: false, line, id: this.breakpointId++ };
 			newBps.push(bp);
 		}
 
@@ -1057,8 +1093,7 @@ export class VMSRuntime extends EventEmitter
 	// Set breakpoint in file with given line.
 	public async setBreakPoint(path: string, line: number) : Promise<VMSBreakpoint>
 	{
-		let fileName = this.getNameFromPath(path);
-		const bp = <VMSBreakpoint> { file: fileName, verified: false, line, id: this.breakpointId++ };
+		const bp = <VMSBreakpoint> { path, verified: false, line, id: this.breakpointId++ };
 		let key = path.toLowerCase();
 		let bps = this.breakPoints.get(key);
 
@@ -1239,7 +1274,8 @@ export class VMSRuntime extends EventEmitter
 
 					if(!Number.isNaN(numberLine))
 					{
-						this.shell.SendCommandToQueue(this.dbgCmd.breakPointRemove(bp.file, numberLine));
+						let moduleName = this.modulesHolder.getItemByPath(path).moduleName;
+						this.shell.SendCommandToQueue(this.dbgCmd.breakPointRemove(moduleName, numberLine));
 					}
 					else//clear breakpoint
 					{
@@ -1265,7 +1301,8 @@ export class VMSRuntime extends EventEmitter
 
 					if(!Number.isNaN(numberLine))
 					{
-						this.shell.SendCommandToQueue(this.dbgCmd.breakPointSet(bp.file, numberLine));
+						let moduleName = this.modulesHolder.getItemByPath(path).moduleName;
+						this.shell.SendCommandToQueue(this.dbgCmd.breakPointSet(moduleName, numberLine));
 					}
 					else//clear breakpoint
 					{
@@ -1297,7 +1334,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			this.debugRun = true;
 
-			this.dbgParser.parseDebugData(this.shell, type, data, this.sourcePaths, this.lisPaths);
+			this.dbgParser.parseDebugData(this.shell, type, data);
 
 			let messageCommand = this.dbgParser.getCommandMessage();
 			let messageDebug = this.dbgParser.getDebugMessage();
@@ -1329,7 +1366,7 @@ export class VMSRuntime extends EventEmitter
 						break;
 
 					case DebugCmdVMS.dbgCallStack:
-						this.dbgParser.parseCallStackMsg(messageData, this.sourcePaths, this.lisPaths, this.stackStartFrame, this.stackEndFrame)
+						this.dbgParser.parseCallStackMsg(messageData, this.modulesHolder, this.stackStartFrame, this.stackEndFrame)
 							.then((stack) =>
 							{
 								//get current file and routine
@@ -1344,7 +1381,7 @@ export class VMSRuntime extends EventEmitter
 						break;
 
 					case DebugCmdVMS.dbgSymbol:
-						this.dbgParser.parseVariableMsg(this.sourcePaths, messageData);
+						this.dbgParser.parseVariableMsg(this.modulesHolder, messageData);
 						this.waitSymbols.notify();
 						break;
 

@@ -5,6 +5,7 @@ import { ShellSession, TypeDataMessage } from "../net/shell-session";
 import { Queue } from "../queue/queues";
 import { HolderDebugFileInfo } from "./debug_file_info";
 import { DebugVariable, HolderDebugVariableInfo, ReflectKind, VariableFileInfo } from "./debug_variable_info";
+import { HolderModuleInfo } from "./debug_module_info";
 
 
 export enum MessageDebuger
@@ -62,7 +63,7 @@ export class DebugParser
 	}
 
 
-	public parseDebugData(shell : ShellSession, type: TypeDataMessage, data : string, sourcePaths: string[], lisPaths: string[])
+	public parseDebugData(shell : ShellSession, type: TypeDataMessage, data : string)
 	{
 		if(data !== "")
 		{
@@ -96,7 +97,7 @@ export class DebugParser
 						{
 							if(!item.includes(cmd))
 							{
-								this.parseLineMsg(item, sourcePaths, lisPaths);
+								this.parseLineMsg(item);
 							}
 						}
 					}
@@ -342,7 +343,7 @@ export class DebugParser
 		return lineBase;
 	}
 
-	private parseLineMsg(msgLine: string, sourcePaths: string[], lisPaths: string[])
+	private parseLineMsg(msgLine: string)
 	{
 		const matcher = /^[-%](\w+)-([EFWIS])-(\w+)/;
 		let matches = msgLine.match(matcher);
@@ -376,7 +377,7 @@ export class DebugParser
 	// *HELLO          main             1648       0000000000000360 0000000000020360
 	// *HELLO          __main           1634       00000000000000E0 00000000000200E0
 	// 											   FFFFFFFF80A3CF10 FFFFFFFF80A3CF10
-	public async parseCallStackMsg(data : string, sourcePaths: string[], lisPaths: string[], startFrame: number, endFrame: number) //: any
+	public async parseCallStackMsg(data : string, moduleHolder: HolderModuleInfo, startFrame: number, endFrame: number) //: any
 	{
 		let numberLine : number = -1;
 		let columns : string[] = [];
@@ -391,7 +392,7 @@ export class DebugParser
 			{
 				let routineName = "";
 				let numberLineDebug = "-1";
-				let fileName = columns[0].substring(1);//remove symbol '*'
+				let moduleName = columns[0].substring(1);//remove symbol '*'
 
 				if(columns.length === 1)//module name is long
 				{
@@ -440,9 +441,10 @@ export class DebugParser
 					}
 				}
 
-				let pathFile = this.findPathFileByName(fileName, sourcePaths);
-				let pathLisFile = this.findPathFileByName(fileName, lisPaths);
-				let shift = this.fileInfo.getShiftLine(fileName);
+				let moduleItem = moduleHolder.getItem(moduleName);
+				let pathFile = moduleItem.sourcePath;
+				let pathLisFile = moduleItem.listingPath;
+				let shift = this.fileInfo.getShiftLine(moduleName);
 
 				if(pathFile !== "" && pathLisFile !== "")
 				{
@@ -453,11 +455,11 @@ export class DebugParser
 						numberLine = this.getNumberLineSourceCode(numberLineDebug, lisLines);
 						//save file info
 						shift = parseInt(numberLineDebug, 10) - numberLine;
-						this.fileInfo.setItem(pathFile, fileName, shift, numberLine);
+						this.fileInfo.setItem(pathFile, moduleName, shift, numberLine);
 					}
 					else
 					{
-						numberLine = parseInt(numberLineDebug, 10) - this.fileInfo.getShiftLine(fileName);
+						numberLine = parseInt(numberLineDebug, 10) - this.fileInfo.getShiftLine(moduleName);
 					}
 
 					frames.push({
@@ -501,7 +503,7 @@ export class DebugParser
 	// 	atomic type, quadword logical, size: 8 bytes
 	// record component HELLO\_iobuf._pad2
     //  atomic type, byte logical, size: 1 byte
-	public parseVariableMsg(sourcePaths: string[], data: string) : void
+	public parseVariableMsg(modulesInfo: HolderModuleInfo, data: string) : void
 	{
 		let filePath : string = "";
 		let variableInfo = new Array<VariableFileInfo>();
@@ -513,7 +515,7 @@ export class DebugParser
 
 			if(type[0] === "data" || type[0] === "record")
 			{
-				let fileName : string = "";
+				let moduleName : string = "";
 				let wrapName : string = "";
 				let functionName : string = "";
 				let variableName : string = "";
@@ -529,21 +531,21 @@ export class DebugParser
 
 					if(matchesR)
 					{
-						fileName = matchesR[matchesR.length-2].toUpperCase();
+						moduleName = matchesR[matchesR.length-2].toUpperCase();
 						functionName = "";
 						variableName = matchesR[matchesR.length-1];
 					}
 				}
 				else if(matches)//Class
 				{
-					fileName = matches[matches.length-3].toUpperCase();
+					moduleName = matches[matches.length-3].toUpperCase();
 					functionName = matches[matches.length-2];
 					variableName = matches[matches.length-1];
 				}
 				else
 				{
 					let infoData = info.split("\\");
-					fileName = infoData[0];
+					moduleName = infoData[0].toUpperCase();
 					functionName = infoData[infoData.length-2];
 					variableName = infoData[infoData.length-1];
 					variableNameFull = info;
@@ -568,7 +570,7 @@ export class DebugParser
 
 				if(filePath === "")
 				{
-					filePath = this.findPathFileByName(fileName, sourcePaths);
+					filePath = modulesInfo.getItem(moduleName).sourcePath;
 				}
 
 				if(variableName !== "__func__" &&
@@ -601,7 +603,7 @@ export class DebugParser
 						}
 					}
 
-					let variable = <VariableFileInfo> { filePath, fileName, wrapName, functionName, variableName, variableNameFull , variableType };
+					let variable = <VariableFileInfo> { filePath, moduleName, wrapName, functionName, variableName, variableNameFull , variableType };
 
 					variableInfo.push(variable);
 				}
