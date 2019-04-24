@@ -36,10 +36,34 @@ interface IParseRgx {
 
 const rgxMsg = /^((%|-)(\S+)-(\S)-(\S*)),\s(.*)$/;
 
-const rgxMsgCXX = /^((%|-)(CXX|CC)-(\S)-(\S*)),\s(.*)$/;
+const rgxMsgCXX = /^((%|-)(CXX|CC|COBOL)-(\S)-(\S*)),\s(.*)$/;
 const rgxPlaceCXX = /^at line number (\d+) in file (.*)$/;
 const rgxPlaceCXX_TLB = /^at line number (\d+) in module (\S+) of text library (.*)$/;
 const rgxMsgPosCXX = /^(\.*)\^/;
+const rgxMsgInfoMessages = [
+    /\d+ (catastrophic )?error(s?) detected in the compilation of/,
+    /Compilation terminated/,
+];
+
+const parseRgxCXX: IParseRgx = {
+    rgxMain: /^((%|-)(CXX|CC|COBOL)-(\S)-(\S*)),\s(.*)$/,
+    rgxSkip: [ 
+        /^(%|-)COBOL-F-ENDNOOBJ, .*/,
+        /\d+ (catastrophic )?error(s?) detected in the compilation of/,
+        /Compilation terminated/,
+    ],
+    facilityPos: 3,
+    severityPos: 4,
+    typePos: 5,
+    messagePos: 6,
+    lineNumLength: 0,
+    rgxDoSearchPrev: [],
+    rgxLinePresent: [
+        /^at line number (\d+) in file (.*)$/,
+        /^at line number (\d+) in module (\S+) of text library (.*)$/
+    ],
+    rgxDoSearchNextForPath: /%MMS-F-ABORT, For target ([^,]*),/,
+};
 
 const parseRgxMSG: IParseRgx = {
     rgxMain: /^((%|-)(MESSAGE)-(\S)-(\S*)),\s(.*)$/,
@@ -69,25 +93,20 @@ const parseRgxCLD: IParseRgx = {
         /%CDU-E-INVTYPE, Built-in type ([a-z$_][a-z$_0-9]*) is not defined/i,
     ],
     rgxLinePresent: [
-        /%CDU-E-(?:\w+), Line (\d+):/
+        /%CDU-[EFWIS]-(?:\w+), Line (\d+):/
     ],
     rgxDoSearchNextForPath: /%MMS-F-ABORT, For target ([^,]*),/,
 };
 
 const rgxMsgMMS = /^((%|-)(MMS)-(\S)-(\S*)),\s(.*)$/;
 const rgxMsgFileSintax = /(.*) in file (.*)$/;
-const rgxMsgInfoMessages = [
-    /\d+ (catastrophic )?error(s?) detected in the compilation of/,
-    /Compilation terminated/,
-];
 
 const mmsExt = ".MMS";
 
 const lineStartRgx = [
     rgxMsg,
     rgxPlaceCXX,
-    rgxMsgCXX,
-    rgxMsgMMS,
+    rgxPlaceCXX_TLB,
 ];
 
 export function consolidateOutputLines(output: string[], shellWidth?: number) {
@@ -119,7 +138,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
 
     let i = 0;
     while (i < lines.length) {
-        let [consume, from]  = findCxxErrors(i);
+        let [consume, from]  = findCxxCobolErrors(i);
         if (!consume) {
             [consume, from] = findMmsErrors(i);
         }
@@ -142,7 +161,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
     /**
      * returns consumed lines
      */
-    function findCxxErrors(idx: number) {
+    function findCxxCobolErrors(idx: number) {
         let consume = 0;
         let from = idx;
         const line = lines[idx];
@@ -252,6 +271,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
         let consume = 0;
         let from = idx;
         const line = lines[idx];
+        //
         const matched = line.match(parseRgx.rgxMain);
         if (matched) {
             consume++;

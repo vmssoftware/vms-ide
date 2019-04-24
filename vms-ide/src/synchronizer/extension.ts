@@ -13,7 +13,7 @@ import { configApi, ensureConfigHelperApi, ensureSettings } from "./ensure-setti
 import { Perform } from "./performer";
 import { SyncApi } from "./sync/sync-api";
 import { Synchronizer } from "./sync/synchronizer";
-import { LogFunction, LogType } from "../common/main";
+import { LogFunction, LogType, Delay } from "../common/main";
 import { collectSplittedByCommas } from "./common/find-files";
 import { GetSshHelperType } from "../ext-api/ext-api";
 import { SshHelper } from "../ssh-helper/ssh-helper";
@@ -61,8 +61,9 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async (scope?: string) => {
         scope = checkScope(scope);
         return workspace.saveAll(true)
-            .then((saved) => {
+            .then(async (saved) => {
                 if (saved) {
+                    await Delay(500);
                     return Perform("synchronize", scope, logFn);
                 }
                 return saved;
@@ -72,8 +73,9 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async (scope?: string, params?: string) => {
         scope = checkScope(scope);
         return workspace.saveAll(true)
-            .then((saved) => {
+            .then(async (saved) => {
                 if (saved) {
+                    await Delay(500);
                     return Perform("build", scope, logFn, params);
                 }
                 return saved;
@@ -83,8 +85,9 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildProject", async (scope?: string, params?: string) => {
         scope = checkScope(scope);
         return workspace.saveAll(true)
-            .then((saved) => {
+            .then(async (saved) => {
                 if (saved) {
+                    await Delay(500);
                     return Perform("rebuild", scope, logFn, params);
                 }
                 return saved;
@@ -94,8 +97,9 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildOnlyProject", async (scope?: string, params?: string) => {
         scope = checkScope(scope);
         return workspace.saveAll(true)
-            .then((saved) => {
+            .then(async (saved) => {
                 if (saved) {
+                    await Delay(500);
                     return Perform("buildOnly", scope, logFn, params);
                 }
                 return saved;
@@ -105,8 +109,9 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildOnlyProject", async (scope?: string, params?: string) => {
         scope = checkScope(scope);
         return workspace.saveAll(true)
-            .then((saved) => {
+            .then(async (saved) => {
                 if (saved) {
+                    await Delay(500);
                     return Perform("rebuildOnly", scope, logFn, params);
                 }
                 return saved;
@@ -154,12 +159,26 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.uploadZip", async (scope?: string, clear?: string) => {
         scope = checkScope(scope);
-        return Perform("zip", scope, logFn, clear);
+        return workspace.saveAll(true)
+            .then(async (saved) => {
+                if (saved) {
+                    await Delay(500);
+                    return Perform("zip", scope, logFn, clear);
+                }
+                return saved;
+            });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.upload", async (scope?: string) => {
         scope = checkScope(scope);
-        return Perform("upload", scope, logFn);
+        return workspace.saveAll(true)
+            .then(async (saved) => {
+                if (saved) {
+                    await Delay(500);
+                    return Perform("upload", scope, logFn);
+                }
+                return saved;
+            });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.downloadHeaders", async (scope?: string, params?: string) => {
