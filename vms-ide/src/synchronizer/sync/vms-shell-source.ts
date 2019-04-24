@@ -25,6 +25,11 @@ export class VmsShellSource extends SftpSource {
         super(sftp, root, debugLog, attempts);
     }
 
+    public dispose() {
+        this.shell.dispose();
+        super.dispose();
+    }
+
     public async setDate(filename: string, date: Date): Promise<boolean> {
         // try to set time
         const vmsFileName = this.root + ftpPathSeparator + filename;
