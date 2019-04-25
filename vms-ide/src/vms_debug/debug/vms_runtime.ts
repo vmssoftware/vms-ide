@@ -300,7 +300,7 @@ export class VMSRuntime extends EventEmitter
 
 	private async getModuleInfo(sourcePaths: string[], lisPaths: string[]) : Promise<HolderModuleInfo>
 	{
-		const matcher = /^(\S+)\s*Source.*Listing/;
+		const matcher = /^(\S+)\s*Source.*VSI\s*(\S+)/;
 		let info : HolderModuleInfo = new HolderModuleInfo();
 
 		for(let path of sourcePaths)
@@ -312,17 +312,23 @@ export class VMSRuntime extends EventEmitter
 			{
 				let matches = line.match(matcher);
 
-				if(matches && matches.length === 2)
+				if(matches && matches.length === 3)
 				{
 					let sourcePath = path;
 					let moduleName = matches[1];
+					let language = matches[2].toUpperCase();
+
+					if(language === "COBOL")
+					{
+						moduleName = moduleName.replace("-", "_");
+					}
 
 					if(moduleName.includes("$BLK"))
 					{
 						moduleName = moduleName.replace("$BLK", "");
 					}
 
-					info.setItem(moduleName, sourcePath, listingPath);
+					info.setItem(moduleName, sourcePath, listingPath, language);
 					break;
 				}
 			}

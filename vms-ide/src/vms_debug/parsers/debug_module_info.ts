@@ -3,6 +3,7 @@ export interface IModuleInfo
 	moduleName: string;
 	sourcePath: string;
 	listingPath: string;
+	language: string;
 }
 
 export class HolderModuleInfo
@@ -44,7 +45,7 @@ export class HolderModuleInfo
 			}
 		}
 
-		return <IModuleInfo> { moduleName: "", sourcePath: "", listingPath: "" };
+		return <IModuleInfo> { moduleName: "", sourcePath: "", listingPath: "", language: "" };
 	}
 
 	public getItemByPath(sourcePath : string) : IModuleInfo
@@ -57,14 +58,14 @@ export class HolderModuleInfo
 			}
 		}
 
-		return <IModuleInfo> { moduleName: "", sourcePath: "", listingPath: "" };
+		return <IModuleInfo> { moduleName: "", sourcePath: "", listingPath: "", language: "" };
 	}
 
-	public setItem(moduleName: string, sourcePath: string, listingPath: string) : number
+	public setItem(moduleName: string, sourcePath: string, listingPath: string, language: string) : number
 	{
 		moduleName = moduleName.toUpperCase();
 
-		let item = <IModuleInfo> { moduleName, sourcePath, listingPath };
+		let item = <IModuleInfo> { moduleName, sourcePath, listingPath, language };
 
 		return this.moduleInfo.push(item);
 	}
