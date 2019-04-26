@@ -81,6 +81,14 @@ export class ProjectState {
         }
     }
 
+    public removeModified(projectName: string, file: string) {
+        const state = this.states.get(projectName);
+        if (state) {
+            state.modifiedList.delete(file);
+            this.updateDescription();
+        }
+    }
+
     public clearModified(projectName: string) {
         const state = this.states.get(projectName);
         if (state) {
