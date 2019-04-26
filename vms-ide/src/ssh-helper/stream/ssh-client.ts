@@ -104,6 +104,10 @@ export class SshClient extends EventEmitter {
                                     "ssh-rsa",
                                     "ssh-dss",
                                 ],
+                            kex: 
+                                [
+                                    "diffie-hellman-group1-sha1"
+                                ]
                         },
                         // TODO: parse debug output "DEBUG: Remote ident:"
                         // and looking for required version
