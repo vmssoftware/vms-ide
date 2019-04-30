@@ -27,8 +27,8 @@ export class ProjectSection implements IProjectSection, IConfigSection {
     }
 
     public break: string = "C";
-    public builders: string = "*.{mms,com}";
-    public exclude: string = "**/{node_modules,.vscode}/**";
+    public builders: string = "*.{mms,com,opt}";
+    public exclude: string = "**/{.vscode}/**";
     public headers: string = "*.h";
     public listing: string = "*.lis";
     public outdir: string = "out";
@@ -36,7 +36,7 @@ export class ProjectSection implements IProjectSection, IConfigSection {
     public projectType: string = ProjectType[ProjectType.executable];
     public resource: string = "**/resource/**";
     public root: string = "project";
-    public source: string = "*.{cpp,c}";
+    public source: string = "*.{cpp,c,cld,msg}";
 
     public name(): string {
         return ProjectSection.section;
