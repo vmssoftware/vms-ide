@@ -377,7 +377,7 @@ export class DebugParser
 	// *HELLO          main             1648       0000000000000360 0000000000020360
 	// *HELLO          __main           1634       00000000000000E0 00000000000200E0
 	// 											   FFFFFFFF80A3CF10 FFFFFFFF80A3CF10
-	public async parseCallStackMsg(data : string, moduleHolder: HolderModuleInfo, startFrame: number, endFrame: number) //: any
+	public parseCallStackMsg(data : string, moduleHolder: HolderModuleInfo, startFrame: number, endFrame: number) : any
 	{
 		let numberLine : number = -1;
 		let columns : string[] = [];
@@ -770,7 +770,7 @@ export class DebugParser
 
 											if(!Number.isNaN(addr))
 											{
-												if(addr < 0x1000 && addr > 0)
+												if(addr < 0x1000 /*&& addr > 0*/)//???
 												{
 													item.variableAddress = 0;
 												}

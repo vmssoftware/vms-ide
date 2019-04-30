@@ -557,7 +557,7 @@ export class VMSDebugSession extends LoggingDebugSession
 			else
 			{
 				return {
-					result: v.addr ? `(0x${v.addr.toString(16)}) <${info}>` : `<${info}>`,
+					result: v.addr ? `(0x${(v.addr >>> 0).toString(16)}) <${info}>` : `<${info}>`,
 					variablesReference: v.children.length > 0 ? this.variableHandles.create(v) : 0
 				};
 			}
@@ -579,7 +579,7 @@ export class VMSDebugSession extends LoggingDebugSession
 				}
 				else
 				{
-					v.value = `(0x${v.addr.toString(16)})` + " <" + v.type + ">";
+					v.value = `(0x${(v.addr >>> 0).toString(16)})` + " <" + v.type + ">";
 				}
 			}
 

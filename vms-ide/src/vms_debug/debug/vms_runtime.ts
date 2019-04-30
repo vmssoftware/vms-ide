@@ -300,7 +300,7 @@ export class VMSRuntime extends EventEmitter
 
 	private async getModuleInfo(sourcePaths: string[], lisPaths: string[]) : Promise<HolderModuleInfo>
 	{
-		const matcher = /^(\S+)\s*Source.*VSI\s*(\S+)/;
+		const matcher = /^(\S+)\s*Source.*VSI\s*(\S+)/;//MODULE_NAME  Source Listing  25-APR-2019 02:09:09  VSI LANGUAGE V3.1-0007 Page 1
 		let info : HolderModuleInfo = new HolderModuleInfo();
 
 		for(let path of sourcePaths)
@@ -364,7 +364,8 @@ export class VMSRuntime extends EventEmitter
 
 	public stop()
 	{
-		if(this.buttonPressd !== DebugButtonEvent.btnPause)
+		if(this.buttonPressd !== DebugButtonEvent.btnPause &&
+			this.language !== "")
 		{
 			this.buttonPressd = DebugButtonEvent.btnPause;
 			let symbol = this.dbgCmd.getCtrlPlusSymbol(this.abortKey);
@@ -695,7 +696,7 @@ export class VMSRuntime extends EventEmitter
 				funcName = "";
 			}
 
-			if(vars)
+			if(vars && this.buttonPressd === 0)
 			{
 				let nameVars : string = "";
 				let namePtrs : string = "";
@@ -794,18 +795,33 @@ export class VMSRuntime extends EventEmitter
 
 	private async requestVariables(nameVars : string) : Promise<void>
 	{
-		this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of variables
-
-		let wait = new Subject();
-		this.queueWaitVar.push(wait);
-		await wait.wait(5000);
-
-		if(wait.message === undefined)//no answer
+		if(this.buttonPressd === 0)
 		{
-			if(this.queueWaitVar.size() > 0)
+			this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of variables
+
+			let wait = new Subject();
+			this.queueWaitVar.push(wait);
+			await wait.wait(5000);
+
+			if(wait.message === undefined)//no answer
 			{
-				this.queueWaitVar.pop();
+				if(this.queueWaitVar.size() > 0)
+				{
+					this.queueWaitVar.pop();
+				}
 			}
+		}
+	}
+
+	private resetNotifys() : void
+	{
+		this.waitScope.notify();
+
+		while(this.queueWaitVar.size() > 0)
+		{
+			let event = this.queueWaitVar.pop();
+			event.message = "ERROR";
+			event.notify();
 		}
 	}
 
@@ -1372,18 +1388,15 @@ export class VMSRuntime extends EventEmitter
 						break;
 
 					case DebugCmdVMS.dbgCallStack:
-						this.dbgParser.parseCallStackMsg(messageData, this.modulesHolder, this.stackStartFrame, this.stackEndFrame)
-							.then((stack) =>
-							{
-								//get current file and routine
-								if(stack.count > 0)
-								{
-									this.currentFilePath = stack.frames[0].file;
-									this.currentRoutine = stack.frames[0].name.substr(0, stack.frames[0].name.indexOf("["));
-								}
-
-								this.sendEvent(DebugCmdVMS.dbgStack, stack);
-							});
+						let stack = this.dbgParser.parseCallStackMsg(messageData, this.modulesHolder, this.stackStartFrame, this.stackEndFrame);
+						//get current file and routine
+						if(stack.count > 0)
+						{
+							this.currentFilePath = stack.frames[0].file;
+							this.currentRoutine = stack.frames[0].name.substr(0, stack.frames[0].name.indexOf("["));
+						}
+						this.sendEvent(DebugCmdVMS.dbgStack, stack);
+						this.resetNotifys();
 						break;
 
 					case DebugCmdVMS.dbgSymbol:
@@ -1435,7 +1448,7 @@ export class VMSRuntime extends EventEmitter
 				{
 					let indexStart = messageDebug.indexOf(":");
 					let addressStr = messageDebug.substr(indexStart+1).replace(MessageDebuger.msgNoSccess, "");
-					let address = parseInt(addressStr, 16);
+					let address = parseInt(addressStr, 16) >> 0;
 
 					if(!Number.isNaN(address))
 					{
@@ -1453,6 +1466,7 @@ export class VMSRuntime extends EventEmitter
 										{
 											showMsg = false;
 											item.variableAddress = 0;
+											break;
 										}
 									}
 								}
