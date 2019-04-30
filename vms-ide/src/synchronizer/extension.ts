@@ -294,7 +294,7 @@ async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelp
             testModifySync(folder.name, uri.fsPath.slice(rootLength), splittedInclude, options);
         });
         fsWatcher.onDidDelete((uri) => {
-            testModifySync(folder.name, uri.fsPath.slice(rootLength), splittedInclude, options);
+            testModifySync(folder.name, uri.fsPath.slice(rootLength), splittedInclude, options, true);
         });
         fsWatcher.onDidChange((uri) => {
             testModifySync(folder.name, uri.fsPath.slice(rootLength), splittedInclude, options);
@@ -323,9 +323,13 @@ async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelp
     watchers.set(folder.name, scopeWatchers);
 }
 
-function testModifySync(scope: string, filePath: string, includes: string[], options: micromatch.Options) {
+function testModifySync(scope: string, filePath: string, includes: string[], options: micromatch.Options, onDelete = false) {
     const list = micromatch([filePath], includes, options);
     if (list.length) {
-        ProjectState.acquire().addModified(scope, filePath);
+        if (onDelete) {
+            ProjectState.acquire().removeModified(scope, filePath);
+        } else {
+            ProjectState.acquire().addModified(scope, filePath);
+        }
     }
 }

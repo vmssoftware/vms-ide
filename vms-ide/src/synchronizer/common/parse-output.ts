@@ -32,6 +32,8 @@ interface IParseRgx {
     rgxDoSearchPrev: RegExp[];      // if mathed, search it in previous line to get position of matched[1]
     rgxLinePresent: RegExp[];       // if mathed, do not search anything in previous line (it as absent)
     rgxDoSearchNextForPath: RegExp; // try to find target file name
+    rgxMsgPos?: RegExp;             // pattern for searching position in previous line
+    rgxMsgFileSintax?: RegExp;      // pattern for search file name in current line
 }
 
 const rgxMsg = /^((%|-)(\S+)-(\S)-(\S*)),\s(.*)$/;
@@ -58,6 +60,7 @@ const parseRgxCXX: IParseRgx = {
     messagePos: 6,
     lineNumLength: 0,
     rgxDoSearchPrev: [],
+    rgxMsgPos: /^(\.*)\^/,
     rgxLinePresent: [
         /^at line number (\d+) in file (.*)$/,
         /^at line number (\d+) in module (\S+) of text library (.*)$/

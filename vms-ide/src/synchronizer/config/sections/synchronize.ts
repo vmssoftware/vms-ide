@@ -19,7 +19,7 @@ export class SynchronizeSection implements ISynchronizeSection, IConfigSection {
     public downloadNewFiles: DownloadAction = "edit";
     public keepAlive: boolean = false;
     public setTimeAttempts: number = 3;
-    public setTimeByShell: boolean = true;
+    public setTimeByShell: boolean = false;
     public unzipCmd: string = "";
     public preferZip: boolean = false;
     public purge: boolean = false;
