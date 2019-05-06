@@ -9,7 +9,7 @@ export async function activate(context: vscode.ExtensionContext) {
     if (!configApi) {
         return;
     }
-    const logFn = configApi.createLogFunction("VMS IDE: Task2Cmd");
+    const logFn = configApi.createLogFunction("VMS-IDE Task2Cmd");
 
     const taskProvider = new Task2CmdProvider(logFn);
     let disposable = tasks.registerTaskProvider(Task2CmdProvider.taskType, taskProvider);

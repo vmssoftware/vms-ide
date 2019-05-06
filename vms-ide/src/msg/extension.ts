@@ -26,7 +26,7 @@ export async function activate(context: vscode.ExtensionContext) {
         return;
     }
 
-    const logFn = configApi.createLogFunction("VMS IDE: MSG");
+    const logFn = configApi.createLogFunction("VMS-IDE MSG");
 
     const backend = new MsgFacade(logFn);
     const diagnosticCollection = languages.createDiagnosticCollection(MSG.language);
