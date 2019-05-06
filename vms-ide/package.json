@@ -791,7 +791,7 @@
                 ],
                 "configurationSnippets": [
                     {
-                        "label": "VMS-IDE: Launch",
+                        "label": "VMS IDE: Launch",
                         "description": "A new configuration for 'debugging'",
                         "body": {
                             "type": "vms_dbg",

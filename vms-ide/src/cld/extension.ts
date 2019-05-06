@@ -22,7 +22,7 @@ export async function activate(context: ExtensionContext) {
         return;
     }
 
-    const logFn = configApi.createLogFunction("VMS-IDE CLD");
+    const logFn = configApi.createLogFunction("VMS IDE: CLD");
 
     const backend = new CldFacade(logFn);
     const diagnosticCollection = languages.createDiagnosticCollection(CLD.language);
