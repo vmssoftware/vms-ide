@@ -188,7 +188,9 @@ export class Builder {
                             } else {
                                 Synchronizer.acquire().enableRemote();
                             }
-                            if (await Synchronizer.acquire().uploadFiles(ensured, modifiedList)) {
+                            if (await Synchronizer.acquire().uploadFiles(ensured, modifiedList.map(file => {
+                                    return file.replace(/[/\\]/g, ftpPathSeparator);
+                                }))) {
                                 ProjectState.acquire().clearModified(projectName);
                             }
                             if (scopeData.ensured.synchronizeSection.purge) {
