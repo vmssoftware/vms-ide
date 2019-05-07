@@ -278,7 +278,7 @@ export class Synchronizer {
 
     /**
      * Upload files, without comparing
-     * @param files files
+     * @param files files IFileEntry or strings in unix format
      */
     public async uploadFiles(ensured: IEnsured, files: string[] | IFileEntry[]) {
         const scopeData = await this.prepareScopeData(ensured);
@@ -533,7 +533,7 @@ export class Synchronizer {
      * Transfer file and set date
      * @param from from
      * @param to to
-     * @param file file
+     * @param file file in unix format
      * @param date date
      */
     private async transferFile(from: ISource, to: ISource, file: string, date: Date) {

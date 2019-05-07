@@ -32,13 +32,13 @@ export async function activate(context: ExtensionContext) {
         return undefined;
     }
 
-    logFn = configApi.createLogFunction("VMS IDE: Build");
+    logFn = configApi.createLogFunction("VMS-IDE Build");
 
     ProjectState.acquire().setLogFn(logFn);
 
     setExtensionContext(context);
 
-    logFn(LogType.debug, () => localize("debug.activated", "VMS IDE: Sync extension is activated"));
+    logFn(LogType.debug, () => localize("debug.activated", "VMS-IDE: Sync extension is activated"));
 
     context.subscriptions.push(Synchronizer.acquire(logFn));
     context.subscriptions.push(Builder.acquire(logFn));
@@ -240,7 +240,7 @@ export function deactivate() {
         scopeWatchers.forEach(w => w.dispose());
     }
     watchers.clear();
-    logFn(LogType.debug, () => localize("debug.deactivated", "VMS IDE: Sync extension is deactivated"));
+    logFn(LogType.debug, () => localize("debug.deactivated", "VMS-IDE: Sync extension is deactivated"));
 }
 
 async function createFsWatchers() {

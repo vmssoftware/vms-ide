@@ -1,6 +1,6 @@
 {
-	"command.category": "VMS IDE",
-	"configuration.title": "VMS IDE",
+	"command.category": "VMS-IDE",
+	"configuration.title": "VMS-IDE",
 	"config-helper.configuration.vsc.description": "Использовать настройки в VS Code",
 	"config-helper.configuration.fs.description": "Использовать файловую систему",
 	"config-helper.configuration.vfs.description": "Использовать виртуальную файловую систему VS Code",
