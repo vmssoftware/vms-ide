@@ -1258,7 +1258,7 @@ export class DebugParser
 				let items = item.trim().split(/\s+/);
 				let matchesNumber = items[0].match(matcherIsNumber);
 
-				if(matchesNumber)
+				if(matchesNumber && matchesNumber[0].length === items[0].length)
 				{
 					return ReflectKind.Value;
 				}
