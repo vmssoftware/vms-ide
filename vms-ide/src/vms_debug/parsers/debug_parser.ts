@@ -1227,6 +1227,7 @@ export class DebugParser
 		const matcherArrayType = /^\s*[\[\(]([0-9,]*)[\]\)]\s*(.*)/;//[2, ...] or (2, ....)
 		const matcherStructType = /^\s*(\S+): \s*(.*)/;//structure
 		const matcherInfoType = /^\s*[\[\(](.*)[\]\)]\s*(.*)/;//[info] or (info)
+		const matcherIsNumber = /^[0-9A-F]+/;
 
 		let matches = item.match(matcherArrayType);
 
@@ -1253,10 +1254,11 @@ export class DebugParser
 			}
 			else
 			{
-				let matchesStruct = item.match(matcherStructType);
-				let items = item.trim().split(" ");
+				let matchesStruct = item.match(matcherStructType);				
+				let items = item.trim().split(/\s+/);
+				let matchesNumber = items[0].match(matcherIsNumber);
 
-				if(!Number.isNaN(parseInt(items[0], 16)))
+				if(matchesNumber)
 				{
 					return ReflectKind.Value;
 				}
