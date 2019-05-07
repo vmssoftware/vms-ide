@@ -400,6 +400,7 @@ export class VMSRuntime extends EventEmitter
 		this.stackStartFrame = startFrame;
 		this.stackEndFrame = endFrame;
 
+		this.resetNotifys();
 		this.shell.SendCommandToQueue(this.dbgCmd.callStack());
 	}
 
@@ -1396,7 +1397,6 @@ export class VMSRuntime extends EventEmitter
 							this.currentRoutine = stack.frames[0].name.substr(0, stack.frames[0].name.indexOf("["));
 						}
 						this.sendEvent(DebugCmdVMS.dbgStack, stack);
-						this.resetNotifys();
 						break;
 
 					case DebugCmdVMS.dbgSymbol:
