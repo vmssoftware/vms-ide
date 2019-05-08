@@ -408,8 +408,48 @@ export class VMSRuntime extends EventEmitter
 	{
 		if(nameVar.length > 0)
 		{
+			nameVar = this.convertVariable(nameVar);
 			this.shell.SendCommandToQueue(this.dbgCmd.deposit(nameVar, valueVar));
 		}
+	}
+
+	private convertVariable(nameVar : string) : string
+	{
+		if(this.language === "COBOL")
+		{
+			const matcherArray = /^\S+([\(\[]\d+[\)\]])/;	
+			let items = nameVar.split(this.variablePeriod);
+			let ofVariable : string = "";
+
+			if(items.length > 1)
+			{
+				for(let item of items)
+				{
+					let matchesA = item.match(matcherArray);
+
+					if(matchesA && matchesA.length === 2)
+					{
+						if(ofVariable === "")
+						{
+							ofVariable = item;
+						}
+						else
+						{
+							ofVariable += matchesA[1];
+						}
+					}
+				}
+
+				if(ofVariable === "")
+				{
+					ofVariable = items[items.length - 2];
+				}
+
+				nameVar = items[items.length - 1] + " OF " + ofVariable;
+			}
+		}
+
+		return nameVar;
 	}
 
 	public setWatchVariable(nameVar : string, params : string)
