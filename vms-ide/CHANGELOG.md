@@ -1,3 +1,6 @@
+## 0.0.21
+* Small fixes
+
 ## 0.0.20
 * Increase stability
 
