@@ -20,6 +20,7 @@ import { Synchronizer } from "../sync/synchronizer";
 import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
 import { ProjectState } from "../dep-tree/proj-state";
 import * as nls from "vscode-nls";
+import { R_OK } from "constants";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -179,6 +180,7 @@ export class Builder {
                 if (result) {
                     if (ensured.configHelper.workspaceFolder) {
                         // upload modified only list
+                        const wsPath = ensured.configHelper.workspaceFolder.uri.fsPath;
                         const projectName = ensured.configHelper.workspaceFolder.name;
                         const modifiedList = ProjectState.acquire().getModifiedList(projectName);
                         if (modifiedList.length > 0) {
@@ -188,9 +190,18 @@ export class Builder {
                             } else {
                                 Synchronizer.acquire().enableRemote();
                             }
-                            if (await Synchronizer.acquire().uploadFiles(ensured, modifiedList.map(file => {
-                                    return file.replace(/[/\\]/g, ftpPathSeparator);
-                                }))) {
+                            if (await Synchronizer.acquire().uploadFiles(ensured,
+                                    // remove unaccessible files
+                                    modifiedList.filter(async file => {
+                                        try { 
+                                            fs.accessSync(path.join(wsPath, file), R_OK);
+                                        } catch(ex) {
+                                            return false;
+                                        }
+                                        return true;
+                                    }).map(file => {    // to UNIX format
+                                        return file.replace(/[/\\]/g, ftpPathSeparator);
+                                    }))) {
                                 ProjectState.acquire().clearModified(projectName);
                             }
                             if (scopeData.ensured.synchronizeSection.purge) {
@@ -501,7 +512,7 @@ export class Builder {
     /**
      * Test if we need to create new MMS
      * @param ensured settings
-     * @param content old MMS content
+     * @param content old MMS content (INCLUDE and SOURCE must have only one file per line!)
      * @returns true if we need to create MMS
      */
     public async checkMmsContent(ensured: IEnsured, content: string) {
@@ -518,6 +529,15 @@ export class Builder {
         let lineType: MmsLineType = MmsLineType.nothing;
         let blocksFound = 0;
         for (const line of content.split("\n")) {
+            if (line.startsWith(Builder.includesLine)) {
+                lineType = MmsLineType.includes;
+                blocksFound = blocksFound + 1;
+                continue;
+            } else if (line.startsWith(Builder.sourcesLine)) {
+                lineType = MmsLineType.sources;
+                blocksFound = blocksFound + 1;
+                continue;
+            } 
             if (lineType !== MmsLineType.nothing) {
                 const matched = line.match(vmsPathRgx);
                 if (matched && matched[VmsPathPart.fileName]) {
@@ -526,19 +546,15 @@ export class Builder {
                     } else if (lineType === MmsLineType.sources) {
                         foundSources.push(VmsPathConverter.fromVms(matched[0]).initial);
                     }
+                    continue;
                 } else {
                     lineType = MmsLineType.nothing;
-                }
-            } else if (line.startsWith(Builder.includesLine)) {
-                lineType = MmsLineType.includes;
-                blocksFound = blocksFound + 1;
-            } else if (line.startsWith(Builder.sourcesLine)) {
-                lineType = MmsLineType.sources;
-                blocksFound = blocksFound + 1;
-            } else if (blocksFound === 2) {
+                }    
+            } 
+            if (blocksFound === 2) {
                 // stop searching
                 break;
-            }
+            } 
         }
 
         const localSource = new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);

@@ -38,17 +38,17 @@ export async function findFiles(canReadDir: IReadDirectory,
                                 exclude?: string,
                                 debugLog?: LogFunction,
                                 progress?: IProgress) {
-    include = include || "*";
+    include = include || "";
     const options: micromatch.Options = {
         basename: true,
         nocase: true,
         nodupes: true,
         unixify: false,
     };
-    const unbraceInclude = micromatch.braces(include);
+    const unbraceInclude = micromatch.braces(include).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
     const splitInclude = unbraceInclude.reduce(collectSplittedByCommas, []);
     if (exclude) {
-        const unbraceExclude = micromatch.braces(exclude);
+        const unbraceExclude = micromatch.braces(exclude).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
         const splitExclude = unbraceExclude.reduce(collectSplittedByCommas, []);
         options.ignore = splitExclude;
     }

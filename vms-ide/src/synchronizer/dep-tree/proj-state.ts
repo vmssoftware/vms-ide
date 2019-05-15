@@ -108,8 +108,8 @@ export class ProjectState {
 
     /**
      * Actually set TRUE flag after 300 delay, set FALSE flag after 0 delay, but returns true immediatly
-     * Is TRUE only after suxxessful UPLOAD or SYNCHRONIZE
-     * Is FALSE only in initial state, or after ANY configuration is changed
+     * Must be TRUE only after successful UPLOAD or SYNCHRONIZE
+     * Must be FALSE only in initial state, or after ANY configuration is changed
      * @param projectName 
      * @param status 
      */
@@ -125,9 +125,9 @@ export class ProjectState {
             for (const currentProject of projects) {
                 const state = this.states.get(currentProject);
                 if (state) {
+                    state.modifiedList.clear(); // clear list because it may be invalid (after configuration changes)
                     if (status) {
                         state.isSync = true;
-                        state.modifiedList.clear();
                     } else {
                         state.isSync = false;
                         state.isBuilt.clear();

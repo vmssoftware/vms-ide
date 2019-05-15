@@ -102,7 +102,7 @@ const parseRgxCLD: IParseRgx = {
 };
 
 const rgxMsgMMS = /^((%|-)(MMS)-(\S)-(\S*)),\s(.*)$/;
-const rgxMsgFileSintax = /(.*) in file (.*)$/;
+const rgxMsgFileSintax = /(.*) in file (.*), line (\d)+\.$/;
 
 const mmsExt = ".MMS";
 
@@ -251,6 +251,10 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
             if (matchFile) {
                 diagnostic.file = matchFile[2];
                 diagnostic.message = matchFile[1];
+                if (matchFile[3]) {
+                    diagnostic.line = +matchFile[3];
+                    diagnostic.pos = 1;
+                }
             }
             if (diagnostic.file) {
                 const converter = VmsPathConverter.fromVms(diagnostic.file);

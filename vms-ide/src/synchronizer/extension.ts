@@ -279,10 +279,10 @@ async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelp
             nodupes: true,
             unixify: false,
         };
-        const unbracedInclude = micromatch.braces(include);
+        const unbracedInclude = micromatch.braces(include).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
         const splittedInclude = unbracedInclude.reduce(collectSplittedByCommas, []);
         if (ensured.projectSection.exclude) {
-            const unbraceExclude = micromatch.braces(ensured.projectSection.exclude);
+            const unbraceExclude = micromatch.braces(ensured.projectSection.exclude).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
             const splitExclude = unbraceExclude.reduce(collectSplittedByCommas, []);
             options.ignore = splitExclude;
         }
