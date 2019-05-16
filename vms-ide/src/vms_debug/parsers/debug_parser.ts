@@ -158,19 +158,27 @@ export class DebugParser
 
 			if(type === TypeDataMessage.typeCmd)//command
 			{
-				let position = data.indexOf(command.getCommand());
+				let position = data.indexOf(command.getBody());
+				let itemsData = data.split("\r\n");
+
+				for(let item of itemsData)
+				{
+					if(item !== "" && command.getCommand().includes(item))
+					{
+						data = data.replace(item, "").trim();
+					}
+				}
 
 				if(position > 0)
 				{
 					cmdBody = commandPrev.getBody();
 				}
 
-				let userData = data.replace(command.getCommand(), "").trim();
 				this.queueMsgCommand.push(MessagePrompt.prmtCMD + command.getCommand());
 
-				if(userData !== "")//data
+				if(data !== "")//data
 				{
-					this.parseEscSequence(userData);
+					this.parseEscSequence(data);
 				}
 			}
 			else//data
@@ -412,7 +420,7 @@ export class DebugParser
 					}
 					else
 					{
-						if(columns.length === 3)
+						if(columns.length === 4)
 						{
 							numberLineDebug = columns[1];
 						}
@@ -760,7 +768,7 @@ export class DebugParser
 									if(matches)
 									{
 										if((item.variableAddress && item.variableAddress !== 0) ||
-											pointerDereferencing === "")
+											pointerDereferencing === "")//for Fortran
 										{
 											item.variableValue = matches[matches.length-1];
 										}
@@ -1182,7 +1190,14 @@ export class DebugParser
 							name = v.split(":")[0].trim();
 							typeName = (kind === ReflectKind.Array) ? "array" : "struct";
 							value = "";
-							childsIn = this.parseStructValues(variable, prm);//parse next inner level
+
+							let itemNext = items[prm.counter];
+							let itemLevelNext = itemNext.length - itemNext.trim().length;
+
+							if(itemLevelNext > itemLevel)
+							{
+								childsIn = this.parseStructValues(variable, prm);//parse next inner level
+							}
 						}
 						else
 						{

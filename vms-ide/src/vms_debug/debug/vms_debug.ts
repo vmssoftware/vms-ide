@@ -371,6 +371,20 @@ export class VMSDebugSession extends LoggingDebugSession
 		let variable = this.variableHandles.get(args.variablesReference);
 		let fullName : string = args.name;
 
+		//Check variables for possible to change
+		for(let item of variable.children)
+		{
+			if(item.name === args.name)
+			{
+				if((item.children.length > 0 || item.addr === undefined || item.addr === 0) && item.kind !== ReflectKind.Atomic)
+				{
+					this.sendResponse(response);
+					return;
+				}				
+				break;
+			}
+		}
+
 		if(variable.kind === ReflectKind.Array)
 		{
 			fullName = variable.fullyQualifiedName + args.name;
