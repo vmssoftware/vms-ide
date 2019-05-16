@@ -645,32 +645,36 @@ export class VMSRuntime extends EventEmitter
 							item.functionName === "" ||
 							item.functionName === wrapFunctionName)
 						{
+							let request = true;
+
 							if(this.checkVariableInScope(item))
 							{
-								if(this.language !== "COBOL")
+								if(item.variableType.includes("pointer to") ||
+									item.variableType.includes("pointer type"))
 								{
-									if(item.variableType.includes("pointer to") ||
-										item.variableType.includes("pointer type"))
+									if(this.language === "COBOL")
 									{
-										nameVar = this.pointerDereferencing + nameVar;
+										request = false;
 									}
-									else if(item.variableType.includes("basic_string"))
+
+									nameVar = this.pointerDereferencing + nameVar;
+								}
+								else if(item.variableType.includes("basic_string"))
+								{
+									if(item.variableAddress)
 									{
-										if(item.variableAddress)
+										if(item.variablePrefix)
 										{
-											if(item.variablePrefix)
-											{
-												nameVar = this.pointerDereferencing + nameVar + item.variablePrefix;
-											}
-											else
-											{
-												nameVar = this.pointerDereferencing + nameVar;
-											}
+											nameVar = this.pointerDereferencing + nameVar + item.variablePrefix;
+										}
+										else
+										{
+											nameVar = this.pointerDereferencing + nameVar;
 										}
 									}
 								}
 
-								if(this.checkVariableToRequest(item))
+								if(this.checkVariableToRequest(item) && request)
 								{
 									await this.requestVariables(nameVar);
 								}
