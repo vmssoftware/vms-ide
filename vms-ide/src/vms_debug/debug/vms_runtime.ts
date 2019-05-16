@@ -647,22 +647,25 @@ export class VMSRuntime extends EventEmitter
 						{
 							if(this.checkVariableInScope(item))
 							{
-								if(item.variableType.includes("pointer to") ||
+								if(this.language !== "COBOL")
+								{
+									if(item.variableType.includes("pointer to") ||
 									item.variableType.includes("pointer type"))
-								{
-									nameVar = this.pointerDereferencing + nameVar;
-								}
-								else if(item.variableType.includes("basic_string"))
-								{
-									if(item.variableAddress)
 									{
-										if(item.variablePrefix)
+										nameVar = this.pointerDereferencing + nameVar;
+									}
+									else if(item.variableType.includes("basic_string"))
+									{
+										if(item.variableAddress)
 										{
-											nameVar = this.pointerDereferencing + nameVar + item.variablePrefix;
-										}
-										else
-										{
-											nameVar = this.pointerDereferencing + nameVar;
+											if(item.variablePrefix)
+											{
+												nameVar = this.pointerDereferencing + nameVar + item.variablePrefix;
+											}
+											else
+											{
+												nameVar = this.pointerDereferencing + nameVar;
+											}
 										}
 									}
 								}
