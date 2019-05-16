@@ -36,7 +36,8 @@ export type ActionType =
     | "edit ssh settings" 
     | "create mms" 
     | "zip" 
-    | "headers";
+    | "headers"
+    | "collect java";
 
 export interface IPerform {
     actionFunc: AsyncAction;
@@ -400,6 +401,33 @@ export const actions: IPerform[] = [
         fail: localize("upload.fail", "Upload failed"),
         status: localize("upload.status", "Upload..."),
         success: localize("upload.success", "Upload done"),
+    },
+    {
+        // collect java classes
+        actionFunc: async (scope: string | undefined, logFn: LogFunction) => {
+            let scopes: string[] = [];
+            if (!scope) {
+                if (workspace.workspaceFolders) {
+                    scopes = workspace.workspaceFolders.map((wf) => wf.name);
+                }
+            } else {
+                scopes = [scope];
+            }
+            const wait: Array<Promise<boolean>> = [];
+            for (const curScope of scopes) {
+                const ensured = await ensureSettings(curScope, logFn);
+                if (ensured) {
+                    wait.push(Builder.acquire().collectJavaClasses(ensured));
+                }
+            }
+            return Promise.all(wait).then((all) => {
+                return all.reduce((res, cur) => res && cur, true);
+            });
+        },
+        actionName: "collect java",
+        fail: localize("collect.fail", "Collect Java classes failed"),
+        status: localize("collect.status", "Collecting Java classes..."),
+        success: localize("collect.success", "Collecting Java classes is done"),
     },
 ];
 

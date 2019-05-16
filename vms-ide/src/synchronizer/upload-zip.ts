@@ -84,7 +84,7 @@ export class UploadZip {
                     // set default directory for shell - project root
                     const cd = `set def ${converter.directory}`;
                     const answer = await shell.execCmd(cd);
-                    if (!answer || answer.length === 0) {
+                    if (!answer) {
                         this.logFn(LogType.error, () => localize("zip.cd.failed", "Cannot set default directory."));
                         shell.dispose();
                         return false;
@@ -95,7 +95,7 @@ export class UploadZip {
                         command = ensured.synchronizeSection.unzipCmd + " " + zipFileName;
                     }
                     const unzipResult = await shell.execCmd(command, 3000);
-                    if (!unzipResult || unzipResult.length === 0 || shell.lastError) {
+                    if (!unzipResult || shell.lastError) {
                         this.logFn(LogType.error, () => localize("zip.unzip.failed", "Unzip command failed: {0}", shell.lastError || "unknown error" ));
                         if (unzipResult && unzipResult.length) {
                             this.logFn(LogType.error, () => localize("zip.unzip.error_output", "Unzip command output:\n {0}", unzipResult.join("\n")));
