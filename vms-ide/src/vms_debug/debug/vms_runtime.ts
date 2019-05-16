@@ -654,7 +654,7 @@ export class VMSRuntime extends EventEmitter
 								}
 								else if(item.variableType.includes("basic_string"))
 								{
-									if(item.variableAddress && item.variableAddress !== 0)
+									if(item.variableAddress)
 									{
 										if(item.variablePrefix)
 										{
@@ -750,14 +750,20 @@ export class VMSRuntime extends EventEmitter
 					if(item.functionName === funcName &&
 						this.checkVariableToRequest(item))
 					{
-						if(item.variableType.includes("pointer to") ||
-							item.variableType.includes("pointer type"))
+						if(this.language !== "FORTRAN")
 						{
-							namePtrs = this.addVariableToString(namePtrs, item);
+							item.variableAddress = 0;
+						}
+
+						if(item.variableType.includes("pointer to") ||
+							item.variableType.includes("pointer type") ||
+							item.variableType.includes("basic_string"))				
+						{
+							namePtrs = this.addVariableToString(namePtrs, item, false);
 						}
 						else
 						{
-							nameVars = this.addVariableToString(nameVars, item);
+							nameVars = this.addVariableToString(nameVars, item, false);
 						}
 					}
 				}
@@ -775,22 +781,19 @@ export class VMSRuntime extends EventEmitter
 
 						namePtrs = "";
 
-						for(let item of vars)//create string of variables without value
+						for(let item of vars)//create string of pointers
 						{
 							if(item.functionName === funcName &&
 								this.checkVariableToRequest(item))
 							{
-								if(item.variableAddress)
+								if(item.variableAddress)//check adress of pointer
 								{
-									if(!item.variableValue && !item.variableInfo && item.variableAddress !== 0)//check a value of pointers
-									{
-										namePtrs = this.addVariableToString(namePtrs, item);
-									}
+									namePtrs = this.addVariableToString(namePtrs, item, true);
 								}
 							}
 						}
 
-						if(namePtrs !== "")
+						if(namePtrs !== "" && this.language !== "COBOL")//don't support for Cobol
 						{
 							await this.requestVariables(namePtrs);//request values of pointers
 						}
@@ -866,7 +869,7 @@ export class VMSRuntime extends EventEmitter
 		}
 	}
 
-	private addVariableToString(variables : string, item : VariableFileInfo) : string
+	private addVariableToString(variables : string, item : VariableFileInfo, pointer : boolean) : string
 	{
 		if(this.checkVariableInScope(item))
 		{
@@ -879,43 +882,43 @@ export class VMSRuntime extends EventEmitter
 
 			nameVar = item.variableName;
 
-			if(item.variableType.includes("pointer to") ||
-				item.variableType.includes("pointer type"))
+			if(pointer === true)
 			{
-				if(item.variableAddress)
+				if(item.variableType.includes("pointer to") ||
+					item.variableType.includes("pointer type"))
 				{
-					if(item.variableAddress !== 0)
+					if(item.variableAddress)
 					{
 						variables += this.pointerDereferencing + nameVar;
+					}
+					else
+					{
+						if(item.variableName === "this")
+						{
+							variables += this.pointerDereferencing + nameVar;
+						}
+						else
+						{
+							variables += nameVar;
+						}
+					}
+				}
+				else if(item.variableType.includes("basic_string"))
+				{
+					if(item.variableAddress)
+					{
+						if(item.variablePrefix)
+						{
+							variables += this.pointerDereferencing + nameVar + item.variablePrefix;
+						}
+						else
+						{
+							variables += this.pointerDereferencing + nameVar;
+						}
 					}
 					else
 					{
 						variables += nameVar;
-					}
-				}
-				else
-				{
-					if(item.variableName === "this")
-					{
-						variables += this.pointerDereferencing + nameVar;
-					}
-					else
-					{
-						variables += nameVar;
-					}
-				}
-			}
-			else if(item.variableType.includes("basic_string"))
-			{
-				if(item.variableAddress && item.variableAddress !== 0)
-				{
-					if(item.variablePrefix)
-					{
-						variables += this.pointerDereferencing + nameVar + item.variablePrefix;
-					}
-					else
-					{
-						variables += this.pointerDereferencing + nameVar;
 					}
 				}
 				else
@@ -1500,7 +1503,7 @@ export class VMSRuntime extends EventEmitter
 							{
 								if(item.functionName === this.currentRoutine)
 								{
-									if(!item.variableValue && item.variableAddress && item.variableAddress !== 0)
+									if(!item.variableValue && item.variableAddress)
 									{
 										if(item.variableAddress === address)
 										{
@@ -1673,6 +1676,9 @@ export class VMSRuntime extends EventEmitter
 				this.pointerDereferencing = ".";
 				break;
 			case "COBOL":
+				this.variablePeriod = ".";
+				this.pointerPeriod = ".";
+				this.pointerDereferencing = ".";
 				break;
 		}
 	}
