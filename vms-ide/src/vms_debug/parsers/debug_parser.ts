@@ -420,7 +420,7 @@ export class DebugParser
 					}
 					else
 					{
-						if(columns.length === 3)
+						if(columns.length === 4)
 						{
 							numberLineDebug = columns[1];
 						}
