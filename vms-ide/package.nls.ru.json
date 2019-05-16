@@ -68,6 +68,7 @@
 	"synchronizer.properties.synchronize.unzipCmd.description": "Команда распаковки на строне VMS",
 	"synchronizer.properties.synchronize.preferZip.description": "Использовать ZIP для выгрузки исходников",
 	"synchronizer.properties.synchronize.purge.description": "Выполнять команду PURGE после выгрузки исходников",
+	"synchronizer.command.collectJavaClasses.title": "Collect Java classes",
 	"vms_debug.extension.vms_c_debug": "VMS Отладчик",
 	"vms_debug.extension.vms_connect": "Подключиться к VMS серверу",
 	"vms_debug.extension.vms_terminal": "Терминал"

@@ -181,6 +181,13 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
+    /**
+     * 
+     */
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.collectJavaClasses", async (scope?: string) => {
+        return Perform("collect java", scope, logFn);
+    }));
+
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.downloadHeaders", async (scope?: string, params?: string) => {
         return Perform("headers", scope, logFn, params);
     }));

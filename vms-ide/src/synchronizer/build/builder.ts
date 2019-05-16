@@ -54,6 +54,16 @@ interface IScopeBuildData {
     sshWatcher: IDispose;
 }
 
+interface IJavaClassInfo {
+    className: string,          // full name
+    lines: number[],            // source lines
+}
+
+interface IJavaFileInfo {
+    fileName: string,           // source file name, without path
+    classes: IJavaClassInfo[],  // java classes in source
+}
+
 export class Builder {
 
     /**
@@ -157,6 +167,114 @@ export class Builder {
             }
         }
         return [BuildConfiguration.unknown, ""];
+    }
+
+
+    public async collectJavaClasses(ensured: IEnsured, params?: string) {
+
+        const startTime = Date.now();
+
+        if (this.sshHelper) {
+            this.sshHelper.clearPasswordCache();
+        }
+        const scopeData = await this.prepareScopeData(ensured);
+        if (!scopeData) {
+            return false;
+        }
+        this.enableRemote();
+        const sync = Synchronizer.acquire();
+        const remote = await sync.requestSource(ensured, "remote");
+        if (remote) {
+            remote.enabled = true;
+            const outdir = ensured.projectSection.outdir + ftpPathSeparator;
+            const mask = outdir + "**" + ftpPathSeparator + "*.class";
+            const files = await remote.findFiles(mask);
+
+            const collection = new Map<string, undefined | Map<string, undefined | Set<number>>>();
+            const rgFile = /Compiled from "(\w+\.\w+)"/;
+            const rgLine = /line (\d+): (\d+)/;
+
+            // this.logFn(LogType.information, () => `=== by classes ===`);
+
+            for(const file of files) {
+                let extDot = file.filename.toLowerCase().lastIndexOf(".class");
+                const className = file.filename.slice(outdir.length, extDot >= 0 ? extDot : undefined).replace(/\//g, ".");
+                const result = await scopeData.shell.execCmd(`javap -cp ${ensured.projectSection.outdir} -l ${className}`);
+                if (result && result.length > 0) {
+                    const fileMatch = result[0].match(rgFile);
+                    if (fileMatch) {
+                        // this.logFn(LogType.information, () => `${className} from ${fileMatch[1]}`);
+                        let fileClasses = collection.get(fileMatch[1]);
+                        if (fileClasses === undefined) {
+                            fileClasses = new Map<string, undefined | Set<number>>();
+                            collection.set(fileMatch[1], fileClasses);
+                        }
+                        let classLines = fileClasses.get(className);
+                        if (classLines === undefined) {
+                            classLines = new Set<number>();
+                            fileClasses.set(className, classLines);
+                        }
+                        for (const line of result) {
+                            const lineMatch = line.match(rgLine);
+                            if (lineMatch) {
+                                // this.logFn(LogType.information, () => `    line: ${lineMatch[1]}`);
+                                classLines.add(+lineMatch[1]);
+                            }
+                        }
+                    }
+                }
+            }
+            remote.dispose();
+
+            // output
+            // this.logFn(LogType.information, () => `=== by files ===`);
+
+            // for(const [fileName, javaClasses] of collection) {
+            //     if (javaClasses !== undefined) {
+            //         this.logFn(LogType.information, () => `----- ${fileName} -----`);
+            //         for (const [jClassName, jClassLines] of javaClasses) {
+            //             if (jClassLines !== undefined) {
+            //                 this.logFn(LogType.information, () => `    ${jClassName}`);
+            //                 for (const jLine of jClassLines) {
+            //                     this.logFn(LogType.information, () => `       ${jLine}`);
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+
+            // convert
+            const javaInfo: IJavaFileInfo[] = [];
+            for(const [fileName, javaClasses] of collection) {
+                if (javaClasses !== undefined) {
+                    const fileInfo: IJavaFileInfo = {
+                        fileName,
+                        classes: [],
+                    };
+                    for (const [className, classLines] of javaClasses) {
+                        if (classLines !== undefined) {
+                            fileInfo.classes.push({
+                                className,
+                                lines: [...classLines],
+                            });
+                        }
+                    }
+                    javaInfo.push(fileInfo);
+                }
+            }
+
+            const content = JSON.stringify(javaInfo, null, 0);
+            // this.logFn(LogType.information, () => content);
+
+            if (ensured.configHelper.workspaceFolder) {
+                const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
+                await fs.writeFile(fileName, content);
+            }
+
+            const seconds = Math.floor((Date.now() - startTime) / 1000);
+            this.logFn(LogType.information, () => `\nElapsed ${seconds}\n, Content length is ${content.length}`);
+        }
+        return true;
     }
 
     /**
@@ -410,8 +528,7 @@ export class Builder {
             `OUT_DIR = .$(OUTDIR).$(TYPE_DIR)`,
             `OBJ_DIR = $(OUT_DIR).obj`,
             `.SUFFIXES`,
-            // `.SUFFIXES .OBJ .CPP .C .CLD .MSG .BLI .COB`,
-            `.SUFFIXES .OBJ .CPP .C .CLD .MSG`,
+            `.SUFFIXES .OBJ .CPP .C .CLD .MSG .BLI .COB. PAS .BAS .F77 .F90`,
             `.CPP.OBJ`,
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    $(CXX) $(COMPILEFLAGS) $(MMS$SOURCE)`,
@@ -428,14 +545,30 @@ export class Builder {
             `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
             `    MESSAGE /OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
             ``,
-            // `.BLI.OBJ`,
-            // `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            // `    BLISS $(COMPILEFLAGS) $(MMS$SOURCE)`,
-            // ``,
-            // `.COB.OBJ`,
-            // `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            // `    COBOL $(COMPILEFLAGS) $(MMS$SOURCE)`,
-            // ``,
+            `.BLI.OBJ`,
+            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+            `    BLISS $(COMPILEFLAGS) $(MMS$SOURCE)`,
+            ``,
+            `.COB.OBJ`,
+            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+            `    COBOL $(COMPILEFLAGS) $(MMS$SOURCE)`,
+            ``,
+            `.PAS.OBJ`,
+            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+            `    PASCAL $(COMPILEFLAGS) $(MMS$SOURCE)`,
+            ``,
+            `.BAS.OBJ`,
+            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+            `    BASIC $(COMPILEFLAGS) $(MMS$SOURCE)`,
+            ``,
+            `.F77.OBJ`,
+            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+            `    FORTRAN $(COMPILEFLAGS) $(MMS$SOURCE)`,
+            ``,
+            `.F90.OBJ`,
+            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+            `    FORTRAN $(COMPILEFLAGS) $(MMS$SOURCE)`,
+            ``,
             `.DEFAULT`,
             `    ! Source $(MMS$TARGET) not yet added`,
             ``,
@@ -879,7 +1012,7 @@ export class Builder {
             });
             // get root of shell (home folder)
             let answer = await shell.execCmd(Builder.getShellRootCmd);
-            if (!answer || answer.length === 0) {
+            if (!answer) {
                 return undefined;
             }
             const shellRootConverter = VmsPathConverter.fromVms(answer[0]);
@@ -887,7 +1020,7 @@ export class Builder {
             const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
             const cd = `set def ${converter.directory}`;
             answer = await shell.execCmd(cd);
-            if (!answer || answer.length === 0) {
+            if (!answer) {
                 return undefined;
             }
             // create local source and watchers

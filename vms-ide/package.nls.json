@@ -68,6 +68,7 @@
     "synchronizer.properties.synchronize.unzipCmd.description": "Command to unzip archive on VMS side",
     "synchronizer.properties.synchronize.preferZip.description": "Prefer ZIP to upload source",
     "synchronizer.properties.synchronize.purge.description": "Execute PURGE command after uploding",
+    "synchronizer.command.collectJavaClasses.title": "Collect Java classes",
 	"vms_debug.extension.vms_c_debug": "VMS Debugger",
 	"vms_debug.extension.vms_connect": "Connect to server",
 	"vms_debug.extension.vms_terminal": "Terminal"

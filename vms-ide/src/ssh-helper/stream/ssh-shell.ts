@@ -125,21 +125,35 @@ export class SshShell extends SshClient implements ISshShell {
                     } else {
                         if (typeof content === "string") {
                             this.logFn(LogType.debug, () => localize("debug.cmd.raw", "shell{1} command raw output: {0}", content, this.tag ? " " + this.tag : ""));
-                            // try to skip garbage from previuos commands
-                            const contentLines = content.split(/\r?\n|\r/);
-                            let firstLine = "";
-                            let pos = 0;
-                            for (; pos < contentLines.length; ++pos) {
-                                const line = contentLines[pos];
-                                if (line !== "") {
-                                    firstLine += line;
-                                } else {
+                            // find written command in content and remove it
+                            let garbage = false;
+                            let contentPos = 0;
+                            for(let commandPos = 0; contentPos < content.length && commandPos < trimmedCommand.length; contentPos++) {
+                                if (content[contentPos] === "\r" || content[contentPos] === "\n") {
+                                    continue;
+                                }
+                                if (content[contentPos] !== trimmedCommand[commandPos]) {
+                                    garbage = true;
                                     break;
                                 }
+                                commandPos++;
                             }
-                            if (firstLine.startsWith(trimmedCommand)) {
+                            // skip empty lines (as in previous version of code)
+                            let outPos = 0;
+                            while(outPos === 0 && contentPos < content.length) {
+                                switch (content[contentPos]) {
+                                    case "\r":
+                                    case "\n":
+                                        contentPos++;
+                                        break;
+                                    default:
+                                        outPos = contentPos;
+                                        break;
+                                }
+                            }
+                            if (!garbage) {
                                 this.logFn(LogType.debug, () => localize("debug.cmd.out", "shell{0} command output found", this.tag ? " " + this.tag : ""));
-                                contentRet = contentLines.slice(pos + 1);
+                                contentRet = outPos ? content.slice(outPos).split(/\r?\n|\r/) : [];
                                 commandEnded.call(this);
                             } else {
                                 this.logFn(LogType.debug, () => localize("debug.garbage", "shell{0} garbage output found", this.tag ? " " + this.tag : ""));

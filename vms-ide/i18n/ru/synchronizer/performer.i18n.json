@@ -29,5 +29,8 @@
     "upload.fail": "Выгрузка неудачна",
     "upload.status": "Выгрузка...",
     "upload.success": "Выгрузка завершена",
+    "collect.fail": "Collect Java classes failed",
+    "collect.status": "Collecting Java classes...",
+    "collect.success": "Collecting Java classes is done",
     "error.no_action": "Отсутсвует действие: {0}"
 }
