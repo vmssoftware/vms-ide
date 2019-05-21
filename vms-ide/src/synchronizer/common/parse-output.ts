@@ -143,6 +143,9 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
     while (i < lines.length) {
         let [consume, from]  = findCxxCobolErrors(i);
         if (!consume) {
+            [consume, from] = findJVMErrors(i);
+        }
+        if (!consume) {
             [consume, from] = findMmsErrors(i);
         }
         if (!consume) {
@@ -160,6 +163,39 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
     }
 
     return { problems, lines } ;
+
+    function findJVMErrors(idx: number) {
+
+        const rgxMsgJVM = /^(\S+?):(\d+):((\d+):)? (\S+?): (.*?)(: (.*))?$/;
+        const rgxPosJVM = /^\s*\^/;
+
+        let consume = 0;
+        let from = idx;
+        const line = lines[idx];
+        const matched = line.match(rgxMsgJVM);
+        if (matched) {
+            consume += 3;
+            const diagnostic: IPartialDiagnostics = {
+                facility:   "jvm",
+                file:       matched[1],
+                line:      +matched[2],
+                pos:        1,
+                message:    matched[6],
+                severity:   VmsSeverity.error,
+            };
+            if (matched[3]) {
+                diagnostic.pos = +matched[4];
+            } else if (idx + 2 < lines.length){
+                const posLine = lines[idx+2];
+                const posMatched = posLine.match(rgxPosJVM);
+                if (posMatched && posMatched[0]) {
+                    diagnostic.pos = posMatched[0].length;
+                }
+            }
+            problems.push(diagnostic);
+        }
+        return [consume, from];
+    }
 
     /**
      * returns consumed lines

@@ -5,6 +5,9 @@ export enum ProjectType {
     executable,
     library,
     shareable,
+    java,
+    kotlin,
+    scala,
 }
 
 export class ProjectSection implements IProjectSection, IConfigSection {

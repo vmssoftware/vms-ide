@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "0.0.21",
+    "version": "0.0.22",
     "publisher": "VMSSoftwareInc",
     "repository": {
         "type": "git",
@@ -600,13 +600,13 @@
                 "vmssoftware.synchronizer.project.builders": {
                     "scope": "resource",
                     "type": "string",
-                    "default": "*.{mms,com}",
+                    "default": "*.{mms,com,opt}",
                     "description": "%synchronizer.properties.project.builders.description%"
                 },
                 "vmssoftware.synchronizer.project.exclude": {
                     "scope": "resource",
                     "type": "string",
-                    "default": "**/{.vscode,node-modules}",
+                    "default": "**/{.vscode,node-modules,out}",
                     "description": "%synchronizer.properties.project.exclude.description%"
                 },
                 "vmssoftware.synchronizer.project.headers": {
@@ -639,12 +639,18 @@
                     "enum": [
                         "executable",
                         "library",
-                        "shareable"
+                        "shareable",
+                        "java",
+                        "kotlin",
+                        "scala"
                     ],
                     "enumDescriptions": [
                         "Executable",
                         "Static library",
-                        "Shareable image"
+                        "Shareable image",
+                        "Java project",
+                        "Kotlin project",
+                        "Scala project"
                     ],
                     "default": "executable",
                     "description": "%synchronizer.properties.project.projectType.description%"

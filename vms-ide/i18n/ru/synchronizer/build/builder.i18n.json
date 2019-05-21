@@ -5,6 +5,7 @@
     "mms_exist": "Предыдущий MMS файл переименован в {0}",
     "opt_exist": "Предыдущий OPT файл переименован в {0}",
     "com_exist": "Предыдущий COM файл переименован в {0}",
+    "too_many_files": "There are more than one file named {0}",
     "debug.cannot_get_ssh_helper": "Не удалось загрузить ssh-helper API",
     "output.install_ssh": "Установите плагин 'vmssoftware.ssh-helper'",
     "debug.create_shell": "Создание shell для компиляции"
