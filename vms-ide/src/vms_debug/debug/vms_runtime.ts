@@ -62,6 +62,7 @@ export class VMSRuntime extends EventEmitter
 	private programEnd : boolean;
 	private waitSymbols = new Subject();
 	private waitScope = new Subject();
+	private waitDeposit = new Subject();
 	private waitShellMode = new Subject();
 	private queueWaitVar = new Queue<any>();
 
@@ -404,13 +405,36 @@ export class VMSRuntime extends EventEmitter
 		this.shell.SendCommandToQueue(this.dbgCmd.callStack());
 	}
 
-	public setVariableValue(nameVar : string, valueVar : string)
+	public async setVariableValue(nameVar : string, valueVar : string): Promise<boolean>
 	{
+		let result : boolean = false;
+
 		if(nameVar.length > 0)
 		{
-			nameVar = this.convertVariable(nameVar);
-			this.shell.SendCommandToQueue(this.dbgCmd.deposit(nameVar, valueVar));
+			if(valueVar.length === 1 && (valueVar.includes("-") || valueVar.includes("+")))
+			{
+				result = false;
+			}
+			else
+			{
+				nameVar = this.convertVariable(nameVar);
+				this.shell.SendCommandToQueue(this.dbgCmd.deposit(nameVar, valueVar));
+
+				this.waitDeposit.message = "";
+				await this.waitDeposit.wait(5000);
+			}
+			
+			if(this.waitDeposit.message === "OK")
+			{
+				result = true;
+			}
+			else
+			{
+				result = false;
+			}
 		}
+
+		return result;
 	}
 
 	private convertVariable(nameVar : string) : string
@@ -1588,6 +1612,47 @@ export class VMSRuntime extends EventEmitter
 				if (this.logFn)
 				{
 					this.logFn(LogType.information, () => messageDebugInfo);
+				}
+			}
+
+			if(type === TypeDataMessage.typeData)
+			{
+				if(this.shell.getCurrentCommand().getBody() === DebugCmdVMS.dbgDeposit)
+				{
+					if(messageDebug !== "")
+					{
+						if(messageDebug.includes(MessageDebuger.msgNoAccessr) ||
+							messageDebug.includes(MessageDebuger.msgOpNotAllow) ||
+							messageDebug.includes(MessageDebuger.msgInvNumStr) ||
+							messageDebug.includes(MessageDebuger.msgInvNumber) ||
+							messageDebug.includes(MessageDebuger.msgNoSymbol) ||
+							messageDebug.includes(MessageDebuger.msgMisInvOper) ||
+							messageDebug.includes(MessageDebuger.msgIllPathIdent) ||
+							messageDebug.includes(MessageDebuger.msgMisOpeMis) ||
+							messageDebug.includes(MessageDebuger.msgSynErrExpr) ||
+							messageDebug.includes(MessageDebuger.msgDivByZero) ||
+							messageDebug.includes(MessageDebuger.msgNullPtr) ||
+							messageDebug.includes(MessageDebuger.msgAnaCvt) ||
+							messageDebug.includes(MessageDebuger.msgIllType) ||
+							messageDebug.includes(MessageDebuger.msgMatQuoMis) ||
+							messageDebug.includes(MessageDebuger.msgNoValue) ||
+							messageDebug.includes(MessageDebuger.msgAmpersand) ||
+							messageDebug.includes(MessageDebuger.msgIvalOutBnds))
+						{
+							this.waitDeposit.message = "ERROR";
+							this.waitDeposit.notify();
+						}
+						else
+						{
+							this.waitDeposit.message = "OK";
+							this.waitDeposit.notify();
+						}
+					}
+					else
+					{
+						this.waitDeposit.message = "OK";
+						this.waitDeposit.notify();
+					}
 				}
 			}
 
