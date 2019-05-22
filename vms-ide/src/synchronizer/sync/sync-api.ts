@@ -6,16 +6,64 @@ import { ISource, sourceType } from "./source";
 
 export interface IProjectSection {
     break: string;
+    /**
+     * builders mask:
+     * blob in UNIX format
+     */
     builders: string;
+    /**
+     * exclude mask:
+     * blob in UNIX format
+     */
     exclude: string;
+    /**
+     * headers mask:
+     * blob in UNIX format
+     */
     headers: string;
+    /**
+     * listings mask, will be uploaded after compilation:
+     * blob in UNIX format
+     */
     listing: string;
+    /**
+     * temporary output folder:
+     * one word, no inner folders
+     */
     outdir: string;
     projectName: string;
+    /**
+     * type of project:
+     * executable, shareable, library, java, scala, kotlin
+     */
     projectType: string;
+    /**
+     * resource mask:
+     * blob in UNIX format
+     */
     resource: string;
+    /**
+     * root folder:
+     * in UNIX format
+     */
     root: string;
+    /**
+     * source mask, files to compile:
+     * blob in UNIX format
+     */
     source: string;
+    /**
+     * comma-separated libraries (or classes for jvm) list:
+     * (java,scala,kotin): in UNIX format,
+     * (executable,shareable,library): in VMS format
+     */
+    addLibraries: string;
+    /**
+     * comma-separated include folders list:
+     * (java,scala,kotin): not applicable,
+     * (executable,shareable,library): in VMS format
+     */
+    addIncludes: string;
 }
 
 export type DownloadAction = "overwrite" | "skip" | "edit";

@@ -172,6 +172,15 @@ export class Builder {
 
     public async collectJavaClasses(ensured: IEnsured, params?: string) {
 
+        switch(ensured.projectSection.projectType) {
+            case ProjectType[ProjectType.java]:
+            case ProjectType[ProjectType.scala]:
+            case ProjectType[ProjectType.kotlin]:
+                break;
+            default:
+                return true;
+        }
+    
         const startTime = Date.now();
 
         const collection = new Map<string, undefined | Map<string, undefined | Set<number>>>();
@@ -190,78 +199,72 @@ export class Builder {
             return false;
         }
         this.enableRemote();
-        const sync = Synchronizer.acquire();
-        const remote = await sync.requestSource(ensured, "remote");
-        if (remote) {
-            remote.enabled = true;
-            const resultLines = await scopeData.shell.execCmd(cmdJarClasses);
-            if (!resultLines) {
-                return false;
-            }
-
-            for (const line of resultLines) {
-                const matched = line.match(rgxJavaClassName);
-                if (matched) {
-                    const className = matched[1];
-                    const result = await scopeData.shell.execCmd(cmdJavaClassLines + className);
-                    if (result && result.length > 0) {
-                        const fileMatch = result[0].match(rgFile);
-                        if (fileMatch) {
-                            let fileClasses = collection.get(fileMatch[1]);
-                            if (fileClasses === undefined) {
-                                fileClasses = new Map<string, undefined | Set<number>>();
-                                collection.set(fileMatch[1], fileClasses);
-                            }
-                            let classLines = fileClasses.get(className);
-                            if (classLines === undefined) {
-                                classLines = new Set<number>();
-                                fileClasses.set(className, classLines);
-                            }
-                            for (const line of result) {
-                                const lineMatch = line.match(rgLine);
-                                if (lineMatch) {
-                                    classLines.add(+lineMatch[1]);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            remote.dispose();
-
-            // convert
-            const javaInfo: IJavaFileInfo[] = [];
-            for(const [fileName, javaClasses] of collection) {
-                if (javaClasses !== undefined) {
-                    const fileInfo: IJavaFileInfo = {
-                        fileName,
-                        classes: [],
-                    };
-                    for (const [className, classLines] of javaClasses) {
-                        if (classLines !== undefined) {
-                            fileInfo.classes.push({
-                                className,
-                                lines: [...classLines],
-                            });
-                        }
-                    }
-                    javaInfo.push(fileInfo);
-                }
-            }
-
-            const content = JSON.stringify(javaInfo, null, 2);
-
-            if (ensured.configHelper.workspaceFolder) {
-                const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
-                await fs.writeFile(fileName, content);
-            }
-
-            const seconds = Math.floor((Date.now() - startTime) / 1000);
-            this.logFn(LogType.information, () => `\nElapsed ${seconds}\n, Content length is ${content.length}`);
-
-            return true;
+            
+        const resultLines = await scopeData.shell.execCmd(cmdJarClasses);
+        if (!resultLines) {
+            return false;
         }
-        return false;
+
+        for (const line of resultLines) {
+            const matched = line.match(rgxJavaClassName);
+            if (matched) {
+                const className = matched[1];
+                const result = await scopeData.shell.execCmd(cmdJavaClassLines + className);
+                if (result && result.length > 0) {
+                    const fileMatch = result[0].match(rgFile);
+                    if (fileMatch) {
+                        let fileClasses = collection.get(fileMatch[1]);
+                        if (fileClasses === undefined) {
+                            fileClasses = new Map<string, undefined | Set<number>>();
+                            collection.set(fileMatch[1], fileClasses);
+                        }
+                        let classLines = fileClasses.get(className);
+                        if (classLines === undefined) {
+                            classLines = new Set<number>();
+                            fileClasses.set(className, classLines);
+                        }
+                        for (const line of result) {
+                            const lineMatch = line.match(rgLine);
+                            if (lineMatch) {
+                                classLines.add(+lineMatch[1]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // convert
+        const javaInfo: IJavaFileInfo[] = [];
+        for(const [fileName, javaClasses] of collection) {
+            if (javaClasses !== undefined) {
+                const fileInfo: IJavaFileInfo = {
+                    fileName,
+                    classes: [],
+                };
+                for (const [className, classLines] of javaClasses) {
+                    if (classLines !== undefined) {
+                        fileInfo.classes.push({
+                            className,
+                            lines: [...classLines],
+                        });
+                    }
+                }
+                javaInfo.push(fileInfo);
+            }
+        }
+
+        const content = JSON.stringify(javaInfo, null, 2);
+
+        if (ensured.configHelper.workspaceFolder) {
+            const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
+            await fs.writeFile(fileName, content);
+        }
+
+        const seconds = Math.floor((Date.now() - startTime) / 1000);
+        this.logFn(LogType.information, () => `Elapsed ${seconds}, Content length is ${content.length}`);
+
+        return true;
     }
 
     /**
@@ -449,6 +452,9 @@ export class Builder {
             ensured.projectSection.projectType === ProjectType[ProjectType.shareable] ||
             ensured.projectSection.projectType === ProjectType[ProjectType.library] ) {
 
+            cxxIncludes.push(...ensured.projectSection.addIncludes.split(","));
+            optLines.push(...ensured.projectSection.addLibraries.split(",").map(lib => lib + "/LIBRARY"));
+
             for (const source of sources) {
                 const vms = new VmsPathConverter(source.filename);
                 const objectDependencyLine = "[$(OBJ_DIR)" + vms.bareDirectory + "]" + vms.fileName + ".obj : " + vms.fullPath + " $(INCLUDES)";
@@ -523,7 +529,7 @@ export class Builder {
                 `OUT_DIR = .$(OUTDIR).$(TYPE_DIR)`,
                 `OBJ_DIR = $(OUT_DIR).obj`,
                 `.SUFFIXES`,
-                `.SUFFIXES .OBJ .CPP .C .CLD .MSG .BLI .COB .PAS .BAS .F77 .F90 .FOR`,
+                `.SUFFIXES .OBJ .CPP .C .CLD .MSG .BLI .COB .PAS .BAS .F77 .F90 .FOR .B32 .CBL`,
                 `.CPP.OBJ`,
                 `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
                 `    $(CXX) $(COMPILEFLAGS) $(MMS$SOURCE)`,
@@ -544,7 +550,15 @@ export class Builder {
                 `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
                 `    BLISS $(COMPILEFLAGS) $(MMS$SOURCE)`,
                 ``,
+                `.B32.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    BLISS $(COMPILEFLAGS) $(MMS$SOURCE)`,
+                ``,
                 `.COB.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    COBOL $(COMPILEFLAGS) $(MMS$SOURCE)`,
+                ``,
+                `.CBL.OBJ`,
                 `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
                 `    COBOL $(COMPILEFLAGS) $(MMS$SOURCE)`,
                 ``,
@@ -628,6 +642,33 @@ export class Builder {
                 `.SILENT`,
             ]);
 
+            // project dependecies
+            let depClassPath = ensured.projectSection.addLibraries.split(",").join(":");
+            let deps = new ProjDepTree().getDepList(ensured.scope);
+            if (deps.length > 1) {  // first is this project
+                const depPathStart = (".." + ftpPathSeparator).repeat(ensured.projectSection.root.split(ftpPathSeparator).length);
+                deps = deps.splice(1);
+                for (const depPrj of deps) {
+                    const depEnsured = await ensureSettings(depPrj, this.logFn);
+                    if (depEnsured) {
+                        switch (depEnsured.projectSection.projectType) {
+                            case ProjectType[ProjectType.java]:
+                            case ProjectType[ProjectType.scala]:
+                            case ProjectType[ProjectType.kotlin]:
+                                const depPath = depPathStart + 
+                                                [depEnsured.projectSection.root,
+                                                 depEnsured.projectSection.outdir,
+                                                 depEnsured.projectSection.projectName].join(ftpPathSeparator) + ".jar";
+                                if (depClassPath) {
+                                    depClassPath += ":";
+                                }
+                                depClassPath += depPath;
+                                break;
+                        }
+                    }
+                }
+            }
+
             //main
             mainModuleLines.push(`[.$(OUTDIR)]$(NAME).jar : `);
             for (const source of sources) {
@@ -635,10 +676,13 @@ export class Builder {
                 const vms = new VmsPathConverter(source.filename);
                 mainModuleLines.push(`[.$(OUTDIR).src]${vms.fileName}${extension}`);
             }
-            mainModuleLines.push(`    ${compiler} -d $(OUTDIR)/$(NAME).jar $(OUTDIR)/src/*${extension}`);
+            if (depClassPath) {
+                depClassPath = "-cp " + depClassPath;
+            }
+            mainModuleLines.push(`    ${compiler} ${depClassPath} -d $(OUTDIR)/$(NAME).jar $(OUTDIR)/src/*${extension}`);
             mainModuleLines.push(``);
 
-            // dependencies
+            // source dependencies
             for (const source of sources) {
                 const vms = new VmsPathConverter(source.filename);
                 const objectDependencyLine = `[.$(OUTDIR).src]${vms.fileName}${extension} : ${vms.fullPath}`;

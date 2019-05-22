@@ -3,6 +3,7 @@ import { ftpPathSeparator } from "../../common/main";
 export const splitter = new RegExp(ftpPathSeparator, "g");
 export const vmsPathRgx = /(([\w_$\-]+):)?(\[((\.)?([\w_$\-]+)(\.([\w_$\-]+))*)\])?((([\w_$\-]+)(\.([\w_$\-]+)?)?)?(;(\d+))?)?/;
 export enum VmsPathPart {
+    disk = 2,
     bareDir = 4,
     isRelative = 5,
     fileName = 11,

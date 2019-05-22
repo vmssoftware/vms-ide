@@ -551,6 +551,12 @@
                     "default": 0,
                     "description": "%ssh-helper.configuration.timeouts.welcome%"
                 },
+                "vmssoftware.ssh-helper.terminal.command": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%ssh-helper.configuration.terminal.command%"
+                },
                 "vmssoftware.ssh-helper.host-collection.hosts": {
                     "scope": "resource",
                     "type": "array",
@@ -672,6 +678,18 @@
                     "type": "string",
                     "default": "*.{c,cpp}",
                     "description": "%synchronizer.properties.project.source.description%"
+                },
+                "vmssoftware.synchronizer.project.addLibraries": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%synchronizer.properties.project.addLibraries.description%"
+                },
+                "vmssoftware.synchronizer.project.addIncludes": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%synchronizer.properties.project.addIncludes.description%"
                 },
                 "vmssoftware.synchronizer.synchronize.downloadNewFiles": {
                     "scope": "resource",
