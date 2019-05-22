@@ -110,6 +110,7 @@ const lineStartRgx = [
     rgxMsg,
     rgxPlaceCXX,
     rgxPlaceCXX_TLB,
+    rgxMsgMMS,
 ];
 
 export function consolidateOutputLines(output: string[], shellWidth?: number) {
