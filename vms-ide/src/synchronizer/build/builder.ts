@@ -452,8 +452,12 @@ export class Builder {
             ensured.projectSection.projectType === ProjectType[ProjectType.shareable] ||
             ensured.projectSection.projectType === ProjectType[ProjectType.library] ) {
 
-            cxxIncludes.push(...ensured.projectSection.addIncludes.split(","));
-            optLines.push(...ensured.projectSection.addLibraries.split(",").map(lib => lib + "/LIBRARY"));
+            if (ensured.projectSection.addIncludes) {
+                cxxIncludes.push(...ensured.projectSection.addIncludes.split(","));
+            }
+            if (ensured.projectSection.addLibraries) {
+                optLines.push(...ensured.projectSection.addLibraries.split(",").map(lib => lib + "/LIBRARY"));
+            }
 
             for (const source of sources) {
                 const vms = new VmsPathConverter(source.filename);
