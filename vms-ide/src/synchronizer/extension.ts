@@ -50,13 +50,16 @@ export async function activate(context: ExtensionContext) {
     //         logFn(LogType.debug, () => `fragment: ${uri.fragment}`);
     //     }}));
 
+    const projectDependenciesProvider = new ProjDepProvider();
+    const projectDescriptionProvider = new ProjDescrProvider();
+
     createFsWatchers();
     workspace.onDidChangeWorkspaceFolders((e) => {
         createFsWatchers();
+        projectDependenciesProvider.refresh();
+        projectDescriptionProvider.refresh();
+        ProjectState.acquire().create();
     });
-
-    const projectDependenciesProvider = new ProjDepProvider();
-    const projectDescriptionProvider = new ProjDescrProvider();
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async (scope?: string) => {
         scope = checkScope(scope);

@@ -77,6 +77,7 @@ export class ProjectState {
         const state = this.states.get(projectName);
         if (state) {
             state.modifiedList.set(file, true);
+            state.isBuilt.clear();
             this.updateDescription();
         }
     }

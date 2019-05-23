@@ -186,7 +186,7 @@ export class Builder {
         const collection = new Map<string, undefined | Map<string, undefined | Set<number>>>();
         
         const cmdJarClasses = `jar -tf ${ensured.projectSection.outdir}/${ensured.projectSection.projectName}.jar`;
-        const cmdJavaClassLines = `javap -cp ${ensured.projectSection.outdir}/${ensured.projectSection.projectName}.jar -l `;
+        const cmdJavaClassLines = `javap -cp ${ensured.projectSection.outdir}/${ensured.projectSection.projectName}.jar -l -p `;
         const rgxJavaClassName = /^(\S*).class/;
         const rgFile = /Compiled from "(\w+\.\w+)"/;
         const rgLine = /line (\d+): (\d+)/;
@@ -292,7 +292,7 @@ export class Builder {
                         const projectName = ensured.configHelper.workspaceFolder.name;
                         const modifiedList = ProjectState.acquire().getModifiedList(projectName);
                         if (modifiedList.length > 0) {
-                            this.smartClean(scopeData, modifiedList, cfg);
+                            await this.smartClean(scopeData, modifiedList, cfg);
                             if (this.stopIssued) {
                                 Synchronizer.acquire().disableRemote();
                             } else {
@@ -300,7 +300,7 @@ export class Builder {
                             }
                             if (await Synchronizer.acquire().uploadFiles(ensured,
                                     // remove unaccessible files
-                                    modifiedList.filter(async file => {
+                                    modifiedList.filter(file => {
                                         try { 
                                             fs.accessSync(path.join(wsPath, file), R_OK);
                                         } catch(ex) {
@@ -638,9 +638,15 @@ export class Builder {
             // delete all previous hard links before the process
             contentFirst.push(`    pipe del/tree [.$(OUTDIR).src]*.*;* | copy SYS$INPUT nl:`);
             contentFirst.push(`    pipe create/dir [.$(OUTDIR).src] | copy SYS$INPUT nl:`);
+            if (ensured.projectSection.projectType === ProjectType[ProjectType.java]) {
+                contentFirst.push(`    pipe create/dir [.$(OUTDIR).tmp] | copy SYS$INPUT nl:`);
+            }
             // delete all current hard link after the process
             contentFirst.push(`.LAST`);
             contentFirst.push(`    pipe del/tree [.$(OUTDIR).src]*.*;* | copy SYS$INPUT nl:`);
+            if (ensured.projectSection.projectType === ProjectType[ProjectType.java]) {
+                contentFirst.push(`    pipe del/tree [.$(OUTDIR).tmp...]*.*;* | copy SYS$INPUT nl:`);
+            }
                     
             middleLines.push(...[
                 `.SILENT`,
@@ -683,7 +689,12 @@ export class Builder {
             if (depClassPath) {
                 depClassPath = "-cp " + depClassPath;
             }
-            mainModuleLines.push(`    ${compiler} ${depClassPath} -d $(OUTDIR)/$(NAME).jar $(OUTDIR)/src/*${extension}`);
+            if (ensured.projectSection.projectType === ProjectType[ProjectType.java]) {
+                mainModuleLines.push(`    ${compiler} ${depClassPath} -d $(OUTDIR)/tmp $(OUTDIR)/src/*${extension}`);
+                mainModuleLines.push(`    jar cf $(OUTDIR)/$(NAME).jar -C $(OUTDIR)/tmp .`);
+            } else {
+                mainModuleLines.push(`    ${compiler} ${depClassPath} -d $(OUTDIR)/$(NAME).jar $(OUTDIR)/src/*${extension}`);
+            }
             mainModuleLines.push(``);
 
             // source dependencies

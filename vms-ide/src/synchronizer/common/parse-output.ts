@@ -169,6 +169,8 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
 
         const rgxMsgJVM = /^(\S+?):(\d+):((\d+):)? (\S+?): (.*?)(: (.*))?$/;
         const rgxPosJVM = /^\s*\^/;
+        // const rgxSymbJVM = /^\s*symbol:\s*(.*?)$/;
+        // const rgxLocJVM = /^\s*location:\s*(.*?)$/;
 
         let consume = 0;
         let from = idx;
@@ -191,6 +193,24 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                 const posMatched = posLine.match(rgxPosJVM);
                 if (posMatched && posMatched[0]) {
                     diagnostic.pos = posMatched[0].length;
+                }
+            }
+            // if (idx + consume + 1 < lines.length) {
+            //     const lineT = lines[idx + consume];
+            //     if (lineT.match(rgxSymbJVM)) {
+            //         consume ++;
+            //     }
+            // }
+            // if (idx + consume + 1 < lines.length) {
+            //     const lineT = lines[idx + consume];
+            //     if (lineT.match(rgxLocJVM)) {
+            //         consume ++;
+            //     }
+            // }
+            while (idx + consume + 1 < lines.length) {
+                const lineT = lines[idx + consume];
+                if (!lineT.length || line[0] === ' ') {
+                    consume ++;
                 }
             }
             problems.push(diagnostic);
