@@ -366,7 +366,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.sendResponse(response);
 	}
 
-	protected setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments): void
+	protected async setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments): Promise<void>
 	{
 		let variable = this.variableHandles.get(args.variablesReference);
 		let fullName : string = args.name;
@@ -430,12 +430,15 @@ export class VMSDebugSession extends LoggingDebugSession
 			}
 		}
 
-		this.runtime.setVariableValue(fullName, args.value);
+		let result = await this.runtime.setVariableValue(fullName, args.value);
 
-		response.body =
+		if(result)
 		{
-			value: args.value
-		};
+			response.body =
+			{
+				value: args.value
+			};
+		}		
 		this.sendResponse(response);
 	}
 
