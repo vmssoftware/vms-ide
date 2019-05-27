@@ -572,17 +572,9 @@
                     ],
                     "description": "%ssh-helper.configuration.hosts-collection%"
                 },
-                "vmssoftware.project-dep.buildType": {
+                "vmssoftware.project-dep.buildName": {
                     "scope": "resource",
-                    "type": "string",
-                    "enum": [
-                        "DEBUG",
-                        "RELEASE"
-                    ],
-                    "enumDescriptions": [
-                        "Debug",
-                        "Release"
-                    ]
+                    "type": "string"
                 },
                 "vmssoftware.project-dep.dependencies": {
                     "scope": "resource",
@@ -742,6 +734,25 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%synchronizer.properties.synchronize.purge.description%"
+                },
+                "vmssoftware.synchronizer.builds.configurations": {
+                    "scope": "resource",
+                    "type": "array",
+                    "default": [
+                        {
+                            "label": "DEBUG",
+                            "description": "debug",
+                            "command": "",
+                            "parameter": "DEBUG"
+                        },
+                        {
+                            "label": "RELEASE",
+                            "description": "release",
+                            "command": "",
+                            "parameter": "RELEASE"
+                        }
+                    ],
+                    "description": "%synchronizer.properties.builds.configurations.description%"
                 }
             }
         },

@@ -73,57 +73,57 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async (scope?: string, params?: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async (scope?: string, buildName?: string) => {
         scope = checkScope(scope);
         return workspace.saveAll(true)
             .then(async (saved) => {
                 if (saved) {
                     await Delay(500);
-                    return Perform("build", scope, logFn, params);
+                    return Perform("build", scope, logFn, buildName);
                 }
                 return saved;
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildProject", async (scope?: string, params?: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildProject", async (scope?: string, buildName?: string) => {
         scope = checkScope(scope);
         return workspace.saveAll(true)
             .then(async (saved) => {
                 if (saved) {
                     await Delay(500);
-                    return Perform("rebuild", scope, logFn, params);
+                    return Perform("rebuild", scope, logFn, buildName);
                 }
                 return saved;
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildOnlyProject", async (scope?: string, params?: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildOnlyProject", async (scope?: string, buildName?: string) => {
         scope = checkScope(scope);
         return workspace.saveAll(true)
             .then(async (saved) => {
                 if (saved) {
                     await Delay(500);
-                    return Perform("buildOnly", scope, logFn, params);
+                    return Perform("buildOnly", scope, logFn, buildName);
                 }
                 return saved;
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildOnlyProject", async (scope?: string, params?: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildOnlyProject", async (scope?: string, buildName?: string) => {
         scope = checkScope(scope);
         return workspace.saveAll(true)
             .then(async (saved) => {
                 if (saved) {
                     await Delay(500);
-                    return Perform("rebuildOnly", scope, logFn, params);
+                    return Perform("rebuildOnly", scope, logFn, buildName);
                 }
                 return saved;
             });
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope?: string, buildType?: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope?: string, buildName?: string) => {
         scope = checkScope(scope);
-        return Perform("clean", scope, logFn, buildType);
+        return Perform("clean", scope, logFn, buildName);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.createMMS", async (scope?: string) => {
@@ -155,9 +155,10 @@ export async function activate(context: ExtensionContext) {
         return ProjectState.acquire().setSynchronized(scope, true);
     }));
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.forceBuilt", async (scope?: string, buildType?: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.forceBuilt", async (scope?: string, buildName?: string) => {
         scope = checkScope(scope);
-        return ProjectState.acquire().setBuilt(scope, buildType, true);
+        buildName = buildName || ProjectState.acquire().getDefBuildName();
+        return ProjectState.acquire().setBuilt(scope, buildName, true);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.uploadZip", async (scope?: string, clear?: string) => {
@@ -187,8 +188,9 @@ export async function activate(context: ExtensionContext) {
     /**
      * 
      */
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.collectJavaClasses", async (scope?: string) => {
-        return Perform("collect java", scope, logFn);
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.collectJavaClasses", async (scope?: string, buildName?: string) => {
+        scope = checkScope(scope);
+        return Perform("collect java", scope, logFn, buildName);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.downloadHeaders", async (scope?: string, params?: string) => {
@@ -227,10 +229,14 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDescription.edit",
         (element) => projectDescriptionProvider.edit(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDescription.changeBuildType",
-        () => projectDescriptionProvider.changeBuildType()) );
+        () => projectDescriptionProvider.changeBuildName()) );
 
     return new SyncApi();
 
+    /**
+     * Returns current selected scope if given parameter is empty
+     * @param scope 
+     */
     function checkScope(scope: string | undefined) {
         if (!scope) {
             const selectedScope = projectDependenciesProvider.selectedProject();

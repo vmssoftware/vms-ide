@@ -78,9 +78,33 @@ export interface ISynchronizeSection  {
     purge: boolean;
 }
 
+export interface IBuildConfigSection {
+    /**
+     * name of configuration, one simple unique word
+     */
+    label: string;
+    /**
+     * description of configuration
+     */
+    description: string;
+    /**
+     * "default" or user defined command in VMS format
+     */
+    command: string;
+    /**
+     * applecable only for default command: "DEBUG", "RELEASE" or empty
+     */
+    parameter: string;
+}
+
+export interface IBuildsSection  {
+    configurations: IBuildConfigSection[];
+}
+
 export interface ISyncScopeSettings {
     projectSection: IProjectSection;
     synchronizeSection: ISynchronizeSection;
+    buildsSection: IBuildsSection;
 }
 
 export class SyncApi {

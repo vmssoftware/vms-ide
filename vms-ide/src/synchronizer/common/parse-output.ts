@@ -211,6 +211,8 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                 const lineT = lines[idx + consume];
                 if (!lineT.length || line[0] === ' ') {
                     consume ++;
+                } else {
+                    break;
                 }
             }
             problems.push(diagnostic);
@@ -246,6 +248,10 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
             }
             diagnostic.type = matched[5];
             diagnostic.message = matched[6];
+            if (diagnostic.type === "ENDDIAGS") {
+                // eat this line
+                return [consume, from];
+            }
             // get position from previous line, as "..............^"
             if (idx > 0) {
                 const prevLine = lines[idx - 1];

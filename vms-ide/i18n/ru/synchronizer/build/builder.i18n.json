@@ -1,10 +1,13 @@
 {
     "debug.disposing": "Освобождение источников",
+    "build.cfg": "There is no build configuration named {0}.",
     "create.mms.first": "Сперва (пере)создайте MMS.",
     "output.cannot_exec": "Не удалось запустить {0}",
     "mms_exist": "Предыдущий MMS файл переименован в {0}",
     "opt_exist": "Предыдущий OPT файл переименован в {0}",
     "com_exist": "Предыдущий COM файл переименован в {0}",
+    "cannot.clean": "Have no idea how to clean configuration: {0}",
+    "cannot.build": "Have no idea how to build configuration: {0}",
     "too_many_files": "There are more than one file named {0}",
     "debug.cannot_get_ssh_helper": "Не удалось загрузить ssh-helper API",
     "output.install_ssh": "Установите плагин 'vmssoftware.ssh-helper'",

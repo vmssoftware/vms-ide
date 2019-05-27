@@ -40,7 +40,7 @@ export enum CommonFields {
     masters,
 }
 
-export enum BuildType {
+export enum KnownBuildType {
     debug = "DEBUG",
     release = "RELEASE",
 }
@@ -146,7 +146,7 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
                 data = this.selectedProject;
                 break;
             case CommonFields[CommonFields.buildType]:
-                data = ProjectState.acquire().getDefBuildType();
+                data = ProjectState.acquire().getDefBuildName();
                 break;
             case CommonFields[CommonFields.sourceState]:
                 data = localize("unknown", "Unknown");
@@ -160,7 +160,7 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
                 }
                 break;
             case CommonFields[CommonFields.buildState]:
-                data = ProjectState.acquire().isBuilt(this.selectedProject, ProjectState.acquire().getDefBuildType()) 
+                data = ProjectState.acquire().isBuilt(this.selectedProject, ProjectState.acquire().getDefBuildName()) 
                     ? localize("built", "Built")
                     : localize("not.built", "Not built");
                 break;
@@ -200,11 +200,14 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
         }
     }
 
-    public changeBuildType() {
-        if (ProjectState.acquire().getDefBuildType() === BuildType.debug) {
-            ProjectState.acquire().setDefBuildType(BuildType.release);
-        } else {
-            ProjectState.acquire().setDefBuildType(BuildType.debug);
+    public changeBuildName() {
+        switch (ProjectState.acquire().getDefBuildName()) {
+            case KnownBuildType.debug:
+                ProjectState.acquire().setDefBuildName(KnownBuildType.release);
+                break;
+            case KnownBuildType.release:
+                ProjectState.acquire().setDefBuildName(KnownBuildType.debug);
+                break;
         }
         this.didChangeTreeEmitter.fire();
     }

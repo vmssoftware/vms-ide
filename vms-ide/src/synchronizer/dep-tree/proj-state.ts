@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
 import { ProjDepTree } from "./proj-dep-tree";
-import { BuildType } from "./project-descr";
 import { LogFunction } from "../../common/main";
 import { LogType } from "../../common/main";
+import { KnownBuildType } from "./project-descr";
 
 export enum SourceState {
     unknown,
@@ -18,7 +18,7 @@ export interface IProjState {
 
 export class ProjectState {
 
-    public static readonly configBuildTypeSection = "buildType";
+    public static readonly configBuildNameSection = "buildName";
 
     public static acquire() {
         if (!ProjectState.instance) {
@@ -148,16 +148,16 @@ export class ProjectState {
 
     }
 
-    public isBuilt(projectName: string, buildType: string) {
+    public isBuilt(projectName: string, buildName: string) {
         const state = this.states.get(projectName);
         if (state) {
-            const buildState = state.isBuilt.get(buildType.trim().toUpperCase());
+            const buildState = state.isBuilt.get(buildName.trim().toUpperCase());
             return !!buildState;
         }
         return false;    // always unbuilt
     }
 
-    public setBuilt(projectName: string | undefined, buildType: string | undefined, status = true) {
+    public setBuilt(projectName: string | undefined, buildName: string, status = true) {
         this.logFn(LogType.debug, () => `setBuilt: ${projectName} is ${status}` );
         const projects: string[] = [];
         if (projectName) {
@@ -165,12 +165,11 @@ export class ProjectState {
         } else {
             projects.push(...this.states.keys());
         }
-        buildType = buildType || this.getDefBuildType();
         let retCode = true;
         for (const currentProject of projects) {
             const state = this.states.get(currentProject);
             if (state) {
-                state.isBuilt.set(buildType.trim().toUpperCase(), status);
+                state.isBuilt.set(buildName.trim().toUpperCase(), status);
             } else {
                 retCode = false;
             }
@@ -183,17 +182,19 @@ export class ProjectState {
         vscode.commands.executeCommand("vmssoftware.project-dep.projectDescription.refresh");
     }
 
-    public getDefBuildType() {
+    public getDefBuildName(): string {
         const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
-        if (config.get<string>(ProjectState.configBuildTypeSection) === BuildType.release) {
-            return BuildType.release;
+        let value = config.get<string>(ProjectState.configBuildNameSection);
+        if (!value) {
+            value = KnownBuildType.debug;
+            this.setDefBuildName(value);
         }
-        return BuildType.debug;
+        return value;
     }
 
-    public setDefBuildType(buildType: BuildType) {
+    public setDefBuildName(buildName: string) {
         const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
-        config.update(ProjectState.configBuildTypeSection, buildType, false);
+        config.update(ProjectState.configBuildNameSection, buildName, false);
         return true;
     }
 }

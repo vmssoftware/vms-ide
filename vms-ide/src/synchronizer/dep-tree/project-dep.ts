@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { ProjDepTree } from "./proj-dep-tree";
 import { ProjectState } from "./proj-state";
-import { BuildType, ProjDescrProvider } from "./project-descr";
 
 export interface IProjectElement {
     parent?: string;
@@ -106,28 +105,23 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
     }
 
     public build(node: IProjectElement) {
-        const buildType = ProjectState.acquire().getDefBuildType();
-        vscode.commands.executeCommand(ProjDepProvider.cmdBuild, this.selectedProject(), buildType);
+        vscode.commands.executeCommand(ProjDepProvider.cmdBuild, this.selectedProject());
     }
 
     public rebuild(node: IProjectElement) {
-        const buildType = ProjectState.acquire().getDefBuildType();
-        vscode.commands.executeCommand(ProjDepProvider.cmdReBuild, this.selectedProject(), buildType);
+        vscode.commands.executeCommand(ProjDepProvider.cmdReBuild, this.selectedProject());
     }
 
     public buildOnly(node: IProjectElement) {
-        const buildType = ProjectState.acquire().getDefBuildType();
-        vscode.commands.executeCommand(ProjDepProvider.cmdBuildOnly, this.selectedProject(), buildType);
+        vscode.commands.executeCommand(ProjDepProvider.cmdBuildOnly, this.selectedProject());
     }
 
     public rebuildOnly(node: IProjectElement) {
-        const buildType = ProjectState.acquire().getDefBuildType();
-        vscode.commands.executeCommand(ProjDepProvider.cmdReBuildOnly, this.selectedProject(), buildType);
+        vscode.commands.executeCommand(ProjDepProvider.cmdReBuildOnly, this.selectedProject());
     }
 
     public clean(node: IProjectElement) {
-        const buildType = ProjectState.acquire().getDefBuildType();
-        vscode.commands.executeCommand(ProjDepProvider.cmdClean, this.selectedProject(), buildType);
+        vscode.commands.executeCommand(ProjDepProvider.cmdClean, this.selectedProject());
     }
 
     public remove(node: IProjectElement) {

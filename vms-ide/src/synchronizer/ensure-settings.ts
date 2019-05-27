@@ -1,12 +1,13 @@
+import * as nls from "vscode-nls";
 import { LogFunction } from "../common/main";
 
-import { IConfigApi, IConfigHelper } from "../config-helper/config/config";
+import { IConfigApi, IConfigHelper, IConfigSection } from "../config-helper/config/config";
 import { GetConfigHelperFromApi } from "../ext-api/ext-api";
 import { ProjectSection } from "./config/sections/project";
 import { SynchronizeSection } from "./config/sections/synchronize";
 import { ISyncScopeSettings } from "./sync/sync-api";
+import { BuildsSection } from "./config/sections/builds";
 
-import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
@@ -45,10 +46,12 @@ export async function ensureSettings(scope?: string, log?: LogFunction): Promise
 
     const config = configHelper.getConfig();
     // first try
-    let [projectSection, synchronizeSection] =
+    let [projectSection, synchronizeSection, buildsSection] =
         await Promise.all(
             [config.get(ProjectSection.section),
-             config.get(SynchronizeSection.section)]);
+             config.get(SynchronizeSection.section),
+             config.get(BuildsSection.section),
+            ]);
     // test and add if missed
     const wait = [];
     if (!projectSection) {
@@ -63,18 +66,52 @@ export async function ensureSettings(scope?: string, log?: LogFunction): Promise
             synchronizeSection = section;
         }));
     }
+    if (!buildsSection) {
+        config.add(new BuildsSection());
+        wait.push(config.get(BuildsSection.section).then((section) => {
+            buildsSection = section;
+        }));
+    }
     // wait
     if (wait.length > 0) {
         await Promise.all(wait);
     }
     // then ensure all are loaded
-    if (ProjectSection.is(projectSection) && SynchronizeSection.is(synchronizeSection)) {
+    if (ProjectSection.is(projectSection) && 
+        SynchronizeSection.is(synchronizeSection) &&
+        BuildsSection.is(buildsSection)) {
         return {
+            scope,
             configHelper,
             projectSection,
-            scope,
             synchronizeSection,
+            buildsSection,
         };
     }
     return undefined;
+}
+
+export async function ensureConfigSection(extension: string, cfgSection: IConfigSection, scope?: string, log?: LogFunction): Promise<IConfigSection | undefined> {
+
+    if (!await ensureConfigHelperApi() || configApi === undefined) {
+        return undefined;
+    }
+    const configHelper = configApi.getConfigHelper(extension, scope);
+
+    if (!configHelper.workspaceFolder) {
+        return undefined;
+    }
+
+    const config = configHelper.getConfig();
+    
+    // first try
+    let storedCfgSection = await config.get(cfgSection.name());
+
+    // test, then add if missed
+    if (!storedCfgSection) {
+        config.add(cfgSection);
+        storedCfgSection = await config.get(cfgSection.name());
+    }
+    
+    return storedCfgSection;
 }

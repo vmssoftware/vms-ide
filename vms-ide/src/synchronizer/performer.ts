@@ -2,7 +2,7 @@ import * as nls from "vscode-nls";
 
 import { ftpPathSeparator, LogFunction, LogType, printLike } from "../common/main";
 
-import { CommandContext, setContext } from "./command-context";
+import { CommandContext, setContext, getContext } from "./command-context";
 import { ensureSettings, IEnsured } from "./ensure-settings";
 
 import { window, workspace } from "vscode";
@@ -21,7 +21,7 @@ import { DownloadHeaders } from "./downloadHeaders";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export type AsyncAction = (scope: string | undefined, logFn: LogFunction, params?: string) => Promise<boolean>;
+export type AsyncAction = (scope: string | undefined, logFn: LogFunction, param?: string) => Promise<boolean>;
 
 export type ActionType = 
       "synchronize" 
@@ -93,9 +93,11 @@ export const actions: IPerform[] = [
     },
     {
         // build
-        actionFunc: async (scope: string | undefined, logFn: LogFunction, params?: string) => {
+        actionFunc: async (scope: string | undefined, logFn: LogFunction, buildName?: string) => {
+
+            buildName = buildName || ProjectState.acquire().getDefBuildName();
+
             let scopes: string[] = new ProjDepTree().getDepList(scope).reverse();
-            params = params || ProjectState.acquire().getDefBuildType();
             const builder = Builder.acquire(logFn);
             let retCode = scopes.length > 0;
             // execute using AWAIT, not simultaneously
@@ -108,8 +110,8 @@ export const actions: IPerform[] = [
                         if (ProjectState.acquire().sourceState(curScope) === SourceState.unknown) {
                             logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", curScope));    
                         }
-                        const isBuilt = await builder.buildProject(ensured, params);
-                        ProjectState.acquire().setBuilt(curScope, params, isBuilt);
+                        const isBuilt = await builder.buildProject(ensured, buildName);
+                        ProjectState.acquire().setBuilt(curScope, buildName, isBuilt);
                         retCode = isBuilt;
                     } else {
                         logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", curScope));
@@ -126,16 +128,18 @@ export const actions: IPerform[] = [
     },
     {
         // build only
-        actionFunc: async (scope: string | undefined, logFn: LogFunction, params?: string) => {
-            params = params || ProjectState.acquire().getDefBuildType();
+        actionFunc: async (scope: string | undefined, logFn: LogFunction, buildName?: string) => {
+
+            buildName = buildName || ProjectState.acquire().getDefBuildName();
+
             const builder = Builder.acquire(logFn);
             const ensured = await ensureSettings(scope, logFn);
             if (ensured && ensured.scope) {
                 if (ProjectState.acquire().sourceState(ensured.scope) === SourceState.unknown) {
                     logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", ensured.scope));    
                 }
-                const isBuilt = await builder.buildProject(ensured, params);
-                ProjectState.acquire().setBuilt(ensured.scope, params, isBuilt);
+                const isBuilt = await builder.buildProject(ensured, buildName);
+                ProjectState.acquire().setBuilt(ensured.scope, buildName, isBuilt);
                 return isBuilt;
             } else {
                 logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", scope));
@@ -149,9 +153,11 @@ export const actions: IPerform[] = [
     },
     {
         // re-build, the same as build but execute clean before
-        actionFunc: async (scope: string | undefined, logFn: LogFunction, params?: string) => {
+        actionFunc: async (scope: string | undefined, logFn: LogFunction, buildName?: string) => {
+
+            buildName = buildName || ProjectState.acquire().getDefBuildName();
+
             let scopes: string[] = new ProjDepTree().getDepList(scope).reverse();
-            params = params || ProjectState.acquire().getDefBuildType();
             const builder = Builder.acquire(logFn);
             let retCode = scopes.length > 0;
             for (const curScope of scopes) {
@@ -161,12 +167,12 @@ export const actions: IPerform[] = [
                     const ensured = await ensureSettings(curScope, logFn);
                     if (ensured) {
                         // just do clean, ignore result
-                        await builder.cleanProject(ensured, params);
+                        await builder.cleanProject(ensured, buildName);
                         if (ProjectState.acquire().sourceState(curScope) === SourceState.unknown) {
                             logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", curScope));    
                         }
-                        const isBuilt = await builder.buildProject(ensured, params);
-                        ProjectState.acquire().setBuilt(curScope, params, isBuilt);
+                        const isBuilt = await builder.buildProject(ensured, buildName);
+                        ProjectState.acquire().setBuilt(curScope, buildName, isBuilt);
                         retCode = isBuilt;
                     } else {
                         logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", curScope));
@@ -183,18 +189,20 @@ export const actions: IPerform[] = [
     },
     {
         // re-build only, the same as build only but execute clean before
-        actionFunc: async (scope: string | undefined, logFn: LogFunction, params?: string) => {
-            params = params || ProjectState.acquire().getDefBuildType();
+        actionFunc: async (scope: string | undefined, logFn: LogFunction, buildName?: string) => {
+
+            buildName = buildName || ProjectState.acquire().getDefBuildName();
+
             const builder = Builder.acquire(logFn);
             const ensured = await ensureSettings(scope, logFn);
             if (ensured && ensured.scope) {
                 // just do clean, ignore result
-                await builder.cleanProject(ensured, params);
+                await builder.cleanProject(ensured, buildName);
                 if (ProjectState.acquire().sourceState(ensured.scope) === SourceState.unknown) {
                     logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", ensured.scope));    
                 }
-                const isBuilt = await builder.buildProject(ensured, params);
-                ProjectState.acquire().setBuilt(ensured.scope, params, isBuilt);
+                const isBuilt = await builder.buildProject(ensured, buildName);
+                ProjectState.acquire().setBuilt(ensured.scope, buildName, isBuilt);
                 return isBuilt;
             } else {
                 logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", scope));
@@ -208,7 +216,10 @@ export const actions: IPerform[] = [
     },
     {
         // clean
-        actionFunc: async (scope: string | undefined, logFn: LogFunction, params?: string) => {
+        actionFunc: async (scope: string | undefined, logFn: LogFunction, buildName?: string) => {
+
+            buildName = buildName || ProjectState.acquire().getDefBuildName();
+
             let scopes: string[] = [];
             if (!scope) {
                 if (workspace.workspaceFolders) {
@@ -222,13 +233,10 @@ export const actions: IPerform[] = [
                 wait.push( (async () => {
                     const ensured = await ensureSettings(curScope, logFn);
                     if (ensured) {
-                        params = params || ProjectState.acquire().getDefBuildType();
                         const builder = Builder.acquire(logFn);
-                        return builder.cleanProject(ensured, params)
-                            .then(async (result) => {
-                                ProjectState.acquire().setBuilt(curScope, params, false);
-                                return result;
-                            });
+                        const result = await builder.cleanProject(ensured, buildName)
+                        ProjectState.acquire().setBuilt(curScope, buildName, false);
+                        return result;
                     } else {
                         logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", curScope));
                         return false;
@@ -246,7 +254,7 @@ export const actions: IPerform[] = [
     },
     {
         // create MMS
-        actionFunc: async (scope: string | undefined, logFn: LogFunction, params?: string) => {
+        actionFunc: async (scope: string | undefined, logFn: LogFunction) => {
             let scopes: string[] = [];
             if (!scope) {
                 if (workspace.workspaceFolders) {
@@ -404,7 +412,8 @@ export const actions: IPerform[] = [
     },
     {
         // collect java classes
-        actionFunc: async (scope: string | undefined, logFn: LogFunction) => {
+        actionFunc: async (scope: string | undefined, logFn: LogFunction, buildName?: string) => {
+            buildName = buildName || ProjectState.acquire().getDefBuildName();
             let scopes: string[] = [];
             if (!scope) {
                 if (workspace.workspaceFolders) {
@@ -417,7 +426,7 @@ export const actions: IPerform[] = [
             for (const curScope of scopes) {
                 const ensured = await ensureSettings(curScope, logFn);
                 if (ensured) {
-                    wait.push(Builder.acquire().collectJavaClasses(ensured));
+                    wait.push(Builder.acquire().collectJavaClasses(ensured, buildName));
                 }
             }
             return Promise.all(wait).then((all) => {
@@ -431,16 +440,20 @@ export const actions: IPerform[] = [
     },
 ];
 
-export async function Perform(actionName: ActionType, scope: string | undefined, logFn: LogFunction, params?: string) {
+export async function Perform(actionName: ActionType, scope: string | undefined, logFn: LogFunction, param?: string) {
     const actionToDo = actions.find((action) => action.actionName === actionName);
     if (!actionToDo) {
-        logFn(LogType.debug, () => localize("error.no_action", "Cannot find action: {0}", actionName));
+        logFn(LogType.error, () => localize("error.no_action", "Cannot find action: {0}", actionName));
+        return false;
+    }
+    if (getContext(CommandContext.isInAction)) {
+        logFn(LogType.error, () => localize("error.action_in_progress", "Action already in progress: {0}", actionName));
         return false;
     }
     setContext(CommandContext.isInAction, true);
     const scopeStr = scope ? ` [${scope}]` : ` [All]`;
     const msg = window.setStatusBarMessage(actionToDo.status + scopeStr);
-    return actionToDo.actionFunc(scope, logFn, params)
+    return actionToDo.actionFunc(scope, logFn, param)
         .catch((err) => {
             logFn(LogType.error, () => err);
             return false;
