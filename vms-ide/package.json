@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "0.0.21",
+    "version": "0.0.22",
     "publisher": "VMSSoftwareInc",
     "repository": {
         "type": "git",
@@ -541,6 +541,12 @@
                     "default": 0,
                     "description": "%ssh-helper.configuration.timeouts.welcome%"
                 },
+                "vmssoftware.ssh-helper.terminal.command": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%ssh-helper.configuration.terminal.command%"
+                },
                 "vmssoftware.ssh-helper.host-collection.hosts": {
                     "scope": "resource",
                     "type": "array",
@@ -556,17 +562,9 @@
                     ],
                     "description": "%ssh-helper.configuration.hosts-collection%"
                 },
-                "vmssoftware.project-dep.buildType": {
+                "vmssoftware.project-dep.buildName": {
                     "scope": "resource",
-                    "type": "string",
-                    "enum": [
-                        "DEBUG",
-                        "RELEASE"
-                    ],
-                    "enumDescriptions": [
-                        "Debug",
-                        "Release"
-                    ]
+                    "type": "string"
                 },
                 "vmssoftware.project-dep.dependencies": {
                     "scope": "resource",
@@ -590,13 +588,13 @@
                 "vmssoftware.synchronizer.project.builders": {
                     "scope": "resource",
                     "type": "string",
-                    "default": "*.{mms,com}",
+                    "default": "*.{mms,com,opt}",
                     "description": "%synchronizer.properties.project.builders.description%"
                 },
                 "vmssoftware.synchronizer.project.exclude": {
                     "scope": "resource",
                     "type": "string",
-                    "default": "**/{.vscode,node-modules}",
+                    "default": "**/{.vscode,node-modules,out}",
                     "description": "%synchronizer.properties.project.exclude.description%"
                 },
                 "vmssoftware.synchronizer.project.headers": {
@@ -657,6 +655,18 @@
                     "default": "*.{c,cpp}",
                     "description": "%synchronizer.properties.project.source.description%"
                 },
+                "vmssoftware.synchronizer.project.addLibraries": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%synchronizer.properties.project.addLibraries.description%"
+                },
+                "vmssoftware.synchronizer.project.addIncludes": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%synchronizer.properties.project.addIncludes.description%"
+                },
                 "vmssoftware.synchronizer.synchronize.downloadNewFiles": {
                     "scope": "resource",
                     "type": "string",
@@ -708,6 +718,25 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%synchronizer.properties.synchronize.purge.description%"
+                },
+                "vmssoftware.synchronizer.builds.configurations": {
+                    "scope": "resource",
+                    "type": "array",
+                    "default": [
+                        {
+                            "label": "DEBUG",
+                            "description": "debug",
+                            "command": "",
+                            "parameter": "DEBUG"
+                        },
+                        {
+                            "label": "RELEASE",
+                            "description": "release",
+                            "command": "",
+                            "parameter": "RELEASE"
+                        }
+                    ],
+                    "description": "%synchronizer.properties.builds.configurations.description%"
                 }
             }
         },

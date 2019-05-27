@@ -1,4 +1,5 @@
 
+import * as nls from "vscode-nls";
 import micromatch from "micromatch";
 import fs from "fs-extra";
 import path from "path";
@@ -13,25 +14,20 @@ import { IDispose, SshHelper } from "../../ssh-helper/ssh-helper";
 import { parseVmsOutput } from "../common/parse-output";
 import { ProjectType } from "../config/sections/project";
 import { ProjDepTree } from "../dep-tree/proj-dep-tree";
-import { ensureSettings, IEnsured } from "../ensure-settings";
+import { ensureSettings, IEnsured, ensureConfigSection } from "../ensure-settings";
 import { FsSource } from "../sync/fs-source";
 import { ISource } from "../sync/source";
 import { Synchronizer } from "../sync/synchronizer";
 import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
 import { ProjectState } from "../dep-tree/proj-state";
-import * as nls from "vscode-nls";
 import { R_OK } from "constants";
+import { collectSplittedByCommas } from "../../synchronizer/common/find-files";
+import { IProjectSection, IBuildConfigSection, IBuildsSection } from "../../synchronizer/sync/sync-api";
+import { BuildsSection } from "../../synchronizer/config/sections/builds";
+import { TestExecResult } from "../../synchronizer/common/TestExecResult";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
-
-enum BuildConfiguration {
-    unknown,
-    debug,
-    release,
-    mms,
-    com,
-}
 
 enum MmsLineType {
     nothing,
@@ -64,6 +60,23 @@ interface IJavaFileInfo {
     classes: IJavaClassInfo[],  // java classes in source
 }
 
+function isCommandDefault(command: string | undefined) {
+    return !command || command.toUpperCase() === "DEFAULT";
+}
+
+function isCommandMMS(command: string | undefined) {
+    return command && command.toUpperCase().endsWith("MMS");
+}
+
+function isCommandCOM(command: string | undefined) {
+    return command && command.toUpperCase().endsWith("COM");
+}
+
+function isParameterDebug(parameter: string | undefined) {
+    return !parameter || parameter.toUpperCase() === "DEBUG";
+}
+
+
 export class Builder {
 
     /**
@@ -83,10 +96,9 @@ export class Builder {
     }
 
     private static readonly mmsUserCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}`;
-    private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}")`;
+    private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}","CONFIG=${"buildName"}")`;
 
-    private static readonly cleanDEBUG = printLike`del/tree [.${"outdir"}.DEBUG...]*.*;*`;
-    private static readonly cleanRELEASE = printLike`del/tree [.${"outdir"}.RELEASE...]*.*;*`;
+    private static readonly cleanCmd = printLike`del/tree [.${"outdir"}.${"buildName"}...]*.*;*`;
 
     private static readonly cleanSuffix = " CLEAN";
 
@@ -147,32 +159,31 @@ export class Builder {
     }
 
     /**
-     * Parse parameter and returns BuildConfiguration
-     * @param params 
+     * 
+     * @param ensured 
+     * @param buildName label of build configuration
      */
-    private parseParams(params?: string): [BuildConfiguration, string] {
-        params = params || ProjectState.acquire().getDefBuildType();
-        switch(params.toLowerCase()) {
-            case BuildConfiguration[BuildConfiguration.debug].toLowerCase():
-                return [BuildConfiguration.debug, ""];
-            case BuildConfiguration[BuildConfiguration.release].toLowerCase():
-                return [BuildConfiguration.release, ""];
+    public async collectJavaClasses(ensured: IEnsured, buildName: string) {
+
+        switch(ensured.projectSection.projectType) {
+            case ProjectType[ProjectType.java]:
+            case ProjectType[ProjectType.scala]:
+            case ProjectType[ProjectType.kotlin]:
+                break;
+            default:
+                return false;
         }
-        const match = params.trim().toLowerCase().match(Builder.rgFile);
-        if (match && match[1] && match[2]) {
-            if ( match[2] === Builder.mmsExt) {
-                return [BuildConfiguration.mms, params.trim()];
-            } else if ( match[2] === Builder.comExt) {
-                return [BuildConfiguration.com, params.trim()];
-            }
-        }
-        return [BuildConfiguration.unknown, ""];
-    }
-
-
-    public async collectJavaClasses(ensured: IEnsured, params?: string) {
-
+    
         const startTime = Date.now();
+
+        const collection = new Map<string, undefined | Map<string, undefined | Set<number>>>();
+        
+        const jarFile = `${ensured.projectSection.outdir}/${buildName}/${ensured.projectSection.projectName}.jar`;
+        const cmdJarClasses = `jar -tf ${jarFile}`;
+        const cmdJavaClassLines = `javap -cp ${jarFile} -l -p `;
+        const rgxJavaClassName = /^(\S*).class/;
+        const rgFile = /Compiled from "(\w+\.\w+)"/;
+        const rgLine = /line (\d+): (\d+)/;
 
         if (this.sshHelper) {
             this.sshHelper.clearPasswordCache();
@@ -182,28 +193,20 @@ export class Builder {
             return false;
         }
         this.enableRemote();
-        const sync = Synchronizer.acquire();
-        const remote = await sync.requestSource(ensured, "remote");
-        if (remote) {
-            remote.enabled = true;
-            const outdir = ensured.projectSection.outdir + ftpPathSeparator;
-            const mask = outdir + "**" + ftpPathSeparator + "*.class";
-            const files = await remote.findFiles(mask);
+            
+        const resultLines = await scopeData.shell.execCmd(cmdJarClasses);
+        if (!resultLines) {
+            return false;
+        }
 
-            const collection = new Map<string, undefined | Map<string, undefined | Set<number>>>();
-            const rgFile = /Compiled from "(\w+\.\w+)"/;
-            const rgLine = /line (\d+): (\d+)/;
-
-            // this.logFn(LogType.information, () => `=== by classes ===`);
-
-            for(const file of files) {
-                let extDot = file.filename.toLowerCase().lastIndexOf(".class");
-                const className = file.filename.slice(outdir.length, extDot >= 0 ? extDot : undefined).replace(/\//g, ".");
-                const result = await scopeData.shell.execCmd(`javap -cp ${ensured.projectSection.outdir} -l ${className}`);
+        for (const line of resultLines) {
+            const matched = line.match(rgxJavaClassName);
+            if (matched) {
+                const className = matched[1];
+                const result = await scopeData.shell.execCmd(cmdJavaClassLines + className);
                 if (result && result.length > 0) {
                     const fileMatch = result[0].match(rgFile);
                     if (fileMatch) {
-                        // this.logFn(LogType.information, () => `${className} from ${fileMatch[1]}`);
                         let fileClasses = collection.get(fileMatch[1]);
                         if (fileClasses === undefined) {
                             fileClasses = new Map<string, undefined | Set<number>>();
@@ -217,135 +220,124 @@ export class Builder {
                         for (const line of result) {
                             const lineMatch = line.match(rgLine);
                             if (lineMatch) {
-                                // this.logFn(LogType.information, () => `    line: ${lineMatch[1]}`);
                                 classLines.add(+lineMatch[1]);
                             }
                         }
                     }
                 }
             }
-            remote.dispose();
-
-            // output
-            // this.logFn(LogType.information, () => `=== by files ===`);
-
-            // for(const [fileName, javaClasses] of collection) {
-            //     if (javaClasses !== undefined) {
-            //         this.logFn(LogType.information, () => `----- ${fileName} -----`);
-            //         for (const [jClassName, jClassLines] of javaClasses) {
-            //             if (jClassLines !== undefined) {
-            //                 this.logFn(LogType.information, () => `    ${jClassName}`);
-            //                 for (const jLine of jClassLines) {
-            //                     this.logFn(LogType.information, () => `       ${jLine}`);
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
-
-            // convert
-            const javaInfo: IJavaFileInfo[] = [];
-            for(const [fileName, javaClasses] of collection) {
-                if (javaClasses !== undefined) {
-                    const fileInfo: IJavaFileInfo = {
-                        fileName,
-                        classes: [],
-                    };
-                    for (const [className, classLines] of javaClasses) {
-                        if (classLines !== undefined) {
-                            fileInfo.classes.push({
-                                className,
-                                lines: [...classLines],
-                            });
-                        }
-                    }
-                    javaInfo.push(fileInfo);
-                }
-            }
-
-            const content = JSON.stringify(javaInfo, null, 0);
-            // this.logFn(LogType.information, () => content);
-
-            if (ensured.configHelper.workspaceFolder) {
-                const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
-                await fs.writeFile(fileName, content);
-            }
-
-            const seconds = Math.floor((Date.now() - startTime) / 1000);
-            this.logFn(LogType.information, () => `\nElapsed ${seconds}\n, Content length is ${content.length}`);
         }
+
+        // convert
+        const javaInfo: IJavaFileInfo[] = [];
+        for(const [fileName, javaClasses] of collection) {
+            if (javaClasses !== undefined) {
+                const fileInfo: IJavaFileInfo = {
+                    fileName,
+                    classes: [],
+                };
+                for (const [className, classLines] of javaClasses) {
+                    if (classLines !== undefined) {
+                        fileInfo.classes.push({
+                            className,
+                            lines: [...classLines],
+                        });
+                    }
+                }
+                javaInfo.push(fileInfo);
+            }
+        }
+
+        const content = JSON.stringify(javaInfo, null, 2);
+
+        if (ensured.configHelper.workspaceFolder) {
+            const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
+            await fs.writeFile(fileName, content);
+        }
+
+        const seconds = Math.floor((Date.now() - startTime) / 1000);
+        this.logFn(LogType.information, () => `Elapsed ${seconds}, Content length is ${content.length}`);
+
         return true;
     }
 
     /**
      * Fast build, 
      * @param ensured scope settings
-     * @param params build type or user defined MMS or COM
+     * @param buildName name of predefined build settings
      */
-    public async buildProject(ensured: IEnsured, params?: string) {
+    public async buildProject(ensured: IEnsured, buildName: string) {
+
+        const buildCfg = ensured.buildsSection.configurations.find((cfg) => cfg.label === buildName);
+        if (!buildCfg) {
+            this.logFn(LogType.error, () => localize("build.cfg", "There is no build configuration named {0}.", buildName));
+            return false;
+        }
+
         // clear password cache
         if (this.sshHelper) {
             this.sshHelper.clearPasswordCache();
         }
+
+        // scope data
         const scopeData = await this.prepareScopeData(ensured);
         if (!scopeData) {
             return false;
         }
         this.enableRemote();
-        const [cfg, cmd] = this.parseParams(params);
-        return this.ensureMmsCreated(scopeData, cfg)
-            .then(async (result) => {
-                if (result) {
-                    if (ensured.configHelper.workspaceFolder) {
-                        // upload modified only list
-                        const wsPath = ensured.configHelper.workspaceFolder.uri.fsPath;
-                        const projectName = ensured.configHelper.workspaceFolder.name;
-                        const modifiedList = ProjectState.acquire().getModifiedList(projectName);
-                        if (modifiedList.length > 0) {
-                            this.smartClean(scopeData, modifiedList, cfg);
-                            if (this.stopIssued) {
-                                Synchronizer.acquire().disableRemote();
-                            } else {
-                                Synchronizer.acquire().enableRemote();
-                            }
-                            if (await Synchronizer.acquire().uploadFiles(ensured,
-                                    // remove unaccessible files
-                                    modifiedList.filter(async file => {
-                                        try { 
-                                            fs.accessSync(path.join(wsPath, file), R_OK);
-                                        } catch(ex) {
-                                            return false;
-                                        }
-                                        return true;
-                                    }).map(file => {    // to UNIX format
-                                        return file.replace(/[/\\]/g, ftpPathSeparator);
-                                    }))) {
-                                ProjectState.acquire().clearModified(projectName);
-                            }
-                            if (scopeData.ensured.synchronizeSection.purge) {
-                                await scopeData.shell.execCmd("purge [...]");
-                            }                    
-                        }
-                    }
-                    return this.runRemoteBuild(scopeData, cfg, cmd);
-                } else {
-                    this.logFn(LogType.error, () => localize("create.mms.first", "Please first (re)create MMS."));
+
+        // test MMS is created for "default"
+        if (isCommandDefault(buildCfg.command)) {
+            if (!(await this.ensureMmsCreated(scopeData))) {
+                this.logFn(LogType.error, () => localize("create.mms.first", "Please first (re)create MMS."));
+                return false;
+            }
+        }
+        if (ensured.configHelper.workspaceFolder) {
+            // upload modified only list
+            const wsPath = ensured.configHelper.workspaceFolder.uri.fsPath;
+            const wsName = ensured.configHelper.workspaceFolder.name;
+            const modifiedList = ProjectState.acquire().getModifiedList(wsName);
+            if (modifiedList.length > 0) {
+                // do smart clean only for "default"
+                if (isCommandDefault(buildCfg.command)) {
+                    await this.smartClean(scopeData, modifiedList, buildName);
                 }
-                return result;
-            })
-            .then((result) => {
-                this.decideDispose(scopeData);
-                return result;
-            });
+                if (this.stopIssued) {
+                    Synchronizer.acquire().disableRemote();
+                } else {
+                    Synchronizer.acquire().enableRemote();
+                }
+                if (await Synchronizer.acquire().uploadFiles(ensured,
+                        // remove unaccessible files, no async functions!
+                        modifiedList.filter(file => {
+                            try { 
+                                fs.accessSync(path.join(wsPath, file), R_OK);
+                            } catch(ex) {
+                                return false;
+                            }
+                            return true;
+                        }).map(file => {    // to UNIX format
+                            return file.replace(/[/\\]/g, ftpPathSeparator);
+                        }))) {
+                    ProjectState.acquire().clearModified(wsName);
+                }
+                if (scopeData.ensured.synchronizeSection.purge) {
+                    await scopeData.shell.execCmd("purge [...]");
+                }                    
+            }
+        }
+
+        const result = await this.runRemoteBuild(scopeData, buildCfg);
+        this.decideDispose(scopeData);
+        return result;
     }
 
-    protected async smartClean(scopeData: IScopeBuildData, files: string[], cfg: BuildConfiguration) {
-        if (cfg !== BuildConfiguration.debug && cfg !== BuildConfiguration.release) {
-            return;
-        }
+    protected async smartClean(scopeData: IScopeBuildData, files: string[], buildName: string) {
+        
         for (const file of files) {
             const vms = new VmsPathConverter(file);
-            const objDir = scopeData.ensured.projectSection.outdir + "." + BuildConfiguration[cfg] + ".obj";
+            const objDir = scopeData.ensured.projectSection.outdir + "." + buildName + ".obj";
             const command = "del [." + objDir + vms.bareDirectory + "]" + vms.fileName + ".*;*";
             const out = await scopeData.shell.execCmd(command);
             if (!out) {
@@ -368,7 +360,14 @@ export class Builder {
         }
     }
 
-    public async cleanProject(ensured: IEnsured, params?: string) {
+    public async cleanProject(ensured: IEnsured, buildName: string) {
+
+        const buildCfg = ensured.buildsSection.configurations.find((cfg) => cfg.label === buildName);
+        if (!buildCfg) {
+            this.logFn(LogType.error, () => localize("build.cfg", "There is no build configuration named {0}.", buildName));
+            return false;
+        }
+
         // clear password cache
         if (this.sshHelper) {
             this.sshHelper.clearPasswordCache();
@@ -378,12 +377,10 @@ export class Builder {
             return false;
         }
         this.enableRemote();
-        const [cfg, cmd] = this.parseParams(params);
-        return this.runRemoteClean(scopeData, cfg, cmd)
-            .then((result) => {
-                this.decideDispose(scopeData);
-                return result;
-        });
+
+        const result = await this.runRemoteClean(scopeData, buildCfg)
+        this.decideDispose(scopeData);
+        return result;
     }
 
     public async createMmsFiles(ensured: IEnsured) {
@@ -436,8 +433,8 @@ export class Builder {
 
         const headerLines = [
             `! Do not modify this file. It may be overwritten automatically.`,
-            `OUTDIR=${ensured.projectSection.outdir}`,
-            `NAME=${ensured.projectSection.projectName}`,
+            // `OUTDIR=${ensured.projectSection.outdir}`,
+            // `NAME=${ensured.projectSection.projectName}`,
         ];
 
         const includeLines = [Builder.includesLine];
@@ -451,154 +448,268 @@ export class Builder {
             sourceLines.push(convertIFileEntryToVmsPath(src));
         }
 
-        const objectDependenciesLines: string[] = [];
-        for (const source of sources) {
-            const vms = new VmsPathConverter(source.filename);
-            const objectDependencyLine = "[$(OBJ_DIR)" + vms.bareDirectory + "]" + vms.fileName + ".obj : " + vms.fullPath + " $(INCLUDES)";
-            objectDependenciesLines.push(objectDependencyLine);
-        }
-
-        // project dependecies
         const cxxIncludes: string[] = [];
         const contentFirst: string[] = [".FIRST"];
-        let deps = new ProjDepTree().getDepList(ensured.scope);
-        if (deps.length > 1) {  // first is this project
-            deps = deps.splice(1);
-            for (const depPrj of deps) {
-                const depEnsured = await ensureSettings(depPrj, this.logFn);
-                if (depEnsured) {
-                    if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library] ||
-                        depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
-                        const vms = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
-                        const projName = depEnsured.projectSection.projectName.toUpperCase();
-                        const outDir = depEnsured.projectSection.outdir;
-                        contentFirst.push(`    ${projName}_INC_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}]"`);
-                        contentFirst.push(`    DEFINE ${projName}_INC_DIR '${projName}_INC_SYMB'`);
-                        contentFirst.push(`    ${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}.${outDir}.$(TYPE_DIR)]"`);
-                        contentFirst.push(`    DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
-                        cxxIncludes.push(`${projName}_INC_DIR`);
-                        if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library]) {
-                            optLines.push(`${projName}_LIB_DIR:${projName}/LIBRARY`);
-                        }
-                        if (depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
-                            optLines.push(`${projName}_LIB_DIR:${projName}/SHAREABLE`);
-                            // com file
-                            comLines.push(`TYPE:=DEBUG`);
-                            comLines.push(`if P1 .NES. "" THEN TYPE:='P1'`);
-                            comLines.push(`${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vms.bareDirectory}.${outDir}.'TYPE']"`);
-                            comLines.push(`DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
-                            comLines.push(`DEFINE ${projName} ${projName}_LIB_DIR:${projName}.exe`);
+        const mainModuleLines: string[] = [];
+        const flagLines : string[] = [];
+        const middleLines : string[] = [];
+        const objectDependenciesLines: string[] = [];
+
+        if (ensured.projectSection.projectType === ProjectType[ProjectType.executable] ||
+            ensured.projectSection.projectType === ProjectType[ProjectType.shareable] ||
+            ensured.projectSection.projectType === ProjectType[ProjectType.library] ) {
+
+            if (ensured.projectSection.addIncludes) {
+                cxxIncludes.push(...ensured.projectSection.addIncludes.split(","));
+            }
+            if (ensured.projectSection.addLibraries) {
+                optLines.push(...ensured.projectSection.addLibraries.split(",").map(lib => lib + "/LIBRARY"));
+            }
+
+            for (const source of sources) {
+                const vms = new VmsPathConverter(source.filename);
+                const objectDependencyLine = "[$(OBJ_DIR)" + vms.bareDirectory + "]" + vms.fileName + ".obj : " + vms.fullPath + " $(INCLUDES)";
+                objectDependenciesLines.push(objectDependencyLine);
+            }
+
+            // project dependecies
+            let deps = new ProjDepTree().getDepList(ensured.scope);
+            if (deps.length > 1) {  // first is this project
+                deps = deps.splice(1);
+                for (const depPrj of deps) {
+                    const depEnsured = await ensureSettings(depPrj, this.logFn);
+                    if (depEnsured) {
+                        if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library] ||
+                            depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
+                            const vmsRoot = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
+                            const projName = depEnsured.projectSection.projectName.toUpperCase();
+                            const outDir = depEnsured.projectSection.outdir;
+                            contentFirst.push(`    ${projName}_INC_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}]"`);
+                            contentFirst.push(`    DEFINE ${projName}_INC_DIR '${projName}_INC_SYMB'`);
+                            contentFirst.push(`    ${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.$(CONFIG)]"`);
+                            contentFirst.push(`    DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
+                            cxxIncludes.push(`${projName}_INC_DIR`);
+                            if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library]) {
+                                optLines.push(`${projName}_LIB_DIR:${projName}/LIBRARY`);
+                            }
+                            if (depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
+                                optLines.push(`${projName}_LIB_DIR:${projName}/SHAREABLE`);
+                                // com file
+                                comLines.push(`CONFIG:=DEBUG`);
+                                comLines.push(`if P1 .NES. "" THEN CONFIG:='P1'`);
+                                comLines.push(`${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.'CONFIG']"`);
+                                comLines.push(`DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
+                                comLines.push(`DEFINE ${projName} ${projName}_LIB_DIR:${projName}.exe`);
+                            }
                         }
                     }
                 }
             }
-        }
-        contentFirst.push("");
+            contentFirst.push("");
 
-        if (ensured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
-            optLines.push(`GSMATCH=LEQUAL,1,1001    ! adjust vesrion`);
-            optLines.push(`!SYMBOL_VECTOR=()        ! add universal symbols here`);
-        }
+            if (ensured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
+                optLines.push(`GSMATCH=LEQUAL,1,1001    ! adjust vesrion`);
+                optLines.push(`!SYMBOL_VECTOR=()        ! add universal symbols here`);
+            }
 
-        const includeDirCxx = cxxIncludes.length
-            ? `/INCLUDE_DIRECTORY=(${cxxIncludes.join(",")})`
-            : "";
-        const cxxCommonFlags = `/OBJECT=$(MMS$TARGET)${includeDirCxx}`;
-        const cxxDebugFlags = `/DEBUG/NOOP/LIST=$(MMS$TARGET_NAME)${cxxCommonFlags}`;
-        const linkCommonFlags = ensured.projectSection.projectType === ProjectType[ProjectType.executable]
-            ? `/EXECUTABLE=$(MMS$TARGET)`
-            : ensured.projectSection.projectType === ProjectType[ProjectType.shareable]
-            ? `/SHAREABLE=$(MMS$TARGET)`
-            : ``;
+            const includeDirCxx = cxxIncludes.length
+                ? `/INCLUDE_DIRECTORY=(${cxxIncludes.join(",")})`
+                : "";
+            const cxxCommonFlags = `/OBJECT=$(MMS$TARGET)${includeDirCxx}`;
+            const cxxDebugFlags = `/DEBUG/NOOP/LIST=$(MMS$TARGET_NAME)${cxxCommonFlags}`;
+            const linkCommonFlags = ensured.projectSection.projectType === ProjectType[ProjectType.executable]
+                ? `/EXECUTABLE=$(MMS$TARGET)`
+                : ensured.projectSection.projectType === ProjectType[ProjectType.shareable]
+                ? `/SHAREABLE=$(MMS$TARGET)`
+                : ``;
 
-        const flagLines = [
-        `.IF DEBUG`,
-        `TYPE_DIR=debug`,
-        `COMPILEFLAGS = ${cxxDebugFlags}`,
-        `LINKFLAGS = /DEBUG/MAP=$(MMS$TARGET_NAME)${linkCommonFlags}`,
-        `.ELSE`,
-        `TYPE_DIR=release`,
-        `COMPILEFLAGS = ${cxxCommonFlags}`,
-        `LINKFLAGS = ${linkCommonFlags}`,
-        `.ENDIF`,
-        ];
+            flagLines.push(...[
+            `.IF DEBUG`,
+            `COMPILEFLAGS = ${cxxDebugFlags}`,
+            `LINKFLAGS = /DEBUG/MAP=$(MMS$TARGET_NAME)${linkCommonFlags}`,
+            `.ELSE`,
+            `COMPILEFLAGS = ${cxxCommonFlags}`,
+            `LINKFLAGS = ${linkCommonFlags}`,
+            `.ENDIF`,
+            ]);
 
-        const middleLines = [
-            `.SILENT`,
-            `OUT_DIR = .$(OUTDIR).$(TYPE_DIR)`,
-            `OBJ_DIR = $(OUT_DIR).obj`,
-            `.SUFFIXES`,
-            `.SUFFIXES .OBJ .CPP .C .CLD .MSG .BLI .COB. PAS .BAS .F77 .F90`,
-            `.CPP.OBJ`,
-            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    $(CXX) $(COMPILEFLAGS) $(MMS$SOURCE)`,
-            ``,
-            `.C.OBJ`,
-            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    $(CC) $(COMPILEFLAGS) $(MMS$SOURCE)`,
-            ``,
-            `.CLD.OBJ`,
-            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    SET COMMAND/OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
-            ``,
-            `.MSG.OBJ`,
-            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    MESSAGE /OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
-            ``,
-            `.BLI.OBJ`,
-            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    BLISS $(COMPILEFLAGS) $(MMS$SOURCE)`,
-            ``,
-            `.COB.OBJ`,
-            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    COBOL $(COMPILEFLAGS) $(MMS$SOURCE)`,
-            ``,
-            `.PAS.OBJ`,
-            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    PASCAL $(COMPILEFLAGS) $(MMS$SOURCE)`,
-            ``,
-            `.BAS.OBJ`,
-            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    BASIC $(COMPILEFLAGS) $(MMS$SOURCE)`,
-            ``,
-            `.F77.OBJ`,
-            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    FORTRAN $(COMPILEFLAGS) $(MMS$SOURCE)`,
-            ``,
-            `.F90.OBJ`,
-            `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
-            `    FORTRAN $(COMPILEFLAGS) $(MMS$SOURCE)`,
-            ``,
-            `.DEFAULT`,
-            `    ! Source $(MMS$TARGET) not yet added`,
-            ``,
-        ];
+            middleLines.push(...[
+                `.SILENT`,
+                `OUT_DIR = .$(OUTDIR).$(CONFIG)`,
+                `OBJ_DIR = $(OUT_DIR).obj`,
+                `.SUFFIXES`,
+                `.SUFFIXES .OBJ .CPP .C .CLD .MSG .BLI .COB .PAS .BAS .F77 .F90 .FOR .B32 .CBL`,
+                `.CPP.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    $(CXX) $(COMPILEFLAGS) $(MMS$SOURCE)`,
+                ``,
+                `.C.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    $(CC) $(COMPILEFLAGS) $(MMS$SOURCE)`,
+                ``,
+                `.CLD.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    SET COMMAND/OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
+                ``,
+                `.MSG.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    MESSAGE /OBJECT=$(MMS$TARGET) $(MMS$SOURCE)`,
+                ``,
+                `.BLI.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    BLISS $(COMPILEFLAGS) $(MMS$SOURCE)`,
+                ``,
+                `.B32.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    BLISS $(COMPILEFLAGS) $(MMS$SOURCE)`,
+                ``,
+                `.COB.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    COBOL $(COMPILEFLAGS) $(MMS$SOURCE)`,
+                ``,
+                `.CBL.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    COBOL $(COMPILEFLAGS) $(MMS$SOURCE)`,
+                ``,
+                `.PAS.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    PASCAL $(COMPILEFLAGS) $(MMS$SOURCE)`,
+                ``,
+                `.BAS.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    BASIC $(COMPILEFLAGS) $(MMS$SOURCE)`,
+                ``,
+                `.F77.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    FORTRAN $(COMPILEFLAGS) $(MMS$SOURCE)`,
+                ``,
+                `.F90.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    FORTRAN $(COMPILEFLAGS) $(MMS$SOURCE)`,
+                ``,
+                `.FOR.OBJ`,
+                `    pipe create/dir $(DIR $(MMS$TARGET)) | copy SYS$INPUT nl:`,
+                `    FORTRAN $(COMPILEFLAGS) $(MMS$SOURCE)`,
+                ``,
+                `.DEFAULT`,
+                `    ! Source $(MMS$TARGET) not yet added`,
+                ``,
+            ]);
 
-        const mainModuleLines: string[] = [];
-        if (ensured.projectSection.projectType === ProjectType[ProjectType.executable] ||
-            ensured.projectSection.projectType === ProjectType[ProjectType.shareable] ) {
-            mainModuleLines.push(`[$(OUT_DIR)]$(NAME).EXE : `);
+            if (ensured.projectSection.projectType === ProjectType[ProjectType.executable] ||
+                ensured.projectSection.projectType === ProjectType[ProjectType.shareable] ) {
+                mainModuleLines.push(`[$(OUT_DIR)]$(NAME).EXE : `);
+                for (const source of sources) {
+                    mainModuleLines[mainModuleLines.length - 1] = mainModuleLines[mainModuleLines.length - 1] + " -";
+                    const vms = new VmsPathConverter(source.filename);
+                    const objectLine = `[$(OBJ_DIR)${vms.bareDirectory}]${vms.fileName}.obj`;
+                    mainModuleLines.push(objectLine);
+                }
+                if (optLines.length) {
+                    mainModuleLines.push(`    CXXLINK $(LINKFLAGS) $(MMS$SOURCE_LIST),[]$(NAME)/OPT`);
+                } else {
+                    mainModuleLines.push(`    CXXLINK $(LINKFLAGS) $(MMS$SOURCE_LIST)`);
+                }
+                mainModuleLines.push(``);
+            }
+            if (ensured.projectSection.projectType === ProjectType[ProjectType.library]) {
+                for (const source of sources) {
+                    const vms = new VmsPathConverter(source.filename);
+                    mainModuleLines.push(`[$(OUT_DIR)]$(NAME).OLB :: [$(OBJ_DIR)${vms.bareDirectory}]${vms.fileName}.obj`);
+                    mainModuleLines.push(`   IF "''F$SEARCH("[$(OUT_DIR)]$(NAME).OLB")'" .EQS. "" THEN -`);
+                    mainModuleLines.push(`       LIBR/CREATE/OBJ [$(OUT_DIR)]$(NAME).OLB`);
+                    mainModuleLines.push(`   LIBR [$(OUT_DIR)]$(NAME).OLB [$(OBJ_DIR)${vms.bareDirectory}]${vms.fileName}.obj`);
+                    mainModuleLines.push(``);
+                }
+            }
+        } else if (ensured.projectSection.projectType === ProjectType[ProjectType.java] ||
+                   ensured.projectSection.projectType === ProjectType[ProjectType.scala] ||
+                   ensured.projectSection.projectType === ProjectType[ProjectType.kotlin] ) {
+            // TODO: distinguish DEBUG and RELEASE
+            
+            let extension = ".java";
+            let compiler = "javac";
+            switch(ensured.projectSection.projectType) {
+                case ProjectType[ProjectType.scala]:
+                    extension = ".sc";
+                    compiler = "scalac";
+                    break;
+                case ProjectType[ProjectType.kotlin]:
+                    extension = ".kt";
+                    compiler = "kotlinc";
+                    break;
+            }
+
+            // delete all previous hard links before the process
+            contentFirst.push(`    pipe del/tree [.$(OUTDIR).src]*.*;* | copy SYS$INPUT nl:`);
+            contentFirst.push(`    pipe create/dir [.$(OUTDIR).src] | copy SYS$INPUT nl:`);
+            contentFirst.push(`    pipe create/dir [.$(OUTDIR).$(CONFIG)] | copy SYS$INPUT nl:`);
+            if (ensured.projectSection.projectType === ProjectType[ProjectType.java]) {
+                contentFirst.push(`    pipe create/dir [.$(OUTDIR).tmp] | copy SYS$INPUT nl:`);
+            }
+            // delete all current hard link after the process
+            contentFirst.push(`.LAST`);
+            contentFirst.push(`    pipe del/tree [.$(OUTDIR).src]*.*;* | copy SYS$INPUT nl:`);
+            if (ensured.projectSection.projectType === ProjectType[ProjectType.java]) {
+                contentFirst.push(`    pipe del/tree [.$(OUTDIR).tmp...]*.*;* | copy SYS$INPUT nl:`);
+            }
+                    
+            middleLines.push(...[
+                `.SILENT`,
+            ]);
+
+            // project dependecies
+            let depClassPath = ensured.projectSection.addLibraries.split(",").join(":");
+            let deps = new ProjDepTree().getDepList(ensured.scope);
+            if (deps.length > 1) {  // first is this project
+                const depPathStart = (".." + ftpPathSeparator).repeat(ensured.projectSection.root.split(ftpPathSeparator).length);
+                deps = deps.splice(1);
+                for (const depPrj of deps) {
+                    const depEnsured = await ensureSettings(depPrj, this.logFn);
+                    if (depEnsured) {
+                        switch (depEnsured.projectSection.projectType) {
+                            case ProjectType[ProjectType.java]:
+                            case ProjectType[ProjectType.scala]:
+                            case ProjectType[ProjectType.kotlin]:
+                                const depPath = depPathStart + 
+                                                [depEnsured.projectSection.root,
+                                                 depEnsured.projectSection.outdir,
+                                                 "$(CONFIG)",
+                                                 depEnsured.projectSection.projectName].join(ftpPathSeparator) + ".jar";
+                                if (depClassPath) {
+                                    depClassPath += ":";
+                                }
+                                depClassPath += depPath;
+                                break;
+                        }
+                    }
+                }
+            }
+
+            //main
+            mainModuleLines.push(`[.$(OUTDIR).$(CONFIG)]$(NAME).jar : `);
             for (const source of sources) {
                 mainModuleLines[mainModuleLines.length - 1] = mainModuleLines[mainModuleLines.length - 1] + " -";
                 const vms = new VmsPathConverter(source.filename);
-                const objectLine = `[$(OBJ_DIR)${vms.bareDirectory}]${vms.fileName}.obj`;
-                mainModuleLines.push(objectLine);
+                mainModuleLines.push(`[.$(OUTDIR).src]${vms.fileName}${extension}`);
             }
-            if (optLines.length) {
-                mainModuleLines.push(`    CXXLINK $(LINKFLAGS) $(MMS$SOURCE_LIST),[]$(NAME)/OPT`);
+            if (depClassPath) {
+                depClassPath = "-cp " + depClassPath;
+            }
+            if (ensured.projectSection.projectType === ProjectType[ProjectType.java]) {
+                mainModuleLines.push(`    ${compiler} ${depClassPath} -d $(OUTDIR)/tmp $(OUTDIR)/src/*${extension}`);
+                mainModuleLines.push(`    jar cf $(OUTDIR)/$(CONFIG)/$(NAME).jar -C $(OUTDIR)/tmp .`);
             } else {
-                mainModuleLines.push(`    CXXLINK $(LINKFLAGS) $(MMS$SOURCE_LIST)`);
+                mainModuleLines.push(`    ${compiler} ${depClassPath} -d $(OUTDIR)/$(CONFIG)/$(NAME).jar $(OUTDIR)/src/*${extension}`);
             }
             mainModuleLines.push(``);
-        }
-        if (ensured.projectSection.projectType === ProjectType[ProjectType.library]) {
+
+            // source dependencies
             for (const source of sources) {
                 const vms = new VmsPathConverter(source.filename);
-                mainModuleLines.push(`[$(OUT_DIR)]$(NAME).OLB :: [$(OBJ_DIR)${vms.bareDirectory}]${vms.fileName}.obj`);
-                mainModuleLines.push(`   IF "''F$SEARCH("[$(OUT_DIR)]$(NAME).OLB")'" .EQS. "" THEN -`);
-                mainModuleLines.push(`       LIBR/CREATE/OBJ [$(OUT_DIR)]$(NAME).OLB`);
-                mainModuleLines.push(`   LIBR [$(OUT_DIR)]$(NAME).OLB [$(OBJ_DIR)${vms.bareDirectory}]${vms.fileName}.obj`);
-                mainModuleLines.push(``);
+                const objectDependencyLine = `[.$(OUTDIR).src]${vms.fileName}${extension} : ${vms.fullPath}`;
+                objectDependenciesLines.push(objectDependencyLine);
+                objectDependenciesLines.push(`    set file ${vms.fullPath}/enter=[.$(OUTDIR).src]${vms.fileName}${extension}`);
             }
         }
 
@@ -727,10 +838,7 @@ export class Builder {
         return false;
     }
 
-    private async ensureMmsCreated(scopeData: IScopeBuildData, cfg: BuildConfiguration, autoCreate = false) {
-        if (!(cfg === BuildConfiguration.debug || cfg === BuildConfiguration.release)) {
-            return true;
-        }
+    private async ensureMmsCreated(scopeData: IScopeBuildData, autoCreate = false) {
 
         const localMmsFile = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
         const foundMms = await scopeData.localSource.findFiles(localMmsFile);
@@ -748,133 +856,123 @@ export class Builder {
         return true;
     }
 
-    private async runRemoteClean(scopeData: IScopeBuildData, cfg: BuildConfiguration, cmd: string) {
+    private async runRemoteClean(scopeData: IScopeBuildData, buildCfg: IBuildConfigSection) {
         // decide what to clean
-        let command = "";
-        switch (cfg) {
-            case BuildConfiguration.unknown:
-                return false;
-            case BuildConfiguration.debug:
-                command = Builder.cleanDEBUG(scopeData.ensured.projectSection.outdir);
-                break;
-            case BuildConfiguration.release:
-                command = Builder.cleanRELEASE(scopeData.ensured.projectSection.outdir);
-                break;
-            case BuildConfiguration.com:
-                command = '@' + cmd + Builder.cleanSuffix;
-                break;
-            case BuildConfiguration.mms:
-                command = Builder.mmsUserCmd(cmd) + Builder.cleanSuffix;
-                break;
-        }
-        // run if decided
-        const output = await scopeData.shell.execCmd(command);
-        if (output) {
-            switch (cfg) {
-                case BuildConfiguration.com:
-                case BuildConfiguration.mms:
-                    this.logFn(LogType.information, () => output.join("\n"));
-                    break;
-            }
-            return true;
+        let command = buildCfg.command;
+        if (isCommandDefault(command)) {
+            command = Builder.cleanCmd(scopeData.ensured.projectSection.outdir, buildCfg.label);
+        } else if (isCommandCOM(command)) {
+            command = '@' + command + Builder.cleanSuffix;
+        } else if (isCommandMMS(command)) {
+            command = Builder.mmsUserCmd(command) + Builder.cleanSuffix;
         } else {
-            this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute > {0}", command));
+            this.logFn(LogType.error, () => localize("cannot.clean", "Have no idea how to clean configuration: {0}", buildCfg.label));
             return false;
         }
+        // run if decided
+        const output = await scopeData.shell.execCmd(command);
+        if (output && TestExecResult(output)) {
+            return true;
+        } 
+        if (!output) {
+            this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute: {0}", command));
+        } else {
+            this.logFn(LogType.error, () => output.join("\n"));
+        }
+        return false;
     }
 
-    private async runRemoteBuild(scopeData: IScopeBuildData, cfg: BuildConfiguration, cmd: string) {
-        let command = "";
-        let debugDefine = "";
-        switch (cfg) {
-            case BuildConfiguration.unknown:
-                return false;
-            case BuildConfiguration.debug:
-                debugDefine = "1";
-            case BuildConfiguration.release:
-                command = 
-                    Builder.mmsCmd(scopeData.ensured.projectSection.projectName + Builder.mmsExt,
-                        debugDefine,
-                        scopeData.ensured.projectSection.outdir,
-                        scopeData.ensured.projectSection.projectName);
-                break;
-            case BuildConfiguration.com:
-                command = '@' + cmd;
-                break;
-            case BuildConfiguration.mms:
-                command = Builder.mmsUserCmd(cmd);
-                break;
+    private async runRemoteBuild(scopeData: IScopeBuildData, buildCfg: IBuildConfigSection) {
+        let command = buildCfg.command;
+        if (isCommandDefault(command)) {
+            if (isParameterDebug(buildCfg.parameter)) {
+                command = Builder.mmsCmd(scopeData.ensured.projectSection.projectName + Builder.mmsExt,
+                    "1",
+                    scopeData.ensured.projectSection.outdir,
+                    scopeData.ensured.projectSection.projectName,
+                    buildCfg.label);
+            } else {
+                command = Builder.mmsCmd(scopeData.ensured.projectSection.projectName + Builder.mmsExt,
+                    "0",
+                    scopeData.ensured.projectSection.outdir,
+                    scopeData.ensured.projectSection.projectName,
+                    buildCfg.label);
+            }
+        } else if (isCommandCOM(command)) {
+            command = '@' + command + " " + buildCfg.parameter;
+        } else if (isCommandMMS(command)) {
+            command = Builder.mmsUserCmd(command) + " " + buildCfg.parameter;
+        } else {
+            this.logFn(LogType.error, () => localize("cannot.build", "Have no idea how to build configuration: {0}", buildCfg.label));
+            return false;
         }
         // run if decided
         const output = await scopeData.shell.execCmd(command);
         if (output) {
-            let retCode = true;
-            switch (cfg) {
-                case BuildConfiguration.com:
-                case BuildConfiguration.mms:
-                    this.logFn(LogType.information, () => output.join("\n"));
-                    break;
-                default:
-                    retCode = await this.parseProblems(scopeData, output, cfg, cmd);
-                    break;
-            }
-            // always try to download listing, for all configurations
-            let downloadedByZip = false;
-            if (scopeData.ensured.synchronizeSection.preferZip) {
-                // get and save current folder
-                let currentPath: VmsPathConverter | undefined;
-                let answer = await scopeData.shell.execCmd('show default');
-                if (answer && answer.length !== 0) {
-                    currentPath = VmsPathConverter.fromVms(answer[0].trim());
-                }
-                // go to folder for zipping files
-                const zipFolder = 
-                    scopeData.shellRootConverter.initial
-                    + scopeData.ensured.projectSection.root
-                    + ftpPathSeparator
-                    + scopeData.ensured.projectSection.outdir
-                    + ftpPathSeparator
-                    + "debug"
-                    + ftpPathSeparator;
-                const zipFolderConverter = new VmsPathConverter(zipFolder);
-                let cd = `set def ${zipFolderConverter.directory}`;
-                answer = await scopeData.shell.execCmd(cd);
-                // create zip file 
-                let lists = scopeData.ensured.projectSection.listing;
-                lists = lists || "*.lis";
-                const unbracedList = micromatch.braces(lists).join(" ");
-                const zipCmd = Builder.zipCmd(Builder.zipName, unbracedList);
-                answer = await scopeData.shell.execCmd(zipCmd);
-                // download zip file
-                const relZipName = scopeData.ensured.projectSection.outdir + "/debug/" + Builder.zipName + Builder.zipExt;
-                const downloaded = await Synchronizer.acquire(this.logFn).downloadFiles(scopeData.ensured, [relZipName]);
-                if (downloaded) {
-                    // unzip it
-                    const zipApi = GetZipApi();
-                    if (zipApi && scopeData.ensured.configHelper.workspaceFolder) {
-                        const fullZipName = path.join(scopeData.ensured.configHelper.workspaceFolder.uri.fsPath, relZipName);
-                        downloadedByZip = await new zipApi(this.logFn).unzip(fullZipName);
+            const retCode = await this.parseProblems(scopeData, output, buildCfg);
+            if (scopeData.ensured.projectSection.listing) {
+                // always try to download listing, for all configurations
+                let downloadedByZip = false;
+                if (scopeData.ensured.synchronizeSection.preferZip) {
+                    // get and save current folder
+                    let currentPath: VmsPathConverter | undefined;
+                    let answer = await scopeData.shell.execCmd('show default');
+                    if (answer && answer.length !== 0) {
+                        currentPath = VmsPathConverter.fromVms(answer[0].trim());
+                    }
+                    // go to folder for zipping files
+                    const zipFolder = 
+                        scopeData.shellRootConverter.initial
+                        + scopeData.ensured.projectSection.root
+                        + ftpPathSeparator
+                        + scopeData.ensured.projectSection.outdir
+                        + ftpPathSeparator
+                        + buildCfg.label
+                        + ftpPathSeparator;
+                    const zipFolderConverter = new VmsPathConverter(zipFolder);
+                    let cd = `set def ${zipFolderConverter.directory}`;
+                    answer = await scopeData.shell.execCmd(cd);
+                    // create zip file 
+                    const unbracedList = 
+                        micromatch.braces(scopeData.ensured.projectSection.listing).
+                        map(mask => mask.replace(/[{}]/g, "")).
+                        reduce(collectSplittedByCommas, []).
+                        join(" ");
+                    const zipCmd = Builder.zipCmd(Builder.zipName, unbracedList);
+                    answer = await scopeData.shell.execCmd(zipCmd);
+                    // download zip file
+                    const relZipName = scopeData.ensured.projectSection.outdir + 
+                            ftpPathSeparator + buildCfg.label + 
+                            ftpPathSeparator + Builder.zipName + Builder.zipExt;
+                    const downloaded = await Synchronizer.acquire(this.logFn).downloadFiles(scopeData.ensured, [relZipName]);
+                    if (downloaded) {
+                        // unzip it
+                        const zipApi = GetZipApi();
+                        if (zipApi && scopeData.ensured.configHelper.workspaceFolder) {
+                            const fullZipName = path.join(scopeData.ensured.configHelper.workspaceFolder.uri.fsPath, relZipName);
+                            downloadedByZip = await new zipApi(this.logFn).unzip(fullZipName);
+                        }
+                    }
+                    // delete zip file on OpenVMS side
+                    answer = await scopeData.shell.execCmd(`del ${Builder.zipName + Builder.zipExt};*`);
+                    // go back to saved current folder
+                    if (currentPath) {
+                        cd = `set def ${currentPath.directory}`;
+                        answer = await scopeData.shell.execCmd(cd);
                     }
                 }
-                // delete zip file on OpenVMS side
-                answer = await scopeData.shell.execCmd(`del ${Builder.zipName + Builder.zipExt};*`);
-                // go back to saved current folder
-                if (currentPath) {
-                    cd = `set def ${currentPath.directory}`;
-                    answer = await scopeData.shell.execCmd(cd);
+                if (!downloadedByZip) {
+                    await Synchronizer.acquire(this.logFn).downloadListings(scopeData.ensured);
                 }
-            }
-            if (!downloadedByZip) {
-                await Synchronizer.acquire(this.logFn).downloadListings(scopeData.ensured);
             }
             return retCode;
         } else {
-            this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute > {0}", command));
+            this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute: {0}", command));
             return false;
         }
     }
 
-    private async parseProblems(scopeData: IScopeBuildData, output: string[], cfg: BuildConfiguration, cmd: string) {
+    private async parseProblems(scopeData: IScopeBuildData, output: string[], buildCfg: IBuildConfigSection) {
         const result = parseVmsOutput(output, scopeData.shell.width);
         for (const line of result.lines) {
             this.logFn(LogType.warning, () => line);
@@ -882,6 +980,15 @@ export class Builder {
         let cwd = "";
         cwd = scopeData.shellRootConverter.initial + scopeData.ensured.projectSection.root + ftpPathSeparator;
         cwd = cwd.toUpperCase();
+        let hardlinkFolder = "";
+        switch (scopeData.ensured.projectSection.projectType) {
+            case ProjectType[ProjectType.java]:
+            case ProjectType[ProjectType.scala]:
+            case ProjectType[ProjectType.kotlin]:
+                // cut out/src
+                hardlinkFolder = scopeData.ensured.projectSection.outdir + ftpPathSeparator + "src" + ftpPathSeparator;
+                break;
+        }
         const errMap = new Map<string, Diagnostic[]>();
         let hasError = false;
         for (const entry of result.problems) {
@@ -907,10 +1014,10 @@ export class Builder {
                 }
                 if (!entry.file) {
                     if (entry.facility && entry.facility.toUpperCase() === "MMS") {
-                        if (cfg === BuildConfiguration.mms) {
-                            entry.file = cmd;
-                        } else {
+                        if (isCommandDefault(buildCfg.command)) {
                             entry.file = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
+                        } else if (isCommandMMS(buildCfg.command)) {
+                            entry.file = buildCfg.command;
                         }
                     }
                 }
@@ -927,9 +1034,9 @@ export class Builder {
                     // check MSG or CLD
                     if (entry.facility &&
                         (entry.facility.toUpperCase() === "MESSAGE" || entry.facility.toUpperCase() === "CDU") &&
-                        (cfg === BuildConfiguration.release || cfg === BuildConfiguration.debug)) {
+                        isCommandDefault(buildCfg.command)) {
                         // conver target to source
-                        const outPathLength = scopeData.ensured.projectSection.outdir.length + BuildConfiguration[cfg].length + 6;   // 6 = length of "obj" and three separators
+                        const outPathLength = scopeData.ensured.projectSection.outdir.length + buildCfg.label.length + 6;   // 6 is length of "OBJ" and three separators
                         localFile = localFile.slice(outPathLength);
                         const dotPos = localFile.indexOf(".");
                         if (dotPos >= 0) {
@@ -946,10 +1053,16 @@ export class Builder {
                             }
                         }
                     }
+                    if (hardlinkFolder && localFile.startsWith(hardlinkFolder)) {
+                        localFile = "**" + ftpPathSeparator + localFile.slice(hardlinkFolder.length);
+                    }
                     // find case-insensitive
                     const found = await scopeData.localSource.findFiles(localFile);
                     if (found.length === 1) {
                         localFile = found[0].filename;
+                    } else if (found.length > 1) {
+                        localFile = found[0].filename;
+                        this.logFn(LogType.warning, () => localize("too_many_files", "There are more than one file named {0}", localFile));
                     }
                     uri = Uri.file(path.join(scopeData.ensured.configHelper.workspaceFolder!.uri.fsPath, localFile));
                 }

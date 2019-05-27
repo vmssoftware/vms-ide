@@ -20,6 +20,7 @@ import { SshShell } from "./stream/ssh-shell";
 import { MemoryStreamCreator } from "./stream/stream-creators";
 
 import { ICanCreateReadStream, ICanCreateWriteStream, IConnectConfig, IMemoryStreamCreator, ISftpClient, ISshScopeSettings, ISshShell } from "./api";
+import { TerminalSection } from "./config/sections/terminal";
 
 interface IEnsured extends ISshScopeSettings {
     configHelper: IConfigHelper;
@@ -148,11 +149,13 @@ async function ensureSettings(logFn: LogFunction, scope?: string): Promise<IEnsu
     const configHelper = configApi.getConfigHelper(extensionName, scope);
     const config = configHelper.getConfig();
     // first try
-    let [connectionSection, hostsSection, timeoutSection] =
+    let [connectionSection, hostsSection, timeoutSection, terminalSection] =
         await Promise.all(
             [config.get(ConnectionSection.section),
-                config.get(HostsSection.section),
-                config.get(TimeoutSection.section)]);
+             config.get(HostsSection.section),
+             config.get(TimeoutSection.section),
+             config.get(TerminalSection.section),
+            ]);
     const wait = [];
     // test and add if missed
     if (!connectionSection) {
@@ -173,6 +176,12 @@ async function ensureSettings(logFn: LogFunction, scope?: string): Promise<IEnsu
             timeoutSection = section;
         }));
     }
+    if (!terminalSection) {
+        config.add(new TerminalSection());
+        wait.push(config.get(TerminalSection.section).then((section) => {
+            terminalSection = section;
+        }));
+    }
     // wait
     if (wait.length > 0) {
         await Promise.all(wait);
@@ -180,7 +189,8 @@ async function ensureSettings(logFn: LogFunction, scope?: string): Promise<IEnsu
     // then ensure all are loaded
     if (ConnectionSection.is(connectionSection) &&
         HostsSection.is(hostsSection) &&
-        TimeoutSection.is(timeoutSection)) {
+        TimeoutSection.is(timeoutSection) &&
+        TerminalSection.is(terminalSection) ) {
         const fillers = [new HostFiller(hostsSection, logFn), new KeyFiller(logFn), new PasswordVscodeFiller()];
         const connectConfigResolver = new ConnectConfigResolverImpl(fillers, timeoutSection.feedbackTimeout, logFn);
         return {
@@ -189,6 +199,7 @@ async function ensureSettings(logFn: LogFunction, scope?: string): Promise<IEnsu
             connectionSection,
             hostsSection,
             timeoutSection,
+            terminalSection,
         };
     }
     return undefined;

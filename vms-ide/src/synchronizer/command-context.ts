@@ -10,6 +10,13 @@ export enum CommandContext {
     // isHeaders = "vmssoftware.synchronizer.isHeaders",
 }
 
+const contextMap = new Map<string, boolean>();
+
 export function setContext(context: CommandContext, state: boolean) {
+    contextMap.set(context, state);
     commands.executeCommand("setContext", context, state);
+}
+
+export function getContext(context: CommandContext): boolean {
+    return !!contextMap.get(context);
 }

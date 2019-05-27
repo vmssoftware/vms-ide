@@ -32,5 +32,6 @@
     "collect.fail": "Collect Java classes failed",
     "collect.status": "Collecting Java classes...",
     "collect.success": "Collecting Java classes is done",
-    "error.no_action": "Отсутсвует действие: {0}"
+    "error.no_action": "Отсутсвует действие: {0}",
+    "error.action_in_progress": "Action already in progress: {0}"
 }

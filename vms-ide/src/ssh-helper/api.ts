@@ -111,6 +111,10 @@ export interface ITimeoutsSection  {
     welcomeTimeout: number;
 }
 
+export interface ITerminalSection  {
+    command: string;
+}
+
 export enum ResolverState {
     absent,
     asked,
@@ -134,5 +138,6 @@ export interface ISshScopeSettings {
     connectionSection: IConnectionSection;
     hostsSection: IHostsSection;
     timeoutSection: ITimeoutsSection;
+    terminalSection: ITerminalSection;
     connectConfigResolver: IConnectConfigResolver<IConnectConfig>;
 }
