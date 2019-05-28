@@ -17,7 +17,7 @@
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
-    "main": "./out/index",
+    "main": "./out/extension",
     "activationEvents": [
         "*",
         "onView:vmssoftware.project-dep.projectDependencies",
@@ -38,6 +38,7 @@
         "onCommand:vmssoftware.synchronizer.uploadZip",
         "onCommand:vmssoftware.synchronizer.upload",
         "onCommand:vmssoftware.synchronizer.downloadHeaders",
+        "onCommand:vmssoftware.synchronizer.collectJavaClasses",
         "onDebug",
         "onCommand:extension.vms-debug.terminal",
         "onLanguage:cld",
@@ -258,6 +259,10 @@
                 {
                     "command": "vmssoftware.synchronizer.downloadHeaders",
                     "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.collectJavaClasses",
+                    "when": "!vmssoftware.synchronizer.isInAction"
                 }
             ],
             "view/title": [
@@ -460,6 +465,11 @@
                 "command": "vmssoftware.synchronizer.downloadHeaders",
                 "title": "%synchronizer.command.downloadHeaders.title%",
                 "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.collectJavaClasses",
+                "title": "%synchronizer.command.collectJavaClasses.title%",
+                "category": "%command.category%"
             }
         ],
         "configuration": {
@@ -627,12 +637,18 @@
                     "enum": [
                         "executable",
                         "library",
-                        "shareable"
+                        "shareable",
+                        "java",
+                        "kotlin",
+                        "scala"
                     ],
                     "enumDescriptions": [
                         "Executable",
                         "Static library",
-                        "Shareable image"
+                        "Shareable image",
+                        "Java project",
+                        "Kotlin project",
+                        "Scala project"
                     ],
                     "default": "executable",
                     "description": "%synchronizer.properties.project.projectType.description%"
