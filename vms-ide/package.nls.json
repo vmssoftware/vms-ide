@@ -74,7 +74,6 @@
     "synchronizer.properties.synchronize.purge.description": "Execute PURGE command after uploding",
     "synchronizer.properties.builds.current.description": "Current build configuration",
     "synchronizer.properties.builds.configurations.description": "Array of build configurations",
-    "synchronizer.command.collectJavaClasses.title": "Collect Java classes",
 	"vms_debug.extension.vms_c_debug": "VMS Debugger",
 	"vms_debug.extension.vms_connect": "Connect to server",
 	"vms_debug.extension.vms_terminal": "Terminal"

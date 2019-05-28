@@ -185,14 +185,6 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
-    /**
-     * 
-     */
-    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.collectJavaClasses", async (scope?: string, buildName?: string) => {
-        scope = checkScope(scope);
-        return Perform("collect java", scope, logFn, buildName);
-    }));
-
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.downloadHeaders", async (scope?: string, params?: string) => {
         return Perform("headers", scope, logFn, params);
     }));
