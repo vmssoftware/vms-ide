@@ -6,6 +6,7 @@ import { ensureSettings } from "../ensure-settings";
 import { ISyncScopeSettings } from "../sync/sync-api";
 import { ProjDepTree } from "./proj-dep-tree";
 import { ProjectState, SourceState } from "./proj-state";
+import { QuickPickOptions } from "vscode";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -34,7 +35,7 @@ export enum ProjectFields {
 
 export enum CommonFields {
     folder,
-    buildType,
+    buildName,
     sourceState,
     buildState,
     masters,
@@ -47,7 +48,7 @@ export enum KnownBuildType {
 
 export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
 
-    public static readonly cmdChangeBuildType = "vmssoftware.project-dep.projectDescription.changeBuildType";
+    public static readonly cmdChangeBuildName = "vmssoftware.project-dep.projectDescription.changeBuildName";
     public static readonly cmdEditSync = "vmssoftware.synchronizer.editProject";
     public static readonly cmdEditSsh = "vmssoftware.ssh-helper.editSettings";
 
@@ -145,7 +146,7 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
             case CommonFields[CommonFields.folder]:
                 data = this.selectedProject;
                 break;
-            case CommonFields[CommonFields.buildType]:
+            case CommonFields[CommonFields.buildName]:
                 data = ProjectState.acquire().getDefBuildName();
                 break;
             case CommonFields[CommonFields.sourceState]:
@@ -172,13 +173,8 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
         if (editable) {
             item.contextValue = "editable";
         }
-        if (element === CommonFields[CommonFields.buildType]) {
-            item.tooltip = localize("tooltip.type", "Click to change build type");
-            item.command = {
-                arguments: [],
-                command: ProjDescrProvider.cmdChangeBuildType,
-                title: "",
-            };
+        if (element === CommonFields[CommonFields.buildName]) {
+            item.contextValue = "buildName";
         }
         return item;
     }
@@ -200,16 +196,41 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
         }
     }
 
-    public changeBuildName() {
-        switch (ProjectState.acquire().getDefBuildName()) {
-            case KnownBuildType.debug:
-                ProjectState.acquire().setDefBuildName(KnownBuildType.release);
-                break;
-            case KnownBuildType.release:
-                ProjectState.acquire().setDefBuildName(KnownBuildType.debug);
-                break;
+    /**
+     * Collect build labels which are present in each workspace folder
+     * Select one of them
+     */
+    public async changeBuildName() {
+        if (!vscode.workspace.workspaceFolders || 
+             vscode.workspace.workspaceFolders.length === 0 ||
+             !this.syncScopeSettings) {
+            return;
         }
-        this.didChangeTreeEmitter.fire();
+        let buildNames = new Set<string>(this.syncScopeSettings.buildsSection.configurations.map(cfg => cfg.label));
+        for (const ws of vscode.workspace.workspaceFolders) {
+            const ws_settings = await ensureSettings(ws.name);
+            if (ws_settings) {
+                let intersection = new Set<string>();
+                for (const cfg of ws_settings.buildsSection.configurations) {
+                    if (buildNames.has(cfg.label)) {
+                        intersection.add(cfg.label);
+                    }
+                }
+                buildNames = intersection;
+            }
+        }
+        if (buildNames.size) {
+            const opt: QuickPickOptions = {
+                canPickMany: false,
+                placeHolder: localize("select.buildName", "Select build configuration"),
+                ignoreFocusOut: true,
+            };
+            const newBuildName = await vscode.window.showQuickPick([...buildNames], opt);
+            if (newBuildName) {
+                ProjectState.acquire().setDefBuildName(newBuildName);
+                this.didChangeTreeEmitter.fire();
+            }
+        }
     }
 
     public resolveHost(host: string) {

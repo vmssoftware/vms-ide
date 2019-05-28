@@ -48,6 +48,7 @@
     "synchronizer.command.projectDescription.refresh.title": "Обновить",
     "synchronizer.command.projectDescription.select.title": "Выбрать",
     "synchronizer.command.projectDescription.edit.title": "Редактировать",
+    "synchronizer.command.projectDescription.changeBuildName.title": "Change",
     "synchronizer.properties.project.break.description": "Клавиша останова дебаггера",
     "synchronizer.properties.project.builders.description": "Файлы для построения проекта",
     "synchronizer.properties.project.exclude.description": "Исключить",

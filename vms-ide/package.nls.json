@@ -48,6 +48,7 @@
     "synchronizer.command.projectDescription.refresh.title": "Refresh",
     "synchronizer.command.projectDescription.select.title": "Select",
     "synchronizer.command.projectDescription.edit.title": "Edit",
+    "synchronizer.command.projectDescription.changeBuildName.title": "Change",
     "synchronizer.properties.project.break.description": "Debugger break key",
     "synchronizer.properties.project.builders.description": "Builders",
     "synchronizer.properties.project.exclude.description": "Exclude pattern",

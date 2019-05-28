@@ -317,6 +317,10 @@
                 {
                     "command": "vmssoftware.project-dep.projectDescription.edit",
                     "when": "view == vmssoftware.project-dep.projectDescription && viewItem == editable"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDescription.changeBuildName",
+                    "when": "view == vmssoftware.project-dep.projectDescription && viewItem == buildName"
                 }
             ]
         },
@@ -390,6 +394,10 @@
             {
                 "command": "vmssoftware.project-dep.projectDescription.edit",
                 "title": "%synchronizer.command.projectDescription.edit.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDescription.changeBuildName",
+                "title": "%synchronizer.command.projectDescription.changeBuildName.title%"
             },
             {
                 "command": "vmssoftware.synchronizer.stopAction",

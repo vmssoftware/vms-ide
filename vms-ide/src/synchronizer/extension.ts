@@ -228,7 +228,7 @@ export async function activate(context: ExtensionContext) {
         () => projectDescriptionProvider.refresh()) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDescription.edit",
         (element) => projectDescriptionProvider.edit(element)) );
-    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDescription.changeBuildType",
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDescription.changeBuildName",
         () => projectDescriptionProvider.changeBuildName()) );
 
     return new SyncApi();
