@@ -199,33 +199,75 @@ export class Builder {
             return false;
         }
 
+        let   classNames: string[] = [];
+        let   javapCmd = "";
+        const maxCmdLength = 1024;
+
+        // combine command until its length is more than maxCmdLength
         for (const line of resultLines) {
             const matched = line.match(rgxJavaClassName);
             if (matched) {
                 const className = matched[1];
-                const result = await scopeData.shell.execCmd(cmdJavaClassLines + className);
-                if (result && result.length > 0) {
-                    const fileMatch = result[0].match(rgFile);
+                if (javapCmd === "") {
+                    javapCmd = cmdJavaClassLines;
+                }
+                if (javapCmd.length + className.length + 1 < maxCmdLength ) {
+                    javapCmd += " " + className;
+                    classNames.push(className);
+                } else {
+                    // execute command and collect information
+                    await updateCollection(this.logFn);
+                }
+            }
+        }
+        // execute command and collect information if it isn't empty
+        await updateCollection(this.logFn);
+
+        async function updateCollection(logFn: LogFunction) {
+            if (!javapCmd) {
+                return;
+            }
+            const result = await scopeData!.shell.execCmd(javapCmd);
+            if (result && result.length > 0) {
+                let classLines: Set<number> | undefined;
+                for (const line of result) {
+                    const fileMatch = line.match(rgFile);
                     if (fileMatch) {
+                        // found next class
                         let fileClasses = collection.get(fileMatch[1]);
                         if (fileClasses === undefined) {
                             fileClasses = new Map<string, undefined | Set<number>>();
                             collection.set(fileMatch[1], fileClasses);
                         }
-                        let classLines = fileClasses.get(className);
-                        if (classLines === undefined) {
-                            classLines = new Set<number>();
-                            fileClasses.set(className, classLines);
-                        }
-                        for (const line of result) {
-                            const lineMatch = line.match(rgLine);
-                            if (lineMatch) {
-                                classLines.add(+lineMatch[1]);
+                        const className = classNames.shift();
+                        if (className) {                                   
+                            classLines = fileClasses.get(className);
+                            if (classLines === undefined) {
+                                classLines = new Set<number>();
+                                fileClasses.set(className, classLines);
                             }
+                        } else {
+                            logFn(LogType.error, () => localize("collect.no_class_for_file", "No class for this file match: {0}", line));
+                            break;
+                        }
+                        continue;
+                    }
+                    const lineMatch = line.match(rgLine);
+                    if (lineMatch) {
+                        if (classLines) {
+                            classLines.add(+lineMatch[1]);
+                        } else {
+                            logFn(LogType.error, () => localize("collect.no_class_for_line", "No class for this line match: {0}", line));
+                            break;
                         }
                     }
                 }
             }
+            if (classNames.length > 0) {
+                logFn(LogType.error, () => localize("collect.no_info", "No info for classes: {0}", classNames.join(", ")));
+            }
+            javapCmd = "";
+            classNames = [];
         }
 
         // convert
@@ -1105,7 +1147,7 @@ export class Builder {
             if (!sshHelperType) {
                 this.logFn(LogType.debug, () => localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
                 this.logFn(LogType.error, () => localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
-                return false;
+                return undefined;
             }
             this.sshHelper = new sshHelperType(this.logFn);
         }
