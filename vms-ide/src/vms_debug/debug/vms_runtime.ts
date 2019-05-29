@@ -441,7 +441,7 @@ export class VMSRuntime extends EventEmitter
 	{
 		if(this.language === "COBOL")
 		{
-			const matcherArray = /^\S+([\(\[]\d+[\)\]])/;	
+			const matcherArray = /^(\S+)([\(\[]\d+[\)\]])/;	
 			let items = nameVar.split(this.variablePeriod);
 			let ofVariable : string = "";
 
@@ -451,25 +451,27 @@ export class VMSRuntime extends EventEmitter
 				{
 					let matchesA = item.match(matcherArray);
 
-					if(matchesA && matchesA.length === 2)
+					if(ofVariable === "")
 					{
-						if(ofVariable === "")
-						{
-							ofVariable = item;
-						}
-						else
-						{
-							ofVariable += matchesA[1];
-						}
+						ofVariable = item;
+					}
+
+					if(matchesA && matchesA.length === 3)
+					{
+						ofVariable += matchesA[2];
 					}
 				}
 
-				if(ofVariable === "")
-				{
-					ofVariable = items[items.length - 2];
-				}
+				let matchesA = items[items.length - 1].match(matcherArray);
 
-				nameVar = items[items.length - 1] + " OF " + ofVariable;
+				if(matchesA && matchesA.length === 3)
+				{
+					nameVar = matchesA[matchesA.length - 2] + " OF " + ofVariable;
+				}
+				else
+				{
+					nameVar = items[items.length - 1] + " OF " + ofVariable;
+				}
 			}
 		}
 
