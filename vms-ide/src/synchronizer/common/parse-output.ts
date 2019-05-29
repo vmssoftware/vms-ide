@@ -46,6 +46,10 @@ const rgxMsgInfoMessages = [
     /\d+ (catastrophic )?error(s?) detected in the compilation of/,
     /Compilation terminated/,
 ];
+const typesToSkip = new Set<string>([
+    "ENDNOOBJ",
+    "ENDDIAGS"
+]);
 
 const parseRgxCXX: IParseRgx = {
     rgxMain: /^((%|-)(CXX|CC|COBOL)-(\S)-(\S*)),\s(.*)$/,
@@ -248,7 +252,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
             }
             diagnostic.type = matched[5];
             diagnostic.message = matched[6];
-            if (diagnostic.type === "ENDDIAGS") {
+            if (typesToSkip.has(diagnostic.type)) {
                 // eat this line
                 return [consume, from];
             }
