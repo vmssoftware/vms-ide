@@ -5,6 +5,9 @@ export enum ProjectType {
     executable,
     library,
     shareable,
+    java,
+    kotlin,
+    scala,
 }
 
 export class ProjectSection implements IProjectSection, IConfigSection {
@@ -23,7 +26,9 @@ export class ProjectSection implements IProjectSection, IConfigSection {
         typeof candidate.projectType === "string" &&
         typeof candidate.resource === "string" &&
         typeof candidate.root === "string" &&
-        typeof candidate.source === "string";
+        typeof candidate.source === "string" &&
+        typeof candidate.addLibraries === "string" &&
+        typeof candidate.addIncludes === "string";
     }
 
     public break: string = "C";
@@ -37,6 +42,8 @@ export class ProjectSection implements IProjectSection, IConfigSection {
     public resource: string = "**/resource/**";
     public root: string = "project";
     public source: string = "*.{cpp,c,cld,msg}";
+    public addLibraries: string = "";
+    public addIncludes: string = "";
 
     public name(): string {
         return ProjectSection.section;
@@ -59,6 +66,8 @@ export class ProjectSection implements IProjectSection, IConfigSection {
             resource: this.resource,
             root: this.root,
             source: this.source,
+            addLibraries: this.addLibraries,
+            addIncludes: this.addIncludes,
         };
     }
 
@@ -77,6 +86,8 @@ export class ProjectSection implements IProjectSection, IConfigSection {
             this.resource = data.resource;
             this.root = data.root;
             this.source = data.source;
+            this.addLibraries = data.addLibraries;
+            this.addIncludes = data.addIncludes;
             return true;
         }
         return false;

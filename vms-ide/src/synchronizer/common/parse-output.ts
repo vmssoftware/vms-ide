@@ -110,6 +110,7 @@ const lineStartRgx = [
     rgxMsg,
     rgxPlaceCXX,
     rgxPlaceCXX_TLB,
+    rgxMsgMMS,
 ];
 
 export function consolidateOutputLines(output: string[], shellWidth?: number) {
@@ -143,6 +144,9 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
     while (i < lines.length) {
         let [consume, from]  = findCxxCobolErrors(i);
         if (!consume) {
+            [consume, from] = findJVMErrors(i);
+        }
+        if (!consume) {
             [consume, from] = findMmsErrors(i);
         }
         if (!consume) {
@@ -160,6 +164,61 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
     }
 
     return { problems, lines } ;
+
+    function findJVMErrors(idx: number) {
+
+        const rgxMsgJVM = /^(\S+?):(\d+):((\d+):)? (\S+?): (.*?)(: (.*))?$/;
+        const rgxPosJVM = /^\s*\^/;
+        // const rgxSymbJVM = /^\s*symbol:\s*(.*?)$/;
+        // const rgxLocJVM = /^\s*location:\s*(.*?)$/;
+
+        let consume = 0;
+        let from = idx;
+        const line = lines[idx];
+        const matched = line.match(rgxMsgJVM);
+        if (matched) {
+            consume += 3;
+            const diagnostic: IPartialDiagnostics = {
+                facility:   "jvm",
+                file:       matched[1],
+                line:      +matched[2],
+                pos:        1,
+                message:    matched[6],
+                severity:   VmsSeverity.error,
+            };
+            if (matched[3]) {
+                diagnostic.pos = +matched[4];
+            } else if (idx + 2 < lines.length){
+                const posLine = lines[idx+2];
+                const posMatched = posLine.match(rgxPosJVM);
+                if (posMatched && posMatched[0]) {
+                    diagnostic.pos = posMatched[0].length;
+                }
+            }
+            // if (idx + consume + 1 < lines.length) {
+            //     const lineT = lines[idx + consume];
+            //     if (lineT.match(rgxSymbJVM)) {
+            //         consume ++;
+            //     }
+            // }
+            // if (idx + consume + 1 < lines.length) {
+            //     const lineT = lines[idx + consume];
+            //     if (lineT.match(rgxLocJVM)) {
+            //         consume ++;
+            //     }
+            // }
+            while (idx + consume + 1 < lines.length) {
+                const lineT = lines[idx + consume];
+                if (!lineT.length || line[0] === ' ') {
+                    consume ++;
+                } else {
+                    break;
+                }
+            }
+            problems.push(diagnostic);
+        }
+        return [consume, from];
+    }
 
     /**
      * returns consumed lines
@@ -189,6 +248,10 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
             }
             diagnostic.type = matched[5];
             diagnostic.message = matched[6];
+            if (diagnostic.type === "ENDDIAGS") {
+                // eat this line
+                return [consume, from];
+            }
             // get position from previous line, as "..............^"
             if (idx > 0) {
                 const prevLine = lines[idx - 1];

@@ -1,3 +1,8 @@
+## 0.0.22
+* New project settings: **addLibraries** and **addIncludes**
+* Allow customization of command to start the SSH terminal
+* Named build configurations
+
 ## 0.0.21
 * Small fixes
 

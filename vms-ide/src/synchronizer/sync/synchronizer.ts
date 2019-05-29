@@ -551,12 +551,18 @@ export class Synchronizer {
                     await Delay(500);
                     if (await to.setDate(file, date)) {
                         const actualDate = await to.getDate(file);
-                        if (actualDate) {
+                        if (actualDate !== undefined) {
                             const diff = date.valueOf() - actualDate.valueOf();
                             if (Math.abs(diff) > 1000) {
                                 const newDate = new Date(date.valueOf() + diff);
                                 const retCode = await to.setDate(file, newDate);
                                 const lastDate = await to.getDate(file);
+                                if (lastDate !== undefined) {
+                                    const lastDiff = date.valueOf() - lastDate.valueOf();
+                                    if (Math.abs(lastDiff) > 1000) {
+                                        this.logFn(LogType.warning, () => `set time for ${file} missed by ${lastDiff}, must be ${date.toISOString()}, but set as ${lastDate.toISOString()} `);
+                                    }
+                                }
                                 return retCode;
                             } else {
                                 return true;

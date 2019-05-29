@@ -2,7 +2,7 @@ import { IFileEntry, Lock } from "../../common/main";
 import * as readline from "readline";
 import { GetSshHelperType } from "../../ext-api/ext-api";
 import { GetSyncApi } from "../../ext-api/ext-api";
-import { IConnectionSection } from "../../ssh-helper/api";
+import { IConnectionSection, ITerminalSection } from "../../ssh-helper/api";
 import { SshHelper } from "../../ssh-helper/ssh-helper";
 import { ISource } from "../../synchronizer/sync/source";
 import { IProjectSection, SyncApi } from "../../synchronizer/sync/sync-api";
@@ -90,6 +90,26 @@ export class ConfigManager
 				{
 					return configuredSettings.connectionSection;
 				}
+			}
+		}
+
+		return undefined;
+	}
+
+	public async getTerminalSection() : Promise<ITerminalSection | undefined>
+	{
+		if (!await this.ensureSshHelper())
+		{
+			return undefined;
+		}
+
+		if(this.sshHelper)
+		{
+			const configuredSettings = await this.sshHelper.getSettings(this.scope);
+
+			if (configuredSettings)
+			{
+				return configuredSettings.terminalSection;
 			}
 		}
 

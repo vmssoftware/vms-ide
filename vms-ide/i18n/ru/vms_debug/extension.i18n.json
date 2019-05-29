@@ -1,4 +1,5 @@
 {
+    "setup.connection": "Please set up connection",
     "extention.conecting": "Соединение с сервером ...",
     "extention.bar.conecting": "Соединение ...",
     "extention.connected": "Соединение с сервером установлено",

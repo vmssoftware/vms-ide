@@ -79,25 +79,71 @@ async function createTerminal() : Promise<void>
 	terminals.create(nameTerminalVMS)
 	.then(async(terminal) =>
 	{
+		await configManager.clearPasswordCache();
 		let connection = await configManager.getConnectionSection();
 
 		if(terminal)
 		{
 			if(connection && connection.username)
 			{
-				if(connection.keyFile)
+				let terminalSection = await configManager.getTerminalSection();
+				if (terminalSection && terminalSection.command) 
 				{
-					terminals.startByKey(terminal, connection.host, connection.username, connection.keyFile);
-				}
-				else
+					let commandT = terminalSection.command;
+					{
+						// replace direct values
+						const rgxField = /\${(\w+?)}/g;
+						let matchField = rgxField.exec(commandT);
+						while (matchField) 
+						{
+							const field = matchField[1];
+							let value = "";
+							if (field in connection) {
+								value = String((<any>connection)[field]);
+							}
+							const rgxReplace = new RegExp(matchField[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+							commandT = commandT.replace(rgxReplace, value);
+							rgxField.lastIndex = 0;
+							matchField = rgxField.exec(commandT);
+						}
+					}
+					{
+						// replace question values
+						const rgxFieldQ = /\${(\w+?)\?([^{]*?)}/g;
+						let matchFieldQ = rgxFieldQ.exec(commandT);
+						while (matchFieldQ) 
+						{
+							const field = matchFieldQ[1];
+							let value = "";
+							if (field in connection && String((<any>connection)[field])) {
+								value = matchFieldQ[2];
+							}
+							const rgxReplace = new RegExp(matchFieldQ[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+							commandT = commandT.replace(rgxReplace, value);
+							rgxFieldQ.lastIndex = 0;
+							matchFieldQ = rgxFieldQ.exec(commandT);
+						}
+					}
+
+					terminal.sendText(commandT);
+					terminal.show();
+				} 
+				else 
 				{
-					await configManager.clearPasswordCache();
-					terminals.start(terminal, connection.host, connection.username, connection.password);
+					if(connection.keyFile)
+					{
+						terminals.startByKey(terminal, connection.host, connection.username, connection.keyFile);
+					}
+					else
+					{
+						terminals.start(terminal, connection.host, connection.username, connection.password);
+					}
 				}
 			}
 			else
 			{
-				terminal.show();
+				logFn(LogType.error, () => localize("setup.connection", "Cannot start terminal. Please set up connection"), true);
+				terminal.dispose();
 			}
 		}
 	});
