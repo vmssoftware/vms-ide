@@ -1,0 +1,5 @@
+{
+    "msg.class_name": "Enter class name to execute",
+    "msg.config.empty_class": "Cannot find a class to execute",
+    "msg.session.started": "Session has started"
+}

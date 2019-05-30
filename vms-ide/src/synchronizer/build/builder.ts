@@ -25,6 +25,7 @@ import { collectSplittedByCommas } from "../../synchronizer/common/find-files";
 import { IProjectSection, IBuildConfigSection, IBuildsSection } from "../../synchronizer/sync/sync-api";
 import { BuildsSection } from "../../synchronizer/config/sections/builds";
 import { TestExecResult } from "../../synchronizer/common/TestExecResult";
+import { JvmProject, IClassInfo } from "../../vms_jvm_debug/jvm-project";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -48,17 +49,6 @@ interface IScopeBuildData {
     shellRootConverter: VmsPathConverter;
     watcher: IDispose;
     sshWatcher: IDispose;
-}
-
-interface IJavaClassInfo {
-    className: string,          // full name
-    hasMain: boolean,
-    lines: number[],            // source lines
-}
-
-interface IJavaFileInfo {
-    fileName: string,           // source file name, without path
-    classes: IJavaClassInfo[],  // java classes in source
 }
 
 function isCommandDefault(command: string | undefined) {
@@ -159,6 +149,64 @@ export class Builder {
         }
     }
 
+    public async getClassPath(ensured: IEnsured, buildName: string) {
+
+        if (ensured.projectSection.projectType === ProjectType[ProjectType.java] ||
+            ensured.projectSection.projectType === ProjectType[ProjectType.scala] ||
+            ensured.projectSection.projectType === ProjectType[ProjectType.kotlin] ) {
+
+            // TODO: bring out into editable constants?
+            const kotlinRuntime = "/kotlin$root/lib/kotlin-runtime.jar";
+            const scalaRuntime = "/scala$root/lib/scala-library.jar";
+            let hasKotlin = false;
+            let hasScala = false;
+            
+            // project dependecies
+            let depClassPath = ensured.projectSection.addLibraries.split(",").join(":");
+            let deps = new ProjDepTree().getDepList(ensured.scope);
+            if (deps.length > 0) {
+                // first is this project
+                const depPathStart = (".." + ftpPathSeparator).repeat(ensured.projectSection.root.split(ftpPathSeparator).length);
+                for (const depPrj of deps) {
+                    const depEnsured = await ensureSettings(depPrj, this.logFn);
+                    if (depEnsured) {
+                        switch (depEnsured.projectSection.projectType) {
+                            case ProjectType[ProjectType.java]:
+                                break;
+                            case ProjectType[ProjectType.scala]:
+                                hasScala = true;
+                                break;
+                            case ProjectType[ProjectType.kotlin]:
+                                hasKotlin = true;
+                                break;
+                            default:
+                                continue;   // go to next dependency
+                        }
+                        const depPath = depPathStart + 
+                                        [depEnsured.projectSection.root,
+                                         depEnsured.projectSection.outdir,
+                                         buildName,
+                                         depEnsured.projectSection.projectName].join(ftpPathSeparator) + ".jar";
+                        if (depClassPath) {
+                            depClassPath += ":";
+                        }
+                        depClassPath += depPath;
+                    }
+                }
+            }
+            if (hasKotlin) {
+                depClassPath += ":" + kotlinRuntime;
+            }
+            if (hasScala) {
+                depClassPath += ":" + scalaRuntime;
+            }
+
+            return depClassPath;
+        }
+
+        return undefined;
+    }
+
     /**
      * 
      * @param ensured 
@@ -177,8 +225,6 @@ export class Builder {
     
         const startTime = Date.now();
 
-        const collection = new Map<string, undefined | Map<string, undefined | Set<number>>>();
-        
         const jarFile = `${ensured.projectSection.outdir}/${buildName}/${ensured.projectSection.projectName}.jar`;
         const cmdJarClasses = `jar -tf ${jarFile}`;
         const cmdJavaClassLines = `javap -cp ${jarFile} -l -p `;
@@ -204,8 +250,9 @@ export class Builder {
         let   classNames: string[] = [];
         let   javapCmd = "";
         const maxCmdLength = 1024;
-        const mainClasses = new Set<string>();
 
+        const jvmProject = new JvmProject(ensured.scope);
+        
         // combine command until its length is more than maxCmdLength
         for (const line of resultLines) {
             const matched = line.match(rgxJavaClassName);
@@ -219,37 +266,28 @@ export class Builder {
                     classNames.push(className);
                 } else {
                     // execute command and collect information
-                    await updateCollection(this.logFn);
+                    await updateJvmProject(this.logFn);
                 }
             }
         }
         // execute command and collect information if it isn't empty
-        await updateCollection(this.logFn);
+        await updateJvmProject(this.logFn);
 
-        async function updateCollection(logFn: LogFunction) {
+        async function updateJvmProject(logFn: LogFunction) {
             if (!javapCmd) {
                 return;
             }
             const result = await scopeData!.shell.execCmd(javapCmd);
             if (result && result.length > 0) {
-                let classLines: Set<number> | undefined;
-                let className: string | undefined;
+                let classInfo: IClassInfo | undefined;
                 for (const line of result) {
                     const fileMatch = line.match(rgFile);
                     if (fileMatch) {
                         // found next class
-                        let fileClasses = collection.get(fileMatch[1]);
-                        if (fileClasses === undefined) {
-                            fileClasses = new Map<string, undefined | Set<number>>();
-                            collection.set(fileMatch[1], fileClasses);
-                        }
-                        className = classNames.shift();
+                        let fileInfo = jvmProject.getFileInfo(fileMatch[1], true);
+                        const className = classNames.shift();
                         if (className) {                                   
-                            classLines = fileClasses.get(className);
-                            if (classLines === undefined) {
-                                classLines = new Set<number>();
-                                fileClasses.set(className, classLines);
-                            }
+                            classInfo = jvmProject.getClassInfo(className, fileInfo);
                         } else {
                             logFn(LogType.error, () => localize("collect.no_class_for_file", "No class for this file match: {0}", line));
                             break;
@@ -258,8 +296,8 @@ export class Builder {
                     }
                     const lineMatch = line.match(rgLine);
                     if (lineMatch) {
-                        if (classLines) {
-                            classLines.add(+lineMatch[1]);
+                        if (classInfo) {
+                            classInfo.lines.add(+lineMatch[1]);
                         } else {
                             logFn(LogType.error, () => localize("collect.no_class_for_line", "No class for this line match: {0}", line));
                             break;
@@ -267,8 +305,8 @@ export class Builder {
                     }
                     const mainMatch = line.match(rgMain);
                     if (mainMatch) {
-                        if (className) {
-                            mainClasses.add(className);
+                        if (classInfo) {
+                            classInfo.hasMain = true;
                         } else {
                             logFn(LogType.error, () => localize("collect.no_class_for_main", "No class for this main function match: {0}", line));
                         }
@@ -282,36 +320,10 @@ export class Builder {
             classNames = [];
         }
 
-        // convert
-        const javaInfo: IJavaFileInfo[] = [];
-        for(const [fileName, javaClasses] of collection) {
-            if (javaClasses !== undefined) {
-                const fileInfo: IJavaFileInfo = {
-                    fileName,
-                    classes: [],
-                };
-                for (const [className, classLines] of javaClasses) {
-                    if (classLines !== undefined) {
-                        fileInfo.classes.push({
-                            className,
-                            hasMain: mainClasses.has(className),
-                            lines: [...classLines],
-                        });
-                    }
-                }
-                javaInfo.push(fileInfo);
-            }
-        }
-
-        const content = JSON.stringify(javaInfo, null, 2);
-
-        if (ensured.configHelper.workspaceFolder) {
-            const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
-            await fs.writeFile(fileName, content);
-        }
+        await jvmProject.save();
 
         const seconds = Math.floor((Date.now() - startTime) / 1000);
-        this.logFn(LogType.information, () => `Elapsed ${seconds}, Content length is ${content.length}`);
+        this.logFn(LogType.information, () => `Elapsed ${seconds} sec.`);
 
         return true;
     }

@@ -13,7 +13,7 @@ import * as nls from "vscode-nls";
 import { VMSDebugSession } from "./debug/vms_debug";
 import { VMSNoDebugSession } from "./debug/vms_debug_run";
 import { ConfigManager } from "./ext-api/config_manager";
-import { createLogFunction } from "./log";
+import { createLogFunction } from '../config-helper/log';
 import { ModeWork, ShellSession, TypeDataMessage } from "./net/shell-session";
 import { StatusBarDebug } from "./ui/status_bar";
 import { TerminalVMS } from "./ui/terminal";

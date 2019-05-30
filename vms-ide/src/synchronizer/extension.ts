@@ -231,6 +231,10 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDescription.changeBuildName",
         () => projectDescriptionProvider.changeBuildName()) );
 
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.getCurrentScope", () => {
+        return checkScope(undefined);
+    }));
+
     return new SyncApi();
 
     /**

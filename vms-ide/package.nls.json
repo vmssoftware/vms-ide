@@ -77,5 +77,12 @@
     "synchronizer.command.collectJavaClasses.title": "Collect Java classes",
 	"vms_debug.extension.vms_c_debug": "VMS Debugger",
 	"vms_debug.extension.vms_connect": "Connect to server",
-	"vms_debug.extension.vms_terminal": "Terminal"
+	"vms_debug.extension.vms_terminal": "Terminal",
+	"vms_jvm_debug.label.description": "VMS JVM Debugger",
+	"vms_jvm_debug.classpath.description": "A ':' separated list of directories, JAR archives, and ZIP archives to search for class files.",
+	"vms_jvm_debug.class.description": "Class to execute",
+	"vms_jvm_debug.port.description": "JVM debugging port",
+	"vms_jvm_debug.arguments.description": "Arguments",
+	"vms_jvm_debug.stopOnEntry.description": "Automatically stop after launch",
+	"vms_jvm_debug.trace.description": "Enable logging of the Debug Adapter Protocol"
 }
