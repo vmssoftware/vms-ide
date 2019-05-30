@@ -52,6 +52,7 @@ interface IScopeBuildData {
 
 interface IJavaClassInfo {
     className: string,          // full name
+    hasMain: boolean,
     lines: number[],            // source lines
 }
 
@@ -184,6 +185,7 @@ export class Builder {
         const rgxJavaClassName = /^(\S*).class/;
         const rgFile = /Compiled from "(\w+\.\w+)"/;
         const rgLine = /line (\d+): (\d+)/;
+        const rgMain = /public\s+static\s+(final\s+)?void\s+main\(/;
 
         if (this.sshHelper) {
             this.sshHelper.clearPasswordCache();
@@ -202,6 +204,7 @@ export class Builder {
         let   classNames: string[] = [];
         let   javapCmd = "";
         const maxCmdLength = 1024;
+        const mainClasses = new Set<string>();
 
         // combine command until its length is more than maxCmdLength
         for (const line of resultLines) {
@@ -230,6 +233,7 @@ export class Builder {
             const result = await scopeData!.shell.execCmd(javapCmd);
             if (result && result.length > 0) {
                 let classLines: Set<number> | undefined;
+                let className: string | undefined;
                 for (const line of result) {
                     const fileMatch = line.match(rgFile);
                     if (fileMatch) {
@@ -239,7 +243,7 @@ export class Builder {
                             fileClasses = new Map<string, undefined | Set<number>>();
                             collection.set(fileMatch[1], fileClasses);
                         }
-                        const className = classNames.shift();
+                        className = classNames.shift();
                         if (className) {                                   
                             classLines = fileClasses.get(className);
                             if (classLines === undefined) {
@@ -259,6 +263,14 @@ export class Builder {
                         } else {
                             logFn(LogType.error, () => localize("collect.no_class_for_line", "No class for this line match: {0}", line));
                             break;
+                        }
+                    }
+                    const mainMatch = line.match(rgMain);
+                    if (mainMatch) {
+                        if (className) {
+                            mainClasses.add(className);
+                        } else {
+                            logFn(LogType.error, () => localize("collect.no_class_for_main", "No class for this main function match: {0}", line));
                         }
                     }
                 }
@@ -282,6 +294,7 @@ export class Builder {
                     if (classLines !== undefined) {
                         fileInfo.classes.push({
                             className,
+                            hasMain: mainClasses.has(className),
                             lines: [...classLines],
                         });
                     }

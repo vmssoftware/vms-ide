@@ -791,8 +791,6 @@
             {
                 "type": "vms_dbg",
                 "label": "%vms_debug.extension.vms_c_debug%",
-                "program": "./out/debugAdapter.js",
-                "runtime": "node",
                 "configurationAttributes": {
                     "launch": {
                         "required": [
