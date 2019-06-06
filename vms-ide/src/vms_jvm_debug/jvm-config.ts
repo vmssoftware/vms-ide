@@ -20,7 +20,9 @@ export interface IJvmLaunchRequestArguments extends DebugProtocol.LaunchRequestA
     /** automatically stop target after launch. If not specified, target does not stop. */
     stopOnEntry?: boolean;
 	/** enable logging the Debug Adapter Protocol */
-	trace?: boolean;
+    trace?: boolean;
+    /** current scope */
+    scope?: string;
 }
 
 export interface IJvmDebugConfiguration extends DebugConfiguration {

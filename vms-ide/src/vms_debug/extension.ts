@@ -17,6 +17,7 @@ import { createLogFunction } from '../config-helper/log';
 import { ModeWork, ShellSession, TypeDataMessage } from "./net/shell-session";
 import { StatusBarDebug } from "./ui/status_bar";
 import { TerminalVMS } from "./ui/terminal";
+import { RgxFromStr } from "../common/rgx-from-str";
 
 
 export enum TypeRunConfig
@@ -101,7 +102,7 @@ async function createTerminal() : Promise<void>
 							if (field in connection) {
 								value = String((<any>connection)[field]);
 							}
-							const rgxReplace = new RegExp(matchField[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+							const rgxReplace = RgxFromStr(matchField[0]);
 							commandT = commandT.replace(rgxReplace, value);
 							rgxField.lastIndex = 0;
 							matchField = rgxField.exec(commandT);
@@ -118,7 +119,7 @@ async function createTerminal() : Promise<void>
 							if (field in connection && String((<any>connection)[field])) {
 								value = matchFieldQ[2];
 							}
-							const rgxReplace = new RegExp(matchFieldQ[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+							const rgxReplace = RgxFromStr(matchFieldQ[0]);
 							commandT = commandT.replace(rgxReplace, value);
 							rgxFieldQ.lastIndex = 0;
 							matchFieldQ = rgxFieldQ.exec(commandT);

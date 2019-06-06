@@ -3,10 +3,8 @@ import * as arch from "archiver";
 import * as path from "path";
 import {Zlib} from "unzipt";
 
-import { LogFunction, ftpPathSeparator }      from "../common/main";
+import { LogFunction, ftpPathSeparator, Resolve }      from "../common/main";
 import { LogType }          from "../common/main";
-
-export type Resolve<T> = ((value?: T | PromiseLike<T> | undefined) => void);
 
 export class ZipApi {
 

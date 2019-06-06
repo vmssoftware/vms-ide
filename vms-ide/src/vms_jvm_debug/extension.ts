@@ -6,6 +6,7 @@ import { LogFunction, LogType } from '../common/main';
 import { createLogFunction } from '../config-helper/log';
 import { JvmProjectHelper } from './jvm-proj-helper';
 import { isJvmDebugConfiguration } from './jvm-config';
+import { JvmDebugSession } from './jvm-debug-session';
 
 const locale = vscode.env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -15,6 +16,7 @@ let logFn: LogFunction;
 export function activate(context: vscode.ExtensionContext) {
 
 	logFn = createLogFunction("VMS-IDE JVM Debug");
+	JvmProjectHelper.logFn = logFn;
 
 	context.subscriptions.push(vscode.commands.registerCommand('vms_jvm_debugger.fillClassName', async config => {
 		const classNames = await JvmProjectHelper.getExecutableClassNames(config.scope);
@@ -75,13 +77,14 @@ class JvmDebugAdapterDescriptorFactory implements vscode.DebugAdapterDescriptorF
 
 	createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): vscode.ProviderResult<vscode.DebugAdapterDescriptor> {
 
+		logFn(LogType.information, () => localize("msg.descr", "createDebugAdapterDescriptor: {0}", session.workspaceFolder?session.workspaceFolder.name:"no workspace"));
+
 		if (!this.server) {
 			// start listening on a random port
 			this.server = Net.createServer(socket => {
-				logFn(LogType.information, () => localize("msg.session.started", "Session has started"));
-				// const session = new MockDebugSession();
-				// session.setRunAsServer(true);
-				// session.start(<NodeJS.ReadableStream>socket, socket);
+				const newSession = new JvmDebugSession(JvmProjectHelper.logFn);
+				newSession.setRunAsServer(true);
+				newSession.start(<NodeJS.ReadableStream>socket, socket);
 			}).listen(0);
 		}
 

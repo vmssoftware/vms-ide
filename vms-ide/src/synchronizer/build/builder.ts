@@ -764,7 +764,7 @@ export class Builder {
                 depClassPath = "-cp " + depClassPath;
             }
             if (ensured.projectSection.projectType === ProjectType[ProjectType.java]) {
-                mainModuleLines.push(`    ${compiler} ${depClassPath} -d $(OUTDIR)/tmp $(OUTDIR)/src/*${extension}`);
+                mainModuleLines.push(`    ${compiler} ${depClassPath} -g -d $(OUTDIR)/tmp $(OUTDIR)/src/*${extension}`);
                 mainModuleLines.push(`    jar cf $(OUTDIR)/$(CONFIG)/$(NAME).jar -C $(OUTDIR)/tmp .`);
             } else {
                 mainModuleLines.push(`    ${compiler} ${depClassPath} -d $(OUTDIR)/$(CONFIG)/$(NAME).jar $(OUTDIR)/src/*${extension}`);

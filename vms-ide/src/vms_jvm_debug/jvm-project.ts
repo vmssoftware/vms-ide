@@ -52,6 +52,7 @@ export class JvmProject {
      * @param fileInfo file info to search in and add to if class info doesn't exist yet
      */
     public getClassInfo(className: string, fileInfo?: IFileInfo) : IClassInfo | undefined {
+        className = className.replace(/\//g, ".");
         if (fileInfo) {
             let classInfo = fileInfo.classes.get(className);
             if (!classInfo) {
