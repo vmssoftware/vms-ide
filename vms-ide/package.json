@@ -44,6 +44,10 @@
         "onLanguage:cld",
         "onLanguage:msg",
         "onLanguage:mms",
+        "onLanguage:vms_cobol",
+        "onLanguage:vms_pascal",
+        "onLanguage:vms_fortran",
+        "onLanguage:bliss",
         "onCommand:workbench.action.tasks.runTask"
     ],
     "contributes": {
@@ -120,23 +124,26 @@
                 ]
             },
             {
-                "id": "COBOL",
+                "id": "vms_cobol",
                 "extensions": [
                     ".cob"
-                ]
+                ],
+                "configuration": "cobol.language-configuration.json"
             },
             {
-                "id": "fortran",
+                "id": "vms_pascal",
+                "extensions": [
+                    ".pas"
+                ],
+                "configuration": "pascal.language-configuration.json"
+            },
+            {
+                "id": "vms_fortran",
                 "extensions": [
                     ".f77",
                     ".f90"
-                ]
-            },
-            {
-                "id": "pascal",
-                "extensions": [
-                    ".pas"
-                ]
+                ],
+                "configuration": "fortran.language-configuration.json"
             },
             {
                 "id": "c",
@@ -149,6 +156,13 @@
                 "extensions": [
                     ".cpp"
                 ]
+            },
+            {
+                "id": "bliss",
+                "extensions": [
+                    ".bli"
+                ],
+                "configuration": "bliss.language-configuration.json"
             }
         ],
         "grammars": [
@@ -166,6 +180,26 @@
                 "language": "msg",
                 "scopeName": "source.msg",
                 "path": "syntaxes/msg.tmLanguage.json"
+            },
+            {
+                "language": "vms_cobol",
+                "scopeName": "source.vms_cobol",
+                "path": "syntaxes/cobol.tmLanguage.json"
+            },
+            {
+                "language": "vms_pascal",
+                "scopeName": "source.vms_pascal",
+                "path": "syntaxes/pascal.tmLanguage"
+            },
+            {
+                "language": "vms_fortran",
+                "scopeName": "source.vms_fortran",
+                "path": "syntaxes/fortran.tmLanguage.json"
+            },
+            {
+                "language": "bliss",
+                "scopeName": "source.bliss",
+                "path": "syntaxes/bliss.tmLanguage.json"
             }
         ],
         "keybindings": [
@@ -784,13 +818,13 @@
                 "language": "basic"
             },
             {
-                "language": "COBOL"
+                "language": "vms_cobol"
             },
             {
-                "language": "fortran"
+                "language": "vms_pascal"
             },
             {
-                "language": "pascal"
+                "language": "vms_fortran"
             }
         ],
         "debuggers": [

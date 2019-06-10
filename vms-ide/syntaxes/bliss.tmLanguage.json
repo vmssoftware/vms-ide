@@ -1,0 +1,55 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json"
+    ,"name": "BLISS"
+    ,"patterns": [
+        {
+            "include": "#module"
+        }
+        ,{
+            "include": "#comment"
+        }
+    ]
+    ,"repository": {        
+        "module": {
+            "name": "bliss.module"
+            ,"begin": "(?i)module"
+            ,"beginCaptures": {
+                "0": {
+                    "name": "keyword"
+                }
+            }
+            ,"end": "(?i)eludom"
+            ,"endCaptures": {
+                "0": {
+                    "name": "keyword"
+                }
+            }
+            ,"patterns": [
+                {
+                    "include": "#comment"
+                }
+                ,{
+                    "include": "#string"
+                }        
+            ]
+        }
+        ,"string": {
+            "name": "string.quoted"
+            ,"begin": "'"
+            ,"end": "'(?=[^'])"
+            ,"patterns": [
+                {
+                    "match": "''"
+                    ,"name": "string.quoted.double"
+                }
+            ]
+        }
+        ,"comment": 
+        {
+            "name": "comment.line"
+            ,"begin": "!"
+            ,"end": "\\n"
+        }
+    }
+    ,"scopeName": "source.bliss"
+}
