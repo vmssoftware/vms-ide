@@ -43,7 +43,7 @@ export class ZipApi {
         return false;
     }
 
-    public start(file: string, logFn?: LogFunction): Promise<boolean> | undefined {
+    public start(file: string, forceLocalTime?: boolean, logFn?: LogFunction): Promise<boolean> | undefined {
         if (this.output || this.archiveResolver) {
             return undefined;
         }
@@ -77,6 +77,7 @@ export class ZipApi {
         });
 
         this.archive = arch.create("zip", {
+            forceLocalTime,
             zlib: { level: 9 }
         });
         

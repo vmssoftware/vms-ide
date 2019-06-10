@@ -71,6 +71,7 @@
     "synchronizer.properties.synchronize.setTimeByShell.description": "Do or not set file time by shell",
     "synchronizer.properties.synchronize.unzipCmd.description": "Command to unzip archive on VMS side",
     "synchronizer.properties.synchronize.preferZip.description": "Prefer ZIP to upload source",
+    "synchronizer.properties.synchronize.forceLocalTime.description": "Force local time for ZIP",
     "synchronizer.properties.synchronize.purge.description": "Execute PURGE command after uploding",
     "synchronizer.properties.builds.current.description": "Current build configuration",
     "synchronizer.properties.builds.configurations.description": "Array of build configurations",

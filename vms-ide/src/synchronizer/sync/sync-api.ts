@@ -75,6 +75,7 @@ export interface ISynchronizeSection  {
     setTimeByShell: boolean;
     unzipCmd: string;
     preferZip: boolean;
+    forceLocalTime: boolean;
     purge: boolean;
 }
 

@@ -737,6 +737,12 @@
                     "default": false,
                     "description": "%synchronizer.properties.synchronize.preferZip.description%"
                 },
+                "vmssoftware.synchronizer.synchronize.forceLocalTime": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%synchronizer.properties.synchronize.forceLocalTime.description%"
+                },
                 "vmssoftware.synchronizer.synchronize.purge": {
                     "scope": "resource",
                     "type": "boolean",
