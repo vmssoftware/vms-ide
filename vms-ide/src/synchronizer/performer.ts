@@ -25,6 +25,7 @@ export type AsyncAction = (scope: string | undefined, logFn: LogFunction, param?
 
 export type ActionType = 
       "synchronize" 
+    | "quicksync"
     | "upload"
     | "build" 
     | "rebuild" 
@@ -90,6 +91,45 @@ export const actions: IPerform[] = [
         fail: localize("synchronizing.fail", "Synchronizing failed"),
         status: localize("synchronizing.status", "$(sync) Synchronizing..."),
         success: localize("synchronizing.success", "Synchronizing ok"),
+    },
+    {
+        // quick synchronize (!) simultaneously
+        actionFunc: async (scope: string | undefined, logFn: LogFunction) => {
+            let scopes: string[] = [];
+            if (!scope) {
+                if (workspace.workspaceFolders) {
+                    scopes = workspace.workspaceFolders.map((wf) => wf.name);
+                }
+            } else {
+                scopes = [scope];
+            }
+            const wait: Array<Promise<boolean>> = [];
+            for (const curScope of scopes) {
+                wait.push( (async () => {
+                    const ensured = await ensureSettings(curScope, logFn);
+                    if (ensured) {
+                        const syncronizer = Synchronizer.acquire(logFn);
+                        return syncronizer.quickSync(ensured)
+                            .then(async (result) => {
+                                if (result) {
+                                    ProjectState.acquire().setSynchronized(curScope, true);
+                                }
+                                return result;
+                            });
+                    } else {
+                        logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", curScope));
+                        return false;
+                    }
+                })() );
+            }
+            return Promise.all(wait).then((all) => {
+                return all.reduce((res, cur) => res && cur, true);
+            });
+        },
+        actionName: "quicksync",
+        fail: localize("quicksync.fail", "Quick synchronizing failed"),
+        status: localize("quicksync.status", "$(sync) Quick synchronizing..."),
+        success: localize("quicksync.success", "Quick synchronizing ok"),
     },
     {
         // build

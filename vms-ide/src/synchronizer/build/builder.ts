@@ -353,50 +353,31 @@ export class Builder {
         }
         this.enableRemote();
 
-        // test MMS is created for "default"
         if (isCommandDefault(buildCfg.command)) {
+            // test MMS is created for "default"
             if (!(await this.ensureMmsCreated(scopeData))) {
                 this.logFn(LogType.error, () => localize("create.mms.first", "Please first (re)create MMS."));
                 return false;
             }
-        }
-        if (ensured.configHelper.workspaceFolder) {
-            // upload modified only list
-            const wsPath = ensured.configHelper.workspaceFolder.uri.fsPath;
-            const wsName = ensured.configHelper.workspaceFolder.name;
-            const modifiedList = ProjectState.acquire().getModifiedList(wsName);
-            if (modifiedList.length > 0) {
-                // do smart clean only for "default"
-                if (isCommandDefault(buildCfg.command)) {
-                    await this.smartClean(scopeData, modifiedList, buildName);
-                }
-                if (this.stopIssued) {
-                    Synchronizer.acquire().disableRemote();
-                } else {
-                    Synchronizer.acquire().enableRemote();
-                }
-                if (await Synchronizer.acquire().uploadFiles(ensured,
-                        // remove unaccessible files, no async functions!
-                        modifiedList.filter(file => {
-                            try { 
-                                fs.accessSync(path.join(wsPath, file), R_OK);
-                            } catch(ex) {
-                                return false;
-                            }
-                            return true;
-                        }).map(file => {    // to UNIX format
-                            return file.replace(/[/\\]/g, ftpPathSeparator);
-                        }))) {
-                    ProjectState.acquire().clearModified(wsName);
-                }
-                if (scopeData.ensured.synchronizeSection.purge) {
-                    await scopeData.shell.execCmd("purge [...]");
-                }                    
+            // smart clean
+            if (ensured.scope) {
+                const list = ProjectState.acquire().getList(ensured.scope);
+                await this.smartClean(scopeData, list, buildName);
             }
         }
 
-        const result = await this.runRemoteBuild(scopeData, buildCfg);
+        let result = await Synchronizer.acquire().quickSync(ensured);
+
+        if (result && scopeData.ensured.synchronizeSection.purge) {
+            await scopeData.shell.execCmd("purge [...]");
+        }                    
+
+        if (!(await this.runRemoteBuild(scopeData, buildCfg))) {
+            result = false;
+        }
+
         this.decideDispose(scopeData);
+
         return result;
     }
 

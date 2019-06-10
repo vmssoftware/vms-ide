@@ -75,6 +75,10 @@ export class VmsSftpClient extends EventEmitter implements ISftpClient {
         return this.sftp.setStat(this.fixLocalName(file), stat);
     }
 
+    public deleteFile(file: string): Promise<boolean> {
+        return this.sftp.deleteFile(this.fixLocalName(file));
+    }
+
     public async readDirectory(directory: string): Promise<IFileEntry[] | undefined> {
         let list = await this.sftp.readDirectory(directory);
         if (list) {

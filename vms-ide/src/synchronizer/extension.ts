@@ -347,9 +347,9 @@ function testModifySync(scope: string, filePath: string, includes: string[], opt
     const list = micromatch([filePath], includes, options);
     if (list.length) {
         if (onDelete) {
-            ProjectState.acquire().removeModified(scope, filePath);
+            ProjectState.acquire().setDeleted(scope, filePath);
         } else {
-            ProjectState.acquire().addModified(scope, filePath);
+            ProjectState.acquire().setModified(scope, filePath);
         }
     }
 }

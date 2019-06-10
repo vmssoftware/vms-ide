@@ -71,6 +71,7 @@
 	"synchronizer.properties.synchronize.setTimeByShell.description": "Использовать shell для установки даты файла",
 	"synchronizer.properties.synchronize.unzipCmd.description": "Команда распаковки на строне VMS",
 	"synchronizer.properties.synchronize.preferZip.description": "Использовать ZIP для выгрузки исходников",
+	"synchronizer.properties.synchronize.forceLocalTime.description": "Force local time for ZIP",
 	"synchronizer.properties.synchronize.purge.description": "Выполнять команду PURGE после выгрузки исходников",
 	"synchronizer.properties.builds.current.description": "Current build configuration",
 	"synchronizer.properties.builds.configurations.description": "Array of build configurations",

@@ -3,6 +3,9 @@
     "output.download_manually": "Удалённый файл {0} новее, проверьте и загрузите его самостоятельно",
     "output.edit_count": "Отредактируйте и сохраните {0} файл(ов) самостоятельно",
     "debug.retcode": "Синхронизация вернула: {0}",
+    "debug.quick.delete": "Delete remote file failed: {0}",
+    "quick.failed": "Quick synchronize failed. Please execute full synchronization or uploading.",
+    "debug.quick.retcode": "Quick synchronize:  {0}",
     "debug.upload.retcode": "Выгрузка исходников retCode: {0}",
     "debug.download_listing.error": "Ошибка при загрузке листинга {0}",
     "debug.download.error": "Ошибка при загрузке {0}",
@@ -14,10 +17,10 @@
     "debug.remote_is_newer": "Удалённый файл {0} новее на {1} => загрузить",
     "debug.the_same": "Файлы {0} одинаковы",
     "debug.no_local": "Нет локального файла {0} => загрузить",
-    "debug.create_remote": "Создание удалённого источника",
-    "debug.create_local": "Создание локального источника",
     "debug.cannot_get_ssh_helper": "Не удалось загрузить ssh-helper API",
     "output.install_ssh": "Установите плагин 'vmssoftware.ssh-helper'",
     "message.action_success": "{0} удачно: {1}",
-    "message.action_failed": "{0} ошибка: {1}"
+    "message.action_failed": "{0} ошибка: {1}",
+    "debug.create_remote": "Создание удалённого источника",
+    "debug.create_local": "Создание локального источника"
 }
