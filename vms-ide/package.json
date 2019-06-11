@@ -285,10 +285,6 @@
                     "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
-                    "command": "vmssoftware.synchronizer.cleanProject",
-                    "when": "!vmssoftware.synchronizer.isInAction"
-                },
-                {
                     "command": "vmssoftware.synchronizer.downloadHeaders",
                     "when": "!vmssoftware.synchronizer.isInAction"
                 }

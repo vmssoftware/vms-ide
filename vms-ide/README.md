@@ -35,6 +35,8 @@
 | `VMS-IDE: Create MMS` | Create default MMS |
 | `VMS-IDE: Build on VMS` | Build project on OpenVMS with its dependencies |
 | `VMS-IDE: Re-build on VMS` | Rebuild project on OpenVMS with its dependencies |
+| `VMS-IDE: Build only this project` | Build only the selected project on OpenVMS (`Ctrl+Alt+F7`)|
+| `VMS-IDE: Re-build only this project` | Rebuild only the selected project on OpenVMS |
 | `VMS-IDE: Clean project` | Clean project, delete files from output folder |
 | `VMS-IDE: Synchronize project file with VMS` | Synchronize project files with VMS |
 | `VMS-IDE: Force synchronized status` | Force synchronized status |
@@ -42,6 +44,8 @@
 | `VMS-IDE: Upload all via Zip` | Upload project files using Zip |
 | `VMS-IDE: Download system headers` | Download system headers from VMS |
 | `VMS-IDE: Terminal` | Open VMS terminal (`Ctrl+F6`)|
+| `VMS-IDE: Upload` | Upload project files |
+| `VMS-IDE: Quick synchronization` | Execute quick synchronization |
 
 ## Settings
 
