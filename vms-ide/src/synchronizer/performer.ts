@@ -109,13 +109,7 @@ export const actions: IPerform[] = [
                     const ensured = await ensureSettings(curScope, logFn);
                     if (ensured) {
                         const syncronizer = Synchronizer.acquire(logFn);
-                        return syncronizer.quickSync(ensured)
-                            .then(async (result) => {
-                                if (result) {
-                                    ProjectState.acquire().setSynchronized(curScope, true);
-                                }
-                                return result;
-                            });
+                        return syncronizer.quickSync(ensured);
                     } else {
                         logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", curScope));
                         return false;

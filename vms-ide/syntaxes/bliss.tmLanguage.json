@@ -154,7 +154,7 @@
             ]
         }
         ,"decimal-literal": {
-            "match": "(\\+|\\-)?\\s*[0-9]+"
+            "match": "(?i)(\\+|\\-)?\\s*(?<![a-z$_])[0-9]+"
             ,"name": "constant.numeric.dec"
         }
         ,"binary-literal": {

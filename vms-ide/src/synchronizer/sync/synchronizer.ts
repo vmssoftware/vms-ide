@@ -1,10 +1,9 @@
 import path from "path";
 import * as vscode from "vscode";
-import fs from "fs-extra";
 import * as nls from "vscode-nls";
 
 import { GetSshHelperType } from "../../ext-api/ext-api";
-import { Barrier, Delay } from "../../common/main";
+import { Barrier, Delay, printLike } from "../../common/main";
 import { LogFunction, LogType } from "../../common/main";
 import { ftpPathSeparator } from "../../common/main";
 import { IFileEntry } from "../../common/main";
@@ -17,9 +16,7 @@ import { IProgress, ISource } from "./source";
 import { VmsSftpClient } from "./vms-sftp-client";
 import { VmsShellSource } from "./vms-shell-source";
 import { ProjectState } from "../dep-tree/proj-state";
-import { ISshShell } from "../../ssh-helper/api";
-import { R_OK } from "constants";
-import { Builder } from "../build/builder";
+import { VmsPathConverter } from "../vms/vms-path-converter";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -32,6 +29,8 @@ interface IScopeSyncData {
     watcher: IDispose;
     sshWatcher: IDispose;
 }
+
+const purgeCmd = printLike`purge [${"directory"}...]`;
 
 export class Synchronizer {
 
@@ -210,10 +209,13 @@ export class Synchronizer {
         
             // delete deleted files
             const deletedList = ProjectState.acquire().getDeletedList(ensured.scope);
-            for (const fileToDelete of deletedList) {
-                if (!(await scopeData.remoteSource.deleteFile(fileToDelete.replace(/[/\\]/g, ftpPathSeparator)))) {
+            for (let fileToDelete of deletedList) {
+                fileToDelete = fileToDelete.replace(/[/\\]/g, ftpPathSeparator);
+                if (!(await scopeData.remoteSource.deleteFile(fileToDelete))) {
                     this.logFn(LogType.error, () => localize("debug.quick.delete", "Delete remote file failed: {0}", fileToDelete));
                     retCode = false;
+                } else {
+                    this.logFn(LogType.information, () => localize("debug.quick.delete.ok", "Remote file deleted: {0}", fileToDelete));
                 }
             }
 
@@ -228,6 +230,16 @@ export class Synchronizer {
             }
             if (!(await this.uploadFiles(ensured, uploadList))) {
                 retCode = false;
+            }
+
+            // this part is optional so do not return error if it occurs
+            if (ensured.synchronizeSection.purge && this.sshHelper) {
+                const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
+                const shell = await this.sshHelper.getDefaultVmsShell(ensured.scope);
+                if (shell) {
+                    await shell.execCmd(purgeCmd(converter.bareDirectory));
+                    shell.dispose();
+                }
             }
 
             // clean list in any case

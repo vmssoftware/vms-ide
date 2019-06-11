@@ -4,6 +4,7 @@
     "output.edit_count": "Отредактируйте и сохраните {0} файл(ов) самостоятельно",
     "debug.retcode": "Синхронизация вернула: {0}",
     "debug.quick.delete": "Delete remote file failed: {0}",
+    "debug.quick.delete.ok": "Remote file deleted: {0}",
     "quick.failed": "Quick synchronize failed. Please execute full synchronization or uploading.",
     "debug.quick.retcode": "Quick synchronize:  {0}",
     "debug.upload.retcode": "Выгрузка исходников retCode: {0}",

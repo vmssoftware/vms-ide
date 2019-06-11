@@ -111,6 +111,8 @@ export class SftpClient extends SshClient {
                     return !this.sftp.unlink(file, (err) => {
                         if (err) {
                             this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
+                        } else {
+                            fileDeleted = true;
                         }
                         complete.release();
                     });

@@ -121,6 +121,18 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.quickSync", async (scope?: string) => {
+        scope = checkScope(scope);
+        return workspace.saveAll(true)
+            .then(async (saved) => {
+                if (saved) {
+                    await Delay(500);
+                    return Perform("quicksync", scope, logFn);
+                }
+                return saved;
+            });
+    }));
+
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope?: string, buildName?: string) => {
         scope = checkScope(scope);
         return Perform("clean", scope, logFn, buildName);
