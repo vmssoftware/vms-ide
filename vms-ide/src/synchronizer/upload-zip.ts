@@ -37,7 +37,7 @@ export class UploadZip {
             const localPath = ensured.configHelper.workspaceFolder.uri.fsPath;
             const zipFileName = ensured.projectSection.projectName + ".zip";
             const zipFilePath = path.join(localPath, zipFileName);
-            const zipFinished = zipApi.start(zipFilePath);
+            const zipFinished = zipApi.start(zipFilePath, ensured.synchronizeSection.forceLocalTime);
             if (!zipFinished) {
                 this.logFn(LogType.error, () => localize("zip.cannot_start", "Cannot start Zip."));
                 return false;

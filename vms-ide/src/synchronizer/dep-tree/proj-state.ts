@@ -10,10 +10,15 @@ export enum SourceState {
     modified,
 }
 
+enum EFileState {
+    modified,
+    deleted,
+};
+
 export interface IProjState {
     isBuilt: Map<string, boolean>;
     isSync: boolean;
-    modifiedList: Map<string, boolean>;
+    modifiedList: Map<string, EFileState>;
 }
 
 export class ProjectState {
@@ -29,7 +34,7 @@ export class ProjectState {
 
     private static instance?: ProjectState;
 
-    private states!: Map<string, IProjState>;
+    private projStates!: Map<string, IProjState>;
 
     public logFn: LogFunction;
 
@@ -43,7 +48,7 @@ export class ProjectState {
     }
 
     public create() {
-        this.states = new Map();
+        this.projStates = new Map();
         if (vscode.workspace.workspaceFolders) {
             for (const folder of vscode.workspace.workspaceFolders) {
                 this.addFolder(folder);
@@ -52,7 +57,7 @@ export class ProjectState {
     }
 
     public addFolder(folder: vscode.WorkspaceFolder) {
-        this.states.set(folder.name, {
+        this.projStates.set(folder.name, {
             isBuilt: new Map(),
             isSync: false,
             modifiedList: new Map(),
@@ -60,10 +65,10 @@ export class ProjectState {
     }
 
     public sourceState(projectName: string): SourceState {
-        const state = this.states.get(projectName);
-        if (state) {
-            if (state.isSync === true) {
-                if (state.modifiedList.size === 0) {
+        const projState = this.projStates.get(projectName);
+        if (projState) {
+            if (projState.isSync === true) {
+                if (projState.modifiedList.size === 0) {
                     return SourceState.synchronized;
                 }
                 return SourceState.modified;
@@ -73,36 +78,63 @@ export class ProjectState {
         return SourceState.unknown;
     }
 
-    public addModified(projectName: string, file: string) {
-        const state = this.states.get(projectName);
-        if (state) {
-            state.modifiedList.set(file, true);
-            state.isBuilt.clear();
+    public setModified(projectName: string, file: string) {
+        const projState = this.projStates.get(projectName);
+        if (projState) {
+            projState.modifiedList.set(file, EFileState.modified);
+            projState.isBuilt.clear();
             this.updateDescription();
         }
     }
 
-    public removeModified(projectName: string, file: string) {
-        const state = this.states.get(projectName);
-        if (state) {
-            state.modifiedList.delete(file);
+    public setDeleted(projectName: string, file: string) {
+        const projState = this.projStates.get(projectName);
+        if (projState) {
+            projState.modifiedList.set(file, EFileState.deleted);
+            projState.isBuilt.clear();
             this.updateDescription();
         }
     }
 
-    public clearModified(projectName: string) {
-        const state = this.states.get(projectName);
-        if (state) {
-            state.modifiedList.clear();
+    public clearList(projectName: string) {
+        const projState = this.projStates.get(projectName);
+        if (projState) {
+            projState.modifiedList.clear();
             this.updateDescription();
         }
+    }
+
+    public getList(projectName: string) {
+        const list: string[] = [];
+        const projState = this.projStates.get(projectName);
+        if (projState) {
+            list.push(...projState.modifiedList.keys());
+        }
+        return list;
     }
 
     public getModifiedList(projectName: string) {
         const list: string[] = [];
-        const state = this.states.get(projectName);
-        if (state) {
-            list.push(...state.modifiedList.keys());
+        const projState = this.projStates.get(projectName);
+        if (projState) {
+            for (const [file, fileState] of projState.modifiedList) {
+                if (fileState === EFileState.modified) {
+                    list.push(file);
+                }
+            }
+        }
+        return list;
+    }
+
+    public getDeletedList(projectName: string) {
+        const list: string[] = [];
+        const projState = this.projStates.get(projectName);
+        if (projState) {
+            for (const [file, fileState] of projState.modifiedList) {
+                if (fileState === EFileState.deleted) {
+                    list.push(file);
+                }
+            }
         }
         return list;
     }
@@ -121,10 +153,10 @@ export class ProjectState {
             if (projectName) {
                 projects.push(projectName);
             } else {
-                projects.push(...this.states.keys());
+                projects.push(...this.projStates.keys());
             }
             for (const currentProject of projects) {
-                const state = this.states.get(currentProject);
+                const state = this.projStates.get(currentProject);
                 if (state) {
                     state.modifiedList.clear(); // clear list because it may be invalid (after configuration changes)
                     if (status) {
@@ -134,7 +166,7 @@ export class ProjectState {
                         state.isBuilt.clear();
                         const projDep = new ProjDepTree();
                         for (const dep of projDep.getMasterList(projectName)) {
-                            const depState = this.states.get(dep);
+                            const depState = this.projStates.get(dep);
                             if (depState) {
                                 depState.isBuilt.clear();
                             }
@@ -149,7 +181,7 @@ export class ProjectState {
     }
 
     public isBuilt(projectName: string, buildName: string) {
-        const state = this.states.get(projectName);
+        const state = this.projStates.get(projectName);
         if (state) {
             const buildState = state.isBuilt.get(buildName.trim().toUpperCase());
             return !!buildState;
@@ -163,11 +195,11 @@ export class ProjectState {
         if (projectName) {
             projects.push(projectName);
         } else {
-            projects.push(...this.states.keys());
+            projects.push(...this.projStates.keys());
         }
         let retCode = true;
         for (const currentProject of projects) {
-            const state = this.states.get(currentProject);
+            const state = this.projStates.get(currentProject);
             if (state) {
                 state.isBuilt.set(buildName.trim().toUpperCase(), status);
             } else {

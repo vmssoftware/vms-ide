@@ -25,6 +25,7 @@ import { collectSplittedByCommas } from "../../synchronizer/common/find-files";
 import { IProjectSection, IBuildConfigSection, IBuildsSection } from "../../synchronizer/sync/sync-api";
 import { BuildsSection } from "../../synchronizer/config/sections/builds";
 import { TestExecResult } from "../../synchronizer/common/TestExecResult";
+import { JvmProject, IClassInfo } from "../../vms_jvm_debug/jvm-project";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -48,16 +49,6 @@ interface IScopeBuildData {
     shellRootConverter: VmsPathConverter;
     watcher: IDispose;
     sshWatcher: IDispose;
-}
-
-interface IJavaClassInfo {
-    className: string,          // full name
-    lines: number[],            // source lines
-}
-
-interface IJavaFileInfo {
-    fileName: string,           // source file name, without path
-    classes: IJavaClassInfo[],  // java classes in source
 }
 
 function isCommandDefault(command: string | undefined) {
@@ -158,6 +149,64 @@ export class Builder {
         }
     }
 
+    public async getClassPath(ensured: IEnsured, buildName: string) {
+
+        if (ensured.projectSection.projectType === ProjectType[ProjectType.java] ||
+            ensured.projectSection.projectType === ProjectType[ProjectType.scala] ||
+            ensured.projectSection.projectType === ProjectType[ProjectType.kotlin] ) {
+
+            // TODO: bring out into editable constants?
+            const kotlinRuntime = "/kotlin$root/lib/kotlin-runtime.jar";
+            const scalaRuntime = "/scala$root/lib/scala-library.jar";
+            let hasKotlin = false;
+            let hasScala = false;
+            
+            // project dependecies
+            let depClassPath = ensured.projectSection.addLibraries.split(",").join(":");
+            let deps = new ProjDepTree().getDepList(ensured.scope);
+            if (deps.length > 0) {
+                // first is this project
+                const depPathStart = (".." + ftpPathSeparator).repeat(ensured.projectSection.root.split(ftpPathSeparator).length);
+                for (const depPrj of deps) {
+                    const depEnsured = await ensureSettings(depPrj, this.logFn);
+                    if (depEnsured) {
+                        switch (depEnsured.projectSection.projectType) {
+                            case ProjectType[ProjectType.java]:
+                                break;
+                            case ProjectType[ProjectType.scala]:
+                                hasScala = true;
+                                break;
+                            case ProjectType[ProjectType.kotlin]:
+                                hasKotlin = true;
+                                break;
+                            default:
+                                continue;   // go to next dependency
+                        }
+                        const depPath = depPathStart + 
+                                        [depEnsured.projectSection.root,
+                                         depEnsured.projectSection.outdir,
+                                         buildName,
+                                         depEnsured.projectSection.projectName].join(ftpPathSeparator) + ".jar";
+                        if (depClassPath) {
+                            depClassPath += ":";
+                        }
+                        depClassPath += depPath;
+                    }
+                }
+            }
+            if (hasKotlin) {
+                depClassPath += ":" + kotlinRuntime;
+            }
+            if (hasScala) {
+                depClassPath += ":" + scalaRuntime;
+            }
+
+            return depClassPath;
+        }
+
+        return undefined;
+    }
+
     /**
      * 
      * @param ensured 
@@ -176,14 +225,13 @@ export class Builder {
     
         const startTime = Date.now();
 
-        const collection = new Map<string, undefined | Map<string, undefined | Set<number>>>();
-        
         const jarFile = `${ensured.projectSection.outdir}/${buildName}/${ensured.projectSection.projectName}.jar`;
         const cmdJarClasses = `jar -tf ${jarFile}`;
         const cmdJavaClassLines = `javap -cp ${jarFile} -l -p `;
         const rgxJavaClassName = /^(\S*).class/;
         const rgFile = /Compiled from "(\w+\.\w+)"/;
         const rgLine = /line (\d+): (\d+)/;
+        const rgMain = /public\s+static\s+(final\s+)?void\s+main\(/;
 
         if (this.sshHelper) {
             this.sshHelper.clearPasswordCache();
@@ -199,64 +247,83 @@ export class Builder {
             return false;
         }
 
+        let   classNames: string[] = [];
+        let   javapCmd = "";
+        const maxCmdLength = 1024;
+
+        const jvmProject = new JvmProject(ensured.scope);
+        
+        // combine command until its length is more than maxCmdLength
         for (const line of resultLines) {
             const matched = line.match(rgxJavaClassName);
             if (matched) {
                 const className = matched[1];
-                const result = await scopeData.shell.execCmd(cmdJavaClassLines + className);
-                if (result && result.length > 0) {
-                    const fileMatch = result[0].match(rgFile);
+                if (javapCmd === "") {
+                    javapCmd = cmdJavaClassLines;
+                }
+                if (javapCmd.length + className.length + 1 < maxCmdLength ) {
+                    javapCmd += " " + className;
+                    classNames.push(className);
+                } else {
+                    // execute command and collect information
+                    await updateJvmProject(this.logFn);
+                }
+            }
+        }
+        // execute command and collect information if it isn't empty
+        await updateJvmProject(this.logFn);
+
+        async function updateJvmProject(logFn: LogFunction) {
+            if (!javapCmd) {
+                return;
+            }
+            const result = await scopeData!.shell.execCmd(javapCmd);
+            if (result && result.length > 0) {
+                let classInfo: IClassInfo | undefined;
+                for (const line of result) {
+                    const fileMatch = line.match(rgFile);
                     if (fileMatch) {
-                        let fileClasses = collection.get(fileMatch[1]);
-                        if (fileClasses === undefined) {
-                            fileClasses = new Map<string, undefined | Set<number>>();
-                            collection.set(fileMatch[1], fileClasses);
+                        // found next class
+                        let fileInfo = jvmProject.getFileInfo(fileMatch[1], true);
+                        const className = classNames.shift();
+                        if (className) {                                   
+                            classInfo = jvmProject.getClassInfo(className, fileInfo);
+                        } else {
+                            logFn(LogType.error, () => localize("collect.no_class_for_file", "No class for this file match: {0}", line));
+                            break;
                         }
-                        let classLines = fileClasses.get(className);
-                        if (classLines === undefined) {
-                            classLines = new Set<number>();
-                            fileClasses.set(className, classLines);
+                        continue;
+                    }
+                    const lineMatch = line.match(rgLine);
+                    if (lineMatch) {
+                        if (classInfo) {
+                            classInfo.lines.add(+lineMatch[1]);
+                        } else {
+                            logFn(LogType.error, () => localize("collect.no_class_for_line", "No class for this line match: {0}", line));
+                            break;
                         }
-                        for (const line of result) {
-                            const lineMatch = line.match(rgLine);
-                            if (lineMatch) {
-                                classLines.add(+lineMatch[1]);
-                            }
+                    }
+                    const mainMatch = line.match(rgMain);
+                    if (mainMatch) {
+                        if (classInfo) {
+                            classInfo.hasMain = true;
+                        } else {
+                            logFn(LogType.error, () => localize("collect.no_class_for_main", "No class for this main function match: {0}", line));
                         }
                     }
                 }
             }
-        }
-
-        // convert
-        const javaInfo: IJavaFileInfo[] = [];
-        for(const [fileName, javaClasses] of collection) {
-            if (javaClasses !== undefined) {
-                const fileInfo: IJavaFileInfo = {
-                    fileName,
-                    classes: [],
-                };
-                for (const [className, classLines] of javaClasses) {
-                    if (classLines !== undefined) {
-                        fileInfo.classes.push({
-                            className,
-                            lines: [...classLines],
-                        });
-                    }
-                }
-                javaInfo.push(fileInfo);
+            if (classNames.length > 0) {
+                logFn(LogType.error, () => localize("collect.no_info", "No info for classes: {0}", classNames.join(", ")));
             }
+            javapCmd = "";
+            classNames = [];
         }
 
-        const content = JSON.stringify(javaInfo, null, 2);
-
-        if (ensured.configHelper.workspaceFolder) {
-            const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
-            await fs.writeFile(fileName, content);
-        }
+        await jvmProject.save();
 
         const seconds = Math.floor((Date.now() - startTime) / 1000);
-        this.logFn(LogType.information, () => `Elapsed ${seconds}, Content length is ${content.length}`);
+        this.logFn(LogType.information, () => `Elapsed ${seconds} sec.`);
 
         return true;
     }
@@ -286,50 +353,31 @@ export class Builder {
         }
         this.enableRemote();
 
-        // test MMS is created for "default"
         if (isCommandDefault(buildCfg.command)) {
+            // test MMS is created for "default"
             if (!(await this.ensureMmsCreated(scopeData))) {
                 this.logFn(LogType.error, () => localize("create.mms.first", "Please first (re)create MMS."));
                 return false;
             }
-        }
-        if (ensured.configHelper.workspaceFolder) {
-            // upload modified only list
-            const wsPath = ensured.configHelper.workspaceFolder.uri.fsPath;
-            const wsName = ensured.configHelper.workspaceFolder.name;
-            const modifiedList = ProjectState.acquire().getModifiedList(wsName);
-            if (modifiedList.length > 0) {
-                // do smart clean only for "default"
-                if (isCommandDefault(buildCfg.command)) {
-                    await this.smartClean(scopeData, modifiedList, buildName);
-                }
-                if (this.stopIssued) {
-                    Synchronizer.acquire().disableRemote();
-                } else {
-                    Synchronizer.acquire().enableRemote();
-                }
-                if (await Synchronizer.acquire().uploadFiles(ensured,
-                        // remove unaccessible files, no async functions!
-                        modifiedList.filter(file => {
-                            try { 
-                                fs.accessSync(path.join(wsPath, file), R_OK);
-                            } catch(ex) {
-                                return false;
-                            }
-                            return true;
-                        }).map(file => {    // to UNIX format
-                            return file.replace(/[/\\]/g, ftpPathSeparator);
-                        }))) {
-                    ProjectState.acquire().clearModified(wsName);
-                }
-                if (scopeData.ensured.synchronizeSection.purge) {
-                    await scopeData.shell.execCmd("purge [...]");
-                }                    
+            // smart clean
+            if (ensured.scope) {
+                const list = ProjectState.acquire().getList(ensured.scope);
+                await this.smartClean(scopeData, list, buildName);
             }
         }
 
-        const result = await this.runRemoteBuild(scopeData, buildCfg);
+        let result = await Synchronizer.acquire().quickSync(ensured);
+
+        if (result && scopeData.ensured.synchronizeSection.purge) {
+            await scopeData.shell.execCmd("purge [...]");
+        }                    
+
+        if (!(await this.runRemoteBuild(scopeData, buildCfg))) {
+            result = false;
+        }
+
         this.decideDispose(scopeData);
+
         return result;
     }
 
@@ -697,7 +745,7 @@ export class Builder {
                 depClassPath = "-cp " + depClassPath;
             }
             if (ensured.projectSection.projectType === ProjectType[ProjectType.java]) {
-                mainModuleLines.push(`    ${compiler} ${depClassPath} -d $(OUTDIR)/tmp $(OUTDIR)/src/*${extension}`);
+                mainModuleLines.push(`    ${compiler} ${depClassPath} -g -d $(OUTDIR)/tmp $(OUTDIR)/src/*${extension}`);
                 mainModuleLines.push(`    jar cf $(OUTDIR)/$(CONFIG)/$(NAME).jar -C $(OUTDIR)/tmp .`);
             } else {
                 mainModuleLines.push(`    ${compiler} ${depClassPath} -d $(OUTDIR)/$(CONFIG)/$(NAME).jar $(OUTDIR)/src/*${extension}`);
@@ -1105,7 +1153,7 @@ export class Builder {
             if (!sshHelperType) {
                 this.logFn(LogType.debug, () => localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
                 this.logFn(LogType.error, () => localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
-                return false;
+                return undefined;
             }
             this.sshHelper = new sshHelperType(this.logFn);
         }

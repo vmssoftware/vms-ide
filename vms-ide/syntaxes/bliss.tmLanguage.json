@@ -1,0 +1,471 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json"
+    ,"name": "BLISS"
+    ,"patterns": [
+        {
+            "include": "#module"
+        }
+        ,{
+            "include": "#comment"
+        }
+    ]
+    ,"repository": {        
+        "module": {
+            "name": "bliss.module"
+            ,"begin": "(?i)MODULE"
+            ,"beginCaptures": {
+                "0": {
+                    "name": "keyword"
+                }
+            }
+            ,"end": "(?i)ELUDOM"
+            ,"endCaptures": {
+                "0": {
+                    "name": "keyword"
+                }
+            }
+            ,"patterns": [
+                {
+                    "include": "#comment"
+                }
+                ,{
+                    "include": "#test-kill"
+                }        
+            ]
+        }
+        ,"test-kill": {
+            "patterns": [
+                {
+                    "include": "#string-literal"
+                }        
+                ,{
+                    "include": "#numeric-literal"
+                }
+                ,{
+                    "include": "#plit"
+                }
+            ]
+        }
+        ,"string-literal": {
+            "name": "string.quoted"
+            ,"begin": "(?i)(%(ASCII|ASCIZ|ASCIC|ASCID|RAD50_11|RAD50_10|SIXBIT|P))?\\s*'"
+            ,"end": "'(?=[^'])"
+            ,"patterns": [
+                {
+                    "match": "''"
+                    ,"name": "string.quoted.double"
+                }
+            ]
+        }
+        ,"comment": {
+            "patterns": [
+                {
+                    "include": "#line-comment"
+                }
+                ,{
+                    "include": "#block-comment"
+                }
+            ]
+        }
+        ,"line-comment": {
+            "name": "comment.line"
+            ,"begin": "!"
+            ,"end": "\\n"
+        }
+        ,"block-comment": {
+            "name": "comment.block"
+            ,"begin": "%\\("
+            ,"end": "\\)%"
+        }
+        ,"allocation-unit": {
+            "name": "bliss.allocation.unit"
+            ,"match": "(?i)LONG|WORD|BYTE"
+            ,"captures": {
+                "0": {
+                    "name": "keyword.control"
+                }
+            }
+        }
+        ,"extension-attribute": {
+            "name": "bliss.extension.attribute"
+            ,"match": "(?i)UNSIGNED|SIGNED"
+        }
+        ,"expression": {
+            "patterns": [
+                {
+                    "include": "#primary"
+                }
+                ,{
+                    "include": "#operator-expression"
+                }
+                ,{
+                    "include": "#executable-function"
+                }
+                ,{
+                    "include": "#control-expression"
+                }
+            ]
+        }
+        ,"primary": {
+            "patterns": [
+                {
+                    "include": "#numeric-literal"
+                }
+                ,{
+                    "include": "#string-literal"
+                }
+                ,{
+                    "include": "#plit"
+                }
+                ,{
+                    "include": "#name"
+                }
+                ,{
+                    "include": "#block"
+                }
+                ,{
+                    "include": "#structure-reference"
+                }
+                ,{
+                    "include": "#routine-call"
+                }
+                ,{
+                    "include": "#field-reference"
+                }
+                ,{
+                    "include": "#codecomment"
+                }
+            ]
+        }
+        ,"numeric-literal": {
+            "patterns": [
+                {
+                    "include": "#decimal-literal"
+                }
+                ,{
+                    "include": "#integer-literal"
+                }
+                ,{
+                    "include": "#character-code-literal"
+                }
+                ,{
+                    "include": "#float-literal"
+                }
+            ]
+        }
+        ,"decimal-literal": {
+            "match": "(?i)(\\+|\\-)?\\s*(?<![a-z$_])[0-9]+"
+            ,"name": "constant.numeric.dec"
+        }
+        ,"binary-literal": {
+            "match": "(\\+|\\-)?\\s*[01]+"
+            ,"name": "constant.numeric.bin"
+        }
+        ,"octal-literal": {
+            "match": "(\\+|\\-)?\\s*[0-7]+"
+            ,"name": "constant.numeric.oct"
+        }
+        ,"hex-literal": {
+            "match": "(?i)(\\+|\\-)?\\s*[0-9A-F]+"
+            ,"name": "constant.numeric.hex"
+        }
+        ,"integer-literal": {
+            "patterns": [
+                {
+                    "include": "#integer-literal-bin"
+                }
+                ,{
+                    "include": "#integer-literal-oct"
+                }
+                ,{
+                    "include": "#integer-literal-dec"
+                }
+                ,{
+                    "include": "#integer-literal-hex"
+                }
+            ]
+        }
+        ,"integer-literal-bin": {
+            "name": "constant.numeric"
+            ,"begin": "(?i)%B\\s*'"
+            ,"end": "'"
+            ,"patterns": [
+                {
+                    "include": "#binary-literal"
+                }
+                ,{
+                    "match": "."
+                    ,"name": "invalid.illegal"
+                }
+            ]
+        }
+        ,"integer-literal-oct": {
+            "name": "constant.numeric"
+            ,"begin": "(?i)%O\\s*'"
+            ,"end": "'"
+            ,"patterns": [
+                {
+                    "include": "#octal-literal"
+                }
+                ,{
+                    "match": "."
+                    ,"name": "invalid.illegal"
+                }
+            ]
+        }
+        ,"integer-literal-dec": {
+            "name": "constant.numeric"
+            ,"begin": "(?i)%DECIMAL\\s*'"
+            ,"end": "'"
+            ,"patterns": [
+                {
+                    "include": "#decimal-literal"
+                }
+                ,{
+                    "match": "."
+                    ,"name": "invalid.illegal"
+                }
+            ]
+        }
+        ,"integer-literal-hex": {
+            "name": "constant.numeric"
+            ,"begin": "(?i)%X\\s*'"
+            ,"end": "'"
+            ,"patterns": [
+                {
+                    "include": "#hex-literal"
+                }
+                ,{
+                    "match": "."
+                    ,"name": "invalid.illegal"
+                }
+            ]
+        }
+        ,"character-code-literal": {
+            "name": "constant.numeric"
+            ,"begin": "(?i)%C\\s*'"
+            ,"end": "'(?=[^'])"
+            ,"patterns": [
+                {
+                    "match": "''"
+                    ,"name": "constant.numeric.double"
+                }
+            ]
+       }
+       ,"float-literal": {
+            "patterns": [
+                {
+                    "include": "#single-precision-float-literal"
+                }
+                ,{
+                    "include": "#double-precision-float-literal"
+                }
+                ,{
+                    "include": "#extended-doubleprecision-float-literal"
+                }
+                ,{
+                    "include": "#extended-extendedprecision-float-literal"
+                }
+            ]
+        }
+        ,"single-precision-float-literal": {
+            "name": "constant.numeric.spfp"
+            ,"begin": "(?i)%E\\s*'"
+            ,"end": "'"
+            ,"patterns": [
+                {
+                    "match": "(?i)E"
+                    ,"name": "constant.numeric.exp.lit"
+                }
+                ,{
+                    "include": "#decimal-literal"
+                }
+                ,{
+                    "match": "\\."
+                    ,"name": "constant.numeric.dot"
+                }
+                ,{
+                    "match": "."
+                    ,"name": "invalid.illegal"
+                }
+            ]
+       }
+       ,"double-precision-float-literal": {
+            "name": "constant.numeric.dpfp"
+            ,"begin": "(?i)%D\\s*'"
+            ,"end": "'"
+            ,"patterns": [
+                {
+                    "match": "(?i)D"
+                    ,"name": "constant.numeric.exp.lit"
+                }
+                ,{
+                    "include": "#decimal-literal"
+                }
+                ,{
+                    "match": "\\."
+                    ,"name": "constant.numeric.dot"
+                }
+                ,{
+                    "match": "."
+                    ,"name": "invalid.illegal"
+                }
+            ]
+        }
+        ,"extended-doubleprecision-float-literal": {
+            "name": "constant.numeric.edpfp"
+            ,"begin": "(?i)%G\\s*'"
+            ,"end": "'"
+            ,"patterns": [
+                {
+                    "match": "(?i)G|Q"
+                    ,"name": "constant.numeric.exp.lit"
+                }
+                ,{
+                    "include": "#decimal-literal"
+                }
+                ,{
+                    "match": "\\."
+                    ,"name": "constant.numeric.dot"
+                }
+                ,{
+                    "match": "."
+                    ,"name": "invalid.illegal"
+                }
+            ]
+        }
+        ,"extended-extendedprecision-float-literal": {
+            "name": "constant.numeric.eepfp"
+            ,"begin": "(?i)%H\\s*'"
+            ,"end": "'"
+            ,"patterns": [
+                {
+                    "match": "(?i)Q"
+                    ,"name": "constant.numeric.exp.lit"
+                }
+                ,{
+                    "include": "#decimal-literal"
+                }
+                ,{
+                    "match": "\\."
+                    ,"name": "constant.numeric.dot"
+                }
+                ,{
+                    "match": "."
+                    ,"name": "invalid.illegal"
+                }
+            ]
+        }
+        ,"plit": {
+            "name": "bliss.plit"
+            ,"begin": "(?i)U?PLIT"
+            ,"beginCaptures": {
+                "0": {
+                    "name": "keyword"
+                }
+            }
+            ,"end": "\\)"
+            ,"patterns": [
+                {
+                    "include": "#plit-psect"
+                }
+                ,{
+                    "include": "#allocation-unit"
+                }
+                ,{
+                    "include": "#plit-items"
+                }
+            ]
+        }
+        ,"plit-psect": {
+            "name": "bliss.psect"
+            ,"begin": "(?i)PSECT"
+            ,"beginCaptures": {
+                "0": {
+                    "name": "storage.modifier"
+                }
+            }
+            ,"end": "\\)"
+            ,"patterns": [
+                {
+                    "begin": "\\("
+                    ,"end": "(?=\\))"
+                    ,"patterns": [
+                        {
+                            "include": "#name"
+                        }
+                    ]
+                }
+            ]
+        }
+        ,"plit-items": {
+            "begin": "\\("
+            ,"end": "(?=\\))"
+            ,"contentName": "bliss.plititems"
+            ,"patterns": [
+                {
+                    "include": "#allocation-unit"
+                }
+                ,{
+                    "include": "#plit-rep"
+                }
+                ,{
+                    "include": "#string-literal"
+                }
+                ,{
+                    "include": "#name"
+                }
+                ,{
+                    "include": "#plit-items-inner"
+                }
+            ]
+        }
+        ,"plit-items-inner": {
+            "begin": "\\("
+            ,"end": "\\)"
+            ,"contentName": "bliss.plititems"
+            ,"patterns": [
+                {
+                    "include": "#allocation-unit"
+                }
+                ,{
+                    "include": "#plit-rep"
+                }
+                ,{
+                    "include": "#string-literal"
+                }
+                ,{
+                    "include": "#name"
+                }
+                ,{
+                    "include": "#plit-items-inner"
+                }
+            ]
+        }
+        ,"plit-rep": {
+            "begin": "(?i)REP"
+            ,"beginCaptures": {
+                "0": {
+                    "name": "keyword"
+                }
+            }
+            ,"end": "(?i)OF"
+            ,"endCaptures": {
+                "0": {
+                    "name": "keyword"
+                }
+            }
+            ,"contentName": "bliss.replicator"
+            ,"patterns": [
+                {
+                    "include": "#numeric-literal"
+                }
+            ]
+        }
+        ,"name": {
+            "match": "(?i)[a-z$_][a-z$_0-9]*"
+            ,"name": "bliss.name"
+        }
+    }
+    ,"scopeName": "source.bliss"
+}

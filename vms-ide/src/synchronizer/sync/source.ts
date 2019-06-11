@@ -33,4 +33,6 @@ export interface ISource {
     findFiles(include: string, exclude?: string, progress?: IProgress): Promise<IFileEntry[]>;
     getDate(filename: string): Promise<Date|undefined>;
     setDate(filename: string, date: Date): Promise<boolean>;
+    accessFile(filename: string): Promise<boolean>;
+    deleteFile(filename: string): Promise<boolean>;
 }

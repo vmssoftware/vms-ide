@@ -1,21 +1,13 @@
 import path from "path";
 import * as vscode from "vscode";
-
 import * as nls from "vscode-nls";
-nls.config({messageFormat: nls.MessageFormat.both});
-const localize = nls.loadMessageBundle();
 
 import { GetSshHelperType } from "../../ext-api/ext-api";
-
-import { Barrier, Delay } from "../../common/main";
+import { Barrier, Delay, printLike } from "../../common/main";
 import { LogFunction, LogType } from "../../common/main";
 import { ftpPathSeparator } from "../../common/main";
 import { IFileEntry } from "../../common/main";
-
 import { IDispose, SshHelper } from "../../ssh-helper/ssh-helper";
-
-import { createFile } from "../common/create-file";
-import { AcceptedToken } from "../common/find-files";
 import { Progress } from "../common/progress";
 import { IEnsured } from "../ensure-settings";
 import { FsSource } from "./fs-source";
@@ -23,7 +15,11 @@ import { SftpSource } from "./sftp-source";
 import { IProgress, ISource } from "./source";
 import { VmsSftpClient } from "./vms-sftp-client";
 import { VmsShellSource } from "./vms-shell-source";
-import { Builder } from "../../synchronizer/build/builder";
+import { ProjectState } from "../dep-tree/proj-state";
+import { VmsPathConverter } from "../vms/vms-path-converter";
+
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
 
 interface IScopeSyncData {
     ensured: IEnsured;      // saved settings
@@ -33,6 +29,8 @@ interface IScopeSyncData {
     watcher: IDispose;
     sshWatcher: IDispose;
 }
+
+const purgeCmd = printLike`purge [${"directory"}...]`;
 
 export class Synchronizer {
 
@@ -192,6 +190,73 @@ export class Synchronizer {
         this.logFn(LogType.debug, () => localize("debug.retcode", "Synchronize retCode: {0}", retCode));
         return retCode;
     }
+
+    public async quickSync(ensured: IEnsured) {
+        // clear password cache
+        if (this.sshHelper) {
+            this.sshHelper.clearPasswordCache();
+        }
+        const scopeData = await this.prepareScopeData(ensured);
+        if (!scopeData) {
+            return false;
+        }
+        // enable
+        this.enableRemote();
+
+        let retCode = true;
+        
+        if (ensured.scope) {
+        
+            // delete deleted files
+            const deletedList = ProjectState.acquire().getDeletedList(ensured.scope);
+            for (let fileToDelete of deletedList) {
+                fileToDelete = fileToDelete.replace(/[/\\]/g, ftpPathSeparator);
+                if (!(await scopeData.remoteSource.deleteFile(fileToDelete))) {
+                    this.logFn(LogType.error, () => localize("debug.quick.delete", "Delete remote file failed: {0}", fileToDelete));
+                    retCode = false;
+                } else {
+                    this.logFn(LogType.information, () => localize("debug.quick.delete.ok", "Remote file deleted: {0}", fileToDelete));
+                }
+            }
+
+            // send modified files
+            const uploadList: string[] = [];
+            const modifiedList = ProjectState.acquire().getModifiedList(ensured.scope);
+            for (let fileToUpload of modifiedList) {
+                fileToUpload = fileToUpload.replace(/[/\\]/g, ftpPathSeparator);
+                if (await scopeData.localSource.accessFile(fileToUpload)) {
+                    uploadList.push(fileToUpload);
+                }
+            }
+            if (!(await this.uploadFiles(ensured, uploadList))) {
+                retCode = false;
+            }
+
+            // this part is optional so do not return error if it occurs
+            if (ensured.synchronizeSection.purge && this.sshHelper) {
+                const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
+                const shell = await this.sshHelper.getDefaultVmsShell(ensured.scope);
+                if (shell) {
+                    await shell.execCmd(purgeCmd(converter.bareDirectory));
+                    shell.dispose();
+                }
+            }
+
+            // clean list in any case
+            ProjectState.acquire().clearList(ensured.scope);
+        }
+
+        if (!retCode) {
+            this.logFn(LogType.error, () => localize("quick.failed", "Quick synchronize failed. Please execute full synchronization or uploading."));
+        }
+
+        // end
+        this.decideDispose(scopeData);
+        this.logFn(LogType.debug, () => localize("debug.quick.retcode", "Quick synchronize:  {0}", String(retCode)));
+     
+        return retCode;
+    }
+
 
     public async uploadSource(ensured: IEnsured) {
         // clear password cache
@@ -388,82 +453,6 @@ export class Synchronizer {
     }
 
     /**
-     * Prepare sources if missed, also get settings
-     */
-    private async prepareScopeData(ensured: IEnsured) {
-        const scopeKey = ensured.configHelper.workspaceFolder ? ensured.configHelper.workspaceFolder.name : "";
-        let   scopeData = Synchronizer.syncScopes.get(scopeKey);
-        if (scopeData && scopeData.isValid) {
-            return scopeData;
-        }
-        if (scopeData) {
-            this.disposeScopeData(scopeData, true);
-        }
-        // get ssh helper
-        if (!await this.ensureSshHelper() || !this.sshHelper) {
-            return undefined;
-        }
-        // check if all are ready to create sources
-        if (ensured.configHelper.workspaceFolder) {
-            const scope = ensured.configHelper.workspaceFolder.name;
-            this.logFn(LogType.debug, () => localize("debug.create_remote", "Creating remote source"));
-            const sftp = await this.sshHelper.getDefaultSftp(scope);
-            if (!sftp) {
-                return undefined;
-            }
-            sftp.on("cleanSftp", () => {
-                markInvalid();
-            });
-            const remoteSource = await (async (sshHelper) => {
-                if (ensured.synchronizeSection.setTimeByShell) {
-                    const shell = await sshHelper.getDefaultVmsShell(scope);
-                    if (!shell) {
-                        return undefined;
-                    }
-                    shell.on("cleanClient", () => {
-                        markInvalid();
-                    });
-                    shell.on("cleanChannel", () => {
-                        markInvalid();
-                    });
-                    return new VmsShellSource(new VmsSftpClient(sftp), shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
-                } else {
-                    return new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
-                }
-            })(this.sshHelper);
-            if (!remoteSource) {
-                return undefined;
-            }
-
-            this.logFn(LogType.debug, () => localize("debug.create_local", "Creating local source"));
-            const localSource = new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
-
-            const watcher = ensured.configHelper.getConfig().onDidLoad(markInvalid);
-            const sshWatcher = this.sshHelper.setConfigWatcher(scope, markInvalid);
-            scopeData = {
-                ensured,
-                isValid: true,
-                localSource,
-                remoteSource,
-                sshWatcher,
-                watcher,
-            } as IScopeSyncData;
-            Synchronizer.syncScopes.set(scopeKey, scopeData);
-            return scopeData;
-
-            function markInvalid() {
-                // mark as invalid by scopeKey
-                const delData = Synchronizer.syncScopes.get(scopeKey);
-                if (delData) {
-                    delData.isValid = false;
-                }
-            }
-
-        }
-        return undefined;
-    }
-
-    /**
      * Ensure that ssh-helper loaded
      */
     private async ensureSshHelper() {
@@ -576,6 +565,82 @@ export class Synchronizer {
                 this.transferBarrier.release();
                 return done;
             });
+    }
+
+    /**
+     * Prepare sources if missed, also get settings
+     */
+    private async prepareScopeData(ensured: IEnsured) {
+        const scopeKey = ensured.configHelper.workspaceFolder ? ensured.configHelper.workspaceFolder.name : "";
+        let   scopeData = Synchronizer.syncScopes.get(scopeKey);
+        if (scopeData && scopeData.isValid) {
+            return scopeData;
+        }
+        if (scopeData) {
+            this.disposeScopeData(scopeData, true);
+        }
+        // get ssh helper
+        if (!await this.ensureSshHelper() || !this.sshHelper) {
+            return undefined;
+        }
+        // check if all are ready to create sources
+        if (ensured.configHelper.workspaceFolder) {
+            const scope = ensured.configHelper.workspaceFolder.name;
+            this.logFn(LogType.debug, () => localize("debug.create_remote", "Creating remote source"));
+            const sftp = await this.sshHelper.getDefaultSftp(scope);
+            if (!sftp) {
+                return undefined;
+            }
+            sftp.on("cleanSftp", () => {
+                markInvalid();
+            });
+            const remoteSource = await (async (sshHelper)=> {
+                if (ensured.synchronizeSection.setTimeByShell) {
+                    const shell = await sshHelper.getDefaultVmsShell(scope);
+                    if (!shell) {
+                        return undefined;
+                    }
+                    shell.on("cleanClient", () => {
+                        markInvalid();
+                    });
+                    shell.on("cleanChannel", () => {
+                        markInvalid();
+                    });
+                    return new VmsShellSource(new VmsSftpClient(sftp), shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
+                } else {
+                    return new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
+                }
+            })(this.sshHelper);
+            if (!remoteSource) {
+                return undefined;
+            }
+
+            this.logFn(LogType.debug, () => localize("debug.create_local", "Creating local source"));
+            const localSource = new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
+
+            const watcher = ensured.configHelper.getConfig().onDidLoad(markInvalid);
+            const sshWatcher = this.sshHelper.setConfigWatcher(scope, markInvalid);
+            scopeData = {
+                ensured,
+                isValid: true,
+                localSource,
+                remoteSource,
+                sshWatcher,
+                watcher,
+            } as IScopeSyncData;
+            Synchronizer.syncScopes.set(scopeKey, scopeData);
+            return scopeData;
+
+            function markInvalid() {
+                // mark as invalid by scopeKey
+                const delData = Synchronizer.syncScopes.get(scopeKey);
+                if (delData) {
+                    delData.isValid = false;
+                }
+            }
+
+        }
+        return undefined;
     }
 
 }
