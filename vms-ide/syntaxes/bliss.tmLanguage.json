@@ -8,9 +8,32 @@
         ,{
             "include": "#comment"
         }
+        ,{
+            "include": "#literals"
+        }
     ]
-    ,"repository": {        
-        "module": {
+    ,"repository": {
+        "literals": {
+            "patterns": [
+                {
+                    "include": "#string-literal"
+                }
+                ,{
+                    "include": "#numeric-literal"
+                }
+            ]
+        }
+        ,"comment": {
+            "patterns": [
+                {
+                    "include": "#line-comment"
+                }
+                ,{
+                    "include": "#block-comment"
+                }
+            ]
+        }
+        ,"module": {
             "name": "bliss.module"
             ,"begin": "(?i)MODULE"
             ,"beginCaptures": {
@@ -26,47 +49,541 @@
             }
             ,"patterns": [
                 {
+                    "include": "#module-head"
+                }
+                ,{
                     "include": "#comment"
                 }
                 ,{
-                    "include": "#test-kill"
-                }        
+                    "match": "\\S+"
+                    ,"name": "invalid.illegal"
+                }
             ]
         }
-        ,"test-kill": {
+        ,"module-head": {
+            "begin": "(?i)[a-z$_][a-z$_0-9]*"
+            ,"beginCaptures": {
+                "0": {
+                    "name": "bliss.modulename"
+                }
+            }
+            ,"end": "(?i)(?=ELUDOM)"
+            ,"patterns": [
+                {
+                    "include": "#module-head-switches"
+                }
+                ,{
+                    "include": "#module-body"
+                }
+            ]
+        }
+        ,"module-head-switches": {
+            "begin": "\\("
+            ,"end": "(?i)(?=ELUDOM)"
+            ,"patterns": [
+                {
+                    "begin": "\\G"
+                    ,"end": "\\)"
+                    ,"contentName": "bliss.module.head.switches"
+                    ,"patterns": [
+                        {
+                            "include": "#module-head-switches-on-off-switch"
+                        }
+                        ,{
+                            "include": "#module-head-switches-special-switch"
+                        }
+                    ]
+                }
+                ,{
+                    "begin": "="
+                    ,"end": "(?i)(?=ELUDOM)"
+                    ,"patterns": [
+                        {
+                            "include": "#module-body"
+                        }
+                    ]
+                }
+            ]
+        }
+        ,"module-head-switches-on-off-switch": {
+            "match": "(?i)CODE|NOCODE|DEBUG|NODEBUG|ERRS|NOERRS|OPTIMIZE|NOOPTIMIZE|SAFE|NOSAFE|UNAMES|NOUNAMES|ZIP|NOZIP"
+            ,"name": "keyword"
+        }
+        ,"module-head-switches-special-switch": {
             "patterns": [
                 {
-                    "include": "#string-literal"
-                }        
-                ,{
-                    "include": "#numeric-literal"
-                }
-                ,{
-                    "include": "#plit"
+                    "begin": "(?i)IDENT"
+                    ,"end": ""
+                    ,"patterns": [
+                        {
+                            "include": "#string"
+                        }
+                    ]
                 }
             ]
         }
-        ,"string-literal": {
-            "name": "string.quoted"
-            ,"begin": "(?i)(%(ASCII|ASCIZ|ASCIC|ASCID|RAD50_11|RAD50_10|SIXBIT|P))?\\s*'"
+        ,"module-head-switches-common-switch": {
+            "match": "(?i)IDENT|LANGUAGE|LINKAGE|LIST|STRUCTURE|MAIN|OPTLEVEL|VERSION"
+            ,"name": "keyword"
+        }
+        ,"module-head-switches-language": {
+            "match": "(?i)COMMON|BLISS16|BLISS32|BLISS36"
+            ,"name": "keyword"
+        }
+        ,"module-head-switches-list-option": {
+            "match": "(?i)SOURCE|NOSOURCE|REQUIRE|NOREQUIRE|EXPAND|NOEXPAND|TRACE|NOTRACE|LIBRARY|NOLIBRARY|OBJECT|NOOBJECT|ASSEMBLY|NOASSEMBLY|SYMBOLIC|NOSYMBOLIC|BINARY|NOBINARY|COMMENTARY|NOCOMMENTARY"
+            ,"name": "keyword"
+        }
+
+        ,"module-body": {
+            "begin": "(?i)begin"
+            ,"end": "(?i)end"
+            ,"contentName": "bliss.module.body"
+            ,"patterns": [
+                {
+                    "include": ""
+                }
+            ]
+        }
+
+        ,"string": {
+            "begin": "'"
             ,"end": "'(?=[^'])"
             ,"patterns": [
                 {
                     "match": "''"
-                    ,"name": "string.quoted.double"
                 }
             ]
         }
-        ,"comment": {
-            "patterns": [
+
+        ,"string-literal": {
+            "name": "bliss.string.literal"
+            ,"begin": "(?i)(?=%(ASCII|ASCIZ|ASCIC|ASCID|RAD50_11|RAD50_10|SIXBIT|P))"
+            ,"end": "(?<=')"
+            ,"patterns": [
                 {
-                    "include": "#line-comment"
+                    "begin": "(?i)\\G%(ASCII|ASCIZ|ASCIC|ASCID|RAD50_11|RAD50_10|SIXBIT|P)"
+                    ,"beginCaptures": {
+                        "0": {
+                            "name": "string.other"
+                        }
+                    }
+                    ,"end": "(?=')"
+                    ,"patterns": [
+                        {
+                            "include": "#illegal-up-to-comma"
+                        }
+                    ]
                 }
                 ,{
-                    "include": "#block-comment"
+                    "begin": "(?=')"
+                    ,"end": "(?<=')"
+                    ,"contentName": "string"
+                    ,"patterns": [
+                        {
+                            "include": "#string"
+                        }
+                    ]
                 }
             ]
         }
+
+        ,"numeric-literal": {
+            "name": "bliss.numeric.literal"
+            ,"begin": "(?i)(?=%(B|O|DECIMAL|X|C|E|D|G|H))"
+            ,"end": "(?<=')"
+            ,"patterns": [
+                {
+                    "begin": "(?i)\\G(?=%B)"
+                    ,"name": "constant.numeric.bin"
+                    ,"end": "(?<=')"
+                    ,"patterns": [
+                        {
+                            "begin": "(?i)\\G%B"
+                            ,"end": "(?=')"
+                            ,"patterns": [
+                                {
+                                    "include": "#illegal-up-to-comma"
+                                }
+                            ]
+                        }
+                        ,{
+                            "begin": "'"
+                            ,"end": "'"
+                            ,"patterns": [
+                                {
+                                    "begin": "(?=(\\+|\\-))"
+                                    ,"end": "(?=')"
+                                    ,"patterns": [
+                                        {
+                                            "begin": "\\G(\\+|\\-)"
+                                            ,"end": "(?=')"
+                                            ,"patterns": [
+                                                {
+                                                    "include": "#binary-only-up-to-comma"
+                                                }
+                                                ,{
+                                                    "include": "#illegal-up-to-comma"
+                                                }
+                                            ]
+                                        }
+                                        ,{
+                                            "include": "#illegal-up-to-comma"
+                                        }
+                                    ]
+                                }
+                                ,{
+                                    "include": "#binary-only-up-to-comma"
+                                }
+                                ,{
+                                    "include": "#illegal-up-to-comma"
+                                }
+                            ]
+                        }
+                    ]
+                }
+                ,{
+                    "begin": "(?i)\\G(?=%O)"
+                    ,"name": "constant.numeric.oct"
+                    ,"end": "(?<=')"
+                    ,"patterns": [
+                        {
+                            "begin": "(?i)\\G%O"
+                            ,"end": "(?=')"
+                            ,"patterns": [
+                                {
+                                    "include": "#illegal-up-to-comma"
+                                }
+                            ]
+                        }
+                        ,{
+                            "begin": "'"
+                            ,"end": "'"
+                            ,"patterns": [
+                                {
+                                    "begin": "(?=(\\+|\\-))"
+                                    ,"end": "(?=')"
+                                    ,"patterns": [
+                                        {
+                                            "begin": "\\G(\\+|\\-)"
+                                            ,"end": "(?=')"
+                                            ,"patterns": [
+                                                {
+                                                    "include": "#octal-only-up-to-comma"
+                                                }
+                                                ,{
+                                                    "include": "#illegal-up-to-comma"
+                                                }
+                                            ]
+                                        }
+                                        ,{
+                                            "include": "#illegal-up-to-comma"
+                                        }
+                                    ]
+                                }
+                                ,{
+                                    "include": "#octal-only-up-to-comma"
+                                }
+                                ,{
+                                    "include": "#illegal-up-to-comma"
+                                }
+                            ]
+                        }
+                    ]
+                }
+                ,{
+                    "begin": "(?i)\\G(?=%DECIMAL)"
+                    ,"name": "constant.numeric.dec"
+                    ,"end": "(?<=')"
+                    ,"patterns": [
+                        {
+                            "begin": "(?i)\\G%DECIMAL"
+                            ,"end": "(?=')"
+                            ,"patterns": [
+                                {
+                                    "include": "#illegal-up-to-comma"
+                                }
+                            ]
+                        }
+                        ,{
+                            "begin": "'"
+                            ,"end": "'"
+                            ,"patterns": [
+                                {
+                                    "begin": "(?=(\\+|\\-))"
+                                    ,"end": "(?=')"
+                                    ,"patterns": [
+                                        {
+                                            "begin": "\\G(\\+|\\-)"
+                                            ,"end": "(?=')"
+                                            ,"patterns": [
+                                                {
+                                                    "include": "#decimal-only-up-to-comma"
+                                                }
+                                                ,{
+                                                    "include": "#illegal-up-to-comma"
+                                                }
+                                            ]
+                                        }
+                                        ,{
+                                            "include": "#illegal-up-to-comma"
+                                        }
+                                    ]
+                                }
+                                ,{
+                                    "include": "#decimal-only-up-to-comma"
+                                }
+                                ,{
+                                    "include": "#illegal-up-to-comma"
+                                }
+                            ]
+                        }
+                    ]
+                }
+                ,{
+                    "begin": "(?i)\\G(?=%X)"
+                    ,"name": "constant.numeric.hex"
+                    ,"end": "(?<=')"
+                    ,"patterns": [
+                        {
+                            "begin": "(?i)\\G%X"
+                            ,"end": "(?=')"
+                            ,"patterns": [
+                                {
+                                    "include": "#illegal-up-to-comma"
+                                }
+                            ]
+                        }
+                        ,{
+                            "begin": "'"
+                            ,"end": "'"
+                            ,"patterns": [
+                                {
+                                    "begin": "(?=(\\+|\\-))"
+                                    ,"end": "(?=')"
+                                    ,"patterns": [
+                                        {
+                                            "begin": "\\G(\\+|\\-)"
+                                            ,"end": "(?=')"
+                                            ,"patterns": [
+                                                {
+                                                    "include": "#hex-only-up-to-comma"
+                                                }
+                                                ,{
+                                                    "include": "#illegal-up-to-comma"
+                                                }
+                                            ]
+                                        }
+                                        ,{
+                                            "include": "#illegal-up-to-comma"
+                                        }
+                                    ]
+                                }
+                                ,{
+                                    "include": "#hex-only-up-to-comma"
+                                }
+                                ,{
+                                    "include": "#illegal-up-to-comma"
+                                }
+                            ]
+                        }
+                    ]
+                }
+                ,{
+                    "begin": "(?i)\\G(?=%C)"
+                    ,"name": "constant.numeric.char"
+                    ,"end": "(?<=')"
+                    ,"patterns": [
+                        {
+                            "begin": "(?i)\\G%C"
+                            ,"end": "(?=')"
+                            ,"patterns": [
+                                {
+                                    "include": "#illegal-up-to-comma"
+                                }
+                            ]
+                        }
+                        ,{
+                            "include": "#string"
+                        }
+                    ]
+                }
+                ,{
+                    "begin": "(?i)\\G(?=%E)"
+                    ,"name": "constant.numeric.spfl"
+                    ,"end": "(?<=')"
+                    ,"patterns": [
+                        {
+                            "begin": "(?i)\\G%E"
+                            ,"end": "(?=')"
+                            ,"patterns": [
+                                {
+                                    "include": "#illegal-up-to-comma"
+                                }
+                            ]
+                        }
+                        ,{
+                            "begin": "'"
+                            ,"end": "'"
+                            ,"patterns": [
+                                {
+                                    "begin": "(?=(\\+|\\-))"
+                                    ,"end": "(?=')"
+                                    ,"patterns": [
+                                        {
+                                            "begin": "\\G(\\+|\\-)"
+                                            ,"beginCaptures": {
+                                                "0": {
+                                                    "name": "bliss.spfl.mantissa.sign"
+                                                }
+                                            }
+                                            ,"end": "(?=')"
+                                            ,"patterns": [
+                                                {
+                                                    "include": "#spfl-up-to-comma"
+                                                }
+                                                ,{
+                                                    "include": "#illegal-up-to-comma"
+                                                }
+                                            ]
+                                        }
+                                        ,{
+                                            "include": "#illegal-up-to-comma"
+                                        }
+                                    ]
+                                }
+                                ,{
+                                    "include": "#spfl-up-to-comma"
+                                }
+                                ,{
+                                    "include": "#illegal-up-to-comma"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        ,"binary-only-up-to-comma": {
+            "begin": "(?=[01])"
+            ,"end": "(?=')"
+            ,"patterns": [
+                {
+                    "match": "\\G[01]+"
+                }
+                ,{
+                    "include": "#illegal-up-to-comma"
+                }
+            ]
+        }
+        ,"octal-only-up-to-comma": {
+            "begin": "(?=[0-7])"
+            ,"end": "(?=')"
+            ,"patterns": [
+                {
+                    "match": "\\G[0-7]+"
+                }
+                ,{
+                    "include": "#illegal-up-to-comma"
+                }
+            ]
+        }
+        ,"decimal-only-up-to-comma": {
+            "begin": "(?=[0-9])"
+            ,"end": "(?=')"
+            ,"patterns": [
+                {
+                    "match": "\\G[0-9]+"
+                }
+                ,{
+                    "include": "#illegal-up-to-comma"
+                }
+            ]
+        }
+        ,"hex-only-up-to-comma": {
+            "begin": "(?i)(?=[0-9a-f])"
+            ,"end": "(?=')"
+            ,"patterns": [
+                {
+                    "match": "(?i)\\G[0-9a-f]+"
+                }
+                ,{
+                    "include": "#illegal-up-to-comma"
+                }
+            ]
+        }
+        ,"spfl-up-to-comma": {
+            "begin": "([0-9]*\\.)?[0-9]+"
+            ,"beginCaptures": {
+                "0": {
+                    "name": "bliss.spfl.mantissa"
+                }
+            }
+            ,"end": "(?=')"
+            ,"patterns": [
+                {
+                    "begin": "(?i)(?=E)"
+                    ,"end": "(?=')"
+                    ,"patterns": [
+                        {
+                            "begin": "(?i)E"
+                            ,"beginCaptures": {
+                                "0": {
+                                    "name": "markup.bold"
+                                }
+                            }
+                            ,"contentName": "bliss.spfl.exponent"
+                            ,"end": "(?=')"
+                            ,"patterns": [
+                                {
+                                    "include": "#signed-decimal-up-to-comma"
+                                }
+                                ,{
+                                    "include": "#decimal-only-up-to-comma"
+                                }
+                                ,{
+                                    "include": "#illegal-up-to-comma"
+                                }
+                            ]
+                        }
+                        ,{
+                            "include": "#illegal-up-to-comma"
+                        }
+                    ]
+                }
+                ,{
+                    "include": "#illegal-up-to-comma"
+                }
+            ]
+        }
+        ,"signed-decimal-up-to-comma": {
+            "begin": "(?=(\\+|\\-))"
+            ,"end": "(?=')"
+            ,"patterns": [
+                {
+                    "begin": "\\G(\\+|\\-)"
+                    ,"end": "(?=')"
+                    ,"patterns": [
+                        {
+                            "include": "#decimal-only-up-to-comma"
+                        }
+                        ,{
+                            "include": "#illegal-up-to-comma"
+                        }
+                    ]
+                }
+                ,{
+                    "include": "#illegal-up-to-comma"
+                }
+            ]
+        }
+        ,"illegal-up-to-comma": {
+            "match": "[^'\\s]+"
+            ,"name": "invalid.illegal"
+        }
+
+
+
         ,"line-comment": {
             "name": "comment.line"
             ,"begin": "!"
@@ -90,7 +607,9 @@
             "name": "bliss.extension.attribute"
             ,"match": "(?i)UNSIGNED|SIGNED"
         }
-        ,"expression": {
+
+
+        ,"bliss-expression": {
             "patterns": [
                 {
                     "include": "#primary"
@@ -137,22 +656,7 @@
                 }
             ]
         }
-        ,"numeric-literal": {
-            "patterns": [
-                {
-                    "include": "#decimal-literal"
-                }
-                ,{
-                    "include": "#integer-literal"
-                }
-                ,{
-                    "include": "#character-code-literal"
-                }
-                ,{
-                    "include": "#float-literal"
-                }
-            ]
-        }
+
         ,"decimal-literal": {
             "match": "(?i)(\\+|\\-)?\\s*(?<![a-z$_])[0-9]+"
             ,"name": "constant.numeric.dec"
@@ -465,6 +969,13 @@
         ,"name": {
             "match": "(?i)[a-z$_][a-z$_0-9]*"
             ,"name": "bliss.name"
+        }
+        ,"standard-function": {
+
+        }
+        ,"predeclared-name": {
+            "match": "(?i)ABS|BITVECTOR|BLISS36C|BLISS10|BLISS|BLOCKVECTOR|BLOCK|"
+            ,"name": "bliss.name.predeclared"
         }
     }
     ,"scopeName": "source.bliss"
