@@ -1,7 +1,7 @@
 {
     "comments": {
         "lineComment": "!",
-        "blockComment": [ "%(", "%)" ]
+        "blockComment": [ "%(", ")%" ]
     },
     "wordPattern": "[a-zA-Z$_][a-zA-Z$_0-9]*",
     "brackets": [
