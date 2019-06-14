@@ -121,9 +121,9 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "quicksync",
-        fail: localize("quicksync.fail", "Quick synchronizing failed"),
-        status: localize("quicksync.status", "$(sync) Quick synchronizing..."),
-        success: localize("quicksync.success", "Quick synchronizing ok"),
+        fail: localize("quicksync.fail", "Quick uploading failed"),
+        status: localize("quicksync.status", "$(sync) Quick uploading..."),
+        success: localize("quicksync.success", "Quick uploading ok"),
     },
     {
         // build

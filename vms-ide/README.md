@@ -45,7 +45,7 @@
 | `VMS-IDE: Download system headers` | Download system headers from VMS |
 | `VMS-IDE: Terminal` | Open VMS terminal (`Ctrl+F6`)|
 | `VMS-IDE: Upload` | Upload project files |
-| `VMS-IDE: Quick synchronization` | Execute quick synchronization |
+| `VMS-IDE: Quick uploading` | Execute quick uploading |
 
 ## Settings
 

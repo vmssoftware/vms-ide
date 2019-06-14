@@ -35,7 +35,7 @@
     "synchronizer.command.uploadZip.title": "Выгрузить с помощью ZIP",
     "synchronizer.command.upload.title": "Выгрузить",
     "synchronizer.command.downloadHeaders.title": "Загрузить системные заголовочные файлы",
-    "synchronizer.command.quickSync.title": "Quick synchronization",
+    "synchronizer.command.quickSync.title": "Quick uploading",
     "synchronizer.command.projectDependencies.syncProject.title": "Синхронизировать",
     "synchronizer.command.projectDependencies.upload.title": "Выгрузить",
     "synchronizer.command.projectDependencies.add.title": "Добавить в зависимости к текущему",

@@ -247,12 +247,12 @@ export class Synchronizer {
         }
 
         if (!retCode) {
-            this.logFn(LogType.error, () => localize("quick.failed", "Quick synchronize failed. Please execute full synchronization or uploading."));
+            this.logFn(LogType.error, () => localize("quick.failed", "Quick uploading failed. Please execute full synchronization or uploading."));
         }
 
         // end
         this.decideDispose(scopeData);
-        this.logFn(LogType.debug, () => localize("debug.quick.retcode", "Quick synchronize:  {0}", String(retCode)));
+        this.logFn(LogType.debug, () => localize("debug.quick.retcode", "Quick uploading:  {0}", String(retCode)));
      
         return retCode;
     }
