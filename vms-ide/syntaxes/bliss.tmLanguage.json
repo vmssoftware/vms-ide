@@ -6,14 +6,18 @@
             "include": "#module"
         }
         ,{
-            "include": "#comment"
+            "include": "#literals"
         }
         ,{
-            "include": "#literals"
+            "include": "#comment-or-illegal-char"
         }
     ]
     ,"repository": {
-        "literals": {
+        "bliss-name": {
+            "match": "(?i)[a-z$_][a-z$_0-9]*"
+            ,"name": "bliss.name"
+        }
+        ,"literals": {
             "patterns": [
                 {
                     "include": "#string-literal"
@@ -309,7 +313,7 @@
                                             ,"contentName": "markup.italic"
                                             ,"patterns": [
                                                 {
-                                                    "include": "#name"
+                                                    "include": "#bliss-name"
                                                 }
                                                 ,{
                                                     "include": "#comment-or-illegal-char"
@@ -431,7 +435,7 @@
                                     ,"name": "markup.italic"
                                     ,"patterns": [
                                         {
-                                            "include": "#name"
+                                            "include": "#bliss-name"
                                         }
                                         ,{
                                             "include": "#comment-or-illegal-up-to-comma-or-backet"
@@ -593,7 +597,7 @@
                                             ,"contentName": "markup.italic"
                                             ,"patterns": [
                                                 {
-                                                    "include": "#name"
+                                                    "include": "#bliss-name"
                                                 }
                                                 ,{
                                                     "include": "#comment-or-illegal-char"
@@ -730,6 +734,27 @@
         }
 
         ,"numeric-literal": {
+            "patterns": [
+                {
+                    "name": "bliss.numeric.literal"
+                    ,"begin": "(?i)([\\+\\-])|(?=\\d)"
+                    ,"end": "(?<=\\d)"
+                    ,"name": "constant.numeric"
+                    ,"patterns": [
+                        {
+                            "match": "\\d+"
+                        }
+                        ,{
+                            "include": "#comment-or-illegal-char"
+                        }
+                    ]
+                }
+                ,{
+                    "include": "#numeric-literal-prefixed"
+                }
+            ]
+        }
+        ,"numeric-literal-prefixed": {
             "name": "bliss.numeric.literal"
             ,"begin": "(?i)(?=%(B|O|DECIMAL|X|C|E|D|G|H))"
             ,"end": "(?<=')"
@@ -1456,9 +1481,6 @@
                 }
             ]
         }
-
-
-
         ,"line-comment": {
             "name": "comment.line"
             ,"begin": "!"
@@ -1481,7 +1503,17 @@
         ,"extension-attribute": {
             "name": "bliss.extension.attribute"
             ,"match": "(?i)UNSIGNED|SIGNED"
+            ,"captures": {
+                "0": {
+                    "name": "keyword.control"
+                }
+            }
         }
+
+
+
+
+
 
 
         ,"bliss-expression": {
@@ -1512,7 +1544,7 @@
                     "include": "#plit"
                 }
                 ,{
-                    "include": "#name"
+                    "include": "#bliss-name"
                 }
                 ,{
                     "include": "#block"
@@ -1531,7 +1563,6 @@
                 }
             ]
         }
-
         ,"plit": {
             "name": "bliss.plit"
             ,"begin": "(?i)U?PLIT"
@@ -1568,7 +1599,7 @@
                     ,"end": "(?=\\))"
                     ,"patterns": [
                         {
-                            "include": "#name"
+                            "include": "#bliss-name"
                         }
                     ]
                 }
@@ -1589,7 +1620,7 @@
                     "include": "#string-literal"
                 }
                 ,{
-                    "include": "#name"
+                    "include": "#bliss-name"
                 }
                 ,{
                     "include": "#plit-items-inner"
@@ -1611,7 +1642,7 @@
                     "include": "#string-literal"
                 }
                 ,{
-                    "include": "#name"
+                    "include": "#bliss-name"
                 }
                 ,{
                     "include": "#plit-items-inner"
@@ -1638,16 +1669,27 @@
                 }
             ]
         }
-        ,"name": {
-            "match": "(?i)[a-z$_][a-z$_0-9]*"
-            ,"name": "bliss.name"
-        }
         ,"standard-function": {
 
         }
         ,"predeclared-name": {
             "match": "(?i)ABS|BITVECTOR|BLISS36C|BLISS10|BLISS|BLOCKVECTOR|BLOCK|"
             ,"name": "bliss.name.predeclared"
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+        ,"expression": {
+
         }
     }
     ,"scopeName": "source.bliss"
