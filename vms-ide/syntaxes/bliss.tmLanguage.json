@@ -6,18 +6,11 @@
             "include": "#module"
         }
         ,{
-            "include": "#literals"
-        }
-        ,{
             "include": "#comment-or-illegal-char"
         }
     ]
     ,"repository": {
-        "bliss-name": {
-            "match": "(?i)[a-z$_][a-z$_0-9]*"
-            ,"name": "bliss.name"
-        }
-        ,"literals": {
+        "literals": {
             "patterns": [
                 {
                     "include": "#string-literal"
@@ -28,6 +21,8 @@
             ]
         }
         ,"comment": {
+            "begin": "(?=%\\()|(?=\\!)"
+            ,"end": "(?!\\G)",
             "patterns": [
                 {
                     "include": "#line-comment"
@@ -39,19 +34,19 @@
         }
         ,"module": {
             "name": "bliss.module"
-            ,"begin": "(?i)(?=MODULE)"
-            ,"end": "(?i)ELUDOM"
+            ,"begin": "(?i)(?=MODULE[^a-z$_0-9%])"
+            ,"end": "(?i)ELUDOM[^a-z$_0-9%]"
             ,"endCaptures": {
                 "0": {
-                    "name": "keyword"
+                    "name": "keyword.control"
                 }
             }
             ,"patterns": [
                 {
-                    "begin": "(?i)\\G(MODULE)"
+                    "begin": "(?i)\\G(MODULE)(?=[^a-z$_0-9%])"
                     ,"beginCaptures": {
                         "0": {
-                            "name": "keyword"
+                            "name": "keyword.control"
                         }
                     }
                     ,"end": "="
@@ -71,11 +66,11 @@
                 }
                 ,{
                     "begin": "(?i)(?<==)"
-                    ,"end": "(?i)(?=ELUDOM)"
+                    ,"end": "(?i)(?=ELUDOM[^a-z$_0-9%])"
                     ,"patterns": [
                         {
-                            "begin": "(?i)(?=begin)"
-                            ,"end": "(?i)(?<=end)"
+                            "begin": "(?i)(?=begin[^a-z$_0-9%])"
+                            ,"end": "(?i)(?<=end)(?=[^a-z$_0-9%])"
                             ,"patterns": [
                                 {
                                     "include": "#module-body"
@@ -125,7 +120,9 @@
             ]
         }
         ,"module-head-switches": {
-            "patterns": [
+            "begin": "(?<=\\()"
+            ,"end": "(?=\\))"
+            ,"patterns": [
                 {
                     "include": "#module-head-switches-ident"
                 }
@@ -159,7 +156,7 @@
             ]
         }
         ,"module-head-switches-on-off-switch": {
-            "begin": "(?i)CODE|NOCODE|DEBUG|NODEBUG|ERRS|NOERRS|OPTIMIZE|NOOPTIMIZE|SAFE|NOSAFE|UNAMES|NOUNAMES|ZIP|NOZIP"
+            "begin": "(?i)(CODE|NOCODE|DEBUG|NODEBUG|ERRS|NOERRS|OPTIMIZE|NOOPTIMIZE|SAFE|NOSAFE|UNAMES|NOUNAMES|ZIP|NOZIP)(?=[^a-z$_0-9%])"
             ,"end": "(?=[,)])"
             ,"name": "keyword"
             ,"patterns": [
@@ -170,11 +167,11 @@
         }
         ,"module-head-switches-ident": {
             "name": "bliss.module.switch.ident"
-            ,"begin": "(?i)(?=IDENT)"
+            ,"begin": "(?i)(?=IDENT[^a-z$_0-9%])"
             ,"end": "(?=[,)])"
             ,"patterns": [
                 {
-                    "begin": "(?i)\\G(IDENT)"
+                    "begin": "(?i)\\G(IDENT)(?=[^a-z$_0-9%])"
                     ,"beginCaptures": {
                         "0": {
                             "name": "keyword"
@@ -199,11 +196,12 @@
                         {
                             "begin": "(?=')"
                             ,"end": "(?=[,)])"
+                            ,"name": "markup.italic"
                             ,"patterns": [
                                 {
                                     "begin": "\\G(?=')"
                                     ,"end": "(?<=')"
-                                    ,"name": "markup.italic"
+                                    ,"name": "string"
                                     ,"patterns": [
                                         {
                                             "include": "#string"
@@ -230,11 +228,11 @@
         }
         ,"module-head-switches-language": {
             "name": "bliss.module.switch.language"
-            ,"begin": "(?i)(?=LANGUAGE)"
+            ,"begin": "(?i)(?=LANGUAGE[^a-z$_0-9%])"
             ,"end": "(?=[,)])"
             ,"patterns": [
                 {
-                    "begin": "(?i)\\G(LANGUAGE)"
+                    "begin": "(?i)\\G(LANGUAGE)(?=[^a-z$_0-9%])"
                     ,"beginCaptures": {
                         "0": {
                             "name": "keyword"
@@ -287,11 +285,11 @@
         }
         ,"module-head-switches-linkage": {
             "name": "bliss.module.switch.linkage"
-            ,"begin": "(?i)(?=LINKAGE)"
+            ,"begin": "(?i)(?=LINKAGE[^a-z$_0-9%])"
             ,"end": "(?=[,)])"
             ,"patterns": [
                 {
-                    "begin": "(?i)\\G(LINKAGE)"
+                    "begin": "(?i)\\G(LINKAGE)(?=[^a-z$_0-9%])"
                     ,"beginCaptures": {
                         "0": {
                             "name": "keyword"
@@ -342,11 +340,11 @@
         }
         ,"module-head-switches-list": {
             "name": "bliss.module.switch.list"
-            ,"begin": "(?i)(?=LIST)"
+            ,"begin": "(?i)(?=LIST[^a-z$_0-9%])"
             ,"end": "(?=[,)])"
             ,"patterns": [
                 {
-                    "begin": "(?i)\\G(LIST)"
+                    "begin": "(?i)\\G(LIST)(?=[^a-z$_0-9%])"
                     ,"beginCaptures": {
                         "0": {
                             "name": "keyword"
@@ -399,11 +397,11 @@
         }
         ,"module-head-switches-main": {
             "name": "bliss.module.switch.main"
-            ,"begin": "(?i)(?=MAIN)"
+            ,"begin": "(?i)(?=MAIN[^a-z$_0-9%])"
             ,"end": "(?=[,)])"
             ,"patterns": [
                 {
-                    "begin": "(?i)\\G(MAIN)"
+                    "begin": "(?i)\\G(MAIN)(?=[^a-z$_0-9%])"
                     ,"beginCaptures": {
                         "0": {
                             "name": "keyword"
@@ -459,11 +457,11 @@
         }
         ,"module-head-switches-optlevel": {
             "name": "bliss.module.switch.optlevel"
-            ,"begin": "(?i)(?=OPTLEVEL)"
+            ,"begin": "(?i)(?=OPTLEVEL[^a-z$_0-9%])"
             ,"end": "(?=[,)])"
             ,"patterns": [
                 {
-                    "begin": "(?i)\\G(OPTLEVEL)"
+                    "begin": "(?i)\\G(OPTLEVEL)(?=[^a-z$_0-9%])"
                     ,"beginCaptures": {
                         "0": {
                             "name": "keyword"
@@ -511,11 +509,11 @@
         }
         ,"module-head-switches-version": {
             "name": "bliss.module.switch.version"
-            ,"begin": "(?i)(?=VERSION)"
+            ,"begin": "(?i)(?=VERSION[^a-z$_0-9%])"
             ,"end": "(?=[,)])"
             ,"patterns": [
                 {
-                    "begin": "(?i)\\G(VERSION)"
+                    "begin": "(?i)\\G(VERSION)(?=[^a-z$_0-9%])"
                     ,"beginCaptures": {
                         "0": {
                             "name": "keyword"
@@ -540,11 +538,12 @@
                         {
                             "begin": "(?=')"
                             ,"end": "(?=[,)])"
+                            ,"name": "markup.italic"
                             ,"patterns": [
                                 {
                                     "begin": "\\G(?=')"
                                     ,"end": "(?<=')"
-                                    ,"name": "markup.italic"
+                                    ,"name": "string"
                                     ,"patterns": [
                                         {
                                             "include": "#string"
@@ -571,11 +570,11 @@
         }
         ,"module-head-switches-structure": {
             "name": "bliss.module.switch.structure"
-            ,"begin": "(?i)(?=STRUCTURE)"
+            ,"begin": "(?i)(?=STRUCTURE[^a-z$_0-9%])"
             ,"end": "(?=[,)])"
             ,"patterns": [
                 {
-                    "begin": "(?i)\\G(STRUCTURE)"
+                    "begin": "(?i)\\G(STRUCTURE)(?=[^a-z$_0-9%])"
                     ,"beginCaptures": {
                         "0": {
                             "name": "keyword"
@@ -625,68 +624,36 @@
             ]
         }
         ,"module-head-switches-languages": {
-            "match": "(?i)COMMON|BLISS16|BLISS32|BLISS36"
+            "match": "(?i)(COMMON|BLISS16|BLISS32|BLISS36)(?=[^a-z$_0-9%])"
             ,"name": "markup.italic"
         }
         ,"module-head-switches-list-options": {
-            "match": "(?i)SOURCE|NOSOURCE|REQUIRE|NOREQUIRE|EXPAND|NOEXPAND|TRACE|NOTRACE|LIBRARY|NOLIBRARY|OBJECT|NOOBJECT|ASSEMBLY|NOASSEMBLY|SYMBOLIC|NOSYMBOLIC|BINARY|NOBINARY|COMMENTARY|NOCOMMENTARY"
+            "match": "(?i)(SOURCE|NOSOURCE|REQUIRE|NOREQUIRE|EXPAND|NOEXPAND|TRACE|NOTRACE|LIBRARY|NOLIBRARY|OBJECT|NOOBJECT|ASSEMBLY|NOASSEMBLY|SYMBOLIC|NOSYMBOLIC|BINARY|NOBINARY|COMMENTARY|NOCOMMENTARY)(?=[^a-z$_0-9%])"
             ,"name": "markup.italic"
         }
-
-
-
-
-
         ,"module-body": {
-            "begin": "(?i)begin"
+            "begin": "(?i)begin(?=[^a-z$_0-9%])"
             ,"beginCaptures": {
                 "0": {
-                    "name": "keyword"
+                    "name": "keyword.control"
                 }
             }
-            ,"end": "(?i)end"
+            ,"end": "(?i)end(?=[^a-z$_0-9%])"
             ,"endCaptures": {
                 "0": {
-                    "name": "keyword"
+                    "name": "keyword.control"
                 }
             }
             ,"contentName": "bliss.module.body"
             ,"patterns": [
                 {
-                    "include": "#bliss-block"
+                    "include": "#bliss-expression"
                 }
                 ,{
                     "include": "#comment"
                 }
             ]
         }
-
-        ,"bliss-block": {
-            "begin": "(?i)begin"
-            ,"beginCaptures": {
-                "0": {
-                    "name": "keyword"
-                }
-            }
-            ,"end": "(?i)end"
-            ,"endCaptures": {
-                "0": {
-                    "name": "keyword"
-                }
-            }
-            ,"contentName": "bliss.block"
-            ,"patterns": [
-                {
-                    "include": "#bliss-block"
-                }
-                ,{
-                    "include": "#comment"
-                }
-            ]
-        }
-
-
-
         ,"string": {
             "begin": "'"
             ,"end": "'(?=[^'])"
@@ -696,10 +663,20 @@
                 }
             ]
         }
-
-        ,"string-literal": {
+        ,"string-literal-bare": {
             "name": "bliss.string.literal"
-            ,"begin": "(?i)(?=%(ASCII|ASCIZ|ASCIC|ASCID|RAD50_11|RAD50_10|SIXBIT|P))"
+            ,"begin": "(?i)(?=')"
+            ,"end": "(?<=')"
+            ,"contentName": "string"
+            ,"patterns": [
+                {
+                    "include": "#string"
+                }
+            ]
+        }
+        ,"string-literal-prefixed": {
+            "name": "bliss.string.literal"
+            ,"begin": "(?i)(?=%(ASCII|ASCIZ|ASCIC|ASCID|RAD50_11|RAD50_10|SIXBIT|P)[\\s'])"
             ,"end": "(?<=')"
             ,"patterns": [
                 {
@@ -732,17 +709,26 @@
                 }
             ]
         }
-
+        ,"string-literal": {
+            "patterns": [
+                {
+                    "include": "#string-literal-bare"
+                }
+                ,{
+                    "include": "#string-literal-prefixed"
+                }
+            ]
+        }
         ,"numeric-literal": {
             "patterns": [
                 {
-                    "name": "bliss.numeric.literal"
-                    ,"begin": "(?i)([\\+\\-])|(?=\\d)"
-                    ,"end": "(?<=\\d)"
-                    ,"name": "constant.numeric"
+                    "name": "bliss.numeric.literal.bare"
+                    ,"begin": "(?i)(?=\\d)"
+                    ,"end": "(?<=\\d)(?=[^\\d])"
                     ,"patterns": [
                         {
                             "match": "\\d+"
+                            ,"name": "constant.numeric"
                         }
                         ,{
                             "include": "#comment-or-illegal-char"
@@ -756,7 +742,7 @@
         }
         ,"numeric-literal-prefixed": {
             "name": "bliss.numeric.literal"
-            ,"begin": "(?i)(?=%(B|O|DECIMAL|X|C|E|D|G|H))"
+            ,"begin": "(?i)(?=%(B|O|DECIMAL|X|C|E|D|G|H)[\\s'])"
             ,"end": "(?<=')"
             ,"patterns": [
                 {
@@ -1255,12 +1241,6 @@
                     ,"patterns": [
                         {
                             "begin": "(?i)E"
-                            ,"beginCaptures": {
-                                "0": {
-                                    "name": "markup.bold"
-                                }
-                            }
-                            ,"contentName": "bliss.spfl.exponent"
                             ,"end": "(?=')"
                             ,"patterns": [
                                 {
@@ -1299,11 +1279,6 @@
                     ,"patterns": [
                         {
                             "begin": "(?i)D"
-                            ,"beginCaptures": {
-                                "0": {
-                                    "name": "markup.bold"
-                                }
-                            }
                             ,"contentName": "bliss.dpfl.exponent"
                             ,"end": "(?=')"
                             ,"patterns": [
@@ -1343,11 +1318,6 @@
                     ,"patterns": [
                         {
                             "begin": "(?i)(G|Q)"
-                            ,"beginCaptures": {
-                                "0": {
-                                    "name": "markup.bold"
-                                }
-                            }
                             ,"contentName": "bliss.eedpfl.exponent"
                             ,"end": "(?=')"
                             ,"patterns": [
@@ -1387,11 +1357,6 @@
                     ,"patterns": [
                         {
                             "begin": "(?i)Q"
-                            ,"beginCaptures": {
-                                "0": {
-                                    "name": "markup.bold"
-                                }
-                            }
                             ,"contentName": "bliss.eeepfl.exponent"
                             ,"end": "(?=')"
                             ,"patterns": [
@@ -1493,203 +1458,223 @@
         }
         ,"allocation-unit": {
             "name": "bliss.allocation.unit"
-            ,"match": "(?i)LONG|WORD|BYTE"
+            ,"match": "(?i)(LONG|WORD|BYTE)(?=[^a-z$_0-9%])"
             ,"captures": {
                 "0": {
-                    "name": "keyword.control"
+                    "name": "keyword"
                 }
             }
         }
         ,"extension-attribute": {
             "name": "bliss.extension.attribute"
-            ,"match": "(?i)UNSIGNED|SIGNED"
+            ,"match": "(?i)(UNSIGNED|SIGNED)(?=[^a-z$_0-9%])"
             ,"captures": {
+                "0": {
+                    "name": "keyword"
+                }
+            }
+        }
+        ,"bliss-expression": {
+            "patterns": [
+                {
+                    "include": "#comment"
+                }
+                ,{
+                    "include": "#bliss-block"
+                }
+                ,{
+                    "begin": "\\("
+                    ,"end": "\\)"
+                    ,"contentName": "bliss.in.brackets"
+                    ,"patterns": [
+                        {
+                            "include": "#bliss-expression"
+                        }
+                    ]
+                }
+                ,{
+                    "begin": "\\["
+                    ,"end": "\\]"
+                    ,"contentName": "bliss.in.brackets.square"
+                    ,"patterns": [
+                        {
+                            "include": "#bliss-expression"
+                        }
+                    ]
+                }
+                ,{
+                    "begin": "<"
+                    ,"end": ">"
+                    ,"contentName": "bliss.in.brackets.angle"
+                    ,"patterns": [
+                        {
+                            "include": "#bliss-expression"
+                        }
+                    ]
+                }
+                ,{
+                    "include": "#bliss-name"
+                }
+                ,{
+                    "include": "#literals"
+                }
+            ]
+        }
+        ,"bliss-block": {
+            "begin": "(?i)(begin)(?=[^a-z$_0-9%])"
+            ,"beginCaptures": {
                 "0": {
                     "name": "keyword.control"
                 }
             }
-        }
-
-
-
-
-
-
-
-        ,"bliss-expression": {
-            "patterns": [
-                {
-                    "include": "#primary"
-                }
-                ,{
-                    "include": "#operator-expression"
-                }
-                ,{
-                    "include": "#executable-function"
-                }
-                ,{
-                    "include": "#control-expression"
-                }
-            ]
-        }
-        ,"primary": {
-            "patterns": [
-                {
-                    "include": "#numeric-literal"
-                }
-                ,{
-                    "include": "#string-literal"
-                }
-                ,{
-                    "include": "#plit"
-                }
-                ,{
-                    "include": "#bliss-name"
-                }
-                ,{
-                    "include": "#block"
-                }
-                ,{
-                    "include": "#structure-reference"
-                }
-                ,{
-                    "include": "#routine-call"
-                }
-                ,{
-                    "include": "#field-reference"
-                }
-                ,{
-                    "include": "#codecomment"
-                }
-            ]
-        }
-        ,"plit": {
-            "name": "bliss.plit"
-            ,"begin": "(?i)U?PLIT"
-            ,"beginCaptures": {
-                "0": {
-                    "name": "keyword"
-                }
-            }
-            ,"end": "\\)"
-            ,"patterns": [
-                {
-                    "include": "#plit-psect"
-                }
-                ,{
-                    "include": "#allocation-unit"
-                }
-                ,{
-                    "include": "#plit-items"
-                }
-            ]
-        }
-        ,"plit-psect": {
-            "name": "bliss.psect"
-            ,"begin": "(?i)PSECT"
-            ,"beginCaptures": {
-                "0": {
-                    "name": "storage.modifier"
-                }
-            }
-            ,"end": "\\)"
-            ,"patterns": [
-                {
-                    "begin": "\\("
-                    ,"end": "(?=\\))"
-                    ,"patterns": [
-                        {
-                            "include": "#bliss-name"
-                        }
-                    ]
-                }
-            ]
-        }
-        ,"plit-items": {
-            "begin": "\\("
-            ,"end": "(?=\\))"
-            ,"contentName": "bliss.plititems"
-            ,"patterns": [
-                {
-                    "include": "#allocation-unit"
-                }
-                ,{
-                    "include": "#plit-rep"
-                }
-                ,{
-                    "include": "#string-literal"
-                }
-                ,{
-                    "include": "#bliss-name"
-                }
-                ,{
-                    "include": "#plit-items-inner"
-                }
-            ]
-        }
-        ,"plit-items-inner": {
-            "begin": "\\("
-            ,"end": "\\)"
-            ,"contentName": "bliss.plititems"
-            ,"patterns": [
-                {
-                    "include": "#allocation-unit"
-                }
-                ,{
-                    "include": "#plit-rep"
-                }
-                ,{
-                    "include": "#string-literal"
-                }
-                ,{
-                    "include": "#bliss-name"
-                }
-                ,{
-                    "include": "#plit-items-inner"
-                }
-            ]
-        }
-        ,"plit-rep": {
-            "begin": "(?i)REP"
-            ,"beginCaptures": {
-                "0": {
-                    "name": "keyword"
-                }
-            }
-            ,"end": "(?i)OF"
+            ,"end": "(?i)(end)(?=[^a-z$_0-9%])"
             ,"endCaptures": {
                 "0": {
-                    "name": "keyword"
+                    "name": "keyword.control"
                 }
             }
-            ,"contentName": "bliss.replicator"
+            ,"contentName": "bliss.block"
             ,"patterns": [
                 {
-                    "include": "#numeric-literal"
+                    "include": "#bliss-expression"
                 }
             ]
         }
-        ,"standard-function": {
-
-        }
-        ,"predeclared-name": {
-            "match": "(?i)ABS|BITVECTOR|BLISS36C|BLISS10|BLISS|BLOCKVECTOR|BLOCK|"
-            ,"name": "bliss.name.predeclared"
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-        ,"expression": {
-
+        ,"bliss-name": {
+            "begin": "(?i)(?=[a-z$_0-9%])"
+            ,"end": "(?i)(?<=[a-z$_0-9%])(?=[^a-z$_0-9%])"
+            ,"name": "bliss.name"
+            ,"patterns": [
+                {
+                    "include": "#comment"
+                }
+                ,{
+                    "include": "#literals"
+                }
+                ,{
+                    "include": "#allocation-unit"
+                }
+                ,{
+                    "match": "(?i)(routine|module)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword.control"
+                }
+                ,{
+                    "match": "(?i)(if|then|else)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword.control"
+                }
+                ,{
+                    "match": "(?i)(case|from|to|of|inrange|outrange|set|tes)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword.control"
+                }
+                ,{
+                    "match": "(?i)(selectu|selecta|selectoneu|selectonea|selectone|select|of|set|tes|always|otherwise)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword.control"
+                }
+                ,{
+                    "match": "(?i)(incru|incra|incr|decru|decra|decr|from|to|by|do)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword.control"
+                }
+                ,{
+                    "match": "(?i)(while|until|do)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword.control"
+                }
+                ,{
+                    "match": "(?i)(leave|with|exitloop)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword.control"
+                }
+                ,{
+                    "match": "(?i)(return)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword.control"
+                }
+                ,{
+                    "match": "(?i)(\\$CODE\\$|\\$GLOBAL\\$|\\$HIGH\\$|\\$LOW\\$|\\$OWN\\$|\\$PLIT\\$)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(%ALLOCATION|%ASCIC|%ASCID|%ASCII|%ASCIZ|%ASSIGN|%BLISS16|%BLISS32|%BLISS36|%BLISS|%BPADDR|%BPUNIT|%BPVAL|%B)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(%CHARCOUNT|%CHAR|%COUNT|%CTCE|%C|%DECIMAL|%DECLARED|%D|%ELSE|%ERRORMACRO|%ERROR|%EXACTSTRING|%EXITITERATION|%EXITMACRO|%EXPAND|%EXPLODE|%E)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(%FIELDEXPAND|%FI|%G|%H|%IDENTICAL|%IF|%INFORM|%ISSTRING|%LENGTH|%LTCE|%MESSAGE|%NAME|%NBITSU|%NBITS|%NULL|%NUMBER|%O|%PRINT|%P)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(%QUOTENAME|%QUOTE|%RAD50_10|%RAD50_11|%REF|%REMAINING|%REMOVE|%REQUIRE|%SBTTL|%SIXBIT|%SIZE|%STRING|%SWITCHES|%THEN|%TITLE|%UNQUOTE|%UPVAL|%VARIANT|%WARN|%X)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(ZIP|XOR|WRITE|WORD_RELATIVE|WORD|WITH|WHILE|WEAK|VOLATILE|VERSION|VECTOR|VALUECBIT|UPLIT|UNTIL|UNSIGNED|UNDECLARE|UNAMES)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(TRAP|TRACE|TOPS20|TOPS10|TO|THEN|TES|T11|SYMBOLIC|SWITCHES|STRUCTURE|STANDARD_OTS|STANDARD|STACKLOCAL|STACK|SP|SOURCE|SKIP|SIGNED)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(SIGNAL_STOP|SIGNAL|SIGN|SHOW|SHARE|SETUNWIND|SET|SELECTU|SELECTONEU|SELECTONEA|SELECTONE|SELECTA|SELECT|SAFE|RTT|RSX_AST|ROUTINE)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(RETURN|REQUIRE|REP|RELOCATABLE|RELATIVE|REGISTER|REF|RECORD|READ|R9|R8|R7|R6|R5|R4|R3|R2|R11|R10|R1|R0|PUSHJ|PSECT|PS_INTERRUPT)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(PRESET|PRESERVE|PORTAL|PLIT|PIC|PC|OWN|OVERLAY|OUTRANGE|OTS_LINKAGE|OTS|OTHERWISE|ORIGIN|OR|OPTLEVEL|OPTIMIZE|OF|OBJECT|NULLPARAMETER)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(NOZIP|NOWRITE|NOVALUE|NOUNAMES|NOTUSED|NOTRACE|NOT|NOSYMBOLIC|NOSOURCE|NOSHARE|NOSAFE|NOREQUIRE|NOREAD|NOPRESERVE|NOPIC|NOOPTIMIZE)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(NOOBJECT|NONEXTERNAL|NOLIBRARY|NOINDIRECT|NOEXPAND|NOEXECUTE|NOERRS|NODEFAULT|NODEBUG|NOCOMMENTARY|NOCODE|NOBINARY|NOASSEMBLY|NEQU)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(NEQA|NEQ|MODULE|MOD|MINU|MINA|MIN|MAXU|MAXA|MAX|MAP|MAIN|MACRO|LSSU|LSSA|LSS|LSI11|LONG_RELATIVE|LONG|LOCAL|LITERAL|LIST|LINKAGE_REGS)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(LINKAGE|LIBRARY|LEQU|LEQA|LEQ|LEAVE|LANGUAGE|LABEL|KS10|KL10|KI10|KEYWORDMACRO|KC10|KA10|JSYS|JSR|JSB|IOT|IOPAGE|INTERRUPT|INRANGE)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(INITIAL|INDIRECT|INCRU|INCRA|INCR|IF|IDENT|GTRU|GTRA|GTR|GLOBAL|GEQU|GEQA|GEQ|GENERAL|FROM|FP|FORWARD|FORTRAN_SUB|FORTRAN_FUNC)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(FORTRAN|FIELD|F10|EXTERNAL|EXTENDED|EXPAND|EXITLOOP|EXECUTE|ERRS|EQV|EQLU|EQLA|EQL|ENVIRONMENT|ENTRY|END|ENABLE|EMT|ELUDOM|ELSE)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(DO|DECRU|DECRA|DECR|DEBUG|CONCATENATE|COMPILETIME|COMMENTARY|CODECOMMENT|CODE|CLEARSTACK|CH\\$WCHAR_A|CH\\$WCHAR|CH\\$TRANSTABLE)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(CH\\$TRANSLATE|CH\\$SIZE|CH\\$RCHAR_A|CH\\$RCHAR|CH\\$PTR|CH\\$PLUS|CH\\$NEQ|CH\\$MOVE|CH\\$LSS|CH\\$LEQ|CH\\$GTR|CH\\$GEQ|CH\\$FIND_SUB|CH\\$FIND_NOT_CH)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(CH\\$FIND_CH|CH\\$FILL|CH\\$FAIL|CH\\$EQL|CH\\$DIFF|CH\\$COPY|CH\\$COMPARE|CH\\$ALLOCATION|CH\\$A_WCHAR|CH\\$A_RCHAR|CASE|CALL|BYTE|BY|BUILTIN)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(BLOCKVECTOR|BLOCK|BLISS36C_OTS|BLISS36C|BLISS36|BLISS32|BLISS16|BLISS10_OTS|BLISS10|BLISS|BITVECTOR|BIT|BIND|BINARY|BEGIN)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                },
+                {
+                    "match": "(?i)(ASSEMBLY|ARGPTR|AP|AND|ALWAYS|ALIGN|ADDRESSING_MODE|ACTUALPARAMETER|ACTUALCOUNT|ABSOLUTE|ABS)(?=[^a-z$_0-9%])"
+                    ,"name": "keyword"
+                }
+                ,{
+                    "match": "(?i)[a-z$_][a-z$_0-9]*"
+                    ,"name": "bliss.name"
+                }
+            ]
         }
     }
     ,"scopeName": "source.bliss"
