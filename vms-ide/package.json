@@ -49,6 +49,7 @@
         "onLanguage:pascal",
         "onLanguage:fortran",
         "onLanguage:bliss",
+        "onLanguage:vms-basic",
         "onCommand:workbench.action.tasks.runTask"
     ],
     "contributes": {
@@ -79,6 +80,18 @@
             }
         ],
         "languages": [
+            {
+                "id": "c",
+                "extensions": [
+                    ".c"
+                ]
+            },
+            {
+                "id": "cpp",
+                "extensions": [
+                    ".cpp"
+                ]
+            },
             {
                 "id": "mms",
                 "aliases": [
@@ -113,12 +126,6 @@
                 "configuration": "msg.language-configuration.json"
             },
             {
-                "id": "basic",
-                "extensions": [
-                    ".bas"
-                ]
-            },
-            {
                 "id": "cobol",
                 "extensions": [
                     ".cob"
@@ -141,23 +148,18 @@
                 "configuration": "fortran.language-configuration.json"
             },
             {
-                "id": "c",
-                "extensions": [
-                    ".c"
-                ]
-            },
-            {
-                "id": "cpp",
-                "extensions": [
-                    ".cpp"
-                ]
-            },
-            {
                 "id": "bliss",
                 "extensions": [
                     ".bli"
                 ],
                 "configuration": "bliss.language-configuration.json"
+            },
+            {
+                "id": "vms-basic",
+                "extensions": [
+                    ".bas"
+                ],
+                "configuration": "basic.language-configuration.json"
             }
         ],
         "grammars": [
@@ -195,6 +197,11 @@
                 "language": "bliss",
                 "scopeName": "source.bliss",
                 "path": "syntaxes/bliss.tmLanguage.json"
+            },
+            {
+                "language": "vms-basic",
+                "scopeName": "source.vms-basic",
+                "path": "syntaxes/basic.tmLanguage.json"
             }
         ],
         "keybindings": [
@@ -800,7 +807,7 @@
                 "language": "bliss"
             },
             {
-                "language": "basic"
+                "language": "vms-basic"
             },
             {
                 "language": "cobol"

@@ -1,0 +1,51 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json"
+    ,"name": "BASIC"
+    ,"patterns": [
+        {
+            "include": "#comment"
+        }
+        ,{
+            "include": "#string"
+        }
+        ,{
+            "include": "#numeric"
+        }
+    ]
+    ,"repository": {
+        "comment": {
+            "name": "comment.line"
+            ,"begin": "!"
+            ,"end": "\\n"
+        }
+		,"string": {
+			"name": "string"
+			,"begin": "(\"|')"
+			,"end": "\\1"
+        }
+        ,"numeric": {
+            "begin": "(?i)(?<=[^a-z%$_\\.])(?=[\\d\\.])"
+            ,"end": "(?=[^\\d\\.])"
+            ,"patterns": [
+                {
+                    "match": "(?i)(?<=[^a-z%$_\\.])(\\d*)(\\.(\\d*))?"
+                    ,"captures": {
+                        "0": {
+                            "name": "constant.numeric"
+                        }
+                        ,"1": {
+                            "name": "constant.numeric.1"
+                        }
+                        ,"2": {
+                            "name": "constant.numeric.2"
+                        }
+                        ,"3": {
+                            "name": "constant.numeric.3"
+                        }
+                    }
+                }
+            ]
+        }
+    }
+    ,"scopeName": "source.vms-basic"
+}

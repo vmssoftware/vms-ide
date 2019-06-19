@@ -50,11 +50,6 @@
                         }
                     }
                     ,"end": "="
-                    ,"endCaptures": {
-                        "0": {
-                            "name": "constant.regexp"
-                        }
-                    }
                     ,"patterns": [
                         {
                             "include": "#module-head"
@@ -178,11 +173,6 @@
                         }
                     }
                     ,"end": "="
-                    ,"endCaptures": {
-                        "0": {
-                            "name": "constant.regexp"
-                        }
-                    }
                     ,"patterns": [
                         {
                             "include": "#comment-or-illegal-char"
@@ -408,11 +398,6 @@
                         }
                     }
                     ,"end": "="
-                    ,"endCaptures": {
-                        "0": {
-                            "name": "constant.regexp"
-                        }
-                    }
                     ,"patterns": [
                         {
                             "include": "#comment-or-illegal-char"
@@ -468,11 +453,6 @@
                         }
                     }
                     ,"end": "="
-                    ,"endCaptures": {
-                        "0": {
-                            "name": "constant.regexp"
-                        }
-                    }
                     ,"patterns": [
                         {
                             "include": "#comment-or-illegal-char"
@@ -520,11 +500,6 @@
                         }
                     }
                     ,"end": "="
-                    ,"endCaptures": {
-                        "0": {
-                            "name": "constant.regexp"
-                        }
-                    }
                     ,"patterns": [
                         {
                             "include": "#comment-or-illegal-char"
@@ -647,12 +622,18 @@
             ,"contentName": "bliss.module.body"
             ,"patterns": [
                 {
-                    "include": "#bliss-expression"
-                }
-                ,{
                     "include": "#comment"
                 }
+                ,{
+                    "include": "#bliss-declaration"
+                }
+                ,{
+                    "include": "#bliss-expression"
+                }
             ]
+        }
+        ,"bliss-declaration": {
+
         }
         ,"string": {
             "begin": "'"
