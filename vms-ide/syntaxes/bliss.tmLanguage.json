@@ -1442,7 +1442,7 @@
             ,"match": "(?i)(LONG|WORD|BYTE)(?=[^a-z$_0-9%])"
             ,"captures": {
                 "0": {
-                    "name": "keyword"
+                    "name": "entity.name.class"
                 }
             }
         }
@@ -1451,7 +1451,7 @@
             ,"match": "(?i)(UNSIGNED|SIGNED)(?=[^a-z$_0-9%])"
             ,"captures": {
                 "0": {
-                    "name": "keyword"
+                    "name": "entity.name.class"
                 }
             }
         }

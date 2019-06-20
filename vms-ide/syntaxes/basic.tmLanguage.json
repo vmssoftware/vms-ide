@@ -3,6 +3,11 @@
     ,"name": "BASIC"
     ,"patterns": [
         {
+            "match": "^(\\d+)"
+            ,"name": "entity.name.function"
+            ,"comment": "line numbers"
+        }
+        ,{
             "include": "#comment"
         }
         ,{
@@ -437,6 +442,18 @@
             "match":"(?i)[a-z][a-z0-9$_%\\.]*([%$])?"
             ,"name":"basic.name" 
         }
+        ,{
+            "match": "[,:()=;]"
+            ,"name": "basic.punctuation"
+        }
+        ,{
+            "match": "[\\+\\-\\*\\/\\^<>]"
+            ,"name": "keyword.operator"
+        }
+        ,{
+            "match": "\\S"
+            ,"name": "invalid.illegal"
+        }
     ]
     ,"repository": {
         "continuation": {
@@ -453,7 +470,7 @@
 			,"match": "(\"|')(.*?)(\\1)"
         }
         ,"numeric": {
-            "begin": "(?i)(?<=[^a-z%$_\\.])(?=[\\d\\.])"
+            "begin": "(?i)(?=[\\d\\.])"
             ,"end": "(?i)(%)?(?=[^\\d\\.E])"
             ,"endCaptures": {
                 "0": {
@@ -462,7 +479,7 @@
             }
             ,"patterns": [
                 {
-                    "match": "(?i)(?<=[^a-z%$_\\.])(\\d*)((\\.(\\d*))?(E[\\+\\-]?\\d*)?)?"
+                    "match": "(?i)(\\d*)((\\.(\\d*))?(E[\\+\\-]?\\d*)?)?"
                     ,"captures": {
                         "0": {
                             "name": "constant.numeric"
@@ -477,9 +494,13 @@
                             "name": "constant.numeric.fractional"
                         }
                         ,"5": {
-                            "name": "constant.numeric.exp"
+                            "name": "entity.name.class"
                         }
                     }
+                }
+                ,{
+                    "match": "\\S"
+                    ,"name": "invalid.illegal"
                 }
             ]
         }
@@ -490,19 +511,19 @@
                     "name": "constant.numeric"
                 }
                 ,"2": {
-                    "name": "constant.numeric.radix"
+                    "name": "entity.name.class"
                 }
                 ,"3": {
                     "name": "constant.numeric.value"
                 }
                 ,"4": {
-                    "name": "constant.numeric.type"
+                    "name": "entity.name.class"
                 }
                 ,"6": {
                     "name": "constant.numeric.value"
                 }
                 ,"7": {
-                    "name": "constant.numeric.type"
+                    "name": "entity.name.class"
                 }
             }
         }
