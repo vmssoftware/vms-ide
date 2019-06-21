@@ -126,7 +126,7 @@ export class VMSRuntime extends EventEmitter
 		this.programEnd = false;
 		let configManager = new ConfigManager(this.rootFolderName);
 		let section = await configManager.getProjectSection();
-		const messageSync = localize('runtime.sync_api_not_find', "Sync API don't find");
+		const messageSync = localize('runtime.sync_api_not_find', "Sync API doesn't find");
 
 		if (!section)
 		{
@@ -165,14 +165,19 @@ export class VMSRuntime extends EventEmitter
 					if(path !== "")
 					{
 						let fileM = new ConfigManager(folder);
-						let sourcePaths = await fileM.loadPathListFiles(section.source);
-						let lisPaths = await fileM.loadPathListFiles(section.listing);
+						let sectionCur = await fileM.getProjectSection();
 
-						this.addPrefixToArray(path, sourcePaths);
-						this.addPrefixToArray(path, lisPaths);
+						if (sectionCur)
+						{
+							let sourcePaths = await fileM.loadPathListFiles(sectionCur.source);
+							let lisPaths = await fileM.loadPathListFiles(sectionCur.listing);
 
-						this.sourcePaths = this.sourcePaths.concat(sourcePaths);
-						this.lisPaths = this.lisPaths.concat(lisPaths);
+							this.addPrefixToArray(path, sourcePaths);
+							this.addPrefixToArray(path, lisPaths);
+
+							this.sourcePaths = this.sourcePaths.concat(sourcePaths);
+							this.lisPaths = this.lisPaths.concat(lisPaths);
+						}						
 					}
 				}
 			}
@@ -288,7 +293,7 @@ export class VMSRuntime extends EventEmitter
 
 			if(!found)
 			{
-				const message = localize('runtime.lis_not_find', ".LIS file don't find for the source file");
+				const message = localize('runtime.lis_not_find', ".LIS file doesn't find for the source file");
 				vscode.window.showWarningMessage(message + " " + itemSource);
 
 				if (this.logFn)
@@ -299,10 +304,66 @@ export class VMSRuntime extends EventEmitter
 		}
 	}
 
+// Module/Image     File           Ident              Attributes          Bytes  Creation Date      Creator
+// ------------     ----           -----           ----------------       -----  -------------      -------
+// ADD                             V1.0                Lkg     Dnrm        224   2-APR-2019 00:41  VSI C V7.4-001
+//                  WORK:[KULIKOVSKIY.project.OUT.DEBUG.OBJ]ADD.OBJ;2
+// REM_TEST_LONG_NAME_CALL         V1.0                Lkg     Dnrm        120  20-MAR-2019 07:41  VSI C V7.4-001
+//                  WORK:[KULIKOVSKIY.project.OUT.DEBUG.OBJ.INTO]REM_TEST_LONG_NAME_CALL.OBJ;1
+// DECC$SHR                        V8.4-00             Lkg                   0  15-FEB-2016 11:06  Linker I02-37
+//                  SYS$COMMON:[SYSLIB]DECC$SHR.EXE;1
 	private async getModuleInfo(sourcePaths: string[], lisPaths: string[]) : Promise<HolderModuleInfo>
 	{
-		const matcher = /^(\S+)\s*Source.*\d+:\d+:\d+\s+(.*)/;//MODULE_NAME  Source Listing  25-APR-2019 02:09:09  VSI LANGUAGE V3.1-0007 Page 1
+		const matcher = /^(\S+)\s*Source.*\d+:\d+:\d+\s+(.*)/;				//MODULE_NAME  Source Listing  25-APR-2019 02:09:09  VSI LANGUAGE V3.1-0007
+		const matcherHead = /^Module\/Image\s*File\s*Ident/;				//Module/Image     File    Ident
+		const matcherModule = /^(\S+)\s*.*\s(\d*-\S+-\d+\s*\d+:\d+)\s+(.*)/;//BASIC_MENU    Fast   8235  19-JUN-2019 05:35   I64 BASIC V1.8-004
+		const matcherFile = /^\s*\S+:\[\S+\](\S+)\.O\S+;/;					// WORK:[KULIKOVSKIY.project.OUT.DEBUG.OBJ]ADD.OBJ;2
+
+		let moduleNames : string[] = [];
 		let info : HolderModuleInfo = new HolderModuleInfo();
+
+		for(let path of lisPaths)
+		{
+			let extPos = path.lastIndexOf(".");
+			let ext = path.substring(extPos).toUpperCase();
+
+			if(ext === ".MAP")
+			{
+				let block = false;
+				let sourceLines = await this.dbgParser.loadFileContext(path);
+				
+				for(let i = 0; i < sourceLines.length; i++)
+				{
+					if(block)
+					{
+						if(sourceLines[i] !== "")
+						{
+							let matchesM = sourceLines[i].match(matcherModule);
+							let matchesN = sourceLines[i+1].match(matcherFile);
+
+							if(matchesN && matchesM && matchesM.length === 4 && matchesN.length === 2)
+							{
+								moduleNames.push(matchesM[1]);
+								i++;
+							}
+						}
+						else
+						{
+							break;
+						}						
+					}
+					else
+					{
+						let matches = sourceLines[i].match(matcherHead);
+
+						if(matches)//find heaader line
+						{
+							block = true;
+						}
+					}
+				}
+			}
+		}
 
 		for(let path of sourcePaths)
 		{
@@ -315,6 +376,7 @@ export class VMSRuntime extends EventEmitter
 
 				if(matches && matches.length === 3)
 				{
+					let find = false;
 					let sourcePath = path;
 					let moduleName = matches[1];
 					let languageInfo = matches[2].toUpperCase();
@@ -327,6 +389,36 @@ export class VMSRuntime extends EventEmitter
 					if(moduleName.includes("$BLK"))
 					{
 						moduleName = moduleName.replace("$BLK", "");
+					}
+
+					if(languageInfo.includes("BASIC"))
+					{
+						if(moduleNames.length === 0)
+						{
+							const message = localize('runtime.map_not_find', ".MAP file or module name doesn't find");
+							vscode.window.showWarningMessage(message);
+
+							if (this.logFn)
+							{
+								this.logFn(LogType.information, () => message + "\n");
+							}
+						}
+						else
+						{
+							for(let item of moduleNames)
+							{
+								if(moduleName === item)
+								{
+									find = true;
+									break;
+								}
+							}
+
+							if(!find)
+							{
+								moduleName = this.getNameFromPath(path);
+							}
+						}
 					}
 
 					info.setItem(moduleName, sourcePath, listingPath, languageInfo);
