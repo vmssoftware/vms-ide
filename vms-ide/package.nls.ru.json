@@ -35,6 +35,7 @@
 	"synchronizer.command.uploadZip.title": "Выгрузить с помощью ZIP",
 	"synchronizer.command.upload.title": "Выгрузить",
 	"synchronizer.command.downloadHeaders.title": "Загрузить системные заголовочные файлы",
+	"synchronizer.command.quickSync.title": "Quick uploading",
 	"synchronizer.command.projectDependencies.syncProject.title": "Синхронизировать",
 	"synchronizer.command.projectDependencies.upload.title": "Выгрузить",
 	"synchronizer.command.projectDependencies.add.title": "Добавить в зависимости к текущему",
@@ -71,10 +72,18 @@
 	"synchronizer.properties.synchronize.setTimeByShell.description": "Использовать shell для установки даты файла",
 	"synchronizer.properties.synchronize.unzipCmd.description": "Команда распаковки на строне VMS",
 	"synchronizer.properties.synchronize.preferZip.description": "Использовать ZIP для выгрузки исходников",
+	"synchronizer.properties.synchronize.forceLocalTime.description": "Force local time for ZIP",
 	"synchronizer.properties.synchronize.purge.description": "Выполнять команду PURGE после выгрузки исходников",
 	"synchronizer.properties.builds.current.description": "Current build configuration",
 	"synchronizer.properties.builds.configurations.description": "Array of build configurations",
 	"vms_debug.extension.vms_c_debug": "VMS Отладчик",
 	"vms_debug.extension.vms_connect": "Подключиться к VMS серверу",
-	"vms_debug.extension.vms_terminal": "Терминал"
+	"vms_debug.extension.vms_terminal": "Терминал",
+	"vms_jvm_debug.label.description": "VMS JVM Debugger",
+	"vms_jvm_debug.classpath.description": "A ':' separated list of directories, JAR archives, and ZIP archives to search for class files.",
+	"vms_jvm_debug.class.description": "Class to execute",
+	"vms_jvm_debug.port.description": "JVM debugging port",
+	"vms_jvm_debug.arguments.description": "Arguments",
+	"vms_jvm_debug.stopOnEntry.description": "Automatically stop after launch",
+	"vms_jvm_debug.trace.description": "Enable logging of the Debug Adapter Protocol"
 }

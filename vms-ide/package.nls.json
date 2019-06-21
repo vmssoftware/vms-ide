@@ -35,6 +35,7 @@
     "synchronizer.command.uploadZip.title": "Upload all via Zip",
     "synchronizer.command.upload.title": "Upload all",
     "synchronizer.command.downloadHeaders.title": "Download system headers",
+    "synchronizer.command.quickSync.title": "Quick uploading",
     "synchronizer.command.projectDependencies.syncProject.title": "Synchronize",
     "synchronizer.command.projectDependencies.upload.title": "Upload",
     "synchronizer.command.projectDependencies.add.title": "Add to dependencies of selected",
@@ -71,10 +72,18 @@
     "synchronizer.properties.synchronize.setTimeByShell.description": "Do or not set file time by shell",
     "synchronizer.properties.synchronize.unzipCmd.description": "Command to unzip archive on VMS side",
     "synchronizer.properties.synchronize.preferZip.description": "Prefer ZIP to upload source",
+    "synchronizer.properties.synchronize.forceLocalTime.description": "Force local time for ZIP",
     "synchronizer.properties.synchronize.purge.description": "Execute PURGE command after uploding",
     "synchronizer.properties.builds.current.description": "Current build configuration",
     "synchronizer.properties.builds.configurations.description": "Array of build configurations",
 	"vms_debug.extension.vms_c_debug": "VMS Debugger",
 	"vms_debug.extension.vms_connect": "Connect to server",
-	"vms_debug.extension.vms_terminal": "Terminal"
+	"vms_debug.extension.vms_terminal": "Terminal",
+	"vms_jvm_debug.label.description": "VMS JVM Debugger",
+	"vms_jvm_debug.classpath.description": "A ':' separated list of directories, JAR archives, and ZIP archives to search for class files.",
+	"vms_jvm_debug.class.description": "Class to execute",
+	"vms_jvm_debug.port.description": "JVM debugging port",
+	"vms_jvm_debug.arguments.description": "Arguments",
+	"vms_jvm_debug.stopOnEntry.description": "Automatically stop after launch",
+	"vms_jvm_debug.trace.description": "Enable logging of the Debug Adapter Protocol"
 }

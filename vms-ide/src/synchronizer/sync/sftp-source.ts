@@ -113,4 +113,13 @@ export class SftpSource implements ISource {
         return this.sftp.createWriteStream(filename);
     }
 
+    public deleteFile(filename: string) {
+        filename = this.root + ftpPathSeparator + filename;
+        return this.sftp.deleteFile(filename);
+    }
+
+    public accessFile(filename: string) {
+        filename = this.root + ftpPathSeparator + filename;
+        return this.sftp.getStat(filename).then((stats) => stats !== undefined);
+    }
 }

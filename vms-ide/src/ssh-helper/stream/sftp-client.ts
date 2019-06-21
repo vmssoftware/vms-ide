@@ -98,6 +98,31 @@ export class SftpClient extends SshClient {
         return statRet;
     }
 
+    public async deleteFile(file: string) {
+        let fileDeleted = false;
+        await this.waitOperation.acquire();
+        if (await this.ensureSftp()) {
+            if (this.sftp) {
+                const opName = localize("operation.delete", "delete {0} via sftp{1}", file, this.tag ? " " + this.tag : "");
+                await WaitableOperation(opName, this.sftp, "continue", this.sftp, "error", (complete) => {
+                    if (!this.sftp) {
+                        return false;
+                    }
+                    return !this.sftp.unlink(file, (err) => {
+                        if (err) {
+                            this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
+                        } else {
+                            fileDeleted = true;
+                        }
+                        complete.release();
+                    });
+                }, this.logFn);
+            }
+        }
+        this.waitOperation.release();
+        return fileDeleted;
+    }
+
     public async setStat(file: string, stat: IInputAttributes) {
         await this.waitOperation.acquire();
         if (await this.ensureSftp()) {

@@ -137,4 +137,14 @@ export class FsSource implements ISource, IReadDirectory {
         return fs.createWriteStream(filename);
     }
 
+    public async deleteFile(filename: string) {
+        filename = this.root + ftpPathSeparator + filename;
+        return fs.unlink(filename).then(() => true);
+    }
+
+    public async accessFile(filename: string) {
+        filename = this.root + ftpPathSeparator + filename;
+        return fs.access(filename).then(() => true).catch(() => false);
+    }
+
 }

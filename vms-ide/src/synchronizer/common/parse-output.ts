@@ -38,7 +38,7 @@ interface IParseRgx {
 
 const rgxMsg = /^((%|-)(\S+)-(\S)-(\S*)),\s(.*)$/;
 
-const rgxMsgCXX = /^((%|-)(CXX|CC|COBOL)-(\S)-(\S*)),\s(.*)$/;
+const rgxMsgCXX = /^((%|-)(CXX|CC|COBOL|BLS32)-(\S)-(\S*)),\s(.*)$/;
 const rgxPlaceCXX = /^at line number (\d+) in file (.*)$/;
 const rgxPlaceCXX_TLB = /^at line number (\d+) in module (\S+) of text library (.*)$/;
 const rgxMsgPosCXX = /^(\.*)\^/;
@@ -46,6 +46,10 @@ const rgxMsgInfoMessages = [
     /\d+ (catastrophic )?error(s?) detected in the compilation of/,
     /Compilation terminated/,
 ];
+const typesToSkip = new Set<string>([
+    "ENDNOOBJ",
+    "ENDDIAGS"
+]);
 
 const parseRgxCXX: IParseRgx = {
     rgxMain: /^((%|-)(CXX|CC|COBOL)-(\S)-(\S*)),\s(.*)$/,
@@ -142,7 +146,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
 
     let i = 0;
     while (i < lines.length) {
-        let [consume, from]  = findCxxCobolErrors(i);
+        let [consume, from]  = findCxxCobolBlissErrors(i);
         if (!consume) {
             [consume, from] = findJVMErrors(i);
         }
@@ -223,7 +227,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
     /**
      * returns consumed lines
      */
-    function findCxxCobolErrors(idx: number) {
+    function findCxxCobolBlissErrors(idx: number) {
         let consume = 0;
         let from = idx;
         const line = lines[idx];
@@ -248,7 +252,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
             }
             diagnostic.type = matched[5];
             diagnostic.message = matched[6];
-            if (diagnostic.type === "ENDDIAGS") {
+            if (typesToSkip.has(diagnostic.type)) {
                 // eat this line
                 return [consume, from];
             }
@@ -267,6 +271,17 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
             consume++;
             while (idx < lines.length) {
                 const nextLine = lines[idx];
+                if (diagnostic.facility && diagnostic.severity && diagnostic.type) {
+                    const continueLine = `-${diagnostic.facility}-${diagnostic.severity}-${diagnostic.type}, (.*)`;
+                    const rgxContinueLine = new RegExp(continueLine);
+                    const continueMatched = nextLine.match(rgxContinueLine);
+                    if (continueMatched) {
+                        diagnostic.message += continueMatched[1];
+                        ++idx;
+                        ++consume;
+                        continue;
+                    }
+                }
                 const nextLineMathed = nextLine.match(rgxPlaceCXX);
                 if (nextLineMathed) {
                     diagnostic.line = parseInt(nextLineMathed[1], 10);
@@ -285,8 +300,8 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                         break;
                     }
                     diagnostic.message += nextLine;
-                    idx++;
-                    consume++;
+                    ++idx;
+                    ++consume;
                 }
             }
             problems.push(diagnostic);

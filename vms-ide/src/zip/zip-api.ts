@@ -3,10 +3,8 @@ import * as arch from "archiver";
 import * as path from "path";
 import {Zlib} from "unzipt";
 
-import { LogFunction, ftpPathSeparator }      from "../common/main";
+import { LogFunction, ftpPathSeparator, Resolve }      from "../common/main";
 import { LogType }          from "../common/main";
-
-export type Resolve<T> = ((value?: T | PromiseLike<T> | undefined) => void);
 
 export class ZipApi {
 
@@ -45,7 +43,7 @@ export class ZipApi {
         return false;
     }
 
-    public start(file: string, logFn?: LogFunction): Promise<boolean> | undefined {
+    public start(file: string, forceLocalTime?: boolean, logFn?: LogFunction): Promise<boolean> | undefined {
         if (this.output || this.archiveResolver) {
             return undefined;
         }
@@ -79,6 +77,7 @@ export class ZipApi {
         });
 
         this.archive = arch.create("zip", {
+            forceLocalTime,
             zlib: { level: 9 }
         });
         

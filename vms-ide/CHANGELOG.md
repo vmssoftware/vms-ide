@@ -1,3 +1,8 @@
+## 0.0.23
+* New synchrinization setting: **forceLocalTime**
+* Grammar for **PASCAL**, **COBOL**, **FORTRAN** is included. Grammar for **BLISS** is under development.
+* New command is added: "Quick uploading"
+
 ## 0.0.22
 * New project settings: **addLibraries** and **addIncludes**
 * Allow customization of command to start the SSH terminal

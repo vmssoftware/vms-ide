@@ -2,7 +2,7 @@ import { LogFunction, LogType } from "./log-type";
 
 /**
  * Collects all calls and fire only one if during _msec were no more calls
- * Only the last then() or awaitwill continue to work!!!
+ * Only the last then() or await will continue to work!!!
  */
 
 export class Debouncer {

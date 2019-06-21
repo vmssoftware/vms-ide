@@ -2,14 +2,15 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "0.0.22",
+    "version": "0.0.23",
     "publisher": "VMSSoftwareInc",
+    "license": "SEE LICENSE IN LICENSE.md",
     "repository": {
         "type": "git",
         "url": "git:"
     },
     "engines": {
-        "vscode": "^1.28.0"
+        "vscode": "^1.33.1"
     },
     "categories": [
         "Debuggers",
@@ -34,15 +35,21 @@
         "onCommand:vmssoftware.synchronizer.forceSynchronized",
         "onCommand:vmssoftware.synchronizer.forceBuilt",
         "onCommand:vmssoftware.synchronizer.uploadZip",
+        "onCommand:vmssoftware.synchronizer.upload",
+        "onCommand:vmssoftware.synchronizer.quickSync",
         "onCommand:vmssoftware.synchronizer.downloadHeaders",
         "onCommand:vmssoftware.synchronizer.buildOnlyProject",
         "onCommand:vmssoftware.synchronizer.reBuildOnlyProject",
-        "onCommand:vmssoftware.synchronizer.upload",
         "onCommand:extension.vms-debug.terminal",
         "onDebug",
         "onLanguage:cld",
         "onLanguage:msg",
         "onLanguage:mms",
+        "onLanguage:cobol",
+        "onLanguage:pascal",
+        "onLanguage:fortran",
+        "onLanguage:bliss",
+        "onLanguage:vms-basic",
         "onCommand:workbench.action.tasks.runTask"
     ],
     "contributes": {
@@ -73,6 +80,18 @@
             }
         ],
         "languages": [
+            {
+                "id": "c",
+                "extensions": [
+                    ".c"
+                ]
+            },
+            {
+                "id": "cpp",
+                "extensions": [
+                    ".cpp"
+                ]
+            },
             {
                 "id": "mms",
                 "aliases": [
@@ -107,47 +126,40 @@
                 "configuration": "msg.language-configuration.json"
             },
             {
-                "id": "bliss",
-                "extensions": [
-                    ".bli"
-                ]
-            },
-            {
-                "id": "basic",
-                "extensions": [
-                    ".bas"
-                ]
-            },
-            {
                 "id": "cobol",
                 "extensions": [
                     ".cob"
-                ]
+                ],
+                "configuration": "cobol.language-configuration.json"
+            },
+            {
+                "id": "pascal",
+                "extensions": [
+                    ".pas"
+                ],
+                "configuration": "pascal.language-configuration.json"
             },
             {
                 "id": "fortran",
                 "extensions": [
                     ".f77",
                     ".f90"
-                ]
+                ],
+                "configuration": "fortran.language-configuration.json"
             },
             {
-                "id": "pascal",
+                "id": "bliss",
                 "extensions": [
-                    ".pas"
-                ]
+                    ".bli"
+                ],
+                "configuration": "bliss.language-configuration.json"
             },
             {
-                "id": "c",
+                "id": "vms-basic",
                 "extensions": [
-                    ".c"
-                ]
-            },
-            {
-                "id": "cpp",
-                "extensions": [
-                    ".cpp"
-                ]
+                    ".bas"
+                ],
+                "configuration": "basic.language-configuration.json"
             }
         ],
         "grammars": [
@@ -165,6 +177,31 @@
                 "language": "msg",
                 "scopeName": "source.msg",
                 "path": "syntaxes/msg.tmLanguage.json"
+            },
+            {
+                "language": "cobol",
+                "scopeName": "source.cobol",
+                "path": "syntaxes/cobol.tmLanguage.json"
+            },
+            {
+                "language": "pascal",
+                "scopeName": "source.pascal",
+                "path": "syntaxes/pascal.tmLanguage"
+            },
+            {
+                "language": "fortran",
+                "scopeName": "source.fortran",
+                "path": "syntaxes/fortran.tmLanguage.json"
+            },
+            {
+                "language": "bliss",
+                "scopeName": "source.bliss",
+                "path": "syntaxes/bliss.tmLanguage.json"
+            },
+            {
+                "language": "vms-basic",
+                "scopeName": "source.vms-basic",
+                "path": "syntaxes/basic.tmLanguage.json"
             }
         ],
         "keybindings": [
@@ -236,6 +273,10 @@
                     "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
+                    "command": "vmssoftware.synchronizer.quickSync",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
                     "command": "vmssoftware.synchronizer.editProject",
                     "when": "!vmssoftware.synchronizer.isInAction"
                 },
@@ -249,10 +290,6 @@
                 },
                 {
                     "command": "vmssoftware.synchronizer.upload",
-                    "when": "!vmssoftware.synchronizer.isInAction"
-                },
-                {
-                    "command": "vmssoftware.synchronizer.cleanProject",
                     "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
@@ -432,6 +469,11 @@
             {
                 "command": "vmssoftware.synchronizer.syncProject",
                 "title": "%synchronizer.command.syncProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.quickSync",
+                "title": "%synchronizer.command.quickSync.title%",
                 "category": "%command.category%"
             },
             {
@@ -721,6 +763,12 @@
                     "default": false,
                     "description": "%synchronizer.properties.synchronize.preferZip.description%"
                 },
+                "vmssoftware.synchronizer.synchronize.forceLocalTime": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%synchronizer.properties.synchronize.forceLocalTime.description%"
+                },
                 "vmssoftware.synchronizer.synchronize.purge": {
                     "scope": "resource",
                     "type": "boolean",
@@ -759,24 +807,22 @@
                 "language": "bliss"
             },
             {
-                "language": "basic"
+                "language": "vms-basic"
             },
             {
                 "language": "cobol"
             },
             {
-                "language": "fortran"
+                "language": "pascal"
             },
             {
-                "language": "pascal"
+                "language": "fortran"
             }
         ],
         "debuggers": [
             {
                 "type": "vms_dbg",
                 "label": "%vms_debug.extension.vms_c_debug%",
-                "program": "./out/debugAdapter.js",
-                "runtime": "node",
                 "configurationAttributes": {
                     "launch": {
                         "required": [

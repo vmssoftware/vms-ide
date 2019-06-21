@@ -74,6 +74,7 @@ export interface ISftpClient extends EventEmitter {
     setStat(file: string, stat: IInputAttributes): Promise<void>;
     readDirectory(directory: string): Promise<IFileEntry[] | undefined>;
     ensureDirectory(directory: string): Promise<boolean>;
+    deleteFile(file: string): Promise<boolean>;
     dispose(): void;
 }
 
