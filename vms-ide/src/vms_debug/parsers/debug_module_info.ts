@@ -15,6 +15,11 @@ export class HolderModuleInfo
 		return this.moduleInfo.length;
 	}
 
+	public getItems() : Array<IModuleInfo>
+	{
+		return this.moduleInfo;
+	}
+
 	public getIndexItem(moduleName : string) : number
 	{
 		let index : number = -1;
