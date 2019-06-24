@@ -38,7 +38,7 @@ interface IParseRgx {
 
 const rgxMsg = /^((%|-)(\S+)-(\S)-(\S*)),\s(.*)$/;
 
-const rgxMsgCompiler = /^((%|-)(CXX|CC|COBOL|BLS32|BASIC)-(\S)-(\S*)),\s(.*)$/;
+const rgxMsgCompiler = /^((%|-)(CXX|CC|COBOL|BLS32|BASIC|F90|PASCAL)-(\S)-(\S*)),\s(.*)$/;
 const rgxPlaceCompiler = /^at line number (\d+) in file (.*)$/;
 const rgxPlaceCompiler_TLB = /^at line number (\d+) in module (\S+) of text library (.*)$/;
 const rgxMsgPosCompiler = /^(\.*)\^/;
