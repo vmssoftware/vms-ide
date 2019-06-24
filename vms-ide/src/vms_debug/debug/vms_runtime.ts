@@ -317,7 +317,7 @@ export class VMSRuntime extends EventEmitter
 		const matcher = /^(\S+)\s*Source.*\d+:\d+:\d+\s+(.*)/;				//MODULE_NAME  Source Listing  25-APR-2019 02:09:09  VSI LANGUAGE V3.1-0007
 		const matcherHead = /^Module\/Image\s*File\s*Ident/;				//Module/Image     File    Ident
 		const matcherModule = /^(\S+)\s*.*\s(\d*-\S+-\d+\s*\d+:\d+)\s+(.*)/;//BASIC_MENU    Fast   8235  19-JUN-2019 05:35   I64 BASIC V1.8-004
-		const matcherFile = /^\s*\S+:\[\S+\](\S+)\.O\S+;/;					// WORK:[KULIKOVSKIY.project.OUT.DEBUG.OBJ]ADD.OBJ;2
+		const matcherFile = /^\s*\S+:\[\S+\](\S+)\.O\S+;/i;					// WORK:[KULIKOVSKIY.project.OUT.DEBUG.OBJ]ADD.OBJ;2
 
 		let moduleNames : string[] = [];
 		let info : HolderModuleInfo = new HolderModuleInfo();
@@ -395,7 +395,7 @@ export class VMSRuntime extends EventEmitter
 					{
 						if(moduleNames.length === 0)
 						{
-							const message = localize('runtime.map_not_find', ".MAP file or module name doesn't find");
+							const message = localize('runtime.map_not_find', ".MAP file or module name could not be found");
 							vscode.window.showWarningMessage(message);
 
 							if (this.logFn)
