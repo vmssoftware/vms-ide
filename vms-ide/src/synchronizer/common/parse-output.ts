@@ -246,10 +246,8 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                 }
             }
             // get file and line
-            idx++;
-            consume++;
-            while (idx < lines.length) {
-                const nextLine = lines[idx];
+            while (idx + 1 < lines.length) {
+                const nextLine = lines[idx + 1];
                 if (diagnostic.facility && diagnostic.severity && diagnostic.type) {
                     const continueLine = `-${diagnostic.facility}-${diagnostic.severity}-${diagnostic.type}, (.*)`;
                     const rgxContinueLine = new RegExp(continueLine);
@@ -267,6 +265,8 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                     diagnostic.file = nextLineMathed[2];
                     const converter = VmsPathConverter.fromVms(diagnostic.file);
                     diagnostic.file = converter.initial;
+                    ++idx;
+                    ++consume;
                     break;
                 } else {
                     const nextLineMathed_TLB = nextLine.match(rgxPlaceCompiler_TLB);
@@ -276,6 +276,11 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                         const converter = VmsPathConverter.fromVms(diagnostic.file);
                         diagnostic.file = converter.initial;
                         diagnostic.external = true;
+                        ++idx;
+                        ++consume;
+                        break;
+                    }
+                    if (lineStartRgx.some((rgx) => rgx.test(nextLine)))  {
                         break;
                     }
                     diagnostic.message += nextLine;
