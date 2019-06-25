@@ -1,5 +1,8 @@
+## 1.0.0
+* Stable version
+
 ## 0.0.23
-* New synchrinization setting: **forceLocalTime**
+* New synchronization setting: **forceLocalTime**
 * Grammars for **PASCAL**, **COBOL**, **FORTRAN**, **BLISS** and **BASIC** are included.
 * New command is added: "Quick uploading"
 
