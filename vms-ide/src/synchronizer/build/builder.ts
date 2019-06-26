@@ -1111,8 +1111,14 @@ export class Builder {
                     } else if (found.length > 1) {
                         localFile = found[0].filename;
                         this.logFn(LogType.warning, () => localize("too_many_files", "There are more than one file named {0}", localFile));
+                    } else {
+                        this.logFn(LogType.warning, () => localize("no_file", "Cannot find the file named {0}", localFile));
                     }
                     uri = Uri.file(path.join(scopeData.ensured.configHelper.workspaceFolder!.uri.fsPath, localFile));
+                } else {
+                    if (entry.file === undefined && scopeData.ensured.configHelper.workspaceFolder) {
+                        uri = scopeData.ensured.configHelper.workspaceFolder.uri;
+                    }
                 }
                 let diagArr = errMap.get(uri.toString());
                 diagArr = diagArr || [];

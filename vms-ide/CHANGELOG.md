@@ -1,6 +1,6 @@
 ## 0.0.23
 * New synchrinization setting: **forceLocalTime**
-* Grammar for **PASCAL**, **COBOL**, **FORTRAN** is included. Grammar for **BLISS** is under development.
+* Grammars for **PASCAL**, **COBOL**, **FORTRAN**, **BLISS** and **BASIC** are included.
 * New command is added: "Quick uploading"
 
 ## 0.0.22

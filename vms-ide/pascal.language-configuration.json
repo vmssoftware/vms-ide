@@ -27,6 +27,6 @@
 			"start": "^\\s*\\{\\$REGION(\\s\\'.*\\')?\\}",
 			"end": "^\\s*\\{\\$ENDREGION\\}"
 		}
-	}
-
+	},
+    "wordPattern": "[a-zA-Z$_][a-zA-Z$_0-9]*"
 }

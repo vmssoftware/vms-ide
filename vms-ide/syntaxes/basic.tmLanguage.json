@@ -3,7 +3,18 @@
     ,"name": "BASIC"
     ,"patterns": [
         {
+            "match": "^(\\d+)"
+            ,"name": "entity.name.function"
+            ,"comment": "line numbers"
+        }
+        ,{
             "include": "#comment"
+        }
+        ,{
+            "include": "#continuation"
+        }
+        ,{
+            "include": "#explicit-numeric"
         }
         ,{
             "include": "#string"
@@ -11,40 +22,510 @@
         ,{
             "include": "#numeric"
         }
+        ,{ "match":"(?i)(ZER)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(XOR)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(XLATE$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(XLATE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(XFLOAT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(WRITE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(WORD)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(WINDOWSIZE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(WHILE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(WHEN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(WARNING)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(WAIT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(VT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(VPS%)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(VIRTUAL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(VFC)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(VARIANT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(VARIABLE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(VALUE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(VAL%)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(VAL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(USR$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(USING)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(USEROPEN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(USAGE$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(UPDATE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(UNTIL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(UNLOCK)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(UNLESS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(UNDEFINED)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(UNALIGNED)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(UBOUND)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TYPE$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TYPE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TYP)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TRN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TRM$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TRANSFORM)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TO)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TIME$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TIME)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TIM)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(THEN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TFLOAT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TERMINAL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TEMPORARY)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TAN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(TAB)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SYS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SWAP%)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SUM$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SUBSCRIPT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SUBEXIT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SUBEND)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SUB)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(STRING$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(STRING)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(STREAM)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(STR$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(STOP)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(STEP)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(STATUS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SQRT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SQR)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SPEC%)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SPAN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SPACE$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SP)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SO)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SLEEP)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SIZE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SINGLE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SIN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SI)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SHIFT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SHEAR)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SGN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SFLOAT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SEVERE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SETUP)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SET)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SEQUENTIAL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SELECT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SEG$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SCRATCH)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(SCALE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RSET)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ROUNDING)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ROTATE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RND)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RMSSTATUS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RIGHT$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RIGHT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RFA)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RETURN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RETRY)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RESUME)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RESTORE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RESET)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(REMAP)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(REM)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RELATIVE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(REGARDLESS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(REF)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RECOUNT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RECORDTYPE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RECORDSIZE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RECORD)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(REAL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(READ)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RCTRLO)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RCTRLC)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RANDOMIZE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RANDOM)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(RAD$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(QUO$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(QUAD)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(PUT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(PROGRAM)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(PROD$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(PRINT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(PRIMARY)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(PPS%)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(POS%)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(POS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(PLOT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(PLACE$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(PICTURE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(PI)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(PEEK)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(PAGE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(OVERFLOW)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(OUTPUT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(OTHERWISE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ORGANIZATION)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(OR)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(OPTIONAL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(OPTION)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(OPEN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ONERROR)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ONECHR)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ON)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(OF)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NXEQ)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NX)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NUM2)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NUM1$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NUM$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NUM)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NUL$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NOT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NOSPAN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NOREWIND)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NOPAGE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NONE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NOMARGIN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NOEXTEND)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NOECHO)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NODUPLICATES)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NODATA)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NOCHANGES)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NEXT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(NAME)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MOVE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MODIFY)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MODE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MOD%)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MOD)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MIN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MID$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MID)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MAX)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MAT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MARGIN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MAR%)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MAR)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MAP)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MAGTAPE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(MAG)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LSET)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LONG)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LOG10)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LOG)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LOCKED)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LOC)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LIST)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LINPUT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LINO)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LINE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LF)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LET)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LEN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LEFT$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LEFT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(LBOUND)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(KILL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(KEY)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(JSB)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ITERATE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(INVALID)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(INV)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(INTEGER)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(INT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(INSTR)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(INPUT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(INKEY$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(INITIAL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(INFORMATIONAL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(INDEXED)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(INACTIVE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(IMP)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(IMAGE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(IFMORE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(IFEND)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(IF)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(IDN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(HT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(HFLOAT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(HANDLER)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(HANDLE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(GT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(GROUP)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(GRAPH)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(GOTO)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(GOSUB)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(GOBACK)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(GO)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(GFLOAT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(GETRFA)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(GET)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(GE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FUNCTIONEXIT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FUNCTIONEND)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FUNCTION)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FSS$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FSP$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FROM)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FREE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FORTRAN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FORMAT$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FOR)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FNEXIT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FNEND)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FNAME$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FLUSH)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FIXED)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FIX)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FIND)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FILL%)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FILL$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FILL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FILESIZE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FILE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FIELD)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(FF)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(EXTERNAL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(EXTENDSIZE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(EXTEND)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(EXPLICIT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(EXP)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(EXIT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ESC)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ERT$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ERROR)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ERR)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ERN$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ERL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(EQV)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(EQ)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(END)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ELSE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(EDIT$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ECHO)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DYNAMIC)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DUPLICATES)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DRAW)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DOUBLEBUF)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DOUBLE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DIMENSION)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DIM)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DIF$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DEVICE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DET)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DESCENDING)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DESC)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DELETE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DEL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DEFAULTNAME)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DEF*)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DEF)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DECLARE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DECIMAL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DEACTIVATE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DATE$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DATA)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DAT$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(DAT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CVTF$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CVT%$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CVT$F)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CVT$%)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CVT$$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CTRLC)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CR)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(COUNT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(COT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(COS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CONTINUE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CONTIGUOUS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CONSTANT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CONNECT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CON)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(COMP%)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(COMMON)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(COM)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CLUSTERSIZE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CLOSE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CLK$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CLEAR)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CHR$)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CHECKING)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CHANGES)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CHANGE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CHAIN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CCPOS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CAUSE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CASE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(CALL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BYTE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BY)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BUFSIZ)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BUFFER)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BUCKETSIZE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BLOCKSIZE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BLOCK)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BIT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BINARY)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BEL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BASIC)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BASE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(BACK)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ATN2)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ATN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ASK)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ASCII)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ASCENDING)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ASC)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(AS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(APPEND)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ANY)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(AND)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ALTERNATE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ALLOW)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ALIGNED)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ACTIVE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ACTIVATE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ACCESS%)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ACCESS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ABS%)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ABS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(ABORT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%VARIANT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%UNDEFINE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%TITLE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%THEN)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%SBTTL)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%PRINT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%PAGE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%NOLIST)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%NOCROSS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%LIST)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%LIBRARY)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%LET)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%INCLUDE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%IF)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%IDENT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%FROM)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%END)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%ELSE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%DEFINE)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%CROSS)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(%ABORT)(?=[^a-z0-9$_%\\.])", "name":"keyword" }
+        ,{ "match":"(?i)(WITH)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(WINDOW)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(VIEWPORT)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(UNIT)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(TRANSFORMATION)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(TRAN)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(TEXT)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(STYLE)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(SPACE)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(RANGE)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(PROMPT)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(PRIORITY)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(POINTS)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(POINT)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(PATH)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(NO)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(MULTIPOINT)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(MIX)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(METAFILE)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(LINES)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(INDEX)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(IN)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(HEIGHT)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(GRAPHICS)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(FONT)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(EXPAND)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(COLOR)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(CLIP)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(CHOICE)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(AT)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(AREA)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(ANGLE)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{ "match":"(?i)(%CDD)(?=[^a-z0-9$_%\\.])", "name":"keyword.other" }
+        ,{
+            "match":"(?i)[a-z][a-z0-9$_%\\.]*([%$])?"
+            ,"name":"basic.name" 
+        }
+        ,{
+            "match": "[,:()=;]"
+            ,"name": "basic.punctuation"
+        }
+        ,{
+            "match": "[\\+\\-\\*\\/\\^<>]"
+            ,"name": "keyword.operator"
+        }
+        ,{
+            "match": "\\S"
+            ,"name": "invalid.illegal"
+        }
     ]
     ,"repository": {
-        "comment": {
+        "continuation": {
+            "name": "constant.regexp"
+            ,"match": "&\\s*\n"
+        }
+        ,"comment": {
             "name": "comment.line"
             ,"begin": "!"
-            ,"end": "\\n"
+            ,"end": "(!|\\n)"
         }
 		,"string": {
 			"name": "string"
-			,"begin": "(\"|')"
-			,"end": "\\1"
+			,"match": "(\"|')(.*?)(\\1)"
         }
         ,"numeric": {
-            "begin": "(?i)(?<=[^a-z%$_\\.])(?=[\\d\\.])"
-            ,"end": "(?=[^\\d\\.])"
+            "begin": "(?i)(?=[\\d\\.])"
+            ,"end": "(?i)(%)?(?=[^\\d\\.E])"
+            ,"endCaptures": {
+                "0": {
+                    "name": "constant.numeric"
+                }
+            }
             ,"patterns": [
                 {
-                    "match": "(?i)(?<=[^a-z%$_\\.])(\\d*)(\\.(\\d*))?"
+                    "match": "(?i)(\\d*)((\\.(\\d*))?(E[\\+\\-]?\\d*)?)?"
                     ,"captures": {
                         "0": {
                             "name": "constant.numeric"
                         }
                         ,"1": {
-                            "name": "constant.numeric.1"
+                            "name": "constant.numeric.integer"
                         }
                         ,"2": {
-                            "name": "constant.numeric.2"
+                            "name": "constant.numeric.floating"
                         }
-                        ,"3": {
-                            "name": "constant.numeric.3"
+                        ,"4": {
+                            "name": "constant.numeric.fractional"
+                        }
+                        ,"5": {
+                            "name": "entity.name.class"
                         }
                     }
                 }
+                ,{
+                    "match": "\\S"
+                    ,"name": "invalid.illegal"
+                }
             ]
+        }
+        ,"explicit-numeric": {
+            "match": "(?i)((D|B|O|X|A)\"(.+?)\"(B|W|L|Q|F|D|G|S|T|X|P|C)?)|(\"(.+?)\"(B|W|L|Q|F|D|G|S|T|X|P|C))"
+            ,"captures": {
+                "0": {
+                    "name": "constant.numeric"
+                }
+                ,"2": {
+                    "name": "entity.name.class"
+                }
+                ,"3": {
+                    "name": "constant.numeric.value"
+                }
+                ,"4": {
+                    "name": "entity.name.class"
+                }
+                ,"6": {
+                    "name": "constant.numeric.value"
+                }
+                ,"7": {
+                    "name": "entity.name.class"
+                }
+            }
         }
     }
     ,"scopeName": "source.vms-basic"

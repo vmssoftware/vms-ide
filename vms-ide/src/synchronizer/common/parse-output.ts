@@ -38,10 +38,10 @@ interface IParseRgx {
 
 const rgxMsg = /^((%|-)(\S+)-(\S)-(\S*)),\s(.*)$/;
 
-const rgxMsgCXX = /^((%|-)(CXX|CC|COBOL|BLS32)-(\S)-(\S*)),\s(.*)$/;
-const rgxPlaceCXX = /^at line number (\d+) in file (.*)$/;
-const rgxPlaceCXX_TLB = /^at line number (\d+) in module (\S+) of text library (.*)$/;
-const rgxMsgPosCXX = /^(\.*)\^/;
+const rgxMsgCompiler = /^((%|-)(CXX|CC|COBOL|BLS32|BASIC|F90|PASCAL)-(\S)-(\S*)),\s(.*)$/;
+const rgxPlaceCompiler = /^at line number (\d+) in file (.*)$/;
+const rgxPlaceCompiler_TLB = /^at line number (\d+) in module (\S+) of text library (.*)$/;
+const rgxMsgPosCompiler = /^(\.*)\^/;
 const rgxMsgInfoMessages = [
     /\d+ (catastrophic )?error(s?) detected in the compilation of/,
     /Compilation terminated/,
@@ -50,27 +50,6 @@ const typesToSkip = new Set<string>([
     "ENDNOOBJ",
     "ENDDIAGS"
 ]);
-
-const parseRgxCXX: IParseRgx = {
-    rgxMain: /^((%|-)(CXX|CC|COBOL)-(\S)-(\S*)),\s(.*)$/,
-    rgxSkip: [ 
-        /^(%|-)COBOL-F-ENDNOOBJ, .*/,
-        /\d+ (catastrophic )?error(s?) detected in the compilation of/,
-        /Compilation terminated/,
-    ],
-    facilityPos: 3,
-    severityPos: 4,
-    typePos: 5,
-    messagePos: 6,
-    lineNumLength: 0,
-    rgxDoSearchPrev: [],
-    rgxMsgPos: /^(\.*)\^/,
-    rgxLinePresent: [
-        /^at line number (\d+) in file (.*)$/,
-        /^at line number (\d+) in module (\S+) of text library (.*)$/
-    ],
-    rgxDoSearchNextForPath: /%MMS-F-ABORT, For target ([^,]*),/,
-};
 
 const parseRgxMSG: IParseRgx = {
     rgxMain: /^((%|-)(MESSAGE)-(\S)-(\S*)),\s(.*)$/,
@@ -112,8 +91,8 @@ const mmsExt = ".MMS";
 
 const lineStartRgx = [
     rgxMsg,
-    rgxPlaceCXX,
-    rgxPlaceCXX_TLB,
+    rgxPlaceCompiler,
+    rgxPlaceCompiler_TLB,
     rgxMsgMMS,
 ];
 
@@ -146,7 +125,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
 
     let i = 0;
     while (i < lines.length) {
-        let [consume, from]  = findCxxCobolBlissErrors(i);
+        let [consume, from]  = findCompilerErrors(i);
         if (!consume) {
             [consume, from] = findJVMErrors(i);
         }
@@ -227,11 +206,11 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
     /**
      * returns consumed lines
      */
-    function findCxxCobolBlissErrors(idx: number) {
+    function findCompilerErrors(idx: number) {
         let consume = 0;
         let from = idx;
         const line = lines[idx];
-        const matched = line.match(rgxMsgCXX);
+        const matched = line.match(rgxMsgCompiler);
         if (matched) {
             consume++;
             if (rgxMsgInfoMessages.some((rgx) => rgx.test(matched[6]))) {
@@ -259,7 +238,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
             // get position from previous line, as "..............^"
             if (idx > 0) {
                 const prevLine = lines[idx - 1];
-                const prevMathed = prevLine.match(rgxMsgPosCXX);
+                const prevMathed = prevLine.match(rgxMsgPosCompiler);
                 if (prevMathed) {
                     diagnostic.pos = prevMathed[0].length;
                     from -= 2;
@@ -267,10 +246,8 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                 }
             }
             // get file and line
-            idx++;
-            consume++;
-            while (idx < lines.length) {
-                const nextLine = lines[idx];
+            while (idx + 1 < lines.length) {
+                const nextLine = lines[idx + 1];
                 if (diagnostic.facility && diagnostic.severity && diagnostic.type) {
                     const continueLine = `-${diagnostic.facility}-${diagnostic.severity}-${diagnostic.type}, (.*)`;
                     const rgxContinueLine = new RegExp(continueLine);
@@ -282,21 +259,28 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                         continue;
                     }
                 }
-                const nextLineMathed = nextLine.match(rgxPlaceCXX);
+                const nextLineMathed = nextLine.match(rgxPlaceCompiler);
                 if (nextLineMathed) {
                     diagnostic.line = parseInt(nextLineMathed[1], 10);
                     diagnostic.file = nextLineMathed[2];
                     const converter = VmsPathConverter.fromVms(diagnostic.file);
                     diagnostic.file = converter.initial;
+                    ++idx;
+                    ++consume;
                     break;
                 } else {
-                    const nextLineMathed_TLB = nextLine.match(rgxPlaceCXX_TLB);
+                    const nextLineMathed_TLB = nextLine.match(rgxPlaceCompiler_TLB);
                     if (nextLineMathed_TLB) {
                         diagnostic.line = parseInt(nextLineMathed_TLB[1], 10);
                         diagnostic.file = nextLineMathed_TLB[2];
                         const converter = VmsPathConverter.fromVms(diagnostic.file);
                         diagnostic.file = converter.initial;
                         diagnostic.external = true;
+                        ++idx;
+                        ++consume;
+                        break;
+                    }
+                    if (lineStartRgx.some((rgx) => rgx.test(nextLine)))  {
                         break;
                     }
                     diagnostic.message += nextLine;
