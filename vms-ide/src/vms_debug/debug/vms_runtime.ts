@@ -324,10 +324,7 @@ export class VMSRuntime extends EventEmitter
 
 		for(let path of lisPaths)
 		{
-			let extPos = path.lastIndexOf(".");
-			let ext = path.substring(extPos).toUpperCase();
-
-			if(ext === ".MAP")
+			if (this.checkExtension(path, "MAP"))
 			{
 				let block = false;
 				let sourceLines = await this.dbgParser.loadFileContext(path);
@@ -367,7 +364,7 @@ export class VMSRuntime extends EventEmitter
 
 		for(let path of sourcePaths)
 		{
-			let listingPath = this.findPathFileByName(path, lisPaths);
+			let listingPath = this.findPathFileByName(path, lisPaths, "LIS");
 			let sourceLines = await this.dbgParser.loadFileContext(listingPath);
 
 			for(let line of sourceLines)
@@ -1346,6 +1343,26 @@ export class VMSRuntime extends EventEmitter
 		return item;
 	}
 
+	private checkExtension(file: string, extension: string) : boolean
+	{
+		let result : boolean = false;
+
+		let extPos = file.lastIndexOf(".");
+
+		if(extPos !== -1)
+		{
+			extPos += 1;
+			let ext = file.substring(extPos).toUpperCase();
+
+			if(ext === extension.toUpperCase())
+			{
+				result = true;
+			}
+		}
+
+		return result;
+	}
+
 	private getFolderName(fullPath: string) : string //get name of the folder project, item="folder/path/file.ext"
 	{
 		let folderProject = "";
@@ -1361,7 +1378,7 @@ export class VMSRuntime extends EventEmitter
 		return folderProject;
 	}
 
-	private findPathFileByName(fileName : string, paths : string[]) : string
+	private findPathFileByName(fileName : string, paths : string[], extension: string) : string
 	{
 		let pathFile : string = "";
 
@@ -1374,8 +1391,11 @@ export class VMSRuntime extends EventEmitter
 			{
 				if (name === this.getNameFromPath(item))
 				{
-					pathFile = item;
-					break;
+					if (this.checkExtension(item, extension))
+					{						
+						pathFile = item;
+						break;
+					}
 				}
 			}
 		}
@@ -1390,7 +1410,7 @@ export class VMSRuntime extends EventEmitter
 
 	private async loadSourceLis(file: string) : Promise<string[]>
 	{
-		let pathFileLis = this.findPathFileByName(file, this.lisPaths);
+		let pathFileLis = this.findPathFileByName(file, this.lisPaths, "LIS");
 
 		return this.dbgParser.loadFileContext(pathFileLis);
 	}
