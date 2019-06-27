@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "publisher": "VMSSoftwareInc",
     "license": "SEE LICENSE IN LICENSE.md",
     "repository": {
@@ -18,7 +18,7 @@
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
-    "main": "./out/index",
+    "main": "./out/extension",
     "activationEvents": [
         "*",
         "onView:vmssoftware.project-dep.projectDependencies",
@@ -46,7 +46,7 @@
         "onLanguage:msg",
         "onLanguage:mms",
         "onLanguage:cobol",
-        "onLanguage:pascal",
+        "onLanguage:vms-pascal",
         "onLanguage:fortran",
         "onLanguage:bliss",
         "onLanguage:vms-basic",
@@ -133,7 +133,7 @@
                 "configuration": "cobol.language-configuration.json"
             },
             {
-                "id": "pascal",
+                "id": "vms-pascal",
                 "extensions": [
                     ".pas"
                 ],
@@ -184,9 +184,9 @@
                 "path": "syntaxes/cobol.tmLanguage.json"
             },
             {
-                "language": "pascal",
-                "scopeName": "source.pascal",
-                "path": "syntaxes/pascal.tmLanguage"
+                "language": "vms-pascal",
+                "scopeName": "source.vms-pascal",
+                "path": "syntaxes/pascal.tmLanguage.json"
             },
             {
                 "language": "fortran",
@@ -813,7 +813,7 @@
                 "language": "cobol"
             },
             {
-                "language": "pascal"
+                "language": "vms-pascal"
             },
             {
                 "language": "fortran"

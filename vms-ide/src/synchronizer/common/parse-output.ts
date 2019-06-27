@@ -217,6 +217,7 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                 // skip summary information
                 return [consume, from];
             }
+            const additionalDiagnostics: IPartialDiagnostics[] = [];
             const diagnostic: IPartialDiagnostics = {
                 facility: matched[3],
                 severity: VmsSeverity.information,
@@ -246,18 +247,26 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                 }
             }
             // get file and line
+            const continueLine = `-${diagnostic.facility}-([FEWIS])-(\\S+), (.*)`;
+            const rgxContinueLine = new RegExp(continueLine);
             while (idx + 1 < lines.length) {
                 const nextLine = lines[idx + 1];
-                if (diagnostic.facility && diagnostic.severity && diagnostic.type) {
-                    const continueLine = `-${diagnostic.facility}-${diagnostic.severity}-${diagnostic.type}, (.*)`;
-                    const rgxContinueLine = new RegExp(continueLine);
-                    const continueMatched = nextLine.match(rgxContinueLine);
-                    if (continueMatched) {
-                        diagnostic.message += continueMatched[1];
-                        ++idx;
-                        ++consume;
-                        continue;
+                const continueMatched = nextLine.match(rgxContinueLine);
+                if (continueMatched) {
+                    const addDiags: IPartialDiagnostics = {
+                        facility: diagnostic.facility,
+                        severity: VmsSeverity.information,
+                    };
+                    const trySeverity = continueMatched[1];
+                    if (isVmsSeverity(trySeverity)) {
+                        addDiags.severity = trySeverity;
                     }
+                    addDiags.type = continueMatched[2];
+                    addDiags.message = continueMatched[3];
+                    additionalDiagnostics.push(addDiags);
+                    ++idx;
+                    ++consume;
+                    continue;
                 }
                 const nextLineMathed = nextLine.match(rgxPlaceCompiler);
                 if (nextLineMathed) {
@@ -287,6 +296,13 @@ export function parseVmsOutput(output: string[], shellWidth?: number) {
                     ++idx;
                     ++consume;
                 }
+            }
+            for (const addDiag of additionalDiagnostics) {
+                addDiag.file = diagnostic.file;
+                addDiag.line = diagnostic.line;
+                addDiag.pos = diagnostic.pos;
+                addDiag.external = diagnostic.external;
+                problems.push(addDiag);
             }
             problems.push(diagnostic);
         }
