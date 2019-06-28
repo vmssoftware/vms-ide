@@ -35,7 +35,7 @@ export class ProjectSection implements IProjectSection, IConfigSection {
     public builders: string = "*.{mms,com,opt}";
     public exclude: string = "**/{.vscode}/**";
     public headers: string = "*.h";
-    public listing: string = "*.lis";
+    public listing: string = "*.lis,*.map";
     public outdir: string = "out";
     public projectName: string = "project";
     public projectType: string = ProjectType[ProjectType.executable];

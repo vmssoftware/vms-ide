@@ -1,0 +1,225 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json"
+    ,"name": "Pascal"
+    ,"patterns": [
+        {
+            "include": "#comment"
+        }
+        ,{
+            "include": "#string"
+        }
+        ,{
+            "include": "#number"
+        }
+        ,{
+            "include": "#known-word"
+        }
+        ,{
+            "match": "(?i)[0-9a-z_][a-z0-9$_]*"
+            ,"name": "invalid.illegal" 
+        }
+    ]
+    ,"repository": {
+        "comment": {
+            "begin": "(?=({|\\(\\*|!))"
+            ,"end": "(?!\\G)"
+            ,"patterns": [
+                {
+                    "begin": "\\G!"
+                    ,"end": "\\n"
+                    ,"name": "comment.line"
+                }
+                ,{
+                    "begin": "\\G({|\\(\\*)"
+                    ,"end": "(}|\\*\\))"
+                    ,"name": "comment.block"
+                }
+            ]
+        }
+        ,"string": {
+            "name": "string.quoted"
+            ,"begin": "(?=(\"|'))"
+            ,"end": "(?!\\G)"
+            ,"patterns": [
+                {
+                    "begin": "\\G\""
+                    ,"end": "\""
+                    ,"patterns": [
+                        {
+                            "name": "constant.character.escape"
+                            ,"match": "\\\\(([abfnrtv'\\\"\\\\]|([0-7]){3}|[xX]([0-9a-fA-F]){2}))"
+                        }        
+                    ]
+                }
+                ,{
+                    "match": "\\G('')\\((\\d+)\\)"
+                    ,"captures": {
+                        "2": {
+                            "name": "constant.character.escape"
+                        }
+                    }
+                }
+                ,{
+                    "begin": "\\G'"
+                    ,"end": "'"
+                    ,"patterns": [
+                        {
+                            "name": "constant.character.escape"
+                            ,"match": "''"
+                        }        
+                    ]
+                }
+            ]
+        }
+        ,"number": {
+            "begin": "(?i)(?=([0-9]|%[box]))"
+            ,"end": "(?!\\G)"
+            ,"patterns": [
+                {
+                    "match": "(?i)\\G[0-9]+#[0-9a-z]+"
+                    ,"name": "constant.numeric"
+                }
+                ,{
+                    "match": "(?i)\\G[0-9]+#'[0-9a-z\\s]+'"
+                    ,"name": "constant.numeric"
+                }
+                ,{
+                    "match": "(?i)\\G%[box][0-9a-z]+"
+                    ,"name": "constant.numeric"
+                }
+                ,{
+                    "match": "(?i)\\G%[box]'[0-9a-z]+'"
+                    ,"name": "constant.numeric"
+                }
+                ,{
+                    "match": "(?i)\\G[0-9]+\\.[0-9]+([edq][\\+\\-]?[0-9]+)?"
+                    ,"name": "constant.numeric"
+                }
+                ,{
+                    "match": "\\G[0-9]+"
+                    ,"name": "constant.numeric"
+                }
+            ]
+        }
+        ,"name": {
+            "match": "(?i)(?<![0-9])[a-z_][a-z0-9$_]*"
+            ,"name": "markup.italic"
+        }
+        ,"reserved-control": {
+            "match": "(?i)(BEGIN|CASE|DOWNTO|DO|ELSE|END|FOR|GOTO|IF|IN|LABEL|OF|REPEAT|THEN|TO|UNTIL|WHILE|WITH)(?=[^a-z0-9$_])"
+            ,"name": "keyword.control"
+        }
+        ,"reserved": {
+            "match": "(?i)(%DESCR|%DICTIONARY|%IMMED|%INCLUDE|%REF|%STDESCR|%SUBTITLE|%TITLE|AND|ARRAY|BEGIN|CASE|CONST|DIV|DOWNTO|DO|ELSE|END|FILE|FOR|FUNCTION|GOTO|IF|IN|LABEL|MOD|NOT|OF|OR|PACKED|PROCEDURE|PROGRAM|RECORD|REPEAT|SET|THEN|TO|TYPE|UNTIL|VAR|WHILE|WITH)(?=[^a-z0-9$_])"
+            ,"name": "keyword"
+        }
+        ,"redefinable": {
+            "match": "(?i)(AND_THEN|BREAK|CONTINUE|MODULE|OR_ELSE|OTHERWISE|REM|RETURN|VALUE|VARYING)(?=[^a-z0-9$_])"
+            ,"name": "keyword.redefinable"
+        }
+        ,"predeclared-integer-type": {
+            "match": "(?i)(INTEGER|INTEGER8|INTEGER16|INTEGER32|INTEGER64|CARDINAL|CARDINAL16|CARDINAL32|UNSIGNED|UNSIGNED8|UNSIGNED16|UNSIGNED32|UNSIGNED64|INTEGER_ADDRESS)(?=[^a-z0-9$_])"
+            ,"name": "entity.name.class"
+        }
+        ,"predeclared-integer-constant": {
+            "match": "(?i)(MAXINT|MAXINT64|MAXUNSIGNED|MAXUNSIGNED64)(?=[^a-z0-9$_])"
+            ,"name": "support.function"
+        }        
+        ,"predeclared-char-type": {
+            "match": "(?i)(CHAR)(?=[^a-z0-9$_])"
+            ,"name": "entity.name.class"
+        }
+        ,"predeclared-char-constant": {
+            "match": "(?i)(MAXCHAR)(?=[^a-z0-9$_])"
+            ,"name": "support.function"
+        }        
+        ,"predeclared-boolean-type": {
+            "match": "(?i)(BOOLEAN)(?=[^a-z0-9$_])"
+            ,"name": "entity.name.class"
+        }
+        ,"predeclared-boolean-constant": {
+            "match": "(?i)(TRUE|FALSE)(?=[^a-z0-9$_])"
+            ,"name": "support.function"
+        }        
+        ,"predeclared-real-type": {
+            "match": "(?i)(REAL|SINGLE|DOUBLE|QUADRUPLE)(?=[^a-z0-9$_])"
+            ,"name": "entity.name.class"
+        }
+        ,"predeclared-real-constant": {
+            "match": "(?i)(MINREAL|MAXREAL|EPSREAL|MINDOUBLE|MAXDOUBLE|EPSDOUBLE|MINQUADRUPLE|MAXQUADRUPLE|EPSQUADRUPLE)(?=[^a-z0-9$_])"
+            ,"name": "support.function"
+        }        
+        ,"predeclared-pointer-type": {
+            "match": "(?i)(POINTER)(?=[^a-z0-9$_])"
+            ,"name": "entity.name.class"
+        }
+        ,"predeclared-pointer-constant": {
+            "match": "(?i)(NIL)(?=[^a-z0-9$_])"
+            ,"name": "support.function"
+        }
+        ,"predeclared-type-b1": {
+            "match": "(?i)(ALFA|C_STR_T|INTSET|POINTER|UNIV_PTR|SINGLE|DOUBLE|QUADRUPLE|STRING|TIMESTAMP)(?=[^a-z0-9$_])"
+            ,"name": "entity.name.class"
+        }
+        ,"predeclared": {
+            "match": "(?i)(ABS|ADD_ATOMIC|ADD_INTERLOCKED|ADDRESS|AND_ATOMIC|ARCTAN|ARGC|ARGUMENT|ARGUMENT_LIST_LENGTH|ARGV|ASSERT|BARRIER|BIN|BIT_OFFSET|BITNEXT|BITSIZE|BOOLEAN|BYTE_OFFSET|CARD|CARDINAL|CARDINAL16|CARDINAL32|CHAR|CHR|CLEAR_INTERLOCKED|CLOCK|C_STR|C_STR_T|CLOSE|COS|CREATE_DIRECTORY|D_FLOAT|DATE|DBLE|DEC|DELETE|DELETE_FILE|DISPOSE|DOUBLE|EOF|EOLN|EPSDOUBLE|EPSQUADRUPLE|EPSREAL|EQ|ESTABLISH|EXP|EXPO|EXTEND|F_FLOAT|FALSE|FIND|FIND_FIRST_BIT_CLEAR|FIND_FIRST_BIT_SET|FIND_MEMBER|FIND_NONMEMBER|FINDK|G_FLOAT|GE|GET|GETTIMESTAMP|GT|H_FLOAT|HALT|HEX|IADDRESS|IADDRESS64|INDEX|INPUT|INT|INTEGER|INTEGER8|INTEGER16|INTEGER32|INTEGER64|INTEGER_ADDRESS|LE|LENGTH|LINELIMIT|LN|LOCATE|LOWER|LSHIFT|LT|MALLOC_C_STR|MAX|MAXCHAR|MAXDOUBLE|MAXINT|MAXQUADRUPLE|MAXREAL|MAXUNSIGNED|MIN|MINDOUBLE|MINQUADRUPLE|MINREAL|NE|NEW|NEXT|NIL|OCT|ODD|OPEN|OR_ATOMIC|ORD|OUTPUT|PACK|PAD|PAGE|PAS_STR|PAS_STRCPY|POINTER|PRED|PRESENT|PUT|QUAD|QUADRUPLE|RANDOM|READ|READLN|READV|REAL|RENAME_FILE|RESET|RESETK|REVERT|REWRITE|ROUND|ROUND64|RSHIFT|S_FLOAT|SEED|SET_INTERLOCKED|SIN|SINGLE|SIZE|SNGL|SQR|SQRT|STATUS|STATUSV|STRING|SUBSTR|SUCC|SYSCLOCK|T_FLOAT|TEXT|TIME|TIMESTAMP|TRUE|TRUNC|TRUNC64|TRUNCATE|UAND|UDEC|UFB|UINT|UNDEFINED|UNLOCK|UNOT|UNPACK|UNSIGNED|UNSIGNED8|UNSIGNED16|UNSIGNED32|UNSIGNED64|UOR|UPDATE|UPPER|UROUND|UROUND64|UTRUNC|UTRUNC64|UXOR|WALLCLOCK|WRITE|WRITELN|WRITEV|X_FLOAT|XOR|ZERO)(?=[^a-z0-9$_])"
+            ,"name": "keyword.predeclared"
+        }
+        ,"known-word": {
+            "name": "pascal.known-word"
+            ,"begin": "(?i)(?<![0-9])(?=[a-z_])"
+            ,"end": "(?i)(?=[^a-z0-9$_])"
+            ,"patterns": [
+                {
+                    "include": "#reserved-control"
+                }
+                ,{
+                    "include": "#reserved"
+                }
+                ,{
+                    "include": "#predeclared-integer-type"
+                }
+                ,{
+                    "include": "#predeclared-integer-constant"
+                }
+                ,{
+                    "include": "#predeclared-char-type"
+                }
+                ,{
+                    "include": "#predeclared-char-constant"
+                }
+                ,{
+                    "include": "#predeclared-boolean-type"
+                }
+                ,{
+                    "include": "#predeclared-boolean-constant"
+                }
+                ,{
+                    "include": "#predeclared-real-type"
+                }
+                ,{
+                    "include": "#predeclared-real-constant"
+                }
+                ,{
+                    "include": "#predeclared-pointer-type"
+                }
+                ,{
+                    "include": "#predeclared-pointer-constant"
+                }
+                ,{
+                    "include": "#predeclared-type"
+                }
+                ,{
+                    "include": "#predeclared"
+                }
+                ,{
+                    "include": "#redefinable"
+                }
+                ,{
+                    "include": "#name"
+                }
+            ]
+        }
+    }
+    ,"scopeName": "source.vms-pascal"
+}
