@@ -1,7 +1,7 @@
 ## 1.0.1
 * Fix: parsing compiler errors that occurred on the same line of source code.
-* Start working on OpenVMS specific Pascal grammar.
-* Debugger: skip querying symbols with an invalid names.
+* OpenVMS specific Pascal grammar basic support.
+* Debugger: skip querying symbols with invalid names.
 
 ## 1.0.0
 * Stable version
