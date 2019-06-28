@@ -599,6 +599,7 @@ export class DebugParser
 
 				if(variableName !== "__func__" &&
 					!variableName.includes(".") &&
+					!variableName.includes("%") &&
 					variableName !== "")
 				{
 					let variableType : string = "";
