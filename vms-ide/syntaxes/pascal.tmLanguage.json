@@ -118,7 +118,7 @@
         }
         ,"predeclared-integer-constant": {
             "match": "(?i)(MAXINT|MAXINT64|MAXUNSIGNED|MAXUNSIGNED64)(?=[^a-z0-9$_])"
-            ,"name": "support.function"
+            ,"name": "variable.other"
         }        
         ,"predeclared-char-type": {
             "match": "(?i)(CHAR|TEXT|STRING)(?=[^a-z0-9$_])"
@@ -126,7 +126,7 @@
         }
         ,"predeclared-char-constant": {
             "match": "(?i)(MAXCHAR)(?=[^a-z0-9$_])"
-            ,"name": "support.function"
+            ,"name": "variable.other"
         }        
         ,"predeclared-boolean-type": {
             "match": "(?i)(BOOLEAN)(?=[^a-z0-9$_])"
@@ -134,7 +134,7 @@
         }
         ,"predeclared-boolean-constant": {
             "match": "(?i)(TRUE|FALSE)(?=[^a-z0-9$_])"
-            ,"name": "support.function"
+            ,"name": "variable.other"
         }        
         ,"predeclared-real-type": {
             "match": "(?i)(REAL|SINGLE|DOUBLE|QUADRUPLE)(?=[^a-z0-9$_])"
@@ -142,7 +142,7 @@
         }
         ,"predeclared-real-constant": {
             "match": "(?i)(MINREAL|MAXREAL|EPSREAL|MINDOUBLE|MAXDOUBLE|EPSDOUBLE|MINQUADRUPLE|MAXQUADRUPLE|EPSQUADRUPLE)(?=[^a-z0-9$_])"
-            ,"name": "support.function"
+            ,"name": "variable.other"
         }        
         ,"predeclared-pointer-type": {
             "match": "(?i)(POINTER|C_STR_T)(?=[^a-z0-9$_])"
@@ -150,7 +150,7 @@
         }
         ,"predeclared-pointer-constant": {
             "match": "(?i)(NIL)(?=[^a-z0-9$_])"
-            ,"name": "support.function"
+            ,"name": "variable.other"
         }
         ,"predeclared-time-type": {
             "match": "(?i)(TIMESTAMP)(?=[^a-z0-9$_])"
