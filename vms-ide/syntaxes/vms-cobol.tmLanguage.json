@@ -1,0 +1,134 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json"
+  ,"name": "VMS-COBOL"
+  ,"scopeName": "source.vms-cobol"
+  ,"patterns": [
+    {
+      "include": "#comment"
+    }
+    ,{
+      "include": "#system-name"
+    }
+    ,{
+      "include": "#number"
+    }
+    ,{
+      "include": "#string"
+    }
+    ,{
+      "include": "#reserved-word"
+    }
+  ]
+  ,"repository": {
+    "comment": {
+      "patterns": [
+        {
+          "match": "^[\\s\\d\\*]{6}[*/].*$"
+          ,"name": "comment.line"
+        }
+        ,{
+          "match": "^[*/].*$"
+          ,"name": "comment.line"
+        }
+      ]
+    }
+    ,"number": {
+      "begin": "(?i)(?=\\d)|(?=\\.\\d)|(?=X[\"'])"
+      ,"end": "(?!\\G)"
+      ,"name": "cobol.number"
+      ,"patterns": [
+          {
+              "match": "(?i)\\G[0-9]*\\.[0-9]+(E[-+]?\\d+)"
+              ,"name": "constant.numeric.float"
+          }
+          ,{
+              "match": "(?i)\\G[0-9]+\\.[0-9]*(E[-+]?\\d+)?"
+              ,"name": "constant.numeric.float"
+          }
+          ,{
+            "match": "(?i)\\G[0-9]+"
+            ,"name": "constant.numeric.integer"
+        }
+        ,{
+          "match": "(?i)\\GX\"[0-9a-f]+\""
+          ,"name": "constant.numeric.integer"
+        }
+        ,{
+          "match": "(?i)\\GX'[0-9a-f]+'"
+          ,"name": "constant.numeric.integer"
+        }
+      ]
+    }
+    ,"string": {
+      "begin": "(?i)(?=(N)?(\"|'))"
+      ,"end": "(?!\\G)"
+      ,"patterns": [
+          {
+              "name": "string.quoted.double"
+              ,"begin": "(?i)\\G(N)?\""
+              ,"end": "\"(?=[^\"])|\n"
+              ,"patterns": [
+                  {
+                      "name": "constant.character.escape"
+                      ,"match": "\"\""
+                  }        
+              ]
+          }
+          ,{
+              "name": "string.quoted.single"
+              ,"begin": "(?i)\\G(N)?'"
+              ,"end": "'(?=[^'])|\n"
+              ,"patterns": [
+                  {
+                      "name": "constant.character.escape"
+                      ,"match": "''"
+                  }
+              ]
+          }
+      ]
+    }
+    ,"system-name": {
+      "match": "(?i)(^|(?<=[^-a-z0-9$_]))(ALPHA|ASCII|CARD-READER|CONSOLE|CONTIGUOUS|CONTIGUOUS-BEST-TRY|C01|DEFERRED-WRITE|EBCDIC|EXTENSION|FILL-SIZE|I64|LINE-PRINTER|LOCK-HOLDING|MASS-INSERT|OPERATOR|PAPER-TAPE-PUNCH|PAPER-TAPE-READER|PREALLOCATION|PRINT-CONTROL|SWITCH|VAX|WINDOW)(?=[^-a-z0-9$_])"
+      ,"name": "variable.other"
+    }
+    ,"reserved-word": {
+      "patterns": [
+        {
+          "include": "#required-word"
+        }
+        ,{
+          "include": "#optional-word"
+        }
+        ,{
+          "include": "#special-purpose-word"
+        }
+      ]
+    }
+    ,"required-word": {
+      "match": "(?i)(^|(?<=[^-a-z0-9$_]))(requiredword)(?=[^-a-z0-9$_])"
+      ,"name": "keyword"
+    }
+    ,"optional-word": {
+      "match": "(?i)(^|(?<=[^-a-z0-9$_]))(optionalword)(?=[^-a-z0-9$_])"
+      ,"name": "support.function"
+    }
+    ,"special-purpose-word": {
+      "patterns": [
+        {
+          "include": "#figurative-constant"
+        }
+        ,{
+          "include": "#special-register"
+        }
+      ]
+    }
+    ,"figurative-constant": {
+      "match": "(?i)(^|(?<=[^-a-z0-9$_]))(ZERO((E)?S)?|SPACE(S)?|HIGH-VALUE(S)?|LOW-VALUE(S)?|QUOTE(S)?|ALL)(?=[^-a-z0-9$_])"
+      ,"name": "variable.other"
+    }
+    ,"special-register": {
+      "match": "(?i)(^|(?<=[^-a-z0-9$_]))(RETURN-CODE|LINAGE-COUNTER|PAGE-COUNTER|LINE-COUNTER|RMS-STS|RMS-STV|RMS-FILENAME|RMS-CURRENT-STS|RMS-CURRENT-STV|RMS-CURRENT-FILENAME)(?=[^-a-z0-9$_])"
+      ,"name": "variable.other"
+    }
+  }
+}
