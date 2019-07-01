@@ -6,9 +6,6 @@
             "include": "#comment"
         }
         ,{
-            "include": "#directive"
-        }
-        ,{
             "include": "#string"
         }
         ,{
@@ -104,6 +101,10 @@
             "match": "(?i)(BEGIN|CASE|DOWNTO|DO|ELSE|END|FOR|GOTO|IF|IN|LABEL|OF|REPEAT|THEN|TO|UNTIL|WHILE|WITH)(?=[^a-z0-9$_])"
             ,"name": "keyword.control"
         }
+        ,"reserved-perc": {
+            "match": "(?i)%(DESCR|DICTIONARY|IMMED|INCLUDE|REF|STDESCR|SUBTITLE|TITLE)(?=[^a-z0-9$_])"
+            ,"name": "keyword"
+        }
         ,"reserved": {
             "match": "(?i)(%DESCR|%DICTIONARY|%IMMED|%INCLUDE|%REF|%STDESCR|%SUBTITLE|%TITLE|AND|ARRAY|BEGIN|CASE|CONST|DIV|DOWNTO|DO|ELSE|END|FILE|FOR|FUNCTION|GOTO|IF|IN|LABEL|MOD|NOT|OF|OR|PACKED|PROCEDURE|PROGRAM|RECORD|REPEAT|SET|THEN|TO|TYPE|UNTIL|VAR|WHILE|WITH)(?=[^a-z0-9$_])"
             ,"name": "keyword"
@@ -174,11 +175,17 @@
         }
         ,"known-word": {
             "name": "pascal.known-word"
-            ,"begin": "(?i)(?<![0-9])(?=[a-z_])"
-            ,"end": "(?i)(?=[^a-z0-9$_])"
+            ,"begin": "(?i)(?<![0-9])(?=[%$a-z_])"
+            ,"end": "(?i)(?=[^%a-z0-9$_])"
             ,"patterns": [
                 {
                     "include": "#reserved-control"
+                }
+                ,{
+                    "include": "#directive"
+                }
+                ,{
+                    "include": "#reserved-perc"
                 }
                 ,{
                     "include": "#reserved"
