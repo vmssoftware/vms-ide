@@ -17,6 +17,11 @@
             "type": "npm",
             "script": "vscode:prepublish",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "vscode:prepublish_dev",
+            "problemMatcher": []
         }
     ]
 }

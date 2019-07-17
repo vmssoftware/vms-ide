@@ -96,6 +96,7 @@ export interface IConnectionSection {
     username?: string;
     password?: string;
     keyFile?: string;
+    skipSignatureVerification?: boolean;
 }
 
 export interface IHost extends IConnectionSection {

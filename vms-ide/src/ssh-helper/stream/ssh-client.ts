@@ -118,6 +118,7 @@ export class SshClient extends EventEmitter {
                         // BILBO    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
                         // FRODO    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
                         // SAREK    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
+                        // Uncomment next line to get debug info from SSH2
                         // debug: (s: string) => this.logFn(LogType.debug, () => s)
                     }, configResolved,
                 );

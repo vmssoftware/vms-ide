@@ -11,7 +11,8 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             (typeof candidate.port === "number" || candidate.port === undefined) &&
             (typeof candidate.username === "string" || candidate.username === undefined) &&
             (typeof candidate.keyFile === "string" || candidate.keyFile === undefined) &&
-            (typeof candidate.password === "string" || candidate.password === undefined);
+            (typeof candidate.password === "string" || candidate.password === undefined) &&
+            (typeof candidate.skipSignatureVerification === "boolean" || candidate.skipSignatureVerification === undefined);
     }
 
     public host: string = "";
@@ -19,6 +20,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
     public password?: string;
     public port?: number = 22;
     public username?: string = "";
+    public skipSignatureVerification?: boolean = false;
 
     public name(): string {
         return ConnectionSection.section;
@@ -38,6 +40,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             password: this.password || "",
             port: this.port || 0,
             username: this.username || "",
+            skipSignatureVerification: this.skipSignatureVerification || false,
         };
     }
 
@@ -48,6 +51,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             this.password = data.password;
             this.port = data.port;
             this.username = data.username;
+            this.skipSignatureVerification = data.skipSignatureVerification;
             return true;
         }
         return false;
