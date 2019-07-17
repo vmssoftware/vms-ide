@@ -102,6 +102,10 @@
           }
       ]
     }
+    ,"cobol-name": {
+      "match": "[$a-zA-Z0-9_]([-$a-zA-Z0-9_]*[$a-zA-Z0-9_])?"
+      ,"name": "variable.other"
+    }
 
     ,"identification-division": {
       "begin": "(?i)(^|(?<=[^-a-z0-9$_]))(IDENTIFICATION)(?=[^-a-z0-9$_])"
@@ -410,8 +414,7 @@
           ,"name": "entity.name.class"
         }
         ,{
-          "match": "(?i)([-a-z0-9$_]+)"
-          ,"name": "variable.other"
+          "include": "#cobol-name"
         }
       ]
     }
@@ -480,8 +483,7 @@
               ,"name": "entity.name.function"
             }
             ,{
-              "match": "(?i)(^|(?<=[^-a-z0-9$_]))([-a-z0-9$_]+)(?=[^-a-z0-9$_])"
-              ,"name": "variable.other"
+              "include": "#cobol-name"
             }
           ]
         }
@@ -506,8 +508,7 @@
           ]
         }
         ,{
-          "match": "(?i)([-a-z0-9$_]+)"
-          ,"name": "variable.other"
+          "include": "#cobol-name"
         }
       ]
     }
@@ -519,81 +520,78 @@
           "name": "entity.name.class"
         }
       }
-      ,"end": "(?!\\G)"
+      ,"end": "(?<=\\S)(?!\\G)"
       ,"name": "cobol.console"
       ,"patterns": [
         {
           "include": "#is-name"
         }
+        ,{
+          "include": "#comment-is-name"
+        }
+        ,{
+          "include": "#cobol-name"
+        }
+      ]
+    }
+
+    ,"comment-is-name": {
+      "begin": "^[\\s\\d\\*]{6}[*/].*$|^[*/].*$"
+      ,"beginCaptures": {
+        "0": {
+          "name": "comment.line"
+        }
+      }
+      ,"end": "(?<=\\S)(?!\\G)"
+      ,"patterns": [
+        {
+          "include": "#is-name"
+        }
+        ,{
+          "include": "#comment-is-name"
+        }
+        ,{
+          "include": "#cobol-name"
+        }
       ]
     }
 
     ,"is-name": {
-      "begin": "\\G"
-      ,"end": "(?!\\G)"
-      ,"name": "cobol.is.name"
+      "begin": "(?i)(^|(?<=[^-a-z0-9$_]))(IS)(?=[^-a-z0-9$_])"
+      ,"beginCaptures": {
+        "0": {
+          "name": "entity.name.function"
+        }
+      }
+      ,"end": "(?<=\\S)(?!\\G)"
       ,"patterns": [
         {
-          "include": "#comment"
+          "include": "#comment-name"
         }
         ,{
-          "begin": "(?i)\\s*IS"
-          ,"name": "entity.name.function"
-          ,"end": "(?!\\G)"
-          ,"patterns": [
-            {
-              "include": "#name-tail"
-            }
-          ]
-        }
-        ,{
-          "begin": "\\s*?\n"
-          ,"end": "(?<=\\S)"
-          ,"name": "cobol.is.tail"
-          ,"patterns": [
-            {
-              "include": "#comment"
-            }
-            ,{
-              "begin": "(?i)\\s*IS"
-              ,"name": "entity.name.function"
-              ,"end": "(?!\\G)"
-              ,"patterns": [
-                {
-                  "include": "#name-tail"
-                }
-              ]
-            }
-          ]
+          "include": "#cobol-name"
         }
       ]
     }
 
-    ,"name-tail": {
-      "begin": "\\G"
-      ,"end": "(?!\\G)"
-      ,"name": "cobol.name"
+    ,"comment-name": {
+      "begin": "^[\\s\\d\\*]{6}[*/].*$|^[*/].*$"
+      ,"beginCaptures": {
+        "0": {
+          "name": "comment.line"
+        }
+      }
+      ,"end": "(?<=\\S)(?!\\G)"
       ,"patterns": [
         {
-          "begin": "(?i)\\s*[-a-z0-9$_]+"
-          ,"name": "variable.other"
-          ,"end": "(?!\\G)"
+          "include": "#comment-name"
         }
         ,{
-          "begin": "\\s*?\n"
-          ,"end": "(?<=\\S)"
-          ,"name": "cobol.name.tail"
-          ,"patterns": [
-            {
-              "begin": "(?i)\\s*[-a-z0-9$_]+"
-              ,"name": "variable.other"
-              ,"end": "(?!\\G)"
-            }
-          ]
+          "include": "#cobol-name"
         }
-
       ]
     }
+
 
     ,"special-names": {
       "begin": "(?i)(^|(?<=[^-a-z0-9$_]))(SPECIAL-NAMES)(?=[^-a-z0-9$_])"
@@ -609,31 +607,46 @@
           "include": "#comment"
         }
         ,{
-          "include": "#console-test"
-        }
-        ,{
           "begin": "(?i)(^|(?<=[^-a-z0-9$_]))(CARD-READER|PAPER-TAPE-READER|CONSOLE|LINE-PRINTER|PAPER-TAPE-PUNCH|SYSIN|SYSOUT|SYSERR)(?=[^-a-z0-9$_])"
-          ,"end": "(?i)(^|(?<=[^-a-z0-9$_]))(?=(SOURCE-COMPUTER|OBJECT-COMPUTER|INPUT-OUTPUT|DATA|PROCEDURE|END|IDENTIFICATION))"
-          ,"captures": {
-            "3": {
+          ,"beginCaptures": {
+            "2": {
               "name": "entity.name.class"
             }
-            ,"4": {
-              "name": "entity.name.function"
-            }
-            ,"5": {
-              "name": "variable.other"
-            }
           }
+          ,"end": "(?<=\\S)(?!\\G)"
+          ,"name": "cobol.device"
+          ,"patterns": [
+            {
+              "include": "#is-name"
+            }
+            ,{
+              "include": "#comment-is-name"
+            }
+            ,{
+              "include": "#cobol-name"
+            }
+          ]
         }
         ,{
-          "match": "(?i)(^|(?<=[^-a-z0-9$_]))((ARGUMENT-NUMBER|ARGUMENT-VALUE|ENVIRONMENT-NAME|ENVIRONMENT-VALUE)\\s+(IS)\\s+([-a-z0-9$_]+))(?=[^-a-z0-9$_])"
-          ,"name": "entity.name.function"
-          ,"captures": {
-            "5": {
+          "begin": "(?i)(^|(?<=[^-a-z0-9$_]))(ARGUMENT-NUMBER|ARGUMENT-VALUE|ENVIRONMENT-NAME|ENVIRONMENT-VALUE)(?=[^-a-z0-9$_])"
+          ,"beginCaptures": {
+            "2": {
               "name": "entity.name.class"
             }
           }
+          ,"end": "(?<=\\S)(?!\\G)"
+          ,"name": "cobol.argument_environment"
+          ,"patterns": [
+            {
+              "include": "#is-name"
+            }
+            ,{
+              "include": "#comment-is-name"
+            }
+            ,{
+              "include": "#cobol-name"
+            }
+          ]
         }
         ,{
           "match": "(?i)(^|(?<=[^-a-z0-9$_]))((C01)\\s+(IS)\\s+([-a-z0-9$_]+))(?=[^-a-z0-9$_])"
