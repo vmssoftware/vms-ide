@@ -2,6 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json"
   ,"name": "VMS-COBOL"
   ,"scopeName": "source.vms-cobol"
+  , "comment": "/NOANSI_FORMAT"
   ,"patterns": [
     {
       "include": "#comment"
@@ -36,16 +37,8 @@
   ]
   ,"repository": {
     "comment": {
-      "patterns": [
-        {
-          "match": "^[\\s\\d\\*]{6}[*/].*$"
-          ,"name": "comment.line"
-        }
-        ,{
-          "match": "^[*/].*$"
-          ,"name": "comment.line"
-        }
-      ]
+      "match": "^[*/].*$"
+      ,"name": "comment.line"
     }
     ,"number": {
       "begin": "(?i)(?=\\d)|(?=(\\.|,)\\d)|(?=X[\"'])"
@@ -536,7 +529,7 @@
     }
 
     ,"comment-is-name": {
-      "begin": "^[\\s\\d\\*]{6}[*/].*$|^[*/].*$"
+      "begin": "^[*/].*$"
       ,"beginCaptures": {
         "0": {
           "name": "comment.line"
@@ -575,7 +568,7 @@
     }
 
     ,"comment-name": {
-      "begin": "^[\\s\\d\\*]{6}[*/].*$|^[*/].*$"
+      "begin": "^[*/].*$"
       ,"beginCaptures": {
         "0": {
           "name": "comment.line"
@@ -649,13 +642,25 @@
           ]
         }
         ,{
-          "match": "(?i)(^|(?<=[^-a-z0-9$_]))((C01)\\s+(IS)\\s+([-a-z0-9$_]+))(?=[^-a-z0-9$_])"
-          ,"name": "entity.name.function"
-          ,"captures": {
-            "5": {
+          "begin": "(?i)(^|(?<=[^-a-z0-9$_]))(C01)(?=[^-a-z0-9$_])"
+          ,"beginCaptures": {
+            "2": {
               "name": "entity.name.class"
             }
           }
+          ,"end": "(?<=\\S)(?!\\G)"
+          ,"name": "cobol.c01"
+          ,"patterns": [
+            {
+              "include": "#is-name"
+            }
+            ,{
+              "include": "#comment-is-name"
+            }
+            ,{
+              "include": "#cobol-name"
+            }
+          ]
         }
         ,{
           "match": "(?i)(^|(?<=[^-a-z0-9$_]))(SWITCH(\\s+|-)\\d(\\d)?\\s+(IS)\\s+([-a-z0-9$_]+)\\s+(ON) )(?=[^-a-z0-9$_])"
