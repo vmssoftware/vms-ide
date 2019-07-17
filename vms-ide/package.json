@@ -573,6 +573,12 @@
                     "default": "",
                     "description": "%ssh-helper.configuration.keyFile%"
                 },
+                "vmssoftware.ssh-helper.connection.skipSignatureVerification": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%ssh-helper.configuration.skipSignatureVerification%"
+                },
                 "vmssoftware.ssh-helper.timeouts.cmdTimeout": {
                     "scope": "resource",
                     "type": "number",
