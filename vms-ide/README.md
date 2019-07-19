@@ -12,9 +12,9 @@
 
 ## Getting started
 
-* [Installation](https://www.vmssoftwaretraining.com/wiki/VMS_IDE_Installation)
-* [Setting Up a VMS Project](https://www.vmssoftwaretraining.com/wiki/VMS_IDE_Project_Configuration)
-* [Working On a VMS Project](https://www.vmssoftwaretraining.com/wiki/VMS_IDE_Developing)
+* [Installation](https://wiki.vmssoftware.com/VMS_IDE_Installation)
+* [Setting Up a VMS Project](https://wiki.vmssoftware.com/VMS_IDE_Project_Configuration)
+* [Working On a VMS Project](https://wiki.vmssoftware.com/VMS_IDE_Developing)
 
 ## Configuration Storage Options
 
