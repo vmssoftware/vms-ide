@@ -77,7 +77,7 @@ class JvmDebugAdapterDescriptorFactory implements vscode.DebugAdapterDescriptorF
 
 	createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): vscode.ProviderResult<vscode.DebugAdapterDescriptor> {
 
-		logFn(LogType.information, () => localize("msg.descr", "createDebugAdapterDescriptor: {0}", session.workspaceFolder?session.workspaceFolder.name:"no workspace"));
+		// logFn(LogType.information, () => localize("msg.descr", "createDebugAdapterDescriptor: {0}", session.workspaceFolder?session.workspaceFolder.name:"no workspace"));
 
 		if (!this.server) {
 			// start listening on a random port

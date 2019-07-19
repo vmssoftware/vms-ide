@@ -1,5 +1,4 @@
 {
     "msg.class_name": "Enter class name to execute",
-    "msg.config.invalid": "Configuration is invalid",
-    "msg.descr": "createDebugAdapterDescriptor: {0}"
+    "msg.config.invalid": "Configuration is invalid"
 }
