@@ -6,7 +6,7 @@
 * **SSH connection** setup to remote OpenVMS system.
 * **Projects Explorer** as a simple and convenient way to manage OpenVMS projects.
 * **Debugger** for OpenVMS projects.
-* **Syntax highlighting** for *MMS*, *CLD*, and *MSG* files.
+* **Syntax highlighting** for *Pascal*, *MMS*, *CLD*, and *MSG* files.
 * **Code autocompletion** for *MSG* and *CLD* files.
 * Supported languages: **C**, **C++**, **Fortran**, **Cobol**, **Pascal**, **Basic**, **Bliss**.
 

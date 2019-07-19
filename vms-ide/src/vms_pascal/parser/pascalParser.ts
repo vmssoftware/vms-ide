@@ -1,4 +1,4 @@
-// Generated from src/parser/pascal.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from src/vms_pascal/parser/pascal.g4 by ANTLR 4.7.3-SNAPSHOT
 
 
 import { ATN } from "antlr4ts/atn/ATN";
@@ -159,9 +159,9 @@ export class pascalParser extends Parser {
 	public static readonly NUM_REAL = 129;
 	public static readonly RULE_program = 0;
 	public static readonly RULE_programHeading = 1;
-	public static readonly RULE_inheritBrack = 2;
+	public static readonly RULE_inheritAttr = 2;
 	public static readonly RULE_inherit = 3;
-	public static readonly RULE_invironment = 4;
+	public static readonly RULE_invironmentAttr = 4;
 	public static readonly RULE_identifier = 5;
 	public static readonly RULE_attributePart = 6;
 	public static readonly RULE_attributeDef = 7;
@@ -266,7 +266,7 @@ export class pascalParser extends Parser {
 	public static readonly RULE_recordVariableList = 106;
 	// tslint:disable:no-trailing-whitespace
 	public static readonly ruleNames: string[] = [
-		"program", "programHeading", "inheritBrack", "inherit", "invironment", 
+		"program", "programHeading", "inheritAttr", "inherit", "invironmentAttr", 
 		"identifier", "attributePart", "attributeDef", "attribute", "block", "usesUnitsPart", 
 		"labelDeclarationPart", "label", "constantDefinitionPart", "constantDefinition", 
 		"constantChr", "constant", "unsignedNumber", "unsignedInteger", "unsignedReal", 
@@ -409,7 +409,7 @@ export class pascalParser extends Parser {
 				if (_la === pascalParser.LBRACK) {
 					{
 					this.state = 221;
-					this.inheritBrack();
+					this.inheritAttr();
 					}
 				}
 
@@ -445,7 +445,7 @@ export class pascalParser extends Parser {
 				if (_la === pascalParser.LBRACK) {
 					{
 					this.state = 234;
-					this.invironment();
+					this.invironmentAttr();
 					}
 				}
 
@@ -474,9 +474,9 @@ export class pascalParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public inheritBrack(): InheritBrackContext {
-		let _localctx: InheritBrackContext = new InheritBrackContext(this._ctx, this.state);
-		this.enterRule(_localctx, 4, pascalParser.RULE_inheritBrack);
+	public inheritAttr(): InheritAttrContext {
+		let _localctx: InheritAttrContext = new InheritAttrContext(this._ctx, this.state);
+		this.enterRule(_localctx, 4, pascalParser.RULE_inheritAttr);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
@@ -551,9 +551,9 @@ export class pascalParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public invironment(): InvironmentContext {
-		let _localctx: InvironmentContext = new InvironmentContext(this._ctx, this.state);
-		this.enterRule(_localctx, 8, pascalParser.RULE_invironment);
+	public invironmentAttr(): InvironmentAttrContext {
+		let _localctx: InvironmentAttrContext = new InvironmentAttrContext(this._ctx, this.state);
+		this.enterRule(_localctx, 8, pascalParser.RULE_invironmentAttr);
 		let _la: number;
 		try {
 			this.state = 284;
@@ -5675,8 +5675,8 @@ export class ProgramHeadingContext extends ParserRuleContext {
 		return this.getRuleContext(0, IdentifierContext);
 	}
 	public SEMI(): TerminalNode { return this.getToken(pascalParser.SEMI, 0); }
-	public inheritBrack(): InheritBrackContext | undefined {
-		return this.tryGetRuleContext(0, InheritBrackContext);
+	public inheritAttr(): InheritAttrContext | undefined {
+		return this.tryGetRuleContext(0, InheritAttrContext);
 	}
 	public LPAREN(): TerminalNode | undefined { return this.tryGetToken(pascalParser.LPAREN, 0); }
 	public identifierList(): IdentifierListContext | undefined {
@@ -5684,8 +5684,8 @@ export class ProgramHeadingContext extends ParserRuleContext {
 	}
 	public RPAREN(): TerminalNode | undefined { return this.tryGetToken(pascalParser.RPAREN, 0); }
 	public MODULE(): TerminalNode | undefined { return this.tryGetToken(pascalParser.MODULE, 0); }
-	public invironment(): InvironmentContext | undefined {
-		return this.tryGetRuleContext(0, InvironmentContext);
+	public invironmentAttr(): InvironmentAttrContext | undefined {
+		return this.tryGetRuleContext(0, InvironmentAttrContext);
 	}
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
@@ -5715,7 +5715,7 @@ export class ProgramHeadingContext extends ParserRuleContext {
 }
 
 
-export class InheritBrackContext extends ParserRuleContext {
+export class InheritAttrContext extends ParserRuleContext {
 	public LBRACK(): TerminalNode { return this.getToken(pascalParser.LBRACK, 0); }
 	public inherit(): InheritContext {
 		return this.getRuleContext(0, InheritContext);
@@ -5725,23 +5725,23 @@ export class InheritBrackContext extends ParserRuleContext {
 		super(parent, invokingState);
 	}
 	// @Override
-	public get ruleIndex(): number { return pascalParser.RULE_inheritBrack; }
+	public get ruleIndex(): number { return pascalParser.RULE_inheritAttr; }
 	// @Override
 	public enterRule(listener: pascalListener): void {
-		if (listener.enterInheritBrack) {
-			listener.enterInheritBrack(this);
+		if (listener.enterInheritAttr) {
+			listener.enterInheritAttr(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: pascalListener): void {
-		if (listener.exitInheritBrack) {
-			listener.exitInheritBrack(this);
+		if (listener.exitInheritAttr) {
+			listener.exitInheritAttr(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: pascalVisitor<Result>): Result {
-		if (visitor.visitInheritBrack) {
-			return visitor.visitInheritBrack(this);
+		if (visitor.visitInheritAttr) {
+			return visitor.visitInheritAttr(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -5799,7 +5799,7 @@ export class InheritContext extends ParserRuleContext {
 }
 
 
-export class InvironmentContext extends ParserRuleContext {
+export class InvironmentAttrContext extends ParserRuleContext {
 	public LBRACK(): TerminalNode { return this.getToken(pascalParser.LBRACK, 0); }
 	public ENVIRONMENT(): TerminalNode { return this.getToken(pascalParser.ENVIRONMENT, 0); }
 	public RBRACK(): TerminalNode { return this.getToken(pascalParser.RBRACK, 0); }
@@ -5816,23 +5816,23 @@ export class InvironmentContext extends ParserRuleContext {
 		super(parent, invokingState);
 	}
 	// @Override
-	public get ruleIndex(): number { return pascalParser.RULE_invironment; }
+	public get ruleIndex(): number { return pascalParser.RULE_invironmentAttr; }
 	// @Override
 	public enterRule(listener: pascalListener): void {
-		if (listener.enterInvironment) {
-			listener.enterInvironment(this);
+		if (listener.enterInvironmentAttr) {
+			listener.enterInvironmentAttr(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: pascalListener): void {
-		if (listener.exitInvironment) {
-			listener.exitInvironment(this);
+		if (listener.exitInvironmentAttr) {
+			listener.exitInvironmentAttr(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: pascalVisitor<Result>): Result {
-		if (visitor.visitInvironment) {
-			return visitor.visitInvironment(this);
+		if (visitor.visitInvironmentAttr) {
+			return visitor.visitInvironmentAttr(this);
 		} else {
 			return visitor.visitChildren(this);
 		}

@@ -265,9 +265,9 @@ NUM_REAL
 rule names:
 program
 programHeading
-inheritBrack
+inheritAttr
 inherit
-invironment
+invironmentAttr
 identifier
 attributePart
 attributeDef

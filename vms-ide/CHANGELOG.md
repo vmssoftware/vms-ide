@@ -1,3 +1,6 @@
+## 1.1.0
+* **Pascal** syntax highlighting.
+
 ## 1.0.2
 * Allow to skip verifying the signature in SSH (because of VS Code 1.36.1 issue).
 

@@ -1,13 +1,13 @@
-// Generated from src/parser/pascal.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from src/vms_pascal/parser/pascal.g4 by ANTLR 4.7.3-SNAPSHOT
 
 
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 
 import { ProgramContext } from "./pascalParser";
 import { ProgramHeadingContext } from "./pascalParser";
-import { InheritBrackContext } from "./pascalParser";
+import { InheritAttrContext } from "./pascalParser";
 import { InheritContext } from "./pascalParser";
-import { InvironmentContext } from "./pascalParser";
+import { InvironmentAttrContext } from "./pascalParser";
 import { IdentifierContext } from "./pascalParser";
 import { AttributePartContext } from "./pascalParser";
 import { AttributeDefContext } from "./pascalParser";
@@ -140,15 +140,15 @@ export interface pascalListener extends ParseTreeListener {
 	exitProgramHeading?: (ctx: ProgramHeadingContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `pascalParser.inheritBrack`.
+	 * Enter a parse tree produced by `pascalParser.inheritAttr`.
 	 * @param ctx the parse tree
 	 */
-	enterInheritBrack?: (ctx: InheritBrackContext) => void;
+	enterInheritAttr?: (ctx: InheritAttrContext) => void;
 	/**
-	 * Exit a parse tree produced by `pascalParser.inheritBrack`.
+	 * Exit a parse tree produced by `pascalParser.inheritAttr`.
 	 * @param ctx the parse tree
 	 */
-	exitInheritBrack?: (ctx: InheritBrackContext) => void;
+	exitInheritAttr?: (ctx: InheritAttrContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `pascalParser.inherit`.
@@ -162,15 +162,15 @@ export interface pascalListener extends ParseTreeListener {
 	exitInherit?: (ctx: InheritContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `pascalParser.invironment`.
+	 * Enter a parse tree produced by `pascalParser.invironmentAttr`.
 	 * @param ctx the parse tree
 	 */
-	enterInvironment?: (ctx: InvironmentContext) => void;
+	enterInvironmentAttr?: (ctx: InvironmentAttrContext) => void;
 	/**
-	 * Exit a parse tree produced by `pascalParser.invironment`.
+	 * Exit a parse tree produced by `pascalParser.invironmentAttr`.
 	 * @param ctx the parse tree
 	 */
-	exitInvironment?: (ctx: InvironmentContext) => void;
+	exitInvironmentAttr?: (ctx: InvironmentAttrContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `pascalParser.identifier`.
