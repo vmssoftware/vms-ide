@@ -913,6 +913,7 @@
         "CLD.antlr4ts": "antlr4ts -o src/cld -visitor src/cld/cld.g4",
         "MSG.antlr4ts": "antlr4ts -o src/msg -visitor src/msg/msg.g4",
         "MSG.antlr4tsLex": "antlr4ts -o src/msg src/msg/msgLex.g4",
+        "Pascal.antlr4ts": "antlr4ts -o src/vms_pascal/parser -visitor src/vms_pascal/parser/pascal.g4",
         "vscode:prepublish": "webpack --mode production",
         "vscode:prepublish_dev": "webpack --mode development",
         "VSCE": "vsce package"
