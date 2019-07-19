@@ -18,7 +18,7 @@
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
-    "main": "./out/index",
+    "main": "./out/extension",
     "activationEvents": [
         "*",
         "onView:vmssoftware.project-dep.projectDependencies",
@@ -45,7 +45,7 @@
         "onLanguage:cld",
         "onLanguage:msg",
         "onLanguage:mms",
-        "onLanguage:cobol",
+        "onLanguage:vms-cobol",
         "onLanguage:vms-pascal",
         "onLanguage:fortran",
         "onLanguage:bliss",
@@ -126,7 +126,7 @@
                 "configuration": "msg.language-configuration.json"
             },
             {
-                "id": "cobol",
+                "id": "vms-cobol",
                 "extensions": [
                     ".cob"
                 ],
@@ -179,9 +179,9 @@
                 "path": "syntaxes/msg.tmLanguage.json"
             },
             {
-                "language": "cobol",
-                "scopeName": "source.cobol",
-                "path": "syntaxes/cobol.tmLanguage.json"
+                "language": "vms-cobol",
+                "scopeName": "source.vms-cobol",
+                "path": "syntaxes/vms-cobol.tmLanguage.json"
             },
             {
                 "language": "vms-pascal",
@@ -816,7 +816,7 @@
                 "language": "vms-basic"
             },
             {
-                "language": "cobol"
+                "language": "vms-cobol"
             },
             {
                 "language": "vms-pascal"
