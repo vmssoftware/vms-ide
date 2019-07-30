@@ -129,7 +129,8 @@
                 "id": "vms-cobol",
                 "extensions": [
                     ".cob",
-                    ".cbl"
+                    ".cbl",
+                    ".cblle"
                 ],
                 "configuration": "cobol.language-configuration.json"
             },
