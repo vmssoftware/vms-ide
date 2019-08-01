@@ -33,8 +33,8 @@
 
     "identifier": {
       "name": "cobol.identifier"
-      ,"begin": "(?=\\S)"
-      ,"end": "(?i)(?!\\G)(?!\\s|$|^((\\s){6})?[*/]|[(])"
+      ,"begin": "(?i)(?=[-a-z0-9$_])"
+      ,"end": "(?i)(?!\\G)(?!\\s|\n|^((\\s){6})?[*/]|[(])"
       ,"patterns": [
         {
           "include": "#comment"
@@ -53,8 +53,8 @@
 
     ,"expression": {
       "name": "cobol.expression"
-      ,"begin": "(?=\\S)"
-      ,"end": "(?i)(?!\\G)(?!\\s|$|^((\\s){6})?[*/]|[-+*/(><=]|\\*\\*|<=|>=|(IS|NOT|GREATER|LESS|OR|EQUAL|IN|OF|AND|NUMERIC|ALPHABETIC|ALPHABETIC-(LOWER|UPPER)|POSITIVE|NEGATIVE|ZERO|SUCCESS|FAILURE)[^-a-z0-9$_])"
+      ,"begin": "(?i)(?=[-a-z0-9$_(\"']|\\.\\d)"
+      ,"end": "(?i)(?!\\G)(?!\\s|\n|\"|'|^((\\s){6})?[*/]|[-+*/(><=]|\\*\\*|(IS|NOT|GREATER|LESS|OR|EQUAL|IN|OF|AND|NUMERIC|ALPHABETIC(-(LOWER|UPPER))?|POSITIVE|NEGATIVE|ZERO|SUCCESS|FAILURE)[^-a-z0-9$_])"
       ,"patterns": [
         {
           "include": "#comment"
@@ -72,10 +72,7 @@
           "include": "#literal.string"
         }
         ,{
-          "include": "#function"
-        }
-        ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -153,56 +150,32 @@
 
     ,"qualified-name": {
       "name": "cobol.qualified_name"
-      ,"begin": "(?i)(?:^|(?<=[^-a-z0-9$_]))(LINAGE-COUNTER|PAGE-COUNTER|LINE-COUNTER|RMS-STS|RMS-STV|RMS-FILENAME)(?=[^-a-z0-9$_])|([$a-zA-Z0-9_](?:[-$a-zA-Z0-9_]*[$a-zA-Z0-9_])?)"
+      ,"begin": "(?i)(?:^|(?<=[^-a-z0-9$_]))(LINAGE-COUNTER|PAGE-COUNTER|LINE-COUNTER|RMS-STS|RMS-STV|RMS-FILENAME)(?=[^-a-z0-9$_])|([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
       ,"beginCaptures": {
         "1": {
           "name": "entity.name.class"
         }
         ,"2": {
-          "name": "variable.other"
+          "name": "variable.other.start"
         }
       }
-      ,"end": "(?i)(?!$|\\s|^((\\s){6})?[*/]|(IN|OF)[^-a-z0-9$_])"
+      ,"end": "(?i)(?!\\s|\n|^((\\s){6})?[*/]|(IN|OF)[^-a-z0-9$_])"
       ,"patterns": [
         {
-          "begin": "\\G"
-          ,"end": "(?i)(?!$|\\s|^((\\s){6})?[*/]|(IN|OF)[^-a-z0-9$_])"
-          ,"patterns": [
-            {
-              "include": "#qualified-name-tail"
-            }
-          ]
+          "include": "#comment"
         }
-      ]
-    }
-
-    ,"qualified-name-tail": {
-      "name": "cobol.qualified_name_tail"
-      ,"begin": "(?i)\\G"
-      ,"beginCaptures": {
-        "0": {
-          "name": "cobol.qualified_name_tail.begin"
-        }
-      }
-      ,"end": "(?i)(?!$|\\s|^((\\s){6})?[*/]|(IN|OF)[^-a-z0-9$_])"
-      ,"endCaptures": {
-        "0": {
-          "name": "cobol.qualified_name_tail.end"
-        }
-      }
-      ,"patterns": [
-        {
-          "name": "cobol.qualified_name.part"
+        ,{
+          "name": "cobol.qualified_name.belongs"
           ,"begin": "(?i)(^|(?<=[^-a-z0-9$_]))(IN|OF)(?=[^-a-z0-9$_])"
           ,"beginCaptures": {
             "0": {
               "name": "markup.bold.structure"
             }
           }
-          ,"end": "[$a-zA-Z0-9_]([-$a-zA-Z0-9_]*[$a-zA-Z0-9_])?"
+          ,"end": "(?i)[a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?"
           ,"endCaptures": {
             "0": {
-              "name": "variable.other"
+              "name": "variable.other.end"
             }
           }
           ,"patterns": [
@@ -212,13 +185,7 @@
             ,{
               "include": "#invalid-char"
             }
-          ]
-        }
-        ,{
-          "include": "#comment"
-        }
-        ,{
-          "include": "#invalid-char"
+          ]          
         }
       ]
     }
@@ -234,41 +201,36 @@
     }
 
     ,"literal.number": {
-      "name": "cobol.number"
-      ,"begin": "(?i)(?=\\d)|(?=(\\.|,)\\d)|(?=X[\"'])"
-      ,"end": "(?!\\G)"
-      ,"patterns": [
+      "patterns": [
         {
           "name": "constant.numeric.float"
-          ,"match": "(?i)\\G[0-9]*(\\.|,)[0-9]+(E[-+]?\\d+)?"
+          ,"match": "(?i)[0-9]*(\\.|,)[0-9]+(E[-+]?\\d+)?"
         }
         ,{
           "name": "constant.numeric.float"
-          ,"match": "(?i)\\G[0-9]+(\\.|,)[0-9]*(E[-+]?\\d+)"
+          ,"match": "(?i)[0-9]+(\\.|,)[0-9]*(E[-+]?\\d+)"
         }
         ,{
-          "name": "constant.numeric.integer"
-          ,"match": "(?i)\\G[0-9]+"
-        }
-        ,{
-          "name": "constant.numeric.integer"
-          ,"match": "(?i)\\GX\"[0-9a-f]+\""
-        }
-        ,{
-          "name": "constant.numeric.integer"
-          ,"match": "(?i)\\GX'[0-9a-f]+'"
+          "include": "#literal.integer"
         }
       ]
     }
 
     ,"literal.integer": {
-      "name": "cobol.integer"
-      ,"match": "(?i)\\d+|X\"[0-9a-f]+\"|X'[0-9a-f]+'"
-      ,"captures": {
-        "0": {
+      "patterns": [
+        {
           "name": "constant.numeric.integer"
+          ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))([0-9]+)(?=[^-a-z0-9$_])"
         }
-      }
+        ,{
+          "name": "constant.numeric.integer"
+          ,"match": "(?i)X\"[0-9a-f]+\""
+        }
+        ,{
+          "name": "constant.numeric.integer"
+          ,"match": "(?i)X'[0-9a-f]+'"
+        }
+      ]
     }
 
     ,"literal.text": {
@@ -324,7 +286,7 @@
 
     ,"cobol-name": {
       "name": "variable.other"
-      ,"match": "[$a-zA-Z0-9_]([-$a-zA-Z0-9_]*[$a-zA-Z0-9_])?"
+      ,"match": "(?i)[a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?"
     }
 
     ,"comment-is-name": {
@@ -2132,7 +2094,7 @@
           "name": "entity.name.class"
         }
       }
-      ,"end": "[$a-zA-Z0-9_]([-$a-zA-Z0-9_]*[$a-zA-Z0-9_])?"
+      ,"end": "(?i)[a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?"
       ,"endCaptures": {
         "0": {
           "name": "variable.other"
@@ -4006,7 +3968,7 @@
 
     ,"section": {
       "name": "cobol.section"
-      ,"begin": "[$a-zA-Z0-9_]([-$a-zA-Z0-9_]*[$a-zA-Z0-9_])?"
+      ,"begin": "(?i)[a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?"
       ,"beginCaptures": {
         "0": {
           "name": "variable.other"
@@ -4212,7 +4174,7 @@
 
     ,"condition.branch": {
       "name": "cobol.condition.branch"
-      ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(?:(?:NOT\\s+)?(AT\\s+)?END|(?:NOT\\s+)?(ON\\s+)?EXCEPTION|(?:NOT\\s+)?(ON\\s+)?SIZE\\s+ERROR|(?:NOT\\s+)?(ON\\s+)?OVERFLOW|(?:NOT\\s+)?INVALID(\\s+KEY)?|(?:NOT\\s+)?(AT\\s+)?(?:END-OF-PAGE|EOP))(?=[^-a-z0-9$_])"
+      ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(?:(?:NOT\\s+)?(AT\\s+)?END|(?:NOT\\s+)?(ON\\s+)?EXCEPTION|(?:NOT\\s+)?(ON\\s+)?(?:SIZE\\s+)?ERROR|(?:NOT\\s+)?(ON\\s+)?OVERFLOW|(?:NOT\\s+)?INVALID(\\s+KEY)?|(?:NOT\\s+)?(AT\\s+)?(?:END-OF-PAGE|EOP))(?=[^-a-z0-9$_])"
       ,"captures": {
         "0": {
           "name": "keyword.control"
