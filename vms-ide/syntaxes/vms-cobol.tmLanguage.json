@@ -31,10 +31,30 @@
   ]
   ,"repository": {
 
-    "expression": {
+    "identifier": {
+      "name": "cobol.identifier"
+      ,"begin": "(?=\\S)"
+      ,"end": "(?i)(?!\\G)(?!\\s|$|^((\\s){6})?[*/]|[(])"
+      ,"patterns": [
+        {
+          "include": "#comment"
+        }
+        ,{
+          "include": "#function"
+        }
+        ,{
+          "include": "#expression.brackets"
+        }
+        ,{
+          "include": "#qualified-name"
+        }
+      ]
+    }
+
+    ,"expression": {
       "name": "cobol.expression"
       ,"begin": "(?=\\S)"
-      ,"end": "(?i)(?!\\G)(?!\\s|$|^((\\s){6})?[*/]|[-+*/(><=]|\\*\\*|<=|>=|(IS|NOT|GREATER|LESS|OR|EQUAL|TO|THAN|IN|OF|AND|NUMERIC|ALPHABETIC|ALPHABETIC-(LOWER|UPPER)|POSITIVE|NEGATIVE|ZERO|SUCCESS|FAILURE)[^-a-z0-9$_])"
+      ,"end": "(?i)(?!\\G)(?!\\s|$|^((\\s){6})?[*/]|[-+*/(><=]|\\*\\*|<=|>=|(IS|NOT|GREATER|LESS|OR|EQUAL|IN|OF|AND|NUMERIC|ALPHABETIC|ALPHABETIC-(LOWER|UPPER)|POSITIVE|NEGATIVE|ZERO|SUCCESS|FAILURE)[^-a-z0-9$_])"
       ,"patterns": [
         {
           "include": "#comment"
@@ -52,7 +72,35 @@
           "include": "#literal.string"
         }
         ,{
+          "include": "#function"
+        }
+        ,{
           "include": "#qualified-name"
+        }
+      ]
+    }
+
+    ,"function": {
+      "name": "cobol.function"
+      ,"begin": "(?i)(?:^|(?<=[^-a-z0-9$_]))(FUNCTION)(?=[^-a-z0-9$_])"
+      ,"beginCaptures": {
+        "0": {
+          "name": "entity.name.class"
+        }
+      }
+      ,"end": "(?i)(?<=\\S)(?!\\G)(?=[^-a-z0-9$_])"
+      ,"patterns": [
+        {
+          "include": "#comment"
+        }
+        ,{
+          "name": "cobol.function.intrinsic"
+          ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(-C)?|ORD(-(MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY)(?=[^-a-z0-9$_])"
+          ,"captures": {
+            "0": {
+              "name": "markup.bold"
+            }
+          }
         }
       ]
     }
@@ -80,16 +128,25 @@
 
     ,"expression.operator": {
       "name": "cobol.expression.operator"
-      ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))((IS|TO|THAN)|NOT|GREATER|LESS|OR|EQUAL|IN|OF|AND|NUMERIC|ALPHABETIC|ALPHABETIC-(LOWER|UPPER)|POSITIVE|NEGATIVE|ZERO|SUCCESS|FAILURE)(?=[^-a-z0-9$_])|\\*\\*|>=|<=|[-+*/><=]"
+      ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))((IS)|NOT|GREATER(\\s+THAN)?|LESS(\\s+THAN)?|OR|EQUAL(\\s+TO)?|IN|OF|AND|(NUMERIC|ALPHABETIC|ALPHABETIC-(LOWER|UPPER)|POSITIVE|NEGATIVE|ZERO|SUCCESS|FAILURE))(?=[^-a-z0-9$_])|\\*\\*|>=|<=|[-+*/><=]"
       ,"captures": {
         "0": {
           "name": "markup.bold.operator"
         }
-        ,"1": {
-          "name": "entity.name.class"
-        }
         ,"2": {
           "name": "entity.name.function"
+        }
+        ,"3": {
+          "name": "entity.name.function"
+        }
+        ,"4": {
+          "name": "entity.name.function"
+        }
+        ,"5": {
+          "name": "entity.name.function"
+        }
+        ,"6": {
+          "name": "entity.name.class"
         }
       }
     }
@@ -173,7 +230,7 @@
 
     ,"comment": {
       "name": "comment.line"
-      ,"match": "^((\\s){6})?[*/].*$"
+      ,"match": "^((\\s){6})?[*/].*$\n"
     }
 
     ,"literal.number": {
@@ -1265,7 +1322,7 @@
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(IS)(?=[^-a-z0-9$_])"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -1291,7 +1348,7 @@
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(STATUS|IS)(?=[^-a-z0-9$_])"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -1607,7 +1664,7 @@
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(KEY|IS|WITH|ASCENDING)(?=[^-a-z0-9$_])"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
         ,{
           "include": "#compiler.directives"
@@ -1640,7 +1697,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -1699,7 +1756,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -1984,7 +2041,7 @@
               "include": "#compiler.directives"
             }
             ,{
-              "include": "#qualified-name"
+              "include": "#identifier"
             }
           ]
         }
@@ -2010,7 +2067,7 @@
               "include": "#compiler.directives"
             }
             ,{
-              "include": "#qualified-name"
+              "include": "#identifier"
             }
           ]
         }
@@ -2116,7 +2173,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -2225,7 +2282,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -2334,7 +2391,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -2462,7 +2519,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -2492,7 +2549,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -2555,7 +2612,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -2618,7 +2675,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -2648,7 +2705,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -2707,7 +2764,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -2770,7 +2827,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -3018,7 +3075,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -3078,7 +3135,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -3234,7 +3291,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -3287,7 +3344,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -3346,7 +3403,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -3438,7 +3495,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -3720,7 +3777,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -3753,7 +3810,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -3812,7 +3869,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -3871,7 +3928,7 @@
               "include": "#compiler.directives"
             }
             ,{
-              "include": "#qualified-name"
+              "include": "#identifier"
             }
           ]
         }
@@ -4261,7 +4318,7 @@
           "include": "#literal.number"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4398,7 +4455,7 @@
           "include": "#condition.branch"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4458,7 +4515,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4482,7 +4539,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4516,7 +4573,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4539,7 +4596,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4567,7 +4624,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4578,25 +4635,8 @@
       ,"end": "(?i)(?=\\.[^-a-z0-9$_])|(^|(?<=[^-a-z0-9$_]))(?=(END-ACCEPT|END-ADD|END-CALL|END-COMPUTE|END-DELETE|END-DISPLAY|END-DIVIDE|END-EVALUATE|END-IF|END-MULTIPLY|END-PERFORM|END-READ|END-RETURN|END-REWRITE|END-SEARCH|END-START|END-STRING|END-SUBTRACT|END-UNSTRING|END-WRITE|ACCEPT|ADD|ALTER|CALL|CANCEL|CLOSE|COMPUTE|CONTINUE|DELETE|DISPLAY|DIVIDE|EVALUATE|EXIT|GENERATE|GO|IF|ELSE|INITIALIZE|INITIATE|INSPECT|MERGE|MOVE|MULTIPLY|OPEN|PERFORM|READ|RELEASE|RETURN|REWRITE|SEARCH|SET|SORT|START|STOP|STRING|SUBTRACT|SUPPRESS|TERMINATE|UNLOCK|UNSTRING|WRITE|WHEN)[^-a-z0-9$_])"
       ,"patterns": [
         {
-          "begin": "\\G"
-          ,"end": "(?i)^EQUAL(?=[^-a-z0-9$_])|(?<=[^-a-z0-9$_])EQUAL(?=[^-a-z0-9$_])|="
-          ,"endCaptures": {
-            "0": {
-              "name": "entity.name.class"
-            }
-          }
-          , "patterns": [
-            {
-              "include": "#comment"
-            }
-            ,{
-              "name": "entity.name.class"
-              ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(ROUNDED)(?=[^-a-z0-9$_])"
-            }
-            ,{
-              "include": "#qualified-name"
-            }
-          ]
+          "name": "entity.name.class"
+          ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(ROUNDED)(?=[^-a-z0-9$_])"
         }
         ,{
           "include": "#comment"
@@ -4632,7 +4672,7 @@
           "include": "#compiler.directives.without_record"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4677,7 +4717,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4704,7 +4744,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4805,7 +4845,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4836,7 +4876,7 @@
           "include": "#literal.number"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4882,9 +4922,6 @@
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(NEXT|SENTENCE)(?=[^-a-z0-9$_])"
         }
         ,{
-          "include": "#expression"
-        }
-        ,{
           "include": "#condition.branch"
         }
         ,{
@@ -4922,7 +4959,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4942,7 +4979,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -4973,7 +5010,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5001,7 +5038,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5031,7 +5068,7 @@
           "include": "#literal.number"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5058,7 +5095,7 @@
           "include": "#literal.number"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5086,7 +5123,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5147,7 +5184,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5171,7 +5208,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5199,7 +5236,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5227,7 +5264,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5251,7 +5288,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5282,7 +5319,7 @@
           "include": "#literal.number"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5310,7 +5347,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5365,7 +5402,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5392,7 +5429,7 @@
           "include": "#literal.string"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5423,7 +5460,7 @@
           "include": "#literal.string"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5454,7 +5491,7 @@
           "include": "#literal.number"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5495,7 +5532,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5524,7 +5561,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5555,7 +5592,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
@@ -5586,7 +5623,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#identifier"
         }
       ]
     }
