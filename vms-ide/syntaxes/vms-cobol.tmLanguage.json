@@ -31,8 +31,54 @@
   ]
   ,"repository": {
 
-    "identifier": {
-      "name": "cobol.identifier"
+    "expression": {
+      "name": "expression"
+      ,"begin": "(?i)(?=[-a-z0-9$_><=+*/(\"']|\\.\\d)"
+      ,"comment": "not ends on space, new line, comment, operator, open bracket, keyword-operator"
+      ,"end": "(?i)(?<!\\G)(?!\\s|\n|^((\\s){6})?[*/]|[-><=+*/]|[(]|(IS|NOT|GREATER|LESS|EQUAL|OR|AND|IN|OF)[^-a-z0-9$_])"
+      ,"patterns": [
+        {
+          "include": "#comment"
+        }
+        ,{
+          "include": "#literal.number"
+        }
+        ,{
+          "include": "#literal.string"
+        }
+        ,{
+          "include": "#expression.brackets"
+        }
+        ,{
+          "include": "#operator.qualifier"
+        }
+        ,{
+          "include": "#operator.arithmetic"
+        }
+        ,{
+          "include": "#operator.compare"
+        }
+        ,{
+          "include": "#operator.logic"
+        }
+        ,{
+          "name": "entity.name.class.logic.end"
+          ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(SUCCESS|FAILURE|POSITIVE|NEGATIVE|ZERO|NUMERIC|ALPHABETIC(?:-(?:LOWER|UPPER))?)(?=[^-a-z0-9$_])"
+        }
+        ,{
+          "include": "#function"
+        }
+        ,{
+          "include": "#cobol.name"
+        }
+        ,{
+          "include": "#invalid-char"
+        }
+      ]
+    }
+
+    ,"identifier": {
+      "name": "identifier"
       ,"begin": "(?i)(?=[-a-z0-9$_])"
       ,"end": "(?i)(?!\\G)(?!\\s|\n|^((\\s){6})?[*/]|[(])"
       ,"patterns": [
@@ -46,15 +92,93 @@
           "include": "#expression.brackets"
         }
         ,{
-          "include": "#qualified-name"
+          "include": "#operator.qualifier"
+        }
+        ,{
+          "include": "#cobol.name"
         }
       ]
     }
 
-    ,"expression": {
-      "name": "cobol.expression"
-      ,"begin": "(?i)(?=[-a-z0-9$_(\"']|\\.\\d)"
-      ,"end": "(?i)(?!\\G)(?!\\s|\n|\"|'|^((\\s){6})?[*/]|[-+*/(><=]|\\*\\*|(IS|NOT|GREATER|LESS|OR|EQUAL|IN|OF|AND|NUMERIC|ALPHABETIC(-(LOWER|UPPER))?|POSITIVE|NEGATIVE|ZERO|SUCCESS|FAILURE)[^-a-z0-9$_])"
+    ,"function": {
+      "name": "function"
+      ,"begin": "(?i)(?:^|(?<=[^-a-z0-9$_]))(FUNCTION)(?=[^-a-z0-9$_])"
+      ,"beginCaptures": {
+        "0": {
+          "name": "markup.bold.function"
+        }
+      }
+      ,"end": "(?i)(?:^|(?<=[^-a-z0-9$_]))(?:ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(?:10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(?:-C)?|ORD(?:-(?:MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY)(?=[^-a-z0-9$_])|([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
+      ,"endCaptures": {
+        "0": {
+          "name": "entity.name.class.function.name"
+        }
+        ,"1": {
+          "name": "variable.other.function.name"
+        }
+      }
+      ,"patterns": [
+        {
+          "include": "#comment"
+        }
+      ]
+    }
+
+    ,"cobol.name": {
+      "name": "cobol.name"
+      ,"comment": "any acceptable name"
+      ,"match": "(?i)([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
+      ,"captures": {
+        "0": {
+          "name": "variable.other.start"
+        }
+      }
+    }
+
+    ,"operator.qualifier": {
+      "name": "operator.qualifier"
+      ,"begin": "(?i)(?:^|(?<=[^-a-z0-9$_]))(IN|OF)(?=[^-a-z0-9$_])"
+      ,"beginCaptures": {
+        "0": {
+          "name": "markup.bold.operator.qualifier"
+        }
+      }
+      ,"end": "(?i)([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
+      ,"endCaptures": {
+        "1": {
+          "name": "variable.other.qualifier"
+        }
+      }
+      ,"patterns": [
+        {
+          "include": "#comment"
+        }
+        ,{
+          "include": "#invalid-char"
+        }
+      ]
+    }
+
+    ,"operator.arithmetic": {
+      "name": "operator.arithmetic"
+      ,"begin": "(?i)[*]{2}|[-+*/]"
+      ,"beginCaptures": {
+        "0": {
+          "name": "markup.bold.operator.arithmetic"
+        }
+      }
+      ,"end": "(?i)(?<=\\))|(?=[\"'])|[0-9]*(?:\\.|,)[0-9]+(?:E[-+]?\\d+)?|[0-9]+(?:\\.|,)[0-9]*(?:E[-+]?\\d+)|(?:[0-9]+)(?=[^-a-z0-9$_])|X\"[0-9a-f]+\"|X'[0-9a-f]+'|(?:^|(?<=[^-a-z0-9$_]))(ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(?:10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(?:-C)?|ORD(?:-(?:MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY)(?=[^-a-z0-9$_])|(?!(?:FUNCTION)[^-a-z0-9$_])([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
+      ,"endCaptures": {
+        "0": {
+          "name": "constant.numeric.arithmetic.end"
+        }
+        ,"1": {
+          "name": "entity.name.class.function.name.end"
+        }
+        ,"2": {
+          "name": "variable.other.arithmetic.end"
+        }
+      }
       ,"patterns": [
         {
           "include": "#comment"
@@ -63,47 +187,203 @@
           "include": "#expression.brackets"
         }
         ,{
-          "include": "#expression.operator"
+          "name": "function"
+          ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(FUNCTION)(?=[^-a-z0-9$_])"
+          ,"captures": {
+            "0": {
+              "name": "markup.bold.function.inside"
+            }
+          }
         }
         ,{
-          "include": "#literal.number"
+          "name": "operator.unary"
+          ,"begin": "(?i)[-+]"
+          ,"beginCaptures": {
+            "0": {
+              "name": "markup.bold.operator.unary"
+            }
+          }
+          ,"end": "(?i)(?=\\(|\\.\\d|[a-z0-9$_])"
+          ,"patterns": [
+            {
+              "name": "operator.unary.double"
+              ,"match": "(?i)[-+]"
+              ,"captures": {
+                "0": {
+                  "name": "markup.bold.operator.unary.double"
+                }
+              }
+            }
+            ,{
+              "include": "#invalid-char"
+            }
+          ]
         }
         ,{
-          "include": "#literal.string"
-        }
-        ,{
-          "include": "#identifier"
+          "include": "#invalid-char"
         }
       ]
     }
 
-    ,"function": {
-      "name": "cobol.function"
-      ,"begin": "(?i)(?:^|(?<=[^-a-z0-9$_]))(FUNCTION)(?=[^-a-z0-9$_])"
+    ,"operator.logic": {
+      "name": "operator.logic"
+      ,"begin": "(?i)(?:^|(?<=[^-a-z0-9$_]))(?:OR|AND)(?=[^-a-z0-9$_])"
       ,"beginCaptures": {
         "0": {
-          "name": "entity.name.class"
+          "name": "markup.bold.operator.logic.begin"
         }
       }
-      ,"end": "(?i)(?<=\\S)(?!\\G)(?=[^-a-z0-9$_])"
+      ,"comment": "exclude compare operators"
+      ,"end": "(?i)(?<=\\))|(?=[\"'])|[0-9]*(?:\\.|,)[0-9]+(?:E[-+]?\\d+)?|[0-9]+(?:\\.|,)[0-9]*(?:E[-+]?\\d+)|(?:[0-9]+)(?=[^-a-z0-9$_])|X\"[0-9a-f]+\"|X'[0-9a-f]+'|(?:^|(?<=[^-a-z0-9$_]))(SUCCESS|FAILURE|POSITIVE|NEGATIVE|ZERO|NUMERIC|ALPHABETIC(?:-(?:LOWER|UPPER))?)(?=[^-a-z0-9$_])|(?:^|(?<=[^-a-z0-9$_]))(ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(?:10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(?:-C)?|ORD(?:-(?:MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY)(?=[^-a-z0-9$_])|(?!(?:IS|TO|THAN|OR|NOT|GREATER|LESS|EQUAL|FUNCTION)[^-a-z0-9$_])([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
+      ,"endCaptures": {
+        "0": {
+          "name": "constant.numeric.logic.end"
+        }
+        ,"1": {
+          "name": "entity.name.class.logic.end"
+        }
+        ,"2": {
+          "name": "entity.name.class.function.name.end"
+        }
+        ,"3": {
+          "name": "variable.other.logic.end"
+        }
+      }
       ,"patterns": [
         {
           "include": "#comment"
         }
         ,{
-          "name": "cobol.function.intrinsic"
-          ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(-C)?|ORD(-(MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY)(?=[^-a-z0-9$_])"
+          "include": "#expression.brackets"
+        }
+        ,{
+          "name": "function"
+          ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(FUNCTION)(?=[^-a-z0-9$_])"
           ,"captures": {
             "0": {
-              "name": "markup.bold"
+              "name": "markup.bold.function.inside"
             }
           }
+        }
+        ,{
+          "name": "operator.compare"
+          ,"match": "(?i)>=|<=|[><=]|(?:^|(?<=[^-a-z0-9$_]))(?:(IS|TO|THAN|OR)|NOT|GREATER|LESS|EQUAL)(?=[^-a-z0-9$_])"
+          ,"captures": {
+            "0": {
+              "name": "markup.bold.operator.logic.compare"
+            }
+            ,"1": {
+              "name": "entity.name.function.operator.logic.compare"
+            }
+          }
+        }
+        ,{
+          "name": "operator.unary"
+          ,"begin": "(?i)[-+]"
+          ,"beginCaptures": {
+            "0": {
+              "name": "markup.bold.operator.unary"
+            }
+          }
+          ,"end": "(?i)(?=\\(|\\.\\d|[a-z0-9$_])"
+          ,"patterns": [
+            {
+              "name": "operator.unary.double"
+              ,"match": "(?i)[-+]"
+              ,"captures": {
+                "0": {
+                  "name": "markup.bold.operator.unary.double"
+                }
+              }
+            }
+            ,{
+              "include": "#invalid-char"
+            }
+          ]
+        }
+        ,{
+          "include": "#invalid-char"
+        }
+      ]
+    }
+
+    ,"operator.compare": {
+      "name": "operator.compare"
+      ,"begin": "(?i)>=|<=|[><=]|(?:^|(?<=[^-a-z0-9$_]))(?:(IS)|NOT|GREATER|LESS|EQUAL)(?=[^-a-z0-9$_])"
+      ,"beginCaptures": {
+        "0": {
+          "name": "markup.bold.operator.compare.begin"
+        }
+        ,"1": {
+          "name": "entity.name.function.compare.begin"
+        }
+      }
+      ,"end": "(?i)(?<=\\))|(?=[\"'])|[0-9]*(?:\\.|,)[0-9]+(?:E[-+]?\\d+)?|[0-9]+(?:\\.|,)[0-9]*(?:E[-+]?\\d+)|(?:[0-9]+)(?=[^-a-z0-9$_])|X\"[0-9a-f]+\"|X'[0-9a-f]+'|(?:^|(?<=[^-a-z0-9$_]))(SUCCESS|FAILURE|POSITIVE|NEGATIVE|ZERO|NUMERIC|ALPHABETIC(?:-(?:LOWER|UPPER))?)(?=[^-a-z0-9$_])|(?:^|(?<=[^-a-z0-9$_]))(ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(?:10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(?:-C)?|ORD(?:-(?:MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY)(?=[^-a-z0-9$_])|(?!(?:NOT|THAN|TO|OR|GREATER|LESS|EQUAL|FUNCTION)[^-a-z0-9$_])([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
+      ,"endCaptures": {
+        "0": {
+          "name": "constant.numeric.compare.end"
+        }
+        ,"1": {
+          "name": "entity.name.class.logic.end"
+        }
+        ,"2": {
+          "name": "entity.name.class.function.name.end"
+        }
+        ,"3": {
+          "name": "variable.other.logic.end"
+        }
+      }
+      ,"patterns": [
+        {
+          "include": "#comment"
+        }
+        ,{
+          "include": "#expression.brackets"
+        }
+        ,{
+          "name": "function"
+          ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(FUNCTION)(?=[^-a-z0-9$_])"
+          ,"captures": {
+            "0": {
+              "name": "markup.bold.function.inside"
+            }
+          }
+        }
+        ,{
+          "name": "operator.compare.tail"
+          ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(?:TO|THAN|OR)(?=[^-a-z0-9$_])"
+          ,"captures": {
+            "0": {
+              "name": "entity.name.function.compare.tail"
+            }
+          }
+        }
+        ,{
+          "name": "operator.compare.inner"
+          ,"match": "(?i)>=|<=|[><=]|(?:^|(?<=[^-a-z0-9$_]))(?:GREATER|LESS|EQUAL|NOT)(?=[^-a-z0-9$_])"
+          ,"captures": {
+            "0": {
+              "name": "markup.bold.operator.compare.inner"
+            }
+          }
+        }
+        ,{
+          "name": "operator.compare.unary"
+          ,"match": "(?i)[-+]"
+          ,"captures": {
+            "0": {
+              "name": "markup.bold.operator.compare.unary"
+            }
+          }
+        }
+        ,{
+          "include": "#invalid-char"
         }
       ]
     }
 
     ,"expression.brackets": {
-      "name": "cobol.expression.brackets"
+      "name": "expression.brackets"
       ,"begin": "[(]"
       ,"beginCaptures": {
         "0": {
@@ -119,73 +399,6 @@
       ,"patterns": [
         {
           "include": "#expression"
-        }
-      ]
-    }
-
-    ,"expression.operator": {
-      "name": "cobol.expression.operator"
-      ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))((IS)|NOT|GREATER(\\s+THAN)?|LESS(\\s+THAN)?|OR|EQUAL(\\s+TO)?|IN|OF|AND|(NUMERIC|ALPHABETIC|ALPHABETIC-(LOWER|UPPER)|POSITIVE|NEGATIVE|ZERO|SUCCESS|FAILURE))(?=[^-a-z0-9$_])|\\*\\*|>=|<=|[-+*/><=]"
-      ,"captures": {
-        "0": {
-          "name": "markup.bold.operator"
-        }
-        ,"2": {
-          "name": "entity.name.function"
-        }
-        ,"3": {
-          "name": "entity.name.function"
-        }
-        ,"4": {
-          "name": "entity.name.function"
-        }
-        ,"5": {
-          "name": "entity.name.function"
-        }
-        ,"6": {
-          "name": "entity.name.class"
-        }
-      }
-    }
-
-    ,"qualified-name": {
-      "name": "cobol.qualified_name"
-      ,"begin": "(?i)(?:^|(?<=[^-a-z0-9$_]))(LINAGE-COUNTER|PAGE-COUNTER|LINE-COUNTER|RMS-STS|RMS-STV|RMS-FILENAME)(?=[^-a-z0-9$_])|([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
-      ,"beginCaptures": {
-        "1": {
-          "name": "entity.name.class"
-        }
-        ,"2": {
-          "name": "variable.other.start"
-        }
-      }
-      ,"end": "(?i)(?!\\s|\n|^((\\s){6})?[*/]|(IN|OF)[^-a-z0-9$_])"
-      ,"patterns": [
-        {
-          "include": "#comment"
-        }
-        ,{
-          "name": "cobol.qualified_name.belongs"
-          ,"begin": "(?i)(^|(?<=[^-a-z0-9$_]))(IN|OF)(?=[^-a-z0-9$_])"
-          ,"beginCaptures": {
-            "0": {
-              "name": "markup.bold.structure"
-            }
-          }
-          ,"end": "(?i)[a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?"
-          ,"endCaptures": {
-            "0": {
-              "name": "variable.other.end"
-            }
-          }
-          ,"patterns": [
-            {
-              "include": "#comment"
-            }
-            ,{
-              "include": "#invalid-char"
-            }
-          ]          
         }
       ]
     }
@@ -284,104 +497,6 @@
       ,"match": "\\S+?(?=\\.?[\\s$])"
     }
 
-    ,"cobol-name": {
-      "name": "variable.other"
-      ,"match": "(?i)[a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?"
-    }
-
-    ,"comment-is-name": {
-      "begin": "^((\\s){6})?[*/].*$"
-      ,"beginCaptures": {
-        "0": {
-          "name": "comment.line"
-        }
-      }
-      ,"end": "(?!\\G)"
-      ,"patterns": [
-        {
-          "include": "#is-name"
-        }
-        ,{
-          "include": "#comment-is-name"
-        }
-        ,{
-          "include": "#cobol-name"
-        }
-      ]
-    }
-
-    ,"is-name": {
-      "begin": "(?i)(?:^|(?<=[^-a-z0-9$_]))(IS)(?=[^-a-z0-9$_])"
-      ,"beginCaptures": {
-        "0": {
-          "name": "entity.name.function"
-        }
-      }
-      ,"end": "(?!\\G)"
-      ,"patterns": [
-        {
-          "include": "#comment-name"
-        }
-        ,{
-          "include": "#cobol-name"
-        }
-      ]
-    }
-
-    ,"comment-name": {
-      "begin": "^((\\s){6})?[*/].*$"
-      ,"beginCaptures": {
-        "0": {
-          "name": "comment.line"
-        }
-      }
-      ,"end": "(?!\\G)"
-      ,"patterns": [
-        {
-          "include": "#comment-name"
-        }
-        ,{
-          "include": "#cobol-name"
-        }
-      ]
-    }
-
-    ,"comment-integer": {
-      "begin": "^((\\s){6})?[*/].*$"
-      ,"beginCaptures": {
-        "0": {
-          "name": "comment.line"
-        }
-      }
-      ,"end": "(?<=\\S)(?!\\G)"
-      ,"patterns": [
-        {
-          "include": "#comment-integer"
-        }
-        ,{
-          "include": "#literal.integer"
-        }
-      ]
-    }
-
-    ,"comment-string": {
-      "begin": "^((\\s){6})?[*/].*$"
-      ,"beginCaptures": {
-        "0": {
-          "name": "comment.line"
-        }
-      }
-      ,"end": "(?<=\\S)(?!\\G)"
-      ,"patterns": [
-        {
-          "include": "#comment-string"
-        }
-        ,{
-          "include": "#literal.string"
-        }
-      ]
-    }
-    
     ,"comment-is-character-string": {
       "begin": "^((\\s){6})?[*/].*$"
       ,"beginCaptures": {
@@ -531,7 +646,7 @@
           "include": "#literal.string"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -814,7 +929,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -898,7 +1013,7 @@
               ,"name": "entity.name.function"
             }
             ,{
-              "include": "#cobol-name"
+              "include": "#cobol.name"
             }
           ]
         }
@@ -929,7 +1044,7 @@
           ]
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -1007,7 +1122,7 @@
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(IS)(?=[^-a-z0-9$_])"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -1033,7 +1148,7 @@
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(IS)(?=[^-a-z0-9$_])"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -1059,7 +1174,7 @@
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(IS)(?=[^-a-z0-9$_])"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -1093,7 +1208,7 @@
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(\\d+)(?=[^-a-z0-9$_])"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -1127,7 +1242,7 @@
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(\\d+)(?=[^-a-z0-9$_])"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
         ,{
           "include": "#literal.string"
@@ -1160,7 +1275,7 @@
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(\\d+)(?=[^-a-z0-9$_])"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -1194,7 +1309,7 @@
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(\\d+)(?=[^-a-z0-9$_])"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
         ,{
           "include": "#literal.string"
@@ -1434,7 +1549,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -1467,7 +1582,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -1510,16 +1625,24 @@
           "name": "entity.name.class"
         }
       }
-      ,"end": "(?<=\\S)(?!\\G)"
+      ,"end": "(?i)(?!(?:IS)[^-a-z0-9$_])([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
+      ,"endCaptures": {
+        "0": {
+          "name": "variable.other.code_set.end"
+        }
+      }
       ,"patterns": [
         {
-          "include": "#is-name"
+          "include": "#comment"
         }
         ,{
-          "include": "#comment-is-name"
-        }
-        ,{
-          "include": "#cobol-name"
+          "name": "cobol.code_set.is"
+          ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(?:IS)(?=[^-a-z0-9$_])"
+          ,"captures": {
+            "0": {
+              "name": "entity.name.function.code_set.is"
+            }
+          }
         }
       ]
     }
@@ -1779,7 +1902,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -1809,7 +1932,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -1842,7 +1965,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -1875,7 +1998,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -2079,7 +2202,7 @@
               "include": "#compiler.directives"
             }
             ,{
-              "include": "#cobol-name"
+              "include": "#cobol.name"
             }
           ]
         }
@@ -2415,7 +2538,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -2604,7 +2727,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -2693,7 +2816,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -2756,7 +2879,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -2819,7 +2942,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -3004,7 +3127,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -3405,7 +3528,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -3421,7 +3544,7 @@
       ,"end": "(?i)(?=\\.[^-a-z0-9$_])|(?:^|(?<=[^-a-z0-9$_]))(?=(PAGE|CONTROL(S)?)(?=[^-a-z0-9$_]))"
       ,"patterns": [
         {
-          "include": "#comment-string"
+          "include": "#comment"
         }
         ,{
           "include": "#literal.string"
@@ -3584,7 +3707,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -4013,7 +4136,7 @@
           "include": "#compiler.directives"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -4337,7 +4460,7 @@
           "include": "#literal.string"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -4364,7 +4487,7 @@
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(STANDARD|ON)(?=[^-a-z0-9$_])"
         }
         ,{
-          "include": "#cobol-name"
+          "include": "#cobol.name"
         }
       ]
     }
@@ -4394,7 +4517,7 @@
           }
         }
         ,{
-          "name": "string.regexp"
+          "name": "markup.bold.datemask"
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(YYYYMMDD|YYYYDDD)(?=[^-a-z0-9$_])"
         }
         ,{
