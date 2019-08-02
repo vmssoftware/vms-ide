@@ -64,6 +64,11 @@
         ,{
           "name": "entity.name.class.logic.class"
           ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(SUCCESS|FAILURE|POSITIVE|NEGATIVE|ZERO|NUMERIC|ALPHABETIC(?:-(?:LOWER|UPPER))?)(?=[^-a-z0-9$_])"
+          ,"captures": {
+            "0": {
+              "name": "markup.italic"
+            }
+          }
         }
         ,{
           "include": "#function"
@@ -108,12 +113,15 @@
           "name": "markup.bold.function"
         }
       }
-      ,"end": "(?i)(?:^|(?<=[^-a-z0-9$_]))(?:ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(?:10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(?:-C)?|ORD(?:-(?:MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY)(?=[^-a-z0-9$_])|([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
+      ,"end": "(?i)(?:^|(?<=[^-a-z0-9$_]))(ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(?:10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(?:-C)?|ORD(?:-(?:MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY)(?=[^-a-z0-9$_])|([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
       ,"endCaptures": {
         "0": {
-          "name": "entity.name.class.function.name"
+          "name": "markup.italic"
         }
         ,"1": {
+          "name": "entity.name.class.function.name"
+        }
+        ,"2": {
           "name": "variable.other.function.name"
         }
       }
@@ -127,13 +135,16 @@
     ,"cobol.name": {
       "name": "cobol.name"
       ,"comment": "any acceptable name"
-      ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))(ZERO(?:(?:E)?S)?|SPACE(?:S)?|HIGH-VALUE(?:S)?|LOW-VALUE(?:S)?|QUOTE(?:S)?|ALL|RETURN-CODE|LINAGE-COUNTER|PAGE-COUNTER|LINE-COUNTER|RMS-STS|RMS-STV|RMS-FILENAME|RMS-CURRENT-STS|RMS-CURRENT-STV|RMS-CURRENT-FILENAME)(?=[^-a-z0-9$_])|(?:[a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
+      ,"match": "(?i)(?:^|(?<=[^-a-z0-9$_]))((ZERO(?:(?:E)?S)?|SPACE(?:S)?|HIGH-VALUE(?:S)?|LOW-VALUE(?:S)?|QUOTE(?:S)?|ALL|RETURN-CODE|LINAGE-COUNTER|PAGE-COUNTER|LINE-COUNTER|RMS-STS|RMS-STV|RMS-FILENAME|RMS-CURRENT-STS|RMS-CURRENT-STV|RMS-CURRENT-FILENAME))(?=[^-a-z0-9$_])|(?:[a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
       ,"captures": {
         "0": {
           "name": "variable.other.start"
         }
         ,"1": {
-          "name": "markup.italic.special.purpose entity.name.class"
+          "name": "markup.italic"
+        }
+        ,"2": {
+          "name": "entity.name.class.special.purpose"
         }
       }
     }
@@ -170,18 +181,21 @@
           "name": "markup.bold.operator.arithmetic"
         }
       }
-      ,"end": "(?i)(?<=\\))|(?=[\"'])|([0-9]*(?:\\.|,)[0-9]+(?:E[-+]?\\d+)?|[0-9]+(?:\\.|,)[0-9]*(?:E[-+]?\\d+)|(?:[0-9]+)(?=[^-a-z0-9$_])|X\"[0-9a-f]+\"|X'[0-9a-f]+')|(?:^|(?<=[^-a-z0-9$_]))(ZERO(?:(?:E)?S)?|SPACE(?:S)?|HIGH-VALUE(?:S)?|LOW-VALUE(?:S)?|QUOTE(?:S)?|ALL|RETURN-CODE|LINAGE-COUNTER|PAGE-COUNTER|LINE-COUNTER|RMS-STS|RMS-STV|RMS-FILENAME|RMS-CURRENT-STS|RMS-CURRENT-STV|RMS-CURRENT-FILENAME)(?=[^-a-z0-9$_])|(?:^|(?<=[^-a-z0-9$_]))(ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(?:10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(?:-C)?|ORD(?:-(?:MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY)(?=[^-a-z0-9$_])|(?!(?:FUNCTION)[^-a-z0-9$_])([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
+      ,"end": "(?i)(?<=\\))|(?=[\"'])|([0-9]*(?:\\.|,)[0-9]+(?:E[-+]?\\d+)?|[0-9]+(?:\\.|,)[0-9]*(?:E[-+]?\\d+)|(?:[0-9]+)(?=[^-a-z0-9$_])|X\"[0-9a-f]+\"|X'[0-9a-f]+')|(?:^|(?<=[^-a-z0-9$_]))((ZERO(?:(?:E)?S)?|SPACE(?:S)?|HIGH-VALUE(?:S)?|LOW-VALUE(?:S)?|QUOTE(?:S)?|ALL|RETURN-CODE|LINAGE-COUNTER|PAGE-COUNTER|LINE-COUNTER|RMS-STS|RMS-STV|RMS-FILENAME|RMS-CURRENT-STS|RMS-CURRENT-STV|RMS-CURRENT-FILENAME)|(ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(?:10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(?:-C)?|ORD(?:-(?:MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY))(?=[^-a-z0-9$_])|(?!(?:FUNCTION)[^-a-z0-9$_])([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
       ,"endCaptures": {
         "1": {
           "name": "constant.numeric.arithmetic.end"
         }
         ,"2": {
-          "name": "markup.italic.special.purpose entity.name.class"
+          "name": "markup.italic"
         }
         ,"3": {
-          "name": "entity.name.class.function.name.end  markup.italic"
+          "name": "entity.name.class.special.purpose.arithmetic.end"
         }
         ,"4": {
+          "name": "entity.name.class.function.name.arithmetic.end"
+        }
+        ,"5": {
           "name": "variable.other.arithmetic.end"
         }
       }
@@ -240,21 +254,24 @@
         }
       }
       ,"comment": "exclude compare operators"
-      ,"end": "(?i)(?<=\\))|(?=[\"'])|([0-9]*(?:\\.|,)[0-9]+(?:E[-+]?\\d+)?|[0-9]+(?:\\.|,)[0-9]*(?:E[-+]?\\d+)|(?:[0-9]+)(?=[^-a-z0-9$_])|X\"[0-9a-f]+\"|X'[0-9a-f]+')|(?:^|(?<=[^-a-z0-9$_]))(ZERO(?:(?:E)?S)?|SPACE(?:S)?|HIGH-VALUE(?:S)?|LOW-VALUE(?:S)?|QUOTE(?:S)?|ALL|RETURN-CODE|LINAGE-COUNTER|PAGE-COUNTER|LINE-COUNTER|RMS-STS|RMS-STV|RMS-FILENAME|RMS-CURRENT-STS|RMS-CURRENT-STV|RMS-CURRENT-FILENAME)(?=[^-a-z0-9$_])|(?:^|(?<=[^-a-z0-9$_]))(SUCCESS|FAILURE|POSITIVE|NEGATIVE|ZERO|NUMERIC|ALPHABETIC(?:-(?:LOWER|UPPER))?)(?=[^-a-z0-9$_])|(?:^|(?<=[^-a-z0-9$_]))(ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(?:10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(?:-C)?|ORD(?:-(?:MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY)(?=[^-a-z0-9$_])|(?!(?:IS|TO|THAN|OR|NOT|GREATER|LESS|EQUAL|FUNCTION)[^-a-z0-9$_])([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
+      ,"end": "(?i)(?<=\\))|(?=[\"'])|([0-9]*(?:\\.|,)[0-9]+(?:E[-+]?\\d+)?|[0-9]+(?:\\.|,)[0-9]*(?:E[-+]?\\d+)|(?:[0-9]+)(?=[^-a-z0-9$_])|X\"[0-9a-f]+\"|X'[0-9a-f]+')|(?:^|(?<=[^-a-z0-9$_]))((ZERO(?:(?:E)?S)?|SPACE(?:S)?|HIGH-VALUE(?:S)?|LOW-VALUE(?:S)?|QUOTE(?:S)?|ALL|RETURN-CODE|LINAGE-COUNTER|PAGE-COUNTER|LINE-COUNTER|RMS-STS|RMS-STV|RMS-FILENAME|RMS-CURRENT-STS|RMS-CURRENT-STV|RMS-CURRENT-FILENAME)|(ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(?:10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(?:-C)?|ORD(?:-(?:MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY)|(SUCCESS|FAILURE|POSITIVE|NEGATIVE|ZERO|NUMERIC|ALPHABETIC(?:-(?:LOWER|UPPER))?))(?=[^-a-z0-9$_])|(?!(?:IS|TO|THAN|OR|NOT|GREATER|LESS|EQUAL|FUNCTION)[^-a-z0-9$_])([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
       ,"endCaptures": {
         "1": {
           "name": "constant.numeric.logic.end"
         }
         ,"2": {
-          "name": "markup.italic.special.purpose entity.name.class"
+          "name": "markup.italic"
         }
         ,"3": {
-          "name": "entity.name.class.logic.end markup.italic"
+          "name": "entity.name.class.special.purpose.logic.end"
         }
         ,"4": {
-          "name": "entity.name.class.function.name.end"
+          "name": "entity.name.class.function.name.logic.end"
         }
         ,"5": {
+          "name": "entity.name.class.class.logic.end"
+        }
+        ,"6": {
           "name": "variable.other.logic.end"
         }
       }
@@ -327,21 +344,24 @@
           "name": "entity.name.function.compare.begin"
         }
       }
-      ,"end": "(?i)(?<=\\))|(?=[\"'])|([0-9]*(?:\\.|,)[0-9]+(?:E[-+]?\\d+)?|[0-9]+(?:\\.|,)[0-9]*(?:E[-+]?\\d+)|(?:[0-9]+)(?=[^-a-z0-9$_])|X\"[0-9a-f]+\"|X'[0-9a-f]+')|(?:^|(?<=[^-a-z0-9$_]))(ZERO(?:(?:E)?S)?|SPACE(?:S)?|HIGH-VALUE(?:S)?|LOW-VALUE(?:S)?|QUOTE(?:S)?|ALL|RETURN-CODE|LINAGE-COUNTER|PAGE-COUNTER|LINE-COUNTER|RMS-STS|RMS-STV|RMS-FILENAME|RMS-CURRENT-STS|RMS-CURRENT-STV|RMS-CURRENT-FILENAME)(?=[^-a-z0-9$_])|(?:^|(?<=[^-a-z0-9$_]))(SUCCESS|FAILURE|POSITIVE|NEGATIVE|ZERO|NUMERIC|ALPHABETIC(?:-(?:LOWER|UPPER))?)(?=[^-a-z0-9$_])|(?:^|(?<=[^-a-z0-9$_]))(ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(?:10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(?:-C)?|ORD(?:-(?:MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY)(?=[^-a-z0-9$_])|(?!(?:NOT|THAN|TO|OR|GREATER|LESS|EQUAL|FUNCTION)[^-a-z0-9$_])([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
+      ,"end": "(?i)(?<=\\))|(?=[\"'])|([0-9]*(?:\\.|,)[0-9]+(?:E[-+]?\\d+)?|[0-9]+(?:\\.|,)[0-9]*(?:E[-+]?\\d+)|(?:[0-9]+)(?=[^-a-z0-9$_])|X\"[0-9a-f]+\"|X'[0-9a-f]+')|(?:^|(?<=[^-a-z0-9$_]))((ZERO(?:(?:E)?S)?|SPACE(?:S)?|HIGH-VALUE(?:S)?|LOW-VALUE(?:S)?|QUOTE(?:S)?|ALL|RETURN-CODE|LINAGE-COUNTER|PAGE-COUNTER|LINE-COUNTER|RMS-STS|RMS-STV|RMS-FILENAME|RMS-CURRENT-STS|RMS-CURRENT-STV|RMS-CURRENT-FILENAME)|(ACOS|ANNUITY|ARGCOUNT|ASIN|ATAN|CHAR|COS|CURRENT-DATE|DATE-OF-INTEGER|DATE-TO-YYYYMMDD|DAY-OF-INTEGER|DAY-TO-YYYYDDD|FACTORIAL|INTEGER|INTEGER-OF-DATE|INTEGER-OF-DAY|INTEGER-PART|LENGTH|LOG(?:10)?|LOWER-CASE|MAX|MEAN|MEDIAN|MIDRANGE|MIN|MOD|NUMVAL(?:-C)?|ORD(?:-(?:MAX|MIN))?|PRESENT-VALUE|RANDOM|RANGE|REM|REVERSE|SIN|SQRT|STANDARD-DEVIATION|SUM|TAN|TEST-DATE-YYYYMMDD|TEST-DAY-YYYYDDD|UPPER-CASE|VARIANCE|WHEN-COMPILED|YEAR-TO-YYYY)|(SUCCESS|FAILURE|POSITIVE|NEGATIVE|ZERO|NUMERIC|ALPHABETIC(?:-(?:LOWER|UPPER))?))(?=[^-a-z0-9$_])|(?!(?:NOT|THAN|TO|OR|GREATER|LESS|EQUAL|FUNCTION)[^-a-z0-9$_])([a-z0-9$_](?:[-a-z0-9$_]*[a-z0-9$_])?)"
       ,"endCaptures": {
         "1": {
           "name": "constant.numeric.compare.end"
         }
         ,"2": {
-          "name": "markup.italic.special.purpose entity.name.class"
+          "name": "markup.italic"
         }
         ,"3": {
-          "name": "entity.name.class.logic.end  markup.italic"
+          "name": "entity.name.class.special.purpose.logic.end"
         }
         ,"4": {
           "name": "entity.name.class.function.name.end"
         }
         ,"5": {
+          "name": "entity.name.class.class.logic.end"
+        }
+        ,"6": {
           "name": "variable.other.logic.end"
         }
       }
