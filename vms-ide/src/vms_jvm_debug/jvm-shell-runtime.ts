@@ -2,7 +2,7 @@ import * as nls from "vscode-nls";
 import { EventEmitter } from "events";
 import { LogFunction, LogType, Subscribe, Lock} from "../common/main";
 import { ICmdQueue, ListenerResponse } from "./communication";
-import { RgxFromStr } from "../common/rgx-from-str";
+import { RgxFromStr, RgxStrFromStr } from "../common/rgx-from-str";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -59,6 +59,25 @@ export interface IJvmVariable {
 export function isIJvmVariable(candidate: any): candidate is IJvmVariable {
     return candidate !== undefined && 
         typeof candidate.varId === "number";
+}
+
+export function isJvmVarNeedReference(jvmVar: IJvmVariable): boolean {
+    let need = jvmVar.vars !== undefined && jvmVar.vars.length > 0;
+    if (!need && jvmVar.value) {
+        need = jvmVar.value.startsWith('instance of ');
+    }
+    return need;
+}
+
+const rgxIsJvmArray = /instance of (\S+?)\[(\d+)\]/;
+export function getJvmVarArraySize(jvmVar: IJvmVariable): number {
+    if (jvmVar.value) {
+        const matched =  jvmVar.value.match(rgxIsJvmArray);
+        if (matched) {
+            return +matched[2];
+        }
+    }
+    return -1;
 }
 
 export interface IJvmThread {
@@ -804,21 +823,60 @@ export class JvmShellRuntime extends EventEmitter {
 		};
     }
 
-    public async dumpVariable(jvmVar: IJvmVariable) {
+    public async dumpVariable(jvmVar: IJvmVariable, start?: number, count?: number) {
 
-        if (jvmVar.vars) {
-            return true;
+        let fullName = jvmVar.name;
+        let parentId = jvmVar.parent;
+        while(parentId) {
+            const parent = this._vars.get(parentId);
+            parentId = undefined;
+            if (parent) {
+                fullName = parent.name + "." + fullName;
+                parentId = parent.parent;
+            }
         }
 
-        const cmd = `dump ${jvmVar.name}`;
+        const arraySize = getJvmVarArraySize(jvmVar);
+
+        if (arraySize < 0) {
+            await this.getVariableValue(jvmVar, fullName);
+        } else {
+            start = start || 0;
+            count = count || arraySize - start;
+            const last = Math.min(start + count, arraySize - 1);
+            for (let i = start; i <= last; ++i) {
+                await this.getVariableValue(jvmVar, fullName, i);
+            }
+        }
+
+        return true;
+    }
+
+    protected async getVariableValue(jvmVar: IJvmVariable, jvmVarFullName: string, index?: number) {
 
         let vars: IJvmVariable[] = [];
+        
+        let varName = jvmVarFullName;
+        if (index !== undefined) {
+            const innerVar: IJvmVariable = {
+                name: `[${index}]`,
+                value: "",
+                varId: this._vars.size + 1
+            };
+            this._vars.set(innerVar.varId, innerVar);
+            vars.push(innerVar);
+            varName += innerVar.name;
+        }
 
-        const rgxStart = new RegExp(`^\\s*${jvmVar.name}\\s*=\\s*\\{\\s*$`);
         const rgxStop = /^\s*\}\s*$/;
-        const rgxField = /^\s*(\S+?)\s*:\s*(.*?)\s*$/;
+        const rgxField = /^\s*(\S+?)\s*:\s*(.*)/;
 
         let insideVar = false;
+
+        const rgxStart = new RegExp(`^\\s*${RgxStrFromStr(varName)}\\s*=\\s*\\{\\s*$`);
+        const rgxValue = new RegExp(`^\\s*${RgxStrFromStr(varName)}\\s*=\\s*(.*)`);
+        const cmd = `dump ${varName}`;
+        const rgxCmd = RgxFromStr(cmd);
 
         await this._queue.postCommand(cmd, (command, line) => {
             this._logFn(LogType.debug, () => `${command}: ${line?line.trimRight():""}`);
@@ -832,6 +890,19 @@ export class JvmShellRuntime extends EventEmitter {
                         insideVar = true;
                         return ListenerResponse.needMoreLines;
                     }
+                    const valueMatch = line.match(rgxValue);
+                    if (valueMatch) {
+                        if (index !== undefined) {
+                            vars[0].value = valueMatch[1];
+                        } else {
+                            jvmVar.value = valueMatch[1];
+                        }
+                        return ListenerResponse.needMoreLines;
+                    }
+                    const cmdMatch = line.match(rgxCmd);
+                    if (cmdMatch) {
+                        return ListenerResponse.needMoreLines;
+                    }
                 } else {
                     const stopMatch = line.match(rgxStop);
                     if (stopMatch) {
@@ -843,7 +914,6 @@ export class JvmShellRuntime extends EventEmitter {
                         const innerVar: IJvmVariable = {
                             name: fieldMatch[1],
                             value: fieldMatch[2],
-                            parent: jvmVar.varId,
                             varId: this._vars.size + 1
                         };
                         if (innerVar.name) {
@@ -853,7 +923,14 @@ export class JvmShellRuntime extends EventEmitter {
                             }
                         }
                         this._vars.set(innerVar.varId, innerVar);
-                        vars.push(innerVar);
+                        if (index === undefined) {
+                            vars.push(innerVar);
+                        } else {
+                            if (vars[0].vars === undefined) {
+                                vars[0].vars = [];
+                            }
+                            vars[0].vars.push(innerVar);
+                        }
                         return ListenerResponse.needMoreLines;
                     }
                 }
@@ -862,9 +939,11 @@ export class JvmShellRuntime extends EventEmitter {
             return ListenerResponse.stop;
         });
 
-        jvmVar.vars = vars;
-
-        return true;
+        if (jvmVar.vars === undefined) {
+            jvmVar.vars = vars;
+        } else {
+            jvmVar.vars.push(...vars);
+        }
     }
 
     public async getScopes(frameId: number) {

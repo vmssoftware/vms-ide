@@ -1,4 +1,8 @@
 
 export function RgxFromStr(str: string, mode = "g") {
-    return new RegExp(str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), mode);
+    return new RegExp(RgxStrFromStr(str), mode);
+}
+
+export function RgxStrFromStr(str: string) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

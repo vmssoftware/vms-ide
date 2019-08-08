@@ -4,7 +4,7 @@ import {
     Logger, logger,
     LoggingDebugSession,
     InitializedEvent, TerminatedEvent, StoppedEvent, BreakpointEvent, OutputEvent,
-    Thread, StackFrame, Scope, Source, Handles, Breakpoint
+    Thread, StackFrame, Scope, Source, Handles, Breakpoint, Variable
 } from 'vscode-debugadapter';
 
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -12,7 +12,7 @@ import * as path from 'path';
 
 import { Lock, Delay, LogFunction, LogType } from '../common/main';
 
-import { JvmShellRuntime, JvmRuntimeEvents, IJvmScope, IJvmVariable, isIJvmScope, isIJvmVariable } from './jvm-shell-runtime';
+import { JvmShellRuntime, JvmRuntimeEvents, IJvmScope, IJvmVariable, isIJvmScope, isIJvmVariable, isJvmVarNeedReference , getJvmVarArraySize } from './jvm-shell-runtime';
 import { IJvmLaunchRequestArguments } from './jvm-config';
 import { SshShellServer } from './ssh-shell-server';
 import { CmdQueue } from './cmd-queue';
@@ -454,49 +454,35 @@ export class JvmDebugSession extends LoggingDebugSession {
 
     }
 
-    protected isJvmVarNeedDump(jvmVar: IJvmVariable): boolean {
-        if (jvmVar.value) {
-            return jvmVar.value.startsWith('instance of ');
-        }
-        return false;
-    }
-
-    protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
+    protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments) {
 
         const variables = new Array<DebugProtocol.Variable>();
         const scopeOrVar = this._variableHandles.get(args.variablesReference);
-        if (isIJvmScope(scopeOrVar)) {
+
+        if (isIJvmVariable(scopeOrVar) && scopeOrVar.vars === undefined) {
+            await this._runtime.dumpVariable(scopeOrVar, args.start, args.count);
+        }
+        if (scopeOrVar.vars) {
             for (const variable of scopeOrVar.vars) {
-                variables.push({
+                const innerVar: DebugProtocol.Variable = {
                     name: variable.name,
                     value: variable.value,
-                    variablesReference: this.isJvmVarNeedDump(variable) ? this._variableHandles.create(variable) : 0,
-                });    
-            }
-            response.body = {
-                variables: variables
-            };
-            this.sendResponse(response);
-
-        } else if (isIJvmVariable(scopeOrVar)) {
-
-            // TODO: wait for response of dump variable from _runtime (instead of Promise.resolve())
-            this._runtime.dumpVariable(scopeOrVar).then((ok) => {
-                if (ok && scopeOrVar.vars) {
-                    for (const variable of scopeOrVar.vars) {
-                        variables.push({
-                            name: variable.name,
-                            value: variable.value,
-                            variablesReference: this.isJvmVarNeedDump(variable) ? this._variableHandles.create(variable) : 0,
-                        });    
+                    variablesReference: 0,
+                };
+                if (isJvmVarNeedReference(variable)) { 
+                    innerVar.variablesReference = this._variableHandles.create(variable);
+                    const sizeVar = getJvmVarArraySize(variable);
+                    if (sizeVar >= 0) {
+                        innerVar.indexedVariables = sizeVar;
                     }
                 }
-                response.body = {
-                    variables: variables
-                };
-                this.sendResponse(response);
-            });
+                variables.push(innerVar);
+            }
         }
+        response.body = {
+            variables: variables
+        };
+        this.sendResponse(response);
     }
 
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
