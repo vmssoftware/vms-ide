@@ -454,29 +454,49 @@ export class JvmDebugSession extends LoggingDebugSession {
 
     }
 
+    protected isJvmVarNeedDump(jvmVar: IJvmVariable): boolean {
+        if (jvmVar.value) {
+            return jvmVar.value.startsWith('instance of ');
+        }
+        return false;
+    }
+
     protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
 
         const variables = new Array<DebugProtocol.Variable>();
-        const scope = this._variableHandles.get(args.variablesReference);
-        if (isIJvmScope(scope)) {
-            for (const variable of scope.vars) {
+        const scopeOrVar = this._variableHandles.get(args.variablesReference);
+        if (isIJvmScope(scopeOrVar)) {
+            for (const variable of scopeOrVar.vars) {
                 variables.push({
                     name: variable.name,
                     value: variable.value,
-                    variablesReference: this._variableHandles.create(variable),
+                    variablesReference: this.isJvmVarNeedDump(variable) ? this._variableHandles.create(variable) : 0,
                 });    
             }
-        } else if (isIJvmVariable(scope)) {
-            variables.push({
-                name: "value",
-                value: scope.value,
-                variablesReference: 0
-            });            
+            response.body = {
+                variables: variables
+            };
+            this.sendResponse(response);
+
+        } else if (isIJvmVariable(scopeOrVar)) {
+
+            // TODO: wait for response of dump variable from _runtime (instead of Promise.resolve())
+            this._runtime.dumpVariable(scopeOrVar).then((ok) => {
+                if (ok && scopeOrVar.vars) {
+                    for (const variable of scopeOrVar.vars) {
+                        variables.push({
+                            name: variable.name,
+                            value: variable.value,
+                            variablesReference: this.isJvmVarNeedDump(variable) ? this._variableHandles.create(variable) : 0,
+                        });    
+                    }
+                }
+                response.body = {
+                    variables: variables
+                };
+                this.sendResponse(response);
+            });
         }
-        response.body = {
-            variables: variables
-        };
-        this.sendResponse(response);
     }
 
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {

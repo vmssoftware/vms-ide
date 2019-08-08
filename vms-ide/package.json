@@ -690,12 +690,18 @@
                     "enum": [
                         "executable",
                         "library",
-                        "shareable"
+                        "shareable",
+                        "java",
+                        "kotlin",
+                        "scala"
                     ],
                     "enumDescriptions": [
                         "Executable",
                         "Static library",
-                        "Shareable image"
+                        "Shareable image",
+                        "Java project",
+                        "Kotlin project",
+                        "Scala project"
                     ],
                     "default": "executable",
                     "description": "%synchronizer.properties.project.projectType.description%"

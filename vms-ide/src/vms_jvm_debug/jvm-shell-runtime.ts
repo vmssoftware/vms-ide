@@ -2,6 +2,7 @@ import * as nls from "vscode-nls";
 import { EventEmitter } from "events";
 import { LogFunction, LogType, Subscribe, Lock} from "../common/main";
 import { ICmdQueue, ListenerResponse } from "./communication";
+import { RgxFromStr } from "../common/rgx-from-str";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -51,9 +52,8 @@ export interface IJvmVariable {
     varId: number;
     name: string;
     value: string;
-    parent: number;
-    primitive: boolean;
-    scope: IJvmScope;
+    parent?: number;
+    vars?: IJvmVariable[];
 };
 
 export function isIJvmVariable(candidate: any): candidate is IJvmVariable {
@@ -229,8 +229,8 @@ export class JvmShellRuntime extends EventEmitter {
     private _lastThreadId = 0;
     private _lastFrameId = 0;
     private _isPausePressed = false;
-    private _scopeCount = 0;
-    private _varCount = 0;
+    private _scopes = new Map<number, IJvmScope>();
+    private _vars = new Map<number, IJvmVariable>();
 
 	constructor(private _queue: ICmdQueue, logFn?: LogFunction) {
 		super();
@@ -249,8 +249,8 @@ export class JvmShellRuntime extends EventEmitter {
             this._stoppedThreadId = 0;
             this._lastThreadId = 0;
             this._lastFrameId = 0;
-            this._scopeCount = 0;
-            this._varCount = 0;
+            this._scopes = new Map<number, IJvmScope>();
+            this._vars = new Map<number, IJvmVariable>();
         }
     }
 
@@ -721,8 +721,10 @@ export class JvmShellRuntime extends EventEmitter {
             Promise.resolve().then(async () => {
                 let command = 'next';
                 if (threadID && this._stoppedThreadId !== threadID) {
-                    await this.setThread(threadID);
                     command = 'step';   //if thread changes we cannot post 'next' because it runs whole program
+                }
+                if (threadID && this._lastThreadId !== threadID) {
+                    await this.setThread(threadID);
                 }
                 await this._queue.postCommand(command, undefined);
                 this.setRunning(true);
@@ -802,7 +804,71 @@ export class JvmShellRuntime extends EventEmitter {
 		};
     }
 
+    public async dumpVariable(jvmVar: IJvmVariable) {
+
+        if (jvmVar.vars) {
+            return true;
+        }
+
+        const cmd = `dump ${jvmVar.name}`;
+
+        let vars: IJvmVariable[] = [];
+
+        const rgxStart = new RegExp(`^\\s*${jvmVar.name}\\s*=\\s*\\{\\s*$`);
+        const rgxStop = /^\s*\}\s*$/;
+        const rgxField = /^\s*(\S+?)\s*:\s*(.*?)\s*$/;
+
+        let insideVar = false;
+
+        await this._queue.postCommand(cmd, (command, line) => {
+            this._logFn(LogType.debug, () => `${command}: ${line?line.trimRight():""}`);
+            if (cmd === command) {
+                if (line === undefined) {
+                    return ListenerResponse.stop;
+                } 
+                if (!insideVar) {
+                    const startMatch = line.match(rgxStart);
+                    if (startMatch) {
+                        insideVar = true;
+                        return ListenerResponse.needMoreLines;
+                    }
+                } else {
+                    const stopMatch = line.match(rgxStop);
+                    if (stopMatch) {
+                        insideVar = false;
+                        return ListenerResponse.needMoreLines;
+                    }
+                    const fieldMatch = line.match(rgxField);
+                    if (fieldMatch) {
+                        const innerVar: IJvmVariable = {
+                            name: fieldMatch[1],
+                            value: fieldMatch[2],
+                            parent: jvmVar.varId,
+                            varId: this._vars.size + 1
+                        };
+                        if (innerVar.name) {
+                            const dotPos = innerVar.name.lastIndexOf(".");
+                            if (dotPos > 0) {
+                                innerVar.name = innerVar.name.substr(dotPos+1);
+                            }
+                        }
+                        this._vars.set(innerVar.varId, innerVar);
+                        vars.push(innerVar);
+                        return ListenerResponse.needMoreLines;
+                    }
+                }
+                return this.waitPromptForShortCommand(command, line);
+            }
+            return ListenerResponse.stop;
+        });
+
+        jvmVar.vars = vars;
+
+        return true;
+    }
+
     public async getScopes(frameId: number) {
+
         const rgxScope = /^(.+?):\s*$/;
         const rgxVariable = /^\s*(\S+?)\s*=\s*(.*?)\s*$/;
         const rgxUnavail = /Local variable information not available./;
@@ -823,14 +889,13 @@ export class JvmShellRuntime extends EventEmitter {
                             const varMatch = line.match(rgxVariable);
                             if (varMatch) {
                                 if (currentScope) {
-                                    currentScope.vars.push({
+                                    const innerVar: IJvmVariable = {
                                         name: varMatch[1],
-                                        parent: 0,
-                                        primitive: true,
-                                        scope: currentScope,
                                         value: varMatch[2],
-                                        varId: ++this._varCount
-                                    });
+                                        varId: this._vars.size + 1
+                                    };
+                                    this._vars.set(innerVar.varId, innerVar);
+                                    currentScope.vars.push(innerVar);
                                 }
                                 return ListenerResponse.needMoreLines;    
                             }
@@ -838,9 +903,10 @@ export class JvmShellRuntime extends EventEmitter {
                             if (scopeMatch) {
                                 currentScope = {
                                     name: scopeMatch[1],
-                                    scopeId: ++this._scopeCount,
+                                    scopeId: this._scopes.size + 1,
                                     vars: []
                                 };
+                                this._scopes.set(currentScope.scopeId, currentScope);
                                 stackFrame.scopes.push(currentScope);
                                 return ListenerResponse.needMoreLines;    
                             }
