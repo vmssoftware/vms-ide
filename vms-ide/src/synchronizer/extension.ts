@@ -62,6 +62,7 @@ export async function activate(context: ExtensionContext) {
     });
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.jvm.collectJavaClasses", async (scope?: string) => {
+        scope = checkScope(scope);
         return Perform("collect java", scope, logFn);
     }));
 
