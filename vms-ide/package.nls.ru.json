@@ -77,6 +77,7 @@
 	"synchronizer.properties.synchronize.purge.description": "Выполнять команду PURGE после выгрузки исходников",
 	"synchronizer.properties.builds.current.description": "Current build configuration",
 	"synchronizer.properties.builds.configurations.description": "Array of build configurations",
+	"jvm.collectJavaClasses.title": "Collect JAVA classes",
 	"vms_debug.extension.vms_c_debug": "VMS Отладчик",
 	"vms_debug.extension.vms_connect": "Подключиться к VMS серверу",
 	"vms_debug.extension.vms_terminal": "Терминал",

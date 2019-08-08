@@ -18,7 +18,7 @@
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
-    "main": "./out/index",
+    "main": "./out/extension",
     "activationEvents": [
         "*",
         "onView:vmssoftware.project-dep.projectDependencies",
@@ -40,6 +40,7 @@
         "onCommand:vmssoftware.synchronizer.downloadHeaders",
         "onCommand:vmssoftware.synchronizer.buildOnlyProject",
         "onCommand:vmssoftware.synchronizer.reBuildOnlyProject",
+        "onCommand:vmssoftware.jvm.collectJavaClasses",
         "onCommand:extension.vms-debug.terminal",
         "onDebug",
         "onLanguage:cld",
@@ -510,6 +511,11 @@
             {
                 "command": "vmssoftware.synchronizer.downloadHeaders",
                 "title": "%synchronizer.command.downloadHeaders.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.jvm.collectJavaClasses",
+                "title": "%jvm.collectJavaClasses.title%",
                 "category": "%command.category%"
             }
         ],

@@ -61,6 +61,10 @@ export async function activate(context: ExtensionContext) {
         ProjectState.acquire().create();
     });
 
+    context.subscriptions.push( commands.registerCommand("vmssoftware.jvm.collectJavaClasses", async (scope?: string) => {
+        return Perform("collect java", scope, logFn);
+    }));
+
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async (scope?: string) => {
         scope = checkScope(scope);
         return workspace.saveAll(true)
