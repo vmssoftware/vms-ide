@@ -830,6 +830,15 @@
             },
             {
                 "language": "fortran"
+            },
+            {
+                "language": "kotlin"
+            },
+            {
+                "language": "scala"
+            },
+            {
+                "language": "java"
             }
         ],
         "debuggers": [
