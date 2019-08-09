@@ -37,7 +37,7 @@ export class JvmProjectHelper {
         if (!scopedata) {
             const ensured = await ensureSettings(scope, this.logFn);
             if (ensured) {
-                const jvmProject = new JvmProject(scope, this.logFn);
+                const jvmProject = new JvmProject(scope, true, this.logFn);
                 const [loaded, localSource] = await Promise.all([
                     jvmProject.load(),
                     Synchronizer.acquire(this.logFn).requestSource(ensured, "local")

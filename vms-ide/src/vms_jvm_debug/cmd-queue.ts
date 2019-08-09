@@ -1,4 +1,4 @@
-import { ICmdServer, ICmdQueue, ListenerResponse } from "./communication";
+import { ICmdServer, ICmdQueue, ListenerResponse, IDropCommand } from "./communication";
 import { Lock } from "../common/main";
 
 export class CmdQueue implements ICmdQueue {
@@ -22,7 +22,7 @@ export class CmdQueue implements ICmdQueue {
      * @param listener must return true if it requires more lines, otherwise must return false if command is processed
      * @returns false if command cannot be sent, true if command is sent and ended
      */
-    public async postCommand(cmd: string, listener: ((cmd: string, line: string | undefined) => ListenerResponse)|undefined) {
+    public async postCommand(cmd: string, listener: ((cmd: string, line: string | undefined) => ListenerResponse)|undefined, dropCommand?: IDropCommand) {
         if (this._server) {
             await this._ready.acquire();
             const waitSession = new Lock(true);
@@ -46,6 +46,11 @@ export class CmdQueue implements ICmdQueue {
                 }
             });
             this._server.sendCommand(cmd);
+            if (dropCommand) {
+                dropCommand.onDropCommand(() => {
+                    waitSession.release();
+                });
+            }
             await waitSession.acquire();
             this._ready.release();
             return true;

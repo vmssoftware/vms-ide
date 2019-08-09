@@ -3,6 +3,7 @@ import { EventEmitter } from "events";
 import { LogFunction, LogType, Subscribe, Lock} from "../common/main";
 import { ICmdQueue, ListenerResponse } from "./communication";
 import { RgxFromStr, RgxStrFromStr } from "../common/rgx-from-str";
+import { DropCommand } from "./drop";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -872,8 +873,11 @@ export class JvmShellRuntime extends EventEmitter {
         const rgxField = /^\s*(\S+?)\s*:\s*(.*)/;
 
         let insideVar = false;
+        let insideString = false;
+        let stringValue = "";
 
         const rgxStart = new RegExp(`^\\s*${RgxStrFromStr(varName)}\\s*=\\s*\\{\\s*$`);
+        const rgxValueString = new RegExp(`^\\s*${RgxStrFromStr(varName)}\\s*=\\s*\"`);
         const rgxValue = new RegExp(`^\\s*${RgxStrFromStr(varName)}\\s*=\\s*(.*)`);
         const cmd = `dump ${varName}`;
         const rgxCmd = RgxFromStr(cmd);
@@ -884,12 +888,21 @@ export class JvmShellRuntime extends EventEmitter {
                 if (line === undefined) {
                     return ListenerResponse.stop;
                 } 
+                if (insideString) {
+
+                }
                 if (!insideVar) {
                     const startMatch = line.match(rgxStart);
                     if (startMatch) {
                         insideVar = true;
                         return ListenerResponse.needMoreLines;
                     }
+                    // const valueStringMatch = line.match(rgxValueString);
+                    // if (valueStringMatch && valueStringMatch.index) {
+                    //     insideString = true;
+                    //     stringValue = line.substr(valueStringMatch.index);
+                    //     return ListenerResponse.needMoreLines;
+                    // }
                     const valueMatch = line.match(rgxValue);
                     if (valueMatch) {
                         if (index !== undefined) {
@@ -946,10 +959,16 @@ export class JvmShellRuntime extends EventEmitter {
         }
     }
 
+    protected async parseDumpBuffer(jvmVar: IJvmVariable | undefined, buffer: string[]) {
+
+
+    }
+
     public async getScopes(frameId: number) {
 
         const rgxScope = /^(.+?):\s*$/;
         const rgxVariable = /^\s*(\S+?)\s*=\s*(.*?)\s*$/;
+        const rgxVariableString = /^\s*(\S+?)\s*=\s*"/;
         const rgxUnavail = /Local variable information not available./;
 
         if (await this.setFrame(frameId)) {
@@ -959,12 +978,40 @@ export class JvmShellRuntime extends EventEmitter {
                 if (stackFrame.scopes.length === 0) {
                     let cmd = `locals`;
                     let currentScope: IJvmScope | undefined;
+
+                    let insideString = false;
+                    const timerDelay = 300;
+                    let timer: NodeJS.Timer | undefined;
+                    const buffer: string[] = [];
+
+                    const dropCommand = new DropCommand();
+
                     await this._queue.postCommand(cmd, (command, line) => {
                         this._logFn(LogType.debug, () => `${command}: ${line?line.trimRight():""}`);
                         if (cmd === command) {
                             if (line === undefined) {
                                 return ListenerResponse.stop;
-                            } 
+                            }
+                            if (insideString) {
+                                
+                                buffer.push(line);
+
+                                if (timer) {
+                                    clearInterval(timer);
+                                }
+
+                                timer = setInterval(() => {
+                                    dropCommand.doDropCommand();
+                                }, timerDelay);
+
+                                return ListenerResponse.needMoreLines;
+                            }
+                            const varStringMatch = line.match(rgxVariableString);
+                            if (varStringMatch) {
+                                insideString = true;
+                                buffer.push(line);
+                                return ListenerResponse.needMoreLines;
+                            }
                             const varMatch = line.match(rgxVariable);
                             if (varMatch) {
                                 if (currentScope) {
@@ -992,7 +1039,13 @@ export class JvmShellRuntime extends EventEmitter {
                             return this.waitPromptForShortCommand(command, line);
                         }
                         return ListenerResponse.stop;
-                    });
+                    }, 
+                    dropCommand);
+
+                    if (buffer.length && currentScope) {
+                        await this.parseDumpBuffer(undefined, buffer);
+                    }
+
                 }
                 return stackFrame.scopes;
             }

@@ -251,7 +251,7 @@ export class Builder {
         let   javapCmd = "";
         const maxCmdLength = 1024;
 
-        const jvmProject = new JvmProject(ensured.scope);
+        const jvmProject = new JvmProject(ensured.scope, false);
         
         // combine command until its length is more than maxCmdLength
         for (const line of resultLines) {

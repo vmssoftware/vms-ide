@@ -19,14 +19,40 @@ export interface IFileInfo {
 
 export class JvmProject {
 
+    public static reLoadDelay = 300;
+
     /** file => IFileInfo */
     private collection = new Map<string, IFileInfo>();
+    private watcher?: vscode.FileSystemWatcher;
+    private timer?: NodeJS.Timer;
 
     public logFn: LogFunction;
 
-    constructor(private scope: string | undefined, logFn?: LogFunction) {
+    constructor(private scope: string | undefined, doWatch: boolean, logFn?: LogFunction) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
+        if (doWatch) {
+            const storeFileName = this.storeFileName();
+            if (storeFileName !== undefined) {
+                this.watcher = vscode.workspace.createFileSystemWatcher(storeFileName, false, false, false);
+                const reLoad = () => {
+                    if (this.timer) {
+                        clearTimeout(this.timer);
+                    }
+                    this.timer = setTimeout(() => this.load(), JvmProject.reLoadDelay);
+                }
+                this.watcher.onDidChange(reLoad);
+                this.watcher.onDidCreate(reLoad);
+                this.watcher.onDidDelete(reLoad);
+            }
+        }
+    }
+
+    public dispose() {
+        if (this.watcher) {
+            this.watcher.dispose();
+            this.watcher = undefined;
+        }
     }
 
     /**
@@ -102,32 +128,40 @@ export class JvmProject {
         return names;
     }
 
+    public storeFileName() : string | undefined {
+        if (this.scope && vscode.workspace.workspaceFolders) {
+            const workspaceFolder = vscode.workspace.workspaceFolders.find(ws => ws.name === this.scope);
+            if (workspaceFolder) {
+                const fileName = path.join(workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
+                return fileName;
+            }
+        }
+        return undefined;
+    }
+
     public async save() {
         try {
-            if (this.scope && vscode.workspace.workspaceFolders) {
-                const workspaceFolder = vscode.workspace.workspaceFolders.find(ws => ws.name === this.scope);
-                if (workspaceFolder) {
-                    // convert
-                    const jvmInfo: any[] = [];
-                    for(const [fileName, fileInfo] of this.collection) {
-                        const data = [...fileInfo.classes.values()].
-                            map(classInfo => {
-                                return {
-                                    className: classInfo.className,
-                                    hasMain: classInfo.hasMain,
-                                    lines: [...classInfo.lines],
-                                }
-                            });
-                        jvmInfo.push({
-                            fileName,
-                            classes: data,
+            const storeFileName = this.storeFileName();
+            if (storeFileName !== undefined) {
+                // convert
+                const jvmInfo: any[] = [];
+                for(const [fileName, fileInfo] of this.collection) {
+                    const data = [...fileInfo.classes.values()].
+                        map(classInfo => {
+                            return {
+                                className: classInfo.className,
+                                hasMain: classInfo.hasMain,
+                                lines: [...classInfo.lines],
+                            }
                         });
-                    }
-                    const content = JSON.stringify(jvmInfo, null, 2);
-                    const fileName = path.join(workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
-                    await fs.writeFile(fileName, content);    
-                    return true;
+                    jvmInfo.push({
+                        fileName,
+                        classes: data,
+                    });
                 }
+                const content = JSON.stringify(jvmInfo, null, 2);
+                await fs.writeFile(storeFileName, content);    
+                return true;
             }
         }
         catch(ex) {
@@ -139,37 +173,41 @@ export class JvmProject {
     public async load() {
         try {
             this.collection = new Map<string, IFileInfo>();
-            if (this.scope && vscode.workspace.workspaceFolders) {
-                const workspaceFolder = vscode.workspace.workspaceFolders.find(ws => ws.name === this.scope);
-                if (workspaceFolder) {
-                    const fileName = path.join(workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
-                    const contentBuffer = await fs.readFile(fileName);
-                    const content = contentBuffer.toString("utf8");
-                    const jvmInfo = JSON.parse(content);
-                    if (jvmInfo instanceof Array) {
-                        for (const fileInfoData of jvmInfo) {
-                            if (fileInfoData && typeof fileInfoData.fileName === "string") {
-                                const fileInfo = this.getFileInfo(fileInfoData.fileName, true);
-                                if (fileInfoData.classes instanceof Array) {
-                                    for (const classInfoData of fileInfoData.classes) {
-                                        if (classInfoData && typeof classInfoData.className === "string" && typeof classInfoData.hasMain === "boolean") {
-                                            const classInfo = this.getClassInfo(classInfoData.className, fileInfo);
-                                            if (classInfo && classInfoData.lines instanceof Array) {
-                                                classInfo.hasMain = classInfoData.hasMain;  // 'hasMain' is useful only if class has source lines
-                                                for (const line of classInfoData.lines) {
-                                                    if (line && typeof line === "number") {
-                                                        classInfo.lines.add(line);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+            const storeFileName = this.storeFileName();
+            if (storeFileName !== undefined) {
+                const contentBuffer = await fs.readFile(storeFileName);
+                const content = contentBuffer.toString("utf8");
+                const jvmInfo = JSON.parse(content);
+                if (!(jvmInfo instanceof Array)) {
+                    return false;
+                }
+                for (const fileInfoData of jvmInfo) {
+                    if (fileInfoData === undefined || typeof fileInfoData.fileName !== "string") {
+                        return false;
+                    }
+                    const fileInfo = this.getFileInfo(fileInfoData.fileName, true);
+                    if (!(fileInfoData.classes instanceof Array)) {
+                        return false;
+                    }
+                    for (const classInfoData of fileInfoData.classes) {
+                        if (classInfoData === undefined || 
+                            typeof classInfoData.className !== "string" ||
+                            typeof classInfoData.hasMain !== "boolean") {
+                            return false;
+                        }
+                        const classInfo = this.getClassInfo(classInfoData.className, fileInfo);
+                        if (classInfo === undefined || !(classInfoData.lines instanceof Array)) {
+                            return false;
+                        }
+                        classInfo.hasMain = classInfoData.hasMain;  // 'hasMain' is useful only if class has source lines
+                        for (const line of classInfoData.lines) {
+                            if (line && typeof line === "number") {
+                                classInfo.lines.add(line);
                             }
                         }
                     }
-                    return true;
                 }
+                return true;
             }
         }
         catch(ex) {

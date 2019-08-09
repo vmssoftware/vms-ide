@@ -18,13 +18,17 @@ export interface ICmdServer {
     onLineReceived(listener: (line: string | undefined) => void ): { dispose: () => void};
 }
 
+export interface IDropCommand {
+    onDropCommand(callback: (reason?: any) => void): void;
+}
+
 export interface ICmdQueue {
     /**
      * @param cmd command
      * @param listener must return true if requires more lines, otherwise must returns false if command processed
      * @returns promise which will be resolved when command is processed
      */
-    postCommand(cmd: string, listener: ((cmd: string, line: string | undefined) => ListenerResponse)| undefined): Promise<boolean>;
+    postCommand(cmd: string, listener: ((cmd: string, line: string | undefined) => ListenerResponse)| undefined, dropCommand?: IDropCommand): Promise<boolean>;
 
     /**
      * To receive lines when no command is sent
