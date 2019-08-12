@@ -4,6 +4,7 @@ import { EventEmitter } from "events";
 export class Lock {
 
     private locked = false;
+    private cancelled = 0;
     private emitter = new EventEmitter();
 
     constructor(initialState = false, public name?: string) {
@@ -14,22 +15,29 @@ export class Lock {
         return this.locked;
     }
 
-    public acquire(): Promise<void> {
-        return new Promise<void>((resolve) => {
+    public acquire(cancelAllPrevious?: boolean): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
             // If nobody has the lock, take it and resolve immediately
             if (!this.locked) {
                 // Safe because JS doesn't interrupt you on synchronous operations,
                 // so no need for compare-and-swap or anything like that.
                 this.locked = true;
-                resolve();
+                resolve(true);
             } else {
                 // Otherwise, wait until somebody releases the lock and try again
+                if (cancelAllPrevious) {
+                    ++this.cancelled;
+                }
                 const tryAcquire = () => {
-                    if (!this.locked) {
-                        this.locked = true;
+                    if (!this.locked || this.cancelled > 0) {
+                        if (cancelAllPrevious) {
+                            --this.cancelled;
+                        }
+                        const acquired = (!this.locked) && this.cancelled === 0;
+                        this.locked = this.locked || acquired;
                         this.emitter.removeListener("release", tryAcquire);
                         this.emitter.setMaxListeners(Math.max(0, this.emitter.getMaxListeners() - 1));
-                        return resolve();
+                        return resolve(acquired);
                     }
                 };
                 this.emitter.setMaxListeners(this.emitter.getMaxListeners() + 1);
