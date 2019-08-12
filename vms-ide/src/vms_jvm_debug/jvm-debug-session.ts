@@ -12,7 +12,7 @@ import * as path from 'path';
 
 import { Lock, Delay, LogFunction, LogType } from '../common/main';
 
-import { JvmShellRuntime, JvmRuntimeEvents, IJvmScope, IJvmVariable, isIJvmScope, isIJvmVariable, isJvmVarNeedReference , getJvmVarArraySize } from './jvm-shell-runtime';
+import { JvmShellRuntime, JvmRuntimeEvents, IJvmVariable, isJvmVarNeedReference , getJvmVarArraySize } from './jvm-shell-runtime';
 import { IJvmLaunchRequestArguments } from './jvm-config';
 import { SshShellServer } from './ssh-shell-server';
 import { CmdQueue } from './cmd-queue';
@@ -45,7 +45,7 @@ export class JvmDebugSession extends LoggingDebugSession {
     private _scope?: string;
     // private _scopeHelpers: ScopeHelpers;
 
-    private _variableHandles = new Handles<IJvmScope | IJvmVariable>();
+    private _variableHandles = new Handles<IJvmVariable>();
 
     private _configurationDone = new Lock(true, "configurationDone");
 
@@ -445,7 +445,7 @@ export class JvmDebugSession extends LoggingDebugSession {
                     response.body.scopes.push({
                         name: scope.name,
                         variablesReference: this._variableHandles.create(scope),
-                        expensive: scope.vars.length > 8
+                        expensive: scope.vars !== undefined && scope.vars.length > 8
                     });
                 }
             }    
@@ -457,16 +457,17 @@ export class JvmDebugSession extends LoggingDebugSession {
     protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments) {
 
         const variables = new Array<DebugProtocol.Variable>();
-        const scopeOrVar = this._variableHandles.get(args.variablesReference);
+        const jvmVar = this._variableHandles.get(args.variablesReference);
 
-        if (isIJvmVariable(scopeOrVar) && scopeOrVar.vars === undefined) {
-            await this._runtime.dumpVariable(scopeOrVar, args.start, args.count);
+        if (jvmVar.vars === undefined) {
+            await this._runtime.dumpVariable(jvmVar, args.start, args.count);
         }
-        if (scopeOrVar.vars) {
-            for (const variable of scopeOrVar.vars) {
+        if (jvmVar.vars) {
+            for (const variable of jvmVar.vars) {
                 const innerVar: DebugProtocol.Variable = {
                     name: variable.name,
-                    value: variable.value,
+                    value: variable.value? variable.value : "",
+                    presentationHint: { kind: 'rawString' },
                     variablesReference: 0,
                 };
                 if (isJvmVarNeedReference(variable)) { 

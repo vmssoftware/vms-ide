@@ -4,6 +4,7 @@ import { LogFunction, LogType, Subscribe, Lock} from "../common/main";
 import { ICmdQueue, ListenerResponse } from "./communication";
 import { RgxFromStr, RgxStrFromStr } from "../common/rgx-from-str";
 import { DropCommand } from "./drop";
+import { setTimeout } from "timers";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -35,32 +36,16 @@ export interface IJvmStack {
 	file: string;
     line: number;
     thread: IJvmThread;
-    scopes: IJvmScope[];
+    scopes: IJvmVariable[];
 };
-
-export interface IJvmScope {
-    scopeId: number;
-    name: string;
-    vars: IJvmVariable[];
-};
-
-export function isIJvmScope(candidate: any): candidate is IJvmScope {
-    return candidate !== undefined && 
-        typeof candidate.scopeId === "number";
-}
 
 export interface IJvmVariable {
     varId: number;
     name: string;
-    value: string;
+    value?: string;
     parent?: number;
     vars?: IJvmVariable[];
 };
-
-export function isIJvmVariable(candidate: any): candidate is IJvmVariable {
-    return candidate !== undefined && 
-        typeof candidate.varId === "number";
-}
 
 export function isJvmVarNeedReference(jvmVar: IJvmVariable): boolean {
     let need = jvmVar.vars !== undefined && jvmVar.vars.length > 0;
@@ -249,7 +234,6 @@ export class JvmShellRuntime extends EventEmitter {
     private _lastThreadId = 0;
     private _lastFrameId = 0;
     private _isPausePressed = false;
-    private _scopes = new Map<number, IJvmScope>();
     private _vars = new Map<number, IJvmVariable>();
 
 	constructor(private _queue: ICmdQueue, logFn?: LogFunction) {
@@ -269,7 +253,6 @@ export class JvmShellRuntime extends EventEmitter {
             this._stoppedThreadId = 0;
             this._lastThreadId = 0;
             this._lastFrameId = 0;
-            this._scopes = new Map<number, IJvmScope>();
             this._vars = new Map<number, IJvmVariable>();
         }
     }
@@ -959,92 +942,151 @@ export class JvmShellRuntime extends EventEmitter {
         }
     }
 
-    protected async parseDumpBuffer(jvmVar: IJvmVariable | undefined, buffer: string[]) {
-
-
+    protected async getStringValue(varName: string) {
+        const buffer = await this.doCommandAndFetchResultUntilTimeOut(`dump ${varName}`, 300);
+        const rgxValueStart = new RegExp(`^\\s*${RgxStrFromStr(varName)}\\s*=\\s*\"`);
+        for (let i = 0; i < buffer.length - 1; ++i) {
+            const matched = buffer[i].match(rgxValueStart);
+            if (matched) {
+                let retString = buffer[i].substring(matched[0].length);     //all chars, without first quota
+                for (++i; i < buffer.length - 1; ++i) {
+                    retString += buffer[i];                                 //all chars
+                }
+                // drop all after last quota
+                const lastQuota = retString.lastIndexOf("\"");
+                if (lastQuota > 0) {
+                    retString = retString.substring(0, lastQuota);          // last quota is dropped too
+                }
+                return retString;
+            }
+        }
+        return undefined;
     }
 
-    public async getScopes(frameId: number) {
+    protected async doCommandAndFetchResultUntilTimeOut(cmd: string, timeout: number) {
+        let timer: NodeJS.Timer | undefined;
+        const buffer: string[] = [];
+        const dropCommand = new DropCommand();
+        await this._queue.postCommand(cmd, (command, line) => {
+            this._logFn(LogType.debug, () => `${command}: ${line?line.trimRight():""}`);
+            if (cmd === command) {
+                if (line === undefined) {
+                    return ListenerResponse.stop;
+                }
+                buffer.push(line);
+                if (timer) {
+                    clearTimeout(timer);
+                }
+                timer = setTimeout(() => {
+                    dropCommand.doDropCommand();
+                }, timeout);
+                return ListenerResponse.needMoreLines;
+            }
+            return ListenerResponse.stop;
+        }, dropCommand);
+        return buffer;
+    }
+
+    protected async parseDumpBuffer(buffer: string[]) {
+
+        const parsedVars: IJvmVariable[] = [];
 
         const rgxScope = /^(.+?):\s*$/;
         const rgxVariable = /^\s*(\S+?)\s*=\s*(.*?)\s*$/;
         const rgxVariableString = /^\s*(\S+?)\s*=\s*"/;
-        const rgxUnavail = /Local variable information not available./;
+
+        const rgxLocals = /^\s*locals\s*$/;
+        const rgxDump = /^\s*dump (.*)\s*$/;
+
+        if (buffer.length) {
+            const firstLine = buffer[0];
+            const localsMatch = firstLine.match(rgxLocals);
+            const dumpMatch = firstLine.match(rgxDump);
+            let currentScope: IJvmVariable | undefined;
+
+            for (let i = 1; i < buffer.length - 1; ++i) {
+                const line = buffer[i];
+                if (localsMatch) {
+                    const scopeMatch = line.match(rgxScope);
+                    if (scopeMatch) {
+                        currentScope = {
+                            name: scopeMatch[1],
+                            varId: this._vars.size + 1
+                        };
+                        this._vars.set(currentScope.varId, currentScope);
+                        parsedVars.push(currentScope);
+                    } else {
+                        let innerVar: IJvmVariable | undefined;
+                        const varStringMatch = line.match(rgxVariableString);
+                        if (varStringMatch) {
+                            innerVar = {
+                                name: varStringMatch[1],
+                                varId: this._vars.size + 1
+                            }
+                            innerVar.value = await this.getStringValue(innerVar.name);
+                            if (innerVar.value !== undefined) {
+                                let testString = buffer[i].substr(varStringMatch[0].length);
+                                let testPos = 0;
+                                let varPos = 0;
+                                let resultStr = "";
+                                while (varPos < innerVar.value.length) {
+                                    if (testPos >= testString.length) {
+                                        ++i;
+                                        testString += buffer[i];
+                                    }
+                                    if (testString[testPos] === innerVar.value[varPos]) {
+                                        resultStr += testString[testPos];
+                                        ++testPos;
+                                        ++varPos;
+                                    } else if (testString[testPos] == "\r" || testString[testPos] == "\n" ) {
+                                        ++testPos;
+                                    } else if (innerVar.value[varPos] == "\r" || innerVar.value[varPos] == "\n" ) {
+                                        ++varPos;
+                                    } else {
+                                        resultStr += innerVar.value[varPos];    // it is error probably
+                                        ++varPos;
+                                    }
+                                }
+                                innerVar.value = resultStr;
+                            }
+                        } else {
+                            const varMatch = line.match(rgxVariable);
+                            if (varMatch) {
+                                innerVar = {
+                                    name: varMatch[1],
+                                    value: varMatch[2],
+                                    varId: this._vars.size + 1
+                                }
+                            }
+                        }
+                        if (innerVar && currentScope) {
+                            this._vars.set(innerVar.varId, innerVar);
+                            currentScope.vars = currentScope.vars || [];
+                            currentScope.vars.push(innerVar);
+                        }
+                    }
+                } else if (dumpMatch) {
+
+                }
+            }
+        }
+
+        return parsedVars;
+    }
+
+    public async getScopes(frameId: number) {
 
         if (await this.setFrame(frameId)) {
-
             const stackFrame = this.getFrame(frameId);
             if (stackFrame) {
                 if (stackFrame.scopes.length === 0) {
-                    let cmd = `locals`;
-                    let currentScope: IJvmScope | undefined;
 
-                    let insideString = false;
-                    const timerDelay = 300;
-                    let timer: NodeJS.Timer | undefined;
-                    const buffer: string[] = [];
+                    const buffer = await this.doCommandAndFetchResultUntilTimeOut(`locals`, 300);
 
-                    const dropCommand = new DropCommand();
-
-                    await this._queue.postCommand(cmd, (command, line) => {
-                        this._logFn(LogType.debug, () => `${command}: ${line?line.trimRight():""}`);
-                        if (cmd === command) {
-                            if (line === undefined) {
-                                return ListenerResponse.stop;
-                            }
-                            if (insideString) {
-                                
-                                buffer.push(line);
-
-                                if (timer) {
-                                    clearInterval(timer);
-                                }
-
-                                timer = setInterval(() => {
-                                    dropCommand.doDropCommand();
-                                }, timerDelay);
-
-                                return ListenerResponse.needMoreLines;
-                            }
-                            const varStringMatch = line.match(rgxVariableString);
-                            if (varStringMatch) {
-                                insideString = true;
-                                buffer.push(line);
-                                return ListenerResponse.needMoreLines;
-                            }
-                            const varMatch = line.match(rgxVariable);
-                            if (varMatch) {
-                                if (currentScope) {
-                                    const innerVar: IJvmVariable = {
-                                        name: varMatch[1],
-                                        value: varMatch[2],
-                                        varId: this._vars.size + 1
-                                    };
-                                    this._vars.set(innerVar.varId, innerVar);
-                                    currentScope.vars.push(innerVar);
-                                }
-                                return ListenerResponse.needMoreLines;    
-                            }
-                            const scopeMatch = line.match(rgxScope);
-                            if (scopeMatch) {
-                                currentScope = {
-                                    name: scopeMatch[1],
-                                    scopeId: this._scopes.size + 1,
-                                    vars: []
-                                };
-                                this._scopes.set(currentScope.scopeId, currentScope);
-                                stackFrame.scopes.push(currentScope);
-                                return ListenerResponse.needMoreLines;    
-                            }
-                            return this.waitPromptForShortCommand(command, line);
-                        }
-                        return ListenerResponse.stop;
-                    }, 
-                    dropCommand);
-
-                    if (buffer.length && currentScope) {
-                        await this.parseDumpBuffer(undefined, buffer);
-                    }
+                    let test_test = false;
+                    do {
+                        stackFrame.scopes = await this.parseDumpBuffer(buffer);
+                    } while (test_test);
 
                 }
                 return stackFrame.scopes;
