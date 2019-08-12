@@ -43,7 +43,7 @@ export interface IJvmVariable {
     varId: number;
     name: string;
     value?: string;
-    parent?: number;
+    parentId?: number;
     vars?: IJvmVariable[];
 };
 
@@ -236,6 +236,8 @@ export class JvmShellRuntime extends EventEmitter {
     private _isPausePressed = false;
     private _vars = new Map<number, IJvmVariable>();
 
+    private readonly waitFetch = 500;
+
 	constructor(private _queue: ICmdQueue, logFn?: LogFunction) {
 		super();
         // tslint:disable-next-line:no-empty
@@ -353,32 +355,36 @@ export class JvmShellRuntime extends EventEmitter {
             if ( promptId === JvmPrompt.promptIsStoppedThread) {
                 this.setRunning(false);
                 this.populateThreadsInfo().
-                    then(() => {
-                        for(const stopped of this._stoppedThreads) {
-                            const id = this.findThreadId(stopped.name);
-                            if (id) {
-                                // send message for each stopped thread
-                                this.setThread(id).then(() => {
-                                    this.sendEvent(stopped.reason, id);
-                                    this._stoppedThreadId = id;
-                                });
+                    then((isOk) => {
+                        if (isOk) {
+                            for(const stopped of this._stoppedThreads) {
+                                const id = this.findThreadId(stopped.name);
+                                if (id) {
+                                    // send message for each stopped thread
+                                    this.setThread(id).then(() => {
+                                        this.sendEvent(stopped.reason, id);
+                                        this._stoppedThreadId = id;
+                                    });
+                                }
                             }
+                            this._stoppedThreads = [];  // info is sent, clear this
                         }
-                        this._stoppedThreads = [];  // info is sent, clear this
                     });
             } else if (promptId === JvmPrompt.promptIsDefault) {
                 if (this._isPausePressed) {
                     this._isPausePressed = false;
                     this.setRunning(false);
                     this.populateThreadsInfo().
-                        then(() => {
-                            const mainThreads = this.mainThreads();
-                            if (mainThreads) {
-                                for(const thread of mainThreads) {
-                                    this.setThread(thread.id).then(() => {
-                                        this.sendEvent(JvmRuntimeEvents.stopOnPause, thread.id);
-                                    });
-                                    break;
+                        then((isOk) => {
+                            if (isOk) {
+                                const mainThreads = this.mainThreads();
+                                if (mainThreads) {
+                                    for(const thread of mainThreads) {
+                                        this.setThread(thread.id).then(() => {
+                                            this.sendEvent(JvmRuntimeEvents.stopOnPause, thread.id);
+                                        });
+                                        break;
+                                    }
                                 }
                             }
                         });
@@ -463,7 +469,8 @@ export class JvmShellRuntime extends EventEmitter {
         }
 		const command = 'threads';
 		let   threadGroupName = "";
-		const threadMap = new Map<string, IJvmThread[]>();
+        const threadMap = new Map<string, IJvmThread[]>();
+        this._logFn(LogType.debug, () => `POSTING ${command}`);
 		return this._queue.postCommand(command, (cmd, line) => {
 			if (cmd === command) {
 				if (line === undefined) {
@@ -504,7 +511,7 @@ export class JvmShellRuntime extends EventEmitter {
 			}
 			return ListenerResponse.stop;
 		}).then(async (isSent) => {
-            if (!isSent) {
+            if (!isSent || !this.isPaused()) {
                 return false;
             }
             if (this._threadMap) {
@@ -513,7 +520,8 @@ export class JvmShellRuntime extends EventEmitter {
                     let frameId = 0;
                     for(const threadInfo of mainGroup) {
                         const command = `where ${threadInfo.id}`;
-                        await this._queue.postCommand(command, (cmd, line) => {
+                        this._logFn(LogType.debug, () => `POSTING ${command}`);
+                        return await this._queue.postCommand(command, (cmd, line) => {
                             if (cmd === command) {
                                 if (line === undefined) {
                                     this._logFn(LogType.debug, () => `---where: aborted`);
@@ -570,6 +578,7 @@ export class JvmShellRuntime extends EventEmitter {
         }
         if (this.isPaused()) {
             const command = `thread ${id}`;
+            this._logFn(LogType.debug, () => `POSTING ${command}`);
             return this._queue.postCommand(command, (cmd, line) => {
                 if (cmd === command) {
                     if (line === undefined) {
@@ -644,6 +653,7 @@ export class JvmShellRuntime extends EventEmitter {
 
 
 	public async command(command: string) {
+        this._logFn(LogType.debug, () => `POSTING ${command}`);
 		this._queue.postCommand(command, undefined);
 	}
 
@@ -667,98 +677,78 @@ export class JvmShellRuntime extends EventEmitter {
                 return false;
             }).
             then(() => {
-                return this.continue();
+                return this.cont();
             });
     }
     
 	/**
 	 * Pause execution
 	 */
-	public pause(): boolean {
+	public async pause() {
         if (this.isRunning()) {
-            this._queue.postCommand('suspend', undefined);
-            return true;
+            const command = 'suspend';
+            this._logFn(LogType.debug, () => `POSTING ${command}`);
+            return await this._queue.postCommand(command, undefined);
         }
         return false;
 	}
 
+    protected async runByCommand(command: string, threadID?: number) {
+        if (this.isPaused()) {
+            if (threadID && this._lastThreadId !== threadID) {
+                if (!(await this.setThread(threadID))) {
+                    return false;
+                }
+            }
+            this._logFn(LogType.debug, () => `POSTING ${command}`);
+            this.setRunning(true);
+            if (await this._queue.postCommand(command, undefined, true)) {
+                return true;
+            } else {
+                this.setRunning(false);
+            }
+        }
+        return false;
+    }
     /**
 	 * Continue execution
 	 */
-	public continue(threadID?: number): boolean {
-        if (this.isPaused()) {
-            Promise.resolve().then(async () => {
-                if (threadID && this._lastThreadId !== threadID) {
-                    await this.setThread(threadID);
-                }
-                await this._queue.postCommand('cont', undefined);
-                this.setRunning(true);
-            });
-            return true;
-        }
-        return false;
+	public async cont(threadID?: number) {
+        return this.runByCommand('cont', threadID);
 	}
 
 	/**
 	 * Step into
 	 */
-	public step(threadID?: number): boolean {
-        if (this.isPaused()) {
-            Promise.resolve().then(async () => {
-                if (threadID && this._lastThreadId !== threadID) {
-                    await this.setThread(threadID);
-                }
-                await this._queue.postCommand('step', undefined);
-                this.setRunning(true);
-            });
-            return true;
-        }
-        return false;
+	public async step(threadID?: number) {
+        return this.runByCommand('step', threadID);
 	}
 
 	/**
 	 * Step over
 	 */
-	public next(threadID?: number): boolean {
-        if (this.isPaused()) {
-            Promise.resolve().then(async () => {
-                let command = 'next';
-                if (threadID && this._stoppedThreadId !== threadID) {
-                    command = 'step';   //if thread changes we cannot post 'next' because it runs whole program
-                }
-                if (threadID && this._lastThreadId !== threadID) {
-                    await this.setThread(threadID);
-                }
-                await this._queue.postCommand(command, undefined);
-                this.setRunning(true);
-            });
-            return true;
+	public async next(threadID?: number) {
+        let command = 'next';
+        if (threadID && this._stoppedThreadId !== threadID) {
+            command = 'step';   //if thread changes we cannot post 'next' because it runs whole program
         }
-        return false;
+        return this.runByCommand(command, threadID);
 	}
     
 	/**
 	 * Step out
 	 */
-	public stepOut(threadID?: number): boolean {
-        if (this.isPaused()) {
-            Promise.resolve().then(async () => {
-                if (threadID && this._lastThreadId !== threadID) {
-                    await this.setThread(threadID);
-                }
-                await this._queue.postCommand('step up', undefined);
-                this.setRunning(true);
-            });
-            return true;
-        }
-        return false;
+	public async stepOut(threadID?: number) {
+        return this.runByCommand('step up', threadID);
     }
     
 	public async threads() {
 		if (this.isPaused()) {
 			if (!this._threadMap) {
                 this._logFn(LogType.debug, () => `populating threads on demand`);
-				await this.populateThreadsInfo();
+				if (!(await this.populateThreadsInfo())) {
+                    return undefined;
+                }
 			}
 			return this.mainThreads();
 		}
@@ -807,166 +797,14 @@ export class JvmShellRuntime extends EventEmitter {
 		};
     }
 
-    public async dumpVariable(jvmVar: IJvmVariable, start?: number, count?: number) {
-
-        let fullName = jvmVar.name;
-        let parentId = jvmVar.parent;
-        while(parentId) {
-            const parent = this._vars.get(parentId);
-            parentId = undefined;
-            if (parent) {
-                fullName = parent.name + "." + fullName;
-                parentId = parent.parent;
-            }
-        }
-
-        const arraySize = getJvmVarArraySize(jvmVar);
-
-        if (arraySize < 0) {
-            await this.getVariableValue(jvmVar, fullName);
-        } else {
-            start = start || 0;
-            count = count || arraySize - start;
-            const last = Math.min(start + count, arraySize - 1);
-            for (let i = start; i <= last; ++i) {
-                await this.getVariableValue(jvmVar, fullName, i);
-            }
-        }
-
-        return true;
-    }
-
-    protected async getVariableValue(jvmVar: IJvmVariable, jvmVarFullName: string, index?: number) {
-
-        let vars: IJvmVariable[] = [];
-        
-        let varName = jvmVarFullName;
-        if (index !== undefined) {
-            const innerVar: IJvmVariable = {
-                name: `[${index}]`,
-                value: "",
-                varId: this._vars.size + 1
-            };
-            this._vars.set(innerVar.varId, innerVar);
-            vars.push(innerVar);
-            varName += innerVar.name;
-        }
-
-        const rgxStop = /^\s*\}\s*$/;
-        const rgxField = /^\s*(\S+?)\s*:\s*(.*)/;
-
-        let insideVar = false;
-        let insideString = false;
-        let stringValue = "";
-
-        const rgxStart = new RegExp(`^\\s*${RgxStrFromStr(varName)}\\s*=\\s*\\{\\s*$`);
-        const rgxValueString = new RegExp(`^\\s*${RgxStrFromStr(varName)}\\s*=\\s*\"`);
-        const rgxValue = new RegExp(`^\\s*${RgxStrFromStr(varName)}\\s*=\\s*(.*)`);
-        const cmd = `dump ${varName}`;
-        const rgxCmd = RgxFromStr(cmd);
-
-        await this._queue.postCommand(cmd, (command, line) => {
-            this._logFn(LogType.debug, () => `${command}: ${line?line.trimRight():""}`);
-            if (cmd === command) {
-                if (line === undefined) {
-                    return ListenerResponse.stop;
-                } 
-                if (insideString) {
-
-                }
-                if (!insideVar) {
-                    const startMatch = line.match(rgxStart);
-                    if (startMatch) {
-                        insideVar = true;
-                        return ListenerResponse.needMoreLines;
-                    }
-                    // const valueStringMatch = line.match(rgxValueString);
-                    // if (valueStringMatch && valueStringMatch.index) {
-                    //     insideString = true;
-                    //     stringValue = line.substr(valueStringMatch.index);
-                    //     return ListenerResponse.needMoreLines;
-                    // }
-                    const valueMatch = line.match(rgxValue);
-                    if (valueMatch) {
-                        if (index !== undefined) {
-                            vars[0].value = valueMatch[1];
-                        } else {
-                            jvmVar.value = valueMatch[1];
-                        }
-                        return ListenerResponse.needMoreLines;
-                    }
-                    const cmdMatch = line.match(rgxCmd);
-                    if (cmdMatch) {
-                        return ListenerResponse.needMoreLines;
-                    }
-                } else {
-                    const stopMatch = line.match(rgxStop);
-                    if (stopMatch) {
-                        insideVar = false;
-                        return ListenerResponse.needMoreLines;
-                    }
-                    const fieldMatch = line.match(rgxField);
-                    if (fieldMatch) {
-                        const innerVar: IJvmVariable = {
-                            name: fieldMatch[1],
-                            value: fieldMatch[2],
-                            varId: this._vars.size + 1
-                        };
-                        if (innerVar.name) {
-                            const dotPos = innerVar.name.lastIndexOf(".");
-                            if (dotPos > 0) {
-                                innerVar.name = innerVar.name.substr(dotPos+1);
-                            }
-                        }
-                        this._vars.set(innerVar.varId, innerVar);
-                        if (index === undefined) {
-                            vars.push(innerVar);
-                        } else {
-                            if (vars[0].vars === undefined) {
-                                vars[0].vars = [];
-                            }
-                            vars[0].vars.push(innerVar);
-                        }
-                        return ListenerResponse.needMoreLines;
-                    }
-                }
-                return this.waitPromptForShortCommand(command, line);
-            }
-            return ListenerResponse.stop;
-        });
-
-        if (jvmVar.vars === undefined) {
-            jvmVar.vars = vars;
-        } else {
-            jvmVar.vars.push(...vars);
-        }
-    }
-
-    protected async getStringValue(varName: string) {
-        const buffer = await this.doCommandAndFetchResultUntilTimeOut(`dump ${varName}`, 300);
-        const rgxValueStart = new RegExp(`^\\s*${RgxStrFromStr(varName)}\\s*=\\s*\"`);
-        for (let i = 0; i < buffer.length - 1; ++i) {
-            const matched = buffer[i].match(rgxValueStart);
-            if (matched) {
-                let retString = buffer[i].substring(matched[0].length);     //all chars, without first quota
-                for (++i; i < buffer.length - 1; ++i) {
-                    retString += buffer[i];                                 //all chars
-                }
-                // drop all after last quota
-                const lastQuota = retString.lastIndexOf("\"");
-                if (lastQuota > 0) {
-                    retString = retString.substring(0, lastQuota);          // last quota is dropped too
-                }
-                return retString;
-            }
-        }
-        return undefined;
-    }
-
     protected async doCommandAndFetchResultUntilTimeOut(cmd: string, timeout: number) {
-        let timer: NodeJS.Timer | undefined;
         const buffer: string[] = [];
+        if (!this.isPaused()) {
+            return buffer;
+        }
+        let timer: NodeJS.Timer | undefined;
         const dropCommand = new DropCommand();
+        this._logFn(LogType.debug, () => `POSTING ${cmd}`);
         await this._queue.postCommand(cmd, (command, line) => {
             this._logFn(LogType.debug, () => `${command}: ${line?line.trimRight():""}`);
             if (cmd === command) {
@@ -978,22 +816,100 @@ export class JvmShellRuntime extends EventEmitter {
                     clearTimeout(timer);
                 }
                 timer = setTimeout(() => {
+                    this._logFn(LogType.debug, () => `DROPPED ${cmd}`);
                     dropCommand.doDropCommand();
                 }, timeout);
                 return ListenerResponse.needMoreLines;
             }
             return ListenerResponse.stop;
-        }, dropCommand);
+        }, false, dropCommand);
         return buffer;
     }
 
-    protected async parseDumpBuffer(buffer: string[]) {
+    protected getVarFullName(name: string, parentId: number | undefined) {
+        let fullName = name;
+        while(parentId) {
+            const parent = this._vars.get(parentId);
+            parentId = undefined;
+            if (parent) {
+                fullName = parent.name + (fullName.startsWith("[") ? "" : ".") + fullName;
+                parentId = parent.parentId;
+            }
+        }
+        return fullName;
+    }
 
-        const parsedVars: IJvmVariable[] = [];
+    public async dumpVariable(jvmVar: IJvmVariable, start?: number, count?: number) {
+
+        let fullName = this.getVarFullName(jvmVar.name, jvmVar.parentId);
+
+        const arraySize = getJvmVarArraySize(jvmVar);
+
+        if (arraySize < 0) {
+            return await this.getVariableValue(jvmVar, fullName);
+        } else {
+            start = start || 0;
+            count = count || arraySize - start;
+            const last = Math.min(start + count, arraySize - 1);
+            for (let i = start; i <= last; ++i) {
+                let innerVar: IJvmVariable = {
+                    name: `[${i}]`,
+                    value: "",
+                    varId: this._vars.size + 1,
+                    parentId: jvmVar.varId,
+                };
+                this._vars.set(innerVar.varId, innerVar);
+                jvmVar.vars = jvmVar.vars || [];
+                jvmVar.vars.push(innerVar);
+                if (!(await this.getVariableValue(innerVar, fullName + innerVar.name))) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    protected async getVariableValue(jvmVar: IJvmVariable, jvmVarFullName: string) {
+
+        if (!this.isPaused()) {
+            return false;
+        }
+
+        let varName = jvmVarFullName;
+        const cmd = `dump ${varName}`;
+        const buffer = await this.doCommandAndFetchResultUntilTimeOut(cmd, this.waitFetch);
+        const retVar = await this.parseDumpBuffer(buffer, jvmVar.varId);
+        if (retVar) {
+            if (retVar.vars) {
+                jvmVar.vars = retVar.vars;
+            } else {
+                jvmVar.value = retVar.value;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Parse buffer
+     * @param buffer 
+     * @param parentId 
+     * @returns parsed variable
+     */
+    protected async parseDumpBuffer(buffer: string[], parentId?: number) {
+
+        const retVar: IJvmVariable = {
+            name: "",
+            varId: 0,
+            parentId: parentId,
+        };
 
         const rgxScope = /^(.+?):\s*$/;
-        const rgxVariable = /^\s*(\S+?)\s*=\s*(.*?)\s*$/;
-        const rgxVariableString = /^\s*(\S+?)\s*=\s*"/;
+        const rgxVariable = /^\s*(\S+?)\s*[:=]\s*(.*?)\s*$/;
+        const rgxVariableString = /^\s*(\S+?)\s*[:=]\s*\"/;
+        const rgxVariableObjectStart = /^\s*(\S+?)\s*[:=]\s*\{\s*$/;
+        const rgxVariableObjectEnd = /^\s*\}\s*$/;
 
         const rgxLocals = /^\s*locals\s*$/;
         const rgxDump = /^\s*dump (.*)\s*$/;
@@ -1014,80 +930,143 @@ export class JvmShellRuntime extends EventEmitter {
                             varId: this._vars.size + 1
                         };
                         this._vars.set(currentScope.varId, currentScope);
-                        parsedVars.push(currentScope);
-                    } else {
-                        let innerVar: IJvmVariable | undefined;
-                        const varStringMatch = line.match(rgxVariableString);
-                        if (varStringMatch) {
-                            innerVar = {
-                                name: varStringMatch[1],
-                                varId: this._vars.size + 1
-                            }
-                            innerVar.value = await this.getStringValue(innerVar.name);
-                            if (innerVar.value !== undefined) {
-                                let testString = buffer[i].substr(varStringMatch[0].length);
-                                let testPos = 0;
-                                let varPos = 0;
-                                let resultStr = "";
-                                while (varPos < innerVar.value.length) {
-                                    if (testPos >= testString.length) {
-                                        ++i;
-                                        testString += buffer[i];
-                                    }
-                                    if (testString[testPos] === innerVar.value[varPos]) {
-                                        resultStr += testString[testPos];
-                                        ++testPos;
-                                        ++varPos;
-                                    } else if (testString[testPos] == "\r" || testString[testPos] == "\n" ) {
-                                        ++testPos;
-                                    } else if (innerVar.value[varPos] == "\r" || innerVar.value[varPos] == "\n" ) {
-                                        ++varPos;
-                                    } else {
-                                        resultStr += innerVar.value[varPos];    // it is error probably
-                                        ++varPos;
-                                    }
-                                }
-                                innerVar.value = resultStr;
-                            }
-                        } else {
-                            const varMatch = line.match(rgxVariable);
-                            if (varMatch) {
-                                innerVar = {
-                                    name: varMatch[1],
-                                    value: varMatch[2],
-                                    varId: this._vars.size + 1
-                                }
-                            }
-                        }
-                        if (innerVar && currentScope) {
-                            this._vars.set(innerVar.varId, innerVar);
-                            currentScope.vars = currentScope.vars || [];
-                            currentScope.vars.push(innerVar);
-                        }
+                        retVar.vars = retVar.vars || [];
+                        retVar.vars.push(currentScope);
+                        continue;
                     }
                 } else if (dumpMatch) {
-
+                    const varObjStartMatch = line.match(rgxVariableObjectStart);
+                    if (varObjStartMatch) {
+                        currentScope = retVar;
+                        continue;
+                    } else {
+                        const varObjEndMatch = line.match(rgxVariableObjectEnd);
+                        if (varObjEndMatch) {
+                            currentScope = undefined;
+                            continue;
+                        }
+                    }
+                }
+                let innerVar: IJvmVariable | undefined;
+                const varStringMatch = line.match(rgxVariableString);
+                if (varStringMatch) {
+                    if (dumpMatch && varStringMatch[1] === dumpMatch[1]) {
+                        // put all lines to value (without retrieving)
+                        retVar.value = await this.getStringValue(dumpMatch[1], buffer);
+                        return retVar;
+                    } else {
+                        innerVar = {
+                            name: varStringMatch[1],
+                            varId: this._vars.size + 1
+                        }
+                        const dotPos = innerVar.name.lastIndexOf(".");
+                        if (dotPos > 0) {
+                            innerVar.name = innerVar.name.substr(dotPos + 1);
+                        }
+                        // retrieve obly this value via 'dump'
+                        innerVar.value = await this.getStringValue(this.getVarFullName(innerVar.name, parentId));
+                        if (innerVar.value !== undefined) {
+                            let testString = buffer[i].substr(varStringMatch[0].length);
+                            let testPos = 0;
+                            let varPos = 0;
+                            let resultStr = "";
+                            while (varPos < innerVar.value.length) {
+                                if (testPos >= testString.length) {
+                                    ++i;
+                                    testString += buffer[i];
+                                }
+                                if (testString[testPos] === innerVar.value[varPos]) {
+                                    resultStr += testString[testPos];
+                                    ++testPos;
+                                    ++varPos;
+                                } else if (testString[testPos] == "\r" || testString[testPos] == "\n" ) {
+                                    ++testPos;
+                                } else if (innerVar.value[varPos] == "\r" || innerVar.value[varPos] == "\n" ) {
+                                    ++varPos;
+                                } else {
+                                    resultStr += innerVar.value[varPos];    // it is error probably
+                                    ++varPos;
+                                }
+                            }
+                            innerVar.value = resultStr;
+                        } else {
+                            return undefined;  // panic escape
+                        }
+                    }
+                } else {
+                    const varMatch = line.match(rgxVariable);
+                    if (varMatch) {
+                        if (dumpMatch && varMatch[1] === dumpMatch[1]) {
+                            retVar.value = varMatch[2];
+                            return retVar;
+                        }
+                        innerVar = {
+                            name: varMatch[1],
+                            value: varMatch[2],
+                            varId: this._vars.size + 1
+                        }
+                        const dotPos = innerVar.name.lastIndexOf(".");
+                        if (dotPos > 0) {
+                            innerVar.name = innerVar.name.substr(dotPos + 1);
+                        }
+                    }
+                }
+                if (innerVar && currentScope) {
+                    innerVar.parentId = parentId;
+                    this._vars.set(innerVar.varId, innerVar);
+                    currentScope.vars = currentScope.vars || [];
+                    currentScope.vars.push(innerVar);
                 }
             }
         }
 
-        return parsedVars;
+        return retVar;
+    }
+
+    protected fillStringValueFromBuffer(varFullName: string,buffer: string[]) {
+        const rgxValueStart = new RegExp(`^\\s*${RgxStrFromStr(varFullName)}\\s*=\\s*\"`);
+        for (let i = 0; i < buffer.length - 1; ++i) {
+            const matched = buffer[i].match(rgxValueStart);
+            if (matched) {
+                let retString = buffer[i].substring(matched[0].length);     //all chars, without first quota
+                for (++i; i < buffer.length - 1; ++i) {
+                    retString += buffer[i];                                 //all chars
+                }
+                // drop all after last quota
+                const lastQuota = retString.lastIndexOf("\"");
+                if (lastQuota > 0) {
+                    retString = retString.substring(0, lastQuota);          // last quota is dropped too
+                }
+                return retString;
+            }
+        }
+        return undefined;
+    }
+
+    /**
+     * Construct value from given buffer or retrieve this buffer via 'dump'
+     * @param varFullName variable full name
+     * @param buffer given buffer
+     * @returns string value or undefined
+     */
+    protected async getStringValue(varFullName: string, buffer?: string[]) {
+        buffer = buffer || await this.doCommandAndFetchResultUntilTimeOut(`dump ${varFullName}`, this.waitFetch);
+        return this.fillStringValueFromBuffer(varFullName, buffer);
     }
 
     public async getScopes(frameId: number) {
-
+        if (!this.isPaused()) {
+            return undefined;
+        }
         if (await this.setFrame(frameId)) {
             const stackFrame = this.getFrame(frameId);
             if (stackFrame) {
                 if (stackFrame.scopes.length === 0) {
-
-                    const buffer = await this.doCommandAndFetchResultUntilTimeOut(`locals`, 300);
-
-                    let test_test = false;
-                    do {
-                        stackFrame.scopes = await this.parseDumpBuffer(buffer);
-                    } while (test_test);
-
+                    const buffer = await this.doCommandAndFetchResultUntilTimeOut(`locals`, this.waitFetch);
+                    const retVar = await this.parseDumpBuffer(buffer);
+                    if (retVar && retVar.vars) {
+                        stackFrame.scopes = retVar.vars;
+                    }
                 }
                 return stackFrame.scopes;
             }
@@ -1124,7 +1103,9 @@ export class JvmShellRuntime extends EventEmitter {
         if (this._lastFrameId === frameId) {
             return true;
         }
-        await this.threads();
+        if (!(await this.threads())) {
+            return false;
+        }
         const stackFrame = this.getFrame(frameId);
         if (stackFrame) {
             if (this._lastFrameId) {
@@ -1134,21 +1115,29 @@ export class JvmShellRuntime extends EventEmitter {
                     if (prevFrame.level > stackFrame.level) {
                         cmd = `down ${prevFrame.level - stackFrame.level}`;
                     } 
-                    await this._queue.postCommand(cmd, (command, line) => {
+                    this._logFn(LogType.debug, () => `POSTING ${cmd}`);
+                    if (!this.isPaused() || !(await this._queue.postCommand(cmd, (command, line) => {
                         this._logFn(LogType.debug, () => `${command}: ${String(line).trimRight()}`);
                         return this.waitPromptForShortCommand(command, line);
-                    });
+                        }))) {
+                        return false;
+                    }
                     this._lastFrameId = frameId;
                 }
             }
             if (this._lastFrameId !== frameId) {
-                await this.setThread(stackFrame.thread.id);
+                if (!this.isPaused() || !(await this.setThread(stackFrame.thread.id))) {
+                    return false;
+                }
                 if (stackFrame.level > 1) {
                     let cmd = `up ${stackFrame.level - 1}`;
-                    await this._queue.postCommand(cmd, (command, line) => {
+                    this._logFn(LogType.debug, () => `POSTING ${cmd}`);
+                    if (!this.isPaused() || !(await this._queue.postCommand(cmd, (command, line) => {
                         this._logFn(LogType.debug, () => `${command}: ${String(line).trimRight()}`);
                         return this.waitPromptForShortCommand(command, line);
-                    });
+                        }))) {
+                        return false;
+                    }
                 }
                 this._lastFrameId = frameId;
             }
@@ -1246,6 +1235,7 @@ export class JvmShellRuntime extends EventEmitter {
         } else {
             return false;
         }
+        this._logFn(LogType.debug, () => `POSTING ${command}`);
         return this._queue.postCommand(command, undefined);
     }
     
@@ -1266,6 +1256,7 @@ export class JvmShellRuntime extends EventEmitter {
         } else {
             return false;
         }
+        this._logFn(LogType.debug, () => `POSTING ${command}`);
         return this._queue.postCommand(command, undefined);
     }
 

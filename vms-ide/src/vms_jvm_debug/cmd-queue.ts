@@ -22,9 +22,15 @@ export class CmdQueue implements ICmdQueue {
      * @param listener must return true if it requires more lines, otherwise must return false if command is processed
      * @returns false if command cannot be sent, true if command is sent and ended
      */
-    public async postCommand(cmd: string, listener: ((cmd: string, line: string | undefined) => ListenerResponse)|undefined, dropCommand?: IDropCommand) {
+    public async postCommand(cmd: string, 
+                             listener: ((cmd: string, line: string | undefined) => ListenerResponse)|undefined, 
+                             cancelAllPrevious?: boolean, 
+                             dropCommand?: IDropCommand): Promise<boolean> {
         if (this._server) {
-            await this._ready.acquire();
+            const acquired = await this._ready.acquire(cancelAllPrevious);
+            if (!acquired) {
+                return false;
+            }
             const waitSession = new Lock(true);
             const session = this._server.onLineReceived((line: string | undefined) => {
                 let result = ListenerResponse.stop;

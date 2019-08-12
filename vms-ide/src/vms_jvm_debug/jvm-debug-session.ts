@@ -486,39 +486,31 @@ export class JvmDebugSession extends LoggingDebugSession {
         this.sendResponse(response);
     }
 
-    protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
+    protected async continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments) {
         response.body = {
             allThreadsContinued: true,
         };
+        response.success = await this._runtime.cont(args.threadId);
         this.sendResponse(response);
-        if (!this._runtime.continue(args.threadId)) {
-            this.sendStoppedEvent('error');
-        }
     }
 
-    protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
+    protected async nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments) {
+        response.success = await this._runtime.next(args.threadId);
         this.sendResponse(response);
-        if (!this._runtime.next(args.threadId)) {
-            this.sendStoppedEvent('error');
-        }
     }
 
-    protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
+    protected async stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments) {
+        response.success = await this._runtime.step(args.threadId);
         this.sendResponse(response);
-        if (!this._runtime.step(args.threadId)) {
-            this.sendStoppedEvent('error');
-        }
     }
 
-    protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void {
+    protected async stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments) {
+        response.success = await this._runtime.stepOut(args.threadId);
         this.sendResponse(response);
-        if (!this._runtime.stepOut(args.threadId)) {
-            this.sendStoppedEvent('error');
-        }
     }
 
-    protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments): void {
-        this._runtime.pause();
+    protected async pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments) {
+        response.success = await this._runtime.pause();
         this.sendResponse(response);
     }
 

@@ -28,7 +28,10 @@ export interface ICmdQueue {
      * @param listener must return true if requires more lines, otherwise must returns false if command processed
      * @returns promise which will be resolved when command is processed
      */
-    postCommand(cmd: string, listener: ((cmd: string, line: string | undefined) => ListenerResponse)| undefined, dropCommand?: IDropCommand): Promise<boolean>;
+    postCommand(cmd: string, 
+                listener: ((cmd: string, line: string | undefined) => ListenerResponse)| undefined,
+                cancelAllPrevious?: boolean,
+                dropCommand?: IDropCommand): Promise<boolean>;
 
     /**
      * To receive lines when no command is sent
