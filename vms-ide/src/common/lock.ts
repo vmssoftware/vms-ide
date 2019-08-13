@@ -1,5 +1,6 @@
 
 import { EventEmitter } from "events";
+import { Resolve } from "./resolve";
 
 export class Lock {
 
@@ -42,6 +43,60 @@ export class Lock {
                 };
                 this.emitter.setMaxListeners(this.emitter.getMaxListeners() + 1);
                 this.emitter.on("release", tryAcquire);
+            }
+        });
+    }
+
+    public release() {
+        // Release the lock immediately
+        this.locked = false;
+        setImmediate(() => this.emitter.emit("release"));
+    }
+}
+
+export enum LockQueueAction {
+    normal,
+    toTheTop,
+    dropAll,
+};
+
+export class LockQueue {
+
+    private queue : Resolve<boolean>[] = [];
+    private locked = false;
+    private emitter = new EventEmitter();
+
+    constructor(initialState = false, public name?: string) {
+        this.locked = initialState;
+        this.emitter.on("release", () => {
+            const waitResolve = this.queue.shift();
+            if (waitResolve) {
+                this.locked = true;
+                waitResolve(true);
+            }
+        });
+    }
+
+    public get isLocked(): boolean {
+        return this.locked;
+    }
+
+    public acquire(action?: LockQueueAction): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            if (!this.locked && this.queue.length === 0) {
+                this.locked = true;
+                resolve(true);
+            } else {
+                if (action === LockQueueAction.dropAll) {
+                    this.queue.forEach((waitResolve) => {
+                        waitResolve(false);
+                    })
+                    this.queue = [resolve];
+                } else if (action === LockQueueAction.toTheTop) {
+                    this.queue.unshift(resolve);
+                } else {
+                    this.queue.push(resolve);
+                }
             }
         });
     }

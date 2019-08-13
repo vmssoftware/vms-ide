@@ -1,3 +1,4 @@
+import { LockQueueAction } from "../common/lock";
 
 export enum ListenerResponse {
     needMoreLines,
@@ -30,7 +31,7 @@ export interface ICmdQueue {
      */
     postCommand(cmd: string, 
                 listener: ((cmd: string, line: string | undefined) => ListenerResponse)| undefined,
-                cancelAllPrevious?: boolean,
+                action?: LockQueueAction,
                 dropCommand?: IDropCommand): Promise<boolean>;
 
     /**

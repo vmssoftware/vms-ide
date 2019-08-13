@@ -1,6 +1,6 @@
 import * as nls from "vscode-nls";
 import { EventEmitter } from "events";
-import { LogFunction, LogType, Subscribe, Lock} from "../common/main";
+import { LogFunction, LogType, Subscribe, Lock, LockQueueAction} from "../common/main";
 import { ICmdQueue, ListenerResponse } from "./communication";
 import { RgxFromStr, RgxStrFromStr } from "../common/rgx-from-str";
 import { DropCommand } from "./drop";
@@ -19,6 +19,9 @@ export enum JvmRuntimeEvents {
     output = 'output',
     end = 'end',
 };
+
+const SetBreakCommand = true;
+const ClearBreakCommand = false;
 
 export interface JvmBreakpoint {
 	/** unique id */
@@ -181,16 +184,13 @@ const _rgxStack = {
     file: 1,
     line: 2,
 };
-const _rgxSendBp = { 
+const _rgxBreakPoint = { 
     rgxFail: /Unable to set breakpoint/,
     rgxDefer: /It will be set after the class is loaded/,
-    rgxSet: /Set breakpoint/,
+    rgxSet: /Set breakpoint (\S+)/,
+    rgxSetDef: /Set deferred breakpoint (\S+)/,
+    rgxClear: /Removed: breakpoint (\S+)/,
 };
-
-const _rgxSetBreakPointEvent: RegExp[] = [ 
-    /Set deferred breakpoint (\S+)/,
-    /Set breakpoint (\S+)/,
-];
 
 /**
  * Only when we are waiting for result lines
@@ -321,8 +321,8 @@ export class JvmShellRuntime extends EventEmitter {
                 }
             }
 
-            for (const setBreakPointEvent of _rgxSetBreakPointEvent) {
-                const matchedEvent = line.match(setBreakPointEvent);
+            [_rgxBreakPoint.rgxSetDef, _rgxBreakPoint.rgxSet].forEach(rgx => {
+                const matchedEvent = line.match(rgx);
                 if (matchedEvent) {
                     const bpkey = matchedEvent[1];
                     const bp = this._breakpoints.get(bpkey);
@@ -333,7 +333,7 @@ export class JvmShellRuntime extends EventEmitter {
                     const tail = line.replace(matchedEvent[0], "");
                     return this.onUnexpectedLine(tail);
                 }
-            }
+            });
 
             const promptId = this.testIfThreadPrompt(line);
             // if ( promptId === JvmPrompt.promptIsUnknownThread) {
@@ -702,7 +702,7 @@ export class JvmShellRuntime extends EventEmitter {
             }
             this._logFn(LogType.debug, () => `POSTING ${command}`);
             this.setRunning(true);
-            if (await this._queue.postCommand(command, undefined, true)) {
+            if (await this._queue.postCommand(command, undefined, LockQueueAction.dropAll)) {
                 return true;
             } else {
                 this.setRunning(false);
@@ -822,7 +822,7 @@ export class JvmShellRuntime extends EventEmitter {
                 return ListenerResponse.needMoreLines;
             }
             return ListenerResponse.stop;
-        }, false, dropCommand);
+        }, LockQueueAction.normal, dropCommand);
         return buffer;
     }
 
@@ -1148,7 +1148,7 @@ export class JvmShellRuntime extends EventEmitter {
     private async sendAllBreakPoints() {
         for (const [bpKey, bp] of this._breakpoints) {
             if (!bp.sent) {
-                bp.sent = await this.postSetBreakPoint(bp.className, bp.place);
+                bp.sent = await this.postBreakPointCmd(SetBreakCommand, bp.className, bp.place);
             }
         }
         return true;
@@ -1178,7 +1178,7 @@ export class JvmShellRuntime extends EventEmitter {
             this._breakpoints.set(bpKey, bp);
         }
         if (!bp.sent) {
-            bp.sent = await this.postSetBreakPoint(bp.className, bp.place);
+            bp.sent = await this.postBreakPointCmd(SetBreakCommand, bp.className, bp.place);
         }
         return bp;
 	}
@@ -1189,15 +1189,14 @@ export class JvmShellRuntime extends EventEmitter {
 	public async clearBreakPoint(className: string, place: string | number) {
         let bpKey = this.buildBpKey(className, place);
         this._breakpoints.delete(bpKey);
-        this.postClearBreakPoint(className, place);
+        return this.postBreakPointCmd(ClearBreakCommand, className, place);
 	}
 
 	public async clearBreakPointByID(id: number) {
         for (const [bpKey, bp] of this._breakpoints) {
             if (bp.breakId === id) {
                 this._breakpoints.delete(bpKey);
-                this.postClearBreakPoint(bp.className, bp.place);
-                break;
+                return this.postBreakPointCmd(ClearBreakCommand, bp.className, bp.place);
             }
         }
 	}
@@ -1209,8 +1208,9 @@ export class JvmShellRuntime extends EventEmitter {
         const cleared: string[] = [];
         for (const [bpKey, bp] of this._breakpoints) {
             if (bp.className === className) {
-                await this.postClearBreakPoint(className, bp.place);
-                cleared.push(bpKey);
+                if (await this.postBreakPointCmd(ClearBreakCommand, className, bp.place)) {
+                    cleared.push(bpKey);
+                }
             }
         }
         for (const bpKey of cleared) {
@@ -1223,45 +1223,46 @@ export class JvmShellRuntime extends EventEmitter {
      * @param className 
      * @param place 
      */
-    private async postSetBreakPoint(className: string, place: string | number) {
+    private async postBreakPointCmd(isSetCommand: boolean, className: string, place: string | number) {
         if (!this._attached) {
             return false;
         }
-        let command = 'stop';
-        if (typeof place === "number") {
-            command += ` at ${className}:${place}`;
-        } else if (typeof place === "string") {
-            command += ` in ${className}.${place}`;
-        } else {
+        const bpKey = this.buildBpKey(className, place);
+        if (!bpKey) {
             return false;
         }
+        let command = 'clear ';
+        if (isSetCommand) {
+            command = 'stop ';
+            if (typeof place === "number") {
+                command += 'at ';
+            } else if (typeof place === "string") {
+                command += 'in ';
+            }
+        }
+        command += bpKey;
+
         this._logFn(LogType.debug, () => `POSTING ${command}`);
-        return this._queue.postCommand(command, undefined);
+        if (this.isPaused()) {
+            return this._queue.postCommand(command, (cmd, line) => {
+                this._logFn(LogType.debug, () => `${command}: ${String(line).trimRight()}`);
+                if (line) {
+                    const matchedEvent = line.match(_rgxBreakPoint.rgxSet);
+                    if (matchedEvent) {
+                        const bp = this._breakpoints.get(bpKey);
+                        if (bp) {
+                            bp.verified = true;
+                            this.sendEvent(JvmRuntimeEvents.breakpointValidated, bp.breakId, true);
+                        }
+                    }
+                }
+                return this.waitPromptForShortCommand(command, line);
+            }, LockQueueAction.toTheTop);
+        } else {
+            return this._queue.postCommand(command, undefined);
+        }
     }
     
-    /**
-     * post command to clear breakpoint
-     * @param className 
-     * @param place 
-     */
-    private async postClearBreakPoint(className: string, place: string | number) {
-        if (!this._attached) {
-            return false;
-        }
-        let command = 'clear';
-        if (typeof place === "number") {
-            command += ` ${className}:${place}`;
-        } else if (typeof place === "string") {
-            command += ` ${className}.${place}`;
-        } else {
-            return false;
-        }
-        this._logFn(LogType.debug, () => `POSTING ${command}`);
-        return this._queue.postCommand(command, undefined);
-    }
-
-	// private methods
-
 	private sendEvent(event: string, ... args: any[]) {
 		setImmediate(_ => {
 			this.emit(event, ...args);

@@ -1,9 +1,9 @@
 import { ICmdServer, ICmdQueue, ListenerResponse, IDropCommand } from "./communication";
-import { Lock } from "../common/main";
+import { Lock, LockQueue, LockQueueAction } from "../common/main";
 
 export class CmdQueue implements ICmdQueue {
     
-    private _ready = new Lock(false);
+    private _ready = new LockQueue(false);
 
     constructor(private _server: ICmdServer | undefined) {
     }
@@ -24,10 +24,10 @@ export class CmdQueue implements ICmdQueue {
      */
     public async postCommand(cmd: string, 
                              listener: ((cmd: string, line: string | undefined) => ListenerResponse)|undefined, 
-                             cancelAllPrevious?: boolean, 
+                             action?: LockQueueAction, 
                              dropCommand?: IDropCommand): Promise<boolean> {
         if (this._server) {
-            const acquired = await this._ready.acquire(cancelAllPrevious);
+            const acquired = await this._ready.acquire(action);
             if (!acquired) {
                 return false;
             }
