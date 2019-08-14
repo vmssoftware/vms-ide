@@ -5,6 +5,7 @@ import { ICmdQueue, ListenerResponse } from "./communication";
 import { RgxStrFromStr } from "../common/rgx-from-str";
 import { DropCommand } from "./drop";
 import { setTimeout } from "timers";
+import { stringify } from "querystring";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -19,16 +20,14 @@ interface IParserData {
     tmpVar?: IJvmVariable,
     currentScope?: IJvmVariable,
     innerVar?: IJvmVariable,
-    dumpedString?: string,
-    dumpedStringPos?: number,
-    testString?: string,
-    testStringPos?: number,
-    isLastLine?: boolean,
+    stringFullName?: string,
+    stringValue?: string,
+    quotas?: number
 };
 
 enum ParserRequest {
     nextLine,
-    fetchAll,
+    fetchAllAndRetryToParse,
 }
 
 enum ParserState {
@@ -1093,7 +1092,7 @@ export class JvmShellRuntime extends EventEmitter {
                     clearTimeout(timer);
                 }
                 timer = setTimeout(() => {
-                    this._logFn(LogType.debug, () => `DROPPED ${cmd}`);
+                    this._logFn(LogType.debug, () => `TIMEOUT ${cmd}`);
                     dropCommand.doDropCommand();
                 }, timeout);
                 return ListenerResponse.needMoreLines;
@@ -1125,61 +1124,32 @@ export class JvmShellRuntime extends EventEmitter {
             }
         }
         if (data.state === ParserState.stringEncountered) {
-            if (data.innerVar) {
-                if (data.dumpedString !== undefined && data.dumpedStringPos !== undefined && 
-                    data.testString !== undefined && data.testStringPos !== undefined) {
-                    while (data.dumpedStringPos < data.dumpedString.length) {
-                        if (data.testStringPos >= data.testString.length) {
-                            // request next line
-                            if (line) {
-                                data.testString += line;
-                                line = "";  //consume line
-                            } else {
-                                return ParserRequest.nextLine;
-                            }
-                        }
-                        if (data.testString[data.testStringPos] === data.dumpedString[data.dumpedStringPos]) {
-                            data.innerVar.value += data.dumpedString[data.dumpedStringPos];
-                            ++data.dumpedStringPos;
-                            ++data.testStringPos;
-                        } else if (data.testString[data.testStringPos] == "\r" || data.testString[data.testStringPos] == "\n" ) {
-                            ++data.testStringPos;
-                        } else if (data.dumpedString[data.dumpedStringPos] == "\r" || data.dumpedString[data.dumpedStringPos] == "\n" ) {
-                            ++data.dumpedStringPos;
-                        } else {
-                            data.innerVar.value += data.dumpedString[data.dumpedStringPos];
-                            ++data.dumpedStringPos;
-                        }
+            if (data.stringFullName !== undefined) {
+                // first call after fetching
+                if (data.stringValue) {
+                    // count quotas in original string + add two more (at the begin and at the end)
+                    data.quotas = (data.stringValue.split("\"").length - 1) + 2;
+                    // store value 
+                    if (data.innerVar) {
+                        data.innerVar.value = data.stringValue;
+                    } else {
+                        data.tmpVar.value = data.stringValue;
                     }
-                    // inner value completed
-                    if (data.currentScope) {
-                        this._vars.set(data.innerVar.varId, data.innerVar);
-                        data.currentScope.vars = data.currentScope.vars || [];
-                        data.currentScope.vars.push(data.innerVar);
-                    }
-                } 
-                // clear string retrieving state
-                data.innerVar = undefined;
-                data.dumpedString = undefined;
-                data.dumpedStringPos = undefined;
-                data.testString = undefined;
-                data.testStringPos = undefined;
-                data.state = ParserState.normal;
-                if (!line) {    // line consumed, get next line
+                    data.stringValue = undefined;
+                }
+                data.stringFullName = undefined;
+            }
+            if (data.quotas !== undefined) {
+                data.quotas -= line.split("\"").length - 1;
+                if (data.quotas > 0) {
                     return ParserRequest.nextLine;
                 }
-            } else {
-                data.tmpVar.value += line;
-                if (data.isLastLine && data.tmpVar.value) {
-                    const lastQuota = data.tmpVar.value.lastIndexOf("\"");
-                    if (lastQuota > 0) {
-                        data.tmpVar.value = data.tmpVar.value.substring(0, lastQuota);          // last quota is dropped too
-                    }
-                    data.state = ParserState.normal;
-                }
-                return ParserRequest.nextLine;
             }
-        } 
+            // COMPLETED
+            data.quotas = undefined;
+            data.state = ParserState.normal;
+            return ParserRequest.nextLine;
+        }
         if (data.state === ParserState.normal) {
             if (data.isLocals) {
                 const scopeMatch = line.match(_rgxParse.rgxScope);
@@ -1209,52 +1179,54 @@ export class JvmShellRuntime extends EventEmitter {
             const varStringMatch = line.match(_rgxParse.rgxVariableString);
             if (varStringMatch) {
                 if (data.fullVarName && varStringMatch[1] === data.fullVarName) {
-                    data.state = ParserState.stringEncountered;
-                    data.tmpVar.value = line.substring(varStringMatch[0].length);   // begin (without quotas)
-                    return ParserRequest.fetchAll;
+                    data.stringFullName = data.fullVarName;
                 } else {
-                    data.innerVar = {
+                    let innerVar: IJvmVariable | undefined = {
                         name: varStringMatch[1],
-                        value: "",
                         varId: this._vars.size + 1,
                         parentId: data.parentId,
-                    }
-                    const dotPos = data.innerVar.name.lastIndexOf(".");
-                    if (dotPos > 0) {
-                        data.innerVar.name = data.innerVar.name.substr(dotPos + 1);
-                    }
-                    data.testString = line.substring(varStringMatch[0].length);   // begin (without quotas)
-                    data.testStringPos = 0;
-                    data.state = ParserState.stringEncountered;
-                    return ParserRequest.fetchAll;
-                }
-            } else {
-                const varMatch = line.match(_rgxParse.rgxVariable);
-                if (varMatch) {
-                    if (data.fullVarName && varMatch[1] === data.fullVarName) {
-                        data.tmpVar.value = varMatch[2];
-                        data.state = ParserState.stopped;
-                        return ParserRequest.nextLine;
-                    }
-                    let innerVar: IJvmVariable | undefined = {
-                        name: varMatch[1],
-                        value: varMatch[2],
-                        varId: this._vars.size + 1
                     }
                     const dotPos = innerVar.name.lastIndexOf(".");
                     if (dotPos > 0) {
                         innerVar.name = innerVar.name.substr(dotPos + 1);
                     }
                     if (data.currentScope) {
-                        innerVar.parentId = data.parentId;
                         this._vars.set(innerVar.varId, innerVar);
                         data.currentScope.vars = data.currentScope.vars || [];
                         data.currentScope.vars.push(innerVar);
                     }
+                    data.innerVar = innerVar;
+                    data.stringFullName = this.getVarFullName(innerVar.name, innerVar.parentId);
+                }
+                data.state = ParserState.stringEncountered;
+                data.stringValue = undefined;
+                return ParserRequest.fetchAllAndRetryToParse;
+            } else {
+                const varMatch = line.match(_rgxParse.rgxVariable);
+                if (varMatch) {
+                    if (data.fullVarName && varMatch[1] === data.fullVarName) {
+                        data.tmpVar.value = varMatch[2];
+                        data.state = ParserState.stopped;
+                    } else {
+                        let innerVar: IJvmVariable | undefined = {
+                            name: varMatch[1],
+                            value: varMatch[2],
+                            varId: this._vars.size + 1,
+                            parentId: data.parentId,
+                        }
+                        const dotPos = innerVar.name.lastIndexOf(".");
+                        if (dotPos > 0) {
+                            innerVar.name = innerVar.name.substr(dotPos + 1);
+                        }
+                        if (data.currentScope) {
+                            this._vars.set(innerVar.varId, innerVar);
+                            data.currentScope.vars = data.currentScope.vars || [];
+                            data.currentScope.vars.push(innerVar);
+                        }
+                    }
                 }
             }
-            return ParserRequest.nextLine;
-        } 
+        }
         return ParserRequest.nextLine;
     }
 
@@ -1273,13 +1245,13 @@ export class JvmShellRuntime extends EventEmitter {
                 if (line === undefined) {
                     return ListenerResponse.stop;
                 }
-                if (parserLastRequest === ParserRequest.fetchAll) {
+                if (parserLastRequest === ParserRequest.fetchAllAndRetryToParse) {
                     buffer.push(line);
                     if (timer) {
                         clearTimeout(timer);
                     }
                     timer = setTimeout(() => {
-                        this._logFn(LogType.debug, () => `DROPPED ${data.command}`);
+                        this._logFn(LogType.debug, () => `TIMEOUT ${data.command}`);
                         dropCommand.doDropCommand();
                     }, data.timeOut || this.waitFetch);
                 } else {
@@ -1289,6 +1261,9 @@ export class JvmShellRuntime extends EventEmitter {
                         if (this.testIfThreadPrompt(line.trim()) > JvmPrompt.promptIsNotAPrompt) {
                             return ListenerResponse.stop;
                         }
+                    } else if (parserLastRequest === ParserRequest.fetchAllAndRetryToParse) {
+                        // pass this line again
+                        buffer.push(line);
                     }
                 }
                 return ListenerResponse.needMoreLines;
@@ -1297,26 +1272,19 @@ export class JvmShellRuntime extends EventEmitter {
         }, LockQueueAction.normal, dropCommand);
 
         for (let i = 0; this.isPaused() && i < buffer.length; ++i) {
-            if (i === buffer.length - 1) {
-                data.isLastLine = true;
-            }
-            if (data.state === ParserState.stringEncountered &&
-                data.innerVar !== undefined &&
-                data.dumpedString === undefined) {
-                // initialize dumped string
-                data.dumpedStringPos = 0;
-                if (this._requestRun !== 0 || !this.isPaused()) {
-                    this._logFn(LogType.debug, () => `ABORTED ${data.command}`);
-                    return false;
-                }
-                data.dumpedString = await this.dumpStringValue(this.getVarFullName(data.innerVar.name, data.parentId));
-                if (data.dumpedString === undefined) {
-                    // initializing failed, drop inner var
-                    data.innerVar = undefined;
-                    data.state = ParserState.normal;
+            if (data.state === ParserState.stringEncountered) {
+                if (data.stringValue === undefined && data.stringFullName !== undefined) {
+                    if (this._requestRun !== 0 || !this.isPaused()) {
+                        this._logFn(LogType.debug, () => `ABORTED ${data.command}`);
+                        return false;
+                    }
+                    data.stringValue = await this.dumpStringValue(data.stringFullName);
                 }
             }
-            this.parseLine(buffer[i], data);
+            if (this.parseLine(buffer[i], data) === ParserRequest.fetchAllAndRetryToParse) {
+                // parser expects current line again
+                --i;
+            }
         }
         this._logFn(LogType.debug, () => `COMPLETED ${data.command}`);
         return true;
@@ -1372,14 +1340,45 @@ export class JvmShellRuntime extends EventEmitter {
      * @param buffer given buffer
      * @returns string value or undefined
      */
-    private async dumpStringValue(varFullName: string, buffer?: string[]) {
-        if (buffer === undefined) {
-           if (this._requestRun !== 0 && !this.isPaused()) {
-               return undefined;
-           } 
-           buffer = await this.doCommandAndFetchResultUntilTimeOut(`dump ${varFullName}`, this.waitFetch);
+    private async dumpStringValue(varFullName: string) {
+        if (this._requestRun !== 0 || !this.isPaused()) {
+            return undefined;
         }
-        return this.fillStringValueFromBuffer(varFullName, buffer);
+        const evalCmd = `java.util.Arrays.toString(${varFullName}.getBytes())`;
+        const command = `eval ${evalCmd}`;
+        const rgxResultStart = new RegExp(`^\\s*${RgxStrFromStr(evalCmd)}\\s*=\\s*\"\\[`);
+        let   resultArray: string | undefined;
+        let   resultString: string | undefined;
+        await this._queue.postCommand(command, (cmd, line) => {
+            this._logFn(LogType.debug, () => `${cmd}: ${line?line.trimRight():""}`);
+            if (cmd === command) {
+                if (line === undefined) {
+                    return ListenerResponse.stop;
+                }
+                let trimmed = line.trim();
+                if (resultArray === undefined) {
+                    const startMatched = trimmed.match(rgxResultStart);
+                    if (startMatched) {
+                        resultArray = trimmed.substr(startMatched[0].length);
+                    }
+                }
+                else {
+                    resultArray += trimmed;
+                }
+                if (resultArray !== undefined) {
+                    const endPos = resultArray.lastIndexOf("]");
+                    if (endPos > 0) {
+                        resultArray = resultArray.substr(0, endPos);
+                        resultString = resultArray.split(",").map(code => String.fromCharCode(+code)).join('');
+                        resultArray = undefined;
+                        return ListenerResponse.needMoreLines;
+                    }
+                }
+                return this.waitPromptForShortCommand(line);
+            }
+            return ListenerResponse.stop;
+        });
+        return resultString;
     }
 
     private getFrame(frameId: number) {
