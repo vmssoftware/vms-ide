@@ -1,13 +1,41 @@
 import * as nls from "vscode-nls";
 import { EventEmitter } from "events";
-import { LogFunction, LogType, Subscribe, Lock, LockQueueAction} from "../common/main";
+import { LogFunction, LogType, LockQueueAction, LockQueue} from "../common/main";
 import { ICmdQueue, ListenerResponse } from "./communication";
-import { RgxFromStr, RgxStrFromStr } from "../common/rgx-from-str";
+import { RgxStrFromStr } from "../common/rgx-from-str";
 import { DropCommand } from "./drop";
 import { setTimeout } from "timers";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
+
+interface IParserData {
+    command: string,
+    state: ParserState,
+    isLocals?: boolean,
+    fullVarName?: string,
+    parentId?: number,
+    timeOut?: number,
+    tmpVar?: IJvmVariable,
+    currentScope?: IJvmVariable,
+    innerVar?: IJvmVariable,
+    dumpedString?: string,
+    dumpedStringPos?: number,
+    testString?: string,
+    testStringPos?: number,
+    isLastLine?: boolean,
+};
+
+enum ParserRequest {
+    nextLine,
+    fetchAll,
+}
+
+enum ParserState {
+    normal,
+    stopped,
+    stringEncountered,
+}
 
 export enum JvmRuntimeEvents {
     stopOnEntry = 'stopOnEntry',
@@ -191,6 +219,15 @@ const _rgxBreakPoint = {
     rgxSetDef: /Set deferred breakpoint (\S+)/,
     rgxClear: /Removed: breakpoint (\S+)/,
 };
+const _rgxParse = {
+    rgxScope : /^(.+?):\s*$/,
+    rgxVariable : /^\s*(\S+?)\s*[:=]\s*(.*?)\s*$/,
+    rgxVariableString : /^\s*(\S+?)\s*[:=]\s*\"/,
+    rgxVariableObjectStart : /^\s*(\S+?)\s*[:=]\s*\{\s*$/,
+    rgxVariableObjectEnd : /^\s*\}\s*$/,
+    rgxLocals : /^\s*locals\s*$/,
+    rgxDump : /^\s*dump (.*)\s*$/,
+}
 
 /**
  * Only when we are waiting for result lines
@@ -209,17 +246,16 @@ export enum JvmPrompt {
     promptIsDefault = -1,
     promptIsNotAPrompt = 0,
 };
+
 /**
  * A Jvm runtime.
  */
 export class JvmShellRuntime extends EventEmitter {
 
-	// since we want to send breakpoint events, we will assign an id to every event
-	// so that the frontend can match events with breakpoints.
-	private _breakpointId = 0;
-	private _breakpoints: Map<string, JvmBreakpoint> = new Map<string, JvmBreakpoint>();
-
 	private _logFn: LogFunction;
+
+	private _breakpointLastId = 0;
+	private _breakpoints: Map<string, JvmBreakpoint> = new Map<string, JvmBreakpoint>();
 
 	private _args: IJvmLaunch | undefined;
 
@@ -227,6 +263,7 @@ export class JvmShellRuntime extends EventEmitter {
 	
 	private _attached = false;
     private _running = false;
+    private _requestRun = 0;
     
     private _stoppedThreads: JvmStoppedThread[] = [];
     private _stoppedThreadId?: number;
@@ -234,9 +271,12 @@ export class JvmShellRuntime extends EventEmitter {
     private _lastThreadId = 0;
     private _lastFrameId = 0;
     private _isPausePressed = false;
+
     private _vars = new Map<number, IJvmVariable>();
 
     private readonly waitFetch = 500;
+
+    private cmdLock = new LockQueue(false);
 
 	constructor(private _queue: ICmdQueue, logFn?: LogFunction) {
 		super();
@@ -248,6 +288,377 @@ export class JvmShellRuntime extends EventEmitter {
         });
     }
 
+    /******************************************************************************************/
+    // public
+    /******************************************************************************************/
+
+    /**
+     * Do any command. TODO: REMOVE
+     * @param command 
+     */
+    public async command(command: string) {
+        this._logFn(LogType.debug, () => `POSTING ${command}`);
+		this._queue.postCommand(command, undefined);
+	}
+
+	/**
+	 * Start executing the given program.
+	 */
+	public async start(args: IJvmLaunch) {
+		this._args = args;
+        return this.attachJDB().
+            then((attached) => {
+                if (attached) {
+                    if (this.isPaused()) {
+                        return this.sendAllBreakPoints();
+                    }
+                }
+                return false;
+            }).
+            then((breakPointsSet) => {
+                if (breakPointsSet) {
+                    return this.cont();
+                }
+                return false;
+            });
+    }
+    
+	/**
+	 * Pause execution
+	 */
+	public async pause() {
+        const command = 'suspend';
+        this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
+        const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
+        if (acquired) {
+            this._logFn(LogType.debug, () => `CMD locked "${command}"`);
+            if (this.isRunning()) {
+                this._logFn(LogType.debug, () => `POSTING ${command}`);
+                return this._queue.postCommand(command, undefined).
+                    then((isOk) => {
+                        this.cmdLock.release();
+                        this._logFn(LogType.debug, () => `CMD released "${command}"`);
+                        return isOk;
+                    });
+            }
+            this.cmdLock.release();
+            this._logFn(LogType.debug, () => `CMD released "${command}"`);
+        }
+        return false;
+	}
+
+    /**
+	 * Continue execution
+	 */
+	public async cont(threadID?: number) {
+        const command = 'cont';
+        ++this._requestRun;
+        this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
+        const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
+        --this._requestRun;
+        if (acquired) {
+            this._logFn(LogType.debug, () => `CMD locked "${command}"`);
+            return this.runByCommand(command, threadID).
+                then((isOk) => {
+                    this.cmdLock.release();
+                    this._logFn(LogType.debug, () => `CMD released "${command}"`);
+                    return isOk;
+                });
+        }
+        return false;
+	}
+
+	/**
+	 * Step into
+	 */
+	public async step(threadID?: number) {
+        const command = 'step';
+        ++this._requestRun;
+        this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
+        const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
+        --this._requestRun;
+        if (acquired) {
+            this._logFn(LogType.debug, () => `CMD locked "${command}"`);
+            return this.runByCommand(command, threadID).
+                then((isOk) => {
+                    this.cmdLock.release();
+                    this._logFn(LogType.debug, () => `CMD released "${command}"`);
+                    return isOk;
+                });
+        }
+        return false;
+	}
+
+	/**
+	 * Step over
+	 */
+	public async next(threadID?: number) {
+        let command = 'next';
+        if (threadID && this._stoppedThreadId !== threadID) {
+            command = 'step';   //if thread changes we cannot post 'next' because it runs whole program
+        }
+        ++this._requestRun;
+        this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
+        const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
+        --this._requestRun;
+        if (acquired) {
+            this._logFn(LogType.debug, () => `CMD locked "${command}"`);
+            return this.runByCommand(command, threadID).
+                then((isOk) => {
+                    this.cmdLock.release();
+                    this._logFn(LogType.debug, () => `CMD released "${command}"`);
+                    return isOk;
+                });
+        }
+        return false;
+	}
+    
+	/**
+	 * Step out
+	 */
+	public async stepOut(threadID?: number) {
+        const command = 'step up';
+        ++this._requestRun;
+        this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
+        const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
+        --this._requestRun;
+        if (acquired) {
+            this._logFn(LogType.debug, () => `CMD locked "${command}"`);
+            return this.runByCommand(command, threadID).
+                then((isOk) => {
+                    this.cmdLock.release();
+                    this._logFn(LogType.debug, () => `CMD released "${command}"`);
+                    return isOk;
+                });
+        }
+        return false;
+    }
+    
+    /**
+     * Request threads
+     */
+	public async requestThreads() {
+        const command = 'requestThreads';
+        this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
+        const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
+        if (acquired) {
+            this._logFn(LogType.debug, () => `CMD locked "${command}"`);
+            if (this._requestRun === 0 && this.isPaused()) {
+                if (!this._threadMap) {
+                    this._logFn(LogType.debug, () => `populating threads on demand`);
+                    if (!(await this.populateThreadsInfo())) {
+                        this.cmdLock.release();
+                        this._logFn(LogType.debug, () => `CMD released "${command}"`);
+                        return undefined;
+                    }
+                }
+                this.cmdLock.release();
+                this._logFn(LogType.debug, () => `CMD released "${command}"`);
+                return this.mainThreads();
+            }
+            this.cmdLock.release();
+            this._logFn(LogType.debug, () => `CMD released "${command}"`);
+        }
+		return undefined;
+	}
+
+    /**
+	 * Request stack
+	 */
+	public requestStack(threadId: number, startFrame: number, endFrame: number) {
+        let     frames: IJvmStack[] = [];
+        let     totalFrames = 0;
+        const   mainGroup = this.mainThreads();
+        if (mainGroup) {
+            for(const threadInfo of mainGroup) {
+                if (threadInfo.id === threadId) {
+                    totalFrames = threadInfo.stack.length;
+                    if (totalFrames) {
+                        frames = threadInfo.stack.slice(startFrame, endFrame);
+                    } else {
+                        totalFrames = 1;
+                        frames.push({
+                            frameId: 0,
+                            file: "",
+                            line: 1,
+                            level: 1,
+                            place: "",
+                            thread: threadInfo,
+                            scopes: []
+                        });
+                    }
+                    break;
+                }
+            }
+        }
+		return {
+			frames,
+			totalFrames,
+		};
+    }
+
+    /**
+     * Request variable
+     * @param jvmVar 
+     * @param start 
+     * @param count 
+     */
+    public async requestVariable(jvmVar: IJvmVariable, start?: number, count?: number) {
+        const command = 'requestVariable';
+        this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
+        const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
+        if (acquired) {
+            this._logFn(LogType.debug, () => `CMD locked "${command}"`);
+            if (this._requestRun === 0) {
+                let fullName = this.getVarFullName(jvmVar.name, jvmVar.parentId);
+                const arraySize = getJvmVarArraySize(jvmVar);
+                if (arraySize < 0) {
+                    return this.getVariableValue(jvmVar, fullName).
+                        then((isOk) => {
+                            this.cmdLock.release();
+                            this._logFn(LogType.debug, () => `CMD released "${command}"`);
+                            return isOk;
+                        });
+                } else {
+                    start = start || 0;
+                    count = count || arraySize - start;
+                    const last = Math.min(start + count, arraySize - 1);
+                    for (let i = start; i <= last; ++i) {
+                        let innerVar: IJvmVariable = {
+                            name: `[${i}]`,
+                            value: "",
+                            varId: this._vars.size + 1,
+                            parentId: jvmVar.varId,
+                        };
+                        this._vars.set(innerVar.varId, innerVar);
+                        jvmVar.vars = jvmVar.vars || [];
+                        jvmVar.vars.push(innerVar);
+                        if (!(await this.getVariableValue(innerVar, fullName + innerVar.name))) {
+                            this.cmdLock.release();
+                            this._logFn(LogType.debug, () => `CMD released "${command}"`);
+                            return false;
+                        }
+                    }
+                }
+            }
+            this.cmdLock.release();
+            this._logFn(LogType.debug, () => `CMD released "${command}"`);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Request scopes
+     * @param frameId 
+     */
+    public async requestScopes(frameId: number) {
+        const command = 'requestScopes';
+        this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
+        const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
+        if (acquired) {
+            this._logFn(LogType.debug, () => `CMD locked "${command}"`);
+            if (this._requestRun !== 0 ||  !this.isPaused()) {
+                this.cmdLock.release();
+                this._logFn(LogType.debug, () => `CMD released "${command}"`);
+                return undefined;
+            }
+            if (await this.setFrame(frameId)) {
+                const stackFrame = this.getFrame(frameId);
+                if (stackFrame) {
+                    if (stackFrame.scopes.length === 0) {
+                        const parserData: IParserData = {
+                            command: `locals`,
+                            state: ParserState.normal,
+                            isLocals: true,
+                        };
+                        if (this.isPaused() && (await this.dumpVariableValue(parserData)) && parserData.tmpVar && parserData.tmpVar.vars) {
+                            stackFrame.scopes = parserData.tmpVar.vars.map(v => {
+                                v.vars = v.vars || [];  // do not retrieve scope vars if they do not exist
+                                return v;               // return from map
+                            });
+                        }
+                    }
+                    this.cmdLock.release();
+                    this._logFn(LogType.debug, () => `CMD released "${command}"`);
+                    return stackFrame.scopes;
+                }
+            }
+            this.cmdLock.release();
+            this._logFn(LogType.debug, () => `CMD released "${command}"`);
+            return undefined;
+        }
+        return undefined;
+    }
+
+	/*
+	 * Set breakpoint in file with given line.
+	 */
+	public async setBreakPoint(className: string, place: string | number) {
+        const command = 'setBreakPoint';
+        this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
+        const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
+        if (acquired) {
+            this._logFn(LogType.debug, () => `CMD locked "${command}"`);
+            let bpKey = this.buildBpKey(className, place);
+            let bp = this._breakpoints.get(bpKey);
+            if (!bp) {
+                bp = {
+                    className,
+                    place,
+                    breakId: ++this._breakpointLastId,
+                };
+                this._breakpoints.set(bpKey, bp);
+            }
+            if (!bp.sent) {
+                bp.sent = await this.postBreakPointCmd(SetBreakCommand, bp.className, bp.place);
+            }
+            this.cmdLock.release();
+            this._logFn(LogType.debug, () => `CMD released "${command}"`);
+            return bp;
+        }
+        return undefined;
+	}
+
+    /**
+     * Clear BP
+     * @param id 
+     */
+	public async clearBreakPointByID(id: number) {
+        const command = 'clearBreakPointByID';
+        this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
+        const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
+        if (acquired) {
+            this._logFn(LogType.debug, () => `CMD locked "${command}"`);
+            for (const [bpKey, bp] of this._breakpoints) {
+                if (bp.breakId === id) {
+                    this._breakpoints.delete(bpKey);
+                    return this.postBreakPointCmd(ClearBreakCommand, bp.className, bp.place).
+                                then((isOk) => {
+                                    this.cmdLock.release();
+                                    this._logFn(LogType.debug, () => `CMD released "${command}"`);
+                                    return isOk;
+                                });
+                }
+            }
+            this.cmdLock.release();
+            this._logFn(LogType.debug, () => `CMD released "${command}"`);
+        }
+        return false;
+	}
+
+    /******************************************************************************************/
+    // private
+    /******************************************************************************************/
+
+    private isRunning() {
+        return this._attached && this._running;
+    }
+    
+    private isPaused() {
+        return this._attached && !this._running;
+    }
+    
     private setRunning(state: boolean) {
         this._running = state;
         if (state) {
@@ -259,14 +670,6 @@ export class JvmShellRuntime extends EventEmitter {
         }
     }
 
-    public isRunning() {
-        return this._attached && this._running;
-    }
-    
-    public isPaused() {
-        return this._attached && !this._running;
-    }
-    
     private onUnexpectedLine(line: string | undefined): void {
         if (line) {
             this._logFn(LogType.debug, () => `unexpected: ${line.trimRight()}`);
@@ -336,22 +739,6 @@ export class JvmShellRuntime extends EventEmitter {
             });
 
             const promptId = this.testIfThreadPrompt(line);
-            // if ( promptId === JvmPrompt.promptIsUnknownThread) {
-            //     this.setRunning(false);
-            //     this.populateThreadsInfo().
-            //         then(() => {
-            //             if (this._threadInPrompt) {
-            //                 const id = this.findThreadId(this._threadInPrompt);
-            //                 if (id) {
-            //                     // send message for each stopped thread
-            //                     this.setThread(id).then(() => {
-            //                         this.sendEvent(JvmRuntimeEvents.stopOnPause, id);
-            //                     });
-            //                 }
-            //             }
-            //             this._stoppedThreads = [];  // info is sent, clear this
-            //         });
-            // } else 
             if ( promptId === JvmPrompt.promptIsStoppedThread) {
                 this.setRunning(false);
                 this.populateThreadsInfo().
@@ -440,7 +827,7 @@ export class JvmShellRuntime extends EventEmitter {
      * @param threadMap 
      * @returns found thread id or undefined
      */
-    public findThreadId(threadName: string, threadMap?: Map<string, IJvmThread[]>) {
+    private findThreadId(threadName: string, threadMap?: Map<string, IJvmThread[]>) {
         threadMap = threadMap || this._threadMap;
         if (threadMap) {
             for(const [group, threads] of threadMap) {
@@ -464,7 +851,7 @@ export class JvmShellRuntime extends EventEmitter {
      * 
      */
 	private async populateThreadsInfo() {
-        if (!this.isPaused()) {
+        if (this._requestRun !== 0 || !this.isPaused()) {
             return false;
         }
 		const command = 'threads';
@@ -511,7 +898,7 @@ export class JvmShellRuntime extends EventEmitter {
 			}
 			return ListenerResponse.stop;
 		}).then(async (isSent) => {
-            if (!isSent || !this.isPaused()) {
+            if (!isSent || this._requestRun !== 0  || !this.isPaused()) {
                 return false;
             }
             if (this._threadMap) {
@@ -519,9 +906,12 @@ export class JvmShellRuntime extends EventEmitter {
                 if (mainGroup) {
                     let frameId = 0;
                     for(const threadInfo of mainGroup) {
+                        if (this._requestRun !== 0  || !this.isPaused()) {
+                            return false;
+                        }
                         const command = `where ${threadInfo.id}`;
                         this._logFn(LogType.debug, () => `POSTING ${command}`);
-                        return await this._queue.postCommand(command, (cmd, line) => {
+                        const wherePosted = await this._queue.postCommand(command, (cmd, line) => {
                             if (cmd === command) {
                                 if (line === undefined) {
                                     this._logFn(LogType.debug, () => `---where: aborted`);
@@ -565,6 +955,9 @@ export class JvmShellRuntime extends EventEmitter {
                             this._logFn(LogType.debug, () => `---where: not a where command?`);
                             return ListenerResponse.stop;
                         });
+                        if (!wherePosted) {
+                            return false;
+                        }
                     }                   
                 }
             }
@@ -572,7 +965,7 @@ export class JvmShellRuntime extends EventEmitter {
         });
     }
     
-    public async setThread(id: number) {
+    private async setThread(id: number) {
         if (this._lastThreadId === id) {
             return true;
         }
@@ -651,49 +1044,13 @@ export class JvmShellRuntime extends EventEmitter {
 		return JvmPrompt.promptIsNotAPrompt;
 	}
 
-
-	public async command(command: string) {
-        this._logFn(LogType.debug, () => `POSTING ${command}`);
-		this._queue.postCommand(command, undefined);
-	}
-
-
 	private clearSession() {
         this._attached = false;
         this._running = false;
 		this.sendEvent(JvmRuntimeEvents.end);
 	}
 
-	/**
-	 * Start executing the given program.
-	 */
-	public async start(args: IJvmLaunch) {
-		this._args = args;
-        return this.attachJDB().
-            then(() => {
-                if (this.isPaused()) {
-                    return this.sendAllBreakPoints();
-                }
-                return false;
-            }).
-            then(() => {
-                return this.cont();
-            });
-    }
-    
-	/**
-	 * Pause execution
-	 */
-	public async pause() {
-        if (this.isRunning()) {
-            const command = 'suspend';
-            this._logFn(LogType.debug, () => `POSTING ${command}`);
-            return await this._queue.postCommand(command, undefined);
-        }
-        return false;
-	}
-
-    protected async runByCommand(command: string, threadID?: number) {
+    private async runByCommand(command: string, threadID?: number) {
         if (this.isPaused()) {
             if (threadID && this._lastThreadId !== threadID) {
                 if (!(await this.setThread(threadID))) {
@@ -701,60 +1058,15 @@ export class JvmShellRuntime extends EventEmitter {
                 }
             }
             this._logFn(LogType.debug, () => `POSTING ${command}`);
-            this.setRunning(true);
-            if (await this._queue.postCommand(command, undefined, LockQueueAction.dropAll)) {
-                return true;
-            } else {
-                this.setRunning(false);
-            }
+            return this._queue.postCommand(command, (cmd, line) => {
+                    this._logFn(LogType.debug, () => `COMPLETED ${command}`);
+                    this.setRunning(true);
+                    return ListenerResponse.stop;
+                }, LockQueueAction.normal);
         }
         return false;
     }
-    /**
-	 * Continue execution
-	 */
-	public async cont(threadID?: number) {
-        return this.runByCommand('cont', threadID);
-	}
-
-	/**
-	 * Step into
-	 */
-	public async step(threadID?: number) {
-        return this.runByCommand('step', threadID);
-	}
-
-	/**
-	 * Step over
-	 */
-	public async next(threadID?: number) {
-        let command = 'next';
-        if (threadID && this._stoppedThreadId !== threadID) {
-            command = 'step';   //if thread changes we cannot post 'next' because it runs whole program
-        }
-        return this.runByCommand(command, threadID);
-	}
     
-	/**
-	 * Step out
-	 */
-	public async stepOut(threadID?: number) {
-        return this.runByCommand('step up', threadID);
-    }
-    
-	public async threads() {
-		if (this.isPaused()) {
-			if (!this._threadMap) {
-                this._logFn(LogType.debug, () => `populating threads on demand`);
-				if (!(await this.populateThreadsInfo())) {
-                    return undefined;
-                }
-			}
-			return this.mainThreads();
-		}
-		return undefined;
-	}
-
 	private mainThreads() {
 		if (this._threadMap) {
 			return this._threadMap.get("main");
@@ -762,44 +1074,9 @@ export class JvmShellRuntime extends EventEmitter {
 		return undefined;
 	}
 
-	/**
-	 * 
-	 */
-	public stack(threadId: number, startFrame: number, endFrame: number) {
-        let     frames: IJvmStack[] = [];
-        let     totalFrames = 0;
-        const   mainGroup = this.mainThreads();
-        if (mainGroup) {
-            for(const threadInfo of mainGroup) {
-                if (threadInfo.id === threadId) {
-                    totalFrames = threadInfo.stack.length;
-                    if (totalFrames) {
-                        frames = threadInfo.stack.slice(startFrame, endFrame);
-                    } else {
-                        totalFrames = 1;
-                        frames.push({
-                            frameId: 0,
-                            file: "",
-                            line: 1,
-                            level: 1,
-                            place: "",
-                            thread: threadInfo,
-                            scopes: []
-                        });
-                    }
-                    break;
-                }
-            }
-        }
-		return {
-			frames,
-			totalFrames,
-		};
-    }
-
-    protected async doCommandAndFetchResultUntilTimeOut(cmd: string, timeout: number) {
+    private async doCommandAndFetchResultUntilTimeOut(cmd: string, timeout: number) {
         const buffer: string[] = [];
-        if (!this.isPaused()) {
+        if (this._requestRun !== 0 || !this.isPaused()) {
             return buffer;
         }
         let timer: NodeJS.Timer | undefined;
@@ -826,7 +1103,7 @@ export class JvmShellRuntime extends EventEmitter {
         return buffer;
     }
 
-    protected getVarFullName(name: string, parentId: number | undefined) {
+    private getVarFullName(name: string, parentId: number | undefined) {
         let fullName = name;
         while(parentId) {
             const parent = this._vars.get(parentId);
@@ -839,191 +1116,237 @@ export class JvmShellRuntime extends EventEmitter {
         return fullName;
     }
 
-    public async dumpVariable(jvmVar: IJvmVariable, start?: number, count?: number) {
-
-        let fullName = this.getVarFullName(jvmVar.name, jvmVar.parentId);
-
-        const arraySize = getJvmVarArraySize(jvmVar);
-
-        if (arraySize < 0) {
-            return await this.getVariableValue(jvmVar, fullName);
-        } else {
-            start = start || 0;
-            count = count || arraySize - start;
-            const last = Math.min(start + count, arraySize - 1);
-            for (let i = start; i <= last; ++i) {
-                let innerVar: IJvmVariable = {
-                    name: `[${i}]`,
-                    value: "",
-                    varId: this._vars.size + 1,
-                    parentId: jvmVar.varId,
-                };
-                this._vars.set(innerVar.varId, innerVar);
-                jvmVar.vars = jvmVar.vars || [];
-                jvmVar.vars.push(innerVar);
-                if (!(await this.getVariableValue(innerVar, fullName + innerVar.name))) {
-                    return false;
-                }
+    private parseLine(line: string, data: IParserData) {
+        if (data.tmpVar === undefined) {
+            data.tmpVar = {
+                name: data.fullVarName || "",
+                varId: 0,
+                parentId: data.parentId,
             }
         }
+        if (data.state === ParserState.stringEncountered) {
+            if (data.innerVar) {
+                if (data.dumpedString !== undefined && data.dumpedStringPos !== undefined && 
+                    data.testString !== undefined && data.testStringPos !== undefined) {
+                    while (data.dumpedStringPos < data.dumpedString.length) {
+                        if (data.testStringPos >= data.testString.length) {
+                            // request next line
+                            if (line) {
+                                data.testString += line;
+                                line = "";  //consume line
+                            } else {
+                                return ParserRequest.nextLine;
+                            }
+                        }
+                        if (data.testString[data.testStringPos] === data.dumpedString[data.dumpedStringPos]) {
+                            data.innerVar.value += data.dumpedString[data.dumpedStringPos];
+                            ++data.dumpedStringPos;
+                            ++data.testStringPos;
+                        } else if (data.testString[data.testStringPos] == "\r" || data.testString[data.testStringPos] == "\n" ) {
+                            ++data.testStringPos;
+                        } else if (data.dumpedString[data.dumpedStringPos] == "\r" || data.dumpedString[data.dumpedStringPos] == "\n" ) {
+                            ++data.dumpedStringPos;
+                        } else {
+                            data.innerVar.value += data.dumpedString[data.dumpedStringPos];
+                            ++data.dumpedStringPos;
+                        }
+                    }
+                    // inner value completed
+                    if (data.currentScope) {
+                        this._vars.set(data.innerVar.varId, data.innerVar);
+                        data.currentScope.vars = data.currentScope.vars || [];
+                        data.currentScope.vars.push(data.innerVar);
+                    }
+                } 
+                // clear string retrieving state
+                data.innerVar = undefined;
+                data.dumpedString = undefined;
+                data.dumpedStringPos = undefined;
+                data.testString = undefined;
+                data.testStringPos = undefined;
+                data.state = ParserState.normal;
+                if (!line) {    // line consumed, get next line
+                    return ParserRequest.nextLine;
+                }
+            } else {
+                data.tmpVar.value += line;
+                if (data.isLastLine && data.tmpVar.value) {
+                    const lastQuota = data.tmpVar.value.lastIndexOf("\"");
+                    if (lastQuota > 0) {
+                        data.tmpVar.value = data.tmpVar.value.substring(0, lastQuota);          // last quota is dropped too
+                    }
+                    data.state = ParserState.normal;
+                }
+                return ParserRequest.nextLine;
+            }
+        } 
+        if (data.state === ParserState.normal) {
+            if (data.isLocals) {
+                const scopeMatch = line.match(_rgxParse.rgxScope);
+                if (scopeMatch) {
+                    data.currentScope = {
+                        name: scopeMatch[1],
+                        varId: this._vars.size + 1
+                    };
+                    this._vars.set(data.currentScope.varId, data.currentScope);
+                    data.tmpVar.vars = data.tmpVar.vars || [];
+                    data.tmpVar.vars.push(data.currentScope);
+                    return ParserRequest.nextLine;
+                }
+            } else {
+                const varObjStartMatch = line.match(_rgxParse.rgxVariableObjectStart);
+                if (varObjStartMatch) {
+                    data.currentScope = data.tmpVar;
+                    return ParserRequest.nextLine;
+                } else {
+                    const varObjEndMatch = line.match(_rgxParse.rgxVariableObjectEnd);
+                    if (varObjEndMatch) {
+                        data.currentScope = undefined;
+                        return ParserRequest.nextLine;
+                    }
+                }
+            }
+            const varStringMatch = line.match(_rgxParse.rgxVariableString);
+            if (varStringMatch) {
+                if (data.fullVarName && varStringMatch[1] === data.fullVarName) {
+                    data.state = ParserState.stringEncountered;
+                    data.tmpVar.value = line.substring(varStringMatch[0].length);   // begin (without quotas)
+                    return ParserRequest.fetchAll;
+                } else {
+                    data.innerVar = {
+                        name: varStringMatch[1],
+                        value: "",
+                        varId: this._vars.size + 1,
+                        parentId: data.parentId,
+                    }
+                    const dotPos = data.innerVar.name.lastIndexOf(".");
+                    if (dotPos > 0) {
+                        data.innerVar.name = data.innerVar.name.substr(dotPos + 1);
+                    }
+                    data.testString = line.substring(varStringMatch[0].length);   // begin (without quotas)
+                    data.testStringPos = 0;
+                    data.state = ParserState.stringEncountered;
+                    return ParserRequest.fetchAll;
+                }
+            } else {
+                const varMatch = line.match(_rgxParse.rgxVariable);
+                if (varMatch) {
+                    if (data.fullVarName && varMatch[1] === data.fullVarName) {
+                        data.tmpVar.value = varMatch[2];
+                        data.state = ParserState.stopped;
+                        return ParserRequest.nextLine;
+                    }
+                    let innerVar: IJvmVariable | undefined = {
+                        name: varMatch[1],
+                        value: varMatch[2],
+                        varId: this._vars.size + 1
+                    }
+                    const dotPos = innerVar.name.lastIndexOf(".");
+                    if (dotPos > 0) {
+                        innerVar.name = innerVar.name.substr(dotPos + 1);
+                    }
+                    if (data.currentScope) {
+                        innerVar.parentId = data.parentId;
+                        this._vars.set(innerVar.varId, innerVar);
+                        data.currentScope.vars = data.currentScope.vars || [];
+                        data.currentScope.vars.push(innerVar);
+                    }
+                }
+            }
+            return ParserRequest.nextLine;
+        } 
+        return ParserRequest.nextLine;
+    }
 
+    private async dumpVariableValue(data: IParserData) {
+        if (this._requestRun !== 0 || !this.isPaused()) {
+            return false;
+        }
+        const buffer: string[] = [];
+        let timer: NodeJS.Timer | undefined;
+        const dropCommand = new DropCommand();
+        this._logFn(LogType.debug, () => `POSTING ${data.command}`);
+        let parserLastRequest = ParserRequest.nextLine;
+        await this._queue.postCommand(data.command, (command, line) => {
+            this._logFn(LogType.debug, () => `${command}: ${line?line.trimRight():""}`);
+            if (data.command === command) {
+                if (line === undefined) {
+                    return ListenerResponse.stop;
+                }
+                if (parserLastRequest === ParserRequest.fetchAll) {
+                    buffer.push(line);
+                    if (timer) {
+                        clearTimeout(timer);
+                    }
+                    timer = setTimeout(() => {
+                        this._logFn(LogType.debug, () => `DROPPED ${data.command}`);
+                        dropCommand.doDropCommand();
+                    }, data.timeOut || this.waitFetch);
+                } else {
+                    parserLastRequest = this.parseLine(line, data);
+                    if (parserLastRequest === ParserRequest.nextLine) {
+                        // test if prompt only for normal parsing state
+                        if (this.testIfThreadPrompt(line.trim()) > JvmPrompt.promptIsNotAPrompt) {
+                            return ListenerResponse.stop;
+                        }
+                    }
+                }
+                return ListenerResponse.needMoreLines;
+            }
+            return ListenerResponse.stop;
+        }, LockQueueAction.normal, dropCommand);
+
+        for (let i = 0; this.isPaused() && i < buffer.length; ++i) {
+            if (i === buffer.length - 1) {
+                data.isLastLine = true;
+            }
+            if (data.state === ParserState.stringEncountered &&
+                data.innerVar !== undefined &&
+                data.dumpedString === undefined) {
+                // initialize dumped string
+                data.dumpedStringPos = 0;
+                if (this._requestRun !== 0 || !this.isPaused()) {
+                    this._logFn(LogType.debug, () => `ABORTED ${data.command}`);
+                    return false;
+                }
+                data.dumpedString = await this.dumpStringValue(this.getVarFullName(data.innerVar.name, data.parentId));
+                if (data.dumpedString === undefined) {
+                    // initializing failed, drop inner var
+                    data.innerVar = undefined;
+                    data.state = ParserState.normal;
+                }
+            }
+            this.parseLine(buffer[i], data);
+        }
+        this._logFn(LogType.debug, () => `COMPLETED ${data.command}`);
         return true;
     }
 
-    protected async getVariableValue(jvmVar: IJvmVariable, jvmVarFullName: string) {
+    private async getVariableValue(jvmVar: IJvmVariable, jvmVarFullName: string) {
 
-        if (!this.isPaused()) {
+        if (this._requestRun !== 0 || !this.isPaused()) {
             return false;
         }
 
-        let varName = jvmVarFullName;
-        const cmd = `dump ${varName}`;
-        const buffer = await this.doCommandAndFetchResultUntilTimeOut(cmd, this.waitFetch);
-        const retVar = await this.parseDumpBuffer(buffer, jvmVar.varId);
-        if (retVar) {
-            if (retVar.vars) {
-                jvmVar.vars = retVar.vars;
+        const parserData: IParserData = {
+            command: `dump ${jvmVarFullName}`,
+            state: ParserState.normal,
+            fullVarName: jvmVarFullName,
+            parentId: jvmVar.varId,
+        };
+
+        if ((await this.dumpVariableValue(parserData)) && parserData.tmpVar) {
+            if (parserData.tmpVar.vars) {
+                jvmVar.vars = parserData.tmpVar.vars;
             } else {
-                jvmVar.value = retVar.value;
+                jvmVar.value = parserData.tmpVar.value;
             }
             return true;
         }
         return false;
     }
 
-    /**
-     * Parse buffer
-     * @param buffer 
-     * @param parentId 
-     * @returns parsed variable
-     */
-    protected async parseDumpBuffer(buffer: string[], parentId?: number) {
-
-        const retVar: IJvmVariable = {
-            name: "",
-            varId: 0,
-            parentId: parentId,
-        };
-
-        const rgxScope = /^(.+?):\s*$/;
-        const rgxVariable = /^\s*(\S+?)\s*[:=]\s*(.*?)\s*$/;
-        const rgxVariableString = /^\s*(\S+?)\s*[:=]\s*\"/;
-        const rgxVariableObjectStart = /^\s*(\S+?)\s*[:=]\s*\{\s*$/;
-        const rgxVariableObjectEnd = /^\s*\}\s*$/;
-
-        const rgxLocals = /^\s*locals\s*$/;
-        const rgxDump = /^\s*dump (.*)\s*$/;
-
-        if (buffer.length) {
-            const firstLine = buffer[0];
-            const localsMatch = firstLine.match(rgxLocals);
-            const dumpMatch = firstLine.match(rgxDump);
-            let currentScope: IJvmVariable | undefined;
-
-            for (let i = 1; i < buffer.length - 1; ++i) {
-                const line = buffer[i];
-                if (localsMatch) {
-                    const scopeMatch = line.match(rgxScope);
-                    if (scopeMatch) {
-                        currentScope = {
-                            name: scopeMatch[1],
-                            varId: this._vars.size + 1
-                        };
-                        this._vars.set(currentScope.varId, currentScope);
-                        retVar.vars = retVar.vars || [];
-                        retVar.vars.push(currentScope);
-                        continue;
-                    }
-                } else if (dumpMatch) {
-                    const varObjStartMatch = line.match(rgxVariableObjectStart);
-                    if (varObjStartMatch) {
-                        currentScope = retVar;
-                        continue;
-                    } else {
-                        const varObjEndMatch = line.match(rgxVariableObjectEnd);
-                        if (varObjEndMatch) {
-                            currentScope = undefined;
-                            continue;
-                        }
-                    }
-                }
-                let innerVar: IJvmVariable | undefined;
-                const varStringMatch = line.match(rgxVariableString);
-                if (varStringMatch) {
-                    if (dumpMatch && varStringMatch[1] === dumpMatch[1]) {
-                        // put all lines to value (without retrieving)
-                        retVar.value = await this.getStringValue(dumpMatch[1], buffer);
-                        return retVar;
-                    } else {
-                        innerVar = {
-                            name: varStringMatch[1],
-                            varId: this._vars.size + 1
-                        }
-                        const dotPos = innerVar.name.lastIndexOf(".");
-                        if (dotPos > 0) {
-                            innerVar.name = innerVar.name.substr(dotPos + 1);
-                        }
-                        // retrieve obly this value via 'dump'
-                        innerVar.value = await this.getStringValue(this.getVarFullName(innerVar.name, parentId));
-                        if (innerVar.value !== undefined) {
-                            let testString = buffer[i].substr(varStringMatch[0].length);
-                            let testPos = 0;
-                            let varPos = 0;
-                            let resultStr = "";
-                            while (varPos < innerVar.value.length) {
-                                if (testPos >= testString.length) {
-                                    ++i;
-                                    testString += buffer[i];
-                                }
-                                if (testString[testPos] === innerVar.value[varPos]) {
-                                    resultStr += testString[testPos];
-                                    ++testPos;
-                                    ++varPos;
-                                } else if (testString[testPos] == "\r" || testString[testPos] == "\n" ) {
-                                    ++testPos;
-                                } else if (innerVar.value[varPos] == "\r" || innerVar.value[varPos] == "\n" ) {
-                                    ++varPos;
-                                } else {
-                                    resultStr += innerVar.value[varPos];    // it is error probably
-                                    ++varPos;
-                                }
-                            }
-                            innerVar.value = resultStr;
-                        } else {
-                            return undefined;  // panic escape
-                        }
-                    }
-                } else {
-                    const varMatch = line.match(rgxVariable);
-                    if (varMatch) {
-                        if (dumpMatch && varMatch[1] === dumpMatch[1]) {
-                            retVar.value = varMatch[2];
-                            return retVar;
-                        }
-                        innerVar = {
-                            name: varMatch[1],
-                            value: varMatch[2],
-                            varId: this._vars.size + 1
-                        }
-                        const dotPos = innerVar.name.lastIndexOf(".");
-                        if (dotPos > 0) {
-                            innerVar.name = innerVar.name.substr(dotPos + 1);
-                        }
-                    }
-                }
-                if (innerVar && currentScope) {
-                    innerVar.parentId = parentId;
-                    this._vars.set(innerVar.varId, innerVar);
-                    currentScope.vars = currentScope.vars || [];
-                    currentScope.vars.push(innerVar);
-                }
-            }
-        }
-
-        return retVar;
-    }
-
-    protected fillStringValueFromBuffer(varFullName: string,buffer: string[]) {
+    private fillStringValueFromBuffer(varFullName: string,buffer: string[]) {
         const rgxValueStart = new RegExp(`^\\s*${RgxStrFromStr(varFullName)}\\s*=\\s*\"`);
         for (let i = 0; i < buffer.length - 1; ++i) {
             const matched = buffer[i].match(rgxValueStart);
@@ -1049,29 +1372,14 @@ export class JvmShellRuntime extends EventEmitter {
      * @param buffer given buffer
      * @returns string value or undefined
      */
-    protected async getStringValue(varFullName: string, buffer?: string[]) {
-        buffer = buffer || await this.doCommandAndFetchResultUntilTimeOut(`dump ${varFullName}`, this.waitFetch);
+    private async dumpStringValue(varFullName: string, buffer?: string[]) {
+        if (buffer === undefined) {
+           if (this._requestRun !== 0 && !this.isPaused()) {
+               return undefined;
+           } 
+           buffer = await this.doCommandAndFetchResultUntilTimeOut(`dump ${varFullName}`, this.waitFetch);
+        }
         return this.fillStringValueFromBuffer(varFullName, buffer);
-    }
-
-    public async getScopes(frameId: number) {
-        if (!this.isPaused()) {
-            return undefined;
-        }
-        if (await this.setFrame(frameId)) {
-            const stackFrame = this.getFrame(frameId);
-            if (stackFrame) {
-                if (stackFrame.scopes.length === 0) {
-                    const buffer = await this.doCommandAndFetchResultUntilTimeOut(`locals`, this.waitFetch);
-                    const retVar = await this.parseDumpBuffer(buffer);
-                    if (retVar && retVar.vars) {
-                        stackFrame.scopes = retVar.vars;
-                    }
-                }
-                return stackFrame.scopes;
-            }
-        }
-        return undefined;
     }
 
     private getFrame(frameId: number) {
@@ -1087,8 +1395,11 @@ export class JvmShellRuntime extends EventEmitter {
         return undefined;
     }
 
-    private waitPromptForShortCommand(command: string, line: string | undefined) {
-        // this._logFn(LogType.debug, () => `${command}: ${String(line).trimRight()}`);
+    /**
+     * Call this while Paused only
+     * @param line 
+     */
+    private waitPromptForShortCommand(line: string | undefined) {
         if (line === undefined) {
             return ListenerResponse.stop;
         }
@@ -1103,9 +1414,6 @@ export class JvmShellRuntime extends EventEmitter {
         if (this._lastFrameId === frameId) {
             return true;
         }
-        if (!(await this.threads())) {
-            return false;
-        }
         const stackFrame = this.getFrame(frameId);
         if (stackFrame) {
             if (this._lastFrameId) {
@@ -1116,10 +1424,13 @@ export class JvmShellRuntime extends EventEmitter {
                         cmd = `down ${prevFrame.level - stackFrame.level}`;
                     } 
                     this._logFn(LogType.debug, () => `POSTING ${cmd}`);
-                    if (!this.isPaused() || !(await this._queue.postCommand(cmd, (command, line) => {
-                        this._logFn(LogType.debug, () => `${command}: ${String(line).trimRight()}`);
-                        return this.waitPromptForShortCommand(command, line);
-                        }))) {
+                    if (!this.isPaused() || 
+                        !(await this._queue.postCommand(cmd, (command, line) => {
+                            this._logFn(LogType.debug, () => `${command}: ${String(line).trimRight()}`);
+                            return this.waitPromptForShortCommand(line);
+                            })
+                         )
+                        ) {
                         return false;
                     }
                     this._lastFrameId = frameId;
@@ -1132,10 +1443,13 @@ export class JvmShellRuntime extends EventEmitter {
                 if (stackFrame.level > 1) {
                     let cmd = `up ${stackFrame.level - 1}`;
                     this._logFn(LogType.debug, () => `POSTING ${cmd}`);
-                    if (!this.isPaused() || !(await this._queue.postCommand(cmd, (command, line) => {
-                        this._logFn(LogType.debug, () => `${command}: ${String(line).trimRight()}`);
-                        return this.waitPromptForShortCommand(command, line);
-                        }))) {
+                    if (!this.isPaused() || 
+                        !(await this._queue.postCommand(cmd, (command, line) => {
+                            this._logFn(LogType.debug, () => `${command}: ${String(line).trimRight()}`);
+                            return this.waitPromptForShortCommand(line);
+                          })
+                         )
+                        ) {
                         return false;
                     }
                 }
@@ -1161,61 +1475,6 @@ export class JvmShellRuntime extends EventEmitter {
             return `${className}.${place}`;
         }
         return "";
-    }
-
-	/*
-	 * Set breakpoint in file with given line.
-	 */
-	public async setBreakPoint(className: string, place: string | number) {
-        let bpKey = this.buildBpKey(className, place);
-        let bp = this._breakpoints.get(bpKey);
-        if (!bp) {
-            bp = {
-                className,
-                place,
-                breakId: ++this._breakpointId,
-            };
-            this._breakpoints.set(bpKey, bp);
-        }
-        if (!bp.sent) {
-            bp.sent = await this.postBreakPointCmd(SetBreakCommand, bp.className, bp.place);
-        }
-        return bp;
-	}
-
-	/*
-	 * Clear breakpoint for class and place.
-	 */
-	public async clearBreakPoint(className: string, place: string | number) {
-        let bpKey = this.buildBpKey(className, place);
-        this._breakpoints.delete(bpKey);
-        return this.postBreakPointCmd(ClearBreakCommand, className, place);
-	}
-
-	public async clearBreakPointByID(id: number) {
-        for (const [bpKey, bp] of this._breakpoints) {
-            if (bp.breakId === id) {
-                this._breakpoints.delete(bpKey);
-                return this.postBreakPointCmd(ClearBreakCommand, bp.className, bp.place);
-            }
-        }
-	}
-
-	/*
-	 * Clear all breakpoints for class.
-	 */
-	public async clearBreakpointsForClass(className: string) {
-        const cleared: string[] = [];
-        for (const [bpKey, bp] of this._breakpoints) {
-            if (bp.className === className) {
-                if (await this.postBreakPointCmd(ClearBreakCommand, className, bp.place)) {
-                    cleared.push(bpKey);
-                }
-            }
-        }
-        for (const bpKey of cleared) {
-            this._breakpoints.delete(bpKey);
-        }
     }
     
     /**
@@ -1256,8 +1515,8 @@ export class JvmShellRuntime extends EventEmitter {
                         }
                     }
                 }
-                return this.waitPromptForShortCommand(command, line);
-            }, LockQueueAction.toTheTop);
+                return this.waitPromptForShortCommand(line);
+            }, LockQueueAction.normal);
         } else {
             return this._queue.postCommand(command, undefined);
         }

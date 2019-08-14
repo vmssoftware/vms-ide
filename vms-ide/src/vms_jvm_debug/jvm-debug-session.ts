@@ -254,7 +254,7 @@ export class JvmDebugSession extends LoggingDebugSession {
                 return ListenerResponse.needMoreLines;
             }).then(async () => {
                 while (listeningPort <= listeningPortMax) {
-                    let result = await this.tryRunJVM(listeningPort, args.class, args.classpath);
+                    let result = await this.tryRunJVM(listeningPort, args.class, args.classpath, args.arguments);
                     if (result === jvmStartResult.started) {
                         if (args.stopOnEntry) {
                             await this._runtime.setBreakPoint(await JvmProjectHelper.stopOnEntryClass(args.class, this._scope), "main");
@@ -279,13 +279,13 @@ export class JvmDebugSession extends LoggingDebugSession {
         }
     }
 
-    private async tryRunJVM(port: number, jClass: string, jClassPath: string) {
+    private async tryRunJVM(port: number, jClass: string, jClassPath: string, args?: string) {
 
         const rgxListening = /Listening for transport dt_socket at address: (\d+)/;
         const rgxPortError = /ERROR: JDWP Transport dt_socket failed to initialize/;
 
         let result = jvmStartResult.unknown;
-        let runCommand = `java -Xdebug -Xrunjdwp:transport=dt_socket,address=${port},server=y,suspend=y -cp ${jClassPath} ${jClass}`;
+        let runCommand = `java -Xdebug -Xrunjdwp:transport=dt_socket,address=${port},server=y,suspend=y -cp ${jClassPath} ${jClass}${args? " " + args : ""}`;
         return this._jvmQueue.postCommand(runCommand, (cmd, line) => {
             if (!line) {
                 result = jvmStartResult.error;
@@ -340,20 +340,22 @@ export class JvmDebugSession extends LoggingDebugSession {
                     let [className, lineNumber] = await JvmProjectHelper.getBreakPointByFileLine(args.source.path, sourceBp.line);
                     if (className && lineNumber !== undefined) {
                         const runtimeBp = await this._runtime.setBreakPoint(className, lineNumber);
-                        if (newIds.has(runtimeBp.breakId)) {
-                            response.body.breakpoints.push({
-                                message: "On the same place as one of the previous",
-                                id: runtimeBp.breakId,
-                                line: lineNumber,
-                                verified: runtimeBp.verified? true: false
-                            });    
-                        } else {
-                            response.body.breakpoints.push({
-                                id: runtimeBp.breakId,
-                                line: lineNumber,
-                                verified: runtimeBp.verified? true: false
-                            });
-                            newIds.set(runtimeBp.breakId, lineNumber);
+                        if (runtimeBp) {
+                            if (newIds.has(runtimeBp.breakId)) {
+                                response.body.breakpoints.push({
+                                    message: "On the same place as one of the previous",
+                                    id: runtimeBp.breakId,
+                                    line: lineNumber,
+                                    verified: runtimeBp.verified? true: false
+                                });    
+                            } else {
+                                response.body.breakpoints.push({
+                                    id: runtimeBp.breakId,
+                                    line: lineNumber,
+                                    verified: runtimeBp.verified? true: false
+                                });
+                                newIds.set(runtimeBp.breakId, lineNumber);
+                            }
                         }
                     } else {
                         response.body.breakpoints.push({
@@ -380,7 +382,7 @@ export class JvmDebugSession extends LoggingDebugSession {
     }
 
     protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
-        this._runtime.threads().then((threads) => {
+        this._runtime.requestThreads().then((threads) => {
             const respThreads: DebugProtocol.Thread[] = [];
             if (threads) {
                 for (const thread of threads) {
@@ -407,7 +409,7 @@ export class JvmDebugSession extends LoggingDebugSession {
         const maxLevels = typeof args.levels === 'number' ? args.levels : 1000;
         const endFrame = startFrame + maxLevels;
 
-        const stk = this._runtime.stack(args.threadId, startFrame, endFrame);
+        const stk = this._runtime.requestStack(args.threadId, startFrame, endFrame);
 
         const wait = [];
         for (const frame of stk.frames) {
@@ -436,7 +438,7 @@ export class JvmDebugSession extends LoggingDebugSession {
 
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
 
-        this._runtime.getScopes(args.frameId).then((scopes) => {
+        this._runtime.requestScopes(args.frameId).then((scopes) => {
             response.body = {
                 scopes: []
             };
@@ -460,7 +462,7 @@ export class JvmDebugSession extends LoggingDebugSession {
         const jvmVar = this._variableHandles.get(args.variablesReference);
 
         if (jvmVar.vars === undefined) {
-            await this._runtime.dumpVariable(jvmVar, args.start, args.count);
+            await this._runtime.requestVariable(jvmVar, args.start, args.count);
         }
         if (jvmVar.vars) {
             for (const variable of jvmVar.vars) {
