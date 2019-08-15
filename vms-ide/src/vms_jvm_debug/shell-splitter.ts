@@ -2,7 +2,8 @@ import { Transform } from "stream";
 import { EventEmitter } from "events";
 import { ICmdClient } from "./communication";
 
-const _rgxNL = /(?:\r)?\n/g;
+//const _rgxNL = /(?:\r)?\n/g;
+const _rgxNL = /\n/g;
 
 export class ShellSplitter extends Transform {
 

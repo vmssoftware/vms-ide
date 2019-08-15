@@ -11,18 +11,20 @@ nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 interface IParserData {
-    command: string,
-    state: ParserState,
-    isLocals?: boolean,
-    fullVarName?: string,
-    parentId?: number,
-    timeOut?: number,
-    tmpVar?: IJvmVariable,
-    currentScope?: IJvmVariable,
-    innerVar?: IJvmVariable,
-    stringFullName?: string,
-    stringValue?: string,
-    quotas?: number
+    command: string,                // command to get data
+    state: ParserState,             // parser inner state
+    isLocals?: boolean,             // is command === 'locals'
+    fullVarName?: string,           // when command === 'dump ${fullVarName}'
+    parentId?: number,              // parent for this data
+    timeOut?: number,               // timeout for fetching all lines
+    tmpVar?: IJvmVariable,          // current data
+    currentScope?: IJvmVariable,    // current scope for 'locals'
+    innerVar?: IJvmVariable,        // inner var in case of object
+    stringFullName?: string,        // variable name for retrieving string value, we cannot continue parsing until get stringValue
+    stringValue?: string,           // given string value
+    stringIsPrimitive?: boolean,    // given string is char primitive
+    quotas?: number,                // number of quotas in givan string value
+    adjust?: IJvmVariable[],        // variables for retrieving char value, do that after parsing and before exit
 };
 
 enum ParserRequest {
@@ -86,14 +88,14 @@ export function isJvmVarNeedReference(jvmVar: IJvmVariable): boolean {
 }
 
 const rgxIsJvmArray = /instance of (\S+?)\[(\d+)\]/;
-export function getJvmVarArraySize(jvmVar: IJvmVariable): number {
+export function getJvmVarArrayParameters(jvmVar: IJvmVariable): { size: number, type?: string } {
     if (jvmVar.value) {
         const matched =  jvmVar.value.match(rgxIsJvmArray);
         if (matched) {
-            return +matched[2];
+            return { size: +matched[2], type: matched[1] };
         }
     }
-    return -1;
+    return { size: -1 };
 }
 
 export interface IJvmThread {
@@ -226,6 +228,7 @@ const _rgxParse = {
     rgxVariableObjectEnd : /^\s*\}\s*$/,
     rgxLocals : /^\s*locals\s*$/,
     rgxDump : /^\s*dump (.*)\s*$/,
+    rgxPrimitive: /^(?:\S*)ParseException: Cannot access field of primitive type: (.)$/,
 }
 
 /**
@@ -245,6 +248,22 @@ export enum JvmPrompt {
     promptIsDefault = -1,
     promptIsNotAPrompt = 0,
 };
+
+export function conevrtStringToJavaEscaped(str: string | undefined) {
+    if (str !== undefined) {
+        let result = "";
+        const buffer = Buffer.from(str);
+        for (let i = 0; i < buffer.length; ++i) {
+            if (buffer[i] < 0x20) {
+                result += "\\u" + buffer[i].toString(16).padStart(4, "0");
+            } else {
+                result += str[i];
+            }
+        }
+        return result;
+    }
+    return undefined;
+}
 
 /**
  * A Jvm runtime.
@@ -510,8 +529,8 @@ export class JvmShellRuntime extends EventEmitter {
             this._logFn(LogType.debug, () => `CMD locked "${command}"`);
             if (this._requestRun === 0) {
                 let fullName = this.getVarFullName(jvmVar.name, jvmVar.parentId);
-                const arraySize = getJvmVarArraySize(jvmVar);
-                if (arraySize < 0) {
+                const arrayParams = getJvmVarArrayParameters(jvmVar);
+                if (arrayParams.size < 0) {
                     return this.getVariableValue(jvmVar, fullName).
                         then((isOk) => {
                             this.cmdLock.release();
@@ -520,8 +539,8 @@ export class JvmShellRuntime extends EventEmitter {
                         });
                 } else {
                     start = start || 0;
-                    count = count || arraySize - start;
-                    const last = Math.min(start + count, arraySize - 1);
+                    count = count || arrayParams.size - start;
+                    const last = Math.min(start + count, arrayParams.size - 1);
                     for (let i = start; i <= last; ++i) {
                         let innerVar: IJvmVariable = {
                             name: `[${i}]`,
@@ -1073,35 +1092,6 @@ export class JvmShellRuntime extends EventEmitter {
 		return undefined;
 	}
 
-    private async doCommandAndFetchResultUntilTimeOut(cmd: string, timeout: number) {
-        const buffer: string[] = [];
-        if (this._requestRun !== 0 || !this.isPaused()) {
-            return buffer;
-        }
-        let timer: NodeJS.Timer | undefined;
-        const dropCommand = new DropCommand();
-        this._logFn(LogType.debug, () => `POSTING ${cmd}`);
-        await this._queue.postCommand(cmd, (command, line) => {
-            this._logFn(LogType.debug, () => `${command}: ${line?line.trimRight():""}`);
-            if (cmd === command) {
-                if (line === undefined) {
-                    return ListenerResponse.stop;
-                }
-                buffer.push(line);
-                if (timer) {
-                    clearTimeout(timer);
-                }
-                timer = setTimeout(() => {
-                    this._logFn(LogType.debug, () => `TIMEOUT ${cmd}`);
-                    dropCommand.doDropCommand();
-                }, timeout);
-                return ListenerResponse.needMoreLines;
-            }
-            return ListenerResponse.stop;
-        }, LockQueueAction.normal, dropCommand);
-        return buffer;
-    }
-
     private getVarFullName(name: string, parentId: number | undefined) {
         let fullName = name;
         while(parentId) {
@@ -1120,15 +1110,16 @@ export class JvmShellRuntime extends EventEmitter {
             data.tmpVar = {
                 name: data.fullVarName || "",
                 varId: 0,
-                parentId: data.parentId,
             }
         }
         if (data.state === ParserState.stringEncountered) {
             if (data.stringFullName !== undefined) {
                 // first call after fetching
                 if (data.stringValue) {
-                    // count quotas in original string + add two more (at the begin and at the end)
-                    data.quotas = (data.stringValue.split("\"").length - 1) + 2;
+                    if (data.stringIsPrimitive !== true) {
+                        // count quotas in original string + add two more (at the begin and at the end)
+                        data.quotas = (data.stringValue.split("\"").length - 1) + 2;
+                    }
                     // store value 
                     if (data.innerVar) {
                         data.innerVar.value = data.stringValue;
@@ -1138,6 +1129,7 @@ export class JvmShellRuntime extends EventEmitter {
                     data.stringValue = undefined;
                 }
                 data.stringFullName = undefined;
+                data.stringIsPrimitive = undefined;
             }
             if (data.quotas !== undefined) {
                 data.quotas -= line.split("\"").length - 1;
@@ -1207,6 +1199,10 @@ export class JvmShellRuntime extends EventEmitter {
                     if (data.fullVarName && varMatch[1] === data.fullVarName) {
                         data.tmpVar.value = varMatch[2];
                         data.state = ParserState.stopped;
+                        if (data.tmpVar.value === undefined || data.tmpVar.value.length === 0) {
+                            data.adjust = data.adjust || [];
+                            data.adjust.push(data.tmpVar);
+                        }
                     } else {
                         let innerVar: IJvmVariable | undefined = {
                             name: varMatch[1],
@@ -1222,6 +1218,10 @@ export class JvmShellRuntime extends EventEmitter {
                             this._vars.set(innerVar.varId, innerVar);
                             data.currentScope.vars = data.currentScope.vars || [];
                             data.currentScope.vars.push(innerVar);
+                        }
+                        if (innerVar.value === undefined || innerVar.value.length === 0) {
+                            data.adjust = data.adjust || [];
+                            data.adjust.push(innerVar);
                         }
                     }
                 }
@@ -1239,7 +1239,8 @@ export class JvmShellRuntime extends EventEmitter {
         const dropCommand = new DropCommand();
         this._logFn(LogType.debug, () => `POSTING ${data.command}`);
         let parserLastRequest = ParserRequest.nextLine;
-        await this._queue.postCommand(data.command, (command, line) => {
+        
+        const retCode = await this._queue.postCommand(data.command, (command, line) => {
             this._logFn(LogType.debug, () => `${command}: ${line?line.trimRight():""}`);
             if (data.command === command) {
                 if (line === undefined) {
@@ -1271,6 +1272,12 @@ export class JvmShellRuntime extends EventEmitter {
             return ListenerResponse.stop;
         }, LockQueueAction.normal, dropCommand);
 
+        if (!retCode) {
+            this._logFn(LogType.debug, () => `ABORTED ${data.command}`);
+            return retCode;
+        }
+
+        // continue parsing after fetch all lines
         for (let i = 0; this.isPaused() && i < buffer.length; ++i) {
             if (data.state === ParserState.stringEncountered) {
                 if (data.stringValue === undefined && data.stringFullName !== undefined) {
@@ -1278,7 +1285,10 @@ export class JvmShellRuntime extends EventEmitter {
                         this._logFn(LogType.debug, () => `ABORTED ${data.command}`);
                         return false;
                     }
-                    data.stringValue = await this.dumpStringValue(data.stringFullName);
+                    if (!await this.dumpStringValue(data)) {
+                        this._logFn(LogType.debug, () => `ABORTED ${data.command}`);
+                        return false;
+                    }
                 }
             }
             if (this.parseLine(buffer[i], data) === ParserRequest.fetchAllAndRetryToParse) {
@@ -1286,6 +1296,29 @@ export class JvmShellRuntime extends EventEmitter {
                 --i;
             }
         }
+
+        // get char values
+        if (data.adjust !== undefined) {
+            for (const jvmVar of data.adjust) {
+                if (!await this.dumpCharValue(jvmVar)) {
+                    this._logFn(LogType.debug, () => `ABORTED ${data.command}`);
+                    return false;            
+                }
+            }
+        }
+
+        // convert string to escaped string
+        const allVars: (IJvmVariable | undefined) [] = [data.tmpVar];
+        for (let i = 0; i < allVars.length; ++i) {
+            const currentVar = allVars[i];
+            if (currentVar !== undefined) {
+                currentVar.value = conevrtStringToJavaEscaped(currentVar.value);
+                if (currentVar.vars !== undefined) {
+                    allVars.push(...currentVar.vars);
+                }
+            }
+        }
+
         this._logFn(LogType.debug, () => `COMPLETED ${data.command}`);
         return true;
     }
@@ -1314,71 +1347,87 @@ export class JvmShellRuntime extends EventEmitter {
         return false;
     }
 
-    private fillStringValueFromBuffer(varFullName: string,buffer: string[]) {
-        const rgxValueStart = new RegExp(`^\\s*${RgxStrFromStr(varFullName)}\\s*=\\s*\"`);
-        for (let i = 0; i < buffer.length - 1; ++i) {
-            const matched = buffer[i].match(rgxValueStart);
-            if (matched) {
-                let retString = buffer[i].substring(matched[0].length);     //all chars, without first quota
-                for (++i; i < buffer.length - 1; ++i) {
-                    retString += buffer[i];                                 //all chars
-                }
-                // drop all after last quota
-                const lastQuota = retString.lastIndexOf("\"");
-                if (lastQuota > 0) {
-                    retString = retString.substring(0, lastQuota);          // last quota is dropped too
-                }
-                return retString;
-            }
-        }
-        return undefined;
-    }
-
-    /**
-     * Construct value from given buffer or retrieve this buffer via 'dump'
-     * @param varFullName variable full name
-     * @param buffer given buffer
-     * @returns string value or undefined
-     */
-    private async dumpStringValue(varFullName: string) {
+    private async dumpCharValue(jvmVar: IJvmVariable) {
         if (this._requestRun !== 0 || !this.isPaused()) {
             return undefined;
         }
-        const evalCmd = `java.util.Arrays.toString(${varFullName}.getBytes())`;
+        const varFullName = this.getVarFullName(jvmVar.name, jvmVar.parentId);
+        const evalCmd = `java.lang.Integer.valueOf(${varFullName})`;
         const command = `eval ${evalCmd}`;
-        const rgxResultStart = new RegExp(`^\\s*${RgxStrFromStr(evalCmd)}\\s*=\\s*\"\\[`);
-        let   resultArray: string | undefined;
-        let   resultString: string | undefined;
-        await this._queue.postCommand(command, (cmd, line) => {
+        const rgxResult = new RegExp(`^\\s*${RgxStrFromStr(evalCmd)}\\s*=\\s*\"(\\d+)\"`);
+        jvmVar.value = undefined;
+        const retValue = await this._queue.postCommand(command, (cmd, line) => {
             this._logFn(LogType.debug, () => `${cmd}: ${line?line.trimRight():""}`);
             if (cmd === command) {
                 if (line === undefined) {
                     return ListenerResponse.stop;
                 }
-                let trimmed = line.trim();
-                if (resultArray === undefined) {
-                    const startMatched = trimmed.match(rgxResultStart);
-                    if (startMatched) {
-                        resultArray = trimmed.substr(startMatched[0].length);
-                    }
-                }
-                else {
-                    resultArray += trimmed;
-                }
-                if (resultArray !== undefined) {
-                    const endPos = resultArray.lastIndexOf("]");
-                    if (endPos > 0) {
-                        resultArray = resultArray.substr(0, endPos);
-                        resultString = resultArray.split(",").map(code => String.fromCharCode(+code)).join('');
-                        resultArray = undefined;
-                        return ListenerResponse.needMoreLines;
+                if (jvmVar.value === undefined) {
+                    let trimmed = line.trim();
+                    const matched = trimmed.match(rgxResult);
+                    if (matched) {
+                        const intValue = +matched[1];
+                        jvmVar.value = "\\u" + intValue.toString(16).padStart(4, "0");
                     }
                 }
                 return this.waitPromptForShortCommand(line);
             }
             return ListenerResponse.stop;
         });
-        return resultString;
+        return retValue;
+    }
+
+    /**
+     * Evaluate string as bytes array and parse
+     * @param data 
+     */
+    private async dumpStringValue(data: IParserData) {
+        if (this._requestRun !== 0 || !this.isPaused()) {
+            return undefined;
+        }
+        const evalCmd = `java.util.Arrays.toString(${data.stringFullName}.getBytes())`;
+        const command = `eval ${evalCmd}`;
+        const rgxResultStart = new RegExp(`^\\s*${RgxStrFromStr(evalCmd)}\\s*=\\s*\"\\[`);
+        let   resultArray: string | undefined;
+        const retValue = await this._queue.postCommand(command, (cmd, line) => {
+            this._logFn(LogType.debug, () => `${cmd}: ${line?line.trimRight():""}`);
+            if (cmd === command) {
+                if (line === undefined) {
+                    return ListenerResponse.stop;
+                }
+                if (data.stringValue === undefined) {
+                    let trimmed = line.trim();
+                    if (resultArray === undefined) {
+                        const startMatched = trimmed.match(rgxResultStart);
+                        if (startMatched) {
+                            resultArray = trimmed.substr(startMatched[0].length);
+                        } else {
+                            const primitiveMatched = trimmed.match(_rgxParse.rgxPrimitive);
+                            if (primitiveMatched) {
+                                data.stringValue = primitiveMatched[1];
+                                data.stringIsPrimitive = true;
+                                return ListenerResponse.needMoreLines;
+                            }
+                        }
+                    }
+                    else {
+                        resultArray += trimmed;
+                    }
+                    if (resultArray !== undefined) {
+                        const endPos = resultArray.lastIndexOf("]");
+                        if (endPos > 0) {
+                            resultArray = resultArray.substr(0, endPos);
+                            data.stringValue = resultArray.split(",").map(code => String.fromCharCode(+code)).join('');
+                            resultArray = undefined;
+                            return ListenerResponse.needMoreLines;
+                        }
+                    }
+                }
+                return this.waitPromptForShortCommand(line);
+            }
+            return ListenerResponse.stop;
+        });
+        return retValue;
     }
 
     private getFrame(frameId: number) {

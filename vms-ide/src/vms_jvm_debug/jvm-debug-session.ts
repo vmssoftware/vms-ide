@@ -12,7 +12,7 @@ import * as path from 'path';
 
 import { Lock, Delay, LogFunction, LogType } from '../common/main';
 
-import { JvmShellRuntime, JvmRuntimeEvents, IJvmVariable, isJvmVarNeedReference , getJvmVarArraySize } from './jvm-shell-runtime';
+import { JvmShellRuntime, JvmRuntimeEvents, IJvmVariable, isJvmVarNeedReference , getJvmVarArrayParameters } from './jvm-shell-runtime';
 import { IJvmLaunchRequestArguments } from './jvm-config';
 import { SshShellServer } from './ssh-shell-server';
 import { CmdQueue } from './cmd-queue';
@@ -474,9 +474,9 @@ export class JvmDebugSession extends LoggingDebugSession {
                 };
                 if (isJvmVarNeedReference(variable)) { 
                     innerVar.variablesReference = this._variableHandles.create(variable);
-                    const sizeVar = getJvmVarArraySize(variable);
-                    if (sizeVar >= 0) {
-                        innerVar.indexedVariables = sizeVar;
+                    const arrayParams = getJvmVarArrayParameters(variable);
+                    if (arrayParams.size > 0) {
+                        innerVar.indexedVariables = arrayParams.size;
                     }
                 }
                 variables.push(innerVar);

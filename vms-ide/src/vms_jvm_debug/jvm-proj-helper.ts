@@ -40,7 +40,7 @@ export class JvmProjectHelper {
                 const jvmProject = new JvmProject(scope, true, this.logFn);
                 const [loaded, localSource] = await Promise.all([
                     jvmProject.load(),
-                    Synchronizer.acquire(this.logFn).requestSource(ensured, "local")
+                    Synchronizer.acquire().requestSource(ensured, "local")
                 ]);
                 if (loaded && localSource) {
                     scopedata = {
