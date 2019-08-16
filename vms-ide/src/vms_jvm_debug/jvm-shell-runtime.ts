@@ -29,7 +29,7 @@ interface IParserData {
 
 enum ParserRequest {
     nextLine,
-    fetchAllAndRetryToParse,
+    fetchAllAndContinueParsing,
 }
 
 enum ParserState {
@@ -71,34 +71,6 @@ export interface IJvmStack {
     scopes: IJvmVariable[];
 };
 
-export interface IJvmVariable {
-    varId: number;
-    name: string;
-    value?: string;
-    isPrimitive?: boolean,
-    parentId?: number;
-    vars?: IJvmVariable[];
-};
-
-export function isJvmVarNeedReference(jvmVar: IJvmVariable): boolean {
-    let need = jvmVar.vars !== undefined && jvmVar.vars.length > 0;
-    if (!need && jvmVar.value) {
-        need = jvmVar.value.startsWith('instance of ');
-    }
-    return need;
-}
-
-const rgxIsJvmArray = /instance of (\S+?)\[(\d+)\]/;
-export function getJvmVarArrayParameters(jvmVar: IJvmVariable): { size: number, type?: string } {
-    if (jvmVar.value) {
-        const matched =  jvmVar.value.match(rgxIsJvmArray);
-        if (matched) {
-            return { size: +matched[2], type: matched[1] };
-        }
-    }
-    return { size: -1 };
-}
-
 export const _primitiveTypes = [
     "byte",
     "short",
@@ -125,6 +97,76 @@ export const _stringTypes = [
     "java.lang.String",
 ];
 
+export enum JvmVarType {
+    'string',
+    'boolean',
+    'char',
+    'number',
+    'object',
+    'scope',
+};
+
+interface IJvmTypeFromTypeName {
+    type: JvmVarType,
+    typeNames: string[];
+    rgxValue?: RegExp;
+};
+
+export const _typeFromNames: IJvmTypeFromTypeName[] = [
+    {
+        type: JvmVarType.string,
+        typeNames: ["java.lang.String"],
+        rgxValue: /\"/i,
+    },
+    {
+        type: JvmVarType.boolean,
+        typeNames: [
+            "boolean",
+            "java.lang.Boolean"
+        ],
+        rgxValue: /\btrue\b|\bfalse\b/i,
+    },
+    {
+        type: JvmVarType.char,
+        typeNames: [
+            "char",
+            "java.lang.Character"
+        ],
+    },
+    {
+        type: JvmVarType.number,
+        typeNames: [
+            "byte",
+            "short",
+            "int",
+            "long",
+            "float",
+            "double",
+            "java.lang.Byte",
+            "java.lang.Short",
+            "java.lang.Integer",
+            "java.lang.Long",
+            "java.lang.Float",
+            "java.lang.Double",
+        ],
+        rgxValue: /\d+(\.\d+)?/i,
+    }
+];
+
+export interface IJvmVariable {
+    varId: number;
+    name: string;
+    value?: string;
+    type?: JvmVarType,
+    typeName?: string,
+    arraySize?: number,
+    parentId?: number;
+    vars?: IJvmVariable[];
+};
+
+export function isJvmVarNeedReference(jvmVar: IJvmVariable): boolean {
+    return  jvmVar.type === JvmVarType.scope || jvmVar.type === JvmVarType.object || jvmVar.arraySize !== undefined;
+}
 
 export interface IJvmThread {
 	/** thread unique id */
@@ -211,27 +253,33 @@ const _rgxStoppedThread = {
     rgx: /\"thread=(.*?)\", /,
     threadName: 1,
 };
+
 const _rgxDefPrompt = {
     rgx: /^>\s*$/,
 };
+
 const _rgxThreadPrompt = {
     rgx: /^(.*?)\[(\d+)\]\s*$/,
     threadName: 1,
     stackLevel: 2,
 };
+
 const _rgxAttachFailed = { 
     rgx: /Unable to attach to target VM/,
 };
+
 const _rgxGroup = { 
     rgx: /^Group (.*?):/,
     groupName: 1,
 };
+
 const _rgxThread = {
     rgx: /\((.*?)\)0x([0-9a-fA-F]+)\s+(.*)/,
     place: 1,
     id: 2,
     description: 3,
 };
+
 const _rgxStack = {
     rgx: /\[(\d+)\]\s+(\S+)\s+\((.+?)\)/,
     rgxFileLine: /(\S+?):(\d+)/,
@@ -241,6 +289,7 @@ const _rgxStack = {
     file: 1,
     line: 2,
 };
+
 const _rgxBreakPoint = { 
     rgxFail: /Unable to set breakpoint/,
     rgxDefer: /It will be set after the class is loaded/,
@@ -248,6 +297,7 @@ const _rgxBreakPoint = {
     rgxSetDef: /Set deferred breakpoint (\S+)/,
     rgxClear: /Removed: breakpoint (\S+)/,
 };
+
 const _rgxParse = {
     rgxScope : /^(.+?):\s*$/,
     rgxVariable : /^\s*(\S+?)\s*[:=]\s*(.*?)\s*$/,
@@ -257,6 +307,7 @@ const _rgxParse = {
     rgxLocals : /^\s*locals\s*$/,
     rgxDump : /^\s*dump (.*)\s*$/,
     rgxPrimitive: /^(?:\S*)ParseException: Cannot access field of primitive type: (.)$/,
+    rgxIsJvmInstanceOf: /instance of ([^\s\[]+)(?:\[(\d+)\])?/,
 }
 
 /**
@@ -557,15 +608,14 @@ export class JvmShellRuntime extends EventEmitter {
             let retCode = true;
             this._logFn(LogType.debug, () => `CMD locked "${command}"`);
             if (this._requestRun === 0) {
-                const arrayParams = getJvmVarArrayParameters(jvmVar);
-                if (arrayParams.size < 0) {
+                if (jvmVar.arraySize === undefined) {
                     retCode = await this.getVariableValue(jvmVar);
                 } else {
                     start = start || 0;
-                    count = count || arrayParams.size - start;
-                    count = Math.min(count, arrayParams.size - start);
-                    if (arrayParams.type && 
-                        (_primitiveTypes.includes(arrayParams.type) || _primitiveBoxedTypes.includes(arrayParams.type))) {
+                    count = count || jvmVar.arraySize - start;
+                    count = Math.min(count, jvmVar.arraySize - start);
+                    if (jvmVar.typeName !== undefined &&
+                        (_primitiveTypes.includes(jvmVar.typeName) || _primitiveBoxedTypes.includes(jvmVar.typeName))) {
                         retCode = await this.evalPrimitiveArray(jvmVar, start, count);
                     } else {
                         for (let i = start; retCode && i < start + count; ++i) {
@@ -577,7 +627,7 @@ export class JvmShellRuntime extends EventEmitter {
                             this._vars.set(innerVar.varId, innerVar);
                             jvmVar.vars = jvmVar.vars || [];
                             jvmVar.vars.push(innerVar);
-                            if (arrayParams.type !== undefined && _stringTypes.includes(arrayParams.type)) {
+                            if (jvmVar.typeName !== undefined && _stringTypes.includes(jvmVar.typeName)) {
                                 retCode = await this.evalStringValue(innerVar);
                             } else {
                                 retCode = await this.getVariableValue(innerVar);
@@ -594,7 +644,11 @@ export class JvmShellRuntime extends EventEmitter {
                 for (let i = 0; i < allVars.length; ++i) {
                     const currentVar = allVars[i];
                     if (currentVar !== undefined) {
-                        currentVar.value = conevrtStringToJavaEscaped(currentVar.value);
+                        switch (currentVar.type) {
+                            case JvmVarType.char:
+                            //case JvmVarType.string:
+                                currentVar.value = conevrtStringToJavaEscaped(currentVar.value);
+                        }
                         if (currentVar.vars !== undefined) {
                             allVars.push(...currentVar.vars);
                         }
@@ -634,10 +688,23 @@ export class JvmShellRuntime extends EventEmitter {
                             isLocals: true,
                         };
                         if (this.isPaused() && (await this.dumpVariableOrLocals(parserData)) && parserData.tmpVar && parserData.tmpVar.vars) {
-                            stackFrame.scopes = parserData.tmpVar.vars.map(v => {
-                                v.vars = v.vars || [];  // do not retrieve scope vars if they do not exist
-                                return v;               // return from map
-                            });
+                            stackFrame.scopes = parserData.tmpVar.vars;
+                            // TODO: test settings
+                            // convert string to escaped string
+                            const allVars: (IJvmVariable | undefined) [] = [...stackFrame.scopes];
+                            for (let i = 0; i < allVars.length; ++i) {
+                                const currentVar = allVars[i];
+                                if (currentVar !== undefined) {
+                                    switch (currentVar.type) {
+                                        case JvmVarType.char:
+                                        //case JvmVarType.string:
+                                            currentVar.value = conevrtStringToJavaEscaped(currentVar.value);
+                                    }
+                                    if (currentVar.vars !== undefined) {
+                                        allVars.push(...currentVar.vars);
+                                    }
+                                }
+                            }
                         }
                     }
                     this.cmdLock.release();
@@ -1159,12 +1226,12 @@ export class JvmShellRuntime extends EventEmitter {
             if (data.quotas === undefined) {
                 // first call after fetching
                 if (data.innerVar && data.innerVar.value) {
-                    if (data.innerVar.isPrimitive !== true) {
+                    if (data.innerVar.type === JvmVarType.string) {
                         // count quotas in original string + add two more (at the begin and at the end)
                         data.quotas = (data.innerVar.value.split("\"").length - 1) + 2;
                     }
                 } else if (data.tmpVar && data.tmpVar.value) {
-                    if (data.tmpVar.isPrimitive !== true) {
+                    if (data.tmpVar.type === JvmVarType.string) {
                         // count quotas in original string + add two more (at the begin and at the end)
                         data.quotas = (data.tmpVar.value.split("\"").length - 1) + 2;
                     }
@@ -1187,7 +1254,8 @@ export class JvmShellRuntime extends EventEmitter {
                 if (scopeMatch) {
                     data.currentScope = {
                         name: scopeMatch[1],
-                        varId: this._vars.size + 1
+                        varId: this._vars.size + 1,
+                        type: JvmVarType.scope
                     };
                     this._vars.set(data.currentScope.varId, data.currentScope);
                     data.tmpVar.vars = data.tmpVar.vars || [];
@@ -1213,7 +1281,7 @@ export class JvmShellRuntime extends EventEmitter {
                     let innerVar: IJvmVariable | undefined = {
                         name: varStringMatch[1],
                         varId: this._vars.size + 1,
-                        parentId: data.parentId,
+                        parentId: data.parentId
                     }
                     const dotPos = innerVar.name.lastIndexOf(".");
                     if (dotPos > 0) {
@@ -1227,7 +1295,7 @@ export class JvmShellRuntime extends EventEmitter {
                     data.innerVar = innerVar;
                 }
                 data.state = ParserState.stringEncountered;
-                return ParserRequest.fetchAllAndRetryToParse;
+                return ParserRequest.fetchAllAndContinueParsing;
             } else {
                 const varMatch = line.match(_rgxParse.rgxVariable);
                 if (varMatch) {
@@ -1237,6 +1305,8 @@ export class JvmShellRuntime extends EventEmitter {
                         if (data.tmpVar.value === undefined || data.tmpVar.value.length === 0) {
                             data.adjust = data.adjust || [];
                             data.adjust.push(data.tmpVar);
+                        } else {
+                            this.adjustVarType(data.tmpVar);
                         }
                     } else {
                         let innerVar: IJvmVariable | undefined = {
@@ -1257,12 +1327,45 @@ export class JvmShellRuntime extends EventEmitter {
                         if (innerVar.value === undefined || innerVar.value.length === 0) {
                             data.adjust = data.adjust || [];
                             data.adjust.push(innerVar);
+                        } else {
+                            this.adjustVarType(innerVar);
                         }
                     }
                 }
             }
         }
         return ParserRequest.nextLine;
+    }
+
+    private adjustVarType(jvmVar: IJvmVariable) {
+        if (!jvmVar.value) {
+            return false;
+        }
+        const matchedInstance = jvmVar.value.match(_rgxParse.rgxIsJvmInstanceOf);
+        if (matchedInstance) {
+            if (matchedInstance[2]) {
+                jvmVar.arraySize = +matchedInstance[2];
+            }
+            jvmVar.typeName = matchedInstance[1];
+            jvmVar.type = JvmVarType.object;
+            for (const testType of _typeFromNames) {
+                if (testType.typeNames.includes(jvmVar.typeName)) {
+                    jvmVar.type = testType.type;
+                    break;
+                }
+            }
+        } else {
+            for (const testType of _typeFromNames) {
+                if (testType.rgxValue && jvmVar.value.match(testType.rgxValue)) {
+                    jvmVar.type = testType.type;
+                    break;
+                }
+            }
+            if (jvmVar.type === undefined && jvmVar.value.length === 1) {
+                jvmVar.type = JvmVarType.char;
+            }
+        }
+        return jvmVar.type !== undefined;
     }
 
     private async dumpVariableOrLocals(data: IParserData) {
@@ -1281,7 +1384,7 @@ export class JvmShellRuntime extends EventEmitter {
                 if (line === undefined) {
                     return ListenerResponse.stop;
                 }
-                if (parserLastRequest === ParserRequest.fetchAllAndRetryToParse) {
+                if (parserLastRequest === ParserRequest.fetchAllAndContinueParsing) {
                     buffer.push(line);
                     if (timer) {
                         clearTimeout(timer);
@@ -1297,7 +1400,7 @@ export class JvmShellRuntime extends EventEmitter {
                         if (this.testIfThreadPrompt(line.trim()) > JvmPrompt.promptIsNotAPrompt) {
                             return ListenerResponse.stop;
                         }
-                    } else if (parserLastRequest === ParserRequest.fetchAllAndRetryToParse) {
+                    } else if (parserLastRequest === ParserRequest.fetchAllAndContinueParsing) {
                         // pass this line again
                         buffer.push(line);
                     }
@@ -1315,20 +1418,24 @@ export class JvmShellRuntime extends EventEmitter {
         // continue parsing after fetch all lines
         for (let i = 0; this.isPaused() && i < buffer.length; ++i) {
             if (data.state === ParserState.stringEncountered) {
-                if (data.innerVar !== undefined && data.innerVar.value === undefined) {
-                    if (!await this.evalStringValue(data.innerVar)) {
-                        this._logFn(LogType.debug, () => `ABORTED ${data.command}`);
-                        return false;
+                if (data.innerVar !== undefined) {
+                    if (data.innerVar.value === undefined) {
+                        if (!await this.evalStringValue(data.innerVar)) {
+                            this._logFn(LogType.debug, () => `ABORTED ${data.command}`);
+                            return false;
+                        }
                     }
                 }
-                else if (data.tmpVar !== undefined && data.tmpVar.value === undefined) {
-                    if (!await this.evalStringValue(data.tmpVar)) {
-                        this._logFn(LogType.debug, () => `ABORTED ${data.command}`);
-                        return false;
+                else if (data.tmpVar !== undefined) {
+                    if (data.tmpVar.value === undefined) {
+                        if (!await this.evalStringValue(data.tmpVar)) {
+                            this._logFn(LogType.debug, () => `ABORTED ${data.command}`);
+                            return false;
+                        }
                     }
                 }
             }
-            if (this.parseLine(buffer[i], data) === ParserRequest.fetchAllAndRetryToParse) {
+            if (this.parseLine(buffer[i], data) === ParserRequest.fetchAllAndContinueParsing) {
                 // parser expects current line again
                 --i;
             }
@@ -1422,6 +1529,8 @@ export class JvmShellRuntime extends EventEmitter {
                     let innerVar: IJvmVariable = {
                         name: `[${from + i}]`,
                         value: values[i],
+                        type: jvmVar.type,
+                        typeName: jvmVar.typeName,
                         varId: this._vars.size + 1,
                         parentId: jvmVar.varId,
                     };
@@ -1460,7 +1569,12 @@ export class JvmShellRuntime extends EventEmitter {
                     const matched = trimmed.match(rgxResult);
                     if (matched) {
                         const intValue = +matched[1];
-                        jvmVar.value = "\\u" + intValue.toString(16).padStart(4, "0");
+                        if (intValue < 0x20) {
+                            jvmVar.value = "\\u" + intValue.toString(16).padStart(4, "0");
+                        } else {
+                            jvmVar.value = String.fromCodePoint(intValue);
+                        }
+                        jvmVar.type = JvmVarType.char;
                     }
                 }
                 return this.waitPromptForShortCommand(line);
@@ -1499,7 +1613,7 @@ export class JvmShellRuntime extends EventEmitter {
                             const primitiveMatched = trimmed.match(_rgxParse.rgxPrimitive);
                             if (primitiveMatched) {
                                 jvmVar.value = primitiveMatched[1];
-                                jvmVar.isPrimitive = true;
+                                jvmVar.type = JvmVarType.char;
                                 return ListenerResponse.needMoreLines;
                             }
                         }
@@ -1512,6 +1626,7 @@ export class JvmShellRuntime extends EventEmitter {
                         if (endPos > 0) {
                             resultArray = resultArray.substr(0, endPos);
                             jvmVar.value = resultArray.split(",").map(code => String.fromCharCode(+code)).join('');
+                            jvmVar.type = JvmVarType.string;
                             resultArray = undefined;
                             return ListenerResponse.needMoreLines;
                         }
