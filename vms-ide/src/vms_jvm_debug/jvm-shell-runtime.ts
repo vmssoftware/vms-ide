@@ -597,6 +597,9 @@ export class JvmShellRuntime extends EventEmitter {
      * @param count 
      */
     public async requestVariable(jvmVar: IJvmVariable, start?: number, count?: number) {
+        if (jvmVar.type === JvmVarType.scope || jvmVar.vars !== undefined) {
+            return true;
+        }
         const command = 'requestVariable';
         this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
         const acquired = await this.cmdLock.acquire(LockQueueAction.normal);

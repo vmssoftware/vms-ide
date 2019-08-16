@@ -42,7 +42,7 @@ export class JvmProjectHelper {
                     jvmProject.load(),
                     Synchronizer.acquire().requestSource(ensured, "local")
                 ]);
-                if (loaded && localSource) {
+                if (localSource) {
                     scopedata = {
                         ensured,
                         jvmProject,

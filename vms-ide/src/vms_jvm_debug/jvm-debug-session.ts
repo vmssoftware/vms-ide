@@ -461,7 +461,7 @@ export class JvmDebugSession extends LoggingDebugSession {
         const variables = new Array<DebugProtocol.Variable>();
         const jvmVar = this._variableHandles.get(args.variablesReference);
 
-        if (jvmVar.vars === undefined) {
+        if (jvmVar.type !== JvmVarType.scope && jvmVar.vars === undefined) {
             await this._runtime.requestVariable(jvmVar, args.start, args.count);
         }
         if (jvmVar.vars) {
