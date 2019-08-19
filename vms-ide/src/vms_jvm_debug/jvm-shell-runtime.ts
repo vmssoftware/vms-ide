@@ -659,7 +659,11 @@ export class JvmShellRuntime extends EventEmitter {
                 const stackFrame = this.getFrame(frameId);
                 if (stackFrame) {
                     if (stackFrame.scopes.length === 0) {
-                        await this.getLocals(stackFrame);
+                        let isOk = await this.getLocals(stackFrame);
+                        isOk = isOk && await this.dumpThis(stackFrame);
+                        if (isOk) { 
+                            this.correctVariables(stackFrame.scopes);
+                        }
                     }
                     retScopes = stackFrame.scopes;
                 }
@@ -1434,7 +1438,7 @@ export class JvmShellRuntime extends EventEmitter {
                 let evaluated = true;
                 if (jvmVar.typeName !== undefined) {
                     if (_primitiveBoxedTypes.includes(jvmVar.typeName)) {
-                        evaluated = await this.evalNonCharPrimitiveBoxedValue(jvmVar);
+                        evaluated = await this.evalJvmVariable(jvmVar);
                     } else if (_charBoxedTypes.includes(jvmVar.typeName)) {
                         evaluated = await this.evalCharValue(jvmVar, true);
                     }
@@ -1460,6 +1464,31 @@ export class JvmShellRuntime extends EventEmitter {
         return await this.dumpVariableOrLocals(parserData);
     }
 
+    private async dumpThis(jvmStack: IJvmStack) {
+        // add new scope to root
+        const jvmThis: IJvmVariable = {
+            name: 'this',
+            varId: this._vars.size + 1,
+        };
+        this._vars.set(jvmThis.varId, jvmThis);
+        const parserData: IParserData = {
+            state: ParserState.normal,
+            currentVar: jvmThis,
+        };
+        return await this.evalJvmVariable(jvmThis).
+            then((isEvaluated) => {
+                if (isEvaluated && jvmThis.value) {
+                    return this.dumpVariableOrLocals(parserData)
+                }
+                return false;
+            }).then((isDumped) => {
+                if (isDumped) {
+                    jvmStack.scopes.push(jvmThis);
+                }
+                return isDumped;
+            });
+    }
+
     private async getLocals(jvmStack: IJvmStack) {
         const rootScope: IJvmVariable = {
             name: '',
@@ -1475,7 +1504,6 @@ export class JvmShellRuntime extends EventEmitter {
             then((isOk) => {
                 if (isOk) {
                     jvmStack.scopes = rootScope.vars || [];
-                    this.correctVariables(jvmStack.scopes);
                 }
                 return isOk;
             });
@@ -1585,7 +1613,7 @@ export class JvmShellRuntime extends EventEmitter {
         return retValue;
     }
 
-    private async evalNonCharPrimitiveBoxedValue(jvmVar: IJvmVariable) {
+    private async evalJvmVariable(jvmVar: IJvmVariable) {
         if (!this.isDataCommandAllowed()) {
             return false;
         }

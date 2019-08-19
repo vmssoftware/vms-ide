@@ -445,7 +445,7 @@ export class JvmDebugSession extends LoggingDebugSession {
             if (scopes) {
                 for (const scope of scopes) {
                     response.body.scopes.push({
-                        name: scope.name,
+                        name: scope.name + (scope.value ? `(${scope.value})` : ""),
                         variablesReference: this._variableHandles.create(scope),
                         expensive: scope.vars !== undefined && scope.vars.length > 8
                     });
