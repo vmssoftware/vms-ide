@@ -72,7 +72,24 @@ export function createLogFunction(channelName: string): LogFunction {
     }
 
     return function logVsCode(type: LogType, message: LogResult, show?: boolean, addStackLevel?: number ) {
+        // show messages to user
+        if (show) {
+            if (type === LogType.error) {
+                window.showErrorMessage(message());
+            } else if (type === LogType.warning) {
+                window.showInformationMessage(message());
+            }
+        }
         switch (type) {
+            case LogType.error:
+            case LogType.warning:
+                // pass to channel
+            case LogType.information:
+                channel.appendLine(message());
+                if (show) {
+                    channel.show();
+                }
+                // pass to file
             case LogType.debug:
                 if (debug) {
                     // user chose do not ignore debug messages
@@ -92,12 +109,6 @@ export function createLogFunction(channelName: string): LogFunction {
                         fnDebugOut(place);
                     }
                     fnDebugOut(message());
-                }
-                break;
-            default:
-                channel.appendLine(message());
-                if (show) {
-                    channel.show();
                 }
                 break;
         }

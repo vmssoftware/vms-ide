@@ -136,7 +136,7 @@ export class JvmDebugSession extends LoggingDebugSession {
         /** The debug adapter supports stepping back via the 'stepBack' and 'reverseContinue' requests. */
         supportsStepBack: false,
         /** The debug adapter supports setting a variable to a value. */
-        supportsSetVariable: false,
+        supportsSetVariable: true,
         /** The debug adapter supports restarting a frame. */
         supportsRestartFrame: false,
         /** The debug adapter supports the 'gotoTargets' request. */
@@ -184,7 +184,7 @@ export class JvmDebugSession extends LoggingDebugSession {
     protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
 
         // build and return the capabilities of this debug adapter:
-        response.body = response.body || this._capabilities;
+        response.body = Object.assign(response.body, this._capabilities);
 
         this.sendResponse(response);
 
@@ -453,7 +453,19 @@ export class JvmDebugSession extends LoggingDebugSession {
             }    
             this.sendResponse(response);    
         });
+    }
 
+    protected async setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments) {
+        const parent = this._variableHandles.get(args.variablesReference);
+
+        response.success = await this._runtime.requestSetVariable(parent, args.name, args.value);
+
+        if (response.success) {
+            response.body = {
+                value: args.value,
+            }
+        }
+        this.sendResponse(response);
     }
 
     protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments) {
@@ -469,7 +481,6 @@ export class JvmDebugSession extends LoggingDebugSession {
                 const innerVar: DebugProtocol.Variable = {
                     name: variable.name,
                     value: variable.value? variable.value : "",
-                    presentationHint: { kind: 'rawString' },
                     variablesReference: 0,
                 };
                 if (variable.type !== undefined) {
