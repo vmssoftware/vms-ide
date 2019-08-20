@@ -130,7 +130,7 @@ export class JvmDebugSession extends LoggingDebugSession {
         /** The debug adapter supports breakpoints that break execution after a specified number of hits. */
         supportsHitConditionalBreakpoints: false,
         /** The debug adapter supports a (side effect free) evaluate request for data hovers. */
-        supportsEvaluateForHovers: false,
+        supportsEvaluateForHovers: true,
         /** Available filters or options for the setExceptionBreakpoints request. */
         exceptionBreakpointFilters: undefined,
         /** The debug adapter supports stepping back via the 'stepBack' and 'reverseContinue' requests. */
@@ -160,7 +160,7 @@ export class JvmDebugSession extends LoggingDebugSession {
         /** The debug adapter supports the 'exceptionInfo' request. */
         supportsExceptionInfoRequest: false,
         /** The debug adapter supports the 'terminateDebuggee' attribute on the 'disconnect' request. */
-        supportTerminateDebuggee: true,
+        supportTerminateDebuggee: false,
         /** The debug adapter supports the delayed loading of parts of the stack, which requires that both the 'startFrame' and 'levels' arguments and the 'totalFrames' result of the 'StackTrace' request are supported. */
         supportsDelayedStackTraceLoading: true,
         /** The debug adapter supports the 'loadedSources' request. */
@@ -210,6 +210,7 @@ export class JvmDebugSession extends LoggingDebugSession {
         // make sure to 'Stop' the buffered logging if 'trace' is not set
         logger.setup(args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false);
 
+        response.success = true;
         this.sendResponse(response);
 
         this._scope = args.scope;
@@ -319,13 +320,17 @@ export class JvmDebugSession extends LoggingDebugSession {
     protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void {
         this._jvmShellServer.dispose();
         this._jdbShellServer.dispose();
+        response.success = true;
         this.sendResponse(response);
+        this.sendEvent(new TerminatedEvent());
     }
 
     protected terminateRequest(response: DebugProtocol.TerminateResponse, args: DebugProtocol.TerminateArguments): void {
         this._jvmShellServer.dispose();
         this._jdbShellServer.dispose();
+        response.success = true;
         this.sendResponse(response);
+        this.sendEvent(new TerminatedEvent());
     }
 
     protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
@@ -376,6 +381,7 @@ export class JvmDebugSession extends LoggingDebugSession {
             if (args.source.path) {
                 this._breakPoints.set(args.source.path, newIds);
             }
+            response.success = true;
             this.sendResponse(response);
             this._cmdLock.release();
         });
@@ -400,6 +406,7 @@ export class JvmDebugSession extends LoggingDebugSession {
                 threads: respThreads
             };
             this._variableHandles.reset();
+            response.success = true;
             this.sendResponse(response);
         });
     }
@@ -432,6 +439,7 @@ export class JvmDebugSession extends LoggingDebugSession {
                     new StackFrame(f.frameId, f.place, sources[i], this.convertDebuggerLineToClient(f.line))),
                 totalFrames: stk.totalFrames
             };
+            response.success = true;
             this.sendResponse(response);
         });
     }
@@ -450,7 +458,8 @@ export class JvmDebugSession extends LoggingDebugSession {
                         expensive: scope.vars !== undefined && scope.vars.length > 8
                     });
                 }
-            }    
+            }
+            response.success = true;
             this.sendResponse(response);    
         });
     }
@@ -499,6 +508,7 @@ export class JvmDebugSession extends LoggingDebugSession {
         response.body = {
             variables: variables
         };
+        response.success = true;
         this.sendResponse(response);
     }
 
@@ -531,18 +541,17 @@ export class JvmDebugSession extends LoggingDebugSession {
     }
 
     protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments) {
-
-        let reply: string | undefined = undefined;
-
-        if (args.context === 'repl') {
-            await this._runtime.requestEvaluate(args.expression);
-            reply = "";
+        switch (args.context) {
+            case 'repl':
+                response.success = await this._runtime.requestEvaluate(args.expression);
+                response.body = {
+                    result: ``,
+                    variablesReference: 0
+                };
+                break;
+            case 'hover':
+                break;
         }
-
-        response.body = {
-            result: reply ? reply : ``,
-            variablesReference: 0
-        };
         this.sendResponse(response);
     }
 
