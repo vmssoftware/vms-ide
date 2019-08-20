@@ -1,4 +1,4 @@
-// Generated from c:\Users\akulikovskiy\ts_projects\lang_ext\pascal-vms\src\parser\pascal.g4 by ANTLR 4.7.1
+// Generated from c:\Users\akulikovskiy\ts_projects\vms_ide\vms-ide\src\vms_pascal\parser\pascal.g4 by ANTLR 4.7.1
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;

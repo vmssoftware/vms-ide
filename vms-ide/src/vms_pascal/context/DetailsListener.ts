@@ -28,6 +28,7 @@ import {
     ProgramHeadingContext,
     InheritContext,
     IdentifierContext,
+    AttributeDefContext,
     IdentifierListContext,
     BlockContext,
     ProcedureAndFunctionDeclarationPartContext,
@@ -111,6 +112,20 @@ export class DetailsListener implements pascalListener
     }
 
     exitIdentifier(ctx: IdentifierContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
+    enterAttributeDef(ctx: AttributeDefContext)
+    {
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(LabelSymbol, undefined, ctx.attribute().text);
+        this.currentSymbol.context = ctx.attribute();
+    }
+
+    exitAttributeDef(ctx: AttributeDefContext) 
     {
         if (this.currentSymbol) 
         {
