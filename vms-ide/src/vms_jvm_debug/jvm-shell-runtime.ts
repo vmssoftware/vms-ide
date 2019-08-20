@@ -5,7 +5,6 @@ import { ICmdQueue, ListenerResponse } from "./communication";
 import { RgxStrFromStr } from "../common/rgx-from-str";
 import { DropCommand } from "./drop";
 import { setTimeout } from "timers";
-import { stringify } from "querystring";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -792,7 +791,8 @@ export class JvmShellRuntime extends EventEmitter {
         if (acquired) {
             this._logFn(LogType.debug, () => `CMD locked "${command}"`);
             if (this.isDataCommandAllowed()) {
-                const postCmd = `eval ${expression}`;
+                //const postCmd = `eval ${expression}`;
+                const postCmd = `${expression}`;
                 const retLines: string[] = [];
                 success = await this.postCommandAndFetchAllLines(postCmd, retLines);
                 for (let i = 1; i < retLines.length - 1; ++i) {

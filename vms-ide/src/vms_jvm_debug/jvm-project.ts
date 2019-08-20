@@ -1,7 +1,11 @@
+import * as nls from "vscode-nls";
 import * as vscode from 'vscode';
 import fs from "fs-extra";
 import path from "path";
 import { LogFunction, LogType } from '../common/main';
+
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
 
 export interface IClassInfo {
     className: string;
@@ -28,6 +32,8 @@ export class JvmProject {
 
     public logFn: LogFunction;
 
+    private mustBeLoaded = true;
+
     constructor(private scope: string | undefined, doWatch: boolean, logFn?: LogFunction) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
@@ -43,7 +49,9 @@ export class JvmProject {
                 }
                 this.watcher.onDidChange(reLoad);
                 this.watcher.onDidCreate(reLoad);
-                this.watcher.onDidDelete(reLoad);
+                this.watcher.onDidDelete(() => {
+                    this.collection = new Map<string, IFileInfo>();
+                });
             }
         }
     }
@@ -52,6 +60,15 @@ export class JvmProject {
         if (this.watcher) {
             this.watcher.dispose();
             this.watcher = undefined;
+        }
+    }
+
+    private testIfLost() {
+        if (this.mustBeLoaded && this.collection.size === 0) {
+            this.mustBeLoaded = false;
+            this.logFn(LogType.warning, 
+                () => localize("javainfo.lost", "Java classes information is lost for [{0}]", String(this.scope))
+                , true);
         }
     }
 
@@ -69,6 +86,7 @@ export class JvmProject {
             };
             this.collection.set(fileName, fileInfo);
         }
+        this.testIfLost();
         return fileInfo;
     }
 
@@ -85,6 +103,7 @@ export class JvmProject {
                 }
             }
         }
+        this.testIfLost();
         return undefined;
     }
 
@@ -113,6 +132,7 @@ export class JvmProject {
                 }
             }
         }
+        this.testIfLost();
         return undefined;
     }
 
@@ -125,6 +145,7 @@ export class JvmProject {
                 }
             }
         }
+        this.testIfLost();
         return names;
     }
 
@@ -136,6 +157,7 @@ export class JvmProject {
                 return fileName;
             }
         }
+        this.testIfLost();
         return undefined;
     }
 
@@ -207,6 +229,7 @@ export class JvmProject {
                         }
                     }
                 }
+                this.mustBeLoaded = true;
                 return true;
             }
         }
