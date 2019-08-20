@@ -32,7 +32,7 @@ export async function activate(context: ExtensionContext) {
         return undefined;
     }
 
-    logFn = configApi.createLogFunction("VMS-IDE Build");
+    logFn = configApi.createLogFunction("VMS-IDE");
 
     ProjectState.acquire().setLogFn(logFn);
 

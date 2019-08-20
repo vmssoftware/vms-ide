@@ -27,7 +27,7 @@ export class ConfigApi implements IConfigApi {
         }
         if (workspaceFolder === undefined) {
             retConfigHelper = new VSCConfigHelper(undefined, extension, this.logFn);
-            this.logFn(LogType.information, () => localize("message.created", "{0} created", "VSC"));
+            this.logFn(LogType.debug, () => localize("message.created", "{0} created", "VSC"));
         } else {
             // Note: each folder in workspace have to define "using" field in "vmssoftware.config-helper.settings" section of VS Code configuration
             const config = vscode.workspace.getConfiguration("vmssoftware.config-helper.settings", workspaceFolder.uri);
@@ -35,15 +35,15 @@ export class ConfigApi implements IConfigApi {
             switch (using) {
                 case "FS":
                     retConfigHelper = new FSConfigHelper(workspaceFolder, extension, this.logFn);
-                    this.logFn(LogType.information, () => localize("message.created", "{0} created", "FS"));
+                    this.logFn(LogType.debug, () => localize("message.created", "{0} created", "FS"));
                     break;
                 case "VFS":
                     retConfigHelper = new VFSConfigHelper(workspaceFolder, extension, this.logFn);
-                    this.logFn(LogType.information, () => localize("message.created", "{0} created", "VFS"));
+                    this.logFn(LogType.debug, () => localize("message.created", "{0} created", "VFS"));
                     break;
                 default:
                     retConfigHelper = new VSCConfigHelper(workspaceFolder, extension, this.logFn);
-                    this.logFn(LogType.information, () => localize("message.created", "{0} created", "VSC"));
+                    this.logFn(LogType.debug, () => localize("message.created", "{0} created", "VSC"));
                     break;
             }
         }

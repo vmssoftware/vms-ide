@@ -14,7 +14,7 @@ export async function activate(context: vscode.ExtensionContext) {
         return undefined;
     }
 
-    const sshHelper = new SshHelper(configApi.createLogFunction("VMS-IDE SSH"));
+    const sshHelper = new SshHelper(configApi.createLogFunction("VMS-IDE"));
 
     setupWatchers(sshHelper);
 
