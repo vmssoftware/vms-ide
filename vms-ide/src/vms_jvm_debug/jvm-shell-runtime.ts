@@ -326,8 +326,9 @@ const _rgxParse = {
 };
 
 const _rgxFix = {
-    rgxUnicode : /\\u[\da-f]{4}/i,
-    rgxNumber : /([-+])?\d+(\.\d+)?/i,
+    rgxUnicode : /^\s*\\u[\da-f]{4}\s*$/i,
+    rgxEight : /^\s*\\[\d]{1,3}\s*$/i,
+    rgxNumber : /^\s*([-+])?(\d+(\.\d+)?)\s*$/i,
     rgxEsc : /([^\\]*)\\(.)/,
     rgxEmptyStr: /\s*\+\s*\"\"\s*/g,
 };
@@ -357,11 +358,18 @@ export function convertCodeToJavaEscaped(code: number) {
     return String.fromCharCode(code);
 }
 
-export function convertCodeToJavaCharacter(code: number) {
+export function convertCodeToJavaCharacterForString(code: number) {
     if (code < 0x20 || code >= 0x7f || code === 0x22 ) {
         return `"+java.lang.Character.valueOf(${code})+"`;
     }
     return String.fromCharCode(code);
+}
+
+export function convertCodeToJavaCharacterForChar(code: number) {
+    if (code < 0x20 || code >= 0x7f || code === 0x27 ) {
+        return `java.lang.Character.valueOf(${code}).value`;
+    }
+    return "'" + String.fromCharCode(code) + "'";
 }
 
 export function convertStringToJavaEscaped(str: string) {
@@ -462,7 +470,7 @@ export function makeStringReadyToSet(str: string) {
     let result = "\"";
     for (let i = 0; i < str.length; ++i) {
         const code = str.charCodeAt(i);
-        result += convertCodeToJavaCharacter(code);
+        result += convertCodeToJavaCharacterForString(code);
     }
     return (result + "\"").replace(_rgxFix.rgxEmptyStr, "");
 }
@@ -763,24 +771,26 @@ export class JvmShellRuntime extends EventEmitter {
 
     public async requestSetVariable(parent: IJvmVariable, name: string, value: string) {
         const command = 'requestSetVariable';
+        let success = false;
         this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
         const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
         if (acquired) {
-            let retCode = true;
             this._logFn(LogType.debug, () => `CMD locked "${command}"`);
             if (this.isDataCommandAllowed()) {
                 if (parent.vars) {
                     const jvmVar = parent.vars.find((child) => child.name === name);
                     if (jvmVar) {
-                        retCode = await this.setVariable(jvmVar, value);
+                        success = await this.setVariable(jvmVar, value);
+                        if (success && jvmVar.value !== undefined) {
+                            value = jvmVar.value;
+                        }
                     }
                 }
             }
             this.cmdLock.release();
             this._logFn(LogType.debug, () => `CMD released "${command}"`);
-            return retCode;
         }
-        return false;
+        return { success, value };
     }
 
     /**
@@ -1778,46 +1788,54 @@ export class JvmShellRuntime extends EventEmitter {
         return retValue;
     }
 
-    private fixSetValue(jvmVar: IJvmVariable, value: string) : string | undefined {
+    private fixSetValue(jvmVar: IJvmVariable, value: string) {
         if (jvmVar.arraySize !== undefined) {
             return undefined;
         }
+        let valueToSet = "";
+        let valueToPost = "";
         switch(jvmVar.type) {
             case JvmVarType.boolean:
                 switch(value.toLowerCase()) {
                     case 'true':
                     case 'false':
+                        valueToSet = value.toLowerCase();
+                        valueToPost = valueToSet;
                         break;
                     default:
                         return undefined;
                 }
                 break;
             case JvmVarType.char:
-                if (value.length === 1){
-                    value = convertStringToJavaEscaped(value);
-                } else if (!value.match(_rgxFix.rgxUnicode)) {
+                valueToSet = unescapeJavaString(value);
+                if (valueToSet.length !== 1) {
                     return undefined;
                 }
-                value = `'${value}'`;
+                const code = valueToSet.charCodeAt(0);
+                valueToPost = convertCodeToJavaCharacterForChar(code);
+                valueToSet = convertCodeToJavaEscaped(code);
                 break;
             case JvmVarType.number:
                 const numberMatch = value.match(_rgxFix.rgxNumber);
                 if (!numberMatch) {
                     return undefined;
                 }
-                if (numberMatch[1]) {
-                    value = "0" + value;
+                valueToSet = numberMatch[2];
+                valueToPost = valueToSet;
+                if (numberMatch[1] === '-') {
+                    valueToSet = '-' + valueToSet;
+                    valueToPost = "0" + valueToSet;
                 }
                 break;
             case JvmVarType.object:
             case JvmVarType.scope:
                 return undefined;
             case JvmVarType.string:
-                const unEscapedValue = unescapeJavaString(value);
-                value = makeStringReadyToSet(unEscapedValue);
+                valueToSet = unescapeJavaString(value);
+                valueToPost = makeStringReadyToSet(valueToSet);
                 break;
         }
-        return value;
+        return {valueToSet, valueToPost};
     }
 
     private async postCommandAndFetchAllLines(command: string, retLines: string[]) {
@@ -1863,14 +1881,14 @@ export class JvmShellRuntime extends EventEmitter {
         if (!this.isDataCommandAllowed()) {
             return false;
         }
-        const setValue = this.fixSetValue(jvmVar, value);
-        if (!setValue) {
+        const fix = this.fixSetValue(jvmVar, value);
+        if (!fix) {
             return false;
         }
+        let   success = false;
         const varFullName = this.getVarFullName(jvmVar);
-        const expression = `${varFullName} = ${setValue}`;
+        const expression = `${varFullName} = ${fix.valueToPost}`;
         const command = `set ${expression}`;
-        let   retValue = false;
         const maxVarNameLength = 32;
         const resultStart = varFullName.length < maxVarNameLength? ` ${varFullName} =` : ` ${varFullName.substr(0, maxVarNameLength)}`;
         const parserData: ISetVariableParser = {
@@ -1879,14 +1897,14 @@ export class JvmShellRuntime extends EventEmitter {
         };
         if (jvmVar.type === JvmVarType.string) {
             const lines: string[] = [];
-            retValue = await this.postCommandAndFetchAllLines(command, lines);
-            if (retValue) {
+            success = await this.postCommandAndFetchAllLines(command, lines);
+            if (success) {
                 for (const line of lines) {
                     this.setValueResultParser(line, parserData);
                 }
             }
         } else {
-            retValue = await this._queue.postCommand(command, (cmd, line) => {
+            success = await this._queue.postCommand(command, (cmd, line) => {
                 this._logFn(LogType.debug, () => `set value: ${line?line.trimRight():""}`);
                 if (cmd === command) {
                     if (line === undefined) {
@@ -1900,9 +1918,12 @@ export class JvmShellRuntime extends EventEmitter {
         }
         if (parserData.error) {
             this._logFn(LogType.warning, () => String(parserData.error), true);
-            return false;
+            success = false;
         }
-        return retValue;
+        if (success) {
+            jvmVar.value = fix.valueToSet;
+        }
+        return success;
     }
 
     /**

@@ -458,13 +458,11 @@ export class JvmDebugSession extends LoggingDebugSession {
     protected async setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments) {
         const parent = this._variableHandles.get(args.variablesReference);
 
-        response.success = await this._runtime.requestSetVariable(parent, args.name, args.value);
+        response.body = {
+            value: args.value,
+        };
+        ({"success": response.success, "value": response.body.value} = await this._runtime.requestSetVariable(parent, args.name, args.value));
 
-        if (response.success) {
-            response.body = {
-                value: args.value,
-            }
-        }
         this.sendResponse(response);
     }
 
