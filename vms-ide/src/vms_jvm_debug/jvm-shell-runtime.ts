@@ -520,15 +520,6 @@ export class JvmShellRuntime extends EventEmitter {
     // public
     /******************************************************************************************/
 
-    /**
-     * Do any command. TODO: REMOVE
-     * @param command 
-     */
-    public async command(command: string) {
-        this._logFn(LogType.debug, () => `POSTING ${command}`);
-		this._queue.postCommand(command, undefined);
-	}
-
 	/**
 	 * Start executing the given program.
 	 */
@@ -791,6 +782,30 @@ export class JvmShellRuntime extends EventEmitter {
             this._logFn(LogType.debug, () => `CMD released "${command}"`);
         }
         return { success, value };
+    }
+
+    public async requestEvaluate(expression: string) {
+        const command = 'requestEvaluate';
+        let success = false;
+        this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
+        const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
+        if (acquired) {
+            this._logFn(LogType.debug, () => `CMD locked "${command}"`);
+            if (this.isDataCommandAllowed()) {
+                const postCmd = `eval ${expression}`;
+                const retLines: string[] = [];
+                success = await this.postCommandAndFetchAllLines(postCmd, retLines);
+                for (let i = 1; i < retLines.length - 1; ++i) {
+                    const line = retLines[i].trim();
+                    if (line) {
+                        this.sendEvent(JvmRuntimeEvents.output, retLines[i].trim());
+                    }
+                }
+            }
+            this.cmdLock.release();
+            this._logFn(LogType.debug, () => `CMD released "${command}"`);
+        }
+        return success;
     }
 
     /**

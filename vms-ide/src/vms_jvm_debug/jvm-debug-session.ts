@@ -530,12 +530,12 @@ export class JvmDebugSession extends LoggingDebugSession {
         this.sendResponse(response);
     }
 
-    protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
+    protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments) {
 
         let reply: string | undefined = undefined;
 
         if (args.context === 'repl') {
-            this._runtime.command(args.expression);
+            await this._runtime.requestEvaluate(args.expression);
             reply = "";
         }
 
