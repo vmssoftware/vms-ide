@@ -88,19 +88,19 @@ export class Facade
     // Mapping file names to SourceContext instances.
     private filePaths: string[];
     private sourceContexts: Map<string, ContextEntry> = new Map<string, ContextEntry>();
-    private sourceClrContexts: Map<string, ContextEntry> = new Map<string, ContextEntry>();
+    private sourceReferenceContexts: Map<string, ContextEntry> = new Map<string, ContextEntry>();
 
 
     constructor(files: string[]) 
     {
         this.filePaths = files;
+
+        this.createDependencys();       
     }
 
     public attach(fileName: string, source?: string) 
     {
         const context = this.getContext(fileName, source);
-        // let dependencies: Set<SourceContext> = new Set();
-        // this.pushDependencyFiles(this.sourceContexts.get(fileName)!, dependencies);
 
         return context;
     }
@@ -108,7 +108,7 @@ export class Facade
     public detach(fileName: string) 
     {
         // just remove
-        this.sourceContexts.delete(fileName);
+        //this.sourceContexts.delete(fileName);
     }
 
     public getContext(fileName: string, source?: string): SourceContext 
@@ -117,15 +117,15 @@ export class Facade
 
         if (!contextEntry) 
         {
-            return this.loadGrammar(fileName, source);
+            return this.loadGrammar(this.sourceContexts, true, fileName, source);
         }
 
         return contextEntry.context;
     }
 
-    public loadGrammar(fileName: string, source?: string): SourceContext 
+    public loadGrammar(list: Map<string, ContextEntry>, addToReferences: boolean, fileName: string, source?: string): SourceContext 
     {
-        let contextEntry = this.sourceContexts.get(fileName);
+        let contextEntry = list.get(fileName);
 
         if (!contextEntry) 
         {
@@ -143,58 +143,65 @@ export class Facade
             }
 
             let context = new SourceContext(fileName);
-            contextEntry = { context: context, refCount: 0, dependencies: [], grammar: fileName  };
-            this.sourceContexts.set(fileName, contextEntry);
+            contextEntry = { context: context, refCount: 0, dependencies: [], grammar: fileName };
+            list.set(fileName, contextEntry);            
 
             // Do an initial parse run and load all dependencies of this context
             // and pass their references to this context.
             context.setText(source);
-            this.parseGrammar(contextEntry);
+            
+            if(addToReferences)
+            {
+                this.parseGrammar(contextEntry);
+            }
+            else
+            {
+                contextEntry.dependencies = [];
+                contextEntry.context.parse();
+            }
         }
 
         contextEntry.refCount++;
         return contextEntry.context;
     }
 
-    public loadGrammarClr(fileName: string, source?: string): SourceContext 
+    private createDependencys()
     {
-        let contextEntry = this.sourceClrContexts.get(fileName);
-
-        if (!contextEntry) 
+        for (let dep of this.filePaths)
         {
-            if (!source) 
+            this.loadGrammar(this.sourceReferenceContexts, false, dep);
+        }
+    }
+
+    private addDependencys(contextEntry: ContextEntry)
+    {
+        for (let depPath of this.filePaths)
+        {
+            if(contextEntry.context.fileName !== depPath)
             {
-                try 
+                let depContext = this.loadGrammar(this.sourceReferenceContexts, false, depPath);
+
+                if (depContext)
                 {
-                    fs.statSync(fileName);
-                    source = fs.readFileSync(fileName, 'utf8');
-                } 
-                catch (e) 
-                {
-                    source = "";
+                    contextEntry.dependencies.push(depPath);
+                    contextEntry.context.addAsReferenceTo(depContext);
                 }
             }
+        }
+    }
 
-            let context = new SourceContext(fileName);
-            contextEntry = { context: context, refCount: 0, dependencies: [], grammar: fileName  };
-            //this.sourceContexts.set(fileName, contextEntry);
-            this.sourceClrContexts.set(fileName, contextEntry);            
+    private reparseDependency(fileName: string)
+    {
+        let contextEntry = this.sourceReferenceContexts.get(fileName);
 
-            // Do an initial parse run and load all dependencies of this context
-            // and pass their references to this context.
-            context.setText(source);
-            //this.parseGrammar(fileName, contextEntry, loadDep);
-            contextEntry.dependencies = [];
+        if (contextEntry) 
+        {
             contextEntry.context.parse();
         }
-
-        contextEntry.refCount++;
-        return contextEntry.context;
     }
 
     private parseGrammar(contextEntry: ContextEntry) 
     {
-        let oldDependencies = contextEntry.dependencies;
         contextEntry.dependencies = [];
         let newDependencies = contextEntry.context.parse();//files names
 
@@ -208,65 +215,8 @@ export class Facade
         //     }
         // }
 
-        for (let dep of this.filePaths)
-        {
-            if(contextEntry.context.fileName !== dep)
-            {
-                let depContext = this.loadPathDependency(contextEntry, dep);
-
-                if (depContext)
-                {
-                    depContext.parse();
-                    contextEntry.context.addAsReferenceTo(depContext);
-                }
-            }
-        }
-
-        // Release all old dependencies. This will only unload grammars which have
-        // not been ref-counted by the above dependency loading (or which are not used by other
-        // grammars).
-        for (let dep of oldDependencies)
-        {
-            this.releaseGrammar(dep);
-        }
-    }
-
-    private loadDependencys(contextEntry: ContextEntry)//!!!load without recurce!!! 
-    {
-        let oldDependencies = contextEntry.dependencies;
-        contextEntry.dependencies = [];
-
-        // for (let dep of newDependencies) 
-        // {
-        //     let depContext = this.loadDependency(contextEntry, dep);
-
-        //     if (depContext)
-        //     {
-        //         contextEntry.context.addAsReferenceTo(depContext);
-        //     }
-        // }
-
-        for (let dep of this.filePaths)
-        {
-            if(contextEntry.context.fileName !== dep)
-            {
-                let depContext = this.loadPathDependency(contextEntry, dep);
-
-                if (depContext)
-                {
-                    depContext.parse();
-                    contextEntry.context.addAsReferenceTo(depContext);
-                }
-            }
-        }
-
-        // Release all old dependencies. This will only unload grammars which have
-        // not been ref-counted by the above dependency loading (or which are not used by other
-        // grammars).
-        for (let dep of oldDependencies)
-        {
-            this.releaseGrammar(dep);
-        }
+        this.reparseDependency(contextEntry.context.fileName);
+        this.addDependencys(contextEntry);
     }
 
     public setText(fileName: string, source: string) 
@@ -276,6 +226,13 @@ export class Facade
         if (contextEntry) 
         {
             contextEntry.context.setText(source);
+        }
+
+        let contextReferenceEntry = this.sourceReferenceContexts.get(fileName);
+
+        if (contextReferenceEntry) 
+        {
+            contextReferenceEntry.context.setText(source);
         }
     }
 
@@ -321,81 +278,38 @@ export class Facade
         return context.getReferenceCount(symbol);
     }
 
-    private loadDependency(contextEntry: ContextEntry, depName: string): SourceContext | undefined 
-    {
-        // The given import dir is used to locate the dependency (either relative to the base path or via an absolute path).
-        // If we cannot find the grammar file that way we try the base folder.
-        let basePath = path.dirname(contextEntry.grammar);
-        let fullPath = basePath;//path.isAbsolute(this.importDir) ? this.importDir : path.join(basePath, this.importDir);
+    // private loadDependency(contextEntry: ContextEntry, depName: string): SourceContext | undefined 
+    // {
+    //     // The given import dir is used to locate the dependency (either relative to the base path or via an absolute path).
+    //     // If we cannot find the grammar file that way we try the base folder.
+    //     let basePath = path.dirname(contextEntry.grammar);
+    //     let fullPath = basePath;//path.isAbsolute(this.importDir) ? this.importDir : path.join(basePath, this.importDir);
 
-        try 
-        {
-            let depPath = fullPath + "\\" + depName + ".pas";
-            fs.accessSync(depPath, fs.constants.R_OK);
-            // Target path can be read. Now check the target file.
-            contextEntry.dependencies.push(depPath);
-            return this.loadGrammar(depPath);
-        } 
-        catch (e) 
-        {}
+    //     try 
+    //     {
+    //         let depPath = fullPath + "\\" + depName + ".pas";
+    //         fs.accessSync(depPath, fs.constants.R_OK);
+    //         // Target path can be read. Now check the target file.
+    //         contextEntry.dependencies.push(depPath);
+    //         return this.loadGrammar(depPath);
+    //     } 
+    //     catch (e) 
+    //     {}
 
-        // Couldn't find it in the import folder. Use the base then.
-        try 
-        {
-            let depPath = basePath + "\\" + depName + ".pas";
-            fs.statSync(depPath);
-            contextEntry.dependencies.push(depPath);
-            return this.loadGrammar(depPath);
-        } 
-        catch (e) 
-        {}
+    //     // Couldn't find it in the import folder. Use the base then.
+    //     try 
+    //     {
+    //         let depPath = basePath + "\\" + depName + ".pas";
+    //         fs.statSync(depPath);
+    //         contextEntry.dependencies.push(depPath);
+    //         return this.loadGrammar(depPath);
+    //     } 
+    //     catch (e) 
+    //     {}
 
-        // Ignore the dependency if we cannot find the source file for it.
-        return undefined;
-    }
-
-    private loadPathDependency(contextEntry: ContextEntry, dependencyPath: string): SourceContext | undefined 
-    {
-        try 
-        {
-            let depPath = dependencyPath;
-            fs.accessSync(depPath, fs.constants.R_OK);
-            // Target path can be read. Now check the target file.
-            contextEntry.dependencies.push(depPath);
-            return this.loadGrammar(depPath);
-        } 
-        catch (e) 
-        {}
-
-        // Couldn't find it in the import folder. Use the base then.
-        try 
-        {
-            let depPath = dependencyPath;
-            fs.statSync(depPath);
-            contextEntry.dependencies.push(depPath);
-            return this.loadGrammar(depPath);
-        } 
-        catch (e) 
-        {}
-
-        // Ignore the dependency if we cannot find the source file for it.
-        return undefined;
-    }
-
-    private pushDependencyFiles(entry: ContextEntry, contexts: Set<SourceContext>) 
-    {
-        // Using a set for the context list here, to automatically exclude duplicates.
-        for (let dep of entry.dependencies) 
-        {
-            let depEntry = this.sourceContexts.get(dep);
-
-            if (depEntry) 
-            {
-                this.pushDependencyFiles(depEntry, contexts);
-                contexts.add(depEntry.context);
-            }
-        }
-    }
+    //     // Ignore the dependency if we cannot find the source file for it.
+    //     return undefined;
+    // }
 
     /**
      * Triggers a parse run for the given file name. This grammar must have been loaded before.
@@ -407,6 +321,10 @@ export class Facade
         if (contextEntry) 
         {
             this.parseGrammar(contextEntry);
+        }
+        else
+        {
+            this.reparseDependency(fileName);
         }
     }
 

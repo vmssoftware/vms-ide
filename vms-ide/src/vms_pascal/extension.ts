@@ -159,19 +159,20 @@ export async function activate(context: ExtensionContext)
 
     window.onDidChangeActiveTextEditor((editor?: TextEditor) => 
     {
-        if(editor)
-        {
-            if (editor.document.languageId === Pascal.language && editor.document.uri.scheme === Pascal.scheme) 
-            {
-                backend.setText(editor.document.fileName, editor.document.getText());
-                backend.reparse(editor.document.fileName);
-            }
-        }
+        // if(editor)
+        // {
+        //     if (editor.document.languageId === Pascal.language && editor.document.uri.scheme === Pascal.scheme) 
+        //     {
+        //         backend.setText(editor.document.fileName, editor.document.getText());
+        //         backend.reparse(editor.document.fileName);
+        //     }
+        // }
     });
 
     function processDiagnostic(document: TextDocument) 
     {
         let diagnostics = [];
+        backend.setText(document.fileName, document.getText());
         let entries = backend.getDiagnostics(document.fileName);
 
         for (let entry of entries) 
