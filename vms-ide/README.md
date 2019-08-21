@@ -8,7 +8,7 @@
 * **Debugger** for OpenVMS projects.
 * **Syntax highlighting** for *Pascal*, *MMS*, *CLD*, and *MSG* files.
 * **Code autocompletion** for *MSG* and *CLD* files.
-* Supported languages: **C**, **C++**, **Fortran**, **Cobol**, **Pascal**, **Basic**, **Bliss**.
+* Supported languages: **C**, **C++**, **Fortran**, **Cobol**, **Pascal**, **Basic**, **Bliss**, **Java**, **Kotlin**, **Scala**.
 
 ## Getting started
 
