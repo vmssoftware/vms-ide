@@ -205,6 +205,16 @@ export class JvmDebugSession extends LoggingDebugSession {
         this._configurationDone.release();
     }
 
+    private userOutput(line: string) {
+        const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stdout');
+        this.sendEvent(e);
+    }
+
+    private userErrorOutput(line: string) {
+        const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stderr');
+        this.sendEvent(e);
+    }
+
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: IJvmLaunchRequestArguments) {
 
         // make sure to 'Stop' the buffered logging if 'trace' is not set
@@ -262,8 +272,13 @@ export class JvmDebugSession extends LoggingDebugSession {
                         }
                         args.port = String(listeningPort);
                         this._jvmQueue.onUnexpectedLine((line) => {
-                            if (line) {
-                                this._logFn(LogType.information, () => String(line));
+                            if (line) { // && !line.includes('\0')) {
+                                this.userOutput(line);
+                            }
+                        });
+                        this._jvmQueue.onErrorLine((line) => {
+                            if (line) { // && !line.includes('\0')) {
+                                this.userErrorOutput(line);
                             }
                         });
                         return this._runtime.start(args);
@@ -543,7 +558,11 @@ export class JvmDebugSession extends LoggingDebugSession {
     protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments) {
         switch (args.context) {
             case 'repl':
-                response.success = await this._runtime.requestEvaluate(args.expression);
+                if (this._runtime.isDataCommandAllowed()) {
+                    response.success = await this._runtime.requestEvaluate(args.expression);
+                } else if (this._runtime.isRunning()) {
+                    this._jvmQueue.postCommand(args.expression);
+                }
                 response.body = {
                     result: ``,
                     variablesReference: 0

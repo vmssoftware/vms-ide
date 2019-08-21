@@ -44,6 +44,7 @@ export class SshShell extends SshClient implements ISshShell {
     private shellExit?: IUnSubscribe;
     private waitOperation = new Lock(false, "waitOperation");
     private userStream?: Transform;
+    private userStderrStream?: Transform;
     private widthValue = 132;
 
     constructor(config: IConnectConfig,
@@ -67,7 +68,7 @@ export class SshShell extends SshClient implements ISshShell {
         this.cleanChannel();
     }
 
-    public async attachUser(user: Transform) {
+    public async attachUser(user: Transform, stderr?: Transform) {
         this.logFn(LogType.debug, () => "waitOperation.acquire() on attachUser()");
         await this.waitOperation.acquire();
         if (await this.ensureChannel()) {
@@ -76,6 +77,10 @@ export class SshShell extends SshClient implements ISshShell {
                 // no check prompt-catcher, it's user's issue now
                 this.userStream = user;
                 this.userStream.pipe(this.channel).pipe(this.userStream);
+                if (stderr) {
+                    this.userStderrStream = stderr;
+                    this.channel.stderr.pipe(this.userStderrStream);
+                }
                 return true;
             }
         }
@@ -83,11 +88,17 @@ export class SshShell extends SshClient implements ISshShell {
     }
 
     public async detachUser() {
-        if (this.userStream && this.channel) {
-            this.userStream.unpipe(this.channel);
-            this.channel.unpipe(this.userStream);
+        if (this.channel) {
+            if (this.userStream) {
+                this.userStream.unpipe(this.channel);
+                this.channel.unpipe(this.userStream);
+            }
+            if (this.userStderrStream) {
+                this.channel.stderr.unpipe(this.userStderrStream);
+            }
         }
         delete this.userStream;
+        delete this.userStderrStream;
         this.waitOperation.release();
         this.logFn(LogType.debug, () => "waitOperation.release() on detachUser()");
     }

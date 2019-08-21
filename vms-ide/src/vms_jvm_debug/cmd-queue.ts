@@ -16,6 +16,14 @@ export class CmdQueue implements ICmdQueue {
         }
     }
 
+    private _errorLineListener: ((line: string | undefined) => void ) | undefined;
+    public onErrorLine(errorLineListener: (line: string | undefined) => void) {
+        this._errorLineListener = errorLineListener;
+        if (this._server) {
+            this._server.onStderrLineReceived(this._errorLineListener);
+        }
+    }
+
     /**
      * Posts command to the server, wait lines and send them to the listener
      * @param cmd command
@@ -23,7 +31,7 @@ export class CmdQueue implements ICmdQueue {
      * @returns false if command cannot be sent, true if command is sent and ended
      */
     public async postCommand(cmd: string, 
-                             listener: ((cmd: string, line: string | undefined) => ListenerResponse)|undefined, 
+                             listener?: (cmd: string, line: string | undefined) => ListenerResponse, 
                              action?: LockQueueAction, 
                              dropCommand?: IDropCommand): Promise<boolean> {
         if (this._server) {

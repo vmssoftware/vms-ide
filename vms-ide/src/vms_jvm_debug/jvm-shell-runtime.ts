@@ -552,7 +552,7 @@ export class JvmShellRuntime extends EventEmitter {
             this._logFn(LogType.debug, () => `CMD locked "${command}"`);
             if (this.isRunning()) {
                 this._logFn(LogType.debug, () => `POSTING ${command}`);
-                return this._queue.postCommand(command, undefined).
+                return this._queue.postCommand(command).
                     then((isOk) => {
                         this.cmdLock.release();
                         this._logFn(LogType.debug, () => `CMD released "${command}"`);
@@ -892,22 +892,22 @@ export class JvmShellRuntime extends EventEmitter {
         return false;
 	}
 
+    public isRunning() {
+        return this._attached && this._running;
+    }
+    
+    public isPaused() {
+        return this._attached && !this._running;
+    }
+
+    public isDataCommandAllowed() {
+        return this._requestRun === 0 && this.isPaused();
+    }
+    
     /******************************************************************************************/
     // private
     /******************************************************************************************/
 
-    private isRunning() {
-        return this._attached && this._running;
-    }
-    
-    private isPaused() {
-        return this._attached && !this._running;
-    }
-
-    private isDataCommandAllowed() {
-        return this._requestRun === 0 && this.isPaused();
-    }
-    
     private setRunning(state: boolean) {
         this._running = state;
         if (state) {
@@ -2129,7 +2129,7 @@ export class JvmShellRuntime extends EventEmitter {
                 return this.waitPromptForShortCommand(line);
             }, LockQueueAction.normal);
         } else {
-            return this._queue.postCommand(command, undefined);
+            return this._queue.postCommand(command);
         }
     }
     

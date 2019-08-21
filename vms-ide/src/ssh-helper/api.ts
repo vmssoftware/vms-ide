@@ -85,7 +85,7 @@ export interface ISshShell extends EventEmitter {
     lastError?: string;
     setParsers(welcome?: IParseWelcome, prompter?: IPromptCatcher): void;
     dispose(): void;
-    attachUser(user: Transform): Promise<boolean>;
+    attachUser(user: Transform, stderr?: Transform): Promise<boolean>;
     detachUser(): Promise<void>;
     execCmd(command: string, timeout?: number): Promise<string[] | undefined>;
 }

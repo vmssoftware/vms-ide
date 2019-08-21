@@ -3,17 +3,33 @@ import { GetSshHelperType } from "../ext-api/ext-api";
 import { LogFunction, LogType } from "../common/main";
 import { ShellSplitter } from "./shell-splitter";
 import { ISshShell } from "../ssh-helper/api";
+import { SimpleCmdClient } from "./simple-cmd-client";
+import { EventEmitter } from "vscode";
 
 
 export class SshShellServer implements ICmdServer, ICmdClient {
 
     private _cmdListener: ((line: string) => void ) | undefined;
     private _lineListener: ((line: string | undefined) => void ) | undefined;
+    private _stderrLineListener: ((line: string | undefined) => void ) | undefined;
     private _shell: ISshShell | undefined;
+    private _stderr: SimpleCmdClient;
 
     private logFn: LogFunction;
-        constructor(logFn?: LogFunction) {
-        this.logFn = logFn || (() => {});    
+
+    constructor(logFn?: LogFunction) {
+        this.logFn = logFn || (() => {});
+        const emitter = new EventEmitter<string>();
+        this._stderr = new SimpleCmdClient(emitter);
+        emitter.event(
+            (line) => {
+                setImmediate((line) => {
+                    if (this._stderrLineListener) {
+                        this._stderrLineListener(line);
+                    }
+                }, line);
+            }
+        );
     }
 
     // server for CmdQueue
@@ -30,6 +46,13 @@ export class SshShellServer implements ICmdServer, ICmdClient {
         this._lineListener = lineListener;
         return {
             dispose: () => { this._lineListener = undefined }
+        }
+    }
+
+    onStderrLineReceived(stderrLineListener: (line: string | undefined) => void): { dispose: () => void; } {
+        this._stderrLineListener = stderrLineListener;
+        return {
+            dispose: () => { this._stderrLineListener = undefined }
         }
     }
 
@@ -79,10 +102,11 @@ export class SshShellServer implements ICmdServer, ICmdClient {
                 });
                 this._shell.on("cleanChannel", () => {
                     this.dispose();
-                });		
-                if (await this._shell.attachUser(new ShellSplitter(this))) {
+                });
+                if (await this._shell.attachUser(new ShellSplitter(this), new ShellSplitter(this._stderr))) {
                     return true;
                 }
+                // in case of 'false' fall to dispose()
             }
         }
         this.dispose();
