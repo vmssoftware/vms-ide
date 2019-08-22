@@ -47,6 +47,22 @@ export class JvmProject {
     }
 
     /**
+     * Find and return file info
+     * @param fileName relative file name
+     * @param add do add when info doesn't exist yet
+     */
+    public findFileByPlace(stackPlace: string) : IFileInfo | undefined {
+        for (const [filename, fileinfo] of this.collection) {
+            for (const [classname, classinfo] of fileinfo.classes) {
+                if (stackPlace.startsWith(classname)) {
+                    return fileinfo;
+                }
+            }
+        }
+        return undefined;
+    }
+
+    /**
      * Find and return class info
      * @param className full class name
      * @param fileInfo file info to search in and add to if class info doesn't exist yet

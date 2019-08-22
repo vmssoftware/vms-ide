@@ -1,3 +1,4 @@
+import * as nls from "vscode-nls";
 
 import {
     Logger, logger,
@@ -11,11 +12,22 @@ import * as path from 'path';
 
 import { Lock, Delay, LogFunction, LogType } from '../common/main';
 
-import { JvmShellRuntime, JvmRuntimeEvents } from './jvm-shell-runtime';
+import { JvmShellRuntime, JvmRuntimeEvents, IJvmScope, IJvmVariable, isIJvmScope, isIJvmVariable } from './jvm-shell-runtime';
 import { IJvmLaunchRequestArguments } from './jvm-config';
 import { SshShellServer } from './ssh-shell-server';
 import { CmdQueue } from './cmd-queue';
 import { JvmProjectHelper } from './jvm-proj-helper';
+import { ListenerResponse } from "./communication";
+
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
+
+enum jvmStartResult {
+    unknown,
+    started,
+    portIsBusy,
+    error,
+};
 
 /**
  * Adapter between VS code and JVM runtime
@@ -33,11 +45,14 @@ export class JvmDebugSession extends LoggingDebugSession {
     private _scope?: string;
     // private _scopeHelpers: ScopeHelpers;
 
-    private _variableHandles = new Handles<string>();
+    private _variableHandles = new Handles<IJvmScope | IJvmVariable>();
 
     private _configurationDone = new Lock(true, "configurationDone");
 
-    private logFn: LogFunction;
+    private _logFn: LogFunction;
+
+    private _breakPoints = new Map<string, Map<number, number>>(); // [file -> id -> line ]
+    private _cmdLock = new Lock();
 
 	/**
 	 * Creates a new debug adapter that is used for one debug session.
@@ -46,19 +61,19 @@ export class JvmDebugSession extends LoggingDebugSession {
     public constructor(logFn?: LogFunction) {
         super("vms-jvm-debugger.txt");
 
-        this.logFn = logFn || (() => { });
+        this._logFn = logFn || (() => { });
 
         // this debugger uses zero-based lines and columns
         this.setDebuggerLinesStartAt1(true);
         this.setDebuggerColumnsStartAt1(true);
 
-        this._jdbShellServer = new SshShellServer(this.logFn);
-        this._jvmShellServer = new SshShellServer(this.logFn);
+        this._jdbShellServer = new SshShellServer(this._logFn);
+        this._jvmShellServer = new SshShellServer(this._logFn);
         this._jvmQueue = new CmdQueue(this._jvmShellServer);
 
         // this._scopeHelpers = new ScopeHelpers(this.logFn);
 
-        this._runtime = new JvmShellRuntime(new CmdQueue(this._jdbShellServer), this.logFn);
+        this._runtime = new JvmShellRuntime(new CmdQueue(this._jdbShellServer), this._logFn);
 
         // setup event handlers
         this._runtime.on(JvmRuntimeEvents.stopOnEntry, (threadId) => {
@@ -73,8 +88,17 @@ export class JvmDebugSession extends LoggingDebugSession {
         this._runtime.on(JvmRuntimeEvents.stopOnException, (threadId) => {
             this.sendStoppedEvent('exception', threadId);
         });
+        this._runtime.on(JvmRuntimeEvents.stopOnPause, (threadId) => {
+            this.sendStoppedEvent('pause', threadId);
+        });
         this._runtime.on(JvmRuntimeEvents.breakpointValidated, (id: number, verified: boolean) => {
-            this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ id, verified }));
+            for (const [file, ids] of this._breakPoints) {
+                const line = ids.get(id);
+                if (line) {
+                    this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ id, verified, line }));
+                    break;
+                }
+            }
         });
         this._runtime.on(JvmRuntimeEvents.output, async (text, filePath?, line?, column?) => {
             const e: DebugProtocol.OutputEvent = new OutputEvent(`${text}\n`);
@@ -95,6 +119,63 @@ export class JvmDebugSession extends LoggingDebugSession {
         stop.body.allThreadsStopped = true;
         this.sendEvent(stop);
     }
+    
+    private _capabilities: DebugProtocol.Capabilities = {
+        /** The debug adapter supports the 'configurationDone' request. */
+        supportsConfigurationDoneRequest: true,
+        /** The debug adapter supports function breakpoints. */
+        supportsFunctionBreakpoints: false,
+        /** The debug adapter supports conditional breakpoints. */
+        supportsConditionalBreakpoints: false,
+        /** The debug adapter supports breakpoints that break execution after a specified number of hits. */
+        supportsHitConditionalBreakpoints: false,
+        /** The debug adapter supports a (side effect free) evaluate request for data hovers. */
+        supportsEvaluateForHovers: false,
+        /** Available filters or options for the setExceptionBreakpoints request. */
+        exceptionBreakpointFilters: undefined,
+        /** The debug adapter supports stepping back via the 'stepBack' and 'reverseContinue' requests. */
+        supportsStepBack: false,
+        /** The debug adapter supports setting a variable to a value. */
+        supportsSetVariable: false,
+        /** The debug adapter supports restarting a frame. */
+        supportsRestartFrame: false,
+        /** The debug adapter supports the 'gotoTargets' request. */
+        supportsGotoTargetsRequest: false,
+        /** The debug adapter supports the 'stepInTargets' request. */
+        supportsStepInTargetsRequest: true,
+        /** The debug adapter supports the 'completions' request. */
+        supportsCompletionsRequest: false,
+        /** The debug adapter supports the 'modules' request. */
+        supportsModulesRequest: false,
+        /** The set of additional module information exposed by the debug adapter. */
+        additionalModuleColumns: undefined,
+        /** Checksum algorithms supported by the debug adapter. */
+        supportedChecksumAlgorithms: undefined,
+        /** The debug adapter supports the 'restart' request. In this case a client should not implement 'restart' by terminating and relaunching the adapter but by calling the RestartRequest. */
+        supportsRestartRequest: false,
+        /** The debug adapter supports 'exceptionOptions' on the setExceptionBreakpoints request. */
+        supportsExceptionOptions: false,
+        /** The debug adapter supports a 'format' attribute on the stackTraceRequest, variablesRequest, and evaluateRequest. */
+        supportsValueFormattingOptions: false,
+        /** The debug adapter supports the 'exceptionInfo' request. */
+        supportsExceptionInfoRequest: false,
+        /** The debug adapter supports the 'terminateDebuggee' attribute on the 'disconnect' request. */
+        supportTerminateDebuggee: true,
+        /** The debug adapter supports the delayed loading of parts of the stack, which requires that both the 'startFrame' and 'levels' arguments and the 'totalFrames' result of the 'StackTrace' request are supported. */
+        supportsDelayedStackTraceLoading: true,
+        /** The debug adapter supports the 'loadedSources' request. */
+        supportsLoadedSourcesRequest: false,
+        /** The debug adapter supports logpoints by interpreting the 'logMessage' attribute of the SourceBreakpoint. */
+        supportsLogPoints: false,
+        /** The debug adapter supports the 'terminateThreads' request. */
+        supportsTerminateThreadsRequest: false,
+        /** The debug adapter supports the 'setExpression' request. */
+        supportsSetExpression: false,
+        /** The debug adapter supports the 'terminate' request. */
+        supportsTerminateRequest: true,
+        /** The debug adapter supports data breakpoints. */
+        supportsDataBreakpoints: false
+    }
 
 	/**
 	 * The 'initialize' request is the first request called by the frontend
@@ -103,15 +184,7 @@ export class JvmDebugSession extends LoggingDebugSession {
     protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
 
         // build and return the capabilities of this debug adapter:
-        response.body = response.body || {};
-
-        // the adapter implements the configurationDoneRequest.
-        response.body.supportsConfigurationDoneRequest = true;
-
-        // make VS Code to use 'evaluate' when hovering over source
-        response.body.supportsEvaluateForHovers = true;
-
-        response.body.supportsSetVariable = true;
+        response.body = response.body || this._capabilities;
 
         this.sendResponse(response);
 
@@ -137,64 +210,112 @@ export class JvmDebugSession extends LoggingDebugSession {
         // make sure to 'Stop' the buffered logging if 'trace' is not set
         logger.setup(args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false);
 
+        this.sendResponse(response);
+
         this._scope = args.scope;
 
         // wait until configuration has finished (and configurationDoneRequest has been called)
         let reallyDone = false;
-        await Promise.all([
+        const results = await Promise.all([
             Promise.race([
-                Delay(1000),
-                this._configurationDone.acquire().then(() => { reallyDone = true }),
+                Delay(1000).then(() => true),
+                this._configurationDone.acquire().then(() => { 
+                    reallyDone = true;
+                    return true;
+                 }),
             ]),
             this._jdbShellServer.create(this._scope),
             this._jvmShellServer.create(this._scope),
-            JvmProjectHelper.chooseScope(this._scope),
+            JvmProjectHelper.chooseScope(this._scope).then(() => true),
         ]);
 
-        this.logFn(LogType.information, () => `configuration is ${reallyDone ? "really" : "not"} done`);
-
-        let listeningOK = false;
-        let cdCommand = await JvmProjectHelper.cdRemoteRoot(this._scope);
-        this._jvmQueue.postCommand(cdCommand, (cmd, line) => {
-            if (line === undefined || line.includes("\0")) {
-                return false;
-            }
-            return true;
-        }).then(() => {
-            let runCommand = `java -Xdebug -Xrunjdwp:transport=dt_socket,address=${args.port ? args.port : 5005},server=y,suspend=y`;
-            runCommand += ` -cp ${args.classpath}`;
-            runCommand += ` ${args.class}`;
-            return this._jvmQueue.postCommand(runCommand, (cmd, line) => {
-                const rgxListening = /Listening for transport dt_socket at address: (\d+)/;
-                const rgxError = /error/i;
-                if (!line) {
-                    return false;
-                }
-                if (line.match(rgxListening)) {
-                    listeningOK = true;
-                    return false;
-                }
-                if (line.match(rgxError)) {
-                    return false;
-                }
-                return true;
-            });
-        }).then(async () => {
-            // start the debug session
-            if (listeningOK) {
-                if (args.stopOnEntry) {
-                    await this._runtime.setBreakPoint(await JvmProjectHelper.stopOnEntryClass(args.class, this._scope), "main");
-                }
-                return this._runtime.start(args);
+        if (!results.reduce((result, current) => result && current, true)) {
+            this.sendEvent(new TerminatedEvent());
+        } else {
+            let listeningPort = 5005;
+            let listeningPortMax = 5105;
+            const diapason = args.port ? args.port : "5005-5105";
+            const matchedMinMax = diapason.match(/^\s*(\d+)\s*-\s*(\d+)\s*$/);
+            if (matchedMinMax) {
+                listeningPort = +matchedMinMax[1];
+                listeningPortMax = +matchedMinMax[2];
             } else {
+                const matchedPort = diapason.match(/^\s*(\d+)\s*$/);
+                if (matchedPort) {
+                    listeningPort = +matchedPort[1];
+                    listeningPortMax = listeningPort;
+                }
+            }
+            let cdCommand = await JvmProjectHelper.cdRemoteRoot(this._scope);
+            this._jvmQueue.postCommand(cdCommand, (cmd, line) => {
+                if (line === undefined || line.includes("\0")) {
+                    return ListenerResponse.stop;
+                }
+                return ListenerResponse.needMoreLines;
+            }).then(async () => {
+                while (listeningPort <= listeningPortMax) {
+                    let result = await this.tryRunJVM(listeningPort, args.class, args.classpath);
+                    if (result === jvmStartResult.started) {
+                        if (args.stopOnEntry) {
+                            await this._runtime.setBreakPoint(await JvmProjectHelper.stopOnEntryClass(args.class, this._scope), "main");
+                        }
+                        args.port = String(listeningPort);
+                        this._jvmQueue.onUnexpectedLine((line) => {
+                            if (line) {
+                                this._logFn(LogType.information, () => String(line));
+                            }
+                        });
+                        return this._runtime.start(args);
+                    } else if (result === jvmStartResult.portIsBusy) {
+                        this._logFn(LogType.information, () => localize("jvm.port.busy", "Port {0} is busy.", String(listeningPort)));
+                        ++listeningPort;
+                    } else {
+                        break;
+                    }
+                }
                 this.sendEvent(new TerminatedEvent());
                 return false;
-            }
-        });
-
-        this.sendResponse(response);
-
+            });
+        }
     }
+
+    private async tryRunJVM(port: number, jClass: string, jClassPath: string) {
+
+        const rgxListening = /Listening for transport dt_socket at address: (\d+)/;
+        const rgxPortError = /ERROR: JDWP Transport dt_socket failed to initialize/;
+
+        let result = jvmStartResult.unknown;
+        let runCommand = `java -Xdebug -Xrunjdwp:transport=dt_socket,address=${port},server=y,suspend=y -cp ${jClassPath} ${jClass}`;
+        return this._jvmQueue.postCommand(runCommand, (cmd, line) => {
+            if (!line) {
+                result = jvmStartResult.error;
+                return ListenerResponse.stop;   // go out, general error
+            }
+            if (result === jvmStartResult.unknown) {
+                if (line.match(rgxListening)) {
+                    result = jvmStartResult.started;
+                    return ListenerResponse.stop;   // go out, no prompt required
+                }
+                if (line.match(rgxPortError)) {
+                    result = jvmStartResult.portIsBusy;
+                    return ListenerResponse.needMoreLines;    // wait a prompt
+                }
+                return ListenerResponse.needMoreLines;        // need more lines
+            } else {
+                // wait for vms prompt
+                if (line.includes("\0")) {
+                    return ListenerResponse.stop;
+                }
+                return ListenerResponse.needMoreLines;
+            }
+        }).then(() => {
+            return result;
+        }).catch(() => {
+            return jvmStartResult.error;
+        });
+    }
+
+
     protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void {
         this._jvmShellServer.dispose();
         this._jdbShellServer.dispose();
@@ -208,29 +329,57 @@ export class JvmDebugSession extends LoggingDebugSession {
     }
 
     protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
-        // set and verify breakpoint locations
-        if (args.breakpoints) {
-            response.body = {
-                breakpoints: args.breakpoints.map(bp => {
-                    return {
-                        verified: false
-                    }
-                })
-            };
-        } else {
-            // send back the actual breakpoint positions
+        this._cmdLock.acquire().then(async () => {
             response.body = {
                 breakpoints: []
             };
-        }
-
-        this.sendResponse(response);
+            // set and verify breakpoint locations
+            const newIds = new Map<number, number>();
+            if (args.breakpoints) {
+                for (const sourceBp of args.breakpoints) {
+                    let [className, lineNumber] = await JvmProjectHelper.getBreakPointByFileLine(args.source.path, sourceBp.line);
+                    if (className && lineNumber !== undefined) {
+                        const runtimeBp = await this._runtime.setBreakPoint(className, lineNumber);
+                        if (newIds.has(runtimeBp.breakId)) {
+                            response.body.breakpoints.push({
+                                message: "On the same place as one of the previous",
+                                id: runtimeBp.breakId,
+                                line: lineNumber,
+                                verified: runtimeBp.verified? true: false
+                            });    
+                        } else {
+                            response.body.breakpoints.push({
+                                id: runtimeBp.breakId,
+                                line: lineNumber,
+                                verified: runtimeBp.verified? true: false
+                            });
+                            newIds.set(runtimeBp.breakId, lineNumber);
+                        }
+                    } else {
+                        response.body.breakpoints.push({
+                            message: "No code for this line",
+                            verified: false
+                        });
+                    }
+                }
+            }
+            const prevIds = args.source.path?this._breakPoints.get(args.source.path):undefined;
+            if (prevIds) {
+                for (const [prevId, prevLn] of prevIds) {
+                    if (!newIds.has(prevId)) {
+                        this._runtime.clearBreakPointByID(prevId);
+                    }
+                }
+            }
+            if (args.source.path) {
+                this._breakPoints.set(args.source.path, newIds);
+            }
+            this.sendResponse(response);
+            this._cmdLock.release();
+        });
     }
 
     protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
-
-        this.logFn(LogType.information, () => "begin threadsRequest");
-
         this._runtime.threads().then((threads) => {
             const respThreads: DebugProtocol.Thread[] = [];
             if (threads) {
@@ -248,17 +397,12 @@ export class JvmDebugSession extends LoggingDebugSession {
             response.body = {
                 threads: respThreads
             };
+            this._variableHandles.reset();
             this.sendResponse(response);
         });
-
-        this.logFn(LogType.information, () => "end threadsRequest");
-
     }
 
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
-
-        this.logFn(LogType.information, () => "begin stackTraceRequest");
-
         const startFrame = typeof args.startFrame === 'number' ? args.startFrame : 0;
         const maxLevels = typeof args.levels === 'number' ? args.levels : 1000;
         const endFrame = startFrame + maxLevels;
@@ -267,85 +411,72 @@ export class JvmDebugSession extends LoggingDebugSession {
 
         const wait = [];
         for (const frame of stk.frames) {
-            wait.push(this.createSource(frame.file));
+            if (frame.file) {
+                if (frame.line) {
+                    wait.push(this.createSourceByPlace(frame.place).then((source) => {
+                        if (!source) {
+                            return this.createSource(frame.file);
+                        }
+                        return source;
+                    }));
+                } else {
+                    wait.push(Promise.resolve(undefined));
+                }
+            }
         }
         Promise.all(wait).then((sources) => {
             response.body = {
                 stackFrames: stk.frames.map((f, i) =>
-                    new StackFrame(f.id, f.place, sources[i], this.convertDebuggerLineToClient(f.line))),
+                    new StackFrame(f.frameId, f.place, sources[i], this.convertDebuggerLineToClient(f.line))),
                 totalFrames: stk.totalFrames
             };
             this.sendResponse(response);
         });
-
-
-        this.logFn(LogType.information, () => "end stackTraceRequest");
-
     }
 
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
 
-        this.logFn(LogType.information, () => "begin scopesRequest");
-
-        const frameReference = args.frameId;
-        const scopes = new Array<Scope>();
-        scopes.push(new Scope("Local", this._variableHandles.create("local_" + frameReference), false));
-        scopes.push(new Scope("Global", this._variableHandles.create("global_" + frameReference), true));
-
-        response.body = {
-            scopes: scopes
-        };
-
-        setTimeout(() => {
-            this.sendResponse(response);
-        }, 2000);
-
-        this.logFn(LogType.information, () => "end scopesRequest");
+        this._runtime.getScopes(args.frameId).then((scopes) => {
+            response.body = {
+                scopes: []
+            };
+            if (scopes) {
+                for (const scope of scopes) {
+                    response.body.scopes.push({
+                        name: scope.name,
+                        variablesReference: this._variableHandles.create(scope),
+                        expensive: scope.vars.length > 8
+                    });
+                }
+            }    
+            this.sendResponse(response);    
+        });
 
     }
 
-    private counter = 0;
-
     protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
 
-        this.logFn(LogType.information, () => "begin variablesRequest");
-
         const variables = new Array<DebugProtocol.Variable>();
-        const id = this._variableHandles.get(args.variablesReference);
-        if (id !== null) {
+        const scope = this._variableHandles.get(args.variablesReference);
+        if (isIJvmScope(scope)) {
+            for (const variable of scope.vars) {
+                variables.push({
+                    name: variable.name,
+                    value: variable.value,
+                    variablesReference: this._variableHandles.create(variable),
+                });    
+            }
+        } else if (isIJvmVariable(scope)) {
             variables.push({
-                name: id + "_i",
-                type: "integer",
-                value: String(++this.counter),
+                name: "value",
+                value: scope.value,
                 variablesReference: 0
-            });
-            variables.push({
-                name: id + "_f",
-                type: "float",
-                value: "3.14",
-                variablesReference: 0
-            });
-            variables.push({
-                name: id + "_s",
-                type: "string",
-                value: "hello world",
-                variablesReference: 0
-            });
-            variables.push({
-                name: id + "_o",
-                type: "integer",
-                value: "Click me!",
-                variablesReference: this._variableHandles.create("object_")
-            });
+            });            
         }
-
         response.body = {
             variables: variables
         };
         this.sendResponse(response);
-
-        this.logFn(LogType.information, () => "end variablesRequest");
-
     }
 
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
@@ -353,29 +484,35 @@ export class JvmDebugSession extends LoggingDebugSession {
             allThreadsContinued: true,
         };
         this.sendResponse(response);
-        if (!this._runtime.continue()) {
+        if (!this._runtime.continue(args.threadId)) {
             this.sendStoppedEvent('error');
         }
     }
 
     protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-        response.body = {
-            allThreadsContinued: true,
-        };
         this.sendResponse(response);
-        if (!this._runtime.next()) {
+        if (!this._runtime.next(args.threadId)) {
             this.sendStoppedEvent('error');
         }
     }
 
     protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
-        response.body = {
-            allThreadsContinued: true,
-        };
         this.sendResponse(response);
-        if (!this._runtime.step()) {
+        if (!this._runtime.step(args.threadId)) {
             this.sendStoppedEvent('error');
         }
+    }
+
+    protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void {
+        this.sendResponse(response);
+        if (!this._runtime.stepOut(args.threadId)) {
+            this.sendStoppedEvent('error');
+        }
+    }
+
+    protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments): void {
+        this._runtime.pause();
+        this.sendResponse(response);
     }
 
     protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
@@ -398,6 +535,14 @@ export class JvmDebugSession extends LoggingDebugSession {
 
     private async createSource(filePath: string) {
         return new Source(path.basename(filePath), await JvmProjectHelper.localFile(filePath, this._scope), undefined, undefined, 'jvm-adapter-data');
+    }
+
+    private async createSourceByPlace(stackPlace: string) {
+        const filePath = await JvmProjectHelper.localFileByPlace(stackPlace, this._scope);
+        if (filePath) {
+            return new Source(path.basename(filePath), filePath, undefined, undefined, 'jvm-adapter-data');
+        }
+        return undefined;
     }
 
 }

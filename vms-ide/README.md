@@ -6,15 +6,15 @@
 * **SSH connection** setup to remote OpenVMS system.
 * **Projects Explorer** as a simple and convenient way to manage OpenVMS projects.
 * **Debugger** for OpenVMS projects.
-* **Syntax highlighting** for *MMS*, *CLD*, and *MSG* files.
+* **Syntax highlighting** for *Pascal*, *MMS*, *CLD*, and *MSG* files.
 * **Code autocompletion** for *MSG* and *CLD* files.
 * Supported languages: **C**, **C++**, **Fortran**, **Cobol**, **Pascal**, **Basic**, **Bliss**.
 
 ## Getting started
 
-* [Installation](https://www.vmssoftwaretraining.com/wiki/VMS_IDE_Installation)
-* [Setting Up a VMS Project](https://www.vmssoftwaretraining.com/wiki/VMS_IDE_Project_Configuration)
-* [Working On a VMS Project](https://www.vmssoftwaretraining.com/wiki/VMS_IDE_Developing)
+* [Installation](https://wiki.vmssoftware.com/VMS_IDE_Installation)
+* [Setting Up a VMS Project](https://wiki.vmssoftware.com/VMS_IDE_Project_Configuration)
+* [Working On a VMS Project](https://wiki.vmssoftware.com/VMS_IDE_Developing)
 
 ## Configuration Storage Options
 

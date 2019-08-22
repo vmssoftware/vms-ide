@@ -14,7 +14,7 @@ export interface IJvmLaunchRequestArguments extends DebugProtocol.LaunchRequestA
     /** a ':' separated list of directories, JAR archives, and ZIP archives to search for class files. */
     classpath: string;
     /** a port to debug. */
-    port?: number;
+    port?: string;
     /** command line arguments */
     arguments?: string;
     /** automatically stop target after launch. If not specified, target does not stop. */
@@ -31,7 +31,7 @@ export interface IJvmDebugConfiguration extends DebugConfiguration {
     /** a ':' separated list of directories, JAR archives, and ZIP archives to search for class files. */
     classpath: string;
     /** a port to debug. */
-    port?: number;
+    port?: string;
     /** command line arguments */
     arguments?: string;
     /** automatically stop target after launch. If not specified, target does not stop. */

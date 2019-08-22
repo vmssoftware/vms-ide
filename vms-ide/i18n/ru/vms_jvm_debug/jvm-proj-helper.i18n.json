@@ -1,0 +1,3 @@
+{
+    "breakpoint.no.line": "Cannot set breakpoint at {0}:{1} -> disabled"
+}

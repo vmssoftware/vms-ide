@@ -1,24 +1,17 @@
 import * as nls from "vscode-nls";
 import { EventEmitter } from "events";
 import { LogFunction, LogType, Subscribe, Lock} from "../common/main";
-import { GetSshHelperType } from "../ext-api/ext-api";
-import { ShellSplitter } from "./shell-splitter";
-import { RgxFromStr } from "../common/rgx-from-str";
-import { ICmdQueue } from "./communication";
+import { ICmdQueue, ListenerResponse } from "./communication";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
-
-const jdb_Req_Resp = {
-	"suspend": "All threads suspended.",
-	"threads": "> ",
-};
 
 export enum JvmRuntimeEvents {
     stopOnEntry = 'stopOnEntry',
     stopOnStep = 'stopOnStep',
     stopOnBreakpoint = 'stopOnBreakpoint',
     stopOnException = 'stopOnException',
+    stopOnPause = 'stopOnPause',
     breakpointValidated = 'breakpointValidated',
     output = 'output',
     end = 'end',
@@ -26,7 +19,7 @@ export enum JvmRuntimeEvents {
 
 export interface JvmBreakpoint {
 	/** unique id */
-	id: number;
+	breakId: number;
     className: string;
     place: string | number;
     verified?: boolean;
@@ -34,12 +27,39 @@ export interface JvmBreakpoint {
 };
 
 export interface IJvmStack {
-	id: number;
+	frameId: number;
 	level: number;
 	place: string;
 	file: string;
-	line: number;
+    line: number;
+    thread: IJvmThread;
+    scopes: IJvmScope[];
 };
+
+export interface IJvmScope {
+    scopeId: number;
+    name: string;
+    vars: IJvmVariable[];
+};
+
+export function isIJvmScope(candidate: any): candidate is IJvmScope {
+    return candidate !== undefined && 
+        typeof candidate.scopeId === "number";
+}
+
+export interface IJvmVariable {
+    varId: number;
+    name: string;
+    value: string;
+    parent: number;
+    primitive: boolean;
+    scope: IJvmScope;
+};
+
+export function isIJvmVariable(candidate: any): candidate is IJvmVariable {
+    return candidate !== undefined && 
+        typeof candidate.varId === "number";
+}
 
 export interface IJvmThread {
 	/** thread unique id */
@@ -69,7 +89,7 @@ export interface IJvmLaunch {
     /** a ':' separated list of directories, JAR archives, and ZIP archives to search for class files. */
     classpath: string;
     /** a port to debug. */
-    port?: number;
+    port?: string;
     /** command line arguments */
     arguments?: string;
     /** automatically stop target after launch. If not specified, target does not stop. */
@@ -101,6 +121,12 @@ const _stopEvents: IStopLine[] = [
         reason: JvmRuntimeEvents.stopOnException
     },
 ];
+
+const _pauseEvent = {
+    rgx: /All threads suspended./,
+    reason: JvmRuntimeEvents.stopOnPause
+};
+
 const _exitEvents: IStopLine[] = [
     {
         rgx: /The application exited/,
@@ -109,15 +135,19 @@ const _exitEvents: IStopLine[] = [
     {
         rgx: /The application has been disconnected/,
         reason: JvmRuntimeEvents.end
+    },
+    {
+        rgx: /\x00/,
+        reason: JvmRuntimeEvents.end
     }
 ];
 
 const _rgxStoppedThread = {
-    rgx: /\"thread=(.*?)\"/,
+    rgx: /\"thread=(.*?)\", /,
     threadName: 1,
 };
 const _rgxDefPrompt = {
-    rgx: /^> $/,
+    rgx: /^>\s*$/,
 };
 const _rgxThreadPrompt = {
     rgx: /^(.*?)\[(\d+)\]\s*$/,
@@ -138,17 +168,24 @@ const _rgxThread = {
     description: 3,
 };
 const _rgxStack = {
-    rgx: /\[(\d+)\]\s+(\S+)\s+\((\S+?):(\d+)\)/,
+    rgx: /\[(\d+)\]\s+(\S+)\s+\((.+?)\)/,
+    rgxFileLine: /(\S+?):(\d+)/,
     level: 1,
     place: 2,
-    file: 3,
-    line: 4,
+    fileline: 3,
+    file: 1,
+    line: 2,
 };
 const _rgxSendBp = { 
     rgxFail: /Unable to set breakpoint/,
     rgxDefer: /It will be set after the class is loaded/,
     rgxSet: /Set breakpoint/,
 };
+
+const _rgxSetBreakPointEvent: RegExp[] = [ 
+    /Set deferred breakpoint (\S+)/,
+    /Set breakpoint (\S+)/,
+];
 
 /**
  * Only when we are waiting for result lines
@@ -161,6 +198,12 @@ export enum JvmRuntimeOperation {
 	askStack,
 };
 
+export enum JvmPrompt {
+    promptIsUnknownThread = -3,
+    promptIsStoppedThread = -2,
+    promptIsDefault = -1,
+    promptIsNotAPrompt = 0,
+};
 /**
  * A Jvm runtime.
  */
@@ -181,6 +224,13 @@ export class JvmShellRuntime extends EventEmitter {
     private _running = false;
     
     private _stoppedThreads: JvmStoppedThread[] = [];
+    private _stoppedThreadId?: number;
+
+    private _lastThreadId = 0;
+    private _lastFrameId = 0;
+    private _isPausePressed = false;
+    private _scopeCount = 0;
+    private _varCount = 0;
 
 	constructor(private _queue: ICmdQueue, logFn?: LogFunction) {
 		super();
@@ -196,6 +246,11 @@ export class JvmShellRuntime extends EventEmitter {
         this._running = state;
         if (state) {
             this._threadMap = undefined;
+            this._stoppedThreadId = 0;
+            this._lastThreadId = 0;
+            this._lastFrameId = 0;
+            this._scopeCount = 0;
+            this._varCount = 0;
         }
     }
 
@@ -207,71 +262,130 @@ export class JvmShellRuntime extends EventEmitter {
         return this._attached && !this._running;
     }
     
-    private onUnexpectedLine(line: string | undefined) {
-        if (this.isRunning()) {
-            if (line) {
-                this._logFn(LogType.debug, () => `unexpected: ${line.trimRight()}`);
+    private onUnexpectedLine(line: string | undefined): void {
+        if (line) {
+            this._logFn(LogType.debug, () => `unexpected: ${line.trimRight()}`);
 
-                for (const exitEvent of _exitEvents) {
-                    const matchedEvent = line.match(exitEvent.rgx);
-                    if (matchedEvent) {
-                        this.sendEvent(exitEvent.reason);
-                        return;
-                    }
+            for (const exitEvent of _exitEvents) {
+                const matchedEvent = line.match(exitEvent.rgx);
+                if (matchedEvent) {
+                    this.sendEvent(exitEvent.reason);
+                    const tail = line.replace(matchedEvent[0], "");
+                    return this.onUnexpectedLine(tail);
                 }
+            }
 
-                const waitThreadName = this._stoppedThreads.find(th => th.name === "");
-                if (waitThreadName) {
+            for (const stopEvent of _stopEvents) {
+                const matchedEvent = line.match(stopEvent.rgx);
+                if (matchedEvent) {
+                    this.setRunning(false);
+                    this._isPausePressed = false;
                     const matchedStoppedThread = line.match(_rgxStoppedThread.rgx);
                     if (matchedStoppedThread) {
-                        waitThreadName.name = matchedStoppedThread[_rgxStoppedThread.threadName];
-                        return;
+                        const threadName = matchedStoppedThread[_rgxStoppedThread.threadName];
+                        this._stoppedThreads.push({
+                            name: threadName,
+                            reason: stopEvent.reason,
+                        });
+                    } else {
+                        // wait for stopped thread name
+                        this._stoppedThreads.push({
+                            name: "",
+                            reason: stopEvent.reason,
+                        });
                     }
+                    const tail = line.replace(matchedEvent[0], "");
+                    return this.onUnexpectedLine(tail);
                 }
+            }
 
-                for (const stopEvent of _stopEvents) {
-                    const matchedEvent = line.match(stopEvent.rgx);
-                    if (matchedEvent) {
-                        const matchedStoppedThread = line.match(_rgxStoppedThread.rgx);
-                        if (matchedStoppedThread) {
-                            const threadName = matchedStoppedThread[_rgxStoppedThread.threadName];
-                            this._stoppedThreads.push({
-                                name: threadName,
-                                reason: stopEvent.reason,
-                            });
-                        } else {
-                            // wait for stopped thread name
-                            this._stoppedThreads.push({
-                                name: "",
-                                reason: stopEvent.reason,
-                            });
+            const pausedMatch = line.match(_pauseEvent.rgx);
+            if (pausedMatch) {
+                this._isPausePressed = true;
+                const tail = line.replace(pausedMatch[0], "");
+                return this.onUnexpectedLine(tail);
+            }
+
+            const waitThreadName = this._stoppedThreads.find(th => th.name === "");
+            if (waitThreadName) {
+                const matchedStoppedThread = line.match(_rgxStoppedThread.rgx);
+                if (matchedStoppedThread) {
+                    waitThreadName.name = matchedStoppedThread[_rgxStoppedThread.threadName];
+                    const tail = line.replace(matchedStoppedThread[0], "");
+                    return this.onUnexpectedLine(tail);
+                }
+            }
+
+            for (const setBreakPointEvent of _rgxSetBreakPointEvent) {
+                const matchedEvent = line.match(setBreakPointEvent);
+                if (matchedEvent) {
+                    const bpkey = matchedEvent[1];
+                    const bp = this._breakpoints.get(bpkey);
+                    if (bp) {
+                        bp.verified = true;
+                        this.sendEvent(JvmRuntimeEvents.breakpointValidated, bp.breakId, true);
+                    }
+                    const tail = line.replace(matchedEvent[0], "");
+                    return this.onUnexpectedLine(tail);
+                }
+            }
+
+            const promptId = this.testIfThreadPrompt(line);
+            // if ( promptId === JvmPrompt.promptIsUnknownThread) {
+            //     this.setRunning(false);
+            //     this.populateThreadsInfo().
+            //         then(() => {
+            //             if (this._threadInPrompt) {
+            //                 const id = this.findThreadId(this._threadInPrompt);
+            //                 if (id) {
+            //                     // send message for each stopped thread
+            //                     this.setThread(id).then(() => {
+            //                         this.sendEvent(JvmRuntimeEvents.stopOnPause, id);
+            //                     });
+            //                 }
+            //             }
+            //             this._stoppedThreads = [];  // info is sent, clear this
+            //         });
+            // } else 
+            if ( promptId === JvmPrompt.promptIsStoppedThread) {
+                this.setRunning(false);
+                this.populateThreadsInfo().
+                    then(() => {
+                        for(const stopped of this._stoppedThreads) {
+                            const id = this.findThreadId(stopped.name);
+                            if (id) {
+                                // send message for each stopped thread
+                                this.setThread(id).then(() => {
+                                    this.sendEvent(stopped.reason, id);
+                                    this._stoppedThreadId = id;
+                                });
+                            }
                         }
-                        return;
-                    }
-                }
-
-                const promptId = this.testIfThreadPrompt(line);
-                if ( promptId === -2) {
+                        this._stoppedThreads = [];  // info is sent, clear this
+                    });
+            } else if (promptId === JvmPrompt.promptIsDefault) {
+                if (this._isPausePressed) {
+                    this._isPausePressed = false;
                     this.setRunning(false);
                     this.populateThreadsInfo().
                         then(() => {
-                            for(const stopped of this._stoppedThreads) {
-                                const id = this.findThreadId(stopped.name);
-                                if (id) {
-                                    // send message for each stopped thread
-                                    this.setThread(id).then(() => {
-                                        this.sendEvent(stopped.reason, id);
+                            const mainThreads = this.mainThreads();
+                            if (mainThreads) {
+                                for(const thread of mainThreads) {
+                                    this.setThread(thread.id).then(() => {
+                                        this.sendEvent(JvmRuntimeEvents.stopOnPause, thread.id);
                                     });
+                                    break;
                                 }
                             }
-                            this._stoppedThreads = [];  // info is sent, clear this
                         });
-                } else if (promptId === -1) {
-                    // TODO: test if we post 'suspend' command
+                }
+            } else if (promptId > 0) {
+                if (this._lastThreadId !== promptId) {
+                    this._lastThreadId = promptId;
+                    this.adjustLastFrame();
                 }
             }
-        } else {
-            this._logFn(LogType.debug, () => `unexpected paused: ${line?line.trimRight():"{undefined}"}`);
         }
     }
 
@@ -290,7 +404,7 @@ export class JvmShellRuntime extends EventEmitter {
 			if (cmd === command) {
 				if (line === undefined) {
                     this._logFn(LogType.debug, () => `attaching: aborted`);
-					return false;
+					return ListenerResponse.stop;
                 }
                 this._logFn(LogType.debug, () => `attaching: ${line.trimRight()}`);
                 const matchedPrompt = line.match(_rgxThreadPrompt.rgx);
@@ -298,16 +412,16 @@ export class JvmShellRuntime extends EventEmitter {
                     this._attached = true;
                     this.setRunning(false); // stopped because 'suspend=y'
                     this._logFn(LogType.debug, () => `attaching: completed`);
-					return false;
+					return ListenerResponse.stop;
 				} else if (line.match(_rgxAttachFailed.rgx)) {
                     this.clearSession();
                     this._logFn(LogType.debug, () => `attaching: failed`);
-					return false;
+					return ListenerResponse.stop;
 				}
-				return true;	// need more lines
+				return ListenerResponse.needMoreLines;
             }
             this._logFn(LogType.debug, () => `attaching: not attaching?`);
-			return false;
+			return ListenerResponse.stop;
 		});
     }
 
@@ -351,14 +465,14 @@ export class JvmShellRuntime extends EventEmitter {
 			if (cmd === command) {
 				if (line === undefined) {
                     this._logFn(LogType.debug, () => `threads: aborted`);
-					return false;
+					return ListenerResponse.stop;
                 } 
                 this._logFn(LogType.debug, () => `${cmd}: ${line.trimRight()}`);
 				const rgxGroup = _rgxGroup.rgx;
 				const matchedGroup = rgxGroup.exec(line);
 				if (matchedGroup) {
 					threadGroupName = matchedGroup[_rgxGroup.groupName];
-					return true;    // need more lines
+					return ListenerResponse.needMoreLines;    // need more lines
 				}
 				const rgxThread = _rgxThread.rgx;
 				let matchedThread = rgxThread.exec(line);
@@ -374,18 +488,18 @@ export class JvmShellRuntime extends EventEmitter {
                         description: matchedThread[_rgxThread.description],
                         stack: [],
                     });
-					return true;    // need more lines
+					return ListenerResponse.needMoreLines;    // need more lines
 				}
 				// try to match thread prompt
-				if (this.testIfThreadPrompt(line, threadMap)) {
+				if (this.testIfThreadPrompt(line, threadMap) !== JvmPrompt.promptIsNotAPrompt) {
                     // request completed, no more lines required
                     this._threadMap = threadMap;
-                    this._logFn(LogType.debug, () => `threads: completed`);
-                    return false;   // command 'threads' completed
+                    this._logFn(LogType.debug, () => `---threads: completed`);
+                    return ListenerResponse.stop;   // command 'threads' completed
 				}
-				return true;	// need more lines
+				return ListenerResponse.needMoreLines;	// need more lines
 			}
-			return false;
+			return ListenerResponse.stop;
 		}).then(async (isSent) => {
             if (!isSent) {
                 return false;
@@ -393,38 +507,52 @@ export class JvmShellRuntime extends EventEmitter {
             if (this._threadMap) {
                 const mainGroup = this._threadMap.get("main");
                 if (mainGroup) {
-                    let stackId = 0;
+                    let frameId = 0;
                     for(const threadInfo of mainGroup) {
                         const command = `where ${threadInfo.id}`;
                         await this._queue.postCommand(command, (cmd, line) => {
                             if (cmd === command) {
                                 if (line === undefined) {
-                                    this._logFn(LogType.debug, () => `where: aborted`);
-                                    return false;
+                                    this._logFn(LogType.debug, () => `---where: aborted`);
+                                    return ListenerResponse.stop;
                                 }
                                 this._logFn(LogType.debug, () => `${cmd}: ${line.trimRight()}`);
-                                const rgxStack = _rgxStack.rgx;
-                                const matchedStack = rgxStack.exec(line);
+                                const matchedStack = line.match(_rgxStack.rgx);
                                 if (matchedStack) {
-                                    threadInfo.stack.push({
-                                        id: ++stackId,
+                                    const stackFrame: IJvmStack = {
+                                        frameId: ++frameId,
                                         level: +matchedStack[_rgxStack.level],
                                         place: matchedStack[_rgxStack.place],
-                                        file: matchedStack[_rgxStack.file],
-                                        line: +matchedStack[_rgxStack.line],
-                                    });
-                                    return true;    // need more lines
+                                        file: matchedStack[_rgxStack.fileline],
+                                        line: 0,
+                                        thread: threadInfo,
+                                        scopes: []
+                                    }
+                                    const matchFileLine = matchedStack[_rgxStack.fileline].match(_rgxStack.rgxFileLine);
+                                    if (matchFileLine) {
+                                        stackFrame.file = matchFileLine[_rgxStack.file];
+                                        stackFrame.line = +matchFileLine[_rgxStack.line];
+                                    }
+                                    threadInfo.stack.push(stackFrame);
+                                    return ListenerResponse.needMoreLines;
                                 }
                                 // try to match thread prompt
-                                if (this.testIfThreadPrompt(line)) {
+                                if (this.testIfThreadPrompt(line) !== JvmPrompt.promptIsNotAPrompt) {
+                                    if (this._lastThreadId !== threadInfo.id) {
+                                        this._lastThreadId = threadInfo.id;
+                                        this._lastFrameId = 0;
+                                        if (threadInfo.stack.length) {
+                                            this._lastFrameId = threadInfo.stack[0].frameId;
+                                        }
+                                    }
                                     // request completed, no more lines required
-                                    this._logFn(LogType.debug, () => `where: completed`);
-                                    return false;   // command 'where' completed
+                                    this._logFn(LogType.debug, () => `---where: completed`);
+                                    return ListenerResponse.stop;
                                 }
-                                return true;	// need more lines
+                                return ListenerResponse.needMoreLines;
                             }
-                            this._logFn(LogType.debug, () => `where: not a where command?`);
-                            return false;
+                            this._logFn(LogType.debug, () => `---where: not a where command?`);
+                            return ListenerResponse.stop;
                         });
                     }                   
                 }
@@ -434,13 +562,51 @@ export class JvmShellRuntime extends EventEmitter {
     }
     
     public async setThread(id: number) {
+        if (this._lastThreadId === id) {
+            return true;
+        }
         if (this.isPaused()) {
-            return this._queue.postCommand(`thread ${id}`, (cmd, line) => {
-                this._logFn(LogType.debug, () => `set thread: ${line?line.trimRight():""}`);
-                return false;
+            const command = `thread ${id}`;
+            return this._queue.postCommand(command, (cmd, line) => {
+                if (cmd === command) {
+                    if (line === undefined) {
+                        this._logFn(LogType.debug, () => `${cmd}: aborted`);
+                        return ListenerResponse.stop;
+                    }
+                    this._logFn(LogType.debug, () => `${cmd}: ${line.trimRight()}`);
+                    // try to match thread prompt
+                    if (this.testIfThreadPrompt(line) !== JvmPrompt.promptIsNotAPrompt) {
+                        if (this._lastThreadId !== id) {
+                            this._lastThreadId = id;
+                            this.adjustLastFrame();
+                        }
+                        // request completed, no more lines required
+                        this._logFn(LogType.debug, () => `---${cmd}: completed`);
+                        return ListenerResponse.stop;
+                    }
+                    return ListenerResponse.needMoreLines;
+                }
+                this._logFn(LogType.debug, () => `${cmd}: not a "${cmd}" command?`);
+                return ListenerResponse.stop;
             });
         }
         return false;
+    }
+
+    private adjustLastFrame() {
+        this._lastFrameId = 0;
+        if (this._threadMap) {
+            for (const [group, threads] of this._threadMap) {
+                for (const thread of threads) {
+                    if (thread.id === this._lastThreadId) {
+                        if (thread.stack.length) {
+                            this._lastFrameId = thread.stack[0].frameId;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -449,8 +615,8 @@ export class JvmShellRuntime extends EventEmitter {
 	 * @returns 0 if line isn't prompt, -1 if it is default prompt, -2 if it is stopped thread prompt, > 0 if it is thread prompt
 	 */
 	private testIfThreadPrompt(line: string, threadMap?: Map<string, IJvmThread[]>) {
-		if (line.match(_rgxDefPrompt.rgx)) {
-			return -1;
+        if (line.match(_rgxDefPrompt.rgx)) {
+			return JvmPrompt.promptIsDefault;
         }
         const matchPrompt = line.match(_rgxThreadPrompt.rgx);
         if (matchPrompt) {
@@ -464,19 +630,18 @@ export class JvmShellRuntime extends EventEmitter {
             }
             for (const stopped of  this._stoppedThreads) {
                 if (stopped.name === threadName) {
-                    return -2;
+                    return JvmPrompt.promptIsStoppedThread;
                 }
             }
+            return JvmPrompt.promptIsUnknownThread;
         }
-		return 0;
+        // this._logFn(LogType.debug, () => `not a prompt ${[...Buffer.from(line)]}`);
+		return JvmPrompt.promptIsNotAPrompt;
 	}
 
 
 	public async command(command: string) {
-		this._queue.postCommand(command, (cmd, line) => {
-            this._logFn(LogType.debug, () => `command: ${line?line.trimRight():""}`);
-            return false;   // no lines expected
-        });
+		this._queue.postCommand(command, undefined);
 	}
 
 
@@ -504,14 +669,27 @@ export class JvmShellRuntime extends EventEmitter {
     }
     
 	/**
+	 * Pause execution
+	 */
+	public pause(): boolean {
+        if (this.isRunning()) {
+            this._queue.postCommand('suspend', undefined);
+            return true;
+        }
+        return false;
+	}
+
+    /**
 	 * Continue execution
 	 */
-	public continue(): boolean {
+	public continue(threadID?: number): boolean {
         if (this.isPaused()) {
-            this.setRunning(true);
-            this._queue.postCommand('cont', (cnd, line) => {
-                this._logFn(LogType.debug, () => `cont: ${line?line.trimRight():""}`);
-                return false;
+            Promise.resolve().then(async () => {
+                if (threadID && this._lastThreadId !== threadID) {
+                    await this.setThread(threadID);
+                }
+                await this._queue.postCommand('cont', undefined);
+                this.setRunning(true);
             });
             return true;
         }
@@ -521,12 +699,14 @@ export class JvmShellRuntime extends EventEmitter {
 	/**
 	 * Step into
 	 */
-	public step(): boolean {
+	public step(threadID?: number): boolean {
         if (this.isPaused()) {
-            this.setRunning(true);
-            this._queue.postCommand('step', (cnd, line) => {
-                this._logFn(LogType.debug, () => `step: ${line?line.trimRight():""}`);
-                return false;
+            Promise.resolve().then(async () => {
+                if (threadID && this._lastThreadId !== threadID) {
+                    await this.setThread(threadID);
+                }
+                await this._queue.postCommand('step', undefined);
+                this.setRunning(true);
             });
             return true;
         }
@@ -536,12 +716,33 @@ export class JvmShellRuntime extends EventEmitter {
 	/**
 	 * Step over
 	 */
-	public next(): boolean {
+	public next(threadID?: number): boolean {
         if (this.isPaused()) {
-            this.setRunning(true);
-            this._queue.postCommand('next', (cnd, line) => {
-                this._logFn(LogType.debug, () => `next: ${line?line.trimRight():""}`);
-                return false;
+            Promise.resolve().then(async () => {
+                let command = 'next';
+                if (threadID && this._stoppedThreadId !== threadID) {
+                    await this.setThread(threadID);
+                    command = 'step';   //if thread changes we cannot post 'next' because it runs whole program
+                }
+                await this._queue.postCommand(command, undefined);
+                this.setRunning(true);
+            });
+            return true;
+        }
+        return false;
+	}
+    
+	/**
+	 * Step out
+	 */
+	public stepOut(threadID?: number): boolean {
+        if (this.isPaused()) {
+            Promise.resolve().then(async () => {
+                if (threadID && this._lastThreadId !== threadID) {
+                    await this.setThread(threadID);
+                }
+                await this._queue.postCommand('step up', undefined);
+                this.setRunning(true);
             });
             return true;
         }
@@ -582,11 +783,13 @@ export class JvmShellRuntime extends EventEmitter {
                     } else {
                         totalFrames = 1;
                         frames.push({
-                            id: 1,
+                            frameId: 0,
                             file: "",
                             line: 1,
                             level: 1,
                             place: "",
+                            thread: threadInfo,
+                            scopes: []
                         });
                     }
                     break;
@@ -598,12 +801,125 @@ export class JvmShellRuntime extends EventEmitter {
 			totalFrames,
 		};
     }
+
+    public async getScopes(frameId: number) {
+        const rgxScope = /^(.+?):\s*$/;
+        const rgxVariable = /^\s*(\S+?)\s*=\s*(.*?)\s*$/;
+        const rgxUnavail = /Local variable information not available./;
+
+        if (await this.setFrame(frameId)) {
+
+            const stackFrame = this.getFrame(frameId);
+            if (stackFrame) {
+                if (stackFrame.scopes.length === 0) {
+                    let cmd = `locals`;
+                    let currentScope: IJvmScope | undefined;
+                    await this._queue.postCommand(cmd, (command, line) => {
+                        this._logFn(LogType.debug, () => `${command}: ${line?line.trimRight():""}`);
+                        if (cmd === command) {
+                            if (line === undefined) {
+                                return ListenerResponse.stop;
+                            } 
+                            const varMatch = line.match(rgxVariable);
+                            if (varMatch) {
+                                if (currentScope) {
+                                    currentScope.vars.push({
+                                        name: varMatch[1],
+                                        parent: 0,
+                                        primitive: true,
+                                        scope: currentScope,
+                                        value: varMatch[2],
+                                        varId: ++this._varCount
+                                    });
+                                }
+                                return ListenerResponse.needMoreLines;    
+                            }
+                            const scopeMatch = line.match(rgxScope);
+                            if (scopeMatch) {
+                                currentScope = {
+                                    name: scopeMatch[1],
+                                    scopeId: ++this._scopeCount,
+                                    vars: []
+                                };
+                                stackFrame.scopes.push(currentScope);
+                                return ListenerResponse.needMoreLines;    
+                            }
+                            return this.waitPromptForShortCommand(command, line);
+                        }
+                        return ListenerResponse.stop;
+                    });
+                }
+                return stackFrame.scopes;
+            }
+        }
+        return undefined;
+    }
+
+    private getFrame(frameId: number) {
+        const mainThreads = this.mainThreads();
+        if (mainThreads) {
+            for (const thread of mainThreads) {
+                const foundFrame = thread.stack.find((frame) => frame.frameId === frameId);
+                if (foundFrame) {
+                    return foundFrame;
+                }
+            }
+        }
+        return undefined;
+    }
+
+    private waitPromptForShortCommand(command: string, line: string | undefined) {
+        // this._logFn(LogType.debug, () => `${command}: ${String(line).trimRight()}`);
+        if (line === undefined) {
+            return ListenerResponse.stop;
+        }
+        // try to match thread prompt
+        if (this.testIfThreadPrompt(line.trim()) !== JvmPrompt.promptIsNotAPrompt) {
+            return ListenerResponse.stop;
+        }
+        return ListenerResponse.needMoreLines;
+    }
+
+    private async setFrame(frameId: number) {
+        if (this._lastFrameId === frameId) {
+            return true;
+        }
+        await this.threads();
+        const stackFrame = this.getFrame(frameId);
+        if (stackFrame) {
+            if (this._lastFrameId) {
+                const prevFrame = stackFrame.thread.stack.find((frame) => frame.frameId === this._lastFrameId);
+                if (prevFrame) {
+                    let cmd = `up ${stackFrame.level - prevFrame.level}`;
+                    if (prevFrame.level > stackFrame.level) {
+                        cmd = `down ${prevFrame.level - stackFrame.level}`;
+                    } 
+                    await this._queue.postCommand(cmd, (command, line) => {
+                        this._logFn(LogType.debug, () => `${command}: ${String(line).trimRight()}`);
+                        return this.waitPromptForShortCommand(command, line);
+                    });
+                    this._lastFrameId = frameId;
+                }
+            }
+            if (this._lastFrameId !== frameId) {
+                await this.setThread(stackFrame.thread.id);
+                if (stackFrame.level > 1) {
+                    let cmd = `up ${stackFrame.level - 1}`;
+                    await this._queue.postCommand(cmd, (command, line) => {
+                        this._logFn(LogType.debug, () => `${command}: ${String(line).trimRight()}`);
+                        return this.waitPromptForShortCommand(command, line);
+                    });
+                }
+                this._lastFrameId = frameId;
+            }
+        }
+        return this._lastFrameId === frameId;
+    }
     
     private async sendAllBreakPoints() {
         for (const [bpKey, bp] of this._breakpoints) {
             if (!bp.sent) {
-                await this.postSetBreakPoint(bp.className, bp.place);
-                bp.sent = true;
+                bp.sent = await this.postSetBreakPoint(bp.className, bp.place);
             }
         }
         return true;
@@ -623,19 +939,19 @@ export class JvmShellRuntime extends EventEmitter {
 	 */
 	public async setBreakPoint(className: string, place: string | number) {
         let bpKey = this.buildBpKey(className, place);
-        let bps = this._breakpoints.get(bpKey);
-        if (!bps) {
-            bps = {
+        let bp = this._breakpoints.get(bpKey);
+        if (!bp) {
+            bp = {
                 className,
                 place,
-                id: ++this._breakpointId,
+                breakId: ++this._breakpointId,
             };
-            this._breakpoints.set(bpKey, bps);
+            this._breakpoints.set(bpKey, bp);
         }
-        if (!bps.sent) {
-            return this.postSetBreakPoint(className, place);
+        if (!bp.sent) {
+            bp.sent = await this.postSetBreakPoint(bp.className, bp.place);
         }
-        return true;
+        return bp;
 	}
 
 	/*
@@ -644,13 +960,23 @@ export class JvmShellRuntime extends EventEmitter {
 	public async clearBreakPoint(className: string, place: string | number) {
         let bpKey = this.buildBpKey(className, place);
         this._breakpoints.delete(bpKey);
-        return this.postClearBreakPoint(className, place);
+        this.postClearBreakPoint(className, place);
+	}
+
+	public async clearBreakPointByID(id: number) {
+        for (const [bpKey, bp] of this._breakpoints) {
+            if (bp.breakId === id) {
+                this._breakpoints.delete(bpKey);
+                this.postClearBreakPoint(bp.className, bp.place);
+                break;
+            }
+        }
 	}
 
 	/*
 	 * Clear all breakpoints for class.
 	 */
-	public async clearBreakpoints(className: string) {
+	public async clearBreakpointsForClass(className: string) {
         const cleared: string[] = [];
         for (const [bpKey, bp] of this._breakpoints) {
             if (bp.className === className) {
@@ -680,25 +1006,7 @@ export class JvmShellRuntime extends EventEmitter {
         } else {
             return false;
         }
-        return this._queue.postCommand(command, (cmd, line) => {
-            if (cmd === command) {
-                if (line === undefined) {
-                    return false;
-                }
-                if (line.match(_rgxSendBp.rgxDefer)) {
-                    // TODO: mark deferred
-                    return false;
-                } else if (line.match(_rgxSendBp.rgxSet)) {
-                    // TODO: mark set
-                    return false;
-                } else if (line.match(_rgxSendBp.rgxFail)) {
-                    // TODO: mark failed
-                    return false;
-                }
-                return true;
-            }
-            return false;
-        });
+        return this._queue.postCommand(command, undefined);
     }
     
     /**
@@ -718,16 +1026,7 @@ export class JvmShellRuntime extends EventEmitter {
         } else {
             return false;
         }
-        return this._queue.postCommand(command, (cmd, line) => {
-            if (cmd === command) {
-                if (line === undefined) {
-                    return false;
-                }
-                // TODO: parse answer
-                return false;
-            }
-            return false;
-        });
+        return this._queue.postCommand(command, undefined);
     }
 
 	// private methods
