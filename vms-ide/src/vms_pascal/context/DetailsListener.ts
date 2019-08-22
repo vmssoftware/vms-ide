@@ -12,6 +12,7 @@ import {
     VariableBlockDclSymbol,
     VariableGlobalBlockDclSymbol,
     TypeDclSymbol,
+    ConstantDclSymbol,
     TypeBlockDclSymbol,
     LabelBlockDclSymbol,
     ConstBlockDclSymbol,
@@ -37,6 +38,8 @@ import {
     FunctionDesignatorContext,
     ProcedureStatementContext,
     TypeDefinitionContext,
+    ConstantDefinitionPartContext,
+    ConstantDefinitionContext,
     TypeDefinitionPartContext,
 } from '../parser/pascalParser';
 
@@ -165,13 +168,13 @@ export class DetailsListener implements pascalListener
             this.currentSymbol.context = item;
         }
 
-        let listConstant = ctx.constantDefinitionPart();
+        // let listConstant = ctx.constantDefinitionPart();
 
-        for(let item of listConstant)
-        {
-            this.currentSymbol = this.symbolTable.addNewSymbolOfType(ConstBlockDclSymbol, undefined, item.text);
-            this.currentSymbol.context = item;
-        }
+        // for(let item of listConstant)
+        // {
+        //     this.currentSymbol = this.symbolTable.addNewSymbolOfType(ConstBlockDclSymbol, undefined, item.text);
+        //     this.currentSymbol.context = item;
+        // }
 
         let listType = ctx.typeDefinitionPart();
 
@@ -316,6 +319,39 @@ export class DetailsListener implements pascalListener
     }
 
     exitTypeDefinition(ctx: TypeDefinitionContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
+    enterConstantDefinitionPart(ctx: ConstantDefinitionPartContext) 
+    {
+        let list = ctx.constantDefinition(); 
+
+        for(let item of list)
+        {
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(ConstBlockDclSymbol, undefined, item.text);
+            this.currentSymbol.context = item;
+        }
+    }
+
+    exitConstantDefinitionPart(ctx: ConstantDefinitionPartContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
+    enterConstantDefinition(ctx: ConstantDefinitionContext) 
+    {
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(ConstantDclSymbol, undefined, ctx.identifier().text);
+        this.currentSymbol.context = ctx.identifier();
+    }
+
+    exitConstantDefinition(ctx: ConstantDefinitionContext) 
     {
         if (this.currentSymbol) 
         {

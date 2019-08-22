@@ -190,6 +190,26 @@ export class ContextSymbolTable extends SymbolTable
                 }
             }
         }
+        
+        let showConst = false;
+        let consts = this.getAllSymbols(ConstantDclSymbol, false);
+
+        for(let item of consts)
+        {
+            if(item.name.toLowerCase() === symbol.name.toLowerCase())
+            {
+                showConst = true;
+                break;
+            }
+        }
+
+        if(showConst)
+        {
+            let decConsts = this.getAllSymbols(ConstantDclSymbol, false);
+            let decConstBlocks = this.getAllSymbols(ConstBlockDclSymbol, false);
+
+            return this.findSimbolInfoDedlaration(symbol, decConsts, decConstBlocks);
+        }
 
         return undefined;
     }
@@ -692,6 +712,7 @@ export class VariableDclSymbol extends EntityCollection { }
 export class VariableBlockDclSymbol extends EntityCollection { }
 export class VariableGlobalBlockDclSymbol extends EntityCollection { }
 export class TypeDclSymbol extends EntityCollection { }
+export class ConstantDclSymbol extends EntityCollection { }
 export class TypeBlockDclSymbol extends EntityCollection { }
 export class LabelDclSymbol extends EntityCollection { }
 export class LabelBlockDclSymbol extends EntityCollection { }

@@ -1,13 +1,13 @@
-// Generated from src/parser/pascal.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from src/vms_pascal/parser/pascal.g4 by ANTLR 4.7.3-SNAPSHOT
 
 
 import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
 
 import { ProgramContext } from "./pascalParser";
 import { ProgramHeadingContext } from "./pascalParser";
-import { InheritBrackContext } from "./pascalParser";
+import { InheritAttrContext } from "./pascalParser";
 import { InheritContext } from "./pascalParser";
-import { InvironmentContext } from "./pascalParser";
+import { InvironmentAttrContext } from "./pascalParser";
 import { IdentifierContext } from "./pascalParser";
 import { AttributePartContext } from "./pascalParser";
 import { AttributeDefContext } from "./pascalParser";
@@ -135,11 +135,11 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitProgramHeading?: (ctx: ProgramHeadingContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `pascalParser.inheritBrack`.
+	 * Visit a parse tree produced by `pascalParser.inheritAttr`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitInheritBrack?: (ctx: InheritBrackContext) => Result;
+	visitInheritAttr?: (ctx: InheritAttrContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.inherit`.
@@ -149,11 +149,11 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitInherit?: (ctx: InheritContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `pascalParser.invironment`.
+	 * Visit a parse tree produced by `pascalParser.invironmentAttr`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitInvironment?: (ctx: InvironmentContext) => Result;
+	visitInvironmentAttr?: (ctx: InvironmentAttrContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.identifier`.

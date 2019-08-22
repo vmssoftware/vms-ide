@@ -22,6 +22,7 @@ export class PascalHoverProvider implements HoverProvider
 
         if(info.kind === SymbolKind.RoutineDcl ||
              info.kind === SymbolKind.TypeBlockDcl ||
+             info.kind === SymbolKind.ConstBlockDcl ||
              info.kind === SymbolKind.RoutineHeader)
         {
             if(info.definition)
