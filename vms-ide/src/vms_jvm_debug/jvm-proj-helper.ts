@@ -120,7 +120,7 @@ export class JvmProjectHelper {
             const scopedata = await this.chooseScope(scope);
             if (scopedata) {
                 const found = await scopedata.localSource.findFiles("**/" + remoteFile);
-                if (found.length === 1) {
+                if (found && found.length === 1) {
                     return path.join(scopedata.localSource.root!, found[0].filename);
                 }
             }
@@ -138,7 +138,7 @@ export class JvmProjectHelper {
                 const fileInfo = scopedata.jvmProject.findFileByPlace(stackPlace);
                 if (fileInfo) {
                     const found = await scopedata.localSource.findFiles("**/" + fileInfo.fileName);
-                    if (found.length === 1) {
+                    if (found && found.length === 1) {
                         return path.join(scopedata.localSource.root!, found[0].filename);
                     }
                 }
@@ -151,7 +151,7 @@ export class JvmProjectHelper {
                             const fileInfo = scopedataT.jvmProject.findFileByPlace(stackPlace);
                             if (fileInfo) {
                                 const found = await scopedataT.localSource.findFiles("**/" + fileInfo.fileName);
-                                if (found.length === 1) {
+                                if (found && found.length === 1) {
                                     return path.join(scopedataT.localSource.root!, found[0].filename);
                                 }
                             }

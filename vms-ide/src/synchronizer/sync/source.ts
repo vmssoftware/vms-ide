@@ -30,7 +30,7 @@ export interface ISource {
     createWriteStream(filename: string): Promise<Writable|undefined>;
     dispose(): void;
     ensureDirectory(directory: string): Promise<boolean>;
-    findFiles(include: string, exclude?: string, progress?: IProgress): Promise<IFileEntry[]>;
+    findFiles(include: string, exclude?: string, progress?: IProgress): Promise<IFileEntry[] | undefined>;
     getDate(filename: string): Promise<Date|undefined>;
     setDate(filename: string, date: Date): Promise<boolean>;
     accessFile(filename: string): Promise<boolean>;

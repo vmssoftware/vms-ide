@@ -85,12 +85,14 @@ export async function findFiles(canReadDir: IReadDirectory,
                         : true) {
                 for (const dir of separated.dirs) {
                     const inside = await walk(dir.filename);
-                    separated.files.push(...inside);
+                    if (inside) {
+                        separated.files.push(...inside);
+                    }
                 }
             }
             return separated.files;
         }
-        return [];
+        return undefined;
 
         function addWalkDir(fileEntry: IFileEntry) {
             if (walkDir) {

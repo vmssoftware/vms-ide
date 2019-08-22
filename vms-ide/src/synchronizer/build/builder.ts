@@ -476,6 +476,9 @@ export class Builder {
             localSource.findFiles(ensured.projectSection.headers, ensured.projectSection.exclude),
             localSource.findFiles(ensured.projectSection.source, ensured.projectSection.exclude)]);
 
+        if (!sources) {
+            return undefined;
+        }
         const optLines: string[] = [];
         const comLines: string[] = [];
 
@@ -486,9 +489,11 @@ export class Builder {
         ];
 
         const includeLines = [Builder.includesLine];
-        for (const inc of headers) {
-            includeLines[includeLines.length - 1] = includeLines[includeLines.length - 1] + " -";    // continuation
-            includeLines.push(convertIFileEntryToVmsPath(inc));
+        if (headers) {
+            for (const inc of headers) {
+                includeLines[includeLines.length - 1] = includeLines[includeLines.length - 1] + " -";    // continuation
+                includeLines.push(convertIFileEntryToVmsPath(inc));
+            }
         }
         const sourceLines = [Builder.sourcesLine];
         for (const src of sources) {
@@ -855,11 +860,11 @@ export class Builder {
             localSource.findFiles(ensured.projectSection.headers, ensured.projectSection.exclude),
             localSource.findFiles(ensured.projectSection.source, ensured.projectSection.exclude)]);
 
-        if (localIncludes.length !== foundIncludes.length) {
+        if (!localIncludes || localIncludes.length !== foundIncludes.length) {
             return true;
         }
 
-        if (localSources.length !== foundSources.length) {
+        if (!localSources || localSources.length !== foundSources.length) {
             return true;
         }
 
@@ -891,7 +896,7 @@ export class Builder {
         const localMmsFile = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
         const foundMms = await scopeData.localSource.findFiles(localMmsFile);
         let createMMS = true;
-        if (foundMms.length === 1) {
+        if (foundMms && foundMms.length === 1) {
             const localMmsPath = scopeData.localSource.root + ftpPathSeparator + localMmsFile;
             createMMS = await this.checkMmsContent(scopeData.ensured, (await fs.readFile(localMmsPath)).toString("utf8"));
         }
@@ -1106,9 +1111,9 @@ export class Builder {
                     }
                     // find case-insensitive
                     const found = await scopeData.localSource.findFiles(localFile);
-                    if (found.length === 1) {
+                    if (found && found.length === 1) {
                         localFile = found[0].filename;
-                    } else if (found.length > 1) {
+                    } else if (found && found.length > 1) {
                         localFile = found[0].filename;
                         this.logFn(LogType.warning, () => localize("too_many_files", "There are more than one file named {0}", localFile));
                     } else {
