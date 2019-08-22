@@ -20,12 +20,11 @@ import { ISource } from "../sync/source";
 import { Synchronizer } from "../sync/synchronizer";
 import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
 import { ProjectState } from "../dep-tree/proj-state";
-import { R_OK } from "constants";
 import { collectSplittedByCommas } from "../../synchronizer/common/find-files";
-import { IProjectSection, IBuildConfigSection, IBuildsSection } from "../../synchronizer/sync/sync-api";
-import { BuildsSection } from "../../synchronizer/config/sections/builds";
+import { IBuildConfigSection } from "../../synchronizer/sync/sync-api";
 import { TestExecResult } from "../../synchronizer/common/TestExecResult";
-import { JvmProject, IClassInfo, IMethodInfo, MethodAccess, isMethodAccess } from "../../vms_jvm_debug/jvm-project";
+import { JvmProject, IClassInfo, IMethodInfo, isMethodAccess } from "../../vms_jvm_debug/jvm-project";
+import { removeTemplate } from "../../common/rgx-from-str";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -303,7 +302,7 @@ export class Builder {
                             methodInfo.lines.add(+lineMatch[1]);
                         } else {
                             logFn(LogType.error, () => localize("collect.no_class_for_line", "No method for this line match: {0}", line));
-                            break;
+                            continue;
                         }
                     }
                     const mainMatch = line.match(rgMain);
@@ -314,7 +313,8 @@ export class Builder {
                             logFn(LogType.error, () => localize("collect.no_class_for_main", "No class for this main function match: {0}", line));
                         }
                     }
-                    const methodMatch = line.match(rgMethod);
+                    const untemplated = removeTemplate(line);
+                    const methodMatch = untemplated.match(rgMethod);
                     if (methodMatch) {
                         const methodAccess = (methodMatch[1] || "").trim();
                         const methodModifiers = (methodMatch[2] || "").trim();
