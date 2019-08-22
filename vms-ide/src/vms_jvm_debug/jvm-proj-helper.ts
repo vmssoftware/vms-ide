@@ -163,6 +163,35 @@ export class JvmProjectHelper {
         return undefined;
     }
 
+    public static async methodInfoByPlace(stackPlace: string, scope?: string) {
+        if (!scope) {
+            scope = await commands.executeCommand("vmssoftware.synchronizer.getCurrentScope");
+        }
+        if (scope && typeof scope === "string") {
+            const scopedata = await this.chooseScope(scope);
+            if (scopedata) {
+                const methodInfo = scopedata.jvmProject.getMethodInfo(stackPlace);
+                if (methodInfo) {
+                    return methodInfo;
+                }
+            }
+            if (workspace.workspaceFolders) {
+                for (const wsFolder of workspace.workspaceFolders) {
+                    if (wsFolder.name !== scope) {
+                        const scopedataT = await this.chooseScope(wsFolder.name);
+                        if (scopedataT) {
+                            const methodInfo = scopedataT.jvmProject.getMethodInfo(stackPlace);
+                            if (methodInfo) {
+                                return methodInfo;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+
     public static async cdRemoteRoot(scope?: string) {
         if (!scope) {
             scope = await commands.executeCommand("vmssoftware.synchronizer.getCurrentScope");
@@ -205,19 +234,23 @@ export class JvmProjectHelper {
                     const fileInfo = scopedata.jvmProject.getFileInfo(relativePath);
                     if (fileInfo) {
                         for (const [classname, classinfo] of fileInfo.classes) {
-                            if (classinfo.lines.has(line)) {
-                                return [classname, line];
+                            for(const [methodName, methodInfo] of classinfo.methods) {
+                                if (methodInfo.lines.has(line)) {
+                                    return [classname, line];
+                                }
                             }
                         }
                         let nearestClass = "";
                         let nearestLine = Number.MAX_SAFE_INTEGER;
                         for (const [classname, classinfo] of fileInfo.classes) {
-                            for (const classLine of classinfo.lines) {
-                                if (classLine > line && classLine < nearestLine) {
-                                    nearestLine = classLine;
-                                    nearestClass = classname;
-                                    if (nearestLine === line + 1) {
-                                        break;
+                            for(const [methodName, methodInfo] of classinfo.methods) {
+                                for (const classLine of methodInfo.lines) {
+                                    if (classLine > line && classLine < nearestLine) {
+                                        nearestLine = classLine;
+                                        nearestClass = classname;
+                                        if (nearestLine === line + 1) {
+                                            break;
+                                        }
                                     }
                                 }
                             }

@@ -3,6 +3,7 @@
     "collect.no_class_for_file": "No class for this file match: {0}",
     "collect.no_class_for_line": "No class for this line match: {0}",
     "collect.no_class_for_main": "No class for this main function match: {0}",
+    "collect.no_class_for_method": "No class for method: {0}",
     "collect.no_info": "No info for classes: {0}",
     "build.cfg": "There is no build configuration named {0}.",
     "create.mms.first": "Сперва (пере)создайте MMS.",

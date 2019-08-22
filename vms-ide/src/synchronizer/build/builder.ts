@@ -25,7 +25,7 @@ import { collectSplittedByCommas } from "../../synchronizer/common/find-files";
 import { IProjectSection, IBuildConfigSection, IBuildsSection } from "../../synchronizer/sync/sync-api";
 import { BuildsSection } from "../../synchronizer/config/sections/builds";
 import { TestExecResult } from "../../synchronizer/common/TestExecResult";
-import { JvmProject, IClassInfo } from "../../vms_jvm_debug/jvm-project";
+import { JvmProject, IClassInfo, IMethodInfo, MethodAccess, isMethodAccess } from "../../vms_jvm_debug/jvm-project";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -232,6 +232,7 @@ export class Builder {
         const rgFile = /Compiled from "(\w+\.\w+)"/;
         const rgLine = /line (\d+): (\d+)/;
         const rgMain = /public\s+static\s+(final\s+)?void\s+main\(/;
+        const rgMethod = /^\s*((?:public|private|protected)\s+)?((?:static|abstract|synchronized|transient|volatile|final|native|strictfp|default)\s+)*(\S+\s+)?(\S+)\s*\(/i;
 
         if (this.sshHelper) {
             this.sshHelper.clearPasswordCache();
@@ -280,6 +281,7 @@ export class Builder {
             const result = await scopeData!.shell.execCmd(javapCmd);
             if (result && result.length > 0) {
                 let classInfo: IClassInfo | undefined;
+                let methodInfo: IMethodInfo | undefined;
                 for (const line of result) {
                     const fileMatch = line.match(rgFile);
                     if (fileMatch) {
@@ -288,6 +290,7 @@ export class Builder {
                         const className = classNames.shift();
                         if (className) {                                   
                             classInfo = jvmProject.getClassInfo(className, fileInfo);
+                            methodInfo = undefined;
                         } else {
                             logFn(LogType.error, () => localize("collect.no_class_for_file", "No class for this file match: {0}", line));
                             break;
@@ -296,10 +299,10 @@ export class Builder {
                     }
                     const lineMatch = line.match(rgLine);
                     if (lineMatch) {
-                        if (classInfo) {
-                            classInfo.lines.add(+lineMatch[1]);
+                        if (methodInfo) {
+                            methodInfo.lines.add(+lineMatch[1]);
                         } else {
-                            logFn(LogType.error, () => localize("collect.no_class_for_line", "No class for this line match: {0}", line));
+                            logFn(LogType.error, () => localize("collect.no_class_for_line", "No method for this line match: {0}", line));
                             break;
                         }
                     }
@@ -309,6 +312,26 @@ export class Builder {
                             classInfo.hasMain = true;
                         } else {
                             logFn(LogType.error, () => localize("collect.no_class_for_main", "No class for this main function match: {0}", line));
+                        }
+                    }
+                    const methodMatch = line.match(rgMethod);
+                    if (methodMatch) {
+                        const methodAccess = (methodMatch[1] || "").trim();
+                        const methodModifiers = (methodMatch[2] || "").trim();
+                        const methodType = (methodMatch[3] || "").trim();
+                        const methodName = (methodMatch[4] || "").trim();
+                        if (classInfo) {
+                            methodInfo = jvmProject.getMethodInfo(methodName, classInfo);
+                            if (methodInfo) {
+                                methodInfo.methodStatic = methodModifiers.includes('static');
+                                if (isMethodAccess(methodAccess)) {
+                                    methodInfo.methodAccess = methodAccess;
+                                }
+                                methodInfo.methodType = methodType || "";
+                                methodInfo.methodModifiers = methodModifiers.split(" ").map((value) => value.trim()).filter(value => value);
+                            }
+                        } else {
+                            logFn(LogType.error, () => localize("collect.no_class_for_method", "No class for method: {0}", line));
                         }
                     }
                 }

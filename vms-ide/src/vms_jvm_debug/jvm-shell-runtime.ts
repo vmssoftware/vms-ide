@@ -5,6 +5,7 @@ import { ICmdQueue, ListenerResponse } from "./communication";
 import { RgxStrFromStr } from "../common/rgx-from-str";
 import { DropCommand } from "./drop";
 import { setTimeout } from "timers";
+import { JvmProjectHelper } from "./jvm-proj-helper";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -1633,28 +1634,30 @@ export class JvmShellRuntime extends EventEmitter {
     }
 
     private async dumpThis(jvmStack: IJvmStack) {
-        // add new scope to root
-        const jvmThis: IJvmVariable = {
-            name: 'this',
-            varId: this._vars.size + 1,
-        };
-        this._vars.set(jvmThis.varId, jvmThis);
-        const parserData: IParserData = {
-            state: ParserState.normal,
-            currentVar: jvmThis,
-        };
-        return await this.evalJvmVariable(jvmThis).
-            then((isEvaluated) => {
-                if (isEvaluated && jvmThis.value) {
-                    return this.dumpVariableOrLocals(parserData)
-                }
-                return false;
-            }).then((isDumped) => {
-                if (isDumped) {
-                    jvmStack.scopes.push(jvmThis);
-                }
-                return isDumped;
-            });
+
+        const methodInfo = await JvmProjectHelper.methodInfoByPlace(jvmStack.place);
+        if (methodInfo) {
+            if (!methodInfo.methodStatic) {
+                // add new scope to root
+                const jvmThis: IJvmVariable = {
+                    name: 'this',
+                    varId: this._vars.size + 1,
+                };
+                this._vars.set(jvmThis.varId, jvmThis);
+                const parserData: IParserData = {
+                    state: ParserState.normal,
+                    currentVar: jvmThis,
+                };
+                return await this.dumpVariableOrLocals(parserData)
+                    .then((isDumped) => {
+                        if (isDumped) {
+                            jvmStack.scopes.push(jvmThis);
+                        }
+                        return isDumped;
+                    });
+            }
+        }
+        return false;
     }
 
     private async getLocals(jvmStack: IJvmStack) {
@@ -1670,9 +1673,7 @@ export class JvmShellRuntime extends EventEmitter {
         };
         return await this.dumpVariableOrLocals(parserData).
             then((isOk) => {
-                if (isOk) {
-                    jvmStack.scopes = rootScope.vars || [];
-                }
+                jvmStack.scopes = rootScope.vars || [];
                 return isOk;
             });
     }
@@ -1979,7 +1980,7 @@ export class JvmShellRuntime extends EventEmitter {
                     }
                     if (resultArray !== undefined) {
                         const endPos = resultArray.lastIndexOf("]");
-                        if (endPos > 0) {
+                        if (endPos >= 0) {
                             resultArray = resultArray.substr(0, endPos);
                             jvmVar.value = resultArray.split(",").map(code => String.fromCharCode(+code)).join('');
                             jvmVar.type = JvmVarType.string;
