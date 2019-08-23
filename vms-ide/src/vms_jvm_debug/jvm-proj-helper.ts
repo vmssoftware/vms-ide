@@ -125,6 +125,19 @@ export class JvmProjectHelper {
                 }
             }
         }
+        if (workspace.workspaceFolders) {
+            for (const wsFolder of workspace.workspaceFolders) {
+                if (wsFolder.name !== scope) {
+                    const scopedataT = await this.chooseScope(wsFolder.name);
+                    if (scopedataT) {
+                        const found = await scopedataT.localSource.findFiles("**/" + remoteFile);
+                        if (found.length === 1) {
+                            return path.join(scopedataT.localSource.root!, found[0].filename);
+                        }
+                    }
+                }
+            }
+        }
         return undefined;
     }
 
@@ -143,17 +156,17 @@ export class JvmProjectHelper {
                     }
                 }
             }
-            if (workspace.workspaceFolders) {
-                for (const wsFolder of workspace.workspaceFolders) {
-                    if (wsFolder.name !== scope) {
-                        const scopedataT = await this.chooseScope(wsFolder.name);
-                        if (scopedataT) {
-                            const fileInfo = scopedataT.jvmProject.findFileByPlace(stackPlace);
-                            if (fileInfo) {
-                                const found = await scopedataT.localSource.findFiles("**/" + fileInfo.fileName);
-                                if (found.length === 1) {
-                                    return path.join(scopedataT.localSource.root!, found[0].filename);
-                                }
+        }
+        if (workspace.workspaceFolders) {
+            for (const wsFolder of workspace.workspaceFolders) {
+                if (wsFolder.name !== scope) {
+                    const scopedataT = await this.chooseScope(wsFolder.name);
+                    if (scopedataT) {
+                        const fileInfo = scopedataT.jvmProject.findFileByPlace(stackPlace);
+                        if (fileInfo) {
+                            const found = await scopedataT.localSource.findFiles("**/" + fileInfo.fileName);
+                            if (found.length === 1) {
+                                return path.join(scopedataT.localSource.root!, found[0].filename);
                             }
                         }
                     }

@@ -24,7 +24,7 @@ import { collectSplittedByCommas } from "../../synchronizer/common/find-files";
 import { IBuildConfigSection } from "../../synchronizer/sync/sync-api";
 import { TestExecResult } from "../../synchronizer/common/TestExecResult";
 import { JvmProject, IClassInfo, IMethodInfo, isMethodAccess } from "../../vms_jvm_debug/jvm-project";
-import { removeTemplate } from "../../common/rgx-from-str";
+import { maskSpacesInTemplate } from "../../common/rgx-from-str";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -231,7 +231,7 @@ export class Builder {
         const rgFile = /Compiled from "(\w+\.\w+)"/;
         const rgLine = /line (\d+): (\d+)/;
         const rgMain = /public\s+static\s+(final\s+)?void\s+main\(/;
-        const rgMethod = /^\s*((?:public|private|protected)\s+)?((?:static|abstract|synchronized|transient|volatile|final|native|strictfp|default)\s+)*(\S+\s+)?(\S+)\s*\(/i;
+        const rgMethod = /^(\s*)((?:public|private|protected)\s+)?((?:(?:static|abstract|synchronized|transient|volatile|final|native|strictfp|default)\s+)*)(<\S+\s+)?(\S+\s+)?(\S+)\s*\(/i;
 
         if (this.sshHelper) {
             this.sshHelper.clearPasswordCache();
@@ -282,6 +282,9 @@ export class Builder {
                 let classInfo: IClassInfo | undefined;
                 let methodInfo: IMethodInfo | undefined;
                 for (const line of result) {
+                    if (!line) {
+                        continue;
+                    }
                     const fileMatch = line.match(rgFile);
                     if (fileMatch) {
                         // found next class
@@ -302,8 +305,8 @@ export class Builder {
                             methodInfo.lines.add(+lineMatch[1]);
                         } else {
                             logFn(LogType.error, () => localize("collect.no_class_for_line", "No method for this line match: {0}", line));
-                            continue;
                         }
+                        continue;
                     }
                     const mainMatch = line.match(rgMain);
                     if (mainMatch) {
@@ -313,13 +316,20 @@ export class Builder {
                             logFn(LogType.error, () => localize("collect.no_class_for_main", "No class for this main function match: {0}", line));
                         }
                     }
-                    const untemplated = removeTemplate(line);
-                    const methodMatch = untemplated.match(rgMethod);
+                    const maskedTemplates = maskSpacesInTemplate(line, "*");
+                    const methodMatch = maskedTemplates.match(rgMethod);
                     if (methodMatch) {
-                        const methodAccess = (methodMatch[1] || "").trim();
-                        const methodModifiers = (methodMatch[2] || "").trim();
-                        const methodType = (methodMatch[3] || "").trim();
-                        const methodName = (methodMatch[4] || "").trim();
+                        const spacesL = methodMatch[1] ? methodMatch[1].length : 0;
+                        const accessL = methodMatch[2] ? methodMatch[2].length : 0;
+                        const modifiersL = methodMatch[3] ? methodMatch[3].length : 0;
+                        const templateL = methodMatch[4] ? methodMatch[4].length : 0;
+                        const typeL = methodMatch[5] ? methodMatch[5].length : 0;
+                        const nameL = methodMatch[6] ? methodMatch[6].length : 0;
+                        const methodAccess = line.substr(spacesL, accessL).trim();
+                        const methodModifiers = line.substr(spacesL + accessL, modifiersL).trim();
+                        const methodTemplate = line.substr(spacesL + accessL + modifiersL, templateL).trim();
+                        const methodType = line.substr(spacesL + accessL + modifiersL + templateL, typeL).trim();
+                        const methodName = line.substr(spacesL + accessL + modifiersL + templateL + typeL, nameL).trim();
                         if (classInfo) {
                             methodInfo = jvmProject.getMethodInfo(methodName, classInfo);
                             if (methodInfo) {
@@ -328,7 +338,18 @@ export class Builder {
                                     methodInfo.methodAccess = methodAccess;
                                 }
                                 methodInfo.methodType = methodType || "";
-                                methodInfo.methodModifiers = methodModifiers.split(" ").map((value) => value.trim()).filter(value => value);
+                                if (methodMatch[3]) {
+                                    const modifiers_masked = methodMatch[3].split(" ");
+                                    let start = 0;
+                                    for (const modifier of modifiers_masked) {
+                                        if (modifier) {
+                                            const mod_unmasked = methodModifiers.substr(start, start + modifier.length);
+                                            methodInfo.methodModifiers.push(mod_unmasked);
+                                            start += modifier.length;
+                                        }
+                                        ++start;
+                                    }
+                                }
                             }
                         } else {
                             logFn(LogType.error, () => localize("collect.no_class_for_method", "No class for method: {0}", line));
