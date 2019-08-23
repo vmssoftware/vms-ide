@@ -359,7 +359,7 @@ export function convertCodeToJavaEscaped(code: number) {
 }
 
 export function convertCodeToJavaCharacterForString(code: number) {
-    if (code < 0x20 || code >= 0x7f || code === 0x22 ) {
+    if (code < 0x20 || code === 0x22 ) {
         return `"+java.lang.Character.valueOf(${code})+"`;
     }
     return String.fromCharCode(code);
@@ -1637,7 +1637,7 @@ export class JvmShellRuntime extends EventEmitter {
 
         const methodInfo = await JvmProjectHelper.methodInfoByPlace(jvmStack.place);
         if (methodInfo) {
-            if (!methodInfo.methodStatic) {
+            if (!methodInfo.isStatic) {
                 // add new scope to root
                 const jvmThis: IJvmVariable = {
                     name: 'this',
@@ -1953,7 +1953,7 @@ export class JvmShellRuntime extends EventEmitter {
         const evalExpression = `java.util.Arrays.toString(${varFullName}.getBytes())`;
         const command = `eval ${evalExpression}`;
         const rgxResultStart = new RegExp(`^\\s*${RgxStrFromStr(evalExpression)}\\s*=\\s*\"\\[`);
-        let   resultArray: string | undefined;
+        let   separatedByCommas: string | undefined;
         const retValue = await this._queue.postCommand(command, (cmd, line) => {
             this._logFn(LogType.debug, () => `eval string: ${line?line.trimRight():""}`);
             if (cmd === command) {
@@ -1962,10 +1962,10 @@ export class JvmShellRuntime extends EventEmitter {
                 }
                 if (jvmVar.value === undefined) {
                     let trimmed = line.trim();
-                    if (resultArray === undefined) {
+                    if (separatedByCommas === undefined) {
                         const startMatched = trimmed.match(rgxResultStart);
                         if (startMatched) {
-                            resultArray = trimmed.substr(startMatched[0].length);
+                            separatedByCommas = trimmed.substr(startMatched[0].length);
                         } else {
                             const primitiveMatched = trimmed.match(_rgxParse.rgxPrimitive);
                             if (primitiveMatched) {
@@ -1976,15 +1976,19 @@ export class JvmShellRuntime extends EventEmitter {
                         }
                     }
                     else {
-                        resultArray += trimmed;
+                        separatedByCommas += trimmed;
                     }
-                    if (resultArray !== undefined) {
-                        const endPos = resultArray.lastIndexOf("]");
+                    if (separatedByCommas !== undefined) {
+                        const endPos = separatedByCommas.lastIndexOf("]");
                         if (endPos >= 0) {
-                            resultArray = resultArray.substr(0, endPos);
-                            jvmVar.value = resultArray.split(",").map(code => String.fromCharCode(+code)).join('');
+                            separatedByCommas = separatedByCommas.substr(0, endPos);
+                            const stringValuesArray = separatedByCommas.split(",");
+                            const intValuesArray = stringValuesArray.map(v => +v);
+                            const buffer = Buffer.from(intValuesArray);
+                            const str = buffer.toString('utf8');
+                            jvmVar.value = str;
                             jvmVar.type = JvmVarType.string;
-                            resultArray = undefined;
+                            separatedByCommas = undefined;
                             return ListenerResponse.needMoreLines;
                         }
                     }

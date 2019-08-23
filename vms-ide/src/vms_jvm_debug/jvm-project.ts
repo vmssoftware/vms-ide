@@ -7,36 +7,38 @@ import { LogFunction, LogType } from '../common/main';
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export enum MethodAccess {
+export enum FieldAccess {
     'public',
     'protected',
     'private',
 };
 
-export function isMethodAccess(o: any): o is MethodAccess {
-    return Object.values(MethodAccess).includes(o);
+export function isFieldAccess(o: any): o is FieldAccess {
+    return Object.values(FieldAccess).includes(o);
 }
 
-export interface IMethodInfo {
-    methodName: string;
-    methodType: string;
-    methodAccess: MethodAccess;
-    methodStatic: boolean;
-    methodModifiers: string[];
+export interface IFieldInfo {
+    name: string;
+    type: string;
+    access: FieldAccess;
+    isStatic: boolean;
+    isMethod: boolean;
+    template: string;
+    modifiers: string[];
     /** valid source lines */
     lines: Set<number>,
 };
 
 export interface IClassInfo {
-    className: string;
+    name: string;
     hasMain: boolean,
-    /** method => IMethodInfo */
-    methods: Map<string, IMethodInfo>,
+    /** name => IFieldInfo */
+    fields: Map<string, IFieldInfo>,
 };
 
 export interface IFileInfo {
-    fileName: string,
-    /** class => IClassInfo */
+    name: string,
+    /** name => IClassInfo */
     classes: Map<string, IClassInfo>,
 };
 
@@ -44,7 +46,7 @@ export class JvmProject {
 
     public static reLoadDelay = 300;
 
-    /** file => IFileInfo */
+    /** name => IFileInfo */
     private collection = new Map<string, IFileInfo>();
     private watcher?: vscode.FileSystemWatcher;
     private timer?: NodeJS.Timer;
@@ -100,7 +102,7 @@ export class JvmProject {
         let fileInfo = this.collection.get(fileName);
         if (!fileInfo && add) {
             fileInfo = {
-                fileName,
+                name: fileName,
                 classes: new Map<string, IClassInfo>(),
             };
             this.collection.set(fileName, fileInfo);
@@ -114,14 +116,14 @@ export class JvmProject {
      * @param stackPlace 
      */
     public findFileByPlace(stackPlace: string) : IFileInfo | undefined {
-        const methodPos = stackPlace.lastIndexOf(".");
-        if (methodPos !== -1) {
-            const methodName = stackPlace.substr(methodPos+1);
-            const className = stackPlace.substr(0, methodPos);
+        const fieldPos = stackPlace.lastIndexOf(".");
+        if (fieldPos !== -1) {
+            const fieldName = stackPlace.substr(fieldPos+1);
+            const className = stackPlace.substr(0, fieldPos);
             for (const [filename, fileinfo] of this.collection) {
                 const classInfo = fileinfo.classes.get(className);
                 if (classInfo) {
-                    if (classInfo.methods.has(methodName)) {
+                    if (classInfo.fields.has(fieldName)) {
                         return fileinfo;
                     }
                 }
@@ -142,9 +144,9 @@ export class JvmProject {
             let classInfo = fileInfo.classes.get(className);
             if (!classInfo) {
                 classInfo = {
-                    className,
+                    name: className,
                     hasMain: false,
-                    methods: new Map<string, IMethodInfo>(),
+                    fields: new Map<string, IFieldInfo>(),
                 };
                 fileInfo.classes.set(className, classInfo);
             }
@@ -160,33 +162,36 @@ export class JvmProject {
         return undefined;
     }
 
-    public getMethodInfo(methodName: string, classInfo?: IClassInfo) : IMethodInfo | undefined {
+    public getFieldInfo(fieldName: string, classInfo?: IClassInfo) : IFieldInfo | undefined {
         let className = "";
-        methodName = methodName.replace(/\//g, ".");
-        const classNameEnd = methodName.lastIndexOf(".");
+        fieldName = fieldName.replace(/\//g, ".");
+        const classNameEnd = fieldName.lastIndexOf(".");
         if (classNameEnd !== -1) {
-            className = methodName.substr(0, classNameEnd);
-            methodName = methodName.substr(classNameEnd+1);
+            className = fieldName.substr(0, classNameEnd);
+            fieldName = fieldName.substr(classNameEnd+1);
         }
         if (classInfo) {
-            let methodInfo = classInfo.methods.get(methodName);
-            if (!methodInfo) {
-                methodInfo = {
-                    methodName: methodName,
-                    methodAccess: MethodAccess.public,
-                    methodStatic: false,
-                    methodType: "",
-                    methodModifiers: [],
+            let fieldInfo = classInfo.fields.get(fieldName);
+            if (!fieldInfo) {
+                // some of this properties must be filled later
+                fieldInfo = {
+                    name: fieldName,
+                    access: FieldAccess.public,
+                    isStatic: false,
+                    isMethod: false,
+                    type: "",
+                    template: "",
+                    modifiers: [],
                     lines: new Set<number>(),
                 };
-                classInfo.methods.set(methodName, methodInfo);
+                classInfo.fields.set(fieldName, fieldInfo);
             }
-            return methodInfo;
+            return fieldInfo;
         } else if (className) {
             for (const [fileName, fileInfo] of this.collection) {
                 classInfo = fileInfo.classes.get(className);
                 if (classInfo) {
-                    return classInfo.methods.get(methodName);
+                    return classInfo.fields.get(fieldName);
                 }
             }
         }
@@ -228,20 +233,22 @@ export class JvmProject {
                 for(const [fileName, fileInfo] of this.collection) {
                     const data = [...fileInfo.classes.values()].
                         map(classInfo => {
-                            const methods = [...classInfo.methods].map(([methodName, methodInfo]) => {
+                            const fields = [...classInfo.fields].map(([name, info]) => {
                                 return {
-                                    methodName,
-                                    methodType: methodInfo.methodType,
-                                    methodAccess:  methodInfo.methodAccess,
-                                    methodStatic: methodInfo.methodStatic,
-                                    methodModifiers: methodInfo.methodModifiers,
-                                    lines: [...methodInfo.lines],
+                                    name: name,
+                                    type: info.type,
+                                    access:  info.access,
+                                    isStatic: info.isStatic,
+                                    isMethod: info.isMethod,
+                                    template: info.template,
+                                    modifiers: info.modifiers,
+                                    lines: [...info.lines],
                                 }
                             });
                             return {
-                                className: classInfo.className,
+                                className: classInfo.name,
                                 hasMain: classInfo.hasMain,
-                                methods: methods,
+                                fields: fields,
                             }
                         });
                     jvmInfo.push({
@@ -283,7 +290,7 @@ export class JvmProject {
                         if (classInfoData === undefined || 
                             typeof classInfoData.className !== "string" ||
                             typeof classInfoData.hasMain !== "boolean" ||
-                            !(classInfoData.methods instanceof Array)) {
+                            !(classInfoData.fields instanceof Array)) {
                             continue;
                         }
                         const classInfo = this.getClassInfo(classInfoData.className, fileInfo);
@@ -291,31 +298,37 @@ export class JvmProject {
                             return false;
                         }
                         classInfo.hasMain = classInfoData.hasMain;  // 'hasMain' is useful only if class has source lines
-                        for (const methodInfoData of classInfoData.methods) {
-                            if (methodInfoData === undefined || 
-                                typeof methodInfoData.methodName !== "string" ||
-                                !(methodInfoData.lines instanceof Array)) {
+                        for (const fieldInfoData of classInfoData.fields) {
+                            if (fieldInfoData === undefined || 
+                                typeof fieldInfoData.name !== "string" ||
+                                !(fieldInfoData.lines instanceof Array)) {
                                     continue;
                             }
-                            const methodInfo = this.getMethodInfo(methodInfoData.methodName, classInfo);
-                            if (!methodInfo) {
+                            const fieldInfo = this.getFieldInfo(fieldInfoData.name, classInfo);
+                            if (!fieldInfo) {
                                 continue;
                             }
-                            if (isMethodAccess(methodInfoData.methodAccess)) {
-                                methodInfo.methodAccess = methodInfoData.methodAccess;
+                            if (isFieldAccess(fieldInfoData.access)) {
+                                fieldInfo.access = fieldInfoData.access;
                             }
-                            if (typeof methodInfoData.methodStatic === "boolean") {
-                                methodInfo.methodStatic = methodInfoData.methodStatic;
+                            if (typeof fieldInfoData.isStatic === "boolean") {
+                                fieldInfo.isStatic = fieldInfoData.isStatic;
                             }
-                            if (typeof methodInfoData.methodType === "string") {
-                                methodInfo.methodType = methodInfoData.methodType;
+                            if (typeof fieldInfoData.isMethod === "boolean") {
+                                fieldInfo.isMethod = fieldInfoData.isMethod;
                             }
-                            if (methodInfoData.methodModifiers instanceof Array) {
-                                methodInfo.methodModifiers = methodInfoData.methodModifiers;
+                            if (typeof fieldInfoData.type === "string") {
+                                fieldInfo.type = fieldInfoData.type;
                             }
-                            for (const line of methodInfoData.lines) {
+                            if (typeof fieldInfoData.template === "string") {
+                                fieldInfo.template = fieldInfoData.template;
+                            }
+                            if (fieldInfoData.modifiers instanceof Array) {
+                                fieldInfo.modifiers = fieldInfoData.modifiers;
+                            }
+                            for (const line of fieldInfoData.lines) {
                                 if (line && typeof line === "number") {
-                                    methodInfo.lines.add(line);
+                                    fieldInfo.lines.add(line);
                                 }
                             }
                         }

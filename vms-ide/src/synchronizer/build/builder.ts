@@ -23,7 +23,7 @@ import { ProjectState } from "../dep-tree/proj-state";
 import { collectSplittedByCommas } from "../../synchronizer/common/find-files";
 import { IBuildConfigSection } from "../../synchronizer/sync/sync-api";
 import { TestExecResult } from "../../synchronizer/common/TestExecResult";
-import { JvmProject, IClassInfo, IMethodInfo, isMethodAccess } from "../../vms_jvm_debug/jvm-project";
+import { JvmProject, IClassInfo, IFieldInfo, isFieldAccess } from "../../vms_jvm_debug/jvm-project";
 import { maskSpacesInTemplate } from "../../common/rgx-from-str";
 
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -231,7 +231,7 @@ export class Builder {
         const rgFile = /Compiled from "(\w+\.\w+)"/;
         const rgLine = /line (\d+): (\d+)/;
         const rgMain = /public\s+static\s+(final\s+)?void\s+main\(/;
-        const rgMethod = /^(\s*)((?:public|private|protected)\s+)?((?:(?:static|abstract|synchronized|transient|volatile|final|native|strictfp|default)\s+)*)(<\S+\s+)?(\S+\s+)?(\S+)\s*\(/i;
+        const rgField = /^(\s*)((?:public|private|protected)\s+)?((?:(?:static|abstract|synchronized|transient|volatile|final|native|strictfp|default)\s+)*)(<\S+\s+)?(\S+\s+)?([^\s(;]+)\s*(\(|;)/;
 
         if (this.sshHelper) {
             this.sshHelper.clearPasswordCache();
@@ -280,7 +280,7 @@ export class Builder {
             const result = await scopeData!.shell.execCmd(javapCmd);
             if (result && result.length > 0) {
                 let classInfo: IClassInfo | undefined;
-                let methodInfo: IMethodInfo | undefined;
+                let fieldInfo: IFieldInfo | undefined;
                 for (const line of result) {
                     if (!line) {
                         continue;
@@ -292,7 +292,7 @@ export class Builder {
                         const className = classNames.shift();
                         if (className) {                                   
                             classInfo = jvmProject.getClassInfo(className, fileInfo);
-                            methodInfo = undefined;
+                            fieldInfo = undefined;
                         } else {
                             logFn(LogType.error, () => localize("collect.no_class_for_file", "No class for this file match: {0}", line));
                             break;
@@ -301,10 +301,10 @@ export class Builder {
                     }
                     const lineMatch = line.match(rgLine);
                     if (lineMatch) {
-                        if (methodInfo) {
-                            methodInfo.lines.add(+lineMatch[1]);
+                        if (fieldInfo && fieldInfo.isMethod) {
+                            fieldInfo.lines.add(+lineMatch[1]);
                         } else {
-                            logFn(LogType.error, () => localize("collect.no_class_for_line", "No method for this line match: {0}", line));
+                            logFn(LogType.error, () => localize("collect.no_method_for_line", "No method for this line match: {0}", line));
                         }
                         continue;
                     }
@@ -317,34 +317,36 @@ export class Builder {
                         }
                     }
                     const maskedTemplates = maskSpacesInTemplate(line, "*");
-                    const methodMatch = maskedTemplates.match(rgMethod);
-                    if (methodMatch) {
-                        const spacesL = methodMatch[1] ? methodMatch[1].length : 0;
-                        const accessL = methodMatch[2] ? methodMatch[2].length : 0;
-                        const modifiersL = methodMatch[3] ? methodMatch[3].length : 0;
-                        const templateL = methodMatch[4] ? methodMatch[4].length : 0;
-                        const typeL = methodMatch[5] ? methodMatch[5].length : 0;
-                        const nameL = methodMatch[6] ? methodMatch[6].length : 0;
-                        const methodAccess = line.substr(spacesL, accessL).trim();
-                        const methodModifiers = line.substr(spacesL + accessL, modifiersL).trim();
-                        const methodTemplate = line.substr(spacesL + accessL + modifiersL, templateL).trim();
-                        const methodType = line.substr(spacesL + accessL + modifiersL + templateL, typeL).trim();
-                        const methodName = line.substr(spacesL + accessL + modifiersL + templateL + typeL, nameL).trim();
+                    const fieldMatch = maskedTemplates.match(rgField);
+                    if (fieldMatch) {
                         if (classInfo) {
-                            methodInfo = jvmProject.getMethodInfo(methodName, classInfo);
-                            if (methodInfo) {
-                                methodInfo.methodStatic = methodModifiers.includes('static');
-                                if (isMethodAccess(methodAccess)) {
-                                    methodInfo.methodAccess = methodAccess;
+                            const spacesLength = fieldMatch[1] ? fieldMatch[1].length : 0;
+                            const accessLength = fieldMatch[2] ? fieldMatch[2].length : 0;
+                            const modifiersLength = fieldMatch[3] ? fieldMatch[3].length : 0;
+                            const templateLength = fieldMatch[4] ? fieldMatch[4].length : 0;
+                            const typeLength = fieldMatch[5] ? fieldMatch[5].length : 0;
+                            const nameLength = fieldMatch[6] ? fieldMatch[6].length : 0;
+                            const access = line.substr(spacesLength, accessLength).trim();
+                            const modifiers = line.substr(spacesLength + accessLength, modifiersLength).trim();
+                            const template = line.substr(spacesLength + accessLength + modifiersLength, templateLength).trim();
+                            const type = line.substr(spacesLength + accessLength + modifiersLength + templateLength, typeLength).trim();
+                            const name = line.substr(spacesLength + accessLength + modifiersLength + templateLength + typeLength, nameLength).trim();
+                            fieldInfo = jvmProject.getFieldInfo(name, classInfo);
+                            if (fieldInfo) {
+                                fieldInfo.isMethod = (fieldMatch[7] === '(');
+                                fieldInfo.isStatic = modifiers.includes('static');
+                                if (isFieldAccess(access)) {
+                                    fieldInfo.access = access;
                                 }
-                                methodInfo.methodType = methodType || "";
-                                if (methodMatch[3]) {
-                                    const modifiers_masked = methodMatch[3].split(" ");
+                                fieldInfo.type = type;
+                                fieldInfo.template = template;
+                                if (fieldMatch[3]) {
+                                    const modifiers_masked = fieldMatch[3].split(" ");
                                     let start = 0;
                                     for (const modifier of modifiers_masked) {
                                         if (modifier) {
-                                            const mod_unmasked = methodModifiers.substr(start, start + modifier.length);
-                                            methodInfo.methodModifiers.push(mod_unmasked);
+                                            const mod_unmasked = modifiers.substr(start, start + modifier.length);
+                                            fieldInfo.modifiers.push(mod_unmasked);
                                             start += modifier.length;
                                         }
                                         ++start;
@@ -354,6 +356,7 @@ export class Builder {
                         } else {
                             logFn(LogType.error, () => localize("collect.no_class_for_method", "No class for method: {0}", line));
                         }
+                        continue;
                     }
                 }
             }
