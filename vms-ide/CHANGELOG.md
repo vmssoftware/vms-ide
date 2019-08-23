@@ -1,6 +1,9 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
 ## 1.2.1
+* Fix display/set unicode string in **Java** debugger, collecting fields of java classes.
+
+## 1.2.2
 * Fix working with templates in **Java**.
 
 ## 1.2.0
