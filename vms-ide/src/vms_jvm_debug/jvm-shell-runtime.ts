@@ -1644,6 +1644,7 @@ export class JvmShellRuntime extends EventEmitter {
             // add new scope to root
             const jvmThis: IJvmVariable = {
                 name: 'this',
+                value: methodInfo.class.name,
                 varId: this._vars.size + 1,
                 vars: [],
                 type: JvmVarType.object,
@@ -1661,8 +1662,8 @@ export class JvmShellRuntime extends EventEmitter {
                         currentVar: jvmStaticField,
                     };
                     retCode = await this.dumpVariableOrLocals(parserData);
-                    if (retCode) {
-                        jvmThis.vars!.push(jvmStaticField);
+                    if (retCode && jvmThis.vars) {
+                        jvmThis.vars.push(jvmStaticField);
                     }
                 }
             }
@@ -1673,7 +1674,7 @@ export class JvmShellRuntime extends EventEmitter {
                 };
                 retCode = await this.dumpVariableOrLocals(parserData)
             }
-            if (retCode) {
+            if (retCode && jvmThis.vars && jvmThis.vars.length > 0) {
                 jvmStack.scopes.push(jvmThis);
             }
         }
