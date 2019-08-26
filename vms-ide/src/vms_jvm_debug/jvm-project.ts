@@ -25,15 +25,18 @@ export interface IFieldInfo {
     isMethod: boolean;
     template: string;
     modifiers: string[];
+    params: string,
     /** valid source lines */
     lines: Set<number>,
+    class: IClassInfo,
 };
 
 export interface IClassInfo {
     name: string;
     hasMain: boolean,
     /** name => IFieldInfo */
-    fields: Map<string, IFieldInfo>,
+    fields: IFieldInfo[],
+    file: IFileInfo,
 };
 
 export interface IFileInfo {
@@ -123,7 +126,7 @@ export class JvmProject {
             for (const [filename, fileinfo] of this.collection) {
                 const classInfo = fileinfo.classes.get(className);
                 if (classInfo) {
-                    if (classInfo.fields.has(fieldName)) {
+                    if (classInfo.fields.find(field => field.name === fieldName)) {
                         return fileinfo;
                     }
                 }
@@ -146,7 +149,8 @@ export class JvmProject {
                 classInfo = {
                     name: className,
                     hasMain: false,
-                    fields: new Map<string, IFieldInfo>(),
+                    fields: [],
+                    file: fileInfo,
                 };
                 fileInfo.classes.set(className, classInfo);
             }
@@ -162,36 +166,47 @@ export class JvmProject {
         return undefined;
     }
 
-    public getFieldInfo(fieldName: string, classInfo?: IClassInfo) : IFieldInfo | undefined {
+    public getFieldInfo(fieldName: string, classInfo?: IClassInfo, params?: string) : IFieldInfo | undefined {
         let className = "";
         fieldName = fieldName.replace(/\//g, ".");
+        const initPos = fieldName.indexOf(".<init>");
+        if (initPos !== -1) {
+            // replace ".<init>" by the name of the class
+            fieldName = fieldName.substr(0, initPos);
+        }
         const classNameEnd = fieldName.lastIndexOf(".");
         if (classNameEnd !== -1) {
             className = fieldName.substr(0, classNameEnd);
             fieldName = fieldName.substr(classNameEnd+1);
+            if (initPos !== -1) {
+                // replace ".<init>" by the name of the class, now fieldName === className
+                className += "." + fieldName;
+            }
         }
         if (classInfo) {
-            let fieldInfo = classInfo.fields.get(fieldName);
+            let fieldInfo = classInfo.fields.find(field => field.name === fieldName && (params? field.params === params : true));
             if (!fieldInfo) {
                 // some of this properties must be filled later
                 fieldInfo = {
                     name: fieldName,
                     access: FieldAccess.public,
                     isStatic: false,
-                    isMethod: false,
+                    isMethod: params !== "",
                     type: "",
                     template: "",
+                    params: params || "",
                     modifiers: [],
                     lines: new Set<number>(),
+                    class: classInfo,
                 };
-                classInfo.fields.set(fieldName, fieldInfo);
+                classInfo.fields.push(fieldInfo);
             }
             return fieldInfo;
         } else if (className) {
             for (const [fileName, fileInfo] of this.collection) {
                 classInfo = fileInfo.classes.get(className);
                 if (classInfo) {
-                    return classInfo.fields.get(fieldName);
+                    return classInfo.fields.find(field => field.name === fieldName && (params? field.params === params : true));
                 }
             }
         }
@@ -233,14 +248,15 @@ export class JvmProject {
                 for(const [fileName, fileInfo] of this.collection) {
                     const data = [...fileInfo.classes.values()].
                         map(classInfo => {
-                            const fields = [...classInfo.fields].map(([name, info]) => {
+                            const fields = [...classInfo.fields].map(info => {
                                 return {
-                                    name: name,
+                                    name: info.name,
                                     type: info.type,
                                     access:  info.access,
                                     isStatic: info.isStatic,
                                     isMethod: info.isMethod,
                                     template: info.template,
+                                    params: info.params,
                                     modifiers: info.modifiers,
                                     lines: [...info.lines],
                                 }
@@ -304,7 +320,11 @@ export class JvmProject {
                                 !(fieldInfoData.lines instanceof Array)) {
                                     continue;
                             }
-                            const fieldInfo = this.getFieldInfo(fieldInfoData.name, classInfo);
+                            let params = "";
+                            if (typeof fieldInfoData.params === "string") {
+                                params = fieldInfoData.params;
+                            }
+                            const fieldInfo = this.getFieldInfo(fieldInfoData.name, classInfo, params);
                             if (!fieldInfo) {
                                 continue;
                             }
@@ -323,6 +343,7 @@ export class JvmProject {
                             if (typeof fieldInfoData.template === "string") {
                                 fieldInfo.template = fieldInfoData.template;
                             }
+                            fieldInfo.params = params;
                             if (fieldInfoData.modifiers instanceof Array) {
                                 fieldInfo.modifiers = fieldInfoData.modifiers;
                             }

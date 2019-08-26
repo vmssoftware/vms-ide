@@ -1422,6 +1422,9 @@ export class JvmShellRuntime extends EventEmitter {
             } else {
                 const varObjStartMatch = line.match(_rgxParse.rgxVariableObjectStart);
                 if (varObjStartMatch) {
+                    if (data.currentVar.type === undefined) {
+                        data.currentVar.type = JvmVarType.object;
+                    }
                     data.inside = true;
                     return ParserRequest.nextLine;
                 } else {
@@ -1634,30 +1637,47 @@ export class JvmShellRuntime extends EventEmitter {
     }
 
     private async dumpThis(jvmStack: IJvmStack) {
-
+        let retCode = false;
         const methodInfo = await JvmProjectHelper.methodInfoByPlace(jvmStack.place);
         if (methodInfo) {
-            if (!methodInfo.isStatic) {
-                // add new scope to root
-                const jvmThis: IJvmVariable = {
-                    name: 'this',
-                    varId: this._vars.size + 1,
-                };
-                this._vars.set(jvmThis.varId, jvmThis);
+            retCode = true;
+            // add new scope to root
+            const jvmThis: IJvmVariable = {
+                name: 'this',
+                varId: this._vars.size + 1,
+                vars: [],
+                type: JvmVarType.object,
+            };
+            this._vars.set(jvmThis.varId, jvmThis);
+            for(const fieldInfo of methodInfo.class.fields) {
+                if (!fieldInfo.isMethod && fieldInfo.isStatic) {
+                    const jvmStaticField: IJvmVariable = {
+                        name: methodInfo.class.name + "." + fieldInfo.name,
+                        varId: this._vars.size + 1,
+                    };
+                    this._vars.set(jvmStaticField.varId, jvmStaticField);
+                    const parserData: IParserData = {
+                        state: ParserState.normal,
+                        currentVar: jvmStaticField,
+                    };
+                    retCode = await this.dumpVariableOrLocals(parserData);
+                    if (retCode) {
+                        jvmThis.vars!.push(jvmStaticField);
+                    }
+                }
+            }
+            if (retCode && !methodInfo.isStatic) {
                 const parserData: IParserData = {
                     state: ParserState.normal,
                     currentVar: jvmThis,
                 };
-                return await this.dumpVariableOrLocals(parserData)
-                    .then((isDumped) => {
-                        if (isDumped) {
-                            jvmStack.scopes.push(jvmThis);
-                        }
-                        return isDumped;
-                    });
+                retCode = await this.dumpVariableOrLocals(parserData)
+            }
+            if (retCode) {
+                jvmStack.scopes.push(jvmThis);
             }
         }
-        return false;
+        return retCode;
     }
 
     private async getLocals(jvmStack: IJvmStack) {

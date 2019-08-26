@@ -231,7 +231,7 @@ export class Builder {
         const rgFile = /Compiled from "(\w+\.\w+)"/;
         const rgLine = /line (\d+): (\d+)/;
         const rgMain = /public\s+static\s+(final\s+)?void\s+main\(/;
-        const rgField = /^(\s*)((?:public|private|protected)\s+)?((?:(?:static|abstract|synchronized|transient|volatile|final|native|strictfp|default)\s+)*)(<\S+\s+)?(\S+\s+)?([^\s(;]+)\s*(\(|;)/;
+        const rgField = /^(\s*)((?:public|private|protected)\s+)?((?:(?:static|abstract|synchronized|transient|volatile|final|native|strictfp|default)\s+)*)(<\S+\s+)?([^\s(;]+\s+)?([^\s(;]+)\s*(\(.*\))?\s*(?:throws .*)?;/;
 
         if (this.sshHelper) {
             this.sshHelper.clearPasswordCache();
@@ -326,20 +326,23 @@ export class Builder {
                             const templateLength = fieldMatch[4] ? fieldMatch[4].length : 0;
                             const typeLength = fieldMatch[5] ? fieldMatch[5].length : 0;
                             const nameLength = fieldMatch[6] ? fieldMatch[6].length : 0;
+                            const paramsLength = fieldMatch[7] ? fieldMatch[7].length : 0;
                             const access = line.substr(spacesLength, accessLength).trim();
                             const modifiers = line.substr(spacesLength + accessLength, modifiersLength).trim();
                             const template = line.substr(spacesLength + accessLength + modifiersLength, templateLength).trim();
                             const type = line.substr(spacesLength + accessLength + modifiersLength + templateLength, typeLength).trim();
                             const name = line.substr(spacesLength + accessLength + modifiersLength + templateLength + typeLength, nameLength).trim();
-                            fieldInfo = jvmProject.getFieldInfo(name, classInfo);
+                            const params = line.substr(spacesLength + accessLength + modifiersLength + templateLength + typeLength + nameLength, paramsLength).trim();
+                            fieldInfo = jvmProject.getFieldInfo(name, classInfo, params);
                             if (fieldInfo) {
-                                fieldInfo.isMethod = (fieldMatch[7] === '(');
+                                fieldInfo.isMethod = (params !== "") || (name === "{}");  // special case for static initialization
                                 fieldInfo.isStatic = modifiers.includes('static');
                                 if (isFieldAccess(access)) {
                                     fieldInfo.access = access;
                                 }
                                 fieldInfo.type = type;
                                 fieldInfo.template = template;
+                                fieldInfo.params = params;
                                 if (fieldMatch[3]) {
                                     const modifiers_masked = fieldMatch[3].split(" ");
                                     let start = 0;
