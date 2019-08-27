@@ -18,6 +18,9 @@ import { SshShellServer } from './ssh-shell-server';
 import { CmdQueue } from './cmd-queue';
 import { JvmProjectHelper } from './jvm-proj-helper';
 import { ListenerResponse } from "./communication";
+import { minOf } from "../common/iterators";
+import { window, QuickPickItem } from "vscode";
+import { JvmProject } from "./jvm-project";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -51,8 +54,9 @@ export class JvmDebugSession extends LoggingDebugSession {
 
     private _logFn: LogFunction;
 
-    private _breakPoints = new Map<string, Map<number, number>>(); // [file -> id -> line ]
-    private _cmdLock = new Lock();
+    private _breakPoints = new Map<string, Map<number, number>>();  // [file -> id -> line ]
+    private _functionBreakPoints = new Map<string, number>();       // [name as is -> id ]
+    private _stopOnEntryBp = 0;
 
 	/**
 	 * Creates a new debug adapter that is used for one debug session.
@@ -87,6 +91,9 @@ export class JvmDebugSession extends LoggingDebugSession {
         });
         this._runtime.on(JvmRuntimeEvents.stopOnException, (threadId) => {
             this.sendStoppedEvent('exception', threadId);
+        });
+        this._runtime.on(JvmRuntimeEvents.stopOnBreakpointError, (threadId) => {
+            this.sendStoppedEvent('breakpoint error', threadId);
         });
         this._runtime.on(JvmRuntimeEvents.stopOnPause, (threadId) => {
             this.sendStoppedEvent('pause', threadId);
@@ -123,58 +130,63 @@ export class JvmDebugSession extends LoggingDebugSession {
     private _capabilities: DebugProtocol.Capabilities = {
         /** The debug adapter supports the 'configurationDone' request. */
         supportsConfigurationDoneRequest: true,
-        /** The debug adapter supports function breakpoints. */
-        supportsFunctionBreakpoints: false,
-        /** The debug adapter supports conditional breakpoints. */
-        supportsConditionalBreakpoints: false,
-        /** The debug adapter supports breakpoints that break execution after a specified number of hits. */
-        supportsHitConditionalBreakpoints: false,
-        /** The debug adapter supports a (side effect free) evaluate request for data hovers. */
-        supportsEvaluateForHovers: true,
-        /** Available filters or options for the setExceptionBreakpoints request. */
-        exceptionBreakpointFilters: undefined,
+
         /** The debug adapter supports stepping back via the 'stepBack' and 'reverseContinue' requests. */
         supportsStepBack: false,
-        /** The debug adapter supports setting a variable to a value. */
-        supportsSetVariable: true,
-        /** The debug adapter supports restarting a frame. */
-        supportsRestartFrame: false,
-        /** The debug adapter supports the 'gotoTargets' request. */
-        supportsGotoTargetsRequest: false,
         /** The debug adapter supports the 'stepInTargets' request. */
         supportsStepInTargetsRequest: true,
+        /** The debug adapter supports the 'gotoTargets' request. */
+        supportsGotoTargetsRequest: false,
+        /** The debug adapter supports restarting a frame. */
+        supportsRestartFrame: false,
+        /** The debug adapter supports the 'restart' request. In this case a client should not implement 'restart' by terminating and relaunching the adapter but by calling the RestartRequest. */
+        supportsRestartRequest: false,
+        /** The debug adapter supports the 'terminate' request. */
+        supportsTerminateRequest: true,
+        /** The debug adapter supports the 'terminateDebuggee' attribute on the 'disconnect' request. */
+        supportTerminateDebuggee: false,
+        /** The debug adapter supports the 'terminateThreads' request. */
+        supportsTerminateThreadsRequest: false,
+
+        /** The debug adapter supports a (side effect free) evaluate request for data hovers. */
+        supportsEvaluateForHovers: true,
+        /** The debug adapter supports setting a variable to a value. */
+        supportsSetVariable: true,
+        /** The debug adapter supports a 'format' attribute on the stackTraceRequest, variablesRequest, and evaluateRequest. */
+        supportsValueFormattingOptions: false,
+
         /** The debug adapter supports the 'completions' request. */
         supportsCompletionsRequest: false,
+
         /** The debug adapter supports the 'modules' request. */
         supportsModulesRequest: false,
         /** The set of additional module information exposed by the debug adapter. */
         additionalModuleColumns: undefined,
+
         /** Checksum algorithms supported by the debug adapter. */
         supportedChecksumAlgorithms: undefined,
-        /** The debug adapter supports the 'restart' request. In this case a client should not implement 'restart' by terminating and relaunching the adapter but by calling the RestartRequest. */
-        supportsRestartRequest: false,
+
         /** The debug adapter supports 'exceptionOptions' on the setExceptionBreakpoints request. */
         supportsExceptionOptions: false,
-        /** The debug adapter supports a 'format' attribute on the stackTraceRequest, variablesRequest, and evaluateRequest. */
-        supportsValueFormattingOptions: false,
         /** The debug adapter supports the 'exceptionInfo' request. */
         supportsExceptionInfoRequest: false,
-        /** The debug adapter supports the 'terminateDebuggee' attribute on the 'disconnect' request. */
-        supportTerminateDebuggee: false,
         /** The debug adapter supports the delayed loading of parts of the stack, which requires that both the 'startFrame' and 'levels' arguments and the 'totalFrames' result of the 'StackTrace' request are supported. */
         supportsDelayedStackTraceLoading: true,
         /** The debug adapter supports the 'loadedSources' request. */
         supportsLoadedSourcesRequest: false,
-        /** The debug adapter supports logpoints by interpreting the 'logMessage' attribute of the SourceBreakpoint. */
-        supportsLogPoints: false,
-        /** The debug adapter supports the 'terminateThreads' request. */
-        supportsTerminateThreadsRequest: false,
         /** The debug adapter supports the 'setExpression' request. */
         supportsSetExpression: false,
-        /** The debug adapter supports the 'terminate' request. */
-        supportsTerminateRequest: true,
+
+        /** The debug adapter supports logpoints by interpreting the 'logMessage' attribute of the SourceBreakpoint. */
+        supportsLogPoints: false,
+        /** The debug adapter supports conditional breakpoints. */
+        supportsConditionalBreakpoints: false,
+        /** The debug adapter supports breakpoints that break execution after a specified number of hits. */
+        supportsHitConditionalBreakpoints: false,
+        /** The debug adapter supports function breakpoints. */
+        supportsFunctionBreakpoints: true,
         /** The debug adapter supports data breakpoints. */
-        supportsDataBreakpoints: false
+        supportsDataBreakpoints: true
     }
 
 	/**
@@ -268,7 +280,10 @@ export class JvmDebugSession extends LoggingDebugSession {
                     let result = await this.tryRunJVM(listeningPort, args.class, args.classpath, args.arguments);
                     if (result === jvmStartResult.started) {
                         if (args.stopOnEntry) {
-                            await this._runtime.setBreakPoint(await JvmProjectHelper.stopOnEntryClass(args.class, this._scope), "main");
+                            const bp = await this._runtime.setBreakPoint(await JvmProjectHelper.stopOnEntryClass(args.class, this._scope), "main");
+                            if (bp) {
+                                this._stopOnEntryBp = bp.breakId;
+                            }
                         }
                         args.port = String(listeningPort);
                         this._jvmQueue.onUnexpectedLine((line) => {
@@ -348,62 +363,164 @@ export class JvmDebugSession extends LoggingDebugSession {
         this.sendEvent(new TerminatedEvent());
     }
 
-    protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
-        this._cmdLock.acquire().then(async () => {
-            response.body = {
-                breakpoints: []
-            };
-            // set and verify breakpoint locations
-            const newIds = new Map<number, number>();
-            if (args.breakpoints) {
-                for (const sourceBp of args.breakpoints) {
-                    let [className, lineNumber] = await JvmProjectHelper.getBreakPointByFileLine(args.source.path, sourceBp.line);
-                    if (className && lineNumber !== undefined) {
-                        const runtimeBp = await this._runtime.setBreakPoint(className, lineNumber);
+    /**
+     * Set DATA breakpoint
+     * @param response 
+     * @param args 
+     */
+    protected setDataBreakpointsRequest(response: DebugProtocol.SetDataBreakpointsResponse, args: DebugProtocol.SetDataBreakpointsArguments) {
+        response.body = {
+            breakpoints: []
+        };
+
+        response.success = false;
+        this.sendResponse(response);
+    }
+
+    /**
+     * Set FUNCTION breakpoint
+     * @param response 
+     * @param args 
+     */
+    protected async setFunctionBreakPointsRequest(response: DebugProtocol.SetFunctionBreakpointsResponse, args: DebugProtocol.SetFunctionBreakpointsArguments) {
+        response.body = {
+            breakpoints: []
+        };
+
+        /** id is a key */
+        const newIds = new Map<number, string>();   // id -> name
+        for(const bp of args.breakpoints) {
+            let added = false;
+            const prevId = this._functionBreakPoints.get(bp.name);
+            if (prevId) {
+                const runtimeBp = await this._runtime.enableBreakPoint(prevId);
+                if (runtimeBp) {
+                    added = true;
+                    newIds.set(runtimeBp.breakId, bp.name);
+                    response.body.breakpoints.push({
+                        message: `Enabled ${prevId}`,
+                        id: runtimeBp.breakId,
+                        verified: runtimeBp.verified? true: false
+                    });
+                }
+            } else {
+                const fieldInfos = await JvmProjectHelper.findMethods(bp.name);
+                if (fieldInfos.length) {
+                    const chosen = await window.showQuickPick(fieldInfos.map(method => {
+                        return { 
+                            label: method.class.name + "." + method.name + method.params,
+                            method
+                        };
+                        }));
+                    if (chosen) {
+                        const fieldInfo = chosen.method;
+                        const fixedMethodName = JvmProject.fixConstructorForBreakpoint(fieldInfo.class.name, fieldInfo.name);
+                        const runtimeBp = await this._runtime.setBreakPoint(fieldInfo.class.name, fixedMethodName + fieldInfo.params);
                         if (runtimeBp) {
+                            added = true;
                             if (newIds.has(runtimeBp.breakId)) {
                                 response.body.breakpoints.push({
                                     message: "On the same place as one of the previous",
                                     id: runtimeBp.breakId,
-                                    line: lineNumber,
                                     verified: runtimeBp.verified? true: false
                                 });    
                             } else {
                                 response.body.breakpoints.push({
                                     id: runtimeBp.breakId,
-                                    line: lineNumber,
+                                    message: fieldInfo.class.name + "." + fieldInfo.name,
+                                    source: await this.createSource(fieldInfo.class.file.name),
+                                    line: minOf(fieldInfo.lines.values()),
                                     verified: runtimeBp.verified? true: false
                                 });
-                                newIds.set(runtimeBp.breakId, lineNumber);
+                                newIds.set(runtimeBp.breakId, bp.name);
                             }
                         }
-                    } else {
-                        response.body.breakpoints.push({
-                            message: "No code for this line",
-                            verified: false
-                        });
                     }
                 }
             }
-            const prevIds = args.source.path?this._breakPoints.get(args.source.path):undefined;
-            if (prevIds) {
-                for (const [prevId, prevLn] of prevIds) {
-                    if (!newIds.has(prevId)) {
-                        this._runtime.clearBreakPointByID(prevId);
+            if (!added) {
+                response.body.breakpoints.push({
+                    message: "Cannot find this function",
+                    verified: false
+                });
+            }
+        }
+
+        for (const [, id] of this._functionBreakPoints) {
+            if (!newIds.has(id)) {
+                this._runtime.disableBreakPoint(id);
+            }
+        }
+        this._functionBreakPoints = new Map<string, number>();
+        for (const [id, name] of newIds) {
+            this._functionBreakPoints.set(name, id);
+        }
+
+        response.success = true;
+        this.sendResponse(response);
+    }
+
+    protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments) {
+        response.body = {
+            breakpoints: []
+        };
+        // set and verify breakpoint locations
+        const newIds = new Map<number, number>();
+        if (args.breakpoints) {
+            for (const sourceBp of args.breakpoints) {
+                let added = false;
+                let [className, lineNumber] = await JvmProjectHelper.getBreakPointByFileLine(args.source.path, sourceBp.line);
+                if (className && lineNumber !== undefined) {
+                    const runtimeBp = await this._runtime.setBreakPoint(className, lineNumber);
+                    if (runtimeBp) {
+                        if (newIds.has(runtimeBp.breakId)) {
+                            added = true;
+                            response.body.breakpoints.push({
+                                message: "On the same place as one of the previous",
+                                id: runtimeBp.breakId,
+                                line: lineNumber,
+                                verified: runtimeBp.verified? true: false
+                            });    
+                        } else {
+                            added = true;
+                            response.body.breakpoints.push({
+                                id: runtimeBp.breakId,
+                                line: lineNumber,
+                                verified: runtimeBp.verified? true: false
+                            });
+                            newIds.set(runtimeBp.breakId, lineNumber);
+                        }
                     }
                 }
+                if (!added) {
+                    response.body.breakpoints.push({
+                        message: "No code for this line",
+                        verified: false
+                    });
+                }
             }
-            if (args.source.path) {
-                this._breakPoints.set(args.source.path, newIds);
+        }
+        const prevIds = args.source.path?this._breakPoints.get(args.source.path):undefined;
+        if (prevIds) {
+            for (const [prevId, prevLn] of prevIds) {
+                if (!newIds.has(prevId)) {
+                    this._runtime.disableBreakPoint(prevId);
+                }
             }
-            response.success = true;
-            this.sendResponse(response);
-            this._cmdLock.release();
-        });
+        }
+        if (args.source.path) {
+            this._breakPoints.set(args.source.path, newIds);
+        }
+        response.success = true;
+        this.sendResponse(response);
     }
 
     protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
-        this._runtime.requestThreads().then((threads) => {
+        this._runtime.requestThreads().then(async (threads) => {
+            if (this._stopOnEntryBp) {
+                await this._runtime.disableBreakPoint(this._stopOnEntryBp);
+                this._stopOnEntryBp = 0;
+            }
             const respThreads: DebugProtocol.Thread[] = [];
             if (threads) {
                 for (const thread of threads) {

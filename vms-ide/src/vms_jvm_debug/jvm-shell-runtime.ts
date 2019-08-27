@@ -34,6 +34,7 @@ export enum JvmRuntimeEvents {
     stopOnEntry = 'stopOnEntry',
     stopOnStep = 'stopOnStep',
     stopOnBreakpoint = 'stopOnBreakpoint',
+    stopOnBreakpointError = 'stopOnBreakpointError',
     stopOnException = 'stopOnException',
     stopOnPause = 'stopOnPause',
     breakpointValidated = 'breakpointValidated',
@@ -241,6 +242,10 @@ const _stopEvents: IStopLine[] = [
         rgx: /Exception occurred:/,
         reason: JvmRuntimeEvents.stopOnException
     },
+    {
+        rgx: /Stopping due to deferred breakpoint errors./,
+        reason: JvmRuntimeEvents.stopOnBreakpointError
+    }
 ];
 
 const _pauseEvent = {
@@ -310,6 +315,7 @@ const _rgxBreakPoint = {
     rgxSet: /Set breakpoint (\S+)/,
     rgxSetDef: /Set deferred breakpoint (\S+)/,
     rgxClear: /Removed: breakpoint (\S+)/,
+    rgxSetDeferError: /Unable to set deferred breakpoint (.*)/,
 };
 
 const _rgxParse = {
@@ -866,12 +872,35 @@ export class JvmShellRuntime extends EventEmitter {
         return undefined;
 	}
 
+	public async enableBreakPoint(id: number) {
+        let retBp: JvmBreakpoint | undefined;
+        const command = 'enableBreakPoint';
+        this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
+        const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
+        if (acquired) {
+            this._logFn(LogType.debug, () => `CMD locked "${command}"`);
+            for (const [, bp] of this._breakpoints) {
+                if (bp.breakId === id) {
+                    retBp = bp;
+                    if (!bp.sent) {
+                        bp.sent = await this.postBreakPointCmd(SetBreakCommand, bp.className, bp.place);
+                    }
+                    break;
+                }
+            }
+            this.cmdLock.release();
+            this._logFn(LogType.debug, () => `CMD released "${command}"`);
+        }
+        return retBp;
+	}
+
     /**
      * Clear BP
      * @param id 
      */
-	public async clearBreakPointByID(id: number) {
-        const command = 'clearBreakPointByID';
+	public async disableBreakPoint(id: number) {
+        let retCode = false;
+        const command = 'disableBreakPoint';
         this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
         const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
         if (acquired) {
@@ -879,18 +908,14 @@ export class JvmShellRuntime extends EventEmitter {
             for (const [bpKey, bp] of this._breakpoints) {
                 if (bp.breakId === id) {
                     this._breakpoints.delete(bpKey);
-                    return this.postBreakPointCmd(ClearBreakCommand, bp.className, bp.place).
-                                then((isOk) => {
-                                    this.cmdLock.release();
-                                    this._logFn(LogType.debug, () => `CMD released "${command}"`);
-                                    return isOk;
-                                });
+                    retCode = await this.postBreakPointCmd(ClearBreakCommand, bp.className, bp.place);
+                    break;
                 }
             }
             this.cmdLock.release();
             this._logFn(LogType.debug, () => `CMD released "${command}"`);
         }
-        return false;
+        return retCode;
 	}
 
     public isRunning() {
@@ -987,6 +1012,12 @@ export class JvmShellRuntime extends EventEmitter {
                     return this.onUnexpectedLine(tail);
                 }
             });
+
+            const matchDeferErr = line.match(_rgxBreakPoint.rgxSetDeferError);
+            if (matchDeferErr) {
+                this.sendEvent(JvmRuntimeEvents.output, matchDeferErr[1]);
+                return;
+            }
 
             const promptId = this.testIfThreadPrompt(line);
             if ( promptId === JvmPrompt.promptIsStoppedThread) {

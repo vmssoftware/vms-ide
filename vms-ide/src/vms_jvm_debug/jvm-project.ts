@@ -58,6 +58,46 @@ export class JvmProject {
 
     private mustBeLoaded = true;
 
+    /**************************************************************************
+     * Static methods
+    **************************************************************************/
+
+    public static splitPlace(place: string) {
+        let className = "";
+        place = place.replace(/\//g, ".");
+        const initPos = place.indexOf(".<init>");
+        if (initPos !== -1) {
+            // replace ".<init>" by the name of the class
+            place = place.substr(0, initPos);
+        }
+        const classNameEnd = place.lastIndexOf(".");
+        if (classNameEnd !== -1) {
+            className = place.substr(0, classNameEnd);
+            place = place.substr(classNameEnd+1);
+            if (initPos !== -1) {
+                // replace ".<init>" by the name of the class, now fieldName === className
+                className += "." + place;
+            }
+        }
+        return { className, fieldName: place};
+    }
+
+    public static fixConstructorForBreakpoint(fullClassName: string, methodName: string) {
+        const classPos = fullClassName.lastIndexOf(".");
+        let className = fullClassName;
+        if (classPos !== -1) {
+            className = className.substr(classPos+1);
+        }
+        if (className === methodName) {
+            methodName = "<init>";
+        }
+        return methodName;
+    }
+
+    /**************************************************************************
+     * Public methods
+    **************************************************************************/
+
     constructor(private scope: string | undefined, doWatch: boolean, logFn?: LogFunction) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
@@ -87,15 +127,6 @@ export class JvmProject {
         }
     }
 
-    private testIfLost() {
-        if (this.mustBeLoaded && this.collection.size === 0) {
-            this.mustBeLoaded = false;
-            this.logFn(LogType.warning, 
-                () => localize("javainfo.lost", "Java classes information is lost for [{0}]", String(this.scope))
-                , true);
-        }
-    }
-
     /**
      * Find and return file info
      * @param fileName relative file name
@@ -119,10 +150,8 @@ export class JvmProject {
      * @param stackPlace 
      */
     public findFileByPlace(stackPlace: string) : IFileInfo | undefined {
-        const fieldPos = stackPlace.lastIndexOf(".");
-        if (fieldPos !== -1) {
-            const fieldName = stackPlace.substr(fieldPos+1);
-            const className = stackPlace.substr(0, fieldPos);
+        let {className, fieldName} = JvmProject.splitPlace(stackPlace);
+        if (className) {
             for (const [filename, fileinfo] of this.collection) {
                 const classInfo = fileinfo.classes.get(className);
                 if (classInfo) {
@@ -166,23 +195,27 @@ export class JvmProject {
         return undefined;
     }
 
-    public getFieldInfo(fieldName: string, classInfo?: IClassInfo, params?: string) : IFieldInfo | undefined {
-        let className = "";
-        fieldName = fieldName.replace(/\//g, ".");
-        const initPos = fieldName.indexOf(".<init>");
-        if (initPos !== -1) {
-            // replace ".<init>" by the name of the class
-            fieldName = fieldName.substr(0, initPos);
-        }
-        const classNameEnd = fieldName.lastIndexOf(".");
-        if (classNameEnd !== -1) {
-            className = fieldName.substr(0, classNameEnd);
-            fieldName = fieldName.substr(classNameEnd+1);
-            if (initPos !== -1) {
-                // replace ".<init>" by the name of the class, now fieldName === className
-                className += "." + fieldName;
+    public findMethods(method: string) {
+        const methodInfos: IFieldInfo[] = [];
+        let {className, fieldName} = JvmProject.splitPlace(method);
+        fieldName = fieldName.toLowerCase();
+        for (const [, fileInfo] of this.collection) {
+            for (const [, classInfo] of fileInfo.classes) {
+                if (!className || classInfo.name.endsWith(className)) {
+                    for (const methodInfo of classInfo.fields) {
+                        if (methodInfo.isMethod === true && 
+                            methodInfo.name.toLowerCase().includes(fieldName)) {
+                            methodInfos.push(methodInfo);
+                        }
+                    }
+                }
             }
         }
+        return methodInfos;
+    }
+
+    public getFieldInfo(place: string, classInfo?: IClassInfo, params?: string) : IFieldInfo | undefined {
+        let {className, fieldName} = JvmProject.splitPlace(place);
         if (classInfo) {
             let fieldInfo = classInfo.fields.find(field => field.name === fieldName && (params? field.params === params : true));
             if (!fieldInfo) {
@@ -363,6 +396,19 @@ export class JvmProject {
             this.logFn(LogType.error, () => String(ex));
         }
         return false;
+    }
+
+    /**************************************************************************
+     * Private methods
+    **************************************************************************/
+
+    private testIfLost() {
+        if (this.mustBeLoaded && this.collection.size === 0) {
+            this.mustBeLoaded = false;
+            this.logFn(LogType.warning, 
+                () => localize("javainfo.lost", "Java classes information is lost for [{0}]", String(this.scope))
+                , true);
+        }
     }
 
 }

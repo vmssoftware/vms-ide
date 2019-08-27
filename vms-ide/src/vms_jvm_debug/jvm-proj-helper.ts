@@ -5,7 +5,7 @@ import { ensureSettings, IEnsured } from '../synchronizer/ensure-settings';
 import { ProjectState } from '../synchronizer/dep-tree/proj-state';
 import { ProjectType } from '../synchronizer/config/sections/project';
 import { IJvmDebugConfiguration } from './jvm-config';
-import { JvmProject } from "./jvm-project";
+import { JvmProject, IFieldInfo } from "./jvm-project";
 import { LogFunction, ftpPathSeparator, LogType } from "../common/main";
 import { workspace, Uri, commands } from "vscode";
 import { Synchronizer } from "../synchronizer/sync/synchronizer";
@@ -203,6 +203,21 @@ export class JvmProjectHelper {
             }
         }
         return undefined;
+    }
+
+    public static async findMethods(method: string, scope?: string) {
+        const methodInfos: IFieldInfo[] = [];
+        if (workspace.workspaceFolders) {
+            for (const wsFolder of workspace.workspaceFolders) {
+                if (!scope || wsFolder.name === scope) {
+                    const scopedataT = await this.chooseScope(wsFolder.name);
+                    if (scopedataT) {
+                        methodInfos.push(...scopedataT.jvmProject.findMethods(method));
+                    }
+                }
+            }
+        }
+        return methodInfos;
     }
 
     public static async cdRemoteRoot(scope?: string) {
