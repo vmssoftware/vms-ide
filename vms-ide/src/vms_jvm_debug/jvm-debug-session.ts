@@ -98,6 +98,12 @@ export class JvmDebugSession extends LoggingDebugSession {
         this._runtime.on(JvmRuntimeEvents.stopOnPause, (threadId) => {
             this.sendStoppedEvent('pause', threadId);
         });
+        this._runtime.on(JvmRuntimeEvents.stopOnDataChange, (threadId) => {
+            this.sendStoppedEvent('data change', threadId);
+        });
+        this._runtime.on(JvmRuntimeEvents.stopOnDataAccess, (threadId) => {
+            this.sendStoppedEvent('data access', threadId);
+        });
         this._runtime.on(JvmRuntimeEvents.breakpointValidated, (id: number, verified: boolean) => {
             for (const [file, ids] of this._breakPoints) {
                 const line = ids.get(id);
@@ -153,7 +159,7 @@ export class JvmDebugSession extends LoggingDebugSession {
         /** The debug adapter supports setting a variable to a value. */
         supportsSetVariable: true,
         /** The debug adapter supports a 'format' attribute on the stackTraceRequest, variablesRequest, and evaluateRequest. */
-        supportsValueFormattingOptions: false,
+        supportsValueFormattingOptions: true,
 
         /** The debug adapter supports the 'completions' request. */
         supportsCompletionsRequest: false,
@@ -686,6 +692,8 @@ export class JvmDebugSession extends LoggingDebugSession {
                 };
                 break;
             case 'hover':
+                break;
+            case 'watch':
                 break;
         }
         this.sendResponse(response);

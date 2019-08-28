@@ -37,6 +37,8 @@ export enum JvmRuntimeEvents {
     stopOnBreakpointError = 'stopOnBreakpointError',
     stopOnException = 'stopOnException',
     stopOnPause = 'stopOnPause',
+    stopOnDataChange = 'stopOnDataChange',
+    stopOnDataAccess = 'stopOnDataAccess',
     breakpointValidated = 'breakpointValidated',
     output = 'output',
     end = 'end',
@@ -229,6 +231,17 @@ interface IStopLine {
 	reason: string;
 };
 
+const _stopOnDataChange: IStopLine = {
+    rgx: /Field \((\S+)\) is /,
+    reason: JvmRuntimeEvents.stopOnDataChange
+};
+
+const _stopOnDataAccess: IStopLine = {
+    rgx: /Field \((\S+)\) access encountered: /,
+    reason: JvmRuntimeEvents.stopOnDataAccess
+};
+
+
 const _stopEvents: IStopLine[] = [
     {
         rgx: /Breakpoint hit:/,
@@ -245,7 +258,7 @@ const _stopEvents: IStopLine[] = [
     {
         rgx: /Stopping due to deferred breakpoint errors./,
         reason: JvmRuntimeEvents.stopOnBreakpointError
-    }
+    },
 ];
 
 const _pauseEvent = {
@@ -501,6 +514,10 @@ export class JvmShellRuntime extends EventEmitter {
     
     private _stoppedThreads: JvmStoppedThread[] = [];
     private _stoppedThreadId?: number;
+
+    private _dataBpLines: string[] | undefined;
+    private _dataBpTimer: NodeJS.Timer | undefined;
+    private _dataBpReason: string | undefined;
 
     private _lastThreadId = 0;
     private _lastFrameId = 0;
@@ -945,9 +962,46 @@ export class JvmShellRuntime extends EventEmitter {
         }
     }
 
+    private async parseDataBp() {
+        if (this._dataBpLines && this._dataBpLines.length > 1) {
+            this.setRunning(false);
+            if (await this.populateThreadsInfo()) {
+                const isThreadPrompt = this.testIfThreadPrompt(this._dataBpLines[this._dataBpLines.length - 1]);
+                if (isThreadPrompt > 0) {
+                    this.sendEvent(JvmRuntimeEvents.stopOnDataChange, isThreadPrompt);
+                } else {
+                    // set all threads paused
+                    const mainThreads = this.mainThreads();
+                    if (mainThreads) {
+                        for(const thread of mainThreads) {
+                            this.setThread(thread.id).then(() => {
+                                this.sendEvent(this._dataBpReason || JvmRuntimeEvents.stopOnDataAccess, thread.id);
+                            });
+                            break;
+                        }
+                    }
+                }
+            }
+            this._dataBpLines = undefined;
+        }
+    }
+
     private onUnexpectedLine(line: string | undefined): void {
         if (line) {
             this._logFn(LogType.debug, () => `unexpected: ${line.trimRight()}`);
+
+            if (this._dataBpLines) {
+                this._dataBpLines.push(line);
+                if (this._dataBpTimer) {
+                    clearTimeout(this._dataBpTimer);
+                }
+                this._dataBpTimer = setTimeout(() => {
+                    this._dataBpTimer = undefined;
+                    // do not await 
+                    this.parseDataBp();
+                }, this.waitFetch);
+                return;
+            }
 
             for (const exitEvent of _exitEvents) {
                 const matchedEvent = line.match(exitEvent.rgx);
@@ -981,6 +1035,22 @@ export class JvmShellRuntime extends EventEmitter {
                     return this.onUnexpectedLine(tail);
                 }
             }
+
+            [_stopOnDataChange, _stopOnDataAccess].forEach(_stop => {
+                const dataBpMatch = line.match(_stop.rgx);
+                if (dataBpMatch) {
+                    // we cannot be sure the data will be parsed correctly, so fetch all
+                    this._dataBpLines = [];
+                    this._dataBpReason = _stop.reason;
+                    this._dataBpLines.push(line);
+                    this._dataBpTimer = setTimeout(() => {
+                        this._dataBpTimer = undefined;
+                        // do not await 
+                        this.parseDataBp();
+                    }, this.waitFetch);
+                    return;
+                }
+            });
 
             const pausedMatch = line.match(_pauseEvent.rgx);
             if (pausedMatch) {
