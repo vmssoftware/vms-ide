@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import fs from "fs-extra";
 import path from "path";
 import { LogFunction, LogType } from '../common/main';
+import { removeTemplate } from "../common/rgx-from-str";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -82,16 +83,59 @@ export class JvmProject {
         return { className, fieldName: place};
     }
 
-    public static fixConstructorForBreakpoint(fullClassName: string, methodName: string) {
-        const classPos = fullClassName.lastIndexOf(".");
-        let className = fullClassName;
+    public static methodForBreakpoint(method: IFieldInfo) {
+        let place = "";
+        // test if method is a constructor
+        let className = method.class.name;
+        const classPos = className.lastIndexOf(".");
         if (classPos !== -1) {
             className = className.substr(classPos+1);
         }
-        if (className === methodName) {
-            methodName = "<init>";
+        if (className === method.name) {
+            place += "<init>";
+        } else {
+            place += method.name;
         }
-        return methodName;
+        // test if some of params are kind of templates
+        if (method.params && method.params !== "()") {
+            // 1. remove content inside triangle squares
+            // 2. change all occurances of T in params to real class
+            const cleanedParams = removeTemplate(method.params);
+            if (method.template) {
+                const templArray = removeTemplate(method.template.substr(1)).split(",");
+                const mapType = new Map<string, string>();
+                for(const templType of templArray) {
+                    const pair = templType.split(" extends ");
+                    if (pair.length == 2) {
+                        mapType.set(pair[0], pair[1]);
+                    } else {
+                        mapType.set(pair[0], "java.lang.Object");
+                    }
+                }
+                const rgxWord = /\w+/g;
+                let matched = rgxWord.exec(cleanedParams);
+                let fixedParams = "";
+                let lastIndex = 0;
+                while (matched) {
+                    const replaceTo = mapType.get(matched[0]);
+                    fixedParams += cleanedParams.substring(lastIndex, matched.index);
+                    lastIndex = matched.index + matched[0].length;
+                    if (replaceTo) {
+                        fixedParams += replaceTo;
+                    } else {
+                        fixedParams += matched[0];
+                    }
+                    matched = rgxWord.exec(cleanedParams);
+                }
+                if (lastIndex < cleanedParams.length) {
+                    fixedParams += cleanedParams.substr(lastIndex);
+                }
+                place += fixedParams;
+            } else {
+                place += cleanedParams;
+            }
+        }
+        return place;
     }
 
     /**************************************************************************

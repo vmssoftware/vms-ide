@@ -123,7 +123,10 @@ export class JvmDebugSession extends LoggingDebugSession {
             this.sendEvent(e);
         });
         this._runtime.on(JvmRuntimeEvents.end, () => {
-            this.sendEvent(new TerminatedEvent());
+            // give last messages from program a chance to be displayed
+            setTimeout(() => {
+                this.sendEvent(new TerminatedEvent());
+            }, 1000);
         });
     }
 
@@ -420,8 +423,8 @@ export class JvmDebugSession extends LoggingDebugSession {
                         }));
                     if (chosen) {
                         const fieldInfo = chosen.method;
-                        const fixedMethodName = JvmProject.fixConstructorForBreakpoint(fieldInfo.class.name, fieldInfo.name);
-                        const runtimeBp = await this._runtime.setBreakPoint(fieldInfo.class.name, fixedMethodName + fieldInfo.params);
+                        const method = JvmProject.methodForBreakpoint(fieldInfo);
+                        const runtimeBp = await this._runtime.setBreakPoint(fieldInfo.class.name, method);
                         if (runtimeBp) {
                             added = true;
                             if (newIds.has(runtimeBp.breakId)) {

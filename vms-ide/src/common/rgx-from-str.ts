@@ -33,3 +33,25 @@ export function maskSpacesInTemplate(str: string, mask?: string) {
     }
     return result;
 }
+
+export function removeTemplate(str: string) {
+    let depth = 0;
+    let result = "";
+    for(let i = 0; i < str.length; ++i) {
+        switch (str[i] ) {
+            case '<':
+                ++depth;
+                break;
+            case '>':
+                if (depth) {
+                    --depth;
+                }
+                break;
+            default:
+                if (!depth) {
+                    result += str[i];
+                }
+        }
+    }
+    return result;
+}
