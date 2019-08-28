@@ -95,6 +95,7 @@ labelDeclarationPart
 
 label
    : unsignedInteger
+   | identifier
    ;
 
 constantDefinitionPart

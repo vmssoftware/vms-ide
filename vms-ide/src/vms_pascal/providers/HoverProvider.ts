@@ -22,6 +22,7 @@ export class PascalHoverProvider implements HoverProvider
 
         if(info.kind === SymbolKind.RoutineDcl ||
              info.kind === SymbolKind.TypeBlockDcl ||
+             info.kind === SymbolKind.ConstBlockDcl ||
              info.kind === SymbolKind.RoutineHeader)
         {
             if(info.definition)
@@ -49,7 +50,11 @@ export class PascalHoverProvider implements HoverProvider
                 data = document.getText(range);
                 data = data.substr(info.definition.range.start.column);
                 data = data.substr(0, data.indexOf(";"));
-                if(data.includes(")"))
+                if(data.includes("("))
+                {
+                    data = data.substr(0, data.indexOf("("));
+                } 
+                else if(data.includes(")"))
                 {
                     data = data.substr(0, data.indexOf(")"));
                 }           

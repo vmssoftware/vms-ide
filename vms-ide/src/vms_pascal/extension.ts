@@ -3,13 +3,16 @@
 
 import { Range, DiagnosticSeverity, env, ExtensionContext, window, 
     workspace, languages, TextDocument, TextDocumentChangeEvent,
-    TextEditorSelectionChangeEvent, TextEditor, Diagnostic } from 'vscode';
+    TextEditorSelectionChangeEvent, TextEditor, Diagnostic,
+    StatusBarItem, StatusBarAlignment } from 'vscode';
 import { Facade, DiagnosticType } from "./context/Facade";
 import { PascalHoverProvider } from "./providers/HoverProvider";
 import { PascalRenameProvider } from "./providers/RenameProvider";
 import { PascalCompletionItemProvider } from "./providers/CompletionProvider";
 import { PascalDefinitionProvider } from "./providers/DefinitionProvider";
 import { PascalReferenceProvider } from "./providers/ReferenceProvider";
+import { ConfigManager } from "./ext_api/config_manager";
+import * as vscode from "vscode";
 
 //const locale = env.language;
 //const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -18,8 +21,7 @@ export const Pascal = { language: 'vms-pascal', scheme: 'file' };
 
 
 export async function activate(context: ExtensionContext) 
-{
-    const backend = new Facade();
+{    
     const diagnosticCollection = languages.createDiagnosticCollection(Pascal.language);
 
     const DiagnosticTypeMap: Map<DiagnosticType, DiagnosticSeverity> = new Map();
@@ -27,6 +29,53 @@ export async function activate(context: ExtensionContext)
     DiagnosticTypeMap.set(DiagnosticType.Info, DiagnosticSeverity.Information);
     DiagnosticTypeMap.set(DiagnosticType.Warning, DiagnosticSeverity.Warning);
     DiagnosticTypeMap.set(DiagnosticType.Error, DiagnosticSeverity.Error);
+
+    let barMessage: StatusBarItem =  window.createStatusBarItem(StatusBarAlignment.Left);
+    barMessage.text = `$(bug) ${"Loading ..."}`;
+    barMessage.show();
+
+    let sourcePaths: string[] = [];
+    let rootFolderName: string = "";
+    let rootFolderNames = new Array<string>();
+    let configManager = new ConfigManager(rootFolderName);
+    
+    if(vscode.workspace.workspaceFolders)
+    {
+        let listFolders = await configManager.getDependencyList();
+
+        if(listFolders)
+        {
+            for(let folder of listFolders)
+            {
+                let path = "";
+
+                for(let item of vscode.workspace.workspaceFolders)
+                {
+                    if(item.name === folder)
+                    {
+                        path = item.uri.fsPath;
+                        rootFolderNames.push(path);
+                        break;
+                    }
+                }
+
+                if(path !== "")
+                {
+                    let fileM = new ConfigManager(folder);
+                    let sectionCur = await fileM.getProjectSection();
+
+                    if (sectionCur)
+                    {
+                        let sources = await fileM.loadPathListFiles(sectionCur.source);
+                        addPrefixToArray(path, sources);
+                        sourcePaths = sourcePaths.concat(sources);
+                    }						
+                }
+            }
+        }
+    }
+
+    const backend = new Facade(sourcePaths);
 
     // Load interpreter + cache data for each open document, if there's any.
     for (let document of workspace.textDocuments) 
@@ -38,6 +87,8 @@ export async function activate(context: ExtensionContext)
             processDiagnostic(document);
         }
     }
+    
+    barMessage.hide();
 
     context.subscriptions.push(languages.registerHoverProvider(Pascal, new PascalHoverProvider(backend)));
     context.subscriptions.push(languages.registerDefinitionProvider(Pascal, new PascalDefinitionProvider(backend)));    
@@ -108,12 +159,20 @@ export async function activate(context: ExtensionContext)
 
     window.onDidChangeActiveTextEditor((editor?: TextEditor) => 
     {
-        // updateTreeProviders(editor.document);
+        // if(editor)
+        // {
+        //     if (editor.document.languageId === Pascal.language && editor.document.uri.scheme === Pascal.scheme) 
+        //     {
+        //         backend.setText(editor.document.fileName, editor.document.getText());
+        //         backend.reparse(editor.document.fileName);
+        //     }
+        // }
     });
 
     function processDiagnostic(document: TextDocument) 
     {
         let diagnostics = [];
+        backend.setText(document.fileName, document.getText());
         let entries = backend.getDiagnostics(document.fileName);
 
         for (let entry of entries) 
@@ -126,6 +185,14 @@ export async function activate(context: ExtensionContext)
         }
 
         diagnosticCollection.set(document.uri, diagnostics);
+    }
+}
+
+function addPrefixToArray(perfix : string, array : string[])
+{
+    for(let i = 0; i < array.length; i++)
+    {
+        array[i] = perfix + "\\" + array[i];
     }
 }
 

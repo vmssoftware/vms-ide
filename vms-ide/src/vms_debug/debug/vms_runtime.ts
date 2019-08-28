@@ -225,7 +225,7 @@ export class VMSRuntime extends EventEmitter
 			let localSource = await configManager.getLocalSource();
 			const found = await localSource!.findFiles(preRunFile);
 			// run appropriate COM file, if it exists
-			if (found.length === 1)
+			if (found && found.length === 1)
 			{
 				const dotted_root = section.root.replace(/\//g, ".");
 				const pathToPreRunFile = `[.${dotted_root}]${preRunFile} DEBUG`;

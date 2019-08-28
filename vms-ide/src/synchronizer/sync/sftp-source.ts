@@ -40,7 +40,7 @@ export class SftpSource implements ISource {
         this.sftp.dispose();
     }
 
-    public findFiles(include: string, exclude: string, progress?: IProgress): Promise<IFileEntry[]> {
+    public findFiles(include: string, exclude: string, progress?: IProgress): Promise<IFileEntry[] | undefined> {
         // we sure the root exists
         return findFiles(this.sftp, this.root!, include, exclude, this.logFn, progress);
             // .then((list) => {

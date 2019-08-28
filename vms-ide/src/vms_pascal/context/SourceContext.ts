@@ -162,10 +162,12 @@ export class SourceContext
     public addAsReferenceTo(context: SourceContext) 
     {
         // Check for mutual inclusion. References are organized like a mesh.
-        var pipeline: SourceContext[] = [context];
+        let pipeline: SourceContext[] = [context];
+
         while (pipeline.length > 0) 
         {
             let current = pipeline.shift();
+            
             if (!current) 
             {
                 continue;
