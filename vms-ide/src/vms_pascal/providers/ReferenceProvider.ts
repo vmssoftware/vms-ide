@@ -7,6 +7,7 @@ import {
     ReferenceContext,
     ReferenceProvider,
     TextDocument,
+    Uri,
 } from 'vscode';
 import { Facade } from '../context/Facade';
 
@@ -32,7 +33,7 @@ export class PascalReferenceProvider implements ReferenceProvider
 
                     const loc: Location = {
                         range,
-                        uri: document.uri,
+                        uri: Uri.file(symbol.source),
                     };
 
                     result.push(loc);
