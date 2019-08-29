@@ -20,12 +20,11 @@ import { ISource } from "../sync/source";
 import { Synchronizer } from "../sync/synchronizer";
 import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
 import { ProjectState } from "../dep-tree/proj-state";
-import { R_OK } from "constants";
 import { collectSplittedByCommas } from "../../synchronizer/common/find-files";
-import { IProjectSection, IBuildConfigSection, IBuildsSection } from "../../synchronizer/sync/sync-api";
-import { BuildsSection } from "../../synchronizer/config/sections/builds";
+import { IBuildConfigSection } from "../../synchronizer/sync/sync-api";
 import { TestExecResult } from "../../synchronizer/common/TestExecResult";
-import { JvmProject, IClassInfo } from "../../vms_jvm_debug/jvm-project";
+import { JvmProject, IClassInfo, IFieldInfo, isFieldAccess } from "../../vms_jvm_debug/jvm-project";
+import { maskSpacesInTemplate } from "../../common/rgx-from-str";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -232,6 +231,7 @@ export class Builder {
         const rgFile = /Compiled from "(\w+\.\w+)"/;
         const rgLine = /line (\d+): (\d+)/;
         const rgMain = /public\s+static\s+(final\s+)?void\s+main\(/;
+        const rgField = /^(\s*)((?:public|private|protected)\s+)?((?:(?:static|abstract|synchronized|transient|volatile|final|native|strictfp|default)\s+)*)(<\S+\s+)?([^\s(;]+\s+)?([^\s(;]+)\s*(\(.*\))?\s*(?:throws .*)?;/;
 
         if (this.sshHelper) {
             this.sshHelper.clearPasswordCache();
@@ -251,7 +251,7 @@ export class Builder {
         let   javapCmd = "";
         const maxCmdLength = 1024;
 
-        const jvmProject = new JvmProject(ensured.scope);
+        const jvmProject = new JvmProject(ensured.scope, false);
         
         // combine command until its length is more than maxCmdLength
         for (const line of resultLines) {
@@ -280,7 +280,11 @@ export class Builder {
             const result = await scopeData!.shell.execCmd(javapCmd);
             if (result && result.length > 0) {
                 let classInfo: IClassInfo | undefined;
+                let fieldInfo: IFieldInfo | undefined;
                 for (const line of result) {
+                    if (!line) {
+                        continue;
+                    }
                     const fileMatch = line.match(rgFile);
                     if (fileMatch) {
                         // found next class
@@ -288,6 +292,7 @@ export class Builder {
                         const className = classNames.shift();
                         if (className) {                                   
                             classInfo = jvmProject.getClassInfo(className, fileInfo);
+                            fieldInfo = undefined;
                         } else {
                             logFn(LogType.error, () => localize("collect.no_class_for_file", "No class for this file match: {0}", line));
                             break;
@@ -296,12 +301,12 @@ export class Builder {
                     }
                     const lineMatch = line.match(rgLine);
                     if (lineMatch) {
-                        if (classInfo) {
-                            classInfo.lines.add(+lineMatch[1]);
+                        if (fieldInfo && fieldInfo.isMethod) {
+                            fieldInfo.lines.add(+lineMatch[1]);
                         } else {
-                            logFn(LogType.error, () => localize("collect.no_class_for_line", "No class for this line match: {0}", line));
-                            break;
+                            logFn(LogType.error, () => localize("collect.no_method_for_line", "No method for this line match: {0}", line));
                         }
+                        continue;
                     }
                     const mainMatch = line.match(rgMain);
                     if (mainMatch) {
@@ -310,6 +315,51 @@ export class Builder {
                         } else {
                             logFn(LogType.error, () => localize("collect.no_class_for_main", "No class for this main function match: {0}", line));
                         }
+                    }
+                    const maskedTemplates = maskSpacesInTemplate(line, "*");
+                    const fieldMatch = maskedTemplates.match(rgField);
+                    if (fieldMatch) {
+                        if (classInfo) {
+                            const spacesLength = fieldMatch[1] ? fieldMatch[1].length : 0;
+                            const accessLength = fieldMatch[2] ? fieldMatch[2].length : 0;
+                            const modifiersLength = fieldMatch[3] ? fieldMatch[3].length : 0;
+                            const templateLength = fieldMatch[4] ? fieldMatch[4].length : 0;
+                            const typeLength = fieldMatch[5] ? fieldMatch[5].length : 0;
+                            const nameLength = fieldMatch[6] ? fieldMatch[6].length : 0;
+                            const paramsLength = fieldMatch[7] ? fieldMatch[7].length : 0;
+                            const access = line.substr(spacesLength, accessLength).trim();
+                            const modifiers = line.substr(spacesLength + accessLength, modifiersLength).trim();
+                            const template = line.substr(spacesLength + accessLength + modifiersLength, templateLength).trim();
+                            const type = line.substr(spacesLength + accessLength + modifiersLength + templateLength, typeLength).trim();
+                            const name = line.substr(spacesLength + accessLength + modifiersLength + templateLength + typeLength, nameLength).trim();
+                            const params = line.substr(spacesLength + accessLength + modifiersLength + templateLength + typeLength + nameLength, paramsLength).trim();
+                            fieldInfo = jvmProject.getFieldInfo(name, classInfo, params);
+                            if (fieldInfo) {
+                                fieldInfo.isMethod = (params !== "") || (name === "{}");  // special case for static initialization
+                                fieldInfo.isStatic = modifiers.includes('static');
+                                if (isFieldAccess(access)) {
+                                    fieldInfo.access = access;
+                                }
+                                fieldInfo.type = type;
+                                fieldInfo.template = template;
+                                fieldInfo.params = params;
+                                if (fieldMatch[3]) {
+                                    const modifiers_masked = fieldMatch[3].split(" ");
+                                    let start = 0;
+                                    for (const modifier of modifiers_masked) {
+                                        if (modifier) {
+                                            const mod_unmasked = modifiers.substr(start, start + modifier.length);
+                                            fieldInfo.modifiers.push(mod_unmasked);
+                                            start += modifier.length;
+                                        }
+                                        ++start;
+                                    }
+                                }
+                            }
+                        } else {
+                            logFn(LogType.error, () => localize("collect.no_class_for_method", "No class for method: {0}", line));
+                        }
+                        continue;
                     }
                 }
             }
@@ -372,8 +422,20 @@ export class Builder {
             await scopeData.shell.execCmd("purge [...]");
         }                    
 
-        if (!(await this.runRemoteBuild(scopeData, buildCfg))) {
-            result = false;
+        result = await this.runRemoteBuild(scopeData, buildCfg);
+
+        if (result) {
+            switch(ensured.projectSection.projectType) {
+                case ProjectType[ProjectType.java]:
+                case ProjectType[ProjectType.scala]:
+                case ProjectType[ProjectType.kotlin]:
+                    // delete java classes info
+                    if (ensured.configHelper.workspaceFolder) {
+                        const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
+                        fs.unlink(fileName).catch(() => false);
+                    }
+                    break;
+            }
         }
 
         this.decideDispose(scopeData);
@@ -476,6 +538,9 @@ export class Builder {
             localSource.findFiles(ensured.projectSection.headers, ensured.projectSection.exclude),
             localSource.findFiles(ensured.projectSection.source, ensured.projectSection.exclude)]);
 
+        if (!sources) {
+            return undefined;
+        }
         const optLines: string[] = [];
         const comLines: string[] = [];
 
@@ -486,9 +551,11 @@ export class Builder {
         ];
 
         const includeLines = [Builder.includesLine];
-        for (const inc of headers) {
-            includeLines[includeLines.length - 1] = includeLines[includeLines.length - 1] + " -";    // continuation
-            includeLines.push(convertIFileEntryToVmsPath(inc));
+        if (headers) {
+            for (const inc of headers) {
+                includeLines[includeLines.length - 1] = includeLines[includeLines.length - 1] + " -";    // continuation
+                includeLines.push(convertIFileEntryToVmsPath(inc));
+            }
         }
         const sourceLines = [Builder.sourcesLine];
         for (const src of sources) {
@@ -855,11 +922,11 @@ export class Builder {
             localSource.findFiles(ensured.projectSection.headers, ensured.projectSection.exclude),
             localSource.findFiles(ensured.projectSection.source, ensured.projectSection.exclude)]);
 
-        if (localIncludes.length !== foundIncludes.length) {
+        if (!localIncludes || localIncludes.length !== foundIncludes.length) {
             return true;
         }
 
-        if (localSources.length !== foundSources.length) {
+        if (!localSources || localSources.length !== foundSources.length) {
             return true;
         }
 
@@ -891,7 +958,7 @@ export class Builder {
         const localMmsFile = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
         const foundMms = await scopeData.localSource.findFiles(localMmsFile);
         let createMMS = true;
-        if (foundMms.length === 1) {
+        if (foundMms && foundMms.length === 1) {
             const localMmsPath = scopeData.localSource.root + ftpPathSeparator + localMmsFile;
             createMMS = await this.checkMmsContent(scopeData.ensured, (await fs.readFile(localMmsPath)).toString("utf8"));
         }
@@ -1106,9 +1173,9 @@ export class Builder {
                     }
                     // find case-insensitive
                     const found = await scopeData.localSource.findFiles(localFile);
-                    if (found.length === 1) {
+                    if (found && found.length === 1) {
                         localFile = found[0].filename;
-                    } else if (found.length > 1) {
+                    } else if (found && found.length > 1) {
                         localFile = found[0].filename;
                         this.logFn(LogType.warning, () => localize("too_many_files", "There are more than one file named {0}", localFile));
                     } else {

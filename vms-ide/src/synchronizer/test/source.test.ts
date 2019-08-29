@@ -87,32 +87,34 @@ suite("Source tests", function(this: Mocha.Suite) {
     async function WalkFiles(source: ISource, debugLog?: LogFunction) {
         const list = await source.findFiles(include, exclude);
         const all = [];
-        for (const file of list) {
-            all.push(Promise.resolve().then(async () => {
-                if (debugLogFn) {
-                    debugLogFn(LogType.debug, () => `${file.filename} ${file.date}`);
-                }
-                assert.equal(file.isDirectory, false, `No directories allowed ${file.filename}`);
-                const date = await source.getDate(file.filename);
-                assert.notEqual(date, undefined, `Date must be given ${file.filename}`);
-                if (date) {
-                    let diff = Math.abs(date.valueOf() - file.date.valueOf());
-                    assert.equal(diff < 1000, true, `Dates must be almost equal ${date} <> ${file.date}`);
-                    const newDate = new Date(date.valueOf() - 60000);
-                    const setted = await source.setDate(file.filename, newDate);
-                    assert.equal(setted, true, `Date must be setted ${file.filename}`);
-                    const newGotDate = await source.getDate(file.filename);
-                    assert.notEqual(newGotDate, undefined, `Date must be given ${file.filename}`);
-                    if (newGotDate) {
-                        diff = Math.abs(newGotDate.valueOf() - newDate.valueOf());
-                        assert.equal(diff < 1000, true,
-                            `New date must be almost equal previous ${newGotDate} <> ${newDate} ${file.filename}`);
+        if (list) {
+            for (const file of list) {
+                all.push(Promise.resolve().then(async () => {
+                    if (debugLogFn) {
+                        debugLogFn(LogType.debug, () => `${file.filename} ${file.date}`);
                     }
-                }
-                const memoryStream = sshHelper.memStream();
-                const result = await sshHelper.pipeFile(source, memoryStream, file.filename, "", debugLogFn);
-                assert.equal(result, true, "Must be pipeable");
-            }));
+                    assert.equal(file.isDirectory, false, `No directories allowed ${file.filename}`);
+                    const date = await source.getDate(file.filename);
+                    assert.notEqual(date, undefined, `Date must be given ${file.filename}`);
+                    if (date) {
+                        let diff = Math.abs(date.valueOf() - file.date.valueOf());
+                        assert.equal(diff < 1000, true, `Dates must be almost equal ${date} <> ${file.date}`);
+                        const newDate = new Date(date.valueOf() - 60000);
+                        const setted = await source.setDate(file.filename, newDate);
+                        assert.equal(setted, true, `Date must be setted ${file.filename}`);
+                        const newGotDate = await source.getDate(file.filename);
+                        assert.notEqual(newGotDate, undefined, `Date must be given ${file.filename}`);
+                        if (newGotDate) {
+                            diff = Math.abs(newGotDate.valueOf() - newDate.valueOf());
+                            assert.equal(diff < 1000, true,
+                                `New date must be almost equal previous ${newGotDate} <> ${newDate} ${file.filename}`);
+                        }
+                    }
+                    const memoryStream = sshHelper.memStream();
+                    const result = await sshHelper.pipeFile(source, memoryStream, file.filename, "", debugLogFn);
+                    assert.equal(result, true, "Must be pipeable");
+                }));
+            }
         }
         await Promise.all(all);
     }

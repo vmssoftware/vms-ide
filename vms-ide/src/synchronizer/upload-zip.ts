@@ -49,6 +49,10 @@ export class UploadZip {
                 ensured.projectSection.resource,
                 ensured.projectSection.source].join(",");
             const fileEntries = await localSource.findFiles(fileNames, ensured.projectSection.exclude);
+            if (!fileEntries) {
+                this.logFn(LogType.error, () => localize("zip.nothing", "Nothing to Zip."), true);
+                return false;
+            }
             for (const fileEntry of fileEntries) {
                 const fileName = path.join(localPath, fileEntry.filename);
                 zipApi.addFile(fileName, fileEntry.filename);

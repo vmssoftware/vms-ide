@@ -15,7 +15,7 @@ let logFn: LogFunction;
 
 export function activate(context: vscode.ExtensionContext) {
 
-	logFn = createLogFunction("VMS-IDE JVM Debug");
+	logFn = createLogFunction("VMS-IDE");
 	JvmProjectHelper.logFn = logFn;
 
 	context.subscriptions.push(vscode.commands.registerCommand('vms_jvm_debugger.fillClassName', async config => {

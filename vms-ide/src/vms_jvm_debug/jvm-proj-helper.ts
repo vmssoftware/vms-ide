@@ -5,7 +5,7 @@ import { ensureSettings, IEnsured } from '../synchronizer/ensure-settings';
 import { ProjectState } from '../synchronizer/dep-tree/proj-state';
 import { ProjectType } from '../synchronizer/config/sections/project';
 import { IJvmDebugConfiguration } from './jvm-config';
-import { JvmProject } from "./jvm-project";
+import { JvmProject, IFieldInfo } from "./jvm-project";
 import { LogFunction, ftpPathSeparator, LogType } from "../common/main";
 import { workspace, Uri, commands } from "vscode";
 import { Synchronizer } from "../synchronizer/sync/synchronizer";
@@ -37,12 +37,12 @@ export class JvmProjectHelper {
         if (!scopedata) {
             const ensured = await ensureSettings(scope, this.logFn);
             if (ensured) {
-                const jvmProject = new JvmProject(scope, this.logFn);
+                const jvmProject = new JvmProject(scope, true, this.logFn);
                 const [loaded, localSource] = await Promise.all([
                     jvmProject.load(),
-                    Synchronizer.acquire(this.logFn).requestSource(ensured, "local")
+                    Synchronizer.acquire().requestSource(ensured, "local")
                 ]);
-                if (loaded && localSource) {
+                if (localSource) {
                     scopedata = {
                         ensured,
                         jvmProject,
@@ -120,8 +120,21 @@ export class JvmProjectHelper {
             const scopedata = await this.chooseScope(scope);
             if (scopedata) {
                 const found = await scopedata.localSource.findFiles("**/" + remoteFile);
-                if (found.length === 1) {
+                if (found && found.length === 1) {
                     return path.join(scopedata.localSource.root!, found[0].filename);
+                }
+            }
+        }
+        if (workspace.workspaceFolders) {
+            for (const wsFolder of workspace.workspaceFolders) {
+                if (wsFolder.name !== scope) {
+                    const scopedataT = await this.chooseScope(wsFolder.name);
+                    if (scopedataT) {
+                        const found = await scopedataT.localSource.findFiles("**/" + remoteFile);
+                        if (found && found.length === 1) {
+                            return path.join(scopedataT.localSource.root!, found[0].filename);
+                        }
+                    }
                 }
             }
         }
@@ -137,23 +150,23 @@ export class JvmProjectHelper {
             if (scopedata) {
                 const fileInfo = scopedata.jvmProject.findFileByPlace(stackPlace);
                 if (fileInfo) {
-                    const found = await scopedata.localSource.findFiles("**/" + fileInfo.fileName);
-                    if (found.length === 1) {
+                    const found = await scopedata.localSource.findFiles("**/" + fileInfo.name);
+                    if (found && found.length === 1) {
                         return path.join(scopedata.localSource.root!, found[0].filename);
                     }
                 }
             }
-            if (workspace.workspaceFolders) {
-                for (const wsFolder of workspace.workspaceFolders) {
-                    if (wsFolder.name !== scope) {
-                        const scopedataT = await this.chooseScope(wsFolder.name);
-                        if (scopedataT) {
-                            const fileInfo = scopedataT.jvmProject.findFileByPlace(stackPlace);
-                            if (fileInfo) {
-                                const found = await scopedataT.localSource.findFiles("**/" + fileInfo.fileName);
-                                if (found.length === 1) {
-                                    return path.join(scopedataT.localSource.root!, found[0].filename);
-                                }
+        }
+        if (workspace.workspaceFolders) {
+            for (const wsFolder of workspace.workspaceFolders) {
+                if (wsFolder.name !== scope) {
+                    const scopedataT = await this.chooseScope(wsFolder.name);
+                    if (scopedataT) {
+                        const fileInfo = scopedataT.jvmProject.findFileByPlace(stackPlace);
+                        if (fileInfo) {
+                            const found = await scopedataT.localSource.findFiles("**/" + fileInfo.name);
+                            if (found && found.length === 1) {
+                                return path.join(scopedataT.localSource.root!, found[0].filename);
                             }
                         }
                     }
@@ -161,6 +174,50 @@ export class JvmProjectHelper {
             }
         }
         return undefined;
+    }
+
+    public static async methodInfoByPlace(stackPlace: string, scope?: string) {
+        if (!scope) {
+            scope = await commands.executeCommand("vmssoftware.synchronizer.getCurrentScope");
+        }
+        if (scope && typeof scope === "string") {
+            const scopedata = await this.chooseScope(scope);
+            if (scopedata) {
+                const methodInfo = scopedata.jvmProject.getFieldInfo(stackPlace);
+                if (methodInfo) {
+                    return methodInfo;
+                }
+            }
+            if (workspace.workspaceFolders) {
+                for (const wsFolder of workspace.workspaceFolders) {
+                    if (wsFolder.name !== scope) {
+                        const scopedataT = await this.chooseScope(wsFolder.name);
+                        if (scopedataT) {
+                            const methodInfo = scopedataT.jvmProject.getFieldInfo(stackPlace);
+                            if (methodInfo) {
+                                return methodInfo;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+
+    public static async findMethods(method: string, scope?: string) {
+        const methodInfos: IFieldInfo[] = [];
+        if (workspace.workspaceFolders) {
+            for (const wsFolder of workspace.workspaceFolders) {
+                if (!scope || wsFolder.name === scope) {
+                    const scopedataT = await this.chooseScope(wsFolder.name);
+                    if (scopedataT) {
+                        methodInfos.push(...scopedataT.jvmProject.findMethods(method));
+                    }
+                }
+            }
+        }
+        return methodInfos;
     }
 
     public static async cdRemoteRoot(scope?: string) {
@@ -205,19 +262,23 @@ export class JvmProjectHelper {
                     const fileInfo = scopedata.jvmProject.getFileInfo(relativePath);
                     if (fileInfo) {
                         for (const [classname, classinfo] of fileInfo.classes) {
-                            if (classinfo.lines.has(line)) {
-                                return [classname, line];
+                            for(const methodInfo of classinfo.fields) {
+                                if (methodInfo.lines.has(line)) {
+                                    return [classname, line];
+                                }
                             }
                         }
                         let nearestClass = "";
                         let nearestLine = Number.MAX_SAFE_INTEGER;
                         for (const [classname, classinfo] of fileInfo.classes) {
-                            for (const classLine of classinfo.lines) {
-                                if (classLine > line && classLine < nearestLine) {
-                                    nearestLine = classLine;
-                                    nearestClass = classname;
-                                    if (nearestLine === line + 1) {
-                                        break;
+                            for(const methodInfo of classinfo.fields) {
+                                for (const classLine of methodInfo.lines) {
+                                    if (classLine > line && classLine < nearestLine) {
+                                        nearestLine = classLine;
+                                        nearestClass = classname;
+                                        if (nearestLine === line + 1) {
+                                            break;
+                                        }
                                     }
                                 }
                             }

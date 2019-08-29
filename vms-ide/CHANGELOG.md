@@ -1,5 +1,18 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.2.3
+* Function breakpoints. Data breakpoints without UI.
+
+## 1.2.2
+* Fix display/set unicode string in **Java** debugger, collecting fields of java classes.
+
+## 1.2.1
+* Fix working with templates in **Java**.
+
+## 1.2.0
+* Support **Java**, **Kotlin** and **Scala**.
+* One output channel "VMS-IDE" for all extension messages.
+
 ## 1.1.0
 * **Pascal** syntax highlighting.
 * OpenVMS specific **COBOL** grammar support.

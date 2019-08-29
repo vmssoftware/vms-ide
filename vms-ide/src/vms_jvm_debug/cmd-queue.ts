@@ -1,9 +1,9 @@
-import { ICmdServer, ICmdQueue, ListenerResponse } from "./communication";
-import { Lock } from "../common/main";
+import { ICmdServer, ICmdQueue, ListenerResponse, IDropCommand } from "./communication";
+import { Lock, LockQueue, LockQueueAction } from "../common/main";
 
 export class CmdQueue implements ICmdQueue {
     
-    private _ready = new Lock(false);
+    private _ready = new LockQueue(false);
 
     constructor(private _server: ICmdServer | undefined) {
     }
@@ -16,15 +16,29 @@ export class CmdQueue implements ICmdQueue {
         }
     }
 
+    private _errorLineListener: ((line: string | undefined) => void ) | undefined;
+    public onErrorLine(errorLineListener: (line: string | undefined) => void) {
+        this._errorLineListener = errorLineListener;
+        if (this._server) {
+            this._server.onStderrLineReceived(this._errorLineListener);
+        }
+    }
+
     /**
      * Posts command to the server, wait lines and send them to the listener
      * @param cmd command
      * @param listener must return true if it requires more lines, otherwise must return false if command is processed
      * @returns false if command cannot be sent, true if command is sent and ended
      */
-    public async postCommand(cmd: string, listener: ((cmd: string, line: string | undefined) => ListenerResponse)|undefined) {
+    public async postCommand(cmd: string, 
+                             listener?: (cmd: string, line: string | undefined) => ListenerResponse, 
+                             action?: LockQueueAction, 
+                             dropCommand?: IDropCommand): Promise<boolean> {
         if (this._server) {
-            await this._ready.acquire();
+            const acquired = await this._ready.acquire(action);
+            if (!acquired) {
+                return false;
+            }
             const waitSession = new Lock(true);
             const session = this._server.onLineReceived((line: string | undefined) => {
                 let result = ListenerResponse.stop;
@@ -46,6 +60,11 @@ export class CmdQueue implements ICmdQueue {
                 }
             });
             this._server.sendCommand(cmd);
+            if (dropCommand) {
+                dropCommand.onDropCommand(() => {
+                    waitSession.release();
+                });
+            }
             await waitSession.acquire();
             this._ready.release();
             return true;

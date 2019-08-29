@@ -9,7 +9,7 @@ const locale = env.language ;
 import * as nls from "vscode-nls";
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
-const logFn = createLogFunction("VMS-IDE Config");
+const logFn = createLogFunction("VMS-IDE");
 
 export function activate(context: ExtensionContext) {
 

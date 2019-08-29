@@ -51,7 +51,7 @@ let configManager : ConfigManager = new ConfigManager("");
 
 export function activate(context: vscode.ExtensionContext)
 {
-	logFn = createLogFunction("VMS-IDE Debug");
+	logFn = createLogFunction("VMS-IDE");
 
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.terminal', () =>
 	{

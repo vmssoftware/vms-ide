@@ -151,42 +151,52 @@ export class Synchronizer {
              scopeData.localSource.findFiles(include, ensured.projectSection.exclude)]);
         progressRemote.dispose();
 
-        // compare them
-        const compareResult = this.compareLists(localList, remoteList);
-        const waitAll = [];
+        let retCode = false;
 
-        const progressProcess = new Progress();
-        // upload
-        waitAll.push(this.executeAction(scopeData, compareResult.upload, "upload", progressProcess));
-        switch (ensured.synchronizeSection.downloadNewFiles) {
-            case "overwrite":
-                waitAll.push(this.executeAction(scopeData, compareResult.download, "download", progressProcess));
-                break;
-            case "skip":
-                for (const downloadFile of compareResult.download) {
-                    this.logFn(LogType.information, () => localize("output.download_manually", "Remote {0} is newer, please check and download it manually", downloadFile.filename));
-                }
-                break;
-            case "edit":
-                for (const downloadFile of compareResult.download) {
-                    waitAll.push(this.editFile(scopeData, downloadFile.filename));
-                }
-                if (compareResult.download.length > 0) {
-                    this.logFn(LogType.information, () => localize("output.edit_count", "Please edit and save {0} files manually", compareResult.download.length));
-                }
-                break;
-        }
-        // wait all operations are done
-        const results = await Promise.all(waitAll);
+        if (localList && remoteList) {
+            // compare them
+            const compareResult = this.compareLists(localList, remoteList);
+            const waitAll = [];
 
-        progressProcess.dispose();
+            const progressProcess = new Progress();
+            // upload
+            waitAll.push(this.executeAction(scopeData, compareResult.upload, "upload", progressProcess));
+            switch (ensured.synchronizeSection.downloadNewFiles) {
+                case "overwrite":
+                    waitAll.push(this.executeAction(scopeData, compareResult.download, "download", progressProcess));
+                    break;
+                case "skip":
+                    for (const downloadFile of compareResult.download) {
+                        this.logFn(LogType.information, () => localize("output.download_manually", "Remote {0} is newer, please check and download it manually", downloadFile.filename));
+                    }
+                    break;
+                case "edit":
+                    for (const downloadFile of compareResult.download) {
+                        waitAll.push(this.editFile(scopeData, downloadFile.filename));
+                    }
+                    if (compareResult.download.length > 0) {
+                        this.logFn(LogType.information, () => localize("output.edit_count", "Please edit and save {0} files manually", compareResult.download.length));
+                    }
+                    break;
+            }
+            // wait all operations are done
+            const results = await Promise.all(waitAll);
 
-        // end
-        this.decideDispose(scopeData);
-        const retCode = results.reduce((acc, result) => {
+            progressProcess.dispose();
+            retCode = results.reduce((acc, result) => {
                 acc = acc && result;
                 return acc;
             }, true);
+        } else {
+            if (!remoteList) {
+                this.logFn(LogType.error, () => localize("cannot.find.remote", "Cannot find files on remote source"), true);
+            }
+            if (!localList) {
+                this.logFn(LogType.error, () => localize("cannot.find.local", "Cannot find files on local source"), true);
+            }
+        }
+        // end
+        this.decideDispose(scopeData);
         this.logFn(LogType.debug, () => localize("debug.retcode", "Synchronize retCode: {0}", retCode));
         return retCode;
     }
@@ -281,9 +291,23 @@ export class Synchronizer {
         const [remoteList, localList] = await Promise.all(
             [scopeData.remoteSource.findFiles(include, ensured.projectSection.exclude),
              scopeData.localSource.findFiles(include, ensured.projectSection.exclude)]);
+        let retCode = false;
         // compare them
-        const compareResult = this.compareLists(localList, remoteList);
-        const retCode = await this.executeAction(scopeData, compareResult.upload, "upload");
+        if (remoteList && localList) {
+            const compareResult = this.compareLists(localList, remoteList);
+            retCode = await this.executeAction(scopeData, compareResult.upload, "upload")
+                .catch((err) => {
+                    this.logFn(LogType.debug, () => localize("debug.upload.error", "Error while uploading {0}", String(err)));
+                    return false;
+                });
+        } else {
+            if (!remoteList) {
+                this.logFn(LogType.error, () => localize("cannot.find.remote", "Cannot find files on remote source"), true);
+            }
+            if (!localList) {
+                this.logFn(LogType.error, () => localize("cannot.find.local", "Cannot find files on local source"), true);
+            }
+        }
         // end
         this.decideDispose(scopeData);
         this.logFn(LogType.debug, () => localize("debug.upload.retcode", "Upload source retCode: {0}", retCode));
@@ -306,19 +330,27 @@ export class Synchronizer {
                 [scopeData.remoteSource.findFiles(ensured.projectSection.listing),
                 scopeData.localSource.findFiles(ensured.projectSection.listing)]);
         // compare them
-        const compareResult = this.compareLists(localList, remoteList);
+        let retCode = false;
+        if (remoteList && localList) {
+            const compareResult = this.compareLists(localList, remoteList);
             // do not add outdir to the files in list! because remoteSource already has root pointed to outdir
-        return this.executeAction(scopeData, compareResult.download, "download")
-            .catch((err) => {
-                this.logFn(LogType.debug, () => localize("debug.download_listing.error", "Error while download listings {0}", String(err)));
-                return false;
-            })
-            .then((done) => {
-                scopeData.localSource.root = localRoot;
-                scopeData.remoteSource.root = ensured.projectSection.root;
-                this.decideDispose(scopeData);
-                return done;
-            });
+            retCode = await this.executeAction(scopeData, compareResult.download, "download")
+                .catch((err) => {
+                    this.logFn(LogType.debug, () => localize("debug.download_listing.error", "Error while download listings {0}", String(err)));
+                    return false;
+                });
+        } else {
+            if (!remoteList) {
+                this.logFn(LogType.error, () => localize("cannot.find.remote", "Cannot find files on remote source"), true);
+            }
+            if (!localList) {
+                this.logFn(LogType.error, () => localize("cannot.find.local", "Cannot find files on local source"), true);
+            }
+        }
+        scopeData.localSource.root = localRoot;
+        scopeData.remoteSource.root = ensured.projectSection.root;
+        this.decideDispose(scopeData);
+        return retCode;
     }
 
     /**

@@ -79,7 +79,7 @@ export class FsSource implements ISource, IReadDirectory {
         return retList;
     }
 
-    public findFiles(include: string, exclude: string): Promise<IFileEntry[]> {
+    public findFiles(include: string, exclude: string): Promise<IFileEntry[] | undefined> {
         // do not pass root, it will be done in readDirectory
         return findFiles(this, "", include, exclude, this.debugLog);
     }

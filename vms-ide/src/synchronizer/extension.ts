@@ -32,7 +32,7 @@ export async function activate(context: ExtensionContext) {
         return undefined;
     }
 
-    logFn = configApi.createLogFunction("VMS-IDE Build");
+    logFn = configApi.createLogFunction("VMS-IDE");
 
     ProjectState.acquire().setLogFn(logFn);
 
@@ -60,6 +60,11 @@ export async function activate(context: ExtensionContext) {
         projectDescriptionProvider.refresh();
         ProjectState.acquire().create();
     });
+
+    context.subscriptions.push( commands.registerCommand("vmssoftware.jvm.collectJavaClasses", async (scope?: string) => {
+        scope = checkScope(scope);
+        return Perform("collect java", scope, logFn);
+    }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async (scope?: string) => {
         scope = checkScope(scope);

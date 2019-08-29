@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "1.1.0",
+    "version": "1.2.4",
     "publisher": "VMSSoftwareInc",
     "license": "SEE LICENSE IN LICENSE.md",
     "repository": {
@@ -18,7 +18,7 @@
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
-    "main": "./out/extension",
+    "main": "./out/index",
     "activationEvents": [
         "*",
         "onView:vmssoftware.project-dep.projectDependencies",
@@ -40,6 +40,7 @@
         "onCommand:vmssoftware.synchronizer.downloadHeaders",
         "onCommand:vmssoftware.synchronizer.buildOnlyProject",
         "onCommand:vmssoftware.synchronizer.reBuildOnlyProject",
+        "onCommand:vmssoftware.jvm.collectJavaClasses",
         "onCommand:extension.vms-debug.terminal",
         "onDebug",
         "onLanguage:cld",
@@ -511,6 +512,11 @@
                 "command": "vmssoftware.synchronizer.downloadHeaders",
                 "title": "%synchronizer.command.downloadHeaders.title%",
                 "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.jvm.collectJavaClasses",
+                "title": "%jvm.collectJavaClasses.title%",
+                "category": "%command.category%"
             }
         ],
         "configuration": {
@@ -684,12 +690,18 @@
                     "enum": [
                         "executable",
                         "library",
-                        "shareable"
+                        "shareable",
+                        "java",
+                        "kotlin",
+                        "scala"
                     ],
                     "enumDescriptions": [
                         "Executable",
                         "Static library",
-                        "Shareable image"
+                        "Shareable image",
+                        "Java project",
+                        "Kotlin project",
+                        "Scala project"
                     ],
                     "default": "executable",
                     "description": "%synchronizer.properties.project.projectType.description%"
@@ -824,6 +836,15 @@
             },
             {
                 "language": "fortran"
+            },
+            {
+                "language": "kotlin"
+            },
+            {
+                "language": "scala"
+            },
+            {
+                "language": "java"
             }
         ],
         "debuggers": [
@@ -906,6 +927,82 @@
                         }
                     }
                 ]
+            }
+            ,{
+                "type": "vms jvm debugger",
+                "label": "%vms_jvm_debug.label.description%",
+                "configurationAttributes": {
+                    "launch": {
+						"required": [
+                            "classpath",
+                            "class"
+						],
+                        "properties": {
+                            "classpath": {
+                                "type": "string",
+                                "description": "%vms_jvm_debug.classpath.description%",
+                                "default": "${command:FillClassPath}"
+                            },
+                            "class": {
+                                "type": "string",
+                                "description": "%vms_jvm_debug.class.description%",
+                                "default": "${command:FillClassName}"
+                            },
+                            "port": {
+                                "type": "string",
+                                "description": "%vms_jvm_debug.port.description%",
+                                "default": "5005-5105"
+                            },
+                            "arguments": {
+                                "type": "string",
+                                "description": "%vms_jvm_debug.arguments.description%",
+                                "default": ""
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "description": "%vms_jvm_debug.stopOnEntry.description%",
+                                "default": true
+                            },
+                            "trace": {
+                                "type": "boolean",
+                                "description": "%vms_jvm_debug.trace.description%",
+                                "default": true
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "vms jvm debugger",
+                        "request": "launch",
+                        "name": "Launch JVM",
+                        "classpath": "${command:FillClassPath}",
+                        "class": "${command:FillClassName}",
+                        "port": "5005-5105",
+                        "arguments": "",
+                        "stopOnEntry": true
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "VMS IDE: Launch JVM",
+                        "description": "A new configuration for 'debugging' JVM",
+                        "body": {
+                            "type": "vms jvm debugger",
+                            "request": "launch",
+                            "name": "Launch JVM",
+                            "classpath": "^\"\\${command:FillClassPath}\"",
+                            "class": "^\"\\${command:FillClassName}\"",
+                            "port": "5005-5105",
+                            "arguments": "",
+                            "stopOnEntry": true
+                        }
+                    }
+                ],
+				"variables": {
+                    "FillClassName": "vms_jvm_debugger.fillClassName",
+                    "FillClassPath": "vms_jvm_debugger.fillClassPath"
+                }            
             }
         ]
     },

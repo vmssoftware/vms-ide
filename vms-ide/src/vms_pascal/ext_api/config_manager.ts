@@ -168,11 +168,13 @@ export class ConfigManager
 		}
 
 		let list : string[] = [];
-		let entries : IFileEntry[] = await this.localSource!.findFiles(pattern);
+		let entries : IFileEntry[] | undefined = await this.localSource!.findFiles(pattern);
 
-		for(let item of entries)
-		{
-			list.push(item.filename);
+		if (entries) {
+			for(let item of entries)
+			{
+				list.push(item.filename);
+			}
 		}
 
 		return list;
