@@ -7,7 +7,7 @@ import { LogFunction } from "../../common/main";
  * Base types and interfaces
  */
 
-export type SimplyData = string | number | boolean | null | undefined;
+export type SimplyData = string | string[] | number | boolean | null | undefined;
 export type ValueData = SimplyData | IConfigData[];
 
 /**

@@ -1,5 +1,6 @@
-import { IConfigData, IConfigSection } from "../../../config-helper/config/config";
-import { IConnectionSection } from "../../api";
+import { IConfigData, IConfigSection, ValueData } from "../../../config-helper/config/config";
+import { IConnectionSection, IAlgorithms } from "../../api";
+import { Algorithms } from "ssh2-streams";
 
 export class ConnectionSection implements IConnectionSection, IConfigSection {
 
@@ -21,6 +22,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
     public port?: number = 22;
     public username?: string = "";
     public skipSignatureVerification?: boolean = false;
+    public algorithms?: IAlgorithms;
 
     public name(): string {
         return ConnectionSection.section;
@@ -41,6 +43,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             port: this.port || 0,
             username: this.username || "",
             skipSignatureVerification: this.skipSignatureVerification || false,
+            algorithms: this.algorithms as ValueData,
         };
     }
 
@@ -52,6 +55,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             this.port = data.port;
             this.username = data.username;
             this.skipSignatureVerification = data.skipSignatureVerification;
+            this.algorithms = data.algorithms;
             return true;
         }
         return false;

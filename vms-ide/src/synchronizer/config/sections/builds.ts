@@ -40,7 +40,7 @@ export class BuildsSection implements IBuildsSection, IConfigSection {
 
     public store(): IConfigData {
         const ret: IConfigData = {};
-        ret.configurations = [];
+        ret.configurations = [] as IConfigData[];
         for (const tmp of this.configurations) {
             ret.configurations.push({
                 label: tmp.label,

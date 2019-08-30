@@ -1,10 +1,11 @@
 import * as nls from "vscode-nls";
-import { Client } from "ssh2";
+import { Client, ConnectConfig } from "ssh2";
 import { Lock } from "../../common/main";
 import { LogFunction, LogType } from "../../common/main";
 import { IUnSubscribe, Subscribe } from "../../common/main";
-import { IConnectConfig, IConnectConfigResolver } from "../api";
+import { IConnectConfig, IConnectConfigResolver, IAlgorithms } from "../api";
 import { EventEmitter } from "events";
+import { Algorithms } from "ssh2-streams";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -71,6 +72,7 @@ export class SshClient extends EventEmitter {
     }
 
     private async clientConnect() {
+        let   doWait = false;
         const waitClient = new Lock(true, "waitClient");
         const client = new Client();
         this.clientReady = Subscribe(client, "ready", () => {
@@ -95,46 +97,72 @@ export class SshClient extends EventEmitter {
         if (this.resolver) {
             let configResolved = await this.resolver.resolveConnectConfig(this.config);
             if (configResolved) {
-                configResolved = Object.assign(
+                const defaultAlgorithms : IAlgorithms =
                     {
-                        algorithms:
-                        {
-                            serverHostKey:
-                                [
-                                    "ssh-rsa",
-                                    "ssh-dss",
-                                ],
-                            kex: 
-                                [
-                                    "diffie-hellman-group1-sha1"
-                                ]
-                        },
-                        // TODO: parse debug output "DEBUG: Remote ident:"
-                        // and looking for required version
-                        // for example:
-                        // TAZAWA   'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
-                        // BOSTON   'SSH-2.0-Process Software SSH 6.1.5.0 MultiNet'
-                        // REDSOX   'SSH-2.0-Process Software SSH 6.1.5.0 MultiNet'
-                        // BILBO    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
-                        // FRODO    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
-                        // SAREK    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
-                        // Uncomment next line to get debug info from SSH2
-                        // debug: (s: string) => this.logFn(LogType.debug, () => s)
-                    }, configResolved,
-                );
-                client.connect(configResolved);
+                        serverHostKey:
+                            [
+                                "ssh-rsa",
+                                "ssh-dss",
+                            ],
+                        kex: 
+                            [
+                                "diffie-hellman-group1-sha1"
+                            ]
+                    };
+                if (configResolved.algorithms) {
+                    if (configResolved.algorithms.serverHostKey instanceof Array) {
+                        configResolved.algorithms.serverHostKey.push(...defaultAlgorithms.serverHostKey!);
+                    } else {
+                        configResolved.algorithms.serverHostKey = defaultAlgorithms.serverHostKey;
+                    }
+                    if (configResolved.algorithms.kex instanceof Array) {
+                        configResolved.algorithms.kex.push(...defaultAlgorithms.kex!);
+                    } else {
+                        configResolved.algorithms.kex = defaultAlgorithms.kex;
+                    }
+                } else {
+                    configResolved.algorithms = defaultAlgorithms;
+                }
+                //(configResolved as ConnectConfig).debug = (s: string) => this.debugLine(s);
+                try {
+                    doWait = true;
+                    client.connect(configResolved);
+                } catch(e) {
+                    doWait = false;
+                    this.logFn(LogType.error, () => localize("connect.exception", "Exception: {0}", String(e)), true);
+                }
             } else {
                 this.logFn(LogType.debug, () => localize("debug.resolver", "no config resolved {0}", this.tag ? " " + this.tag : ""));
-                waitClient.release();
             }
         } else {
-            client.connect(this.config);
+            try {
+                doWait = true;
+                client.connect(this.config);
+            } catch(e) {
+                doWait = false;
+                this.logFn(LogType.error, () => localize("connect.exception", "Exception: {0}", String(e)), true);
+            }
         }
-        await waitClient.acquire();
+        if (doWait) {
+            await waitClient.acquire();
+        }
         const connected = this.client !== undefined;
         if (this.resolver) {
             this.resolver.feedBack(this.config, connected);
         }
         return connected;
+    }
+
+    // TODO: parse debug output "DEBUG: Remote ident:"
+    // and looking for required version
+    // for example:
+    // TAZAWA   'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
+    // BOSTON   'SSH-2.0-Process Software SSH 6.1.5.0 MultiNet'
+    // REDSOX   'SSH-2.0-Process Software SSH 6.1.5.0 MultiNet'
+    // BILBO    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
+    // FRODO    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
+    // SAREK    'SSH-2.0-3.2.0 SSH OpenVMS V5.5 VMS_sftp_version 3'
+    private debugLine(s: string) {
+        this.logFn(LogType.debug, () => s);
     }
 }

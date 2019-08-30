@@ -1,6 +1,7 @@
 {
     "debug.ready": "client{0} готов",
-    "debug.end": "client{0} завершён", 
+    "debug.end": "client{0} завершён",
     "debug.error": "client{1} ошибка: {0}",
+    "connect.exception": "Exception: {0}",
     "debug.resolver": "не определена конфигурация {0}"
 }
