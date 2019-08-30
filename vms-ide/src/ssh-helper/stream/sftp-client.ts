@@ -148,23 +148,23 @@ export class SftpClient extends SshClient {
     public async readDirectory(directory: string) {
         await this.waitOperation.acquire();
         let files: FileEntry[] | undefined;
-        if (await this.ensureSftp()) {
-            if (this.sftp) {
-                const opName = localize("operation.readdir", "read directory {0} via sftp{1}", directory, this.tag ? " " + this.tag : "");
-                await WaitableOperation(opName, this.sftp, "continue", this.sftp, "error", (complete) => {
-                    if (!this.sftp) {
-                        return false;
+        if (await this.ensureSftp() && this.sftp) {
+            // set empty list => return 'undefined' only if stfp fails, but not if directory doesn't exist
+            files = [];
+            const opName = localize("operation.readdir", "read directory {0} via sftp{1}", directory, this.tag ? " " + this.tag : "");
+            await WaitableOperation(opName, this.sftp, "continue", this.sftp, "error", (complete) => {
+                if (!this.sftp) {
+                    return false;
+                }
+                return !this.sftp.readdir(directory, (err, list) => {
+                    if (err) {
+                        this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
+                    } else {
+                        files = list;
                     }
-                    return !this.sftp.readdir(directory, (err, list) => {
-                        if (err) {
-                            this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
-                        } else {
-                            files = list;
-                        }
-                        complete.release();
-                    });
-                }, this.logFn);
-            }
+                    complete.release();
+                });
+            }, this.logFn);
         }
         this.waitOperation.release();
         if (files) {
