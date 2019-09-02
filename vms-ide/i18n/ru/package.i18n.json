@@ -16,6 +16,7 @@
     "ssh-helper.configuration.password": "Пароль, можно пропустить",
     "ssh-helper.configuration.keyFile": "SSH key file or leave it empty to use password authentication.",
     "ssh-helper.configuration.skipSignatureVerification": "Skip signature verification",
+    "ssh-helper.configuration.algorithms": "Additional algorithms passed to SSH connection",
     "ssh-helper.configuration.timeouts.command": "Таймаут команды",
     "ssh-helper.configuration.timeouts.feedback": "Таймаут ответа сервера",
     "ssh-helper.configuration.timeouts.welcome": "Таймаут парсера приветствия",
