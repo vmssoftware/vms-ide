@@ -109,9 +109,11 @@ export class JvmDebugSession extends LoggingDebugSession {
                 const line = ids.get(id);
                 if (line) {
                     this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ id, verified, line }));
-                    break;
+                    return;
                 }
             }
+            // for function breakpoint
+            this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ id, verified }));
         });
         this._runtime.on(JvmRuntimeEvents.output, async (text, filePath?, line?, column?) => {
             const e: DebugProtocol.OutputEvent = new OutputEvent(`${text}\n`);
