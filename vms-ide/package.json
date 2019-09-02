@@ -586,6 +586,12 @@
                     "default": false,
                     "description": "%ssh-helper.configuration.skipSignatureVerification%"
                 },
+                "vmssoftware.ssh-helper.connection.algorithms": {
+                    "scope": "resource",
+                    "type": "object",
+                    "default": {},
+                    "description": "%ssh-helper.configuration.algorithms%"
+                },
                 "vmssoftware.ssh-helper.timeouts.cmdTimeout": {
                     "scope": "resource",
                     "type": "number",
@@ -620,7 +626,9 @@
                             "port": 22,
                             "username": "",
                             "password": "",
-                            "keyFile": ""
+                            "keyFile": "",
+                            "skipSignatureVerification": false,
+                            "algorithms": {}
                         }
                     ],
                     "description": "%ssh-helper.configuration.hosts-collection%"
