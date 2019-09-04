@@ -27,6 +27,21 @@
             "type": "npm",
             "script": "Pascal.antlr4ts",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "Cobol.antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "MSG.antlr4tsLex",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "MSG.antlr4ts",
+            "problemMatcher": []
         }
     ]
 }
