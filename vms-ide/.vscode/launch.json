@@ -37,7 +37,7 @@
             "input": "src/vms_cobol/test/test.cob",
             "grammar": "src/vms_cobol/parser/cobol.g4",
             "startRule": "source",
-            "printParseTree": true,
+            "printParseTree": false,
             "visualParseTree": true
         }
     ]

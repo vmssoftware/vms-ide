@@ -1021,6 +1021,7 @@
         "MSG.antlr4tsLex": "antlr4ts -o src/msg src/msg/msgLex.g4",
         "Pascal.antlr4ts": "antlr4ts -o src/vms_pascal/parser -visitor src/vms_pascal/parser/pascal.g4",
         "Cobol.antlr4ts": "antlr4ts -o src/vms_cobol/parser -visitor src/vms_cobol/parser/cobol.g4",
+        "Cobol.antlr4tsLex": "antlr4ts -o src/vms_cobol/parser src/vms_cobol/parser/cobolLex.g4",
         "vscode:prepublish": "webpack --mode production",
         "vscode:prepublish_dev": "webpack --mode development",
         "VSCE": "vsce package"
