@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "1.2.5",
+    "version": "1.2.6",
     "publisher": "VMSSoftwareInc",
     "license": "SEE LICENSE IN LICENSE.md",
     "repository": {
@@ -935,16 +935,16 @@
                         }
                     }
                 ]
-            }
-            ,{
+            },
+            {
                 "type": "vms jvm debugger",
                 "label": "%vms_jvm_debug.label.description%",
                 "configurationAttributes": {
                     "launch": {
-						"required": [
+                        "required": [
                             "classpath",
                             "class"
-						],
+                        ],
                         "properties": {
                             "classpath": {
                                 "type": "string",
@@ -1007,10 +1007,10 @@
                         }
                     }
                 ],
-				"variables": {
+                "variables": {
                     "FillClassName": "vms_jvm_debugger.fillClassName",
                     "FillClassPath": "vms_jvm_debugger.fillClassPath"
-                }            
+                }
             }
         ]
     },
