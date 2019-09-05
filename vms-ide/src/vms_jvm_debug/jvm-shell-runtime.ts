@@ -2243,7 +2243,7 @@ export class JvmShellRuntime extends EventEmitter {
         if (this.isPaused()) {
             return this._queue.postCommand(command, (cmd, line) => {
                 this._logFn(LogType.debug, () => `${command}: ${String(line).trimRight()}`);
-                if (line) {
+                if (line && isSetCommand) {
                     const matchedEvent = line.match(_rgxBreakPoint.rgxSet);
                     if (matchedEvent) {
                         const bp = this._breakpoints.get(bpKey);

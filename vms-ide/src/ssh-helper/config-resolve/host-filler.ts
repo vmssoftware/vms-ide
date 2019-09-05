@@ -30,6 +30,7 @@ export class HostFiller implements ISettingsFiller {
                         settings.keyFile = host.keyFile;
                         settings.password = host.password;
                         settings.skipSignatureVerification = host.skipSignatureVerification;
+                        settings.algorithms = Object.assign({}, host.algorithms);
                         break;
                     }
                 }

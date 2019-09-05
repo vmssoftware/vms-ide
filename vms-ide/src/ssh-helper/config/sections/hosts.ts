@@ -1,4 +1,4 @@
-import { IConfigData, IConfigSection } from "../../../config-helper/config/config";
+import { IConfigData, IConfigSection, ValueData } from "../../../config-helper/config/config";
 import { IHostsSection } from "../../api";
 import { LabeledConnection } from "./labeled-connection";
 
@@ -18,7 +18,7 @@ export class HostsSection implements IConfigSection {
 
     public store(): IConfigData {
         const ret: IConfigData = {};
-        ret.hosts = [];
+        ret.hosts = [] as IConfigData[];
         for (const tmp of this.hosts) {
             ret.hosts.push(tmp.store());
         }
@@ -37,7 +37,7 @@ export class HostsSection implements IConfigSection {
         if (data.hosts instanceof Array) {
             for (const host of data.hosts) {
                 const tmp =  new LabeledConnection();
-                if (tmp.fillFrom(host)) {
+                if (tmp.fillFrom(host as IConfigData)) {
                     this.hosts.push(tmp);
                 }
             }

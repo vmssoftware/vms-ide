@@ -109,9 +109,11 @@ export class JvmDebugSession extends LoggingDebugSession {
                 const line = ids.get(id);
                 if (line) {
                     this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ id, verified, line }));
-                    break;
+                    return;
                 }
             }
+            // for function breakpoint
+            this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ id, verified }));
         });
         this._runtime.on(JvmRuntimeEvents.output, async (text, filePath?, line?, column?) => {
             const e: DebugProtocol.OutputEvent = new OutputEvent(`${text}\n`);
@@ -247,23 +249,21 @@ export class JvmDebugSession extends LoggingDebugSession {
         this._scope = args.scope;
 
         // wait until configuration has finished (and configurationDoneRequest has been called)
-        let reallyDone = false;
-        const results = await Promise.all([
-            Promise.race([
+        // let reallyDone = false;
+        let result = await Promise.race([
                 Delay(1000).then(() => true),
                 this._configurationDone.acquire().then(() => { 
-                    reallyDone = true;
+                    // reallyDone = true;
                     return true;
                  }),
-            ]),
-            this._jdbShellServer.create(this._scope),
-            this._jvmShellServer.create(this._scope),
-            JvmProjectHelper.chooseScope(this._scope).then(() => true),
-        ]);
+            ]);
+        result = result && await this._jdbShellServer.create(this._scope);
+        result = result && await this._jvmShellServer.create(this._scope);
 
-        if (!results.reduce((result, current) => result && current, true)) {
+        if (!result) {
             this.sendEvent(new TerminatedEvent());
         } else {
+            await JvmProjectHelper.chooseScope(this._scope);
             let listeningPort = 5005;
             let listeningPortMax = 5105;
             const diapason = args.port ? args.port : "5005-5105";

@@ -1,4 +1,4 @@
-import { IFileEntry, LogFunction, LogType, MemoryReadStream, MemoryWriteStream } from "../common/main";
+import { IFileEntry, LogFunction, MemoryReadStream, MemoryWriteStream } from "../common/main";
 
 import { Readable, Transform, Writable } from "stream";
 import { EventEmitter } from "events";
@@ -90,6 +90,15 @@ export interface ISshShell extends EventEmitter {
     execCmd(command: string, timeout?: number): Promise<string[] | undefined>;
 }
 
+
+export interface IAlgorithms {
+    kex?: string[];
+    cipher?: string[];
+    serverHostKey?: string[];
+    hmac?: string[];
+    compress?: string[];
+}
+
 export interface IConnectionSection {
     host: string;
     port?: number;
@@ -97,6 +106,7 @@ export interface IConnectionSection {
     password?: string;
     keyFile?: string;
     skipSignatureVerification?: boolean;
+    algorithms?: IAlgorithms;
 }
 
 export interface IHost extends IConnectionSection {
