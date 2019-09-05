@@ -67,9 +67,8 @@ export async function activate(context: ExtensionContext)
                     if (sectionCur)
                     {
                         let sources = await fileM.loadPathListFiles(sectionCur.source);
-                        addPrefixToArray(path, sources);
-                        sourcePaths = sourcePaths.concat(sources);
-                    }						
+                        addPathToFiles(sourcePaths, path, sources);
+                    }
                 }
             }
         }
@@ -188,11 +187,15 @@ export async function activate(context: ExtensionContext)
     }
 }
 
-function addPrefixToArray(perfix : string, array : string[])
+function addPathToFiles(sourcePaths : string[], path : string, fileNames : string[])
 {
-    for(let i = 0; i < array.length; i++)
+    for(let i = 0; i < fileNames.length; i++)
     {
-        array[i] = perfix + "\\" + array[i];
+        if(fileNames[i].toLowerCase().includes(".pas"))
+        {
+            fileNames[i] = path + "\\" + fileNames[i];
+            sourcePaths.push(fileNames[i]);
+        }
     }
 }
 
