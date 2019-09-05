@@ -111,12 +111,20 @@ export class SshClient extends EventEmitter {
                     };
                 if (configResolved.algorithms) {
                     if (configResolved.algorithms.serverHostKey instanceof Array) {
-                        configResolved.algorithms.serverHostKey.push(...defaultAlgorithms.serverHostKey!);
+                        for (const serverHostKey of defaultAlgorithms.serverHostKey!) {
+                            if (!configResolved.algorithms.serverHostKey.includes(serverHostKey)) {
+                                configResolved.algorithms.serverHostKey.push(serverHostKey);
+                            }
+                        }
                     } else {
                         configResolved.algorithms.serverHostKey = defaultAlgorithms.serverHostKey;
                     }
                     if (configResolved.algorithms.kex instanceof Array) {
-                        configResolved.algorithms.kex.push(...defaultAlgorithms.kex!);
+                        for (const kex of defaultAlgorithms.kex!) {
+                            if (!configResolved.algorithms.kex.includes(kex)) {
+                                configResolved.algorithms.kex.push(kex);
+                            }
+                        }
                     } else {
                         configResolved.algorithms.kex = defaultAlgorithms.kex;
                     }
