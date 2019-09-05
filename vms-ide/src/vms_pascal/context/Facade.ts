@@ -94,12 +94,12 @@ export class Facade
     constructor(files: string[]) 
     {
         this.filePaths = files;
-
-        this.createDependencys();       
     }
 
     public attach(fileName: string, source?: string) 
     {
+        this.createDependencys(fileName);
+        
         const context = this.getContext(fileName, source);
 
         return context;
@@ -127,16 +127,16 @@ export class Facade
     {
         let contextEntry = list.get(fileName);
 
-        if (!contextEntry) 
+        if (!contextEntry)
         {
-            if (!source) 
+            if (!source)
             {
-                try 
+                try
                 {
                     fs.statSync(fileName);
                     source = fs.readFileSync(fileName, 'utf8');
                 } 
-                catch (e) 
+                catch (e)
                 {
                     source = "";
                 }
@@ -144,7 +144,7 @@ export class Facade
 
             let context = new SourceContext(fileName);
             contextEntry = { context: context, refCount: 0, dependencies: [], grammar: fileName };
-            list.set(fileName, contextEntry);            
+            list.set(fileName, contextEntry);
 
             // Do an initial parse run and load all dependencies of this context
             // and pass their references to this context.
@@ -165,8 +165,24 @@ export class Facade
         return contextEntry.context;
     }
 
-    private createDependencys()
+    private createDependencys(fileName: string)
     {
+        let findFile = false;
+
+        for (let dep of this.filePaths)
+        {
+            if(dep === fileName)
+            {
+                findFile = true;
+                break;
+            }
+        }
+
+        if(!findFile)
+        {
+            this.filePaths.push(fileName);
+        }
+
         for (let dep of this.filePaths)
         {
             this.loadGrammar(this.sourceReferenceContexts, false, dep);
