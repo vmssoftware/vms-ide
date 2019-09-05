@@ -64,12 +64,13 @@ export class cobolParser extends Parser {
 	public static readonly LCURLY = 34;
 	public static readonly RCURLY = 35;
 	public static readonly LINE_COMMENT = 36;
-	public static readonly B_AREA_LINE = 37;
-	public static readonly USER_DEFINED_WORD = 38;
-	public static readonly STRING_LITERAL = 39;
-	public static readonly NUM_INT = 40;
-	public static readonly NUM_REAL = 41;
-	public static readonly WS = 42;
+	public static readonly USER_DEFINED_WORD = 37;
+	public static readonly STRING_LITERAL = 38;
+	public static readonly NUM_INT = 39;
+	public static readonly NUM_REAL = 40;
+	public static readonly WHITESPACE = 41;
+	public static readonly NEWLINE = 42;
+	public static readonly NEWLIN = 43;
 	public static readonly RULE_source = 0;
 	public static readonly RULE_program = 1;
 	public static readonly RULE_identification_division = 2;
@@ -79,10 +80,12 @@ export class cobolParser extends Parser {
 	public static readonly RULE_is_program = 6;
 	public static readonly RULE_with_ident = 7;
 	public static readonly RULE_ident_string = 8;
+	public static readonly RULE_author = 9;
 	// tslint:disable:no-trailing-whitespace
 	public static readonly ruleNames: string[] = [
 		"source", "program", "identification_division", "identification_division_paragraph", 
-		"program_id", "program_name", "is_program", "with_ident", "ident_string",
+		"program_id", "program_name", "is_program", "with_ident", "ident_string", 
+		"author",
 	];
 
 	private static readonly _LITERAL_NAMES: Array<string | undefined> = [
@@ -97,8 +100,8 @@ export class cobolParser extends Parser {
 		"PROGRAM", "WITH", "IDENT", "INITIAL", "AUTHOR", "TRUE", "FALSE", "DOWN_LINE", 
 		"PLUS", "MINUS", "STAR", "SLASH", "COMMA", "SEMI", "COLON", "EQUAL", "LT", 
 		"LE", "GE", "GT", "LPAREN", "RPAREN", "LBRACK", "RBRACK", "POINTER", "ATP", 
-		"DOT", "DOTDOT", "LCURLY", "RCURLY", "LINE_COMMENT", "B_AREA_LINE", "USER_DEFINED_WORD", 
-		"STRING_LITERAL", "NUM_INT", "NUM_REAL", "WS",
+		"DOT", "DOTDOT", "LCURLY", "RCURLY", "LINE_COMMENT", "USER_DEFINED_WORD", 
+		"STRING_LITERAL", "NUM_INT", "NUM_REAL", "WHITESPACE", "NEWLINE", "NEWLIN",
 	];
 	public static readonly VOCABULARY: Vocabulary = new VocabularyImpl(cobolParser._LITERAL_NAMES, cobolParser._SYMBOLIC_NAMES, []);
 
@@ -130,21 +133,21 @@ export class cobolParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 21;
+			this.state = 23;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la === cobolParser.IDENTIFICATION) {
+			while (_la === cobolParser.IDENTIFICATION || _la === cobolParser.LINE_COMMENT) {
 				{
 				{
-				this.state = 18;
+				this.state = 20;
 				this.program();
 				}
 				}
-				this.state = 23;
+				this.state = 25;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
-			this.state = 24;
+			this.state = 26;
 			this.match(cobolParser.EOF);
 			}
 		}
@@ -167,10 +170,25 @@ export class cobolParser extends Parser {
 		let _localctx: ProgramContext = new ProgramContext(this._ctx, this.state);
 		this.enterRule(_localctx, 2, cobolParser.RULE_program);
 		try {
-			this.enterOuterAlt(_localctx, 1);
-			{
-			this.state = 26;
-			this.identification_division();
+			this.state = 30;
+			this._errHandler.sync(this);
+			switch (this._input.LA(1)) {
+			case cobolParser.IDENTIFICATION:
+				this.enterOuterAlt(_localctx, 1);
+				{
+				this.state = 28;
+				this.identification_division();
+				}
+				break;
+			case cobolParser.LINE_COMMENT:
+				this.enterOuterAlt(_localctx, 2);
+				{
+				this.state = 29;
+				this.match(cobolParser.LINE_COMMENT);
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
 			}
 		}
 		catch (re) {
@@ -191,29 +209,31 @@ export class cobolParser extends Parser {
 	public identification_division(): Identification_divisionContext {
 		let _localctx: Identification_divisionContext = new Identification_divisionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 4, cobolParser.RULE_identification_division);
-		let _la: number;
 		try {
+			let _alt: number;
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 28;
+			this.state = 32;
 			this.match(cobolParser.IDENTIFICATION);
-			this.state = 29;
+			this.state = 33;
 			this.match(cobolParser.DIVISION);
-			this.state = 30;
-			this.match(cobolParser.DOT);
 			this.state = 34;
+			this.match(cobolParser.DOT);
+			this.state = 38;
 			this._errHandler.sync(this);
-			_la = this._input.LA(1);
-			while (_la === cobolParser.PROGRAM_ID) {
-				{
-				{
-				this.state = 31;
-				this.identification_division_paragraph();
+			_alt = this.interpreter.adaptivePredict(this._input, 2, this._ctx);
+			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
+				if (_alt === 1) {
+					{
+					{
+					this.state = 35;
+					this.identification_division_paragraph();
+					}
+					}
 				}
-				}
-				this.state = 36;
+				this.state = 40;
 				this._errHandler.sync(this);
-				_la = this._input.LA(1);
+				_alt = this.interpreter.adaptivePredict(this._input, 2, this._ctx);
 			}
 			}
 		}
@@ -236,10 +256,32 @@ export class cobolParser extends Parser {
 		let _localctx: Identification_division_paragraphContext = new Identification_division_paragraphContext(this._ctx, this.state);
 		this.enterRule(_localctx, 6, cobolParser.RULE_identification_division_paragraph);
 		try {
-			this.enterOuterAlt(_localctx, 1);
-			{
-			this.state = 37;
-			this.program_id();
+			this.state = 44;
+			this._errHandler.sync(this);
+			switch (this._input.LA(1)) {
+			case cobolParser.PROGRAM_ID:
+				this.enterOuterAlt(_localctx, 1);
+				{
+				this.state = 41;
+				this.program_id();
+				}
+				break;
+			case cobolParser.AUTHOR:
+				this.enterOuterAlt(_localctx, 2);
+				{
+				this.state = 42;
+				this.author();
+				}
+				break;
+			case cobolParser.LINE_COMMENT:
+				this.enterOuterAlt(_localctx, 3);
+				{
+				this.state = 43;
+				this.match(cobolParser.LINE_COMMENT);
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
 			}
 		}
 		catch (re) {
@@ -264,33 +306,33 @@ export class cobolParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 39;
+			this.state = 46;
 			this.match(cobolParser.PROGRAM_ID);
-			this.state = 40;
+			this.state = 47;
 			this.match(cobolParser.DOT);
-			this.state = 41;
+			this.state = 48;
 			this.program_name();
-			this.state = 43;
+			this.state = 50;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === cobolParser.IS) {
 				{
-				this.state = 42;
+				this.state = 49;
 				this.is_program();
 				}
 			}
 
-			this.state = 46;
+			this.state = 53;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === cobolParser.WITH) {
 				{
-				this.state = 45;
+				this.state = 52;
 				this.with_ident();
 				}
 			}
 
-			this.state = 48;
+			this.state = 55;
 			this.match(cobolParser.DOT);
 			}
 		}
@@ -315,7 +357,7 @@ export class cobolParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 50;
+			this.state = 57;
 			this.match(cobolParser.USER_DEFINED_WORD);
 			}
 		}
@@ -341,9 +383,9 @@ export class cobolParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 52;
+			this.state = 59;
 			this.match(cobolParser.IS);
-			this.state = 53;
+			this.state = 60;
 			_la = this._input.LA(1);
 			if (!(_la === cobolParser.COMMON || _la === cobolParser.INITIAL)) {
 			this._errHandler.recoverInline(this);
@@ -355,7 +397,7 @@ export class cobolParser extends Parser {
 				this._errHandler.reportMatch(this);
 				this.consume();
 			}
-			this.state = 54;
+			this.state = 61;
 			this.match(cobolParser.PROGRAM);
 			}
 		}
@@ -380,11 +422,11 @@ export class cobolParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 56;
+			this.state = 63;
 			this.match(cobolParser.WITH);
-			this.state = 57;
+			this.state = 64;
 			this.match(cobolParser.IDENT);
-			this.state = 58;
+			this.state = 65;
 			this.ident_string();
 			}
 		}
@@ -409,8 +451,54 @@ export class cobolParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 60;
+			this.state = 67;
 			this.match(cobolParser.STRING_LITERAL);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public author(): AuthorContext {
+		let _localctx: AuthorContext = new AuthorContext(this._ctx, this.state);
+		this.enterRule(_localctx, 18, cobolParser.RULE_author);
+		try {
+			let _alt: number;
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 69;
+			this.match(cobolParser.AUTHOR);
+			this.state = 70;
+			this.match(cobolParser.DOT);
+			this.state = 74;
+			this._errHandler.sync(this);
+			_alt = this.interpreter.adaptivePredict(this._input, 6, this._ctx);
+			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
+				if (_alt === 1) {
+					{
+					{
+					this.state = 71;
+					this.matchWildcard();
+					}
+					}
+				}
+				this.state = 76;
+				this._errHandler.sync(this);
+				_alt = this.interpreter.adaptivePredict(this._input, 6, this._ctx);
+			}
+			this.state = 77;
+			this.match(cobolParser.NEWLIN);
 			}
 		}
 		catch (re) {
@@ -429,31 +517,38 @@ export class cobolParser extends Parser {
 	}
 
 	public static readonly _serializedATN: string =
-		"\x03\uC91D\uCABA\u058D\uAFBA\u4F53\u0607\uEA8B\uC241\x03,A\x04\x02\t\x02" +
+		"\x03\uC91D\uCABA\u058D\uAFBA\u4F53\u0607\uEA8B\uC241\x03-R\x04\x02\t\x02" +
 		"\x04\x03\t\x03\x04\x04\t\x04\x04\x05\t\x05\x04\x06\t\x06\x04\x07\t\x07" +
-		"\x04\b\t\b\x04\t\t\t\x04\n\t\n\x03\x02\x07\x02\x16\n\x02\f\x02\x0E\x02" +
-		"\x19\v\x02\x03\x02\x03\x02\x03\x03\x03\x03\x03\x04\x03\x04\x03\x04\x03" +
-		"\x04\x07\x04#\n\x04\f\x04\x0E\x04&\v\x04\x03\x05\x03\x05\x03\x06\x03\x06" +
-		"\x03\x06\x03\x06\x05\x06.\n\x06\x03\x06\x05\x061\n\x06\x03\x06\x03\x06" +
-		"\x03\x07\x03\x07\x03\b\x03\b\x03\b\x03\b\x03\t\x03\t\x03\t\x03\t\x03\n" +
-		"\x03\n\x03\n\x02\x02\x02\v\x02\x02\x04\x02\x06\x02\b\x02\n\x02\f\x02\x0E" +
-		"\x02\x10\x02\x12\x02\x02\x03\x04\x02\x07\x07\v\v\x02;\x02\x17\x03\x02" +
-		"\x02\x02\x04\x1C\x03\x02\x02\x02\x06\x1E\x03\x02\x02\x02\b\'\x03\x02\x02" +
-		"\x02\n)\x03\x02\x02\x02\f4\x03\x02\x02\x02\x0E6\x03\x02\x02\x02\x10:\x03" +
-		"\x02\x02\x02\x12>\x03\x02\x02\x02\x14\x16\x05\x04\x03\x02\x15\x14\x03" +
-		"\x02\x02\x02\x16\x19\x03\x02\x02\x02\x17\x15\x03\x02\x02\x02\x17\x18\x03" +
-		"\x02\x02\x02\x18\x1A\x03\x02\x02\x02\x19\x17\x03\x02\x02\x02\x1A\x1B\x07" +
-		"\x02\x02\x03\x1B\x03\x03\x02\x02\x02\x1C\x1D\x05\x06\x04\x02\x1D\x05\x03" +
-		"\x02\x02\x02\x1E\x1F\x07\x03\x02\x02\x1F \x07\x04\x02\x02 $\x07\"\x02" +
-		"\x02!#\x05\b\x05\x02\"!\x03\x02\x02\x02#&\x03\x02\x02\x02$\"\x03\x02\x02" +
-		"\x02$%\x03\x02\x02\x02%\x07\x03\x02\x02\x02&$\x03\x02\x02\x02\'(\x05\n" +
-		"\x06\x02(\t\x03\x02\x02\x02)*\x07\x05\x02\x02*+\x07\"\x02\x02+-\x05\f" +
-		"\x07\x02,.\x05\x0E\b\x02-,\x03\x02\x02\x02-.\x03\x02\x02\x02.0\x03\x02" +
-		"\x02\x02/1\x05\x10\t\x020/\x03\x02\x02\x0201\x03\x02\x02\x0212\x03\x02" +
-		"\x02\x0223\x07\"\x02\x023\v\x03\x02\x02\x0245\x07(\x02\x025\r\x03\x02" +
-		"\x02\x0267\x07\x06\x02\x0278\t\x02\x02\x0289\x07\b\x02\x029\x0F\x03\x02" +
-		"\x02\x02:;\x07\t\x02\x02;<\x07\n\x02\x02<=\x05\x12\n\x02=\x11\x03\x02" +
-		"\x02\x02>?\x07)\x02\x02?\x13\x03\x02\x02\x02\x06\x17$-0";
+		"\x04\b\t\b\x04\t\t\t\x04\n\t\n\x04\v\t\v\x03\x02\x07\x02\x18\n\x02\f\x02" +
+		"\x0E\x02\x1B\v\x02\x03\x02\x03\x02\x03\x03\x03\x03\x05\x03!\n\x03\x03" +
+		"\x04\x03\x04\x03\x04\x03\x04\x07\x04\'\n\x04\f\x04\x0E\x04*\v\x04\x03" +
+		"\x05\x03\x05\x03\x05\x05\x05/\n\x05\x03\x06\x03\x06\x03\x06\x03\x06\x05" +
+		"\x065\n\x06\x03\x06\x05\x068\n\x06\x03\x06\x03\x06\x03\x07\x03\x07\x03" +
+		"\b\x03\b\x03\b\x03\b\x03\t\x03\t\x03\t\x03\t\x03\n\x03\n\x03\v\x03\v\x03" +
+		"\v\x07\vK\n\v\f\v\x0E\vN\v\v\x03\v\x03\v\x03\v\x02\x02\x02\f\x02\x02\x04" +
+		"\x02\x06\x02\b\x02\n\x02\f\x02\x0E\x02\x10\x02\x12\x02\x14\x02\x02\x03" +
+		"\x04\x02\x07\x07\v\v\x02O\x02\x19\x03\x02\x02\x02\x04 \x03\x02\x02\x02" +
+		"\x06\"\x03\x02\x02\x02\b.\x03\x02\x02\x02\n0\x03\x02\x02\x02\f;\x03\x02" +
+		"\x02\x02\x0E=\x03\x02\x02\x02\x10A\x03\x02\x02\x02\x12E\x03\x02\x02\x02" +
+		"\x14G\x03\x02\x02\x02\x16\x18\x05\x04\x03\x02\x17\x16\x03\x02\x02\x02" +
+		"\x18\x1B\x03\x02\x02\x02\x19\x17\x03\x02\x02\x02\x19\x1A\x03\x02\x02\x02" +
+		"\x1A\x1C\x03\x02\x02\x02\x1B\x19\x03\x02\x02\x02\x1C\x1D\x07\x02\x02\x03" +
+		"\x1D\x03\x03\x02\x02\x02\x1E!\x05\x06\x04\x02\x1F!\x07&\x02\x02 \x1E\x03" +
+		"\x02\x02\x02 \x1F\x03\x02\x02\x02!\x05\x03\x02\x02\x02\"#\x07\x03\x02" +
+		"\x02#$\x07\x04\x02\x02$(\x07\"\x02\x02%\'\x05\b\x05\x02&%\x03\x02\x02" +
+		"\x02\'*\x03\x02\x02\x02(&\x03\x02\x02\x02()\x03\x02\x02\x02)\x07\x03\x02" +
+		"\x02\x02*(\x03\x02\x02\x02+/\x05\n\x06\x02,/\x05\x14\v\x02-/\x07&\x02" +
+		"\x02.+\x03\x02\x02\x02.,\x03\x02\x02\x02.-\x03\x02\x02\x02/\t\x03\x02" +
+		"\x02\x0201\x07\x05\x02\x0212\x07\"\x02\x0224\x05\f\x07\x0235\x05\x0E\b" +
+		"\x0243\x03\x02\x02\x0245\x03\x02\x02\x0257\x03\x02\x02\x0268\x05\x10\t" +
+		"\x0276\x03\x02\x02\x0278\x03\x02\x02\x0289\x03\x02\x02\x029:\x07\"\x02" +
+		"\x02:\v\x03\x02\x02\x02;<\x07\'\x02\x02<\r\x03\x02\x02\x02=>\x07\x06\x02" +
+		"\x02>?\t\x02\x02\x02?@\x07\b\x02\x02@\x0F\x03\x02\x02\x02AB\x07\t\x02" +
+		"\x02BC\x07\n\x02\x02CD\x05\x12\n\x02D\x11\x03\x02\x02\x02EF\x07(\x02\x02" +
+		"F\x13\x03\x02\x02\x02GH\x07\f\x02\x02HL\x07\"\x02\x02IK\v\x02\x02\x02" +
+		"JI\x03\x02\x02\x02KN\x03\x02\x02\x02LJ\x03\x02\x02\x02LM\x03\x02\x02\x02" +
+		"MO\x03\x02\x02\x02NL\x03\x02\x02\x02OP\x07-\x02\x02P\x15\x03\x02\x02\x02" +
+		"\t\x19 (.47L";
 	public static __ATN: ATN;
 	public static get _ATN(): ATN {
 		if (!cobolParser.__ATN) {
@@ -505,9 +600,10 @@ export class SourceContext extends ParserRuleContext {
 
 
 export class ProgramContext extends ParserRuleContext {
-	public identification_division(): Identification_divisionContext {
-		return this.getRuleContext(0, Identification_divisionContext);
+	public identification_division(): Identification_divisionContext | undefined {
+		return this.tryGetRuleContext(0, Identification_divisionContext);
 	}
+	public LINE_COMMENT(): TerminalNode | undefined { return this.tryGetToken(cobolParser.LINE_COMMENT, 0); }
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
@@ -578,9 +674,13 @@ export class Identification_divisionContext extends ParserRuleContext {
 
 
 export class Identification_division_paragraphContext extends ParserRuleContext {
-	public program_id(): Program_idContext {
-		return this.getRuleContext(0, Program_idContext);
+	public program_id(): Program_idContext | undefined {
+		return this.tryGetRuleContext(0, Program_idContext);
 	}
+	public author(): AuthorContext | undefined {
+		return this.tryGetRuleContext(0, AuthorContext);
+	}
+	public LINE_COMMENT(): TerminalNode | undefined { return this.tryGetToken(cobolParser.LINE_COMMENT, 0); }
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
@@ -777,6 +877,38 @@ export class Ident_stringContext extends ParserRuleContext {
 	public accept<Result>(visitor: cobolVisitor<Result>): Result {
 		if (visitor.visitIdent_string) {
 			return visitor.visitIdent_string(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class AuthorContext extends ParserRuleContext {
+	public AUTHOR(): TerminalNode { return this.getToken(cobolParser.AUTHOR, 0); }
+	public DOT(): TerminalNode { return this.getToken(cobolParser.DOT, 0); }
+	public NEWLIN(): TerminalNode { return this.getToken(cobolParser.NEWLIN, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
+	}
+	// @Override
+	public get ruleIndex(): number { return cobolParser.RULE_author; }
+	// @Override
+	public enterRule(listener: cobolListener): void {
+		if (listener.enterAuthor) {
+			listener.enterAuthor(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: cobolListener): void {
+		if (listener.exitAuthor) {
+			listener.exitAuthor(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: cobolVisitor<Result>): Result {
+		if (visitor.visitAuthor) {
+			return visitor.visitAuthor(this);
 		} else {
 			return visitor.visitChildren(this);
 		}

@@ -51,6 +51,6 @@ ident_string
 // author
 
 author
-   : AUTHOR_START
+   : AUTHOR DOT .* NEWLIN
 //     b_area_line*
    ;

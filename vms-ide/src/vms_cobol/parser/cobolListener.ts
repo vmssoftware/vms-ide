@@ -12,6 +12,7 @@ import { Program_nameContext } from "./cobolParser";
 import { Is_programContext } from "./cobolParser";
 import { With_identContext } from "./cobolParser";
 import { Ident_stringContext } from "./cobolParser";
+import { AuthorContext } from "./cobolParser";
 
 
 /**
@@ -117,5 +118,16 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitIdent_string?: (ctx: Ident_stringContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.author`.
+	 * @param ctx the parse tree
+	 */
+	enterAuthor?: (ctx: AuthorContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.author`.
+	 * @param ctx the parse tree
+	 */
+	exitAuthor?: (ctx: AuthorContext) => void;
 }
 

@@ -12,6 +12,7 @@ import { Program_nameContext } from "./cobolParser";
 import { Is_programContext } from "./cobolParser";
 import { With_identContext } from "./cobolParser";
 import { Ident_stringContext } from "./cobolParser";
+import { AuthorContext } from "./cobolParser";
 
 
 /**
@@ -84,5 +85,12 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitIdent_string?: (ctx: Ident_stringContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.author`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAuthor?: (ctx: AuthorContext) => Result;
 }
 

@@ -177,8 +177,8 @@ INITIAL
    : I N I T I A L
    ;
 
-AUTHOR_START
-   : A U T H O R -> pushMode(AUTHOR_MODE)
+AUTHOR
+   : A U T H O R
    ;
 
 TRUE
@@ -358,13 +358,13 @@ fragment EXPONENT
 WHITESPACE: SPACE+ -> channel(HIDDEN);
 NEWLINE:    NL     -> channel(HIDDEN);
 
-mode AUTHOR_MODE;
-AUTHOR_REST_OF_LINE
-    : REST_OF_LINE
-    ;
-AUTHOR_NEXT_LINE
-    : {getCharPositionInLine() == 0}? '    ' REST_OF_LINE
-    ;
-AUTHOR_CLOSE
-    :  -> popMode
-    ;
+// mode AUTHOR_MODE;
+// AUTHOR_REST_OF_LINE
+//     : REST_OF_LINE
+//     ;
+// AUTHOR_NEXT_LINE
+//     : {getCharPositionInLine() == 0}? '    ' REST_OF_LINE
+//     ;
+// AUTHOR_CLOSE
+//     :  -> popMode
+//     ;
