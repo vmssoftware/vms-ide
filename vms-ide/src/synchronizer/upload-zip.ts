@@ -16,7 +16,7 @@ const localize = nls.loadMessageBundle();
 export class UploadZip {
 
     private static readonly unzipCmd = printLike`unzip -oo "-D" ${"zipFileName"}`;
-    private static readonly freeAllCmd = printLike`set sec /prot=(o:rwed) [${"directory"}...]*.*;*`;
+    private static readonly freeAllCmd = printLike`set security /prot=(o:rwed) [${"directory"}...]*.*;*`;
     private static readonly delAllCmd = printLike`delete/tree [${"directory"}...]*.*;*`;
 
     public logFn: LogFunction;
@@ -86,7 +86,7 @@ export class UploadZip {
                 if (await Synchronizer.acquire(this.logFn).uploadFiles(ensured, [zipFileName])) {
                     // 2. unzip
                     // set default directory for shell - project root
-                    const cd = `set def ${converter.directory}`;
+                    const cd = `set default ${converter.directory}`;
                     const answer = await shell.execCmd(cd);
                     if (!answer) {
                         this.logFn(LogType.error, () => localize("zip.cd.failed", "Cannot set default directory."));
