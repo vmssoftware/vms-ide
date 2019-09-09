@@ -199,6 +199,26 @@ special_names_content
    | alphabet
    | symbolic_chars
    | class_
+   | currency
+   | DECIMAL_POINT empty_area+ (IS empty_area+)? COMMA
+   | CURSOR empty_area+ (IS empty_area+)? 
+   ;
+
+currency
+   : CURRENCY empty_area+ (SIGN empty_area+)? (IS empty_area+)? currency_def
+   ;
+
+currency_def
+   : literal_7 (WITH empty_area+)? PICTURE empty_area+ SYMBOL empty_area+ literal_8
+   | STRING_LITERAL
+   ;
+
+literal_7
+   : STRING_LITERAL
+   ;
+
+literal_8
+   : STRING_LITERAL
    ;
 
 class_
