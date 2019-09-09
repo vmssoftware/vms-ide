@@ -198,7 +198,19 @@ special_names_content
    | switch_
    | alphabet
    | symbolic_chars
-     //(class empty_area*)?
+   | class_
+   ;
+
+class_
+   : CLASS empty_area+ class_name empty_area+ (IS empty_area+)? (user_class empty_area*)+
+   ;
+
+class_name
+   : USER_DEFINED_WORD
+   ;
+
+user_class
+   : first_literal (empty_area+ (THRU | THROUGH) empty_area+ last_literal)?
    ;
 
 symbolic_chars
@@ -240,7 +252,7 @@ alpha_value
    ;
 
 user_alpha
-   : first_literal (empty_area+ (THRU | THRU) empty_area+ last_literal)?
+   : first_literal (empty_area+ (THRU | THROUGH) empty_area+ last_literal)?
    | first_literal (empty_area+ ALSO empty_area+ same_literal)+
    ;
 
@@ -461,7 +473,7 @@ fragment SPACE
    ;
 
 fragment NL
-   : [\r\n]
+   : '\r'?'\n'
    ;
 
 // comment
@@ -565,6 +577,10 @@ WITH                    : W I T H    ;
 WORDS                   : W O R D S   ;
 
 // symbols
+
+EXCLAM
+   : '!'
+   ;
 
 DOWN_LINE
    : '_'

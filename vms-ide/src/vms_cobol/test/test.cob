@@ -40,6 +40,7 @@ ALPHABET my-alph1 1
 ALPHABET my-alph2 10 11 12
 ALPHABET my-alph3 'a' thru 'z' 'A' also '$' also "#"
 SYMBOLIC CHARACTERS CARRIAGE-RET ESCAPE ARE 14 28 IN my-alph2 CR IS 13 LF is 10
+class cls_my_1 'L' thru 'C'
 .
 DATA DIVISION.
 PROCEDURE DIVISION.
