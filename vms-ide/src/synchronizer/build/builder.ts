@@ -639,7 +639,7 @@ export class Builder {
                 : ``;
 
             flagLines.push(...[
-            `.IF DEBUG`,
+            `.IF DEBUG .AND $(DEBUG) .EQ 1`,
             `COMPILEFLAGS = ${cxxDebugFlags}`,
             `LINKFLAGS = /DEBUG/MAP=$(MMS$TARGET_NAME)${linkCommonFlags}`,
             `.ELSE`,
