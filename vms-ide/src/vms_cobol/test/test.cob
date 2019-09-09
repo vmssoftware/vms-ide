@@ -35,6 +35,12 @@ ARGUMENT-NUMBER argNum
 switch 1
 off status is first_switch_off
 on first_switch
+ALPHABET xyz NATIVE
+ALPHABET my-alph1 1
+ALPHABET my-alph2 10 11 12
+ALPHABET my-alph3 'a' thru 'z' 'A' also '$' also "#"
+SYMBOLIC CHARACTERS CARRIAGE-RET ESCAPE ARE 14 28 IN my-alph2 CR IS 13 LF is 10
+.
 DATA DIVISION.
 PROCEDURE DIVISION.
 END PROGRAM RMSSPECREGS.

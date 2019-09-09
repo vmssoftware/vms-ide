@@ -188,11 +188,75 @@ segment_number
    ;
 
 special_names
-   : SPECIAL_NAMES empty_area* DOT empty_area*
-     (predefined_device empty_area+ (IS empty_area+)? device_name empty_area* )*
-     (arg_env empty_area+ (IS empty_area+)? arg_env_name empty_area* )*
-     (C01 empty_area+ (IS empty_area+)? top_of_page_name empty_area* )?
-     (switch_ empty_area*)?
+   : SPECIAL_NAMES empty_area* DOT empty_area* ((special_names_content empty_area*)+ DOT)?
+   ;
+
+special_names_content
+   : predefined_device empty_area+ (IS empty_area+)? device_name
+   | arg_env empty_area+ (IS empty_area+)? arg_env_name
+   | C01 empty_area+ (IS empty_area+)? top_of_page_name
+   | switch_
+   | alphabet
+   | symbolic_chars
+     //(class empty_area*)?
+   ;
+
+symbolic_chars
+   : SYMBOLIC empty_area+ (CHARACTERS empty_area+)? 
+      symb_ch_definition+
+   ;
+
+symb_ch_definition
+   : symb_ch_def_clause+ symb_ch_def_in_alphabet?
+   ;
+
+symb_ch_def_clause
+   : (symbol_char empty_area+)+ ((ARE|IS) empty_area+)? (char_val empty_area+)+
+   ;
+
+symb_ch_def_in_alphabet
+   : IN empty_area+ alpha_name empty_area*
+   ;
+
+symbol_char
+   : USER_DEFINED_WORD
+   ;
+
+char_val
+   : NUMERIC_LITERAL
+   ;
+
+alphabet
+   : ALPHABET empty_area+ alpha_name empty_area+ (IS empty_area+ )? alpha_value
+   ;
+
+alpha_value
+   : ASCII
+   | STANDARD_1
+   | STANDARD_2
+   | NATIVE
+   | EBCDIC
+   | (user_alpha empty_area*)+
+   ;
+
+user_alpha
+   : first_literal (empty_area+ (THRU | THRU) empty_area+ last_literal)?
+   | first_literal (empty_area+ ALSO empty_area+ same_literal)+
+   ;
+
+first_literal
+   : STRING_LITERAL
+   | NUMERIC_LITERAL
+   ;
+
+last_literal
+   : STRING_LITERAL
+   | NUMERIC_LITERAL
+   ;
+
+same_literal
+   : STRING_LITERAL
+   | NUMERIC_LITERAL
    ;
 
 switch_
