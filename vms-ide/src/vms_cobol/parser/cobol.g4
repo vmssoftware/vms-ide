@@ -201,7 +201,12 @@ special_names_content
    | class_
    | currency
    | DECIMAL_POINT empty_area+ (IS empty_area+)? COMMA
-   | CURSOR empty_area+ (IS empty_area+)? 
+   | CURSOR empty_area+ (IS empty_area+)? data_item
+   | CRT empty_area+ STATUS empty_area+ (IS empty_area+)? data_item
+   ;
+
+data_item
+   : USER_DEFINED_WORD
    ;
 
 currency
