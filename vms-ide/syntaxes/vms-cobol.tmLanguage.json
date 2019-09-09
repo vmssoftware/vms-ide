@@ -714,10 +714,16 @@
     },
     "author": {
       "name": "cobol.author",
-      "begin": "(?i)(AUTHOR)(?=[^-a-z0-9$_])",
+      "begin": "(?i)(AUTHOR)(?=[^-a-z0-9$_])(?:\\s*[.](.*)|(.*))",
       "beginCaptures": {
-        "0": {
+        "1": {
           "name": "keyword"
+        }
+        ,"2": {
+          "name": "comment"
+        }
+        ,"3": {
+          "name": "comment"
         }
       },
       "end": "(?i)(?=(INSTALLATION|DATE-WRITTEN|DATE-COMPILED|SECURITY|OPTIONS|ENVIRONMENT|DATA|PROCEDURE|END|IDENTIFICATION)[^-a-z0-9$_])",
@@ -732,24 +738,11 @@
           "include": "#conditional"
         },
         {
-          "comment": "catching dot",
-          "begin": "\\G",
-          "end": "\\.[^-a-z0-9$_]",
-          "patterns": [
-            {
-              "include": "#comment"
-            },
-            {
-              "include": "#invalid-char"
-            }
-          ]
-        },
-        {
           "include": "#compiler.directives"
         },
         {
           "name": "comment.line",
-          "match": "."
+          "match": "^(?: {4}|\t).+"
         }
       ]
     },
