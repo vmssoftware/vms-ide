@@ -26,7 +26,7 @@ import { Indexed_byContext } from "./cobolParser";
 import { Ind_nameContext } from "./cobolParser";
 import { Key_isContext } from "./cobolParser";
 import { Key_nameContext } from "./cobolParser";
-import { Times_defContext } from "./cobolParser";
+import { Times_definitionContext } from "./cobolParser";
 import { Table_sizeContext } from "./cobolParser";
 import { Min_timesContext } from "./cobolParser";
 import { Max_timesContext } from "./cobolParser";
@@ -53,7 +53,7 @@ import { Page_size_rdContext } from "./cobolParser";
 import { Control_nameContext } from "./cobolParser";
 import { Report_codeContext } from "./cobolParser";
 import { UsageContext } from "./cobolParser";
-import { Usage_defContext } from "./cobolParser";
+import { Usage_definitionContext } from "./cobolParser";
 import { PictureContext } from "./cobolParser";
 import { Character_stringContext } from "./cobolParser";
 import { Char_str_partContext } from "./cobolParser";
@@ -71,10 +71,10 @@ import { Page_sizeContext } from "./cobolParser";
 import { Data_recContext } from "./cobolParser";
 import { Rec_nameContext } from "./cobolParser";
 import { Value_of_idContext } from "./cobolParser";
-import { Value_of_id_defContext } from "./cobolParser";
+import { Value_of_id_definitionContext } from "./cobolParser";
 import { LabelContext } from "./cobolParser";
 import { RecordContext } from "./cobolParser";
-import { Record_defContext } from "./cobolParser";
+import { Record_definitionContext } from "./cobolParser";
 import { Depending_itemContext } from "./cobolParser";
 import { Shortest_recContext } from "./cobolParser";
 import { Longest_recContext } from "./cobolParser";
@@ -115,7 +115,7 @@ import { Special_namesContext } from "./cobolParser";
 import { Special_names_contentContext } from "./cobolParser";
 import { Qualified_data_itemContext } from "./cobolParser";
 import { CurrencyContext } from "./cobolParser";
-import { Currency_defContext } from "./cobolParser";
+import { Currency_definitionContext } from "./cobolParser";
 import { Literal_7Context } from "./cobolParser";
 import { Literal_8Context } from "./cobolParser";
 import { Class_Context } from "./cobolParser";
@@ -149,7 +149,7 @@ import { SelectContext } from "./cobolParser";
 import { File_statusContext } from "./cobolParser";
 import { File_statContext } from "./cobolParser";
 import { Record_keyContext } from "./cobolParser";
-import { Record_key_defContext } from "./cobolParser";
+import { Record_key_definitionContext } from "./cobolParser";
 import { Access_modeContext } from "./cobolParser";
 import { ReserveContext } from "./cobolParser";
 import { Reserve_numContext } from "./cobolParser";
@@ -158,22 +158,22 @@ import { PaddingContext } from "./cobolParser";
 import { Pad_charContext } from "./cobolParser";
 import { OrganizationContext } from "./cobolParser";
 import { Lock_modeContext } from "./cobolParser";
-import { Lock_mode_defContext } from "./cobolParser";
+import { Lock_mode_definitionContext } from "./cobolParser";
 import { Code_setContext } from "./cobolParser";
 import { Block_containsContext } from "./cobolParser";
 import { Smallest_blockContext } from "./cobolParser";
 import { BlocksizeContext } from "./cobolParser";
 import { Assign_toContext } from "./cobolParser";
-import { Assign_to_defContext } from "./cobolParser";
+import { Assign_to_definitionContext } from "./cobolParser";
 import { File_specContext } from "./cobolParser";
 import { File_nameContext } from "./cobolParser";
 import { I_o_controlContext } from "./cobolParser";
 import { Multiple_fileContext } from "./cobolParser";
-import { Multiple_file_defContext } from "./cobolParser";
+import { Multiple_file_definitionContext } from "./cobolParser";
 import { Multiple_file_nameContext } from "./cobolParser";
 import { Pos_integerContext } from "./cobolParser";
 import { RerunContext } from "./cobolParser";
-import { Rerun_defContext } from "./cobolParser";
+import { Rerun_definitionContext } from "./cobolParser";
 import { Clock_countContext } from "./cobolParser";
 import { Condition_nameContext } from "./cobolParser";
 import { Rerun_def_fileContext } from "./cobolParser";
@@ -181,7 +181,7 @@ import { Rec_countContext } from "./cobolParser";
 import { SameContext } from "./cobolParser";
 import { Same_area_fileContext } from "./cobolParser";
 import { ApplyContext } from "./cobolParser";
-import { Apply_defContext } from "./cobolParser";
+import { Apply_definitionContext } from "./cobolParser";
 import { Window_ptrsContext } from "./cobolParser";
 import { Preall_amtContext } from "./cobolParser";
 import { Extend_amtContext } from "./cobolParser";
@@ -446,15 +446,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitKey_name?: (ctx: Key_nameContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.times_def`.
+	 * Enter a parse tree produced by `cobolParser.times_definition`.
 	 * @param ctx the parse tree
 	 */
-	enterTimes_def?: (ctx: Times_defContext) => void;
+	enterTimes_definition?: (ctx: Times_definitionContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.times_def`.
+	 * Exit a parse tree produced by `cobolParser.times_definition`.
 	 * @param ctx the parse tree
 	 */
-	exitTimes_def?: (ctx: Times_defContext) => void;
+	exitTimes_definition?: (ctx: Times_definitionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.table_size`.
@@ -743,15 +743,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitUsage?: (ctx: UsageContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.usage_def`.
+	 * Enter a parse tree produced by `cobolParser.usage_definition`.
 	 * @param ctx the parse tree
 	 */
-	enterUsage_def?: (ctx: Usage_defContext) => void;
+	enterUsage_definition?: (ctx: Usage_definitionContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.usage_def`.
+	 * Exit a parse tree produced by `cobolParser.usage_definition`.
 	 * @param ctx the parse tree
 	 */
-	exitUsage_def?: (ctx: Usage_defContext) => void;
+	exitUsage_definition?: (ctx: Usage_definitionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.picture`.
@@ -941,15 +941,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitValue_of_id?: (ctx: Value_of_idContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.value_of_id_def`.
+	 * Enter a parse tree produced by `cobolParser.value_of_id_definition`.
 	 * @param ctx the parse tree
 	 */
-	enterValue_of_id_def?: (ctx: Value_of_id_defContext) => void;
+	enterValue_of_id_definition?: (ctx: Value_of_id_definitionContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.value_of_id_def`.
+	 * Exit a parse tree produced by `cobolParser.value_of_id_definition`.
 	 * @param ctx the parse tree
 	 */
-	exitValue_of_id_def?: (ctx: Value_of_id_defContext) => void;
+	exitValue_of_id_definition?: (ctx: Value_of_id_definitionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.label`.
@@ -974,15 +974,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitRecord?: (ctx: RecordContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.record_def`.
+	 * Enter a parse tree produced by `cobolParser.record_definition`.
 	 * @param ctx the parse tree
 	 */
-	enterRecord_def?: (ctx: Record_defContext) => void;
+	enterRecord_definition?: (ctx: Record_definitionContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.record_def`.
+	 * Exit a parse tree produced by `cobolParser.record_definition`.
 	 * @param ctx the parse tree
 	 */
-	exitRecord_def?: (ctx: Record_defContext) => void;
+	exitRecord_definition?: (ctx: Record_definitionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.depending_item`.
@@ -1425,15 +1425,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitCurrency?: (ctx: CurrencyContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.currency_def`.
+	 * Enter a parse tree produced by `cobolParser.currency_definition`.
 	 * @param ctx the parse tree
 	 */
-	enterCurrency_def?: (ctx: Currency_defContext) => void;
+	enterCurrency_definition?: (ctx: Currency_definitionContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.currency_def`.
+	 * Exit a parse tree produced by `cobolParser.currency_definition`.
 	 * @param ctx the parse tree
 	 */
-	exitCurrency_def?: (ctx: Currency_defContext) => void;
+	exitCurrency_definition?: (ctx: Currency_definitionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.literal_7`.
@@ -1799,15 +1799,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitRecord_key?: (ctx: Record_keyContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.record_key_def`.
+	 * Enter a parse tree produced by `cobolParser.record_key_definition`.
 	 * @param ctx the parse tree
 	 */
-	enterRecord_key_def?: (ctx: Record_key_defContext) => void;
+	enterRecord_key_definition?: (ctx: Record_key_definitionContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.record_key_def`.
+	 * Exit a parse tree produced by `cobolParser.record_key_definition`.
 	 * @param ctx the parse tree
 	 */
-	exitRecord_key_def?: (ctx: Record_key_defContext) => void;
+	exitRecord_key_definition?: (ctx: Record_key_definitionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.access_mode`.
@@ -1898,15 +1898,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitLock_mode?: (ctx: Lock_modeContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.lock_mode_def`.
+	 * Enter a parse tree produced by `cobolParser.lock_mode_definition`.
 	 * @param ctx the parse tree
 	 */
-	enterLock_mode_def?: (ctx: Lock_mode_defContext) => void;
+	enterLock_mode_definition?: (ctx: Lock_mode_definitionContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.lock_mode_def`.
+	 * Exit a parse tree produced by `cobolParser.lock_mode_definition`.
 	 * @param ctx the parse tree
 	 */
-	exitLock_mode_def?: (ctx: Lock_mode_defContext) => void;
+	exitLock_mode_definition?: (ctx: Lock_mode_definitionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.code_set`.
@@ -1964,15 +1964,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitAssign_to?: (ctx: Assign_toContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.assign_to_def`.
+	 * Enter a parse tree produced by `cobolParser.assign_to_definition`.
 	 * @param ctx the parse tree
 	 */
-	enterAssign_to_def?: (ctx: Assign_to_defContext) => void;
+	enterAssign_to_definition?: (ctx: Assign_to_definitionContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.assign_to_def`.
+	 * Exit a parse tree produced by `cobolParser.assign_to_definition`.
 	 * @param ctx the parse tree
 	 */
-	exitAssign_to_def?: (ctx: Assign_to_defContext) => void;
+	exitAssign_to_definition?: (ctx: Assign_to_definitionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.file_spec`.
@@ -2019,15 +2019,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitMultiple_file?: (ctx: Multiple_fileContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.multiple_file_def`.
+	 * Enter a parse tree produced by `cobolParser.multiple_file_definition`.
 	 * @param ctx the parse tree
 	 */
-	enterMultiple_file_def?: (ctx: Multiple_file_defContext) => void;
+	enterMultiple_file_definition?: (ctx: Multiple_file_definitionContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.multiple_file_def`.
+	 * Exit a parse tree produced by `cobolParser.multiple_file_definition`.
 	 * @param ctx the parse tree
 	 */
-	exitMultiple_file_def?: (ctx: Multiple_file_defContext) => void;
+	exitMultiple_file_definition?: (ctx: Multiple_file_definitionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.multiple_file_name`.
@@ -2063,15 +2063,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitRerun?: (ctx: RerunContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.rerun_def`.
+	 * Enter a parse tree produced by `cobolParser.rerun_definition`.
 	 * @param ctx the parse tree
 	 */
-	enterRerun_def?: (ctx: Rerun_defContext) => void;
+	enterRerun_definition?: (ctx: Rerun_definitionContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.rerun_def`.
+	 * Exit a parse tree produced by `cobolParser.rerun_definition`.
 	 * @param ctx the parse tree
 	 */
-	exitRerun_def?: (ctx: Rerun_defContext) => void;
+	exitRerun_definition?: (ctx: Rerun_definitionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.clock_count`.
@@ -2151,15 +2151,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitApply?: (ctx: ApplyContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.apply_def`.
+	 * Enter a parse tree produced by `cobolParser.apply_definition`.
 	 * @param ctx the parse tree
 	 */
-	enterApply_def?: (ctx: Apply_defContext) => void;
+	enterApply_definition?: (ctx: Apply_definitionContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.apply_def`.
+	 * Exit a parse tree produced by `cobolParser.apply_definition`.
 	 * @param ctx the parse tree
 	 */
-	exitApply_def?: (ctx: Apply_defContext) => void;
+	exitApply_definition?: (ctx: Apply_definitionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.window_ptrs`.

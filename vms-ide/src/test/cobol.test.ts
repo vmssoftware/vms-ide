@@ -52,7 +52,7 @@ suite("COBOL tests", function(this: Mocha.Suite) {
 
         let str_tree = getSyntaxTreeStrings(parser, tree);
         for(let line of str_tree) {
-            if (line) {
+            if (line && line.trim() && line.trim() !== "separator") {
                 console.log(line);
             }
         }

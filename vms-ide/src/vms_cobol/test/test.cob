@@ -5,8 +5,15 @@ PROGRAM-ID. RMSSPECREGS.
 * implement a different recovery for each of several errors with RMS files.
 *
 AUTHOR. Me
-        and all my friends!
-ENVIRONMENT DIVISION.
+* comment in author
+    and all my friends!
+	INPUT-OUTPUT SECTION.
+ 	INPUT-OUTPUT SECTION.
+* comment in author
+  	INPUT-OUTPUT SECTION.
+   	INPUT-OUTPUT SECTION.
+* comment in author
+   ENVIRONMENT DIVISION.
 INPUT-OUTPUT SECTION.
 FILE-CONTROL.
 SELECT OPTIONAL EMP-FILE ASSIGN "SYS$DISK:ART.DAT".

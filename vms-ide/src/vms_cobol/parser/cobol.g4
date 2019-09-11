@@ -1,7 +1,7 @@
 grammar cobol;
 
 cobol_source
-   : program * EOF
+   : (program | separator) * EOF
    ;
 
 separator
@@ -23,7 +23,6 @@ program
      environment_division?
      data_division?
    //   procedure_division?
-   | separator
    ;
 
 data_division
@@ -124,7 +123,7 @@ value_is_literal
    ;
 
 occurs
-   : OCCURS separator+ times_def (separator+ key_is)* (separator+ indexed_by)?
+   : OCCURS separator+ times_definition (separator+ key_is)* (separator+ indexed_by)?
    ;
 
 indexed_by
@@ -143,7 +142,7 @@ key_name
    : qualified_data_item
    ;
 
-times_def
+times_definition
    : table_size separator+ TIMES
    | min_times separator+ TO separator+ max_times separator+ TIMES separator+ DEPENDING separator+ (ON separator+)? depending_item
    ;
@@ -288,10 +287,10 @@ report_code
    ;
 
 usage
-   : (USAGE (separator+ IS)? separator+)? usage_def
+   : (USAGE (separator+ IS)? separator+)? usage_definition
    ;
 
-usage_def
+usage_definition
    : BINARY
    | BINARY_CHAR (separator+ (SIGNED|UNSIGNED))?
    | BINARY_SHORT (separator+ (SIGNED|UNSIGNED))?
@@ -403,10 +402,10 @@ rec_name
    ;
 
 value_of_id
-   : VALUE separator+ OF separator+ ID separator+ (IS separator+) value_of_id_def
+   : VALUE separator+ OF separator+ ID separator+ (IS separator+) value_of_id_definition
    ;
 
-value_of_id_def
+value_of_id_definition
    : STRING_LITERAL
    | qualified_data_item
    ;
@@ -416,10 +415,10 @@ label
    ;
 
 record
-   : RECORD separator+ record_def
+   : RECORD separator+ record_definition
    ;
 
-record_def
+record_definition
    : (CONTAINS separator+)? 
       (shortest_rec separator+ TO separator+)? 
       longest_rec separator* (CHARACTERS separator*)?
@@ -506,6 +505,7 @@ ident_string
 
 comment_entry
    : START_FOUR_SPACES ~NEWLINE* NEWLINE
+   | line_comment
    ;
 
 author
@@ -652,10 +652,10 @@ qualified_data_item
    ;
 
 currency
-   : CURRENCY separator+ (SIGN separator+)? (IS separator+)? currency_def
+   : CURRENCY separator+ (SIGN separator+)? (IS separator+)? currency_definition
    ;
 
-currency_def
+currency_definition
    : literal_7 (WITH separator+)? PICTURE separator+ SYMBOL separator+ literal_8
    | STRING_LITERAL
    ;
@@ -826,12 +826,12 @@ file_stat
    ;
 
 record_key
-   : (ALTERNATE separator+)? RECORD separator+ (KEY separator+)? (IS separator+)? record_key_def 
+   : (ALTERNATE separator+)? RECORD separator+ (KEY separator+)? (IS separator+)? record_key_definition 
      (separator+ (WITH separator+)? DUPLICATES)?
      (separator+ (ASCENDING|DESCENDING))?
    ;
 
-record_key_def
+record_key_definition
    : qualified_data_item
    | USER_DEFINED_WORD separator* EQUAL_ separator* qualified_data_item (separator* qualified_data_item)*
    ;
@@ -876,10 +876,10 @@ organization
    ;
 
 lock_mode
-   : LOCK separator+ (MODE separator+)? (IS separator+)? lock_mode_def
+   : LOCK separator+ (MODE separator+)? (IS separator+)? lock_mode_definition
    ;
 
-lock_mode_def
+lock_mode_definition
    : MANUAL separator+ (WITH separator+)? LOCK separator+ ON separator+ MULTIPLE separator+ RECORDS
    | AUTOMATIC (separator+ (WITH separator+)? ((LOCK separator+ ON separator+ RECORD)|ROLLBACK) )?
    | EXCLUSIVE
@@ -902,10 +902,10 @@ blocksize
    ;
 
 assign_to
-   : ASSIGN separator+ (TO separator+)? assign_to_def
+   : ASSIGN separator+ (TO separator+)? assign_to_definition
    ;
 
-assign_to_def
+assign_to_definition
    : ((EXTERNAL|DYNAMIC) separator+)? file_spec
    | (MULTIPLE separator+)? (REEL|UNIT) (separator+ FILE)?
    ;
@@ -931,10 +931,10 @@ i_o_control
    ;
 
 multiple_file
-   : MULTIPLE separator+ FILE separator+ (TAPE separator+)? (CONTAINS separator+)? (multiple_file_def separator*)+
+   : MULTIPLE separator+ FILE separator+ (TAPE separator+)? (CONTAINS separator+)? (multiple_file_definition separator*)+
    ;
 
-multiple_file_def
+multiple_file_definition
    : multiple_file_name (separator+ POSITION separator+ pos_integer)?
    ;
 
@@ -947,10 +947,10 @@ pos_integer
    ;
 
 rerun
-   : RERUN separator+ (ON separator+ file_name separator+)? (EVERY separator+)? rerun_def
+   : RERUN separator+ (ON separator+ file_name separator+)? (EVERY separator+)? rerun_definition
    ;
 
-rerun_def
+rerun_definition
    : rerun_def_file separator+ (OF separator+)? file_name
    | clock_count separator+ CLOCK_UNITS
    | condition_name
@@ -982,10 +982,10 @@ same_area_file
    ;
 
 apply
-   : APPLY separator+ (apply_def separator+)+ ON separator+ (file_name separator*)+
+   : APPLY separator+ (apply_definition separator+)+ ON separator+ (file_name separator*)+
    ;
 
-apply_def
+apply_definition
    : DEFERRED_WRITE
    | EXTENSION separator+ extend_amt
    | FILL_SIZE
