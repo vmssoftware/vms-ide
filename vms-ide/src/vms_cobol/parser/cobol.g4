@@ -44,7 +44,7 @@ file_description
    : FD separator+ file_name separator*
      (file_description_entry separator*)*
      DOT_ separator*
-     (data_description separator*)*
+     (file_data_description separator*)*
    ;
 
 file_description_entry
@@ -63,10 +63,10 @@ file_description_entry
    | file_status
    ;
 
-data_description
+file_data_description
    : level_number (separator+ (data_name|FILLER))?
      (separator+ REDEFINES separator+ other_data_item)?
-     (separator+ data_description_entry)*
+     (separator+ file_data_description_entry)*
      DOT_
    ;
 
@@ -74,21 +74,172 @@ level_number
    : NUMERIC_LITERAL
    ;
 
-data_description_entry
+file_data_description_entry
    : (IS separator+)? EXTERNAL
    | (IS separator+)? GLOBAL
    | picture
    | usage
    | (SIGN (separator+ IS)? separator+)? (LEADING|TRAILING) (separator+ SEPARATE (separator+ CHARACTER))?
+   | occurs
+   | (SYNCHRONIZED | SYNC) (separator+ (LEFT|RIGHT))?
+   | (JUSTIFIED | JUST) (separator+ RIGHT)?
+   | BLANK separator+ (WHEN separator+)? ZERO
+   | value_is
    ;
 
+value_is
+   : (VALUE separator+ (IS separator+)? | VALUES separator+ (ARE separator+)) value_is_definition (separator+ value_is_definition)*
+   ;
 
+value_is_definition
+   : value_is_definition_part (separator+ value_is_definition_thru)?
+   ;
+
+value_is_definition_part
+   : value_is_literal
+   | REFERENCE separator+ ref_data_name
+   | EXTERNAL separator+ external_name
+   ;
+
+value_is_definition_thru
+   : (THRU|THROUGH) separator+ value_is_definition_part
+   ;
+
+external_name
+   : USER_DEFINED_WORD
+   ;
+
+ref_data_name
+   : qualified_data_item
+   ;
+
+value_is_literal
+   : STRING_LITERAL
+   | NUMERIC_LITERAL
+   ;
+
+occurs
+   : OCCURS separator+ times_def (separator+ key_is)* (separator+ indexed_by)?
+   ;
+
+indexed_by
+   : INDEXED separator+ (BY separator+)? ind_name (separator+ ind_name)*
+   ;
+
+ind_name
+   : USER_DEFINED_WORD
+   ;
+
+key_is
+   : (ASCENDING|DESCENDING) separator+ (KEY separator+)? (IS separator+)? key_name (separator+ key_name)*
+   ;
+
+key_name
+   : qualified_data_item
+   ;
+
+times_def
+   : table_size separator+ TIMES
+   | min_times separator+ TO separator+ max_times separator+ TIMES separator+ DEPENDING separator+ (ON separator+)? depending_item
+   ;
+
+table_size
+   : NUMERIC_LITERAL
+   ;
+min_times
+   : NUMERIC_LITERAL
+   ;
+max_times
+   : NUMERIC_LITERAL
+   ;
 
 report_description
    : RD separator+ report_name separator*
      (report_description_entry separator*)*
-     (data_description separator*)*
+     DOT_ separator*
+     (report_data_description separator*)*
+   ;
+
+report_data_description
+   : level_number (separator+ data_name)?
+     (separator+ report_data_description_entry)*
      DOT_
+   ;
+
+report_data_description_entry
+   : LINE separator+ (NUMBER separator+)? (IS separator+)? line_num_definition
+   | NEXT separator+ GROUP separator+ (IS separator+)? next_group_definition
+   | TYPE separator+ (IS separator+)? type_is_definition
+   | (USAGE separator+ (IS separator+)?)? DISPLAY
+   | BLANK separator+ (WHEN separator+)? ZERO
+   | COLUMN separator+ (NUMBER separator+)? (IS separator+)? column_number
+   | GROUP (separator+ INDICATE)?
+   | (JUSTIFIED | JUST) (separator+ RIGHT)?
+   | picture
+   | (SIGN (separator+ IS)? separator+)? (LEADING|TRAILING) (separator+ SEPARATE (separator+ CHARACTER))?
+   | SOURCE separator+ (IS separator+)? source_name
+   | VALUE separator+ (IS separator+)? value_is_literal
+   | sum
+   ;
+
+sum
+   : (SUM separator+ sum_name (separator+ sum_name)* (separator+ UPON)? (separator+ detail_report_group_name)*)+
+     (separator* RESET separator+ (ON separator+) control_foot_name)?
+   ;
+
+control_foot_name
+   : USER_DEFINED_WORD
+   | FINAL
+   ;
+
+detail_report_group_name
+   : USER_DEFINED_WORD
+   ;
+
+sum_name
+   : USER_DEFINED_WORD
+   ;
+
+source_name
+   : qualified_data_item
+   ;
+
+column_number
+   : NUMERIC_LITERAL
+   ;
+
+type_is_definition
+   : REPORT separator+ HEADING
+   | RH
+   | PAGE separator+ HEADING
+   | PH
+   | (CONTROL separator+ HEADING| CH) separator+ type_control_name
+   | DETAIL
+   | DE
+   | (CONTROL separator+ FOOTING| CF) separator+ type_control_name
+   | PAGE separator+ FOOTING
+   | PF
+   | REPORT separator+ FOOTING
+   | RF
+   ;
+
+type_control_name
+   : USER_DEFINED_WORD
+   | FINAL
+   ;
+
+next_group_definition
+   : line_num
+   | PLUS separator+ line_num
+   | NEXT separator+ PAGE
+   ;
+
+line_num_definition
+   : line_num (separator+ (ON separator+)? NEXT separator+ PAGE)?
+   | PLUS separator+ line_num
+   ;
+line_num
+   : NUMERIC_LITERAL
    ;
 
 report_description_entry
@@ -124,7 +275,7 @@ page_size_rd
    ;
 
 control_name
-   : data_item
+   : qualified_data_item
    ;
 
 report_code
@@ -132,7 +283,7 @@ report_code
    ;
 
 usage
-   : USAGE (separator+ IS)? separator+ usage_def
+   : (USAGE (separator+ IS)? separator+)? usage_def
    ;
 
 usage_def
@@ -166,11 +317,20 @@ usage_def
    ;
 
 picture
-   : (PICTURE|PIC) (separator+ IS)? character_string
+   : (PICTURE|PIC) separator+ (IS separator+ )? character_string
    ;
 
 character_string
-   : USER_DEFINED_WORD
+   : char_str_part+
+   ;
+
+char_str_part
+   : NUMERIC_LITERAL
+   | LPAREN_
+   | RPAREN_
+   | DOT_
+   | COMMA_
+   | USER_DEFINED_WORD
    ;
 
 other_data_item
@@ -184,7 +344,7 @@ data_name
 sort_merge_file_description
    : SD separator+ file_name separator*
      (sort_merge_file_description_entry separator*)*
-     (data_description separator*)*
+     (file_data_description separator*)*
      DOT_
    ;
 
@@ -194,7 +354,7 @@ sort_merge_file_description_entry
    ;
 
 report_is
-   : (REPORT (separator+ IS)? | REPORTS (separator+ ARE)?) report_name (separator* report_name)*
+   : (REPORT (separator+ IS)? | REPORTS (separator+ ARE)?) separator+ report_name (separator* report_name)*
    ;
 
 report_name
@@ -210,22 +370,22 @@ linage
 
 bottom_lines
    : NUMERIC_LITERAL
-   | data_item
+   | qualified_data_item
    ;
 
 top_lines
    : NUMERIC_LITERAL
-   | data_item
+   | qualified_data_item
    ;
 
 footing_line
    : NUMERIC_LITERAL
-   | data_item
+   | qualified_data_item
    ;
 
 page_size
    : NUMERIC_LITERAL
-   | data_item
+   | qualified_data_item
    ;
 
 data_rec
@@ -242,7 +402,7 @@ value_of_id
 
 value_of_id_def
    : STRING_LITERAL
-   | data_item
+   | qualified_data_item
    ;
 
 label
@@ -263,7 +423,7 @@ record_def
    ;
 
 depending_item
-   : data_item
+   : qualified_data_item
    ;
 
 shortest_rec
@@ -276,12 +436,12 @@ longest_rec
 
 working_storage_section
    : WORKING_STORAGE separator+ SECTION separator* DOT_ separator*
-     (data_description separator*)*
+     (file_data_description separator*)*
    ;
 
 linkage_section
    : LINKAGE separator+ SECTION separator* DOT_ separator*
-     (data_description separator*)*
+     (file_data_description separator*)*
    ;
 
 report_section
@@ -291,7 +451,7 @@ report_section
 
 screen_section
    : SCREEN separator+ SECTION separator* DOT_ separator*
-     (data_description_entry separator*)*
+     (file_data_description_entry separator*)*
    ;
 
 identification_division
@@ -477,11 +637,11 @@ special_names_content
    | class_
    | currency
    | DECIMAL_POINT separator+ (IS separator+)? COMMA
-   | CURSOR separator+ (IS separator+)? data_item
-   | CRT separator+ STATUS separator+ (IS separator+)? data_item
+   | CURSOR separator+ (IS separator+)? qualified_data_item
+   | CRT separator+ STATUS separator+ (IS separator+)? qualified_data_item
    ;
 
-data_item
+qualified_data_item
    : USER_DEFINED_WORD ((IN|OF) separator+ USER_DEFINED_WORD separator+)*
    ;
 
@@ -656,7 +816,7 @@ file_status
    ;
 
 file_stat
-   : data_item
+   : qualified_data_item
    ;
 
 record_key
@@ -666,8 +826,8 @@ record_key
    ;
 
 record_key_def
-   : data_item
-   | USER_DEFINED_WORD separator* EQUAL_ separator* data_item (separator* data_item)*
+   : qualified_data_item
+   | USER_DEFINED_WORD separator* EQUAL_ separator* qualified_data_item (separator* qualified_data_item)*
    ;
 
 access_mode
@@ -676,7 +836,7 @@ access_mode
         SEQUENTIAL
       | RANDOM
       | DYNAMIC
-     ) (separator+ RELATIVE separator+ (KEY separator+)? (IS separator+)? data_item )?
+     ) (separator+ RELATIVE separator+ (KEY separator+)? (IS separator+)? qualified_data_item )?
    ;
 
 reserve
@@ -746,7 +906,7 @@ assign_to_def
 
 file_spec
    : STRING_LITERAL
-   | data_item
+   | qualified_data_item
    | DISK
    | PRINTER
    ;
@@ -1031,6 +1191,8 @@ BOTTOM                  : B O T T O M;
 BY                      : B Y;
 C01                     : C '01';
 CARD_READER             : C A R D '-' R E A D E R;
+CF                      : C F;
+CH                      : C H;
 CHARACTER               : C H A R A C T E R;
 CHARACTERS              : C H A R A C T E R S;
 CLASS                   : C L A S S;
@@ -1038,6 +1200,7 @@ CLOCK_UNITS             : C L O C K '-' U N I T S;
 CODE                    : C O D E;
 CODE_SET                : C O D E '-' S E T;
 COLLATING               : C O L L A T I N G;
+COLUMN                  : C O L U M N;
 COMMA                   : C O M M A;
 COMMON                  : C O M M O N;
 COMP                    : C O M P;
@@ -1067,6 +1230,7 @@ CURSOR                  : C U R S O R;
 DATA                    : D A T A;
 DATE_COMPILED           : D A T E '-' C O M P I L E D;
 DATE_WRITTEN            : D A T E '-' W R I T T E N;
+DE                      : D E;
 DEBUGGING               : D E B U G G I N G;
 DECIMAL_POINT           : D E C I M A L '-' P O I N T;
 DEFERRED_WRITE          : D E F E R R E D '-' W R I T E;
@@ -1102,6 +1266,7 @@ FOOTING                 : F O O T I N G;
 FOR                     : F O R;
 FROM                    : F R O M;
 GLOBAL                  : G L O B A L;
+GROUP                   : G R O U P;
 HEADING                 : H E A D I N G;
 I64                     : I '64';
 ID                      : I D;
@@ -1110,6 +1275,7 @@ IDENTIFICATION_DIVISION : IN_A I D E N T I F I C A T I O N;
 IN                      : I N;
 INDEX                   : I N D E X;
 INDEXED                 : I N D E X E D;
+INDICATE                : I N D I C A T E;
 INITIAL                 : I N I T I A L;
 INPUT_OUTPUT            : I N P U T '-' O U T P U T;
 INSTALLATION            : I N S T A L L A T I O N;
@@ -1138,6 +1304,8 @@ MODE                    : M O D E;
 MODULES                 : M O D U L E S;
 MULTIPLE                : M U L T I P L E;
 NATIVE                  : N A T I V E;
+NEXT                    : N E X T;
+NUMBER                  : N U M B E R;
 OBJECT_COMPUTER         : O B J E C T '-' C O M P U T E R;
 OCCURS                  : O C C U R S;
 OF                      : O F ;
@@ -1152,8 +1320,11 @@ PADDING                 : P A D D I N G;
 PAGE                    : P A G E;
 PAPER_TAPE_PUNCH        : P A P E R '-' T A P E '-' P U N C H;
 PAPER_TAPE_READER       : P A P E R '-' T A P E '-' R E A D E R;
+PF                      : P F;
+PH                      : P H;
 PIC                     : P I C;
 PICTURE                 : P I C T U R E;
+PLUS                    : P L U S;
 POINTER                 : P O I N T E R;
 POINTER_64              : P O I N T E R '-64';
 POSITION                : P O S I T I O N;
@@ -1175,6 +1346,9 @@ REPORT                  : R E P O R T;
 REPORTS                 : R E P O R T S;
 RERUN                   : R E R U N;
 RESERVE                 : R E S E R V E;
+RESET                   : R E S E T;
+RF                      : R F;
+RH                      : R H;
 RIGHT                   : R I G H T;
 ROLLBACK                : R O L L B A C K;
 SAME                    : S A M E;
@@ -1192,12 +1366,14 @@ SIGNED                  : S I G N E D;
 SIZE                    : S I Z E;
 SORT                    : S O R T;
 SORT_MERGE              : S O R T '-' M E R G E;
+SOURCE                  : S O U R C E;
 SOURCE_COMPUTER         : S O U R C E '-' C O M P U T E R;
 SPECIAL_NAMES           : S P E C I A L '-' N A M E S;
 STANDARD                : S T A N D A R D;
 STANDARD_1              : S T A N D A R D '-1';
 STANDARD_2              : S T A N D A R D '-2';
 STATUS                  : S T A T U S;
+SUM                     : S U M;
 SWITCH                  : S W I T C H;
 SYMBOL                  : S Y M B O L;
 SYMBOLIC                : S Y M B O L I C;
@@ -1213,12 +1389,16 @@ TIMES                   : T I M E S;
 TO                      : T O;
 TOP                     : T O P;
 TRAILING                : T R A I L I N G;
+TYPE                    : T Y P E;
 UNIT                    : U N I T;
 UNSIGNED                : U N S I G N E D;
+UPON                    : U P O N;
 USAGE                   : U S A G E;
 VALUE                   : V A L U E;
+VALUES                  : V A L U E S;
 VARYING                 : V A R Y I N G;
 VAX                     : V A X;
+WHEN                    : W H E N;
 WINDOW                  : W I N D O W;
 WITH                    : W I T H;
 WORDS                   : W O R D S;
