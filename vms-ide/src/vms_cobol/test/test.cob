@@ -1,10 +1,11 @@
-
-IDENTIFICATION DIVISION.
+  IDENTIFICATION DIVISION.
 PROGRAM-ID. RMSSPECREGS.
 *
 * This program demonstrates the use of RMS special registers to
 * implement a different recovery for each of several errors with RMS files.
 *
+AUTHOR. Me
+        and all my friends!
 ENVIRONMENT DIVISION.
 INPUT-OUTPUT SECTION.
 FILE-CONTROL.

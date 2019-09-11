@@ -1,16 +1,21 @@
 grammar cobol;
 
-source
+cobol_source
    : program * EOF
    ;
 
 separator
-   : WHITESPACE+
-   | NEWLINE+
-   | A_AREA_IS_EMPTY+
-   | LINE_COMMENT
+   : WHITESPACE
+   | NEWLINE
+   | START_FOUR_SPACES
    | COMMA_
    | SEMI_
+   | line_comment
+   ;
+
+line_comment
+   : START_SLASH_ ~NEWLINE* NEWLINE
+   | START_STAR_ ~NEWLINE* NEWLINE
    ;
 
 program
@@ -330,6 +335,7 @@ char_str_part
    | RPAREN_
    | DOT_
    | COMMA_
+   | SLASH_
    | USER_DEFINED_WORD
    ;
 
@@ -455,7 +461,7 @@ screen_section
    ;
 
 identification_division
-   : IDENTIFICATION_DIVISION separator+ DIVISION separator* DOT_ separator*
+   : IDENTIFICATION_IN_A_AREA separator+ DIVISION separator* DOT_ separator*
      identification_division_paragraph*
    ;
 
@@ -499,7 +505,7 @@ ident_string
 // author
 
 comment_entry
-   : A_AREA_IS_EMPTY ~NEWLINE* NEWLINE
+   : START_FOUR_SPACES ~NEWLINE* NEWLINE
    ;
 
 author
@@ -1147,19 +1153,6 @@ fragment REST_OF_LINE
    : .*? NL
    ;
 
-fragment IN_A
-   : {getCharPositionInLine() < 4}?
-   ;
-
-fragment LINE_START
-   : {getCharPositionInLine() == 0}?
-   ;
-
-LINE_COMMENT
-    : LINE_START (STAR_ | SLASH_) REST_OF_LINE
-    ;
-
-
 // keywords
 
 ACCESS                  : A C C E S S;
@@ -1271,7 +1264,7 @@ HEADING                 : H E A D I N G;
 I64                     : I '64';
 ID                      : I D;
 IDENT                   : I D E N T;
-IDENTIFICATION_DIVISION : IN_A I D E N T I F I C A T I O N;
+IDENTIFICATION_IN_A_AREA: I D E N T I F I C A T I O N {this.charPositionInLine < 18}?;
 IN                      : I N;
 INDEX                   : I N D E X;
 INDEXED                 : I N D E X E D;
@@ -1407,6 +1400,9 @@ ZERO                    : Z E R O;
 
 // symbols
 
+START_SLASH_ : '/' {this.charPositionInLine==1}?;
+START_STAR_  : '*' {this.charPositionInLine==1}?;
+
 EXCLAM_  : '!';
 UNDER_   : '_';
 PLUS_    : '+';
@@ -1482,16 +1478,18 @@ USER_DEFINED_WORD
 
 // white space
 
-A_AREA_IS_EMPTY
-   : LINE_START '    '
-   | LINE_START ' ' '\t'
-   | LINE_START '  ' '\t'
-   | LINE_START '   ' '\t'
-   | LINE_START '\t'
+START_FOUR_SPACES
+   : '    '       {this.charPositionInLine==4}?
+   | ' ' '\t'     {this.charPositionInLine==2}?
+   | '  ' '\t'    {this.charPositionInLine==3}?
+   | '   ' '\t'   {this.charPositionInLine==4}?
+   | '\t'         {this.charPositionInLine==1}?
    ;
+
 WHITESPACE
    : SPACE_ //-> channel(HIDDEN)
    ;
+
 NEWLINE
    : NL //-> channel(HIDDEN)
    ;

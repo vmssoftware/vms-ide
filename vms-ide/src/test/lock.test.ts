@@ -7,6 +7,7 @@ suite("Lock tests", function(this: Mocha.Suite) {
 
     this.timeout(0);
 
+    return;
 
     this.beforeAll(async () => {
         // prepare
