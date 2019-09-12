@@ -5,8 +5,10 @@ import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 
 import { Cobol_sourceContext } from "./cobolParser";
 import { SeparatorContext } from "./cobolParser";
+import { Arithmetic_separatorContext } from "./cobolParser";
 import { Line_commentContext } from "./cobolParser";
 import { ProgramContext } from "./cobolParser";
+import { Procedure_divisionContext } from "./cobolParser";
 import { Data_divisionContext } from "./cobolParser";
 import { File_sectionContext } from "./cobolParser";
 import { Working_storage_sectionContext } from "./cobolParser";
@@ -21,6 +23,9 @@ import { Record_description_entryContext } from "./cobolParser";
 import { Data_description_entryContext } from "./cobolParser";
 import { Level_numberContext } from "./cobolParser";
 import { Data_description_clauseContext } from "./cobolParser";
+import { RenamesContext } from "./cobolParser";
+import { Rename_startContext } from "./cobolParser";
+import { Rename_endContext } from "./cobolParser";
 import { Value_isContext } from "./cobolParser";
 import { Value_is_definitionContext } from "./cobolParser";
 import { Value_is_definition_partContext } from "./cobolParser";
@@ -40,6 +45,7 @@ import { Max_timesContext } from "./cobolParser";
 import { Report_group_description_entryContext } from "./cobolParser";
 import { Report_group_data_descriptionContext } from "./cobolParser";
 import { Report_group_data_description_clauseContext } from "./cobolParser";
+import { Sign_isContext } from "./cobolParser";
 import { SumContext } from "./cobolParser";
 import { Control_foot_nameContext } from "./cobolParser";
 import { Detail_report_group_nameContext } from "./cobolParser";
@@ -196,6 +202,16 @@ import { Apply_definitionContext } from "./cobolParser";
 import { Window_ptrsContext } from "./cobolParser";
 import { Preall_amtContext } from "./cobolParser";
 import { Extend_amtContext } from "./cobolParser";
+import { Arithmetic_expressionContext } from "./cobolParser";
+import { Binary_arithmetic_operatorContext } from "./cobolParser";
+import { Unary_arithmetic_operatorContext } from "./cobolParser";
+import { IdentifierContext } from "./cobolParser";
+import { ArgumentsContext } from "./cobolParser";
+import { SubscriptingContext } from "./cobolParser";
+import { Reference_modificationContext } from "./cobolParser";
+import { Leftmost_character_positionContext } from "./cobolParser";
+import { LengthContext } from "./cobolParser";
+import { Function_nameContext } from "./cobolParser";
 
 
 /**
@@ -226,6 +242,17 @@ export interface cobolListener extends ParseTreeListener {
 	exitSeparator?: (ctx: SeparatorContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `cobolParser.arithmetic_separator`.
+	 * @param ctx the parse tree
+	 */
+	enterArithmetic_separator?: (ctx: Arithmetic_separatorContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.arithmetic_separator`.
+	 * @param ctx the parse tree
+	 */
+	exitArithmetic_separator?: (ctx: Arithmetic_separatorContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `cobolParser.line_comment`.
 	 * @param ctx the parse tree
 	 */
@@ -246,6 +273,17 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitProgram?: (ctx: ProgramContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.procedure_division`.
+	 * @param ctx the parse tree
+	 */
+	enterProcedure_division?: (ctx: Procedure_divisionContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.procedure_division`.
+	 * @param ctx the parse tree
+	 */
+	exitProcedure_division?: (ctx: Procedure_divisionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.data_division`.
@@ -400,6 +438,39 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitData_description_clause?: (ctx: Data_description_clauseContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.renames`.
+	 * @param ctx the parse tree
+	 */
+	enterRenames?: (ctx: RenamesContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.renames`.
+	 * @param ctx the parse tree
+	 */
+	exitRenames?: (ctx: RenamesContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.rename_start`.
+	 * @param ctx the parse tree
+	 */
+	enterRename_start?: (ctx: Rename_startContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.rename_start`.
+	 * @param ctx the parse tree
+	 */
+	exitRename_start?: (ctx: Rename_startContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.rename_end`.
+	 * @param ctx the parse tree
+	 */
+	enterRename_end?: (ctx: Rename_endContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.rename_end`.
+	 * @param ctx the parse tree
+	 */
+	exitRename_end?: (ctx: Rename_endContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.value_is`.
@@ -609,6 +680,17 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitReport_group_data_description_clause?: (ctx: Report_group_data_description_clauseContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sign_is`.
+	 * @param ctx the parse tree
+	 */
+	enterSign_is?: (ctx: Sign_isContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sign_is`.
+	 * @param ctx the parse tree
+	 */
+	exitSign_is?: (ctx: Sign_isContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.sum`.
@@ -2325,5 +2407,115 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitExtend_amt?: (ctx: Extend_amtContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.arithmetic_expression`.
+	 * @param ctx the parse tree
+	 */
+	enterArithmetic_expression?: (ctx: Arithmetic_expressionContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.arithmetic_expression`.
+	 * @param ctx the parse tree
+	 */
+	exitArithmetic_expression?: (ctx: Arithmetic_expressionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.binary_arithmetic_operator`.
+	 * @param ctx the parse tree
+	 */
+	enterBinary_arithmetic_operator?: (ctx: Binary_arithmetic_operatorContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.binary_arithmetic_operator`.
+	 * @param ctx the parse tree
+	 */
+	exitBinary_arithmetic_operator?: (ctx: Binary_arithmetic_operatorContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.unary_arithmetic_operator`.
+	 * @param ctx the parse tree
+	 */
+	enterUnary_arithmetic_operator?: (ctx: Unary_arithmetic_operatorContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.unary_arithmetic_operator`.
+	 * @param ctx the parse tree
+	 */
+	exitUnary_arithmetic_operator?: (ctx: Unary_arithmetic_operatorContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.identifier`.
+	 * @param ctx the parse tree
+	 */
+	enterIdentifier?: (ctx: IdentifierContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.identifier`.
+	 * @param ctx the parse tree
+	 */
+	exitIdentifier?: (ctx: IdentifierContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.arguments`.
+	 * @param ctx the parse tree
+	 */
+	enterArguments?: (ctx: ArgumentsContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.arguments`.
+	 * @param ctx the parse tree
+	 */
+	exitArguments?: (ctx: ArgumentsContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.subscripting`.
+	 * @param ctx the parse tree
+	 */
+	enterSubscripting?: (ctx: SubscriptingContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.subscripting`.
+	 * @param ctx the parse tree
+	 */
+	exitSubscripting?: (ctx: SubscriptingContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.reference_modification`.
+	 * @param ctx the parse tree
+	 */
+	enterReference_modification?: (ctx: Reference_modificationContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.reference_modification`.
+	 * @param ctx the parse tree
+	 */
+	exitReference_modification?: (ctx: Reference_modificationContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.leftmost_character_position`.
+	 * @param ctx the parse tree
+	 */
+	enterLeftmost_character_position?: (ctx: Leftmost_character_positionContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.leftmost_character_position`.
+	 * @param ctx the parse tree
+	 */
+	exitLeftmost_character_position?: (ctx: Leftmost_character_positionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.length`.
+	 * @param ctx the parse tree
+	 */
+	enterLength?: (ctx: LengthContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.length`.
+	 * @param ctx the parse tree
+	 */
+	exitLength?: (ctx: LengthContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.function_name`.
+	 * @param ctx the parse tree
+	 */
+	enterFunction_name?: (ctx: Function_nameContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.function_name`.
+	 * @param ctx the parse tree
+	 */
+	exitFunction_name?: (ctx: Function_nameContext) => void;
 }
 
