@@ -37,21 +37,55 @@ data_division
 file_section
    : FILE separator+ SECTION separator* DOT_ separator*
      (
-        ( file_description
-        | sort_merge_file_description
-        | report_description)
+        (  file_description_entry (separator* record_description_entry)*
+         | report_description_entry
+         | sort_merge_file_description_entry (separator* record_description_entry)*
+        )
         separator*
      )*
    ;
 
-file_description
-   : FD separator+ file_name separator*
-     (file_description_entry separator*)*
-     DOT_ separator*
-     (file_data_description separator*)*
+working_storage_section
+   : WORKING_STORAGE separator+ SECTION separator* DOT_ separator*
+     (record_description_entry separator*)*
    ;
 
+linkage_section
+   : LINKAGE separator+ SECTION separator* DOT_ separator*
+     (record_description_entry separator*)*
+   ;
+
+report_section
+   : REPORT separator+ SECTION separator* DOT_ separator*
+     (report_description_entry (separator* report_group_description_entry)* separator*)*
+   ;
+
+screen_section
+   : SCREEN separator+ SECTION separator* DOT_ separator*
+     (screen_description_entry separator*)*
+   ;
+
+
 file_description_entry
+   : FD separator+ file_name separator*
+     (fd_clause separator*)*
+     DOT_
+   ;
+
+sort_merge_file_description_entry
+   : SD separator+ file_name separator*
+     (sd_clause separator*)*
+     DOT_
+   ;
+
+report_description_entry
+   : RD separator+ report_name separator*
+     (rd_clause separator*)*
+     DOT_
+   ;
+
+
+fd_clause
    : (IS separator+)? EXTERNAL
    | (IS separator+)? GLOBAL
    | block_contains
@@ -67,10 +101,14 @@ file_description_entry
    | file_status
    ;
 
-file_data_description
+record_description_entry
+   : data_description_entry (separator* data_description_entry)*
+   ;
+
+data_description_entry
    : level_number (separator+ (data_name|FILLER))?
      (separator+ REDEFINES separator+ other_data_item)?
-     (separator+ file_data_description_entry)*
+     (separator+ data_description_clause)*
      DOT_
    ;
 
@@ -78,7 +116,7 @@ level_number
    : NUMERIC_LITERAL
    ;
 
-file_data_description_entry
+data_description_clause
    : (IS separator+)? EXTERNAL
    | (IS separator+)? GLOBAL
    | picture
@@ -157,20 +195,17 @@ max_times
    : NUMERIC_LITERAL
    ;
 
-report_description
-   : RD separator+ report_name separator*
-     (report_description_entry separator*)*
-     DOT_ separator*
-     (report_data_description separator*)*
+report_group_description_entry
+   : report_group_data_description (separator* report_group_data_description)*
    ;
 
-report_data_description
+report_group_data_description
    : level_number (separator+ data_name)?
-     (separator+ report_data_description_entry)*
+     (separator+ report_group_data_description_clause)*
      DOT_
    ;
 
-report_data_description_entry
+report_group_data_description_clause
    : LINE separator+ (NUMBER separator+)? (IS separator+)? line_num_definition
    | NEXT separator+ GROUP separator+ (IS separator+)? next_group_definition
    | TYPE separator+ (IS separator+)? type_is_definition
@@ -246,10 +281,10 @@ line_num
    : NUMERIC_LITERAL
    ;
 
-report_description_entry
+rd_clause
    : (IS separator+)? GLOBAL
    | CODE separator+ report_code
-   | (CONTROL (separator+ IS)? | CONTROLS (separator+ ARE)?) (control_name (separator* control_name)*| FINAL (separator* control_name)* )
+   | ( CONTROL (separator+ IS)? | CONTROLS (separator+ ARE)? ) separator+ (control_name (separator* control_name)* | FINAL (separator* control_name)* )
    | PAGE separator+ 
       (LIMIT separator+ (IS separator+ )?|LIMITS separator+ (ARE separator+ )?)? page_size_rd (separator+ (LINE|LINES))?
       (separator+ HEADING separator+ heading_line)?
@@ -346,14 +381,7 @@ data_name
    : USER_DEFINED_WORD
    ;
 
-sort_merge_file_description
-   : SD separator+ file_name separator*
-     (sort_merge_file_description_entry separator*)*
-     (file_data_description separator*)*
-     DOT_
-   ;
-
-sort_merge_file_description_entry
+sd_clause
    : record
    | data_rec
    ;
@@ -439,24 +467,64 @@ longest_rec
    : NUMERIC_LITERAL
    ;
 
-working_storage_section
-   : WORKING_STORAGE separator+ SECTION separator* DOT_ separator*
-     (file_data_description separator*)*
+screen_description_entry
+   : level_number (separator+ (screen_name|FILLER))?
+     (separator+ screen_description_clause)*
+     DOT_
    ;
 
-linkage_section
-   : LINKAGE separator+ SECTION separator* DOT_ separator*
-     (file_data_description separator*)*
+screen_name
+   : USER_DEFINED_WORD
    ;
 
-report_section
-   : REPORT separator+ SECTION separator* DOT_ separator*
-     (report_description separator*)*
+screen_description_clause
+   : BLANK separator+ (SCREEN|LINE)
+   | FOREGROUND_COLOR separator+ (IS separator+)? color_num
+   | BACKGROUND_COLOR separator+ (IS separator+)? color_num
+   | AUTO
+   | SECURE
+   | REQUIRED
+   | (USAGE separator+ (IS separator+)?)? DISPLAY
+   | (SIGN (separator+ IS)? separator+)? (LEADING|TRAILING) (separator+ SEPARATE (separator+ CHARACTER))?
+   | FULL
+   | BELL
+   | BLINK
+   | ERASE separator+ (EOL|EOS)
+   | HIGHLIGHT
+   | LOWLIGHT
+   | REVERSE_VIDEO
+   | UNDERLINE
+   | LINE separator+ (NUMBER separator+)? (IS separator+)? (PLUS separator+)? src_number
+   | COLUMN separator+ (NUMBER separator+)? (IS separator+)? (PLUS separator+)? src_number
+   | VALUE separator+ (IS separator+)? nonnumeric_literal
+   | BLANK separator+ (WHEN separator+)? ZERO
+   | (JUSTIFIED | JUST) (separator+ RIGHT)?
+   | picture separator+ (scr_pic_using | scr_pic_from (separator+ scr_pic_to)? | scr_pic_to)
    ;
 
-screen_section
-   : SCREEN separator+ SECTION separator* DOT_ separator*
-     (file_data_description_entry separator*)*
+scr_pic_using
+   : USING separator+ qualified_data_item
+   ;
+
+scr_pic_from
+   : FROM separator+ (qualified_data_item | nonnumeric_literal)
+   ;
+
+scr_pic_to
+   : TO separator+ qualified_data_item
+   ;
+
+nonnumeric_literal
+   : STRING_LITERAL
+   ;
+
+src_number
+   : qualified_data_item
+   | NUMERIC_LITERAL
+   ;
+
+color_num
+   : NUMERIC_LITERAL
    ;
 
 identification_division
@@ -1172,13 +1240,17 @@ ASCII                   : A S C I I;
 ASSIGN                  : A S S I G N;
 AT                      : A T;
 AUTHOR                  : A U T H O R;
+AUTO                    : A U T O;
 AUTOMATIC               : A U T O M A T I C;
+BACKGROUND_COLOR        : B A C K G R O U N D '-' C O L O R;
+BELL                    : B E L L;
 BINARY                  : B I N A R Y;
 BINARY_CHAR             : B I N A R Y '-' C H A R;
 BINARY_DOUBLE           : B I N A R Y '-' D O U B L E;
 BINARY_LONG             : B I N A R Y '-' L O N G;
 BINARY_SHORT            : B I N A R Y '-' S H O R T;
 BLANK                   : B L A N K;
+BLINK                   : B L I N K;
 BLOCK                   : B L O C K;
 BOTTOM                  : B O T T O M;
 BY                      : B Y;
@@ -1241,6 +1313,9 @@ END                     : E N D;
 ENVIRONMENT             : E N V I R O N M E N T;
 ENVIRONMENT_NAME        : E N V I R O N M E N T '-' N A M E;
 ENVIRONMENT_VALUE       : E N V I R O N M E N T '-' V A L U E;
+EOL                     : E O L;
+EOS                     : E O S;
+ERASE                   : E R A S E;
 EVERY                   : E V E R Y;
 EXCLUSIVE               : E X C L U S I V E;
 EXTENSION               : E X T E N S I O N;
@@ -1257,10 +1332,13 @@ FLOAT_LONG              : F L O A T '-' L O N G;
 FLOAT_SHORT             : F L O A T '-' S H O R T;
 FOOTING                 : F O O T I N G;
 FOR                     : F O R;
+FOREGROUND_COLOR        : F O R E G R O U N D '-' C O L O R;
 FROM                    : F R O M;
+FULL                    : F U L L;
 GLOBAL                  : G L O B A L;
 GROUP                   : G R O U P;
 HEADING                 : H E A D I N G;
+HIGHLIGHT               : H I G H L I G H T;
 I64                     : I '64';
 ID                      : I D;
 IDENT                   : I D E N T;
@@ -1290,6 +1368,7 @@ LINE_PRINTER            : L I N E '-' P R I N T E R;
 LINKAGE                 : L I N K A G E;
 LOCK                    : L O C K;
 LOCK_HOLDING            : L O C K '-' H O L D I N G;
+LOWLIGHT                : L O W L I G H T;
 MANUAL                  : M A N U A L;
 MASS_INSERT             : M A S S '-' I N S E R T;
 MEMORY                  : M E M O R Y;
@@ -1337,9 +1416,11 @@ RELATIVE                : R E L A T I V E;
 RENAMES                 : R E N A M E S;
 REPORT                  : R E P O R T;
 REPORTS                 : R E P O R T S;
+REQUIRED                : R E Q U I R E D;
 RERUN                   : R E R U N;
 RESERVE                 : R E S E R V E;
 RESET                   : R E S E T;
+REVERSE_VIDEO           : R E V E R S E '-' V I D E O;
 RF                      : R F;
 RH                      : R H;
 RIGHT                   : R I G H T;
@@ -1348,6 +1429,7 @@ SAME                    : S A M E;
 SCREEN                  : S C R E E N;
 SD                      : S D;
 SECTION                 : S E C T I O N;
+SECURE                  : S E C U R E;
 SECURITY                : S E C U R I T Y;
 SEGMENT_LIMIT           : S E G M E N T '-' L I M I T;
 SELECT                  : S E L E C T;
@@ -1383,10 +1465,12 @@ TO                      : T O;
 TOP                     : T O P;
 TRAILING                : T R A I L I N G;
 TYPE                    : T Y P E;
+UNDERLINE               : U N D E R L I N E;
 UNIT                    : U N I T;
 UNSIGNED                : U N S I G N E D;
 UPON                    : U P O N;
 USAGE                   : U S A G E;
+USING                   : U S I N G;
 VALUE                   : V A L U E;
 VALUES                  : V A L U E S;
 VARYING                 : V A R Y I N G;
