@@ -14,9 +14,9 @@ import { Perform } from "./performer";
 import { SyncApi } from "./sync/sync-api";
 import { Synchronizer } from "./sync/synchronizer";
 import { LogFunction, LogType, Delay } from "../common/main";
-import { collectSplittedByCommas } from "./common/find-files";
 import { GetSshHelperType } from "../ext-api/ext-api";
 import { SshHelper } from "../ssh-helper/ssh-helper";
+import { expandMask } from "./common/find-files";
 
 const locale = env.language ;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -308,11 +308,16 @@ async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelp
             nodupes: true,
             unixify: false,
         };
-        const unbracedInclude = micromatch.braces(include).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
-        const splittedInclude = unbracedInclude.reduce(collectSplittedByCommas, []);
+
+        let {expandedMask: splittedInclude , missed_curly_bracket} = expandMask(include);
+        if (missed_curly_bracket) {
+            logFn(LogType.warning, () => localize("check.inc.mask", "Please check include file masks for correct curly brackets"), true);
+        }
         if (ensured.projectSection.exclude) {
-            const unbraceExclude = micromatch.braces(ensured.projectSection.exclude).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
-            const splitExclude = unbraceExclude.reduce(collectSplittedByCommas, []);
+            let {expandedMask: splitExclude , missed_curly_bracket} = expandMask(ensured.projectSection.exclude);
+            if (missed_curly_bracket) {
+                logFn(LogType.warning, () => localize("check.exc.mask", "Please check exclude file masks for correct curly brackets"), true);
+            }
             options.ignore = splitExclude;
         }
 

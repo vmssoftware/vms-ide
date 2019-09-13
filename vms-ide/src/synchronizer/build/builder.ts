@@ -20,11 +20,11 @@ import { ISource } from "../sync/source";
 import { Synchronizer } from "../sync/synchronizer";
 import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
 import { ProjectState } from "../dep-tree/proj-state";
-import { collectSplittedByCommas } from "../../synchronizer/common/find-files";
 import { IBuildConfigSection } from "../../synchronizer/sync/sync-api";
 import { TestExecResult } from "../../synchronizer/common/TestExecResult";
 import { JvmProject, IClassInfo, IFieldInfo, isFieldAccess } from "../../vms_jvm_debug/jvm-project";
 import { maskSpacesInTemplate } from "../../common/rgx-from-str";
+import { expandMask } from "../../synchronizer/common/find-files";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -1048,11 +1048,11 @@ export class Builder {
                     let cd = `set default ${zipFolderConverter.directory}`;
                     answer = await scopeData.shell.execCmd(cd);
                     // create zip file 
-                    const unbracedList = 
-                        micromatch.braces(scopeData.ensured.projectSection.listing).
-                        map(mask => mask.replace(/[{}]/g, "")).
-                        reduce(collectSplittedByCommas, []).
-                        join(" ");
+                    let {expandedMask: expandedList , missed_curly_bracket} = expandMask(scopeData.ensured.projectSection.listing);
+                    if (missed_curly_bracket) {
+                        this.logFn(LogType.warning, () => localize("check.inc.mask", "Please check listing file masks for correct curly brackets"), true);
+                    }
+                    const unbracedList = expandedList.join(" ");
                     const zipCmd = Builder.zipCmd(Builder.zipName, unbracedList);
                     answer = await scopeData.shell.execCmd(zipCmd);
                     // download zip file
