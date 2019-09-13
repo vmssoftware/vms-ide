@@ -4,11 +4,55 @@
 import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
 
 import { Cobol_sourceContext } from "./cobolParser";
+import { Figurative_constantContext } from "./cobolParser";
 import { SeparatorContext } from "./cobolParser";
 import { Arithmetic_separatorContext } from "./cobolParser";
 import { Line_commentContext } from "./cobolParser";
 import { ProgramContext } from "./cobolParser";
 import { Procedure_divisionContext } from "./cobolParser";
+import { Procedure_division_headerContext } from "./cobolParser";
+import { SectionContext } from "./cobolParser";
+import { DeclarativesContext } from "./cobolParser";
+import { Declaratives_sectionContext } from "./cobolParser";
+import { Declarative_paragraphContext } from "./cobolParser";
+import { ParagraphContext } from "./cobolParser";
+import { SentenseContext } from "./cobolParser";
+import { Use_statementContext } from "./cobolParser";
+import { Group_data_nameContext } from "./cobolParser";
+import { Use_onContext } from "./cobolParser";
+import { Section_headerContext } from "./cobolParser";
+import { Paragraph_nameContext } from "./cobolParser";
+import { Section_nameContext } from "./cobolParser";
+import { UsingContext } from "./cobolParser";
+import { GivingContext } from "./cobolParser";
+import { Procedure_test_lineContext } from "./cobolParser";
+import { StatementContext } from "./cobolParser";
+import { Accept_statementContext } from "./cobolParser";
+import { On_exception_variantsContext } from "./cobolParser";
+import { At_end_variantsContext } from "./cobolParser";
+import { Accept_form6Context } from "./cobolParser";
+import { Accept6_itemContext } from "./cobolParser";
+import { Accept_form1Context } from "./cobolParser";
+import { Accept_form2Context } from "./cobolParser";
+import { Accept_form3Context } from "./cobolParser";
+import { Accept_form4Context } from "./cobolParser";
+import { Accept_form5Context } from "./cobolParser";
+import { Accept_atContext } from "./cobolParser";
+import { Accept_at_lineContext } from "./cobolParser";
+import { Accept_at_columnContext } from "./cobolParser";
+import { Accept_form4_clauseContext } from "./cobolParser";
+import { Accept_form3_clauseContext } from "./cobolParser";
+import { Key_dest_itemContext } from "./cobolParser";
+import { Def_valueContext } from "./cobolParser";
+import { Protected_valueContext } from "./cobolParser";
+import { Prot_fill_litContext } from "./cobolParser";
+import { Prot_size_valueContext } from "./cobolParser";
+import { Number_valueContext } from "./cobolParser";
+import { Date_timeContext } from "./cobolParser";
+import { Dest_itemContext } from "./cobolParser";
+import { Input_sourceContext } from "./cobolParser";
+import { At_endContext } from "./cobolParser";
+import { On_exceptionContext } from "./cobolParser";
 import { Data_divisionContext } from "./cobolParser";
 import { File_sectionContext } from "./cobolParser";
 import { Working_storage_sectionContext } from "./cobolParser";
@@ -205,6 +249,16 @@ import { Extend_amtContext } from "./cobolParser";
 import { Arithmetic_expressionContext } from "./cobolParser";
 import { Binary_arithmetic_operatorContext } from "./cobolParser";
 import { Unary_arithmetic_operatorContext } from "./cobolParser";
+import { Logic_expressionContext } from "./cobolParser";
+import { Success_failure_conditionContext } from "./cobolParser";
+import { Logic_conditionContext } from "./cobolParser";
+import { Logic_operationContext } from "./cobolParser";
+import { Sign_conditionContext } from "./cobolParser";
+import { Sign_condition_nameContext } from "./cobolParser";
+import { Class_conditionContext } from "./cobolParser";
+import { Class_condition_nameContext } from "./cobolParser";
+import { Condition_operatorContext } from "./cobolParser";
+import { Identifier_lvalueContext } from "./cobolParser";
 import { IdentifierContext } from "./cobolParser";
 import { ArgumentsContext } from "./cobolParser";
 import { SubscriptingContext } from "./cobolParser";
@@ -228,6 +282,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitCobol_source?: (ctx: Cobol_sourceContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.figurative_constant`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFigurative_constant?: (ctx: Figurative_constantContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.separator`.
@@ -263,6 +324,307 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitProcedure_division?: (ctx: Procedure_divisionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.procedure_division_header`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitProcedure_division_header?: (ctx: Procedure_division_headerContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.section`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSection?: (ctx: SectionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.declaratives`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDeclaratives?: (ctx: DeclarativesContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.declaratives_section`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDeclaratives_section?: (ctx: Declaratives_sectionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.declarative_paragraph`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDeclarative_paragraph?: (ctx: Declarative_paragraphContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.paragraph`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitParagraph?: (ctx: ParagraphContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.sentense`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSentense?: (ctx: SentenseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.use_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUse_statement?: (ctx: Use_statementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.group_data_name`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitGroup_data_name?: (ctx: Group_data_nameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.use_on`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUse_on?: (ctx: Use_onContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.section_header`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSection_header?: (ctx: Section_headerContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.paragraph_name`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitParagraph_name?: (ctx: Paragraph_nameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.section_name`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSection_name?: (ctx: Section_nameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.using`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUsing?: (ctx: UsingContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.giving`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitGiving?: (ctx: GivingContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.procedure_test_line`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitProcedure_test_line?: (ctx: Procedure_test_lineContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitStatement?: (ctx: StatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.accept_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAccept_statement?: (ctx: Accept_statementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.on_exception_variants`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitOn_exception_variants?: (ctx: On_exception_variantsContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.at_end_variants`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAt_end_variants?: (ctx: At_end_variantsContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.accept_form6`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAccept_form6?: (ctx: Accept_form6Context) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.accept6_item`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAccept6_item?: (ctx: Accept6_itemContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.accept_form1`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAccept_form1?: (ctx: Accept_form1Context) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.accept_form2`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAccept_form2?: (ctx: Accept_form2Context) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.accept_form3`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAccept_form3?: (ctx: Accept_form3Context) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.accept_form4`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAccept_form4?: (ctx: Accept_form4Context) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.accept_form5`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAccept_form5?: (ctx: Accept_form5Context) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.accept_at`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAccept_at?: (ctx: Accept_atContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.accept_at_line`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAccept_at_line?: (ctx: Accept_at_lineContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.accept_at_column`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAccept_at_column?: (ctx: Accept_at_columnContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.accept_form4_clause`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAccept_form4_clause?: (ctx: Accept_form4_clauseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.accept_form3_clause`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAccept_form3_clause?: (ctx: Accept_form3_clauseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.key_dest_item`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitKey_dest_item?: (ctx: Key_dest_itemContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.def_value`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDef_value?: (ctx: Def_valueContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.protected_value`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitProtected_value?: (ctx: Protected_valueContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.prot_fill_lit`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitProt_fill_lit?: (ctx: Prot_fill_litContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.prot_size_value`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitProt_size_value?: (ctx: Prot_size_valueContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.number_value`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitNumber_value?: (ctx: Number_valueContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.date_time`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDate_time?: (ctx: Date_timeContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.dest_item`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDest_item?: (ctx: Dest_itemContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.input_source`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitInput_source?: (ctx: Input_sourceContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.at_end`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAt_end?: (ctx: At_endContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.on_exception`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitOn_exception?: (ctx: On_exceptionContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.data_division`.
@@ -1635,6 +1997,76 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitUnary_arithmetic_operator?: (ctx: Unary_arithmetic_operatorContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.logic_expression`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitLogic_expression?: (ctx: Logic_expressionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.success_failure_condition`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSuccess_failure_condition?: (ctx: Success_failure_conditionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.logic_condition`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitLogic_condition?: (ctx: Logic_conditionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.logic_operation`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitLogic_operation?: (ctx: Logic_operationContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.sign_condition`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSign_condition?: (ctx: Sign_conditionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.sign_condition_name`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSign_condition_name?: (ctx: Sign_condition_nameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.class_condition`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitClass_condition?: (ctx: Class_conditionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.class_condition_name`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitClass_condition_name?: (ctx: Class_condition_nameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.condition_operator`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitCondition_operator?: (ctx: Condition_operatorContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.identifier_lvalue`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitIdentifier_lvalue?: (ctx: Identifier_lvalueContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.identifier`.

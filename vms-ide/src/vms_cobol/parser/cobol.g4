@@ -4,6 +4,19 @@ cobol_source
    : (program | separator) * EOF
    ;
 
+figurative_constant
+   : ZERO
+   | SPACE
+   | SPACES
+   | HIGH_VALUE
+   | HIGH_VALUES
+   | LOW_VALUE
+   | LOW_VALUES
+   | QUOTE
+   | QUOTES
+   | ALL WHITESPACE STRING_LITERAL
+   ;
+
 separator
    : WHITESPACE
    | NEWLINE
@@ -33,16 +46,240 @@ program
    ;
 
 procedure_division
-   : PROCEDURE separator+ DIVISION separator* DOT_ separator*
-     (arithmetic_expression separator* DOT_ | separator)*
+   : procedure_division_header
+     declaratives?
+     ((section separator*)* | (paragraph separator*)*)
+     (END_IN_A_AREA separator+ PROGRAM separator+ program_name)?
+     procedure_test_line* 
    ;
 
-// statement
-//    : compiler_directing_statement
-//    | imperative_statement
-//    | conditional_statement
-//    | delimited_scope_statement
-//    ;
+procedure_division_header
+   : PROCEDURE separator+ DIVISION (separator+ using)? (separator+ giving)? separator* DOT_ separator*
+   ;
+
+section
+   : section_header
+   ;
+
+declaratives
+   : DECLARATIVES_IN_A_AREA separator* DOT_ separator*
+     (declaratives_section separator*)+
+     END_IN_A_AREA separator+ DECLARATIVES separator* DOT_ separator*
+   ;
+
+declaratives_section
+   : section_header
+     use_statement (separator+ declarative_paragraph)*
+   ;
+
+declarative_paragraph
+   : paragraph
+   ;
+
+paragraph
+   : paragraph_name separator* DOT_ separator*
+     (sentense separator*)*
+   ;
+
+sentense
+   : (statement separator*)+ separator* DOT_ separator*
+   ;
+
+use_statement
+   : USE (separator+ GLOBAL)? separator+ 
+      ( AFTER (separator+ STANDARD)? separator+ (EXCEPTION|ERROR) separator+ PROCEDURE (separator+ ON)? separator+ use_on separator* DOT_ separator*
+      | BEFORE separator+ REPORTING separator+ group_data_name)
+   ;
+
+group_data_name
+   : qualified_data_item
+   ;
+
+use_on
+   : file_name (separator+ file_name)*
+   | INPUT
+   | OUTPUT
+   | I_O
+   | EXTEND
+   ;
+
+section_header
+   : section_name separator+ SECTION (separator+ segment_number)? separator* DOT_ separator*
+   ;
+
+paragraph_name
+   : USER_DEFINED_WORD
+   ;
+
+section_name
+   : USER_DEFINED_WORD
+   ;
+
+using
+   : USING separator+ qualified_data_item (separator+ qualified_data_item)*
+   ;
+
+giving
+   : GIVING separator+ qualified_data_item
+   ;
+
+procedure_test_line
+   : arithmetic_expression separator* DOT_
+   | logic_expression separator* DOT_
+   | separator
+   ;
+
+statement
+   : accept_statement
+   ;
+
+accept_statement
+   : accept_form1
+   | accept_form2
+   | accept_form3
+   | accept_form4
+   | accept_form5
+   | accept_form6
+   ;
+
+on_exception_variants
+   : (on_exception (separator+ NOT separator+ on_exception)?)
+   | (NOT separator+ on_exception (separator+ on_exception)?)
+   ;
+
+at_end_variants
+   : (at_end (separator+ NOT separator+ at_end)?)
+   | (NOT separator+ at_end (separator+ at_end)?)
+   ;
+
+accept_form6
+   : ACCEPT separator+ dest_item separator+ (FROM separator+) accept6_item
+     (separator+ on_exception_variants)?
+     (separator+ END_ACCEPT)?
+   ;
+
+accept6_item
+   : USER_DEFINED_WORD
+   ;
+
+accept_form1
+   : ACCEPT separator+ dest_item (separator+ FROM separator+ input_source)? (separator+ WITH separator+ CONVERSION)?
+     (separator+ at_end_variants)?
+     (separator+ END_ACCEPT)?
+   ;
+
+accept_form2
+   : ACCEPT separator+ dest_item separator+ FROM separator+ date_time
+   ;
+
+accept_form3
+   : ACCEPT separator+ dest_item 
+     (separator+ accept_form3_clause)+
+     (separator+ (on_exception_variants|at_end_variants))?
+     (separator+ END_ACCEPT)?
+   ;
+
+accept_form4
+   : ACCEPT separator+ (CONTROL separator+)? KEY separator+ (IN separator+)? key_dest_item 
+     (separator+ accept_form4_clause)+
+     (separator+ (on_exception_variants|at_end_variants))?
+     (separator+ END_ACCEPT)?
+   ;
+
+accept_form5
+   : ACCEPT separator+ screen_name
+     (separator +accept_at)?
+     (separator+ on_exception_variants)?
+     (separator+ END_ACCEPT)?
+   ;
+
+accept_at
+   : (AT separator+)? (accept_at_line (separator+ accept_at_column)? | accept_at_column (separator+ accept_at_line)?)
+   ;
+
+accept_at_line
+   : LINE separator+ (NUMBER separator+)? (NUMERIC_LITERAL | qualified_data_item)
+   ;
+accept_at_column
+   : COLUMN separator+ (NUMBER separator+)? (NUMERIC_LITERAL | qualified_data_item)
+   ;
+
+accept_form4_clause
+   : (FROM separator+)? LINE (separator+ NUMBER)? separator+ number_value
+   | (FROM separator+)? COLUMN (separator+ NUMBER)? separator+ number_value
+   | ERASE (separator+ (TO separator+)? END (separator+ OF)?)? separator+ (SCREEN|LINE)
+   | (WITH separator+)? BELL
+   ;
+
+accept_form3_clause
+   : accept_form4_clause
+   | UNDERLINED
+   | BOLD
+   | (WITH separator+)? BLINKING
+   | PROTECTED (separator+ protected_value)?
+   | (WITH separator+)? CONVERSION
+   | REVERSED
+   | (WITH separator+)? NO separator+ ECHO
+   | DEFAULT separator+ (IS separator+)? def_value
+   | (CONTROL separator+)? KEY (separator+ IN)? separator+ key_dest_item
+   ;
+
+key_dest_item
+   : qualified_data_item
+   ;
+
+def_value
+   : figurative_constant
+   | STRING_LITERAL
+   | qualified_data_item
+   | CURRENT (separator+ VALUE)?
+   ;
+
+protected_value
+   : SIZE separator+ prot_size_value
+   | (WITH separator+)? AUTOTERMINATE
+   | (WITH separator+)? NO separator+ BLANK
+   | (WITH separator+)? EDITING
+   | (WITH separator+)? FILLER separator+ prot_fill_lit
+   ;
+
+prot_fill_lit
+   : STRING_LITERAL
+   ;
+
+prot_size_value
+   : NUMERIC_LITERAL 
+   | qualified_data_item
+   ;
+
+number_value
+   : line_num
+   | qualified_data_item (separator+ PLUS (separator+ line_num)?)?
+   | PLUS (separator+ line_num)?
+   ;
+
+date_time
+   : DATE (separator+ YYYYMMDD)?
+   | DAY  (separator+ YYYYDDD)?
+   | DAY_OF_WEEK
+   | TIME
+   ;
+
+dest_item
+   : identifier_lvalue
+   ;
+
+input_source
+   : USER_DEFINED_WORD
+   ;
+
+at_end
+   : (AT separator+)? END separator+ statement
+   ;
+
+on_exception
+   : (ON separator+)? EXCEPTION separator+ statement
+   ;
 
 data_division
    : DATA separator+ DIVISION separator* DOT_ separator*
@@ -161,7 +398,7 @@ rename_end
    ;
 
 value_is
-   : (VALUE separator+ (IS separator+)? | VALUES separator+ (ARE separator+)) value_is_definition (separator+ value_is_definition)*
+   : (VALUE (separator+ IS)? | VALUES (separator+ ARE)?) separator+ value_is_definition (separator+ value_is_definition)*
    ;
 
 value_is_definition
@@ -258,7 +495,7 @@ sign_is
 
 sum
    : (SUM separator+ sum_name (separator+ sum_name)* (separator+ UPON)? (separator+ detail_report_group_name)*)+
-     (separator* RESET separator+ (ON separator+) control_foot_name)?
+     (separator* RESET separator+ (ON separator+)? control_foot_name)?
    ;
 
 control_foot_name
@@ -431,7 +668,7 @@ report_name
 
 linage
    : LINAGE separator+ (IS separator+)? page_size (separator+ LINES)?
-     (separator+ (WITH separator+)? FOOTING separator+ (AT separator+) footing_line)?
+     (separator+ (WITH separator+)? FOOTING separator+ (AT separator+)? footing_line)?
      (separator+ (LINES separator+)? (AT separator+)? TOP separator+ top_lines)?
      (separator+ (LINES separator+)? (AT separator+)? BOTTOM separator+ bottom_lines)?
    ;
@@ -465,7 +702,7 @@ rec_name
    ;
 
 value_of_id
-   : VALUE separator+ OF separator+ (ID|FILE_ID) separator+ (IS separator+) value_of_id_definition
+   : VALUE separator+ OF separator+ (ID|FILE_ID) separator+ (IS separator+)? value_of_id_definition
    ;
 
 value_of_id_definition
@@ -843,7 +1080,7 @@ same_literal
 
 switch_
    : SWITCH separator+ switch_num separator*
-     ((IS separator+) switch_name separator+)?
+     ((IS separator+)? switch_name separator+)?
      (  switch_clause_on (separator+ switch_clause_off)?
       | switch_clause_off (separator+ switch_clause_on)?
      )? separator*
@@ -969,7 +1206,7 @@ pad_char
    ;
 
 organization
-   : (ORGANIZATION separator+ (IS separator+))? 
+   : (ORGANIZATION separator+ (IS separator+)?)? 
      (
         SEQUENTIAL
       | LINE separator+ SEQUENTIAL
@@ -1119,6 +1356,7 @@ arithmetic_expression
    | unary_arithmetic_operator arithmetic_separator* arithmetic_expression
    | identifier
    | NUMERIC_LITERAL
+   | STRING_LITERAL
    | ZERO
    | ZEROS
    | ZEROES
@@ -1137,8 +1375,79 @@ unary_arithmetic_operator
    | MINUS_
    ;
 
-identifier
+logic_expression
+   : LPAREN_ arithmetic_separator* logic_expression arithmetic_separator* RPAREN_
+   | logic_expression arithmetic_separator* logic_operation arithmetic_separator* logic_expression
+   | NOT arithmetic_separator* logic_expression
+   | class_condition
+   | logic_condition
+   | sign_condition
+   | success_failure_condition
+   ;
+
+success_failure_condition
+   : qualified_data_item (arithmetic_separator+ IS)? arithmetic_separator+ (SUCCESS|FAILURE)
+   ;
+
+logic_condition
+   : arithmetic_expression arithmetic_separator* condition_operator arithmetic_separator* arithmetic_expression
+   | class_condition
+   | qualified_data_item
+   | logic_condition arithmetic_separator+ logic_operation arithmetic_separator* condition_operator arithmetic_separator* arithmetic_expression
+   ;
+
+logic_operation
+   : AND
+   | OR
+   ;
+
+sign_condition
+   : arithmetic_expression (arithmetic_separator+ IS)? (arithmetic_separator+ NOT)? arithmetic_separator+ sign_condition_name
+   ;
+
+sign_condition_name
+   : POSITIVE
+   | NEGATIVE
+   | ZERO
+   ;
+
+class_condition
+   : identifier (arithmetic_separator+ IS)? (arithmetic_separator+ NOT)? arithmetic_separator+ class_condition_name
+   ;
+
+class_condition_name
+   : NUMERIC
+   | ALPHABETIC
+   | ALPHABETIC_LOWER
+   | ALPHABETIC_UPPER
+   | USER_DEFINED_WORD
+   ;
+
+condition_operator
+   : (IS arithmetic_separator*)? 
+      (
+         (NOT arithmetic_separator*)?
+            (
+              GREATER (arithmetic_separator+ THAN)?
+            | GT_ (arithmetic_separator+ THAN)?
+            | LESS (arithmetic_separator+ THAN)?
+            | LT_ (arithmetic_separator+ THAN)?
+            | EQUAL (arithmetic_separator+ TO)?
+            | EQUAL_ (arithmetic_separator+ TO)?
+            )
+         | GREATER (arithmetic_separator+ THAN)? arithmetic_separator+ OR arithmetic_separator+ EQUAL (arithmetic_separator+ TO)?
+         | GE_
+         | LESS (arithmetic_separator+ THAN)? arithmetic_separator+ OR arithmetic_separator+ EQUAL (arithmetic_separator+ TO)?
+         | LE_
+      )
+   ;
+
+identifier_lvalue
    : qualified_data_item (arithmetic_separator* subscripting)? (arithmetic_separator* reference_modification)?
+   ;
+
+identifier
+   : identifier_lvalue
    | FUNCTION arithmetic_separator* function_name (arithmetic_separator* arguments)? (arithmetic_separator* reference_modification)?
    ;
 
@@ -1266,12 +1575,17 @@ fragment REST_OF_LINE
 ACCEPT                  : A C C E P T;
 ACCESS                  : A C C E S S;
 ADD                     : A D D;
+AFTER                   : A F T E R;
 ALL                     : A L L;
 ALPHA                   : A L P H A;
 ALPHABET                : A L P H A B E T;
+ALPHABETIC              : A L P H A B E T I C;
+ALPHABETIC_LOWER        : A L P H A B E T I C '-' L O W E R;
+ALPHABETIC_UPPER        : A L P H A B E T I C '-' U P P E R;
 ALSO                    : A L S O;
 ALTER                   : A L T E R;
 ALTERNATE               : A L T E R N A T E;
+AND                     : A N D;
 APPLY                   : A P P L Y;
 ARE                     : A R E;
 AREA                    : A R E A;
@@ -1286,7 +1600,9 @@ AT                      : A T;
 AUTHOR                  : A U T H O R;
 AUTO                    : A U T O;
 AUTOMATIC               : A U T O M A T I C;
+AUTOTERMINATE           : A U T O T E R M I N A T E;
 BACKGROUND_COLOR        : B A C K G R O U N D '-' C O L O R;
+BEFORE                  : B E F O R E;
 BELL                    : B E L L;
 BINARY                  : B I N A R Y;
 BINARY_CHAR             : B I N A R Y '-' C H A R;
@@ -1295,7 +1611,9 @@ BINARY_LONG             : B I N A R Y '-' L O N G;
 BINARY_SHORT            : B I N A R Y '-' S H O R T;
 BLANK                   : B L A N K;
 BLINK                   : B L I N K;
+BLINKING                : B L I N K I N G;
 BLOCK                   : B L O C K;
+BOLD                    : B O L D;
 BOTTOM                  : B O T T O M;
 BY                      : B Y;
 C01                     : C '01';
@@ -1338,10 +1656,12 @@ CONTIGUOUS_BEST_TRY     : C O N T I G U O U S '-' B E S T '-' T R Y;
 CONTINUE                : C O N T I N U E;
 CONTROL                 : C O N T R O L;
 CONTROLS                : C O N T R O L S;
+CONVERSION              : C O N V E R S I O N;
 CONVERTING              : C O N V E R T I N G;
 COPY                    : C O P Y;
 CRT                     : C R T;
 CURRENCY                : C U R R E N C Y;
+CURRENT                 : C U R R E N T;
 CURSOR                  : C U R S O R;
 DATA                    : D A T A;
 DATE                    : D A T E;
@@ -1352,6 +1672,9 @@ DAY_OF_WEEK             : D A Y '-' O F '-' W E E K;
 DE                      : D E;
 DEBUGGING               : D E B U G G I N G;
 DECIMAL_POINT           : D E C I M A L '-' P O I N T;
+DECLARATIVES            : D E C L A R A T I V E S;
+DECLARATIVES_IN_A_AREA  : D E C L A R A T I V E S {this.charPositionInLine < 16}?;
+DEFAULT                 : D E F A U L T;
 DEFERRED_WRITE          : D E F E R R E D '-' W R I T E;
 DELETE                  : D E L E T E;
 DELIMITER               : D E L I M I T E R;
@@ -1366,6 +1689,8 @@ DOWN                    : D O W N;
 DUPLICATES              : D U P L I C A T E S;
 DYNAMIC                 : D Y N A M I C;
 EBCDIC                  : E B C D I C;
+ECHO                    : E C H O;
+EDITING                 : E D I T I N G;
 END                     : E N D;
 END_ACCEPT              : E N D '-' A C C E P T;
 END_ADD                 : E N D '-' A D D;
@@ -1375,6 +1700,7 @@ END_DELETE              : E N D '-' D E L E T E;
 END_DIVIDE              : E N D '-' D I V I D E;
 END_EVALUATE            : E N D '-' E V A L U A T E;
 END_IF                  : E N D '-' I F;
+END_IN_A_AREA           : E N D {this.charPositionInLine < 7}?;
 END_MULTIPLY            : E N D '-' M U L T I P L Y;
 END_OF_PAGE             : E N D '-' O F '-' P A G E;
 END_PERFORM             : E N D '-' P E R F O R M;
@@ -1392,6 +1718,7 @@ ENVIRONMENT_NAME        : E N V I R O N M E N T '-' N A M E;
 ENVIRONMENT_VALUE       : E N V I R O N M E N T '-' V A L U E;
 EOL                     : E O L;
 EOS                     : E O S;
+EQUAL                   : E Q U A L;
 ERASE                   : E R A S E;
 ERROR                   : E R R O R;
 EVALUATE                : E V A L U A T E;
@@ -1399,8 +1726,10 @@ EVERY                   : E V E R Y;
 EXCEPTION               : E X C E P T I O N;
 EXCLUSIVE               : E X C L U S I V E;
 EXIT                    : E X I T;
+EXTEND                  : E X T E N D;
 EXTENSION               : E X T E N S I O N;
 EXTERNAL                : E X T E R N A L;
+FAILURE                 : F A I L U R E;
 FD                      : F D;
 FILE                    : F I L E;
 FILE_CONTROL            : F I L E '-' C O N T R O L;
@@ -1419,14 +1748,19 @@ FROM                    : F R O M;
 FULL                    : F U L L;
 FUNCTION                : F U N C T I O N;
 GENERATE                : G E N E R A T E;
+GIVING                  : G I V I N G;
 GLOBAL                  : G L O B A L;
 GO                      : G O;
+GREATER                 : G R E A T E R;
 GROUP                   : G R O U P;
 HEADING                 : H E A D I N G;
 HIGHLIGHT               : H I G H L I G H T;
+HIGH_VALUE              : H I G H '-' V A L U E;
+HIGH_VALUES             : H I G H '-' V A L U E S;
 I64                     : I '64';
 ID                      : I D;
 IDENT                   : I D E N T;
+IDENTIFICATION          : I D E N T I F I C A T I O N;
 IDENTIFICATION_IN_A_AREA: I D E N T I F I C A T I O N {this.charPositionInLine < 18}?;
 IF                      : I F;
 IN                      : I N;
@@ -1436,11 +1770,13 @@ INDICATE                : I N D I C A T E;
 INITIAL                 : I N I T I A L;
 INITIALIZE              : I N I T I A L I Z E;
 INITIATE                : I N I T I A T E;
+INPUT                   : I N P U T;
 INPUT_OUTPUT            : I N P U T '-' O U T P U T;
 INSPECT                 : I N S P E C T;
 INSTALLATION            : I N S T A L L A T I O N;
 INVALID                 : I N V A L I D;
 IS                      : I S;
+I_O                     : I '-' O;
 I_O_CONTROL             : I '-' O '-' C O N T R O L;
 JUST                    : J U S T;
 JUSTIFIED               : J U S T I F I E D;
@@ -1449,6 +1785,7 @@ LABEL                   : L A B E L;
 LAST                    : L A S T;
 LEADING                 : L E A D I N G;
 LEFT                    : L E F T;
+LESS                    : L E S S;
 LIMIT                   : L I M I T;
 LIMITS                  : L I M I T S;
 LINAGE                  : L I N A G E;
@@ -1459,6 +1796,8 @@ LINKAGE                 : L I N K A G E;
 LOCK                    : L O C K;
 LOCK_HOLDING            : L O C K '-' H O L D I N G;
 LOWLIGHT                : L O W L I G H T;
+LOW_VALUE               : L O W '-' V A L U E;
+LOW_VALUES              : L O W '-' V A L U E S;
 MANUAL                  : M A N U A L;
 MASS_INSERT             : M A S S '-' I N S E R T;
 MEMORY                  : M E M O R Y;
@@ -1469,9 +1808,12 @@ MOVE                    : M O V E;
 MULTIPLE                : M U L T I P L E;
 MULTIPLY                : M U L T I P L Y;
 NATIVE                  : N A T I V E;
+NEGATIVE                : N E G A T I V E;
 NEXT                    : N E X T;
+NO                      : N O;
 NOT                     : N O T;
 NUMBER                  : N U M B E R;
+NUMERIC                 : N U M E R I C;
 OBJECT_COMPUTER         : O B J E C T '-' C O M P U T E R;
 OCCURS                  : O C C U R S;
 OF                      : O F ;
@@ -1481,7 +1823,9 @@ ON                      : O N;
 OPEN                    : O P E N;
 OPTIONAL                : O P T I O N A L;
 OPTIONS                 : O P T I O N S;
+OR                      : O R;
 ORGANIZATION            : O R G A N I Z A T I O N;
+OUTPUT                  : O U T P U T;
 OVERFLOW                : O V E R F L O W;
 PACKED_DECIMAL          : P A C K E D '-' D E C I M A L;
 PADDING                 : P A D D I N G;
@@ -1497,12 +1841,16 @@ PLUS                    : P L U S;
 POINTER                 : P O I N T E R;
 POINTER_64              : P O I N T E R '-64';
 POSITION                : P O S I T I O N;
+POSITIVE                : P O S I T I V E;
 PREALLOCATION           : P R E A L L O C A T I O N;
 PRINTER                 : P R I N T E R;
 PRINT_CONTROL           : P R I N T '-' C O N T R O L;
 PROCEDURE               : P R O C E D U R E;
 PROGRAM                 : P R O G R A M;
 PROGRAM_ID              : P R O G R A M '-' I D;
+PROTECTED               : P R O T E C T E D;
+QUOTE                   : Q U O T E;
+QUOTES                  : Q U O T E S;
 RANDOM                  : R A N D O M;
 RD                      : R D;
 READ                    : R E A D;
@@ -1517,12 +1865,14 @@ RENAMES                 : R E N A M E S;
 REPLACE                 : R E P L A C E;
 REPLACING               : R E P L A C I N G;
 REPORT                  : R E P O R T;
+REPORTING               : R E P O R T I N G;
 REPORTS                 : R E P O R T S;
 REQUIRED                : R E Q U I R E D;
 RERUN                   : R E R U N;
 RESERVE                 : R E S E R V E;
 RESET                   : R E S E T;
 RETURN                  : R E T U R N;
+REVERSED                : R E V E R S E D;
 REVERSE_VIDEO           : R E V E R S E '-' V I D E O;
 REWRITE                 : R E W R I T E;
 RF                      : R F;
@@ -1549,6 +1899,8 @@ SORT                    : S O R T;
 SORT_MERGE              : S O R T '-' M E R G E;
 SOURCE                  : S O U R C E;
 SOURCE_COMPUTER         : S O U R C E '-' C O M P U T E R;
+SPACE                   : S P A C E;
+SPACES                  : S P A C E S;
 SPECIAL_NAMES           : S P E C I A L '-' N A M E S;
 STANDARD                : S T A N D A R D;
 STANDARD_1              : S T A N D A R D '-1';
@@ -1558,6 +1910,7 @@ STATUS                  : S T A T U S;
 STOP                    : S T O P;
 STRING                  : S T R I N G;
 SUBTRACT                : S U B T R A C T;
+SUCCESS                 : S U C C E S S;
 SUM                     : S U M;
 SUPPRESS                : S U P P R E S S;
 SWITCH                  : S W I T C H;
@@ -1571,6 +1924,7 @@ SYSOUT                  : S Y S O U T;
 TALLYING                : T A L L Y I N G;
 TAPE                    : T A P E;
 TERMINATE               : T E R M I N A T E;
+THAN                    : T H A N;
 THROUGH                 : T H R O U G H;
 THRU                    : T H R U;
 TIME                    : T I M E;
@@ -1581,6 +1935,7 @@ TRAILING                : T R A I L I N G;
 TRUE                    : T R U E;
 TYPE                    : T Y P E;
 UNDERLINE               : U N D E R L I N E;
+UNDERLINED              : U N D E R L I N E D;
 UNIT                    : U N I T;
 UNLOCK                  : U N L O C K;
 UNSIGNED                : U N S I G N E D;
@@ -1600,9 +1955,12 @@ WITH                    : W I T H;
 WORDS                   : W O R D S;
 WORKING_STORAGE         : W O R K I N G '-' S T O R A G E;
 WRITE                   : W R I T E;
+YYYYDDD                 : Y Y Y Y D D D;
+YYYYMMDD                : Y Y Y Y M M D D;
 ZERO                    : Z E R O;
 ZEROES                  : Z E R O E S;
 ZEROS                   : Z E R O S;
+
 
 // symbols
 
