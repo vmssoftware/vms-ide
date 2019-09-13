@@ -49,8 +49,8 @@ procedure_division
    : procedure_division_header
      declaratives?
      ((section separator*)* | (paragraph separator*)*)
-     (END_IN_A_AREA separator+ PROGRAM separator+ program_name)?
-     procedure_test_line* 
+     (END_IN_A_AREA separator+ PROGRAM (separator+ program_name)?)?
+     (separator* procedure_test_line separator*)* 
    ;
 
 procedure_division_header
@@ -89,6 +89,7 @@ use_statement
    : USE (separator+ GLOBAL)? separator+ 
       ( AFTER (separator+ STANDARD)? separator+ (EXCEPTION|ERROR) separator+ PROCEDURE (separator+ ON)? separator+ use_on separator* DOT_ separator*
       | BEFORE separator+ REPORTING separator+ group_data_name)
+     separator* DOT_ separator*
    ;
 
 group_data_name
@@ -1572,6 +1573,10 @@ fragment REST_OF_LINE
 
 // keywords
 
+DECLARATIVES_IN_A_AREA  : D E C L A R A T I V E S {this.charPositionInLine < 16}?;
+END_IN_A_AREA           : E N D {this.charPositionInLine < 7}?;
+IDENTIFICATION_IN_A_AREA: I D E N T I F I C A T I O N {this.charPositionInLine < 18}?;
+
 ACCEPT                  : A C C E P T;
 ACCESS                  : A C C E S S;
 ADD                     : A D D;
@@ -1673,7 +1678,6 @@ DE                      : D E;
 DEBUGGING               : D E B U G G I N G;
 DECIMAL_POINT           : D E C I M A L '-' P O I N T;
 DECLARATIVES            : D E C L A R A T I V E S;
-DECLARATIVES_IN_A_AREA  : D E C L A R A T I V E S {this.charPositionInLine < 16}?;
 DEFAULT                 : D E F A U L T;
 DEFERRED_WRITE          : D E F E R R E D '-' W R I T E;
 DELETE                  : D E L E T E;
@@ -1700,7 +1704,6 @@ END_DELETE              : E N D '-' D E L E T E;
 END_DIVIDE              : E N D '-' D I V I D E;
 END_EVALUATE            : E N D '-' E V A L U A T E;
 END_IF                  : E N D '-' I F;
-END_IN_A_AREA           : E N D {this.charPositionInLine < 7}?;
 END_MULTIPLY            : E N D '-' M U L T I P L Y;
 END_OF_PAGE             : E N D '-' O F '-' P A G E;
 END_PERFORM             : E N D '-' P E R F O R M;
@@ -1761,7 +1764,6 @@ I64                     : I '64';
 ID                      : I D;
 IDENT                   : I D E N T;
 IDENTIFICATION          : I D E N T I F I C A T I O N;
-IDENTIFICATION_IN_A_AREA: I D E N T I F I C A T I O N {this.charPositionInLine < 18}?;
 IF                      : I F;
 IN                      : I N;
 INDEX                   : I N D E X;
