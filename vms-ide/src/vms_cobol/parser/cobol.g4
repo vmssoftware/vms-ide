@@ -4,9 +4,8 @@ cobol_source
    : (program | separator) * EOF
    ;
 
-figurative_constant
-   : ZERO
-   | SPACE
+figurative_constant_witout_zero
+   : SPACE
    | SPACES
    | HIGH_VALUE
    | HIGH_VALUES
@@ -15,6 +14,12 @@ figurative_constant
    | QUOTE
    | QUOTES
    | ALL WHITESPACE STRING_LITERAL
+   ;
+
+
+figurative_constant
+   : ZERO
+   | figurative_constant_witout_zero
    ;
 
 separator
@@ -146,6 +151,89 @@ statement
    | delete_statement
    | display_statement
    | divide_statement
+   | evaluate_statement
+   | go_to_statement
+   | exit_statement
+   | exit_program_statement
+   | generate_statement
+   | if_statement
+   | move_statement
+   | initialize_statement
+   ;
+
+initialize_statement
+   : INITIALIZE (separator+ fld_name)+ (separator+ replacing)*
+   ;
+
+replacing
+   : REPLACING 
+      (separator+ (ALPHABETIC|ALPHANUMERIC|NUMERIC|ALPHANUMERIC_EDITED|NUMERIC_EDITED) separator+ (DATA separator+)? BY separator+ init_value)+
+   ;
+
+init_value
+   : qualified_data_item
+   | constant
+   ;
+
+fld_name
+   : qualified_data_item
+   ;
+
+move_statement
+   : MOVE separator+ ((CORRESPONDING|CORR) separator+)? src_item separator+ TO separator+ dest_item
+   ;
+
+if_statement
+   : IF separator+ logic_expression (separator+ THEN)? separator+ (sentense | NEXT separator+ SENTENCE)
+     (separator+ ELSE separator+ (sentense | NEXT separator+ SENTENCE))?
+     (separator+ END_IF)?
+   ;
+
+generate_statement
+   : GENERATE separator+ report_item
+   ;
+
+report_item
+   : qualified_data_item
+   ;
+
+exit_statement
+   : EXIT
+   ;
+
+exit_program_statement
+   : EXIT separator+ PROGRAM
+   ;
+
+go_to_statement
+   : GO (separator+ TO)? (separator+ proc_name)?
+   | GO (separator+ TO)? (separator+ proc_name)+ DEPENDING (separator+ ON) separator+ qualified_data_item
+   ;
+
+proc_name
+   : USER_DEFINED_WORD
+   ;
+
+evaluate_statement
+   : EVALUATE separator+ subj_item ((separator+ ALSO)? separator+ subj_item)*
+     (separator+ WHEN separator+ when_condition ((separator+ ALSO)? separator+ when_condition)* separator+ sentense)+
+     (separator+ WHEN separator+ OTHER separator+ sentense)?
+     (separator+ END_EVALUATE)?
+   ;
+
+when_condition
+   : logic_expression
+   | (NOT separator+)? arithmetic_expression (separator+ (THROUGH|THRU) separator+ arithmetic_expression)?
+   | ANY
+   | TRUE
+   | FALSE
+   ;
+
+subj_item
+   : arithmetic_expression 
+   | logic_expression
+   | TRUE
+   | FALSE
    ;
 
 divide_statement
@@ -1814,6 +1902,7 @@ IDENTIFICATION_IN_A_AREA: I D E N T I F I C A T I O N {this.charPositionInLine <
 ACCEPT                  : A C C E P T;
 ACCESS                  : A C C E S S;
 ADD                     : A D D;
+ADVANCING               : A D V A N C I N G;
 AFTER                   : A F T E R;
 ALL                     : A L L;
 ALPHA                   : A L P H A;
@@ -1890,6 +1979,7 @@ COMP_X                  : C O M P '-' X;
 CONFIGURATION           : C O N F I G U R A T I O N;
 CONSOLE                 : C O N S O L E;
 CONTAINS                : C O N T A I N S;
+CONTENT                 : C O N T E N T;
 CONTIGUOUS              : C O N T I G U O U S;
 CONTIGUOUS_BEST_TRY     : C O N T I G U O U S '-' B E S T '-' T R Y;
 CONTINUE                : C O N T I N U E;
@@ -1898,6 +1988,8 @@ CONTROLS                : C O N T R O L S;
 CONVERSION              : C O N V E R S I O N;
 CONVERTING              : C O N V E R T I N G;
 COPY                    : C O P Y;
+CORR                    : C O R R;
+CORRESPONDING           : C O R R E S P O N D I N G;
 CRT                     : C R T;
 CURRENCY                : C U R R E N C Y;
 CURRENT                 : C U R R E N T;
@@ -1918,6 +2010,7 @@ DELETE                  : D E L E T E;
 DELIMITER               : D E L I M I T E R;
 DEPENDING               : D E P E N D I N G;
 DESCENDING              : D E S C E N D I N G;
+DESCRIPTOR              : D E S C R I P T O R;
 DETAIL                  : D E T A I L;
 DISK                    : D I S K;
 DISPLAY                 : D I S P L A Y;
@@ -1935,8 +2028,8 @@ END_ADD                 : E N D '-' A D D;
 END_CALL                : E N D '-' C A L L;
 END_COMPUTE             : E N D '-' C O M P U T E;
 END_DELETE              : E N D '-' D E L E T E;
-END_DIVIDE              : E N D '-' D I V I D E;
 END_DISPLAY             : E N D '-' D I S P L A Y;
+END_DIVIDE              : E N D '-' D I V I D E;
 END_EVALUATE            : E N D '-' E V A L U A T E;
 END_IF                  : E N D '-' I F;
 END_MULTIPLY            : E N D '-' M U L T I P L Y;
@@ -1968,6 +2061,7 @@ EXTEND                  : E X T E N D;
 EXTENSION               : E X T E N S I O N;
 EXTERNAL                : E X T E R N A L;
 FAILURE                 : F A I L U R E;
+FALSE                   : F A L S E;
 FD                      : F D;
 FILE                    : F I L E;
 FILE_CONTROL            : F I L E '-' C O N T R O L;
@@ -2011,6 +2105,7 @@ INPUT                   : I N P U T;
 INPUT_OUTPUT            : I N P U T '-' O U T P U T;
 INSPECT                 : I N S P E C T;
 INSTALLATION            : I N S T A L L A T I O N;
+INTO                    : I N T O;
 INVALID                 : I N V A L I D;
 IS                      : I S;
 I_O                     : I '-' O;
@@ -2083,6 +2178,7 @@ PREALLOCATION           : P R E A L L O C A T I O N;
 PRINTER                 : P R I N T E R;
 PRINT_CONTROL           : P R I N T '-' C O N T R O L;
 PROCEDURE               : P R O C E D U R E;
+PROCEED                 : P R O C E E D;
 PROGRAM                 : P R O G R A M;
 PROGRAM_ID              : P R O G R A M '-' I D;
 PROTECTED               : P R O T E C T E D;
@@ -2098,6 +2194,8 @@ REEL                    : R E E L;
 REFERENCE               : R E F E R E N C E;
 RELATIVE                : R E L A T I V E;
 RELEASE                 : R E L E A S E;
+REMAINDER               : R E M A I N D E R;
+REMOVAL                 : R E M O V A L;
 RENAMES                 : R E N A M E S;
 REPLACE                 : R E P L A C E;
 REPLACING               : R E P L A C I N G;
@@ -2111,11 +2209,13 @@ RESET                   : R E S E T;
 RETURN                  : R E T U R N;
 REVERSED                : R E V E R S E D;
 REVERSE_VIDEO           : R E V E R S E '-' V I D E O;
+REWIND                  : R E W I N D;
 REWRITE                 : R E W R I T E;
 RF                      : R F;
 RH                      : R H;
 RIGHT                   : R I G H T;
 ROLLBACK                : R O L L B A C K;
+ROUNDED                 : R O U N D E D;
 SAME                    : S A M E;
 SCREEN                  : S C R E E N;
 SD                      : S D;
@@ -2197,17 +2297,14 @@ YYYYMMDD                : Y Y Y Y M M D D;
 ZERO                    : Z E R O;
 ZEROES                  : Z E R O E S;
 ZEROS                   : Z E R O S;
-ROUNDED                 : R O U N D E D;
-CORRESPONDING           : C O R R E S P O N D I N G;
-CORR                    : C O R R;
-PROCEED                 : P R O C E E D;
-CONTENT                 : C O N T E N T;
-DESCRIPTOR              : D E S C R I P T O R;
-REMOVAL                 : R E M O V A L;
-REWIND                  : R E W I N D;
-ADVANCING               : A D V A N C I N G;
-INTO                    : I N T O;
-REMAINDER               : R E M A I N D E R;
+OTHER                   : O T H E R;
+ANY                     : A N Y;
+THEN                    : T H E N;
+SENTENCE                : S E N T E N C E;
+ELSE                    : E L S E;
+ALPHANUMERIC            : A L P H A N U M E R I C;
+NUMERIC_EDITED          : N U M E R I C '-' E D I T E D;
+ALPHANUMERIC_EDITED     : A L P H A N U M E R I C '-' E D I T E D;
 
 
 // symbols

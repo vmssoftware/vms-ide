@@ -74,4 +74,67 @@ begin.
     DIVIDE ITEME INTO ITEMF GIVING ITEMG ITEMD
         ON SIZE ERROR
             DISPLAY ITEMC.
+    EVALUATE ITEMA
+        WHEN A-01 ALPHABETIC ACCEPT ITEMA FROM DAY-OF-WEEK
+        WHEN "A02" THRU "C16" ACCEPT ITEMB FROM DAY-OF-WEEK
+        WHEN "C20" THRU "L86" ACCEPT ITEMC FROM DAY-OF-WEEK
+        WHEN "R20" ADD 1 TO R-TOT
+                   ACCEPT ITEMD FROM DAY-OF-WEEK
+        WHEN OTHER ACCEPT ITEME FROM DAY-OF-WEEK
+    END-EVALUATE.
+    EVALUATE LOW-STOK   WEEK-USE        LOC-VNDR    ON-ORDER    TRUE
+        WHEN "Y",       16 THRU 999,    ANY,        "N"         A > 10          GO TO RUSH-ORDER
+        WHEN "Y",       16 THRU 999,    ANY,        "Y"         A > 20          GO TO NORMAL-ORDER
+        WHEN "Y",       8 THRU 15,      "N",        "N"         A > 30          GO TO RUSH-ORDER
+        WHEN "Y",       8 THRU 15,      "N",        "Y"         A < 10          GO TO NORMAL-ORDER
+        WHEN "Y",       8 THRU 15,      "Y",        "N"         A < 20          GO TO NORMAL-ORDER
+        WHEN "Y",       0 THRU 7,       ANY,        "N"         A = ZERO        GO TO NORMAL-ORDER
+        WHEN "N",       ANY,            ANY,        "Y"         NOT A = ZERO    GO TO CANCEL-ORDER
+    END-EVALUATE.
+REPORT-INVALID-ADD.
+    DISPLAY " ".
+    DISPLAY "INVALID ADDITION".
+    DISPLAY "RECORD ALREADY EXISTS".
+    DISPLAY "UPDATE ATTEMPT: " UPDATE-REC.
+    DISPLAY "EXISTING RECORD: " OLD-REC.
+REPORT-INVALID-ADD-EXIT.
+    EXIT.
+cont-para.
+    IF ITEMA < 20
+        MOVE "X" TO ITEMB.
+* comment
+    IF ITEMA > 10
+        MOVE "X" TO ITEMB
+    ELSE
+        GO TO PROC-A.
+
+    IF ITEMA < 10 OR > 20
+        NEXT SENTENCE
+    ELSE
+        MOVE "X" TO ITEMB.
+* comment
+    IF ITEMA > 10
+        IF ITEMA = ITEMC
+            MOVE "X" TO ITEMB
+        ELSE
+            MOVE "Y" TO ITEMB
+    ELSE
+        GO TO PROC-A.
+    IF ITEMA > 10
+        IF ITEMA = ITEMC
+            ADD 1 TO ITEMD
+            MOVE "X" TO ITEMB
+        END-IF
+        ADD 1 TO ITEMD.
+    INITIALIZE ITEMA.
+    INITIALIZE ITEMB ITEMG.
+    INITIALIZE ITEMA REPLACING ALPHANUMERIC BY "ABCDE".
+    INITIALIZE ITEMG REPLACING NUMERIC BY 9.
+    INITIALIZE ITEMA REPLACING NUMERIC-EDITED BY 16.
+    INITIALIZE ITEMA REPLACING ALPHANUMERIC-EDITED BY "ABCD".
+    INITIALIZE ITEMA REPLACING ALPHANUMERIC BY "99".
+    INITIALIZE ITEMB ITEMG 
+        REPLACING 
+            ALPHANUMERIC BY "ABCDE"
+            NUMERIC BY 9.
 END PROGRAM.

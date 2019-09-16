@@ -4,6 +4,7 @@
 import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
 
 import { Cobol_sourceContext } from "./cobolParser";
+import { Figurative_constant_witout_zeroContext } from "./cobolParser";
 import { Figurative_constantContext } from "./cobolParser";
 import { SeparatorContext } from "./cobolParser";
 import { Arithmetic_separatorContext } from "./cobolParser";
@@ -28,6 +29,21 @@ import { UsingContext } from "./cobolParser";
 import { GivingContext } from "./cobolParser";
 import { Procedure_test_lineContext } from "./cobolParser";
 import { StatementContext } from "./cobolParser";
+import { Initialize_statementContext } from "./cobolParser";
+import { ReplacingContext } from "./cobolParser";
+import { Init_valueContext } from "./cobolParser";
+import { Fld_nameContext } from "./cobolParser";
+import { Move_statementContext } from "./cobolParser";
+import { If_statementContext } from "./cobolParser";
+import { Generate_statementContext } from "./cobolParser";
+import { Report_itemContext } from "./cobolParser";
+import { Exit_statementContext } from "./cobolParser";
+import { Exit_program_statementContext } from "./cobolParser";
+import { Go_to_statementContext } from "./cobolParser";
+import { Proc_nameContext } from "./cobolParser";
+import { Evaluate_statementContext } from "./cobolParser";
+import { When_conditionContext } from "./cobolParser";
+import { Subj_itemContext } from "./cobolParser";
 import { Divide_statementContext } from "./cobolParser";
 import { Divide_statement_form1Context } from "./cobolParser";
 import { Divide_statement_form2Context } from "./cobolParser";
@@ -328,6 +344,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitCobol_source?: (ctx: Cobol_sourceContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cobolParser.figurative_constant_witout_zero`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFigurative_constant_witout_zero?: (ctx: Figurative_constant_witout_zeroContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cobolParser.figurative_constant`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -494,6 +517,111 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitStatement?: (ctx: StatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.initialize_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitInitialize_statement?: (ctx: Initialize_statementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.replacing`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitReplacing?: (ctx: ReplacingContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.init_value`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitInit_value?: (ctx: Init_valueContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.fld_name`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFld_name?: (ctx: Fld_nameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.move_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMove_statement?: (ctx: Move_statementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.if_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitIf_statement?: (ctx: If_statementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.generate_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitGenerate_statement?: (ctx: Generate_statementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.report_item`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitReport_item?: (ctx: Report_itemContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.exit_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitExit_statement?: (ctx: Exit_statementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.exit_program_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitExit_program_statement?: (ctx: Exit_program_statementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.go_to_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitGo_to_statement?: (ctx: Go_to_statementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.proc_name`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitProc_name?: (ctx: Proc_nameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.evaluate_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEvaluate_statement?: (ctx: Evaluate_statementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.when_condition`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitWhen_condition?: (ctx: When_conditionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.subj_item`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSubj_item?: (ctx: Subj_itemContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.divide_statement`.
