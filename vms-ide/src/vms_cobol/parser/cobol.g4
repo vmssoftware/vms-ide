@@ -49,8 +49,12 @@ procedure_division
    : procedure_division_header
      declaratives?
      ((section separator*)* | (paragraph separator*)*)
-     (END_IN_A_AREA separator+ PROGRAM (separator+ program_name)?)?
+     (separator* end_program)?
      (separator* procedure_test_line separator*)* 
+   ;
+
+end_program
+   : END_IN_A_AREA separator+ PROGRAM (separator+ program_name)? separator* DOT_ separator*
    ;
 
 procedure_division_header
@@ -82,7 +86,7 @@ paragraph
    ;
 
 sentense
-   : (statement separator*)+ separator* DOT_ separator*
+   : (statement separator*)+ (separator* DOT_ separator*)?
    ;
 
 use_statement
@@ -132,6 +136,216 @@ procedure_test_line
 
 statement
    : accept_statement
+   | add_statement
+   | alter_statement
+   | call_statement
+   | cancel_statement
+   | close_statement
+   | compute_statement
+   | continue_statement
+   | delete_statement
+   | display_statement
+   | divide_statement
+   ;
+
+divide_statement
+   : divide_statement_form1
+   | divide_statement_form2
+   ;
+
+divide_statement_form1
+   : DIVIDE separator+ divide_num separator+ (INTO|BY) (separator+ divide_num separator+ GIVING)? (separator+ identifier_result (separator+ ROUNDED)?)+
+     (separator+ on_size_variants)?
+     (separator+ END_DIVIDE)?
+   ;
+
+divide_statement_form2
+   : DIVIDE separator+ divide_num separator+ (INTO|BY) (separator+ divide_num separator+ GIVING)? separator+ identifier_result (separator+ ROUNDED)? 
+     separator+ REMAINDER separator+ remaind
+     (separator+ on_size_variants)?
+     (separator+ END_DIVIDE)?
+   ;
+
+remaind
+   : identifier_result
+   ;
+
+divide_num
+   : identifier
+   | NUMERIC_LITERAL
+   ;
+
+display_statement
+   : display_statement_form1
+   | display_statement_form2
+   | display_statement_form3
+   | display_statement_form4
+   ;
+
+display_statement_form1
+   : DISPLAY (separator+ src_item (separator+ display_form1_clause)* )+
+     (separator+ END_DISPLAY)?
+   ;
+
+display_statement_form2
+   : DISPLAY (separator+ src_item (separator+ display_form2_clause)* )+
+     (separator+ END_DISPLAY)?
+   ;
+
+display_statement_form3
+   : DISPLAY separator+ qualified_data_item (separator+ (AT separator+)? (disp_f3_line (separator+ disp_f3_column)?| disp_f3_column ))?
+     (separator+ END_DISPLAY)?
+   ;
+
+display_statement_form4
+   : DISPLAY separator+ src_item separator+ UPON separator+ display_upon
+     (separator+ on_exception_variants)?
+     (separator+ END_DISPLAY)?
+   ;
+
+src_item
+   : identifier
+   | constant
+   ;
+
+display_upon
+   : USER_DEFINED_WORD
+   ;
+
+disp_f3_line
+   : LINE (separator+ NUMBER) separator+ (identifier|NUMERIC_LITERAL)
+   ;
+
+disp_f3_column
+   : COLUMN (separator+ NUMBER) separator+ (identifier|NUMERIC_LITERAL)
+   ;
+
+display_form1_clause
+   : (WITH separator+)? CONVERSION
+   | UPON separator+ out_dest
+   | (WITH separator+)? NO (separator+ ADVANCING)?
+   ;
+
+display_form2_clause
+   : display_form1_clause
+   | at_line_number
+   | at_column_number
+   | ERASE (separator+ (TO separator+)? END (separator+ OF)?)? separator+ (SCREEN|LINE)
+   | (WITH separator+)? BELL
+   | UNDERLINED
+   | BOLD
+   | (WITH separator+)? BLINKING
+   | REVERSED
+   | (WITH separator+)? CONVERSION
+   | (WITH separator+)? NO (separator+ ADVANCING)?
+   ;
+
+at_line_number
+   : (AT separator+)? LINE (separator+ NUMBER)? separator+ number_value
+   ;
+
+at_column_number
+   : (AT separator+)? COLUMN (separator+ NUMBER)? separator+ number_value
+   ;
+
+out_dest
+   : USER_DEFINED_WORD
+   ;
+
+delete_statement
+   : DELETE separator+ file_name (separator+ RECORD)?
+     (separator+ on_key_variants)?
+     (separator+ END_DELETE)?
+   ;
+
+continue_statement
+   : CONTINUE
+   ;
+
+compute_statement
+   : COMPUTE (separator+ identifier_result (separator+ ROUNDED)?)+ (separator+ EQUAL separator+| separator* EQUAL_ separator*) arithmetic_expression
+     (separator+ on_size_variants)?
+     (separator+ END_COMPUTE)?
+   ;
+
+close_statement
+   : CLOSE (separator+ file_name (separator+ close_params)?)+
+   ;
+
+close_params
+   : (REEL|UNIT) (separator+ ((FOR separator+)? REMOVAL| (WITH separator+)? NO separator+ REWIND))?
+   | (WITH separator+)? (NO separator+ REWIND|LOCK)
+   ;
+
+cancel_statement
+   : CANCEL (separator+ prog_name)+
+   ;
+
+call_statement
+   : CALL separator+ prog_name
+     (separator+ call_using)?
+     (separator+ call_giving)?
+     (separator+ on_exception_variants)?
+     (separator+ END_CALL)?
+   ;
+
+call_giving
+   : GIVING separator+ identifier_result
+   ;
+
+call_using
+   : USING (separator+ using_arg)+
+   ;
+
+using_arg
+   : OMITTED
+   | (using_prefix separator+)? argument (separator+ argument)*
+   ;
+
+using_prefix
+   : (BY separator+)? REFERENCE
+   | (BY separator+)? CONTENT
+   | (BY separator+)? DESCRIPTOR
+   | (BY separator+)? VALUE
+   ;   
+
+argument
+   : qualified_data_item
+   | NUMERIC_LITERAL
+   | STRING_LITERAL
+   ;
+
+prog_name
+   : USER_DEFINED_WORD
+   | STRING_LITERAL
+   ;
+
+alter_statement
+   : ALTER (separator+ alter_proc separator+ TO separator+ (PROCEED separator+ TO separator+)? alter_new_proc )+
+   ;
+
+alter_new_proc
+   : USER_DEFINED_WORD
+   ;
+alter_proc
+   : USER_DEFINED_WORD
+   ;
+
+add_statement
+   : ( ADD (separator+ add_num)+ separator+ TO (separator+ identifier_result (separator+ ROUNDED)?)+
+     | ADD (separator+ add_num)* (separator+ TO)? (separator+ add_num)+ separator+ GIVING (separator+ identifier_result (separator+ ROUNDED)?)+
+     | ADD separator+ (CORR|CORRESPONDING) separator+ add_grp separator+ TO separator+ add_grp (separator+ ROUNDED)?)
+     (separator+ on_size_variants)?
+     (separator+ END_ADD)?
+   ;
+
+add_grp
+   : qualified_data_item
+   ;
+
+add_num
+   : NUMERIC_LITERAL
+   | identifier
    ;
 
 accept_statement
@@ -153,8 +367,18 @@ at_end_variants
    | (NOT separator+ at_end (separator+ at_end)?)
    ;
 
+on_size_variants
+   : (on_size (separator+ NOT separator+ on_size)?)
+   | (NOT separator+ on_size (separator+ on_size)?)
+   ;
+
+on_key_variants
+   : (on_key (separator+ NOT separator+ on_key)?)
+   | (NOT separator+ on_key (separator+ on_key)?)
+   ;
+
 accept_form6
-   : ACCEPT separator+ dest_item separator+ (FROM separator+) accept6_item
+   : ACCEPT separator+ dest_item separator+ (FROM separator+)? accept6_item
      (separator+ on_exception_variants)?
      (separator+ END_ACCEPT)?
    ;
@@ -267,7 +491,7 @@ date_time
    ;
 
 dest_item
-   : identifier_lvalue
+   : identifier_result
    ;
 
 input_source
@@ -275,11 +499,19 @@ input_source
    ;
 
 at_end
-   : (AT separator+)? END separator+ statement
+   : (AT separator+)? END (separator+ sentense)?
    ;
 
 on_exception
-   : (ON separator+)? EXCEPTION separator+ statement
+   : (ON separator+)? EXCEPTION (separator+ sentense)?
+   ;
+
+on_size
+   : (ON separator+)? SIZE separator+ ERROR (separator+ sentense)?
+   ;
+
+on_key
+   : INVALID (separator+ KEY)? (separator+ sentense)?
    ;
 
 data_division
@@ -491,7 +723,7 @@ report_group_data_description_clause
    ;
 
 sign_is
-   : (SIGN (separator+ IS)? separator+)? (LEADING|TRAILING) (separator+ SEPARATE (separator+ CHARACTER))?
+   : (SIGN (separator+ IS)? separator+)? (LEADING|TRAILING) (separator+ SEPARATE (separator+ CHARACTER)?)?
    ;
 
 sum
@@ -1356,11 +1588,13 @@ arithmetic_expression
    | arithmetic_expression arithmetic_separator* binary_arithmetic_operator arithmetic_separator* arithmetic_expression
    | unary_arithmetic_operator arithmetic_separator* arithmetic_expression
    | identifier
-   | NUMERIC_LITERAL
+   | constant
+   ;
+
+constant
+   : NUMERIC_LITERAL
    | STRING_LITERAL
-   | ZERO
-   | ZEROS
-   | ZEROES
+   | figurative_constant
    ;
 
 binary_arithmetic_operator
@@ -1443,12 +1677,12 @@ condition_operator
       )
    ;
 
-identifier_lvalue
+identifier_result
    : qualified_data_item (arithmetic_separator* subscripting)? (arithmetic_separator* reference_modification)?
    ;
 
 identifier
-   : identifier_lvalue
+   : identifier_result
    | FUNCTION arithmetic_separator* function_name (arithmetic_separator* arguments)? (arithmetic_separator* reference_modification)?
    ;
 
@@ -1702,6 +1936,7 @@ END_CALL                : E N D '-' C A L L;
 END_COMPUTE             : E N D '-' C O M P U T E;
 END_DELETE              : E N D '-' D E L E T E;
 END_DIVIDE              : E N D '-' D I V I D E;
+END_DISPLAY             : E N D '-' D I S P L A Y;
 END_EVALUATE            : E N D '-' E V A L U A T E;
 END_IF                  : E N D '-' I F;
 END_MULTIPLY            : E N D '-' M U L T I P L Y;
@@ -1962,6 +2197,17 @@ YYYYMMDD                : Y Y Y Y M M D D;
 ZERO                    : Z E R O;
 ZEROES                  : Z E R O E S;
 ZEROS                   : Z E R O S;
+ROUNDED                 : R O U N D E D;
+CORRESPONDING           : C O R R E S P O N D I N G;
+CORR                    : C O R R;
+PROCEED                 : P R O C E E D;
+CONTENT                 : C O N T E N T;
+DESCRIPTOR              : D E S C R I P T O R;
+REMOVAL                 : R E M O V A L;
+REWIND                  : R E W I N D;
+ADVANCING               : A D V A N C I N G;
+INTO                    : I N T O;
+REMAINDER               : R E M A I N D E R;
 
 
 // symbols
@@ -2019,7 +2265,7 @@ fragment EXPONENT_
 
 NUMERIC_LITERAL
    : DIGIT_+ ('.' DIGIT_+ EXPONENT_? )?
-   | '.' DIGIT_+ EXPONENT_
+   | '.' DIGIT_+ EXPONENT_?
    ;
 
 HEX_LITERAL
