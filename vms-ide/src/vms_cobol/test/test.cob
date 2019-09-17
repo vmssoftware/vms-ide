@@ -137,4 +137,102 @@ cont-para.
         REPLACING 
             ALPHANUMERIC BY "ABCDE"
             NUMERIC BY 9.
+    INSPECT ITEMA TALLYING COUNT1 FOR LEADING "L" BEFORE "A",
+        COUNT2 FOR LEADING "A" BEFORE "L".
+    INSPECT ITEMA TALLYING COUNT1 FOR ALL "L" "R"
+        REPLACING LEADING "A" BY "E" AFTER INITIAL "L".
+    INSPECT ITEMA REPLACING ALL "A" BY "G" BEFORE "X".
+    INSPECT ITEMA TALLYING COUNT1 FOR CHARACTERS AFTER "J"
+        REPLACING ALL "A" BY "B".
+    INSPECT ITEMA REPLACING ALL "X" BY "Y", "B" BY "Z",
+        "W" BY "Q" AFTER "R".
+    INSPECT ITEMA REPLACING CHARACTERS BY "B" BEFORE "A".
+    INSPECT ITEMA REPLACING ALL "A" BY "X" ALL "R" BY "X"
+        AFTER "XXL".
+    INSPECT ITEMA CONVERTING "SIR" TO "DTA"
+        AFTER QUOTE BEFORE "@".
+    if a < 100 then
+        merge file-1 ascending key-1 key-2 descending key-3
+            sequence alph-1
+            using file-2 file-3 file-4
+            output procedure is out-proc-1 thru end-proc-1
+    else 
+        exit
+    end-if
+    MULTIPLY 2 BY ITEMB.
+    MULTIPLY 3 BY 1-A of 2-a in 3-b-group giving ITEMB
+        ON SIZE ERROR
+            MOVE 0 TO ITEMC.
+    MULTIPLY 4 BY ITEMA ITEMB ITEMC
+        ON SIZE ERROR
+            MOVE 1 TO ITEMD
+    END-MULTIPLY
+    MULTIPLY 2 BY ITEMA ITEMB ITEMC
+        ON SIZE ERROR
+            ADD 1 TO ITEMD
+    END-MULTIPLY.
+    OPEN INPUT MASTER-FILE NO REWIND ALLOWING UPDATERS READERS
+         I-O employee-file LOCK.
+    OPEN INPUT FILE1-SEQ file2-seq file-3seq allowing no 
+         extend ext-file-1.
+    OPEN OUTPUT FILE1-RAN no-rewind.
+    OPEN I-O FILE1-DYN.
+    OPEN EXTEND FILE1-EXT.
+    PERFORM PROC-A THRU PROC-B
+        TEST BEFORE
+        VARYING ITEMA
+        FROM ITEMB BY ITEMC
+        UNTIL CONDITION-A.
+    PERFORM PROC-A THRU PROC-B
+        TEST BEFORE
+        VARYING ITEMA
+            FROM ITEMB BY ITEMC
+            UNTIL CONDITION-A
+        AFTER ITEMD
+            FROM ITEME BY ITEMF
+            UNTIL CONDITION-B.
+    PERFORM PROC-A THRU PROC-B
+        TEST AFTER
+        VARYING ITEMA
+            FROM ITEMB BY ITEMC
+            UNTIL CONDITION-A.
+    PERFORM PROC-A THRU PROC-C 3 TIMES.
+    PERFORM PROC-A THRU PROC-B
+        VARYING ITEMC FROM 1 BY 1
+        UNTIL ITEMC > 5.
+    PERFORM PROC-A THRU PROC-B TEST AFTER VARYING ITEMC FROM 1 BY 1 UNTIL ITEMC > 5.
+    PERFORM
+        VARYING ITEMC FROM 1 BY 2
+        UNTIL ITEMC > 7
+            MOVE CHARA (ITEMC) TO CHARB (ITEMC)
+            MOVE CHARA (ITEMC) TO CHARB (ITEMC + 3)
+    END-PERFORM.
+    READ MASTER-FILE KEY IS MASTER-KEY ALLOWING NO OTHERS.
+    READ employee-file NEXT RECORD WITH LOCK
+        AT END GO TO 999-EOJ..
+    READ employee-file NEXT WITH LOCK.
+    READ FILE-A INTO rec-a
+        REGARDLESS OF LOCK
+        AT END PERFORM NO-MORE-RECS
+               DISPLAY "No more records." END-READ.
+    IF ITEMA = ITEMB
+        READ FILEA ALLOWING UPDATERS
+            AT END MOVE ITEMC TO ITEMB
+                   MOVE ITEMC-1 TO ITEMB-1
+    ELSE
+        MOVE ITEMD TO ITEME.
+    READ FILE-A INVALID KEY CONTINUE.
+    RECORD DEPENDENCY path-name TYPE IS relation-type IN DICTIONARY.
+    RELEASE rec FROM src-area.
+    RETURN smrg-file RECORD INTO dest-area 
+        AT END CONTINUE
+        NOT AT END 
+            DISPLAY "No more records."
+            exit
+    END-RETURN
+    REWRITE rec-name FROM src-item
+        ALLOWING NO OTHERS
+        INVALID KEY CONTINUE
+        NOT INVALID KEY EXIT
+    END-REWRITE
 END PROGRAM.
