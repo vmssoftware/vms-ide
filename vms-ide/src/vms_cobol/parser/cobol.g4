@@ -178,6 +178,85 @@ statement
    | release_statement
    | return_statement
    | rewrite_statement
+   | search_statement
+   | set_statement
+   ;
+
+set_statement
+   : set_statement_form1
+   | set_statement_form2
+   | set_statement_form3
+   | set_statement_form4
+   | set_statement_form5
+   | set_statement_form6
+   ;
+
+set_statement_form1
+   : SET (separator+ identifier_result)+ separator+ TO separator+ set_val
+   ;
+
+set_statement_form2
+   : SET (separator+ identifier_result)+ separator+ (UP|DOWN) separator+ BY separator+ set_increm
+   ;
+
+set_statement_form3
+   : SET (separator+ identifier_result)+ separator+ TO separator+ TRUE
+   ;
+
+set_statement_form4
+   : SET (separator+ identifier_result separator+ TO separator+ (ON|OFF))+
+   ;
+
+set_statement_form5
+   : SET (separator+ identifier_result)+ separator+ TO separator+ REFERENCE separator+ (OF separator+)? identifier_result
+   ;
+
+set_statement_form6
+   : SET separator+ identifier_result separator+ TO separator+ (SUCCESS|FAILURE)
+   ;
+
+set_increm
+   : identifier
+   | NUMERIC_LITERAL
+   ;
+
+set_val
+   : identifier
+   | NUMERIC_LITERAL
+   ;
+
+search_statement
+   : SEARCH separator+ src_table (separator+ VARYING separator+ search_pointer)?
+     (separator+ at_end)?
+     ( (separator+ WHEN separator+ logic_expression (separator+ statement)+)+ separator+ END_SEARCH
+     | (separator+ WHEN separator+ logic_expression ((separator+ statement)+ (separator+ END_SEARCH)?|separator+ NEXT separator+ SENTENCE))+
+     )
+   | SEARCH separator+ ALL separator+ src_table
+     (separator+ at_end)?
+     separator+ WHEN separator+ search_condition
+     (separator+ AND separator+ search_condition)*
+     ((separator+ statement)+ (separator+ END_SEARCH)?|separator+ NEXT separator+ SENTENCE)
+   ;
+
+search_condition
+   : search_elemnt (separator+ (IS separator+)? EQUAL (separator+ TO)? separator+|separator* (IS separator*)? EQUAL_ separator*) search_arg 
+   | condition_name
+   ;
+
+search_arg
+   : arithmetic_expression
+   ;
+
+search_elemnt
+   : identifier_result
+   ;
+
+search_pointer
+   : identifier
+   ;
+
+src_table
+   : qualified_data_item
    ;
 
 rewrite_statement

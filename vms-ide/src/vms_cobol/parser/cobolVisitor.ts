@@ -31,6 +31,21 @@ import { UsingContext } from "./cobolParser";
 import { GivingContext } from "./cobolParser";
 import { Procedure_test_lineContext } from "./cobolParser";
 import { StatementContext } from "./cobolParser";
+import { Set_statementContext } from "./cobolParser";
+import { Set_statement_form1Context } from "./cobolParser";
+import { Set_statement_form2Context } from "./cobolParser";
+import { Set_statement_form3Context } from "./cobolParser";
+import { Set_statement_form4Context } from "./cobolParser";
+import { Set_statement_form5Context } from "./cobolParser";
+import { Set_statement_form6Context } from "./cobolParser";
+import { Set_incremContext } from "./cobolParser";
+import { Set_valContext } from "./cobolParser";
+import { Search_statementContext } from "./cobolParser";
+import { Search_conditionContext } from "./cobolParser";
+import { Search_argContext } from "./cobolParser";
+import { Search_elemntContext } from "./cobolParser";
+import { Search_pointerContext } from "./cobolParser";
+import { Src_tableContext } from "./cobolParser";
 import { Rewrite_statementContext } from "./cobolParser";
 import { Rewrite_rec_nameContext } from "./cobolParser";
 import { Return_statementContext } from "./cobolParser";
@@ -587,6 +602,111 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitStatement?: (ctx: StatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.set_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSet_statement?: (ctx: Set_statementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.set_statement_form1`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSet_statement_form1?: (ctx: Set_statement_form1Context) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.set_statement_form2`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSet_statement_form2?: (ctx: Set_statement_form2Context) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.set_statement_form3`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSet_statement_form3?: (ctx: Set_statement_form3Context) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.set_statement_form4`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSet_statement_form4?: (ctx: Set_statement_form4Context) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.set_statement_form5`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSet_statement_form5?: (ctx: Set_statement_form5Context) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.set_statement_form6`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSet_statement_form6?: (ctx: Set_statement_form6Context) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.set_increm`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSet_increm?: (ctx: Set_incremContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.set_val`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSet_val?: (ctx: Set_valContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.search_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSearch_statement?: (ctx: Search_statementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.search_condition`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSearch_condition?: (ctx: Search_conditionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.search_arg`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSearch_arg?: (ctx: Search_argContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.search_elemnt`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSearch_elemnt?: (ctx: Search_elemntContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.search_pointer`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSearch_pointer?: (ctx: Search_pointerContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.src_table`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSrc_table?: (ctx: Src_tableContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.rewrite_statement`.

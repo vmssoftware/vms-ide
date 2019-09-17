@@ -31,6 +31,21 @@ import { UsingContext } from "./cobolParser";
 import { GivingContext } from "./cobolParser";
 import { Procedure_test_lineContext } from "./cobolParser";
 import { StatementContext } from "./cobolParser";
+import { Set_statementContext } from "./cobolParser";
+import { Set_statement_form1Context } from "./cobolParser";
+import { Set_statement_form2Context } from "./cobolParser";
+import { Set_statement_form3Context } from "./cobolParser";
+import { Set_statement_form4Context } from "./cobolParser";
+import { Set_statement_form5Context } from "./cobolParser";
+import { Set_statement_form6Context } from "./cobolParser";
+import { Set_incremContext } from "./cobolParser";
+import { Set_valContext } from "./cobolParser";
+import { Search_statementContext } from "./cobolParser";
+import { Search_conditionContext } from "./cobolParser";
+import { Search_argContext } from "./cobolParser";
+import { Search_elemntContext } from "./cobolParser";
+import { Search_pointerContext } from "./cobolParser";
+import { Src_tableContext } from "./cobolParser";
 import { Rewrite_statementContext } from "./cobolParser";
 import { Rewrite_rec_nameContext } from "./cobolParser";
 import { Return_statementContext } from "./cobolParser";
@@ -696,6 +711,171 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitStatement?: (ctx: StatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.set_statement`.
+	 * @param ctx the parse tree
+	 */
+	enterSet_statement?: (ctx: Set_statementContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.set_statement`.
+	 * @param ctx the parse tree
+	 */
+	exitSet_statement?: (ctx: Set_statementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.set_statement_form1`.
+	 * @param ctx the parse tree
+	 */
+	enterSet_statement_form1?: (ctx: Set_statement_form1Context) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.set_statement_form1`.
+	 * @param ctx the parse tree
+	 */
+	exitSet_statement_form1?: (ctx: Set_statement_form1Context) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.set_statement_form2`.
+	 * @param ctx the parse tree
+	 */
+	enterSet_statement_form2?: (ctx: Set_statement_form2Context) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.set_statement_form2`.
+	 * @param ctx the parse tree
+	 */
+	exitSet_statement_form2?: (ctx: Set_statement_form2Context) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.set_statement_form3`.
+	 * @param ctx the parse tree
+	 */
+	enterSet_statement_form3?: (ctx: Set_statement_form3Context) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.set_statement_form3`.
+	 * @param ctx the parse tree
+	 */
+	exitSet_statement_form3?: (ctx: Set_statement_form3Context) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.set_statement_form4`.
+	 * @param ctx the parse tree
+	 */
+	enterSet_statement_form4?: (ctx: Set_statement_form4Context) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.set_statement_form4`.
+	 * @param ctx the parse tree
+	 */
+	exitSet_statement_form4?: (ctx: Set_statement_form4Context) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.set_statement_form5`.
+	 * @param ctx the parse tree
+	 */
+	enterSet_statement_form5?: (ctx: Set_statement_form5Context) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.set_statement_form5`.
+	 * @param ctx the parse tree
+	 */
+	exitSet_statement_form5?: (ctx: Set_statement_form5Context) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.set_statement_form6`.
+	 * @param ctx the parse tree
+	 */
+	enterSet_statement_form6?: (ctx: Set_statement_form6Context) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.set_statement_form6`.
+	 * @param ctx the parse tree
+	 */
+	exitSet_statement_form6?: (ctx: Set_statement_form6Context) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.set_increm`.
+	 * @param ctx the parse tree
+	 */
+	enterSet_increm?: (ctx: Set_incremContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.set_increm`.
+	 * @param ctx the parse tree
+	 */
+	exitSet_increm?: (ctx: Set_incremContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.set_val`.
+	 * @param ctx the parse tree
+	 */
+	enterSet_val?: (ctx: Set_valContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.set_val`.
+	 * @param ctx the parse tree
+	 */
+	exitSet_val?: (ctx: Set_valContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.search_statement`.
+	 * @param ctx the parse tree
+	 */
+	enterSearch_statement?: (ctx: Search_statementContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.search_statement`.
+	 * @param ctx the parse tree
+	 */
+	exitSearch_statement?: (ctx: Search_statementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.search_condition`.
+	 * @param ctx the parse tree
+	 */
+	enterSearch_condition?: (ctx: Search_conditionContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.search_condition`.
+	 * @param ctx the parse tree
+	 */
+	exitSearch_condition?: (ctx: Search_conditionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.search_arg`.
+	 * @param ctx the parse tree
+	 */
+	enterSearch_arg?: (ctx: Search_argContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.search_arg`.
+	 * @param ctx the parse tree
+	 */
+	exitSearch_arg?: (ctx: Search_argContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.search_elemnt`.
+	 * @param ctx the parse tree
+	 */
+	enterSearch_elemnt?: (ctx: Search_elemntContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.search_elemnt`.
+	 * @param ctx the parse tree
+	 */
+	exitSearch_elemnt?: (ctx: Search_elemntContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.search_pointer`.
+	 * @param ctx the parse tree
+	 */
+	enterSearch_pointer?: (ctx: Search_pointerContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.search_pointer`.
+	 * @param ctx the parse tree
+	 */
+	exitSearch_pointer?: (ctx: Search_pointerContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.src_table`.
+	 * @param ctx the parse tree
+	 */
+	enterSrc_table?: (ctx: Src_tableContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.src_table`.
+	 * @param ctx the parse tree
+	 */
+	exitSrc_table?: (ctx: Src_tableContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.rewrite_statement`.
