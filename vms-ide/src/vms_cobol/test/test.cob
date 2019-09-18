@@ -278,4 +278,110 @@ SEARCH-END.
     SET REPORT-RUN TO OFF.
     SET POINTER-VAR TO REFERENCE OF Z(I,J,K).
     SET RETURN-STATUS TO FAILURE.
+    sort tabl descending elem-item2 elem-item3.
+    sort tabl2 descending elem-item1 of group2
+        sequence alph-2
+        input procedure proc-1 through proc-2
+        giving file-1 file-2 file-3.
+    start file-name KEY GREATER THAN OR EQUAL key-data
+        ALLOWING READERS
+        INVALID
+            MOVE CUSTOMER-NAME TO LAST-NAME (NAME-INDEX)
+    END-START
+    STOP RUN
+    STOP "ass"
+    STOP SPACE.
+    STRING CIVIL-TITLE DELIMITED BY " "
+        " " DELIMITED BY SIZE
+        FIRST-NAME DELIMITED BY " "
+        " " DELIMITED BY SIZE
+        LAST-NAME DELIMITED BY SIZE
+        INTO TEXT-STRING.
+    STRING CITY DELIMITED BY "/"
+        ", " DELIMITED BY SIZE
+        STATE DELIMITED BY SIZE
+        " " DELIMITED BY SIZE
+        ZIP DELIMITED BY SIZE
+        INTO TEXT-STRING.
+* =================================
+    MOVE 0 TO LINE-COUNT.
+    MOVE 1 TO PTR.
+GET-WORD.
+    IF LINE-COUNT NOT < 4
+        DISPLAY " " TEXT-STRING
+        GO TO GOT-WORDS.
+    ACCEPT INPUT-MESSAGE.
+    DISPLAY INPUT-MESSAGE.
+SAME-WORD.
+    MOVE PTR TO HOLD-PTR.
+    STRING INPUT-MESSAGE DELIMITED BY SPACE
+        ", " DELIMITED BY SIZE
+        INTO TEXT-STRING
+            WITH POINTER PTR
+        ON OVERFLOW
+            STRING " " DELIMITED BY SIZE
+                INTO TEXT-STRING
+                    WITH POINTER HOLD-PTR
+            DISPLAY " " TEXT-STRING
+            MOVE SPACES TO TEXT-STRING
+            ADD 1 TO LINE-COUNT
+            MOVE 1 TO PTR
+            GO TO SAME-WORD.
+    GO TO GET-WORD.
+GOT-WORDS.
+    EXIT.
+* ===================================
+    SUBTRACT 2 ITEMB FROM ITEMA.
+    SUBTRACT 14 FROM ITEMA, ITEME
+        ON SIZE ERROR
+            MOVE 0 TO ITEMB.
+    SUBTRACT 14 FROM ITEMA
+        ON SIZE ERROR
+            MOVE 9 TO ITEMB.
+        NOT ON SIZE ERROR
+            MOVE 1 TO ITEMB.
+    SUBTRACT 1 FROM ITEMB ITEMD (ITEMB).
+    SUBTRACT ITEME ITEMD (ITEMB) FROM ITEMA
+        GIVING ITEMB.
+    SUBTRACT 10 ITEMB FROM ITEMD (ITEMB)
+        ON SIZE ERROR
+            MOVE 0 TO ITEMA
+    END-SUBTRACT.
+    IF ITEMB < 3 AND > 1
+        SUBTRACT 1 FROM ITEMD(ITEMB)
+            ON SIZE ERROR
+            MOVE 0 TO ITEMA
+        END-SUBTRACT
+        DISPLAY 'yes'
+    ELSE
+        DISPLAY 'no'.
+    SUBTRACT 1, A, B FROM ITEMA ROUNDED, ITEN-B.
+*****
+    SUPPRESS PRINTING
+    SUPPRESS
+    TERMINATE report-name1 report-name2
+    UNLOCK file-name1 RECORDS
+    UNLOCK file-name2 ALL
+    UNLOCK file-name3
+*****
+    UNSTRING INMESSAGE
+        DELIMITED BY "-" OR "/" OR ALL " "
+            INTO THEMONTH DELIMITER IN HOLD-DELIM
+                 THEDAY   DELIMITER IN HOLD-DELIM
+                 THEYEAR  DELIMITER IN HOLD-DELIM
+        ON OVERFLOW MOVE ALL "0" TO THEDATE.
+    INSPECT THEDATE REPLACING ALL " " BY "0".
+*
+    WRITE RECORD-OUT
+        FROM FUNCTION UPPER-CASE(NAME-FIELD).
+    WRITE REPORT-REC AFTER STARTING-NEW-FORM.
+    WRITE rec-name
+        ALLOWING NO OTHERS
+        BEFORE advance-num LINES
+        END-OF-PAGE
+            EXIT
+        NOT EOP
+            CONTINUE
+            DISPLAY "Continue!"
+    END-WRITE
 END PROGRAM.

@@ -63,7 +63,6 @@ procedure_division
      declaratives?
      ((section separator*)* | (paragraph separator*)*)
      (separator* end_program)?
-     (separator* procedure_test_line separator*)* 
    ;
 
 end_program
@@ -180,6 +179,196 @@ statement
    | rewrite_statement
    | search_statement
    | set_statement
+   | sort_statement
+   | start_statement
+   | stop_statement
+   | string_statement
+   | subtract_statement
+   | suppress_statement
+   | terminate_statement
+   | unlock_statement
+   | unstring_statement
+   | write_statement
+   ;
+
+write_statement
+   : WRITE separator+ rec_name (separator+ FROM separator+ src_item)?
+     (separator+ ALLOWING separator+ NO (separator+ OTHERS)?)?
+     ( separator+ invalid_key_variants
+     | (separator+ (BEFORE|AFTER) separator+ (ADVANCING separator+)? advance_value)?
+       separator+ at_eop_variants
+     | separator+ (BEFORE|AFTER) separator+ (ADVANCING separator+)? advance_value
+       (separator+ at_eop_variants)?
+     )?
+     (separator+ END_WRITE)?
+   ;
+
+advance_value
+   : advance_num (separator+ (LINE|LINES))?
+   | top_of_page_name
+   | PAGE
+   ;
+
+advance_num
+   : identifier
+   | NUMERIC_LITERAL
+   ;
+
+unstring_statement
+   : UNSTRING separator+ unstring_src
+     (separator+ DELIMITED (separator+ BY)? separator+ unstring_delim_clause (separator+ OR separator+ unstring_delim_clause)* )?
+     separator+ INTO (separator+ unstring_dest_clause)+
+     (separator+ (WITH separator+)? POINTER separator+ string_pointer)?
+     (separator+ TALLYING (separator+ IN) separator+ unstring_tally_ctr)?
+     (separator+ on_overflow_variants)?
+     (separator+ END_UNSTRING)?
+   ;
+
+unstring_tally_ctr
+   : identifier_result
+   ;
+
+unstring_dest_clause
+   : dest_string (separator+ DELIMITER (separator+ IN)? separator+ delim_dest)? (separator+ COUNT (separator+ IN)? separator+ countr)?
+   ;
+
+countr
+   : identifier_result
+   ;
+
+dest_string
+   : identifier_result
+   ;
+
+delim_dest
+   : identifier_result
+   ;
+
+unstring_delim_clause
+   : (ALL separator+)? unstring_delim
+   ;
+
+unstring_delim
+   : identifier
+   | STRING_LITERAL
+   | figurative_constant_witout_all
+   ;
+
+unstring_src
+   : identifier
+   ;
+
+unlock_statement
+   : UNLOCK separator+ file_name (separator+ (RECORD|RECORDS|ALL (separator+ RECORDS)?))?
+   ;
+
+terminate_statement
+   : TERMINATE (separator+ report_name)+
+   ;
+
+suppress_statement
+   : SUPPRESS (separator+ PRINTING)?
+   ;
+
+subtract_statement
+   : SUBTRACT 
+      ( (separator+ sub_num)+ separator+ FROM (separator+ sub_num separator+ GIVING)? (separator+ identifier_result (separator+ ROUNDED)?)+ 
+      | separator+ (CORRESPONDING|CORR) separator+ sub_grp separator+ FROM separator+ sub_grp (separator+ ROUNDED)?
+      )
+     (separator+ on_size_variants)?
+     (separator+ END_SUBTRACT)?
+   ;
+
+sub_grp
+   : qualified_data_item
+   ;
+
+sub_num
+   : NUMERIC_LITERAL
+   | identifier
+   ;
+
+
+string_statement
+   : STRING ((separator+ string_src)+ separator+ DELIMITED separator+ (BY separator+)? (SIZE|string_delim) )+
+     separator+ INTO separator+ string_dest (separator+ (WITH separator+)? POINTER separator+ string_pointer)?
+     (separator+ on_overflow_variants)?
+     (separator+ END_STRING)?
+   ;
+
+string_pointer
+   : identifier_result
+   ;
+
+string_dest
+   : identifier_result
+   ;
+
+string_delim
+   : string_src
+   ;
+
+string_src
+   : qualified_data_item
+   | STRING_LITERAL
+   | figurative_constant
+   ;
+
+stop_statement
+   : STOP separator+ (RUN|stop_disp)
+   ;
+
+stop_disp
+   : STRING_LITERAL
+   | NUMERIC_LITERAL
+   | figurative_constant_witout_all
+   ;
+
+start_statement
+   : START separator+ file_name
+     (separator+ KEY separator* condition_operator separator* sort_key_data)?
+     (separator+ regard_allow)?
+     (separator+ invalid_key_variants)?
+     (separator+ END_START)?
+   ;
+
+sort_key_data
+   : qualified_data_item
+   ;
+
+sort_statement
+   : sort_statement_form1
+   | sort_statement_form2
+   ;
+
+sort_statement_form1
+   : SORT separator+ file_name (separator+ on_sort_key)+
+     (separator+ (WITH separator+)? DUPLICATES (separator+ IN)? (separator+ ORDER)?)?
+     (separator+ (COLLATING separator+)? SEQUENCE separator+ (IS separator+)? alpha_name)?
+     (separator+ (INPUT separator+ procedure_is|USING (separator+ file_name)+ ))?
+     (separator+ (OUTPUT separator+ procedure_is|GIVING (separator+ file_name)+ ))?
+   ;
+
+sort_statement_form2
+   : SORT separator+ table_name (separator+ on_sort_key)*
+     (separator+ (WITH separator+)? DUPLICATES (separator+ IN)? (separator+ ORDER)?)?
+     (separator+ (COLLATING separator+)? SEQUENCE separator+ (IS separator+)? alpha_name)?
+   ;
+
+table_name
+   : qualified_data_item
+   ;
+
+procedure_is
+   : PROCEDURE separator+ (IS separator+)? proc_thru_proc
+   ;
+
+on_sort_key
+   : (ON separator+)? (DESCENDING|ASCENDING) separator+ (KEY separator+)? sort_key (separator+ sort_key)*
+   ;
+
+sort_key
+   : qualified_data_item
    ;
 
 set_statement
@@ -318,14 +507,18 @@ read_statement
      (separator+ END_READ)?
    ;
 
-read_options
-   :  (WITH separator+)? (NO separator+)? LOCK
-   | REGARDLESS (separator+ OF)? (separator+ LOCK)?
+regard_allow
+   : REGARDLESS (separator+ OF)? (separator+ LOCK)?
    | ALLOWING separator+ (UPDATERS|READERS|NO (separator+ OTHERS)?)
    ;
 
+read_options
+   :  (WITH separator+)? (NO separator+)? LOCK
+   | regard_allow
+   ;
+
 perform_statement
-   : PERFORM (separator+ first_proc (separator+ (THROUGH|THRU) separator+ end_proc)? )?
+   : PERFORM (separator+ proc_thru_proc)?
      (separator+
       ( perform_times
       | perform_until
@@ -333,6 +526,10 @@ perform_statement
       )
      )?
      ((separator+ statement)+ separator+ END_PERFORM)?
+   ;
+
+proc_thru_proc
+   : first_proc (separator+ (THROUGH|THRU) separator+ end_proc)?
    ;
 
 perform_times
@@ -414,7 +611,7 @@ merge_statement
    ;
 
 output_proc
-   : OUTPUT separator+ PROCEDURE separator+ (IS separator+)? first_proc (separator+ (THROUGH|THRU) separator+ end_proc)?
+   : OUTPUT separator+ PROCEDURE separator+ (IS separator+)? proc_thru_proc
    ;
 
 first_proc
@@ -823,6 +1020,16 @@ on_size_variants
    | (NOT separator+ on_size (separator+ on_size)?)
    ;
 
+on_overflow_variants
+   : (on_overflow (separator+ NOT separator+ on_overflow)?)
+   | (NOT separator+ on_overflow (separator+ on_overflow)?)
+   ;
+
+at_eop_variants
+   : (at_eop (separator+ NOT separator+ at_eop)?)
+   | (NOT separator+ at_eop (separator+ at_eop)?)
+   ;
+
 invalid_key_variants
    : (invalid_key (separator+ NOT separator+ invalid_key)?)
    | (NOT separator+ invalid_key (separator+ invalid_key)?)
@@ -959,6 +1166,14 @@ on_exception
 
 on_size
    : (ON separator+)? SIZE separator+ ERROR (separator+ sentense)?
+   ;
+
+on_overflow
+   : (ON separator+)? OVERFLOW  (separator+ sentense)?
+   ;
+
+at_eop
+   : (AT separator+)? (END_OF_PAGE|EOP)  (separator+ sentense)?
    ;
 
 invalid_key
@@ -2412,6 +2627,7 @@ ENVIRONMENT_NAME        : E N V I R O N M E N T '-' N A M E;
 ENVIRONMENT_VALUE       : E N V I R O N M E N T '-' V A L U E;
 EOL                     : E O L;
 EOS                     : E O S;
+EOP                     : E O P;
 EQUAL                   : E Q U A L;
 ERASE                   : E R A S E;
 ERROR                   : E R R O R;
@@ -2680,6 +2896,11 @@ PRIOR                   : P R I O R;
 REGARDLESS              : R E G A R D L E S S;
 DEPENDENCY              : D E P E N D E N C Y;
 DICTIONARY              : D I C T I O N A R Y;
+ORDER                   : O R D E R;
+RUN                     : R U N;
+DELIMITED               : D E L I M I T E D;
+PRINTING                : P R I N T I N G;
+COUNT                   : C O U N T;
 
 // symbols
 
