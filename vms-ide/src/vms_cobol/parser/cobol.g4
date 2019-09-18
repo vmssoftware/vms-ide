@@ -75,6 +75,7 @@ procedure_division_header
 
 section
    : section_header
+     (separator* paragraph)*
    ;
 
 declaratives
@@ -85,11 +86,7 @@ declaratives
 
 declaratives_section
    : section_header
-     use_statement (separator+ declarative_paragraph)*
-   ;
-
-declarative_paragraph
-   : paragraph
+     use_statement (separator* paragraph)*
    ;
 
 paragraph
@@ -103,7 +100,7 @@ sentense
 
 use_statement
    : USE (separator+ GLOBAL)? separator+ 
-      ( AFTER (separator+ STANDARD)? separator+ (EXCEPTION|ERROR) separator+ PROCEDURE (separator+ ON)? separator+ use_on separator* DOT_ separator*
+      ( AFTER (separator+ STANDARD)? separator+ (EXCEPTION|ERROR) separator+ PROCEDURE (separator+ ON)? separator+ use_on
       | BEFORE separator+ REPORTING separator+ group_data_name)
      separator* DOT_ separator*
    ;
@@ -189,6 +186,12 @@ statement
    | unlock_statement
    | unstring_statement
    | write_statement
+   | replace_statement
+   ;
+
+replace_statement
+   : REPLACE separator+ OFF
+   | REPLACE (separator* PSEUDO_TEXT separator* BY separator* PSEUDO_TEXT)+
    ;
 
 write_statement
@@ -767,7 +770,7 @@ exit_program_statement
 
 go_to_statement
    : GO (separator+ TO)? (separator+ proc_name)?
-   | GO (separator+ TO)? (separator+ proc_name)+ DEPENDING (separator+ ON)? separator+ qualified_data_item
+   | GO (separator+ TO)? (separator+ proc_name)+ separator+ DEPENDING (separator+ ON)? separator+ qualified_data_item
    ;
 
 proc_name
@@ -776,8 +779,8 @@ proc_name
 
 evaluate_statement
    : EVALUATE separator+ subj_item ((separator+ ALSO)? separator+ subj_item)*
-     (separator+ WHEN separator+ when_condition ((separator+ ALSO)? separator+ when_condition)* separator+ sentense)+
-     (separator+ WHEN separator+ OTHER separator+ sentense)?
+     (separator+ WHEN separator+ when_condition ((separator+ ALSO)? separator+ when_condition)* (separator+ sentense)?)+
+     (separator+ WHEN separator+ OTHER (separator+ sentense)?)?
      (separator+ END_EVALUATE)?
    ;
 
@@ -1099,7 +1102,7 @@ accept_form3_clause
    | UNDERLINED
    | BOLD
    | (WITH separator+)? BLINKING
-   | PROTECTED (separator+ protected_value)?
+   | PROTECTED (separator+ protected_value)*
    | (WITH separator+)? CONVERSION
    | REVERSED
    | (WITH separator+)? NO separator+ ECHO
@@ -2280,21 +2283,18 @@ logic_expression
    : LPAREN_ arithmetic_separator* logic_expression arithmetic_separator* RPAREN_
    | logic_expression arithmetic_separator* logic_operation arithmetic_separator* logic_expression
    | NOT arithmetic_separator* logic_expression
-   | class_condition
    | logic_condition
-   | sign_condition
-   | success_failure_condition
-   ;
-
-success_failure_condition
-   : qualified_data_item (arithmetic_separator+ IS)? arithmetic_separator+ (SUCCESS|FAILURE)
    ;
 
 logic_condition
-   : arithmetic_expression arithmetic_separator* condition_operator arithmetic_separator* arithmetic_expression
-   | class_condition
+   : arithmetic_expression arithmetic_separator* logic_condition_right_part (arithmetic_separator+ (OR|AND) arithmetic_separator+ logic_condition_right_part)*
    | qualified_data_item
-   | logic_condition arithmetic_separator+ logic_operation arithmetic_separator* condition_operator arithmetic_separator* arithmetic_expression
+   ;
+
+logic_condition_right_part
+   : condition_operator arithmetic_separator* arithmetic_expression
+   | (IS arithmetic_separator+)? (NOT arithmetic_separator+)? (class_condition_name|sign_condition_name)
+   | (IS arithmetic_separator+)? (SUCCESS|FAILURE)
    ;
 
 logic_operation
@@ -2302,18 +2302,10 @@ logic_operation
    | OR
    ;
 
-sign_condition
-   : arithmetic_expression (arithmetic_separator+ IS)? (arithmetic_separator+ NOT)? arithmetic_separator+ sign_condition_name
-   ;
-
 sign_condition_name
    : POSITIVE
    | NEGATIVE
    | ZERO
-   ;
-
-class_condition
-   : identifier (arithmetic_separator+ IS)? (arithmetic_separator+ NOT)? arithmetic_separator+ class_condition_name
    ;
 
 class_condition_name
@@ -2483,15 +2475,19 @@ ADD                     : A D D;
 ADVANCING               : A D V A N C I N G;
 AFTER                   : A F T E R;
 ALL                     : A L L;
+ALLOWING                : A L L O W I N G;
 ALPHA                   : A L P H A;
 ALPHABET                : A L P H A B E T;
 ALPHABETIC              : A L P H A B E T I C;
 ALPHABETIC_LOWER        : A L P H A B E T I C '-' L O W E R;
 ALPHABETIC_UPPER        : A L P H A B E T I C '-' U P P E R;
+ALPHANUMERIC            : A L P H A N U M E R I C;
+ALPHANUMERIC_EDITED     : A L P H A N U M E R I C '-' E D I T E D;
 ALSO                    : A L S O;
 ALTER                   : A L T E R;
 ALTERNATE               : A L T E R N A T E;
 AND                     : A N D;
+ANY                     : A N Y;
 APPLY                   : A P P L Y;
 ARE                     : A R E;
 AREA                    : A R E A;
@@ -2568,6 +2564,7 @@ CONVERTING              : C O N V E R T I N G;
 COPY                    : C O P Y;
 CORR                    : C O R R;
 CORRESPONDING           : C O R R E S P O N D I N G;
+COUNT                   : C O U N T;
 CRT                     : C R T;
 CURRENCY                : C U R R E N C Y;
 CURRENT                 : C U R R E N T;
@@ -2585,11 +2582,14 @@ DECLARATIVES            : D E C L A R A T I V E S;
 DEFAULT                 : D E F A U L T;
 DEFERRED_WRITE          : D E F E R R E D '-' W R I T E;
 DELETE                  : D E L E T E;
+DELIMITED               : D E L I M I T E D;
 DELIMITER               : D E L I M I T E R;
+DEPENDENCY              : D E P E N D E N C Y;
 DEPENDING               : D E P E N D I N G;
 DESCENDING              : D E S C E N D I N G;
 DESCRIPTOR              : D E S C R I P T O R;
 DETAIL                  : D E T A I L;
+DICTIONARY              : D I C T I O N A R Y;
 DISK                    : D I S K;
 DISPLAY                 : D I S P L A Y;
 DIVIDE                  : D I V I D E;
@@ -2600,6 +2600,7 @@ DYNAMIC                 : D Y N A M I C;
 EBCDIC                  : E B C D I C;
 ECHO                    : E C H O;
 EDITING                 : E D I T I N G;
+ELSE                    : E L S E;
 END                     : E N D;
 END_ACCEPT              : E N D '-' A C C E P T;
 END_ADD                 : E N D '-' A D D;
@@ -2626,8 +2627,8 @@ ENVIRONMENT             : E N V I R O N M E N T;
 ENVIRONMENT_NAME        : E N V I R O N M E N T '-' N A M E;
 ENVIRONMENT_VALUE       : E N V I R O N M E N T '-' V A L U E;
 EOL                     : E O L;
-EOS                     : E O S;
 EOP                     : E O P;
+EOS                     : E O S;
 EQUAL                   : E Q U A L;
 ERASE                   : E R A S E;
 ERROR                   : E R R O R;
@@ -2725,6 +2726,7 @@ NO                      : N O;
 NOT                     : N O T;
 NUMBER                  : N U M B E R;
 NUMERIC                 : N U M E R I C;
+NUMERIC_EDITED          : N U M E R I C '-' E D I T E D;
 OBJECT_COMPUTER         : O B J E C T '-' C O M P U T E R;
 OCCURS                  : O C C U R S;
 OF                      : O F ;
@@ -2735,7 +2737,10 @@ OPEN                    : O P E N;
 OPTIONAL                : O P T I O N A L;
 OPTIONS                 : O P T I O N S;
 OR                      : O R;
+ORDER                   : O R D E R;
 ORGANIZATION            : O R G A N I Z A T I O N;
+OTHER                   : O T H E R;
+OTHERS                  : O T H E R S;
 OUTPUT                  : O U T P U T;
 OVERFLOW                : O V E R F L O W;
 PACKED_DECIMAL          : P A C K E D '-' D E C I M A L;
@@ -2754,8 +2759,11 @@ POINTER_64              : P O I N T E R '-64';
 POSITION                : P O S I T I O N;
 POSITIVE                : P O S I T I V E;
 PREALLOCATION           : P R E A L L O C A T I O N;
+PREVIOUS                : P R E V I O U S;
 PRINTER                 : P R I N T E R;
+PRINTING                : P R I N T I N G;
 PRINT_CONTROL           : P R I N T '-' C O N T R O L;
+PRIOR                   : P R I O R;
 PROCEDURE               : P R O C E D U R E;
 PROCEED                 : P R O C E E D;
 PROGRAM                 : P R O G R A M;
@@ -2766,11 +2774,13 @@ QUOTES                  : Q U O T E S;
 RANDOM                  : R A N D O M;
 RD                      : R D;
 READ                    : R E A D;
+READERS                 : R E A D E R S;
 RECORD                  : R E C O R D;
 RECORDS                 : R E C O R D S;
 REDEFINES               : R E D E F I N E S;
 REEL                    : R E E L;
 REFERENCE               : R E F E R E N C E;
+REGARDLESS              : R E G A R D L E S S;
 RELATIVE                : R E L A T I V E;
 RELEASE                 : R E L E A S E;
 REMAINDER               : R E M A I N D E R;
@@ -2795,6 +2805,7 @@ RH                      : R H;
 RIGHT                   : R I G H T;
 ROLLBACK                : R O L L B A C K;
 ROUNDED                 : R O U N D E D;
+RUN                     : R U N;
 SAME                    : S A M E;
 SCREEN                  : S C R E E N;
 SD                      : S D;
@@ -2804,6 +2815,7 @@ SECURE                  : S E C U R E;
 SECURITY                : S E C U R I T Y;
 SEGMENT_LIMIT           : S E G M E N T '-' L I M I T;
 SELECT                  : S E L E C T;
+SENTENCE                : S E N T E N C E;
 SEPARATE                : S E P A R A T E;
 SEQUENCE                : S E Q U E N C E;
 SEQUENTIAL              : S E Q U E N T I A L;
@@ -2840,7 +2852,9 @@ SYSOUT                  : S Y S O U T;
 TALLYING                : T A L L Y I N G;
 TAPE                    : T A P E;
 TERMINATE               : T E R M I N A T E;
+TEST                    : T E S T;
 THAN                    : T H A N;
+THEN                    : T H E N;
 THROUGH                 : T H R O U G H;
 THRU                    : T H R U;
 TIME                    : T I M E;
@@ -2856,7 +2870,9 @@ UNIT                    : U N I T;
 UNLOCK                  : U N L O C K;
 UNSIGNED                : U N S I G N E D;
 UNSTRING                : U N S T R I N G;
+UNTIL                   : U N T I L;
 UP                      : U P;
+UPDATERS                : U P D A T E R S;
 UPON                    : U P O N;
 USAGE                   : U S A G E;
 USE                     : U S E;
@@ -2871,41 +2887,21 @@ WITH                    : W I T H;
 WORDS                   : W O R D S;
 WORKING_STORAGE         : W O R K I N G '-' S T O R A G E;
 WRITE                   : W R I T E;
+WRITERS                 : W R I T E R S;
 YYYYDDD                 : Y Y Y Y D D D;
 YYYYMMDD                : Y Y Y Y M M D D;
 ZERO                    : Z E R O;
 ZEROES                  : Z E R O E S;
 ZEROS                   : Z E R O S;
-OTHER                   : O T H E R;
-ANY                     : A N Y;
-THEN                    : T H E N;
-SENTENCE                : S E N T E N C E;
-ELSE                    : E L S E;
-ALPHANUMERIC            : A L P H A N U M E R I C;
-NUMERIC_EDITED          : N U M E R I C '-' E D I T E D;
-ALPHANUMERIC_EDITED     : A L P H A N U M E R I C '-' E D I T E D;
-ALLOWING                : A L L O W I N G;
-OTHERS                  : O T H E R S;
-READERS                 : R E A D E R S;
-WRITERS                 : W R I T E R S;
-UPDATERS                : U P D A T E R S;
-UNTIL                   : U N T I L;
-TEST                    : T E S T;
-PREVIOUS                : P R E V I O U S;
-PRIOR                   : P R I O R;
-REGARDLESS              : R E G A R D L E S S;
-DEPENDENCY              : D E P E N D E N C Y;
-DICTIONARY              : D I C T I O N A R Y;
-ORDER                   : O R D E R;
-RUN                     : R U N;
-DELIMITED               : D E L I M I T E D;
-PRINTING                : P R I N T I N G;
-COUNT                   : C O U N T;
 
 // symbols
 
 START_SLASH_ : '/' {this.charPositionInLine==1}?;
 START_STAR_  : '*' {this.charPositionInLine==1}?;
+
+PSEUDO_TEXT
+   : '==' .*? '=='
+   ;
 
 EXCLAM_  : '!';
 UNDER_   : '_';
