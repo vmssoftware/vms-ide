@@ -30,6 +30,11 @@ import { UsingContext } from "./cobolParser";
 import { GivingContext } from "./cobolParser";
 import { Procedure_test_lineContext } from "./cobolParser";
 import { StatementContext } from "./cobolParser";
+import { Copy_statementContext } from "./cobolParser";
+import { Copy_replacingContext } from "./cobolParser";
+import { Record_nameContext } from "./cobolParser";
+import { Library_nameContext } from "./cobolParser";
+import { Text_nameContext } from "./cobolParser";
 import { Replace_statementContext } from "./cobolParser";
 import { Write_statementContext } from "./cobolParser";
 import { Advance_valueContext } from "./cobolParser";
@@ -633,6 +638,41 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitStatement?: (ctx: StatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.copy_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitCopy_statement?: (ctx: Copy_statementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.copy_replacing`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitCopy_replacing?: (ctx: Copy_replacingContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.record_name`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRecord_name?: (ctx: Record_nameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.library_name`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitLibrary_name?: (ctx: Library_nameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.text_name`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitText_name?: (ctx: Text_nameContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.replace_statement`.

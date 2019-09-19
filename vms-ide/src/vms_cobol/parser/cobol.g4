@@ -170,7 +170,6 @@ statement
    | open_statement
    | perform_statement
    | read_statement
-   | record_statement
    | release_statement
    | return_statement
    | rewrite_statement
@@ -187,6 +186,37 @@ statement
    | unstring_statement
    | write_statement
    | replace_statement
+   | copy_statement
+   | record_statement
+   ;
+
+copy_statement
+   : COPY separator+ 
+      ( text_name (separator+ (IN|OF) separator+ library_name)?
+      | record_name separator+ FROM separator+ DICTIONARY)
+      ( separator+ REPLACING (separator+ copy_replacing separator+ BY separator+ copy_replacing)+)?
+   ;
+
+copy_replacing
+   : PSEUDO_TEXT
+   | USER_DEFINED_WORD (separator+ USER_DEFINED_WORD)*
+   | STRING_LITERAL
+   | NUMERIC_LITERAL
+   ;
+
+record_name
+   : USER_DEFINED_WORD
+   | STRING_LITERAL
+   ;
+
+library_name
+   : USER_DEFINED_WORD
+   | STRING_LITERAL
+   ;
+
+text_name
+   : USER_DEFINED_WORD
+   | STRING_LITERAL
    ;
 
 replace_statement

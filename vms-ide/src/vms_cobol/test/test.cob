@@ -8,6 +8,10 @@ DETA-1.
 END DECLARATIVES.
 begin.
     replace ==alpha== by ==NUM-1== ==num== by ==ALPHA-1==.
+    copy custfile replacing xyz by 6, ==r== by ==4==
+        "KEY" by =="abc".
+        * cust-number is a new field
+        03 cust-number pic 9(8)==.
     IF ITEMA < 10 OR > 20
         NEXT SENTENCE
     ELSE

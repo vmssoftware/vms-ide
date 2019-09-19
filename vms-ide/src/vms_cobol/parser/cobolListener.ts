@@ -30,6 +30,11 @@ import { UsingContext } from "./cobolParser";
 import { GivingContext } from "./cobolParser";
 import { Procedure_test_lineContext } from "./cobolParser";
 import { StatementContext } from "./cobolParser";
+import { Copy_statementContext } from "./cobolParser";
+import { Copy_replacingContext } from "./cobolParser";
+import { Record_nameContext } from "./cobolParser";
+import { Library_nameContext } from "./cobolParser";
+import { Text_nameContext } from "./cobolParser";
 import { Replace_statementContext } from "./cobolParser";
 import { Write_statementContext } from "./cobolParser";
 import { Advance_valueContext } from "./cobolParser";
@@ -738,6 +743,61 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitStatement?: (ctx: StatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.copy_statement`.
+	 * @param ctx the parse tree
+	 */
+	enterCopy_statement?: (ctx: Copy_statementContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.copy_statement`.
+	 * @param ctx the parse tree
+	 */
+	exitCopy_statement?: (ctx: Copy_statementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.copy_replacing`.
+	 * @param ctx the parse tree
+	 */
+	enterCopy_replacing?: (ctx: Copy_replacingContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.copy_replacing`.
+	 * @param ctx the parse tree
+	 */
+	exitCopy_replacing?: (ctx: Copy_replacingContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.record_name`.
+	 * @param ctx the parse tree
+	 */
+	enterRecord_name?: (ctx: Record_nameContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.record_name`.
+	 * @param ctx the parse tree
+	 */
+	exitRecord_name?: (ctx: Record_nameContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.library_name`.
+	 * @param ctx the parse tree
+	 */
+	enterLibrary_name?: (ctx: Library_nameContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.library_name`.
+	 * @param ctx the parse tree
+	 */
+	exitLibrary_name?: (ctx: Library_nameContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.text_name`.
+	 * @param ctx the parse tree
+	 */
+	enterText_name?: (ctx: Text_nameContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.text_name`.
+	 * @param ctx the parse tree
+	 */
+	exitText_name?: (ctx: Text_nameContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.replace_statement`.
