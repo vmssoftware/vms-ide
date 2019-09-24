@@ -4,15 +4,18 @@
 import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
 
 import { Cobol_sourceContext } from "./cobolParser";
+import { ProgramContext } from "./cobolParser";
+import { Identification_divisionContext } from "./cobolParser";
+import { Environment_divisionContext } from "./cobolParser";
+import { Data_divisionContext } from "./cobolParser";
+import { Procedure_divisionContext } from "./cobolParser";
+import { Word_in_area_AContext } from "./cobolParser";
+import { Word_in_area_BContext } from "./cobolParser";
+import { AuthorContext } from "./cobolParser";
 import { Figurative_constant_witout_all_zeroContext } from "./cobolParser";
 import { Figurative_constant_witout_allContext } from "./cobolParser";
 import { Figurative_constant_witout_zeroContext } from "./cobolParser";
 import { Figurative_constantContext } from "./cobolParser";
-import { SeparatorContext } from "./cobolParser";
-import { Arithmetic_separatorContext } from "./cobolParser";
-import { Line_commentContext } from "./cobolParser";
-import { ProgramContext } from "./cobolParser";
-import { Procedure_divisionContext } from "./cobolParser";
 import { End_programContext } from "./cobolParser";
 import { Procedure_division_headerContext } from "./cobolParser";
 import { SectionContext } from "./cobolParser";
@@ -24,11 +27,8 @@ import { Use_statementContext } from "./cobolParser";
 import { Group_data_nameContext } from "./cobolParser";
 import { Use_onContext } from "./cobolParser";
 import { Section_headerContext } from "./cobolParser";
-import { Paragraph_nameContext } from "./cobolParser";
-import { Section_nameContext } from "./cobolParser";
 import { UsingContext } from "./cobolParser";
 import { GivingContext } from "./cobolParser";
-import { Procedure_test_lineContext } from "./cobolParser";
 import { StatementContext } from "./cobolParser";
 import { Copy_statementContext } from "./cobolParser";
 import { Copy_replacingContext } from "./cobolParser";
@@ -228,7 +228,6 @@ import { On_sizeContext } from "./cobolParser";
 import { On_overflowContext } from "./cobolParser";
 import { At_eopContext } from "./cobolParser";
 import { Invalid_keyContext } from "./cobolParser";
-import { Data_divisionContext } from "./cobolParser";
 import { File_sectionContext } from "./cobolParser";
 import { Working_storage_sectionContext } from "./cobolParser";
 import { Linkage_sectionContext } from "./cobolParser";
@@ -318,22 +317,18 @@ import { Scr_pic_toContext } from "./cobolParser";
 import { Nonnumeric_literalContext } from "./cobolParser";
 import { Src_numberContext } from "./cobolParser";
 import { Color_numContext } from "./cobolParser";
-import { Identification_divisionContext } from "./cobolParser";
 import { Identification_division_paragraphContext } from "./cobolParser";
 import { Program_idContext } from "./cobolParser";
 import { Program_nameContext } from "./cobolParser";
 import { Is_programContext } from "./cobolParser";
 import { With_identContext } from "./cobolParser";
 import { Ident_stringContext } from "./cobolParser";
-import { Comment_entryContext } from "./cobolParser";
-import { AuthorContext } from "./cobolParser";
 import { InstallationContext } from "./cobolParser";
 import { Date_writtenContext } from "./cobolParser";
 import { Date_compiledContext } from "./cobolParser";
 import { SecurityContext } from "./cobolParser";
 import { Options_Context } from "./cobolParser";
 import { ArithmeticContext } from "./cobolParser";
-import { Environment_divisionContext } from "./cobolParser";
 import { Configuration_sectionContext } from "./cobolParser";
 import { Input_output_sectionContext } from "./cobolParser";
 import { Source_computerContext } from "./cobolParser";
@@ -458,6 +453,62 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitCobol_source?: (ctx: Cobol_sourceContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cobolParser.program`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitProgram?: (ctx: ProgramContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.identification_division`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitIdentification_division?: (ctx: Identification_divisionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.environment_division`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEnvironment_division?: (ctx: Environment_divisionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.data_division`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitData_division?: (ctx: Data_divisionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.procedure_division`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitProcedure_division?: (ctx: Procedure_divisionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.word_in_area_A`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitWord_in_area_A?: (ctx: Word_in_area_AContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.word_in_area_B`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitWord_in_area_B?: (ctx: Word_in_area_BContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.author`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAuthor?: (ctx: AuthorContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cobolParser.figurative_constant_witout_all_zero`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -484,41 +535,6 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitFigurative_constant?: (ctx: Figurative_constantContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `cobolParser.separator`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitSeparator?: (ctx: SeparatorContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `cobolParser.arithmetic_separator`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitArithmetic_separator?: (ctx: Arithmetic_separatorContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `cobolParser.line_comment`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitLine_comment?: (ctx: Line_commentContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `cobolParser.program`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitProgram?: (ctx: ProgramContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `cobolParser.procedure_division`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitProcedure_division?: (ctx: Procedure_divisionContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.end_program`.
@@ -598,20 +614,6 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitSection_header?: (ctx: Section_headerContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.paragraph_name`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitParagraph_name?: (ctx: Paragraph_nameContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `cobolParser.section_name`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitSection_name?: (ctx: Section_nameContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `cobolParser.using`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -624,13 +626,6 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitGiving?: (ctx: GivingContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `cobolParser.procedure_test_line`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitProcedure_test_line?: (ctx: Procedure_test_lineContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.statement`.
@@ -2026,13 +2021,6 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitInvalid_key?: (ctx: Invalid_keyContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.data_division`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitData_division?: (ctx: Data_divisionContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `cobolParser.file_section`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -2656,13 +2644,6 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitColor_num?: (ctx: Color_numContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.identification_division`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitIdentification_division?: (ctx: Identification_divisionContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `cobolParser.identification_division_paragraph`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -2705,20 +2686,6 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitIdent_string?: (ctx: Ident_stringContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.comment_entry`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitComment_entry?: (ctx: Comment_entryContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `cobolParser.author`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitAuthor?: (ctx: AuthorContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `cobolParser.installation`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -2759,13 +2726,6 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitArithmetic?: (ctx: ArithmeticContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `cobolParser.environment_division`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitEnvironment_division?: (ctx: Environment_divisionContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.configuration_section`.

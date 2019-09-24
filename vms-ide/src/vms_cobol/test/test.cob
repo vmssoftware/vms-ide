@@ -605,8 +605,8 @@ CLOSE EMP-FILE REPORT-FILE.
               COLLATING SEQUENCE IS alpha-ebcdic
               using in-file
               OUTPUT PROCEDURE IS first-pro THROUGH end-pro
-              giving out-file
-         NOT ON ERROR MOVE 1 to A
+*              giving out-file
+*         NOT ON ERROR MOVE 1 to A
        replace ==alpha== by ==NUM-1== ==num== by ==ALPHA-1==.
 
 *           examine ass in qqq tallying until first space replacing by "a".

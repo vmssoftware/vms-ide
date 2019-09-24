@@ -4,15 +4,18 @@
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 
 import { Cobol_sourceContext } from "./cobolParser";
+import { ProgramContext } from "./cobolParser";
+import { Identification_divisionContext } from "./cobolParser";
+import { Environment_divisionContext } from "./cobolParser";
+import { Data_divisionContext } from "./cobolParser";
+import { Procedure_divisionContext } from "./cobolParser";
+import { Word_in_area_AContext } from "./cobolParser";
+import { Word_in_area_BContext } from "./cobolParser";
+import { AuthorContext } from "./cobolParser";
 import { Figurative_constant_witout_all_zeroContext } from "./cobolParser";
 import { Figurative_constant_witout_allContext } from "./cobolParser";
 import { Figurative_constant_witout_zeroContext } from "./cobolParser";
 import { Figurative_constantContext } from "./cobolParser";
-import { SeparatorContext } from "./cobolParser";
-import { Arithmetic_separatorContext } from "./cobolParser";
-import { Line_commentContext } from "./cobolParser";
-import { ProgramContext } from "./cobolParser";
-import { Procedure_divisionContext } from "./cobolParser";
 import { End_programContext } from "./cobolParser";
 import { Procedure_division_headerContext } from "./cobolParser";
 import { SectionContext } from "./cobolParser";
@@ -24,11 +27,8 @@ import { Use_statementContext } from "./cobolParser";
 import { Group_data_nameContext } from "./cobolParser";
 import { Use_onContext } from "./cobolParser";
 import { Section_headerContext } from "./cobolParser";
-import { Paragraph_nameContext } from "./cobolParser";
-import { Section_nameContext } from "./cobolParser";
 import { UsingContext } from "./cobolParser";
 import { GivingContext } from "./cobolParser";
-import { Procedure_test_lineContext } from "./cobolParser";
 import { StatementContext } from "./cobolParser";
 import { Copy_statementContext } from "./cobolParser";
 import { Copy_replacingContext } from "./cobolParser";
@@ -228,7 +228,6 @@ import { On_sizeContext } from "./cobolParser";
 import { On_overflowContext } from "./cobolParser";
 import { At_eopContext } from "./cobolParser";
 import { Invalid_keyContext } from "./cobolParser";
-import { Data_divisionContext } from "./cobolParser";
 import { File_sectionContext } from "./cobolParser";
 import { Working_storage_sectionContext } from "./cobolParser";
 import { Linkage_sectionContext } from "./cobolParser";
@@ -318,22 +317,18 @@ import { Scr_pic_toContext } from "./cobolParser";
 import { Nonnumeric_literalContext } from "./cobolParser";
 import { Src_numberContext } from "./cobolParser";
 import { Color_numContext } from "./cobolParser";
-import { Identification_divisionContext } from "./cobolParser";
 import { Identification_division_paragraphContext } from "./cobolParser";
 import { Program_idContext } from "./cobolParser";
 import { Program_nameContext } from "./cobolParser";
 import { Is_programContext } from "./cobolParser";
 import { With_identContext } from "./cobolParser";
 import { Ident_stringContext } from "./cobolParser";
-import { Comment_entryContext } from "./cobolParser";
-import { AuthorContext } from "./cobolParser";
 import { InstallationContext } from "./cobolParser";
 import { Date_writtenContext } from "./cobolParser";
 import { Date_compiledContext } from "./cobolParser";
 import { SecurityContext } from "./cobolParser";
 import { Options_Context } from "./cobolParser";
 import { ArithmeticContext } from "./cobolParser";
-import { Environment_divisionContext } from "./cobolParser";
 import { Configuration_sectionContext } from "./cobolParser";
 import { Input_output_sectionContext } from "./cobolParser";
 import { Source_computerContext } from "./cobolParser";
@@ -459,6 +454,94 @@ export interface cobolListener extends ParseTreeListener {
 	exitCobol_source?: (ctx: Cobol_sourceContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `cobolParser.program`.
+	 * @param ctx the parse tree
+	 */
+	enterProgram?: (ctx: ProgramContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.program`.
+	 * @param ctx the parse tree
+	 */
+	exitProgram?: (ctx: ProgramContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.identification_division`.
+	 * @param ctx the parse tree
+	 */
+	enterIdentification_division?: (ctx: Identification_divisionContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.identification_division`.
+	 * @param ctx the parse tree
+	 */
+	exitIdentification_division?: (ctx: Identification_divisionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.environment_division`.
+	 * @param ctx the parse tree
+	 */
+	enterEnvironment_division?: (ctx: Environment_divisionContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.environment_division`.
+	 * @param ctx the parse tree
+	 */
+	exitEnvironment_division?: (ctx: Environment_divisionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.data_division`.
+	 * @param ctx the parse tree
+	 */
+	enterData_division?: (ctx: Data_divisionContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.data_division`.
+	 * @param ctx the parse tree
+	 */
+	exitData_division?: (ctx: Data_divisionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.procedure_division`.
+	 * @param ctx the parse tree
+	 */
+	enterProcedure_division?: (ctx: Procedure_divisionContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.procedure_division`.
+	 * @param ctx the parse tree
+	 */
+	exitProcedure_division?: (ctx: Procedure_divisionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.word_in_area_A`.
+	 * @param ctx the parse tree
+	 */
+	enterWord_in_area_A?: (ctx: Word_in_area_AContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.word_in_area_A`.
+	 * @param ctx the parse tree
+	 */
+	exitWord_in_area_A?: (ctx: Word_in_area_AContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.word_in_area_B`.
+	 * @param ctx the parse tree
+	 */
+	enterWord_in_area_B?: (ctx: Word_in_area_BContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.word_in_area_B`.
+	 * @param ctx the parse tree
+	 */
+	exitWord_in_area_B?: (ctx: Word_in_area_BContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.author`.
+	 * @param ctx the parse tree
+	 */
+	enterAuthor?: (ctx: AuthorContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.author`.
+	 * @param ctx the parse tree
+	 */
+	exitAuthor?: (ctx: AuthorContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `cobolParser.figurative_constant_witout_all_zero`.
 	 * @param ctx the parse tree
 	 */
@@ -501,61 +584,6 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFigurative_constant?: (ctx: Figurative_constantContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.separator`.
-	 * @param ctx the parse tree
-	 */
-	enterSeparator?: (ctx: SeparatorContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.separator`.
-	 * @param ctx the parse tree
-	 */
-	exitSeparator?: (ctx: SeparatorContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.arithmetic_separator`.
-	 * @param ctx the parse tree
-	 */
-	enterArithmetic_separator?: (ctx: Arithmetic_separatorContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.arithmetic_separator`.
-	 * @param ctx the parse tree
-	 */
-	exitArithmetic_separator?: (ctx: Arithmetic_separatorContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.line_comment`.
-	 * @param ctx the parse tree
-	 */
-	enterLine_comment?: (ctx: Line_commentContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.line_comment`.
-	 * @param ctx the parse tree
-	 */
-	exitLine_comment?: (ctx: Line_commentContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.program`.
-	 * @param ctx the parse tree
-	 */
-	enterProgram?: (ctx: ProgramContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.program`.
-	 * @param ctx the parse tree
-	 */
-	exitProgram?: (ctx: ProgramContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.procedure_division`.
-	 * @param ctx the parse tree
-	 */
-	enterProcedure_division?: (ctx: Procedure_divisionContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.procedure_division`.
-	 * @param ctx the parse tree
-	 */
-	exitProcedure_division?: (ctx: Procedure_divisionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.end_program`.
@@ -679,28 +707,6 @@ export interface cobolListener extends ParseTreeListener {
 	exitSection_header?: (ctx: Section_headerContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.paragraph_name`.
-	 * @param ctx the parse tree
-	 */
-	enterParagraph_name?: (ctx: Paragraph_nameContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.paragraph_name`.
-	 * @param ctx the parse tree
-	 */
-	exitParagraph_name?: (ctx: Paragraph_nameContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.section_name`.
-	 * @param ctx the parse tree
-	 */
-	enterSection_name?: (ctx: Section_nameContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.section_name`.
-	 * @param ctx the parse tree
-	 */
-	exitSection_name?: (ctx: Section_nameContext) => void;
-
-	/**
 	 * Enter a parse tree produced by `cobolParser.using`.
 	 * @param ctx the parse tree
 	 */
@@ -721,17 +727,6 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitGiving?: (ctx: GivingContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.procedure_test_line`.
-	 * @param ctx the parse tree
-	 */
-	enterProcedure_test_line?: (ctx: Procedure_test_lineContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.procedure_test_line`.
-	 * @param ctx the parse tree
-	 */
-	exitProcedure_test_line?: (ctx: Procedure_test_lineContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.statement`.
@@ -2923,17 +2918,6 @@ export interface cobolListener extends ParseTreeListener {
 	exitInvalid_key?: (ctx: Invalid_keyContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.data_division`.
-	 * @param ctx the parse tree
-	 */
-	enterData_division?: (ctx: Data_divisionContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.data_division`.
-	 * @param ctx the parse tree
-	 */
-	exitData_division?: (ctx: Data_divisionContext) => void;
-
-	/**
 	 * Enter a parse tree produced by `cobolParser.file_section`.
 	 * @param ctx the parse tree
 	 */
@@ -3913,17 +3897,6 @@ export interface cobolListener extends ParseTreeListener {
 	exitColor_num?: (ctx: Color_numContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.identification_division`.
-	 * @param ctx the parse tree
-	 */
-	enterIdentification_division?: (ctx: Identification_divisionContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.identification_division`.
-	 * @param ctx the parse tree
-	 */
-	exitIdentification_division?: (ctx: Identification_divisionContext) => void;
-
-	/**
 	 * Enter a parse tree produced by `cobolParser.identification_division_paragraph`.
 	 * @param ctx the parse tree
 	 */
@@ -3990,28 +3963,6 @@ export interface cobolListener extends ParseTreeListener {
 	exitIdent_string?: (ctx: Ident_stringContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.comment_entry`.
-	 * @param ctx the parse tree
-	 */
-	enterComment_entry?: (ctx: Comment_entryContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.comment_entry`.
-	 * @param ctx the parse tree
-	 */
-	exitComment_entry?: (ctx: Comment_entryContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.author`.
-	 * @param ctx the parse tree
-	 */
-	enterAuthor?: (ctx: AuthorContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.author`.
-	 * @param ctx the parse tree
-	 */
-	exitAuthor?: (ctx: AuthorContext) => void;
-
-	/**
 	 * Enter a parse tree produced by `cobolParser.installation`.
 	 * @param ctx the parse tree
 	 */
@@ -4076,17 +4027,6 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitArithmetic?: (ctx: ArithmeticContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.environment_division`.
-	 * @param ctx the parse tree
-	 */
-	enterEnvironment_division?: (ctx: Environment_divisionContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.environment_division`.
-	 * @param ctx the parse tree
-	 */
-	exitEnvironment_division?: (ctx: Environment_divisionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.configuration_section`.

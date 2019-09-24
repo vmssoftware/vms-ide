@@ -1,8 +1,58 @@
 grammar cobol;
 
 cobol_source
-   : (program | separator) * EOF
+   : program* EOF
    ;
+
+program
+   : identification_division
+     environment_division?
+     data_division?
+     procedure_division?
+   ;
+
+identification_division
+   : IDENTIFICATION {$IDENTIFICATION.pos <= 4}? DIVISION DOT_
+     identification_division_paragraph*
+   ;
+
+environment_division
+   : ENVIRONMENT DIVISION DOT_
+     configuration_section?
+     input_output_section?
+   ;
+
+data_division
+   : DATA DIVISION DOT_
+     file_section?
+     working_storage_section?
+     linkage_section?
+     report_section?
+     screen_section?
+   ;
+
+procedure_division
+   : procedure_division_header
+     declaratives?
+     (section*|paragraph*)
+     end_program?
+   ;
+
+// author =====
+
+word_in_area_A
+   : {this.inputStream.LT(1).charPositionInLine < 4}? .
+   ;
+
+word_in_area_B
+   : {this.inputStream.LT(1).charPositionInLine >= 4}? .
+   ;
+
+author
+   : AUTHOR DOT_ word_in_area_B*
+   ;
+
+// author =====
 
 figurative_constant_witout_all_zero
    : SPACE
@@ -22,7 +72,7 @@ figurative_constant_witout_all
 
 figurative_constant_witout_zero
    : figurative_constant_witout_all_zero
-   | ALL WHITESPACE STRING_LITERAL
+   | ALL STRING_LITERAL
    ;
 
 figurative_constant
@@ -30,79 +80,45 @@ figurative_constant
    | ZERO
    ;
 
-separator
-   : WHITESPACE
-   | NEWLINE
-   | START_FOUR_SPACES
-   | COMMA_
-   | SEMI_
-   | line_comment
-   ;
-
-arithmetic_separator
-   : WHITESPACE
-   | NEWLINE
-   | START_FOUR_SPACES
-   | line_comment
-   ;
-
-line_comment
-   : START_SLASH_ ~NEWLINE* NEWLINE
-   | START_STAR_ ~NEWLINE* NEWLINE
-   ;
-
-program
-   : identification_division
-     environment_division?
-     data_division?
-     procedure_division?
-   ;
-
-procedure_division
-   : procedure_division_header
-     declaratives?
-     ((section separator*)* | (paragraph separator*)*)
-     (separator* end_program)?
-   ;
-
 end_program
-   : END_IN_A_AREA separator+ PROGRAM (separator+ program_name)? separator* DOT_ separator*
+   : END {$END.pos <= 4}? PROGRAM program_name? DOT_
    ;
 
 procedure_division_header
-   : PROCEDURE separator+ DIVISION (separator+ using)? (separator+ giving)? separator* DOT_ separator*
+   : PROCEDURE DIVISION using? giving? DOT_
    ;
 
 section
    : section_header
-     (separator* paragraph)*
+     paragraph*
    ;
 
 declaratives
-   : DECLARATIVES_IN_A_AREA separator* DOT_ separator*
-     (declaratives_section separator*)+
-     END_IN_A_AREA separator+ DECLARATIVES separator* DOT_ separator*
+   : DECLARATIVES {$DECLARATIVES.pos <= 4}? DOT_
+     declaratives_section+
+     END {$END.pos <= 4}? DECLARATIVES DOT_
    ;
 
 declaratives_section
    : section_header
-     use_statement (separator* paragraph)*
+     use_statement
+     paragraph*
    ;
 
 paragraph
-   : paragraph_name separator* DOT_ separator*
-     (sentense separator*)*
+   : paragraph_name=USER_DEFINED_WORD {$paragraph_name.pos <= 4}? DOT_
+     sentense*
    ;
 
 sentense
-   : (statement separator*)+ (separator* DOT_ separator*)?
+   : statement+ DOT_?
    ;
 
 use_statement
-   : USE (separator+ GLOBAL)? separator+ 
-      ( AFTER (separator+ STANDARD)? separator+ (EXCEPTION|ERROR) separator+ PROCEDURE (separator+ ON)? separator+ use_on
-      | BEFORE separator+ REPORTING separator+ group_data_name)
-     separator* DOT_ separator*
+   : USE GLOBAL?
+      (AFTER STANDARD? (EXCEPTION|ERROR) PROCEDURE ON? use_on
+      |BEFORE REPORTING group_data_name)
+      DOT_ 
    ;
 
 group_data_name
@@ -110,7 +126,7 @@ group_data_name
    ;
 
 use_on
-   : file_name (separator+ file_name)*
+   : file_name+
    | INPUT
    | OUTPUT
    | I_O
@@ -118,29 +134,15 @@ use_on
    ;
 
 section_header
-   : section_name separator+ SECTION (separator+ segment_number)? separator* DOT_ separator*
-   ;
-
-paragraph_name
-   : USER_DEFINED_WORD
-   ;
-
-section_name
-   : USER_DEFINED_WORD
+   : section_name = USER_DEFINED_WORD {$section_name.pos <= 4}? SECTION segment_number? DOT_
    ;
 
 using
-   : USING separator+ qualified_data_item (separator+ qualified_data_item)*
+   : USING qualified_data_item+
    ;
 
 giving
-   : GIVING separator+ qualified_data_item
-   ;
-
-procedure_test_line
-   : arithmetic_expression separator* DOT_
-   | logic_expression separator* DOT_
-   | separator
+   : GIVING qualified_data_item
    ;
 
 statement
@@ -191,15 +193,15 @@ statement
    ;
 
 copy_statement
-   : COPY separator+ 
-      ( text_name (separator+ (IN|OF) separator+ library_name)?
-      | record_name separator+ FROM separator+ DICTIONARY)
-      ( separator+ REPLACING (separator+ copy_replacing separator+ BY separator+ copy_replacing)+)?
+   : COPY
+      (text_name ((IN|OF) library_name)?
+      |record_name FROM DICTIONARY)
+      (REPLACING (copy_replacing BY copy_replacing)+)?
    ;
 
 copy_replacing
    : PSEUDO_TEXT
-   | USER_DEFINED_WORD (separator+ USER_DEFINED_WORD)*
+   | USER_DEFINED_WORD+
    | STRING_LITERAL
    | NUMERIC_LITERAL
    ;
@@ -220,24 +222,24 @@ text_name
    ;
 
 replace_statement
-   : REPLACE separator+ OFF
-   | REPLACE (separator* PSEUDO_TEXT separator* BY separator* PSEUDO_TEXT)+
+   : REPLACE OFF
+   | REPLACE (PSEUDO_TEXT BY PSEUDO_TEXT)+
    ;
 
 write_statement
-   : WRITE separator+ rec_name (separator+ FROM separator+ src_item)?
-     (separator+ ALLOWING separator+ NO (separator+ OTHERS)?)?
-     ( separator+ invalid_key_variants
-     | (separator+ (BEFORE|AFTER) separator+ (ADVANCING separator+)? advance_value)?
-       separator+ at_eop_variants
-     | separator+ (BEFORE|AFTER) separator+ (ADVANCING separator+)? advance_value
-       (separator+ at_eop_variants)?
+   : WRITE rec_name (FROM src_item)?
+     (ALLOWING NO OTHERS?)?
+     (invalid_key_variants
+     |((BEFORE|AFTER) ADVANCING? advance_value)?
+       at_eop_variants
+     |(BEFORE|AFTER) ADVANCING? advance_value
+      (at_eop_variants)?
      )?
-     (separator+ END_WRITE)?
+     END_WRITE?
    ;
 
 advance_value
-   : advance_num (separator+ (LINE|LINES))?
+   : advance_num (LINE|LINES)?
    | top_of_page_name
    | PAGE
    ;
@@ -248,13 +250,13 @@ advance_num
    ;
 
 unstring_statement
-   : UNSTRING separator+ unstring_src
-     (separator+ DELIMITED (separator+ BY)? separator+ unstring_delim_clause (separator+ OR separator+ unstring_delim_clause)* )?
-     separator+ INTO (separator+ unstring_dest_clause)+
-     (separator+ (WITH separator+)? POINTER separator+ string_pointer)?
-     (separator+ TALLYING (separator+ IN) separator+ unstring_tally_ctr)?
-     (separator+ on_overflow_variants)?
-     (separator+ END_UNSTRING)?
+   : UNSTRING unstring_src
+     (DELIMITED BY? unstring_delim_clause (OR unstring_delim_clause)*)?
+     INTO unstring_dest_clause+
+     (WITH? POINTER string_pointer)?
+     (TALLYING IN? unstring_tally_ctr)?
+     on_overflow_variants?
+     END_UNSTRING?
    ;
 
 unstring_tally_ctr
@@ -262,7 +264,7 @@ unstring_tally_ctr
    ;
 
 unstring_dest_clause
-   : dest_string (separator+ DELIMITER (separator+ IN)? separator+ delim_dest)? (separator+ COUNT (separator+ IN)? separator+ countr)?
+   : dest_string (DELIMITER IN? delim_dest)? (COUNT IN? countr)?
    ;
 
 countr
@@ -278,7 +280,7 @@ delim_dest
    ;
 
 unstring_delim_clause
-   : (ALL separator+)? unstring_delim
+   : ALL? unstring_delim
    ;
 
 unstring_delim
@@ -292,24 +294,24 @@ unstring_src
    ;
 
 unlock_statement
-   : UNLOCK separator+ file_name (separator+ (RECORD|RECORDS|ALL (separator+ RECORDS)?))?
+   : UNLOCK file_name (RECORD|RECORDS|ALL RECORDS?)?
    ;
 
 terminate_statement
-   : TERMINATE (separator+ report_name)+
+   : TERMINATE report_name+
    ;
 
 suppress_statement
-   : SUPPRESS (separator+ PRINTING)?
+   : SUPPRESS PRINTING?
    ;
 
 subtract_statement
    : SUBTRACT 
-      ( (separator+ sub_num)+ separator+ FROM (separator+ sub_num separator+ GIVING)? (separator+ identifier_result (separator+ ROUNDED)?)+ 
-      | separator+ (CORRESPONDING|CORR) separator+ sub_grp separator+ FROM separator+ sub_grp (separator+ ROUNDED)?
+      ( ( sub_num)+  FROM ( sub_num  GIVING)? ( identifier_result ( ROUNDED)?)+ 
+      |  (CORRESPONDING|CORR)  sub_grp  FROM  sub_grp ( ROUNDED)?
       )
-     (separator+ on_size_variants)?
-     (separator+ END_SUBTRACT)?
+     ( on_size_variants)?
+     ( END_SUBTRACT)?
    ;
 
 sub_grp
@@ -323,10 +325,10 @@ sub_num
 
 
 string_statement
-   : STRING ((separator+ string_src)+ separator+ DELIMITED separator+ (BY separator+)? (SIZE|string_delim) )+
-     separator+ INTO separator+ string_dest (separator+ (WITH separator+)? POINTER separator+ string_pointer)?
-     (separator+ on_overflow_variants)?
-     (separator+ END_STRING)?
+   : STRING (( string_src)+  DELIMITED  (BY )? (SIZE|string_delim) )+
+      INTO  string_dest ( (WITH )? POINTER  string_pointer)?
+     ( on_overflow_variants)?
+     ( END_STRING)?
    ;
 
 string_pointer
@@ -348,7 +350,7 @@ string_src
    ;
 
 stop_statement
-   : STOP separator+ (RUN|stop_disp)
+   : STOP  (RUN|stop_disp)
    ;
 
 stop_disp
@@ -358,11 +360,11 @@ stop_disp
    ;
 
 start_statement
-   : START separator+ file_name
-     (separator+ KEY separator* condition_operator separator* sort_key_data)?
-     (separator+ regard_allow)?
-     (separator+ invalid_key_variants)?
-     (separator+ END_START)?
+   : START  file_name
+     ( KEY  condition_operator  sort_key_data)?
+     ( regard_allow)?
+     ( invalid_key_variants)?
+     ( END_START)?
    ;
 
 sort_key_data
@@ -375,17 +377,17 @@ sort_statement
    ;
 
 sort_statement_form1
-   : SORT separator+ file_name (separator+ on_sort_key)+
-     (separator+ (WITH separator+)? DUPLICATES (separator+ IN)? (separator+ ORDER)?)?
-     (separator+ (COLLATING separator+)? SEQUENCE separator+ (IS separator+)? alpha_name)?
-     (separator+ (INPUT separator+ procedure_is|USING (separator+ file_name)+ ))?
-     (separator+ (OUTPUT separator+ procedure_is|GIVING (separator+ file_name)+ ))?
+   : SORT  file_name ( on_sort_key)+
+     ( (WITH )? DUPLICATES ( IN)? ( ORDER)?)?
+     ( (COLLATING )? SEQUENCE  (IS )? alpha_name)?
+     ( (INPUT  procedure_is|USING ( file_name)+ ))?
+     ( (OUTPUT  procedure_is|GIVING ( file_name)+ ))?
    ;
 
 sort_statement_form2
-   : SORT separator+ table_name (separator+ on_sort_key)*
-     (separator+ (WITH separator+)? DUPLICATES (separator+ IN)? (separator+ ORDER)?)?
-     (separator+ (COLLATING separator+)? SEQUENCE separator+ (IS separator+)? alpha_name)?
+   : SORT  table_name ( on_sort_key)*
+     ( (WITH )? DUPLICATES ( IN)? ( ORDER)?)?
+     ( (COLLATING )? SEQUENCE  (IS )? alpha_name)?
    ;
 
 table_name
@@ -393,11 +395,11 @@ table_name
    ;
 
 procedure_is
-   : PROCEDURE separator+ (IS separator+)? proc_thru_proc
+   : PROCEDURE  (IS )? proc_thru_proc
    ;
 
 on_sort_key
-   : (ON separator+)? (DESCENDING|ASCENDING) separator+ (KEY separator+)? sort_key (separator+ sort_key)*
+   : (ON )? (DESCENDING|ASCENDING)  (KEY )? sort_key ( sort_key)*
    ;
 
 sort_key
@@ -414,27 +416,27 @@ set_statement
    ;
 
 set_statement_form1
-   : SET (separator+ identifier_result)+ separator+ TO separator+ set_val
+   : SET ( identifier_result)+  TO  set_val
    ;
 
 set_statement_form2
-   : SET (separator+ identifier_result)+ separator+ (UP|DOWN) separator+ BY separator+ set_increm
+   : SET ( identifier_result)+  (UP|DOWN)  BY  set_increm
    ;
 
 set_statement_form3
-   : SET (separator+ identifier_result)+ separator+ TO separator+ TRUE
+   : SET ( identifier_result)+  TO  TRUE
    ;
 
 set_statement_form4
-   : SET (separator+ identifier_result separator+ TO separator+ (ON|OFF))+
+   : SET ( identifier_result  TO  (ON|OFF))+
    ;
 
 set_statement_form5
-   : SET (separator+ identifier_result)+ separator+ TO separator+ REFERENCE separator+ (OF separator+)? identifier_result
+   : SET ( identifier_result)+  TO  REFERENCE  (OF )? identifier_result
    ;
 
 set_statement_form6
-   : SET separator+ identifier_result separator+ TO separator+ (SUCCESS|FAILURE)
+   : SET  identifier_result  TO  (SUCCESS|FAILURE)
    ;
 
 set_increm
@@ -448,20 +450,20 @@ set_val
    ;
 
 search_statement
-   : SEARCH separator+ src_table (separator+ VARYING separator+ search_pointer)?
-     (separator+ at_end)?
-     ( (separator+ WHEN separator+ logic_expression (separator+ statement)+)+ separator+ END_SEARCH
-     | (separator+ WHEN separator+ logic_expression ((separator+ statement)+ (separator+ END_SEARCH)?|separator+ NEXT separator+ SENTENCE))+
+   : SEARCH  src_table ( VARYING  search_pointer)?
+     ( at_end)?
+     ( ( WHEN  logic_expression ( statement)+)+  END_SEARCH
+     | ( WHEN  logic_expression (( statement)+ ( END_SEARCH)?| NEXT  SENTENCE))+
      )
-   | SEARCH separator+ ALL separator+ src_table
-     (separator+ at_end)?
-     separator+ WHEN separator+ search_condition
-     (separator+ AND separator+ search_condition)*
-     ((separator+ statement)+ (separator+ END_SEARCH)?|separator+ NEXT separator+ SENTENCE)
+   | SEARCH  ALL  src_table
+     ( at_end)?
+      WHEN  search_condition
+     ( AND  search_condition)*
+     (( statement)+ ( END_SEARCH)?| NEXT  SENTENCE)
    ;
 
 search_condition
-   : search_elemnt (separator+ (IS separator+)? EQUAL (separator+ TO)? separator+|separator* (IS separator*)? EQUAL_ separator*) search_arg 
+   : search_elemnt ( (IS )? EQUAL ( TO)? | (IS )? EQUAL_ ) search_arg 
    | condition_name
    ;
 
@@ -482,10 +484,10 @@ src_table
    ;
 
 rewrite_statement
-   : REWRITE separator+ rewrite_rec_name (separator+ FROM separator+ src_item )?
-     (separator+ ALLOWING separator+ NO (separator+ OTHERS)?)?
-     (separator+ invalid_key_variants)?
-     (separator+ END_REWRITE)?
+   : REWRITE  rewrite_rec_name ( FROM  src_item )?
+     ( ALLOWING  NO ( OTHERS)?)?
+     ( invalid_key_variants)?
+     ( END_REWRITE)?
    ;
 
 rewrite_rec_name
@@ -493,10 +495,10 @@ rewrite_rec_name
    ;
 
 return_statement
-   : RETURN separator+ smrg_file (separator+ RECORD)? (separator+ INTO separator+ dest_item)?
-     separator+ at_end
-     (separator+ NOT separator+ at_end)?
-     (separator+ END_RETURN)?
+   : RETURN  smrg_file ( RECORD)? ( INTO  dest_item)?
+      at_end
+     ( NOT  at_end)?
+     ( END_RETURN)?
    ;
 
 smrg_file
@@ -504,7 +506,7 @@ smrg_file
    ;
 
 release_statement
-   : RELEASE separator+ release_rec (separator+ FROM separator+ release_src_area)?
+   : RELEASE  release_rec ( FROM  release_src_area)?
    ;
 
 release_src_area
@@ -516,9 +518,9 @@ release_rec
    ;
 
 record_statement
-   : RECORD separator+ DEPENDENCY separator+ path_name
-      (separator+ TYPE (separator+ IS)? separator+ relation_type)?
-      (separator+ (IN separator+)? DICTIONARY)?
+   : RECORD  DEPENDENCY  path_name
+      ( TYPE ( IS)?  relation_type)?
+      ( (IN )? DICTIONARY)?
    ;
 
 relation_type
@@ -532,59 +534,59 @@ path_name
    ;
 
 read_statement
-   : READ separator+ file_name (separator+ (NEXT|PREVIOUS|PRIOR))? (separator+ RECORD)? (separator+ INTO separator+ dest_item)?
-     ( separator+ read_options (separator+ KEY (separator+ IS)? separator+ key_name )?
-     | separator+ KEY (separator+ IS)? separator+ key_name (separator+ read_options)?
+   : READ  file_name ( (NEXT|PREVIOUS|PRIOR))? ( RECORD)? ( INTO  dest_item)?
+     (  read_options ( KEY ( IS)?  key_name )?
+     |  KEY ( IS)?  key_name ( read_options)?
      )?
-     (separator+ (at_end_variants|invalid_key_variants))?
-     (separator+ END_READ)?
+     ( (at_end_variants|invalid_key_variants))?
+     ( END_READ)?
    ;
 
 regard_allow
-   : REGARDLESS (separator+ OF)? (separator+ LOCK)?
-   | ALLOWING separator+ (UPDATERS|READERS|NO (separator+ OTHERS)?)
+   : REGARDLESS ( OF)? ( LOCK)?
+   | ALLOWING  (UPDATERS|READERS|NO ( OTHERS)?)
    ;
 
 read_options
-   :  (WITH separator+)? (NO separator+)? LOCK
+   :  (WITH )? (NO )? LOCK
    | regard_allow
    ;
 
 perform_statement
-   : PERFORM (separator+ proc_thru_proc)?
-     (separator+
+   : PERFORM ( proc_thru_proc)?
+     (
       ( perform_times
       | perform_until
       | perform_varying
       )
      )?
-     ((separator+ statement)+ separator+ END_PERFORM)?
+     (( statement)+  END_PERFORM)?
    ;
 
 proc_thru_proc
-   : first_proc (separator+ (THROUGH|THRU) separator+ end_proc)?
+   : first_proc ( (THROUGH|THRU)  end_proc)?
    ;
 
 perform_times
-   : (identifier|NUMERIC_LITERAL) separator+ TIMES
+   : (identifier|NUMERIC_LITERAL)  TIMES
    ;
 
 with_test
-   : (WITH separator+)? TEST separator+ (BEFORE|AFTER)
+   : (WITH )? TEST  (BEFORE|AFTER)
    ;
 
 perform_until
-   : (with_test separator+)? UNTIL separator+ logic_expression
+   : (with_test )? UNTIL  logic_expression
    ;
 
 perform_varying
-   : (with_test separator+)?
-     VARYING separator+ perform_range separator+ UNTIL separator+ logic_expression
-     (separator+ AFTER separator+ perform_range separator+ UNTIL separator+ logic_expression)*
+   : (with_test )?
+     VARYING  perform_range  UNTIL  logic_expression
+     ( AFTER  perform_range  UNTIL  logic_expression)*
    ;
 
 perform_range
-   : perform_var separator+ FROM separator+ perform_init separator+ BY separator+ perform_increm
+   : perform_var  FROM  perform_init  BY  perform_increm
    ;
 
 perform_increm
@@ -602,33 +604,33 @@ perform_var
    ;
 
 open_statement
-   : OPEN (separator+ open_definition)+
-   | OPEN (separator+ (OUTPUT|EXTEND) (separator+ file_name (separator+ (WITH separator+)? NO separator+ REWIND)? )+ )+
+   : OPEN ( open_definition)+
+   | OPEN ( (OUTPUT|EXTEND) ( file_name ( (WITH )? NO  REWIND)? )+ )+
    ;
 
 open_definition
-   : (INPUT|OUTPUT|EXTEND|I_O) (separator+ file_name (separator+ (WITH separator+)? NO separator+ REWIND)? (separator+ open_file_attributes)? )+
+   : (INPUT|OUTPUT|EXTEND|I_O) ( file_name ( (WITH )? NO  REWIND)? ( open_file_attributes)? )+
    ;
 
 open_file_attributes
-   : (WITH separator+)? LOCK
-   | ALLOWING separator+ 
-      ( NO (separator+ OTHERS)?
+   : (WITH )? LOCK
+   | ALLOWING  
+      ( NO ( OTHERS)?
       | ALL
-      | (  READERS (separator+ WRITERS)? (separator+ UPDATERS)?
-         | READERS separator+ UPDATERS separator+ WRITERS
-         | WRITERS (separator+ READERS)? (separator+ UPDATERS)?
-         | WRITERS separator+ UPDATERS separator+ READERS
-         | UPDATERS (separator+ READERS)? (separator+ WRITERS)?
-         | UPDATERS separator+ WRITERS separator+ READERS
+      | (  READERS ( WRITERS)? ( UPDATERS)?
+         | READERS  UPDATERS  WRITERS
+         | WRITERS ( READERS)? ( UPDATERS)?
+         | WRITERS  UPDATERS  READERS
+         | UPDATERS ( READERS)? ( WRITERS)?
+         | UPDATERS  WRITERS  READERS
         )
       )
    ;
 
 multiply_statement
-   : MULTIPLY separator+ mult_num separator+ BY (separator+ mult_num separator+ GIVING)? (separator+ identifier_result (separator+ ROUNDED)?)+
-     (separator+ on_size_variants)?
-     (separator+ END_MULTIPLY)?
+   : MULTIPLY  mult_num  BY ( mult_num  GIVING)? ( identifier_result ( ROUNDED)?)+
+     ( on_size_variants)?
+     ( END_MULTIPLY)?
    ;
 
 mult_num
@@ -637,14 +639,14 @@ mult_num
    ;
 
 merge_statement
-   : MERGE separator+ mergefile (separator+ merge_on)+
-     (separator+ (COLLATING separator+)? SEQUENCE separator+ (IS separator+)? alpha_name )?
-     separator+ USING (separator+ infile)+
-     separator+ (output_proc|giving_file)
+   : MERGE  mergefile ( merge_on)+
+     ( (COLLATING )? SEQUENCE  (IS )? alpha_name )?
+      USING ( infile)+
+      (output_proc|giving_file)
    ;
 
 output_proc
-   : OUTPUT separator+ PROCEDURE separator+ (IS separator+)? proc_thru_proc
+   : OUTPUT  PROCEDURE  (IS )? proc_thru_proc
    ;
 
 first_proc
@@ -664,7 +666,7 @@ infile
    ;
 
 merge_on
-   : (ON separator+)? (DESCENDING|ASCENDING) (separator+ KEY)? (separator+ mergekey)+
+   : (ON )? (DESCENDING|ASCENDING) ( KEY)? ( mergekey)+
    ;
 
 mergefile
@@ -676,12 +678,12 @@ mergekey
    ;
 
 inspect_statement
-   : INSPECT separator+ src_string separator+
-      (inspect_tallying (separator+ inspect_replacing)?| inspect_replacing | inspect_converting)
+   : INSPECT  src_string 
+      (inspect_tallying ( inspect_replacing)?| inspect_replacing | inspect_converting)
    ;
 
 inspect_converting
-   : CONVERTING separator+ compare_chars separator+ TO separator+ convert_chars (separator+ delim_definition)*
+   : CONVERTING  compare_chars  TO  convert_chars ( delim_definition)*
    ;
 
 convert_chars
@@ -693,11 +695,11 @@ compare_chars
    ;
 
 inspect_replacing
-   : REPLACING (separator+ (replacing_characters|replacing_all))+
+   : REPLACING ( (replacing_characters|replacing_all))+
    ;
 
 replacing_all
-   : (ALL|LEADING|FIRST) (separator+ compare_val separator+ BY separator+ replace_val (separator+ delim_definition)*)+
+   : (ALL|LEADING|FIRST) ( compare_val  BY  replace_val ( delim_definition)*)+
    ;
 
 replace_val
@@ -705,7 +707,7 @@ replace_val
    ;
 
 replacing_characters
-   : CHARACTERS separator+ BY separator+ replace_char (separator+ delim_definition)*
+   : CHARACTERS  BY  replace_char ( delim_definition)*
    ;
 
 replace_char
@@ -713,23 +715,23 @@ replace_char
    ;
 
 inspect_tallying
-   : TALLYING (separator+ tallying_for)+
+   : TALLYING ( tallying_for)+
    ;
 
 tallying_for
-   : tally_ctr separator+ FOR (separator+ (tallying_for_characters|tallying_for_all))+
+   : tally_ctr  FOR ( (tallying_for_characters|tallying_for_all))+
    ;
 
 tallying_for_characters
-   : CHARACTERS (separator+ delim_definition)*
+   : CHARACTERS ( delim_definition)*
    ;
 
 delim_definition
-   : (BEFORE|AFTER) (separator+ INITIAL)? separator+ delim_val
+   : (BEFORE|AFTER) ( INITIAL)?  delim_val
    ;
 
 tallying_for_all
-   : (ALL|LEADING) (separator+ compare_val (separator+ delim_definition)*)+
+   : (ALL|LEADING) ( compare_val ( delim_definition)*)+
    ;
 
 compare_val
@@ -751,16 +753,16 @@ src_string
    ;
 
 initiate_statement
-   : INITIATE (separator+ report_name)+
+   : INITIATE ( report_name)+
    ;
 
 initialize_statement
-   : INITIALIZE (separator+ fld_name)+ (separator+ replacing)*
+   : INITIALIZE ( fld_name)+ ( replacing)*
    ;
 
 replacing
    : REPLACING 
-      (separator+ (ALPHABETIC|ALPHANUMERIC|NUMERIC|ALPHANUMERIC_EDITED|NUMERIC_EDITED) separator+ (DATA separator+)? BY separator+ init_value)+
+      ( (ALPHABETIC|ALPHANUMERIC|NUMERIC|ALPHANUMERIC_EDITED|NUMERIC_EDITED)  (DATA )? BY  init_value)+
    ;
 
 init_value
@@ -773,17 +775,17 @@ fld_name
    ;
 
 move_statement
-   : MOVE separator+ ((CORRESPONDING|CORR) separator+)? src_item separator+ TO separator+ dest_item
+   : MOVE  ((CORRESPONDING|CORR) )? src_item  TO  dest_item
    ;
 
 if_statement
-   : IF separator+ logic_expression (separator+ THEN)? separator+ (sentense | NEXT separator+ SENTENCE)
-     (separator+ ELSE separator+ (sentense|NEXT separator+ SENTENCE))?
-     (separator+ END_IF)?
+   : IF  logic_expression ( THEN)?  (sentense | NEXT  SENTENCE)
+     ( ELSE  (sentense|NEXT  SENTENCE))?
+     ( END_IF)?
    ;
 
 generate_statement
-   : GENERATE separator+ report_item
+   : GENERATE  report_item
    ;
 
 report_item
@@ -795,12 +797,12 @@ exit_statement
    ;
 
 exit_program_statement
-   : EXIT separator+ PROGRAM
+   : EXIT  PROGRAM
    ;
 
 go_to_statement
-   : GO (separator+ TO)? (separator+ proc_name)?
-   | GO (separator+ TO)? (separator+ proc_name)+ separator+ DEPENDING (separator+ ON)? separator+ qualified_data_item
+   : GO ( TO)? ( proc_name)?
+   | GO ( TO)? ( proc_name)+  DEPENDING ( ON)?  qualified_data_item
    ;
 
 proc_name
@@ -808,15 +810,15 @@ proc_name
    ;
 
 evaluate_statement
-   : EVALUATE separator+ subj_item ((separator+ ALSO)? separator+ subj_item)*
-     (separator+ WHEN separator+ when_condition ((separator+ ALSO)? separator+ when_condition)* (separator+ sentense)?)+
-     (separator+ WHEN separator+ OTHER (separator+ sentense)?)?
-     (separator+ END_EVALUATE)?
+   : EVALUATE  subj_item (( ALSO)?  subj_item)*
+     ( WHEN  when_condition (( ALSO)?  when_condition)* ( sentense)?)+
+     ( WHEN  OTHER ( sentense)?)?
+     ( END_EVALUATE)?
    ;
 
 when_condition
    : logic_expression
-   | (NOT separator+)? arithmetic_expression (separator+ (THROUGH|THRU) separator+ arithmetic_expression)?
+   | (NOT )? arithmetic_expression ( (THROUGH|THRU)  arithmetic_expression)?
    | ANY
    | TRUE
    | FALSE
@@ -835,16 +837,16 @@ divide_statement
    ;
 
 divide_statement_form1
-   : DIVIDE separator+ divide_num separator+ (INTO|BY) (separator+ divide_num separator+ GIVING)? (separator+ identifier_result (separator+ ROUNDED)?)+
-     (separator+ on_size_variants)?
-     (separator+ END_DIVIDE)?
+   : DIVIDE  divide_num  (INTO|BY) ( divide_num  GIVING)? ( identifier_result ( ROUNDED)?)+
+     ( on_size_variants)?
+     ( END_DIVIDE)?
    ;
 
 divide_statement_form2
-   : DIVIDE separator+ divide_num separator+ (INTO|BY) (separator+ divide_num separator+ GIVING)? separator+ identifier_result (separator+ ROUNDED)? 
-     separator+ REMAINDER separator+ remaind
-     (separator+ on_size_variants)?
-     (separator+ END_DIVIDE)?
+   : DIVIDE  divide_num  (INTO|BY) ( divide_num  GIVING)?  identifier_result ( ROUNDED)? 
+      REMAINDER  remaind
+     ( on_size_variants)?
+     ( END_DIVIDE)?
    ;
 
 remaind
@@ -864,24 +866,24 @@ display_statement
    ;
 
 display_statement_form1
-   : DISPLAY (separator+ src_item (separator+ display_form1_clause)* )+
-     (separator+ END_DISPLAY)?
+   : DISPLAY ( src_item ( display_form1_clause)* )+
+     ( END_DISPLAY)?
    ;
 
 display_statement_form2
-   : DISPLAY (separator+ src_item (separator+ display_form2_clause)* )+
-     (separator+ END_DISPLAY)?
+   : DISPLAY ( src_item ( display_form2_clause)* )+
+     ( END_DISPLAY)?
    ;
 
 display_statement_form3
-   : DISPLAY separator+ qualified_data_item (separator+ (AT separator+)? (disp_f3_line (separator+ disp_f3_column)?|disp_f3_column (separator+ disp_f3_line)?))?
-     (separator+ END_DISPLAY)?
+   : DISPLAY  qualified_data_item ( (AT )? (disp_f3_line ( disp_f3_column)?|disp_f3_column ( disp_f3_line)?))?
+     ( END_DISPLAY)?
    ;
 
 display_statement_form4
-   : DISPLAY separator+ src_item separator+ UPON separator+ display_upon
-     (separator+ on_exception_variants)?
-     (separator+ END_DISPLAY)?
+   : DISPLAY  src_item  UPON  display_upon
+     ( on_exception_variants)?
+     ( END_DISPLAY)?
    ;
 
 src_item
@@ -894,39 +896,39 @@ display_upon
    ;
 
 disp_f3_line
-   : LINE (separator+ NUMBER)? separator+ (identifier|NUMERIC_LITERAL)
+   : LINE ( NUMBER)?  (identifier|NUMERIC_LITERAL)
    ;
 
 disp_f3_column
-   : COLUMN (separator+ NUMBER)? separator+ (identifier|NUMERIC_LITERAL)
+   : COLUMN ( NUMBER)?  (identifier|NUMERIC_LITERAL)
    ;
 
 display_form1_clause
-   : (WITH separator+)? CONVERSION
-   | UPON separator+ out_dest
-   | (WITH separator+)? NO (separator+ ADVANCING)?
+   : (WITH )? CONVERSION
+   | UPON  out_dest
+   | (WITH )? NO ( ADVANCING)?
    ;
 
 display_form2_clause
    : display_form1_clause
    | at_line_number
    | at_column_number
-   | ERASE (separator+ (TO separator+)? END (separator+ OF)?)? separator+ (SCREEN|LINE)
-   | (WITH separator+)? BELL
+   | ERASE ( (TO )? END ( OF)?)?  (SCREEN|LINE)
+   | (WITH )? BELL
    | UNDERLINED
    | BOLD
-   | (WITH separator+)? BLINKING
+   | (WITH )? BLINKING
    | REVERSED
-   | (WITH separator+)? CONVERSION
-   | (WITH separator+)? NO (separator+ ADVANCING)?
+   | (WITH )? CONVERSION
+   | (WITH )? NO ( ADVANCING)?
    ;
 
 at_line_number
-   : (AT separator+)? LINE (separator+ NUMBER)? separator+ number_value
+   : (AT )? LINE ( NUMBER)?  number_value
    ;
 
 at_column_number
-   : (AT separator+)? COLUMN (separator+ NUMBER)? separator+ number_value
+   : (AT )? COLUMN ( NUMBER)?  number_value
    ;
 
 out_dest
@@ -934,9 +936,9 @@ out_dest
    ;
 
 delete_statement
-   : DELETE separator+ file_name (separator+ RECORD)?
-     (separator+ invalid_key_variants)?
-     (separator+ END_DELETE)?
+   : DELETE  file_name ( RECORD)?
+     ( invalid_key_variants)?
+     ( END_DELETE)?
    ;
 
 continue_statement
@@ -944,50 +946,50 @@ continue_statement
    ;
 
 compute_statement
-   : COMPUTE (separator+ identifier_result (separator+ ROUNDED)?)+ (separator+ EQUAL separator+|separator* EQUAL_ separator*) arithmetic_expression
-     (separator+ on_size_variants)?
-     (separator+ END_COMPUTE)?
+   : COMPUTE ( identifier_result ( ROUNDED)?)+ ( EQUAL | EQUAL_ ) arithmetic_expression
+     ( on_size_variants)?
+     ( END_COMPUTE)?
    ;
 
 close_statement
-   : CLOSE (separator+ file_name (separator+ close_params)?)+
+   : CLOSE ( file_name ( close_params)?)+
    ;
 
 close_params
-   : (REEL|UNIT) (separator+ ((FOR separator+)? REMOVAL|(WITH separator+)? NO separator+ REWIND))?
-   | (WITH separator+)? (NO separator+ REWIND|LOCK)
+   : (REEL|UNIT) ( ((FOR )? REMOVAL|(WITH )? NO  REWIND))?
+   | (WITH )? (NO  REWIND|LOCK)
    ;
 
 cancel_statement
-   : CANCEL (separator+ prog_name)+
+   : CANCEL ( prog_name)+
    ;
 
 call_statement
-   : CALL separator+ prog_name
-     (separator+ call_using)?
-     (separator+ call_giving)?
-     (separator+ on_exception_variants)?
-     (separator+ END_CALL)?
+   : CALL  prog_name
+     ( call_using)?
+     ( call_giving)?
+     ( on_exception_variants)?
+     ( END_CALL)?
    ;
 
 call_giving
-   : GIVING separator+ identifier_result
+   : GIVING  identifier_result
    ;
 
 call_using
-   : USING (separator+ using_arg)+
+   : USING ( using_arg)+
    ;
 
 using_arg
    : OMITTED
-   | (using_prefix separator+)? argument (separator+ argument)*
+   | (using_prefix )? argument ( argument)*
    ;
 
 using_prefix
-   : (BY separator+)? REFERENCE
-   | (BY separator+)? CONTENT
-   | (BY separator+)? DESCRIPTOR
-   | (BY separator+)? VALUE
+   : (BY )? REFERENCE
+   | (BY )? CONTENT
+   | (BY )? DESCRIPTOR
+   | (BY )? VALUE
    ;   
 
 argument
@@ -1002,7 +1004,7 @@ prog_name
    ;
 
 alter_statement
-   : ALTER (separator+ alter_proc separator+ TO separator+ (PROCEED separator+ TO separator+)? alter_new_proc )+
+   : ALTER ( alter_proc  TO  (PROCEED  TO )? alter_new_proc )+
    ;
 
 alter_new_proc
@@ -1013,11 +1015,11 @@ alter_proc
    ;
 
 add_statement
-   : ( ADD (separator+ add_num)+ separator+ TO (separator+ identifier_result (separator+ ROUNDED)?)+
-     | ADD (separator+ add_num)* (separator+ TO)? (separator+ add_num)+ separator+ GIVING (separator+ identifier_result (separator+ ROUNDED)?)+
-     | ADD separator+ (CORR|CORRESPONDING) separator+ add_grp separator+ TO separator+ add_grp (separator+ ROUNDED)?)
-     (separator+ on_size_variants)?
-     (separator+ END_ADD)?
+   : ( ADD ( add_num)+  TO ( identifier_result ( ROUNDED)?)+
+     | ADD ( add_num)* ( TO)? ( add_num)+  GIVING ( identifier_result ( ROUNDED)?)+
+     | ADD  (CORR|CORRESPONDING)  add_grp  TO  add_grp ( ROUNDED)?)
+     ( on_size_variants)?
+     ( END_ADD)?
    ;
 
 add_grp
@@ -1039,39 +1041,39 @@ accept_statement
    ;
 
 on_exception_variants
-   : (on_exception (separator+ NOT separator+ on_exception)?)
-   | (NOT separator+ on_exception (separator+ on_exception)?)
+   : (on_exception ( NOT  on_exception)?)
+   | (NOT  on_exception ( on_exception)?)
    ;
 
 at_end_variants
-   : (at_end (separator+ NOT separator+ at_end)?)
-   | (NOT separator+ at_end (separator+ at_end)?)
+   : (at_end ( NOT  at_end)?)
+   | (NOT  at_end ( at_end)?)
    ;
 
 on_size_variants
-   : (on_size (separator+ NOT separator+ on_size)?)
-   | (NOT separator+ on_size (separator+ on_size)?)
+   : (on_size ( NOT  on_size)?)
+   | (NOT  on_size ( on_size)?)
    ;
 
 on_overflow_variants
-   : (on_overflow (separator+ NOT separator+ on_overflow)?)
-   | (NOT separator+ on_overflow (separator+ on_overflow)?)
+   : (on_overflow ( NOT  on_overflow)?)
+   | (NOT  on_overflow ( on_overflow)?)
    ;
 
 at_eop_variants
-   : (at_eop (separator+ NOT separator+ at_eop)?)
-   | (NOT separator+ at_eop (separator+ at_eop)?)
+   : (at_eop ( NOT  at_eop)?)
+   | (NOT  at_eop ( at_eop)?)
    ;
 
 invalid_key_variants
-   : (invalid_key (separator+ NOT separator+ invalid_key)?)
-   | (NOT separator+ invalid_key (separator+ invalid_key)?)
+   : (invalid_key ( NOT  invalid_key)?)
+   | (NOT  invalid_key ( invalid_key)?)
    ;
 
 accept_form6
-   : ACCEPT separator+ dest_item separator+ (FROM separator+)? accept6_item
-     (separator+ on_exception_variants)?
-     (separator+ END_ACCEPT)?
+   : ACCEPT  dest_item  (FROM )? accept6_item
+     ( on_exception_variants)?
+     ( END_ACCEPT)?
    ;
 
 accept6_item
@@ -1079,65 +1081,65 @@ accept6_item
    ;
 
 accept_form1
-   : ACCEPT separator+ dest_item (separator+ FROM separator+ input_source)? (separator+ WITH separator+ CONVERSION)?
-     (separator+ at_end_variants)?
-     (separator+ END_ACCEPT)?
+   : ACCEPT  dest_item ( FROM  input_source)? ( WITH  CONVERSION)?
+     ( at_end_variants)?
+     ( END_ACCEPT)?
    ;
 
 accept_form2
-   : ACCEPT separator+ dest_item separator+ FROM separator+ date_time
+   : ACCEPT  dest_item  FROM  date_time
    ;
 
 accept_form3
-   : ACCEPT separator+ dest_item 
-     (separator+ accept_form3_clause)+
-     (separator+ (on_exception_variants|at_end_variants))?
-     (separator+ END_ACCEPT)?
+   : ACCEPT  dest_item 
+     ( accept_form3_clause)+
+     ( (on_exception_variants|at_end_variants))?
+     ( END_ACCEPT)?
    ;
 
 accept_form4
-   : ACCEPT separator+ (CONTROL separator+)? KEY separator+ (IN separator+)? key_dest_item 
-     (separator+ accept_form4_clause)+
-     (separator+ (on_exception_variants|at_end_variants))?
-     (separator+ END_ACCEPT)?
+   : ACCEPT  (CONTROL )? KEY  (IN )? key_dest_item 
+     ( accept_form4_clause)+
+     ( (on_exception_variants|at_end_variants))?
+     ( END_ACCEPT)?
    ;
 
 accept_form5
-   : ACCEPT separator+ screen_name
-     (separator +accept_at)?
-     (separator+ on_exception_variants)?
-     (separator+ END_ACCEPT)?
+   : ACCEPT  screen_name
+     ( accept_at)?
+     ( on_exception_variants)?
+     ( END_ACCEPT)?
    ;
 
 accept_at
-   : (AT separator+)? (accept_at_line (separator+ accept_at_column)? | accept_at_column (separator+ accept_at_line)?)
+   : (AT )? (accept_at_line ( accept_at_column)? | accept_at_column ( accept_at_line)?)
    ;
 
 accept_at_line
-   : LINE separator+ (NUMBER separator+)? (NUMERIC_LITERAL | qualified_data_item)
+   : LINE  (NUMBER )? (NUMERIC_LITERAL | qualified_data_item)
    ;
 accept_at_column
-   : COLUMN separator+ (NUMBER separator+)? (NUMERIC_LITERAL | qualified_data_item)
+   : COLUMN  (NUMBER )? (NUMERIC_LITERAL | qualified_data_item)
    ;
 
 accept_form4_clause
-   : (FROM separator+)? LINE (separator+ NUMBER)? separator+ number_value
-   | (FROM separator+)? COLUMN (separator+ NUMBER)? separator+ number_value
-   | ERASE (separator+ (TO separator+)? END (separator+ OF)?)? separator+ (SCREEN|LINE)
-   | (WITH separator+)? BELL
+   : (FROM )? LINE ( NUMBER)?  number_value
+   | (FROM )? COLUMN ( NUMBER)?  number_value
+   | ERASE ( (TO )? END ( OF)?)?  (SCREEN|LINE)
+   | (WITH )? BELL
    ;
 
 accept_form3_clause
    : accept_form4_clause
    | UNDERLINED
    | BOLD
-   | (WITH separator+)? BLINKING
-   | PROTECTED (separator+ protected_value)*
-   | (WITH separator+)? CONVERSION
+   | (WITH )? BLINKING
+   | PROTECTED ( protected_value)*
+   | (WITH )? CONVERSION
    | REVERSED
-   | (WITH separator+)? NO separator+ ECHO
-   | DEFAULT separator+ (IS separator+)? def_value
-   | (CONTROL separator+)? KEY (separator+ IN)? separator+ key_dest_item
+   | (WITH )? NO  ECHO
+   | DEFAULT  (IS )? def_value
+   | (CONTROL )? KEY ( IN)?  key_dest_item
    ;
 
 key_dest_item
@@ -1148,15 +1150,15 @@ def_value
    : figurative_constant
    | STRING_LITERAL
    | qualified_data_item
-   | CURRENT (separator+ VALUE)?
+   | CURRENT ( VALUE)?
    ;
 
 protected_value
-   : SIZE separator+ prot_size_value
-   | (WITH separator+)? AUTOTERMINATE
-   | (WITH separator+)? NO separator+ BLANK
-   | (WITH separator+)? EDITING
-   | (WITH separator+)? FILLER separator+ prot_fill_lit
+   : SIZE  prot_size_value
+   | (WITH )? AUTOTERMINATE
+   | (WITH )? NO  BLANK
+   | (WITH )? EDITING
+   | (WITH )? FILLER  prot_fill_lit
    ;
 
 prot_fill_lit
@@ -1170,13 +1172,13 @@ prot_size_value
 
 number_value
    : line_num
-   | qualified_data_item (separator+ PLUS (separator+ line_num)?)?
-   | PLUS (separator+ line_num)?
+   | qualified_data_item ( PLUS ( line_num)?)?
+   | PLUS ( line_num)?
    ;
 
 date_time
-   : DATE (separator+ YYYYMMDD)?
-   | DAY  (separator+ YYYYDDD)?
+   : DATE ( YYYYMMDD)?
+   | DAY  ( YYYYDDD)?
    | DAY_OF_WEEK
    | TIME
    ;
@@ -1190,92 +1192,83 @@ input_source
    ;
 
 at_end
-   : (AT separator+)? END (separator+ sentense)?
+   : (AT )? END ( sentense)?
    ;
 
 on_exception
-   : (ON separator+)? EXCEPTION (separator+ sentense)?
+   : (ON )? EXCEPTION ( sentense)?
    ;
 
 on_size
-   : (ON separator+)? SIZE separator+ ERROR (separator+ sentense)?
+   : (ON )? SIZE  ERROR ( sentense)?
    ;
 
 on_overflow
-   : (ON separator+)? OVERFLOW  (separator+ sentense)?
+   : (ON )? OVERFLOW  ( sentense)?
    ;
 
 at_eop
-   : (AT separator+)? (END_OF_PAGE|EOP)  (separator+ sentense)?
+   : (AT )? (END_OF_PAGE|EOP)  ( sentense)?
    ;
 
 invalid_key
-   : INVALID (separator+ KEY)? (separator+ sentense)?
-   ;
-
-data_division
-   : DATA separator+ DIVISION separator* DOT_ separator*
-     (file_section separator*)?
-     (working_storage_section separator*)?
-     (linkage_section separator*)?
-     (report_section separator*)?
-     (screen_section separator*)?
+   : INVALID ( KEY)? ( sentense)?
    ;
 
 file_section
-   : FILE separator+ SECTION separator* DOT_ separator*
+   : FILE  SECTION  DOT_ 
      (
-        (  file_description_entry (separator* record_description_entry)*
+        (  file_description_entry ( record_description_entry)*
          | report_description_entry
-         | sort_merge_file_description_entry (separator* record_description_entry)*
+         | sort_merge_file_description_entry ( record_description_entry)*
         )
-        separator*
+        
      )*
    ;
 
 working_storage_section
-   : WORKING_STORAGE separator+ SECTION separator* DOT_ separator*
-     (record_description_entry separator*)*
+   : WORKING_STORAGE  SECTION  DOT_ 
+     (record_description_entry )*
    ;
 
 linkage_section
-   : LINKAGE separator+ SECTION separator* DOT_ separator*
-     (record_description_entry separator*)*
+   : LINKAGE  SECTION  DOT_ 
+     (record_description_entry )*
    ;
 
 report_section
-   : REPORT separator+ SECTION separator* DOT_ separator*
-     (report_description_entry (separator* report_group_description_entry)* separator*)*
+   : REPORT  SECTION  DOT_ 
+     (report_description_entry ( report_group_description_entry)* )*
    ;
 
 screen_section
-   : SCREEN separator+ SECTION separator* DOT_ separator*
-     (screen_description_entry separator*)*
+   : SCREEN  SECTION  DOT_ 
+     (screen_description_entry )*
    ;
 
 
 file_description_entry
-   : FD separator+ file_name separator*
-     (fd_clause separator*)*
+   : FD  file_name 
+     (fd_clause )*
      DOT_
    ;
 
 sort_merge_file_description_entry
-   : SD separator+ file_name separator*
-     (sd_clause separator*)*
+   : SD  file_name 
+     (sd_clause )*
      DOT_
    ;
 
 report_description_entry
-   : RD separator+ report_name separator*
-     (rd_clause separator*)*
+   : RD  report_name 
+     (rd_clause )*
      DOT_
    ;
 
 
 fd_clause
-   : (IS separator+)? EXTERNAL
-   | (IS separator+)? GLOBAL
+   : (IS )? EXTERNAL
+   | (IS )? GLOBAL
    | block_contains
    | record
    | label
@@ -1290,13 +1283,13 @@ fd_clause
    ;
 
 record_description_entry
-   : data_description_entry (separator* data_description_entry)*
+   : data_description_entry ( data_description_entry)*
    ;
 
 data_description_entry
-   : level_number (separator+ (data_name|FILLER))?
-     (separator+ REDEFINES separator+ other_data_item)?
-     (separator+ data_description_clause)*
+   : level_number ( (data_name|FILLER))?
+     ( REDEFINES  other_data_item)?
+     ( data_description_clause)*
      DOT_
    ;
 
@@ -1305,21 +1298,21 @@ level_number
    ;
 
 data_description_clause
-   : (IS separator+)? EXTERNAL
-   | (IS separator+)? GLOBAL
+   : (IS )? EXTERNAL
+   | (IS )? GLOBAL
    | picture
    | usage
    | sign_is
    | occurs
-   | (SYNCHRONIZED | SYNC) (separator+ (LEFT|RIGHT))?
-   | (JUSTIFIED | JUST) (separator+ RIGHT)?
-   | BLANK separator+ (WHEN separator+)? ZERO
+   | (SYNCHRONIZED | SYNC) ( (LEFT|RIGHT))?
+   | (JUSTIFIED | JUST) ( RIGHT)?
+   | BLANK  (WHEN )? ZERO
    | value_is
    | renames
    ;
 
 renames
-   : RENAMES separator+ rename_start (separator+ (THRU|THROUGH) separator+ rename_end)?
+   : RENAMES  rename_start ( (THRU|THROUGH)  rename_end)?
    ;
 
 rename_start
@@ -1330,21 +1323,21 @@ rename_end
    ;
 
 value_is
-   : (VALUE (separator+ IS)? | VALUES (separator+ ARE)?) separator+ value_is_definition (separator+ value_is_definition)*
+   : (VALUE ( IS)? | VALUES ( ARE)?)  value_is_definition ( value_is_definition)*
    ;
 
 value_is_definition
-   : value_is_definition_part (separator+ value_is_definition_thru)?
+   : value_is_definition_part ( value_is_definition_thru)?
    ;
 
 value_is_definition_part
    : value_is_literal
-   | REFERENCE separator+ ref_data_name
-   | EXTERNAL separator+ external_name
+   | REFERENCE  ref_data_name
+   | EXTERNAL  external_name
    ;
 
 value_is_definition_thru
-   : (THRU|THROUGH) separator+ value_is_definition_part
+   : (THRU|THROUGH)  value_is_definition_part
    ;
 
 external_name
@@ -1361,11 +1354,11 @@ value_is_literal
    ;
 
 occurs
-   : OCCURS separator+ times_definition (separator+ key_is)* (separator+ indexed_by)?
+   : OCCURS  times_definition ( key_is)* ( indexed_by)?
    ;
 
 indexed_by
-   : INDEXED separator+ (BY separator+)? ind_name (separator+ ind_name)*
+   : INDEXED  (BY )? ind_name ( ind_name)*
    ;
 
 ind_name
@@ -1373,7 +1366,7 @@ ind_name
    ;
 
 key_is
-   : (ASCENDING|DESCENDING) separator+ (KEY separator+)? (IS separator+)? key_name (separator+ key_name)*
+   : (ASCENDING|DESCENDING)  (KEY )? (IS )? key_name ( key_name)*
    ;
 
 key_name
@@ -1381,8 +1374,8 @@ key_name
    ;
 
 times_definition
-   : table_size separator+ TIMES
-   | min_times separator+ TO separator+ max_times separator+ TIMES separator+ DEPENDING separator+ (ON separator+)? depending_item
+   : table_size  TIMES
+   | min_times  TO  max_times  TIMES  DEPENDING  (ON )? depending_item
    ;
 
 table_size
@@ -1396,38 +1389,38 @@ max_times
    ;
 
 report_group_description_entry
-   : report_group_data_description (separator* report_group_data_description)*
+   : report_group_data_description ( report_group_data_description)*
    ;
 
 report_group_data_description
-   : level_number (separator+ data_name)?
-     (separator+ report_group_data_description_clause)*
+   : level_number ( data_name)?
+     ( report_group_data_description_clause)*
      DOT_
    ;
 
 report_group_data_description_clause
-   : LINE separator+ (NUMBER separator+)? (IS separator+)? line_num_definition
-   | NEXT separator+ GROUP separator+ (IS separator+)? next_group_definition
-   | TYPE separator+ (IS separator+)? type_is_definition
-   | (USAGE separator+ (IS separator+)?)? DISPLAY
-   | BLANK separator+ (WHEN separator+)? ZERO
-   | COLUMN separator+ (NUMBER separator+)? (IS separator+)? column_number
-   | GROUP (separator+ INDICATE)?
-   | (JUSTIFIED | JUST) (separator+ RIGHT)?
+   : LINE  (NUMBER )? (IS )? line_num_definition
+   | NEXT  GROUP  (IS )? next_group_definition
+   | TYPE  (IS )? type_is_definition
+   | (USAGE  (IS )?)? DISPLAY
+   | BLANK  (WHEN )? ZERO
+   | COLUMN  (NUMBER )? (IS )? column_number
+   | GROUP ( INDICATE)?
+   | (JUSTIFIED | JUST) ( RIGHT)?
    | picture
    | sign_is
-   | SOURCE separator+ (IS separator+)? source_name
-   | VALUE separator+ (IS separator+)? value_is_literal
+   | SOURCE  (IS )? source_name
+   | VALUE  (IS )? value_is_literal
    | sum
    ;
 
 sign_is
-   : (SIGN (separator+ IS)? separator+)? (LEADING|TRAILING) (separator+ SEPARATE (separator+ CHARACTER)?)?
+   : (SIGN ( IS)? )? (LEADING|TRAILING) ( SEPARATE ( CHARACTER)?)?
    ;
 
 sum
-   : (SUM separator+ sum_name (separator+ sum_name)* (separator+ UPON)? (separator+ detail_report_group_name)*)+
-     (separator* RESET separator+ (ON separator+)? control_foot_name)?
+   : (SUM  sum_name ( sum_name)* ( UPON)? ( detail_report_group_name)*)+
+     ( RESET  (ON )? control_foot_name)?
    ;
 
 control_foot_name
@@ -1452,17 +1445,17 @@ column_number
    ;
 
 type_is_definition
-   : REPORT separator+ HEADING
+   : REPORT  HEADING
    | RH
-   | PAGE separator+ HEADING
+   | PAGE  HEADING
    | PH
-   | (CONTROL separator+ HEADING| CH) separator+ type_control_name
+   | (CONTROL  HEADING| CH)  type_control_name
    | DETAIL
    | DE
-   | (CONTROL separator+ FOOTING| CF) separator+ type_control_name
-   | PAGE separator+ FOOTING
+   | (CONTROL  FOOTING| CF)  type_control_name
+   | PAGE  FOOTING
    | PF
-   | REPORT separator+ FOOTING
+   | REPORT  FOOTING
    | RF
    ;
 
@@ -1473,28 +1466,28 @@ type_control_name
 
 next_group_definition
    : line_num
-   | PLUS separator+ line_num
-   | NEXT separator+ PAGE
+   | PLUS  line_num
+   | NEXT  PAGE
    ;
 
 line_num_definition
-   : line_num (separator+ (ON separator+)? NEXT separator+ PAGE)?
-   | PLUS separator+ line_num
+   : line_num ( (ON )? NEXT  PAGE)?
+   | PLUS  line_num
    ;
 line_num
    : NUMERIC_LITERAL
    ;
 
 rd_clause
-   : (IS separator+)? GLOBAL
-   | CODE separator+ report_code
-   | ( CONTROL (separator+ IS)? | CONTROLS (separator+ ARE)? ) separator+ (control_name (separator* control_name)* | FINAL (separator* control_name)* )
-   | PAGE separator+ 
-      (LIMIT separator+ (IS separator+ )?|LIMITS separator+ (ARE separator+ )?)? page_size_rd (separator+ (LINE|LINES))?
-      (separator+ HEADING separator+ heading_line)?
-      (separator+ FIRST separator+ DETAIL separator+ first_detail_line)?
-      (separator+ LAST separator+ DETAIL separator+ last_detail_line)?
-      (separator+ FOOTING separator+ footing_line_rd)?
+   : (IS )? GLOBAL
+   | CODE  report_code
+   | ( CONTROL ( IS)? | CONTROLS ( ARE)? )  (control_name ( control_name)* | FINAL ( control_name)* )
+   | PAGE  
+      (LIMIT  (IS  )?|LIMITS  (ARE  )?)? page_size_rd ( (LINE|LINES))?
+      ( HEADING  heading_line)?
+      ( FIRST  DETAIL  first_detail_line)?
+      ( LAST  DETAIL  last_detail_line)?
+      ( FOOTING  footing_line_rd)?
    ;
 
 footing_line_rd
@@ -1526,15 +1519,15 @@ report_code
    ;
 
 usage
-   : (USAGE (separator+ IS)? separator+)? usage_definition
+   : (USAGE ( IS)? )? usage_definition
    ;
 
 usage_definition
    : BINARY
-   | BINARY_CHAR (separator+ (SIGNED|UNSIGNED))?
-   | BINARY_SHORT (separator+ (SIGNED|UNSIGNED))?
-   | BINARY_LONG (separator+ (SIGNED|UNSIGNED))?
-   | BINARY_DOUBLE (separator+ (SIGNED|UNSIGNED))?
+   | BINARY_CHAR ( (SIGNED|UNSIGNED))?
+   | BINARY_SHORT ( (SIGNED|UNSIGNED))?
+   | BINARY_LONG ( (SIGNED|UNSIGNED))?
+   | BINARY_DOUBLE ( (SIGNED|UNSIGNED))?
    | COMPUTATIONAL
    | COMPUTATIONAL_1
    | COMPUTATIONAL_2
@@ -1560,7 +1553,7 @@ usage_definition
    ;
 
 picture
-   : (PICTURE|PIC) separator+ (IS separator+ )? character_string
+   : (PICTURE|PIC)  (IS  )? character_string
    ;
 
 character_string
@@ -1591,7 +1584,7 @@ sd_clause
    ;
 
 report_is
-   : (REPORT (separator+ IS)? | REPORTS (separator+ ARE)?) separator+ report_name (separator* report_name)*
+   : (REPORT ( IS)? | REPORTS ( ARE)?)  report_name ( report_name)*
    ;
 
 report_name
@@ -1599,10 +1592,10 @@ report_name
    ;
 
 linage
-   : LINAGE separator+ (IS separator+)? page_size (separator+ LINES)?
-     (separator+ (WITH separator+)? FOOTING separator+ (AT separator+)? footing_line)?
-     (separator+ (LINES separator+)? (AT separator+)? TOP separator+ top_lines)?
-     (separator+ (LINES separator+)? (AT separator+)? BOTTOM separator+ bottom_lines)?
+   : LINAGE  (IS )? page_size ( LINES)?
+     ( (WITH )? FOOTING  (AT )? footing_line)?
+     ( (LINES )? (AT )? TOP  top_lines)?
+     ( (LINES )? (AT )? BOTTOM  bottom_lines)?
    ;
 
 bottom_lines
@@ -1626,7 +1619,7 @@ page_size
    ;
 
 data_rec
-   : DATA separator+ (RECORDS (separator+ ARE)?|RECORD (separator+ IS)?) rec_name (separator+ rec_name)*
+   : DATA  (RECORDS ( ARE)?|RECORD ( IS)?) rec_name ( rec_name)*
    ;
 
 rec_name
@@ -1634,7 +1627,7 @@ rec_name
    ;
 
 value_of_id
-   : VALUE separator+ OF separator+ (ID|FILE_ID) separator+ (IS separator+)? value_of_id_definition
+   : VALUE  OF  (ID|FILE_ID)  (IS )? value_of_id_definition
    ;
 
 value_of_id_definition
@@ -1643,20 +1636,20 @@ value_of_id_definition
    ;
 
 label
-   : LABEL separator+ (RECORDS (separator+ ARE)?|RECORD (separator+ IS)?) separator+ (STANDARD|OMITTED)
+   : LABEL  (RECORDS ( ARE)?|RECORD ( IS)?)  (STANDARD|OMITTED)
    ;
 
 record
-   : RECORD separator+ record_definition
+   : RECORD  record_definition
    ;
 
 record_definition
-   : (CONTAINS separator+)? 
-      (shortest_rec separator+ TO separator+)? 
-      longest_rec separator* (CHARACTERS separator*)?
-   | (IS separator+)? VARYING separator+ (IN separator+)? (SIZE separator*)?
-      ((FROM separator+)? shortest_rec)? (TO separator+ longest_rec)? (separator* CHARACTERS separator*)?
-      (DEPENDING separator+ (ON separator+)? depending_item)?
+   : (CONTAINS )? 
+      (shortest_rec  TO )? 
+      longest_rec  (CHARACTERS )?
+   | (IS )? VARYING  (IN )? (SIZE )?
+      ((FROM )? shortest_rec)? (TO  longest_rec)? ( CHARACTERS )?
+      (DEPENDING  (ON )? depending_item)?
    ;
 
 depending_item
@@ -1672,8 +1665,8 @@ longest_rec
    ;
 
 screen_description_entry
-   : level_number (separator+ (screen_name|FILLER))?
-     (separator+ screen_description_clause)*
+   : level_number ( (screen_name|FILLER))?
+     ( screen_description_clause)*
      DOT_
    ;
 
@@ -1682,40 +1675,40 @@ screen_name
    ;
 
 screen_description_clause
-   : BLANK separator+ (SCREEN|LINE)
-   | FOREGROUND_COLOR separator+ (IS separator+)? color_num
-   | BACKGROUND_COLOR separator+ (IS separator+)? color_num
+   : BLANK  (SCREEN|LINE)
+   | FOREGROUND_COLOR  (IS )? color_num
+   | BACKGROUND_COLOR  (IS )? color_num
    | AUTO
    | SECURE
    | REQUIRED
-   | (USAGE separator+ (IS separator+)?)? DISPLAY
+   | (USAGE  (IS )?)? DISPLAY
    | sign_is
    | FULL
    | BELL
    | BLINK
-   | ERASE separator+ (EOL|EOS)
+   | ERASE  (EOL|EOS)
    | HIGHLIGHT
    | LOWLIGHT
    | REVERSE_VIDEO
    | UNDERLINE
-   | LINE separator+ (NUMBER separator+)? (IS separator+)? (PLUS separator+)? src_number
-   | COLUMN separator+ (NUMBER separator+)? (IS separator+)? (PLUS separator+)? src_number
-   | VALUE separator+ (IS separator+)? nonnumeric_literal
-   | BLANK separator+ (WHEN separator+)? ZERO
-   | (JUSTIFIED | JUST) (separator+ RIGHT)?
-   | picture separator+ (scr_pic_using | scr_pic_from (separator+ scr_pic_to)? | scr_pic_to)
+   | LINE  (NUMBER )? (IS )? (PLUS )? src_number
+   | COLUMN  (NUMBER )? (IS )? (PLUS )? src_number
+   | VALUE  (IS )? nonnumeric_literal
+   | BLANK  (WHEN )? ZERO
+   | (JUSTIFIED | JUST) ( RIGHT)?
+   | picture  (scr_pic_using | scr_pic_from ( scr_pic_to)? | scr_pic_to)
    ;
 
 scr_pic_using
-   : USING separator+ qualified_data_item
+   : USING  qualified_data_item
    ;
 
 scr_pic_from
-   : FROM separator+ (qualified_data_item | nonnumeric_literal)
+   : FROM  (qualified_data_item | nonnumeric_literal)
    ;
 
 scr_pic_to
-   : TO separator+ qualified_data_item
+   : TO  qualified_data_item
    ;
 
 nonnumeric_literal
@@ -1731,11 +1724,6 @@ color_num
    : NUMERIC_LITERAL
    ;
 
-identification_division
-   : IDENTIFICATION_IN_A_AREA separator+ DIVISION separator* DOT_ separator*
-     identification_division_paragraph*
-   ;
-
 identification_division_paragraph
    : program_id
    | author
@@ -1744,16 +1732,15 @@ identification_division_paragraph
    | date_compiled
    | security
    | options_
-   | separator
    ;
 
 // program id
 
 program_id
-   : PROGRAM_ID separator* DOT_ separator*
-     program_name separator*
-     is_program? separator*
-     with_ident? separator*
+   : PROGRAM_ID  DOT_ 
+     program_name 
+     is_program? 
+     with_ident? 
      DOT_
    ;
 
@@ -1762,93 +1749,71 @@ program_name
    ;
 
 is_program
-   : (IS separator+)? (COMMON | INITIAL) (separator+ PROGRAM)?
+   : (IS )? (COMMON | INITIAL) ( PROGRAM)?
    ;
 
 with_ident
-   : (WITH separator+)? IDENT separator+ ident_string
+   : (WITH )? IDENT  ident_string
    ;
 
 ident_string
    : STRING_LITERAL
    ;
 
-// author
-
-comment_entry
-   : START_FOUR_SPACES ~NEWLINE* NEWLINE
-   | line_comment
-   ;
-
-author
-   : AUTHOR separator* DOT_ ~NEWLINE* NEWLINE
-     comment_entry*
-   ;
-
 // installation
 
 installation
-   : INSTALLATION separator* DOT_ ~NEWLINE* NEWLINE
-     comment_entry*
+   : INSTALLATION DOT_ word_in_area_B*
    ;
 
 // date written
 
 date_written
-   : DATE_WRITTEN separator* DOT_ ~NEWLINE* NEWLINE
-     comment_entry*
+   : DATE_WRITTEN DOT_ word_in_area_B*
    ;
 
 // date compiled
 
 date_compiled
-   : DATE_COMPILED separator* DOT_ ~NEWLINE* NEWLINE
-     comment_entry*
+   : DATE_COMPILED DOT_ word_in_area_B*
    ;
 
 // security
 
 security
-   : SECURITY separator* DOT_ ~NEWLINE* NEWLINE
-     comment_entry*
+   : SECURITY DOT_ word_in_area_B*
    ;
 
 // options (ANTLR reserved word)
 
 options_
-   : OPTIONS separator* DOT_ separator*
-     arithmetic? separator*
+   : OPTIONS DOT_ 
+     arithmetic?
      DOT_?
    ;
 
 arithmetic
-   : ARITHMETIC separator+ (IS separator+)? (NATIVE | STANDARD) separator* DOT_
+   : ARITHMETIC  (IS )? (NATIVE | STANDARD)  DOT_
    ;
 
 // ENVIRONMENT DIVISION
 
-environment_division
-   : ENVIRONMENT separator+ DIVISION separator* DOT_ separator*
-     configuration_section?
-     input_output_section?
-   ;
-
 configuration_section
-   : CONFIGURATION separator+ SECTION separator* DOT_ separator*
-     source_computer? separator*
-     object_computer? separator*
-     special_names? separator*
+   : CONFIGURATION  SECTION  DOT_ 
+     source_computer? 
+     object_computer? 
+     special_names? 
    ;
 
 input_output_section
-   : INPUT_OUTPUT separator+ SECTION separator* DOT_ separator*
+   : INPUT_OUTPUT  SECTION  DOT_ 
      file_control?
      i_o_control?
    ;
 
 source_computer
-   : SOURCE_COMPUTER separator* DOT_ separator*
-     (computer_type (separator+ with_debugging)? separator* DOT_)?
+   : SOURCE_COMPUTER  DOT_ 
+     (computer_type ( with_debugging)?  DOT_)?
    ;
 
 computer_type
@@ -1859,20 +1824,20 @@ computer_type
    ;
 
 with_debugging
-   : (WITH separator+)? DEBUGGING separator+ MODE
+   : (WITH )? DEBUGGING  MODE
    ;
 
 object_computer
-   : OBJECT_COMPUTER separator* DOT_ separator*
+   : OBJECT_COMPUTER  DOT_ 
      (computer_type 
-         (separator+ memory_size)? 
-         (separator+ program_collating)? 
-         (separator+ segment_limit)?
-      separator* DOT_)?
+         ( memory_size)? 
+         ( program_collating)? 
+         ( segment_limit)?
+       DOT_)?
    ;
 
 memory_size
-   : MEMORY (separator+ SIZE)? separator+ memory_size_amount separator+ memory_size_unit
+   : MEMORY ( SIZE)?  memory_size_amount  memory_size_unit
    ;
 
 memory_size_amount
@@ -1886,7 +1851,7 @@ memory_size_unit
    ;
 
 program_collating
-   : (PROGRAM separator+)? (COLLATING separator+)? SEQUENCE (separator+ IS)? separator+ alpha_name
+   : (PROGRAM )? (COLLATING )? SEQUENCE ( IS)?  alpha_name
    ;
 
 alpha_name
@@ -1894,7 +1859,7 @@ alpha_name
    ;
 
 segment_limit
-   : SEGMENT_LIMIT (separator+ IS)? segment_number
+   : SEGMENT_LIMIT ( IS)? segment_number
    ;
 
 segment_number
@@ -1902,33 +1867,33 @@ segment_number
    ;
 
 special_names
-   : SPECIAL_NAMES separator* DOT_ separator* ((special_names_content separator*)+ DOT_)?
+   : SPECIAL_NAMES  DOT_  ((special_names_content )+ DOT_)?
    ;
 
 special_names_content
-   : predefined_device separator+ (IS separator+)? device_name
-   | arg_env separator+ (IS separator+)? arg_env_name
-   | C01 separator+ (IS separator+)? top_of_page_name
+   : predefined_device  (IS )? device_name
+   | arg_env  (IS )? arg_env_name
+   | C01  (IS )? top_of_page_name
    | switch_
    | alphabet
    | symbolic_chars
    | class_
    | currency
-   | DECIMAL_POINT separator+ (IS separator+)? COMMA
-   | CURSOR separator+ (IS separator+)? qualified_data_item
-   | CRT separator+ STATUS separator+ (IS separator+)? qualified_data_item
+   | DECIMAL_POINT  (IS )? COMMA
+   | CURSOR  (IS )? qualified_data_item
+   | CRT  STATUS  (IS )? qualified_data_item
    ;
 
 qualified_data_item
-   : USER_DEFINED_WORD (separator+ (IN|OF) separator+ USER_DEFINED_WORD)*
+   : USER_DEFINED_WORD ( (IN|OF)  USER_DEFINED_WORD)*
    ;
 
 currency
-   : CURRENCY separator+ (SIGN separator+)? (IS separator+)? currency_definition
+   : CURRENCY  (SIGN )? (IS )? currency_definition
    ;
 
 currency_definition
-   : literal_7 (WITH separator+)? PICTURE separator+ SYMBOL separator+ literal_8
+   : literal_7 (WITH )? PICTURE  SYMBOL  literal_8
    | STRING_LITERAL
    ;
 
@@ -1941,7 +1906,7 @@ literal_8
    ;
 
 class_
-   : CLASS separator+ class_name separator+ (IS separator+)? (user_class separator*)+
+   : CLASS  class_name  (IS )? (user_class )+
    ;
 
 class_name
@@ -1949,11 +1914,11 @@ class_name
    ;
 
 user_class
-   : first_literal (separator+ (THRU | THROUGH) separator+ last_literal)?
+   : first_literal ( (THRU | THROUGH)  last_literal)?
    ;
 
 symbolic_chars
-   : SYMBOLIC separator+ (CHARACTERS separator+)? 
+   : SYMBOLIC  (CHARACTERS )? 
       symb_ch_definition+
    ;
 
@@ -1962,11 +1927,11 @@ symb_ch_definition
    ;
 
 symb_ch_def_clause
-   : (symbol_char separator+)+ ((ARE|IS) separator+)? (char_val separator+)+
+   : (symbol_char )+ ((ARE|IS) )? (char_val )+
    ;
 
 symb_ch_def_in_alphabet
-   : IN separator+ alpha_name separator*
+   : IN  alpha_name 
    ;
 
 symbol_char
@@ -1978,7 +1943,7 @@ char_val
    ;
 
 alphabet
-   : ALPHABET separator+ alpha_name separator+ (IS separator+ )? alpha_value
+   : ALPHABET  alpha_name  (IS  )? alpha_value
    ;
 
 alpha_value
@@ -1987,12 +1952,12 @@ alpha_value
    | STANDARD_2
    | NATIVE
    | EBCDIC
-   | (user_alpha separator*)+
+   | (user_alpha )+
    ;
 
 user_alpha
-   : first_literal (separator+ (THRU | THROUGH) separator+ last_literal)?
-   | first_literal (separator+ ALSO separator+ same_literal)+
+   : first_literal ( (THRU | THROUGH)  last_literal)?
+   | first_literal ( ALSO  same_literal)+
    ;
 
 first_literal
@@ -2011,19 +1976,19 @@ same_literal
    ;
 
 switch_
-   : SWITCH separator+ switch_num separator*
-     ((IS separator+)? switch_name separator+)?
-     (  switch_clause_on (separator+ switch_clause_off)?
-      | switch_clause_off (separator+ switch_clause_on)?
-     )? separator*
+   : SWITCH  switch_num 
+     ((IS )? switch_name )?
+     (  switch_clause_on ( switch_clause_off)?
+      | switch_clause_off ( switch_clause_on)?
+     )? 
    ;
 
 switch_clause_on
-   : ON separator+  (STATUS separator+)? (IS separator+)? cond_name
+   : ON   (STATUS )? (IS )? cond_name
    ;
 
 switch_clause_off
-   : OFF separator+ (STATUS separator+)? (IS separator+)? cond_name
+   : OFF  (STATUS )? (IS )? cond_name
    ;
 
 cond_name
@@ -2069,28 +2034,28 @@ arg_env_name
    ;
 
 file_control
-   : FILE_CONTROL separator* DOT_ separator*
-     (select separator*)*
+   : FILE_CONTROL  DOT_ 
+     (select )*
    ;
 
 select
-   : SELECT separator+ (OPTIONAL separator+)? file_name separator*
-     assign_to separator*
-     (reserve separator*)?
-     (organization separator*)?
-     (block_contains separator*)?
-     (code_set separator*)?
-     (padding separator*)?
-     (record_delimiter separator*)?
-     (access_mode separator*)?
-     (record_key separator*)*
-     (lock_mode separator*)?
-     (file_status separator*)?
+   : SELECT  (OPTIONAL )? file_name 
+     assign_to 
+     (reserve )?
+     (organization )?
+     (block_contains )?
+     (code_set )?
+     (padding )?
+     (record_delimiter )?
+     (access_mode )?
+     (record_key )*
+     (lock_mode )?
+     (file_status )?
      DOT_
    ;
 
 file_status
-   : (FILE separator+)? STATUS separator+ (IS separator+)? file_stat
+   : (FILE )? STATUS  (IS )? file_stat
    ;
 
 file_stat
@@ -2098,27 +2063,27 @@ file_stat
    ;
 
 record_key
-   : (ALTERNATE separator+)? RECORD separator+ (KEY separator+)? (IS separator+)? record_key_definition 
-     (separator+ (WITH separator+)? DUPLICATES)?
-     (separator+ (ASCENDING|DESCENDING))?
+   : (ALTERNATE )? RECORD  (KEY )? (IS )? record_key_definition 
+     ( (WITH )? DUPLICATES)?
+     ( (ASCENDING|DESCENDING))?
    ;
 
 record_key_definition
    : qualified_data_item
-   | USER_DEFINED_WORD separator* EQUAL_ separator* qualified_data_item (separator* qualified_data_item)*
+   | USER_DEFINED_WORD  EQUAL_  qualified_data_item ( qualified_data_item)*
    ;
 
 access_mode
-   : (ACCESS separator+ (MODE separator+)? (IS separator+)?)?
+   : (ACCESS  (MODE )? (IS )?)?
      (
         SEQUENTIAL
       | RANDOM
       | DYNAMIC
-     ) (separator+ RELATIVE separator+ (KEY separator+)? (IS separator+)? qualified_data_item )?
+     ) ( RELATIVE  (KEY )? (IS )? qualified_data_item )?
    ;
 
 reserve
-   : RESERVE separator+ reserve_num (separator+ (AREA|AREAS))?
+   : RESERVE  reserve_num ( (AREA|AREAS))?
    ;
 
 reserve_num
@@ -2126,11 +2091,11 @@ reserve_num
    ;
 
 record_delimiter
-   : RECORD separator+ DELIMITER separator+ (IS separator+)? STANDARD_1
+   : RECORD  DELIMITER  (IS )? STANDARD_1
    ;
 
 padding
-   : PADDING separator+ (CHARACTER separator+)? (IS separator+)? pad_char
+   : PADDING  (CHARACTER )? (IS )? pad_char
    ;
 
 pad_char
@@ -2138,31 +2103,31 @@ pad_char
    ;
 
 organization
-   : (ORGANIZATION separator+ (IS separator+)?)? 
+   : (ORGANIZATION  (IS )?)? 
      (
         SEQUENTIAL
-      | LINE separator+ SEQUENTIAL
+      | LINE  SEQUENTIAL
       | RELATIVE
       | INDEXED
      )
    ;
 
 lock_mode
-   : LOCK separator+ (MODE separator+)? (IS separator+)? lock_mode_definition
+   : LOCK  (MODE )? (IS )? lock_mode_definition
    ;
 
 lock_mode_definition
-   : MANUAL separator+ (WITH separator+)? LOCK separator+ ON separator+ MULTIPLE separator+ RECORDS
-   | AUTOMATIC (separator+ (WITH separator+)? ((LOCK separator+ ON separator+ RECORD)|ROLLBACK) )?
+   : MANUAL  (WITH )? LOCK  ON  MULTIPLE  RECORDS
+   | AUTOMATIC ( (WITH )? ((LOCK  ON  RECORD)|ROLLBACK) )?
    | EXCLUSIVE
    ;
 
 code_set
-   : CODE_SET separator+ (IS separator+)? alpha_name
+   : CODE_SET  (IS )? alpha_name
    ;
 
 block_contains
-   : BLOCK separator+ (CONTAINS separator+)? (smallest_block separator+ TO separator+)? blocksize separator+ (RECORDS|CHARACTERS)
+   : BLOCK  (CONTAINS )? (smallest_block  TO )? blocksize  (RECORDS|CHARACTERS)
    ;
 
 smallest_block
@@ -2174,12 +2139,12 @@ blocksize
    ;
 
 assign_to
-   : ASSIGN separator+ (TO separator+)? assign_to_definition
+   : ASSIGN  (TO )? assign_to_definition
    ;
 
 assign_to_definition
-   : ((EXTERNAL|DYNAMIC) separator+)? file_spec
-   | (MULTIPLE separator+)? (REEL|UNIT) (separator+ FILE)?
+   : ((EXTERNAL|DYNAMIC) )? file_spec
+   | (MULTIPLE )? (REEL|UNIT) ( FILE)?
    ;
 
 file_spec
@@ -2194,20 +2159,20 @@ file_name
    ;
 
 i_o_control
-   : I_O_CONTROL separator* DOT_ separator*
-     ((apply separator*)*
-      (same separator*)*
-      (rerun separator*)*
-      (multiple_file separator*)*
-      DOT_ separator*)?
+   : I_O_CONTROL  DOT_ 
+     ((apply )*
+      (same )*
+      (rerun )*
+      (multiple_file )*
+      DOT_ )?
    ;
 
 multiple_file
-   : MULTIPLE separator+ FILE separator+ (TAPE separator+)? (CONTAINS separator+)? (multiple_file_definition separator*)+
+   : MULTIPLE  FILE  (TAPE )? (CONTAINS )? (multiple_file_definition )+
    ;
 
 multiple_file_definition
-   : multiple_file_name (separator+ POSITION separator+ pos_integer)?
+   : multiple_file_name ( POSITION  pos_integer)?
    ;
 
 multiple_file_name
@@ -2219,12 +2184,12 @@ pos_integer
    ;
 
 rerun
-   : RERUN separator+ (ON separator+ file_name separator+)? (EVERY separator+)? rerun_definition
+   : RERUN  (ON  file_name )? (EVERY )? rerun_definition
    ;
 
 rerun_definition
-   : rerun_def_file separator+ (OF separator+)? file_name
-   | clock_count separator+ CLOCK_UNITS
+   : rerun_def_file  (OF )? file_name
+   | clock_count  CLOCK_UNITS
    | condition_name
    ;
 
@@ -2237,8 +2202,8 @@ condition_name
    ;
 
 rerun_def_file
-   : (END separator+ (OF separator+)?)? (REEL|UNIT)
-   | rec_count separator+ RECORDS
+   : (END  (OF )?)? (REEL|UNIT)
+   | rec_count  RECORDS
    ;
 
 rec_count
@@ -2246,7 +2211,7 @@ rec_count
    ;
 
 same
-   : SAME separator+ ((RECORD|SORT|SORT_MERGE) separator+)? (AREA separator+)? (FOR separator+)? same_area_file (separator+ same_area_file)+
+   : SAME  ((RECORD|SORT|SORT_MERGE) )? (AREA )? (FOR )? same_area_file ( same_area_file)+
    ;
 
 same_area_file
@@ -2254,18 +2219,18 @@ same_area_file
    ;
 
 apply
-   : APPLY separator+ (apply_definition separator+)+ ON separator+ (file_name separator*)+
+   : APPLY  (apply_definition )+ ON  (file_name )+
    ;
 
 apply_definition
    : DEFERRED_WRITE
-   | EXTENSION separator+ extend_amt
+   | EXTENSION  extend_amt
    | FILL_SIZE
    | LOCK_HOLDING
    | MASS_INSERT
-   | ((CONTIGUOUS|CONTIGUOUS_BEST_TRY) separator+)? PREALLOCATION separator+ preall_amt
+   | ((CONTIGUOUS|CONTIGUOUS_BEST_TRY) )? PREALLOCATION  preall_amt
    | PRINT_CONTROL
-   | WINDOW separator+ window_ptrs
+   | WINDOW  window_ptrs
    ;
 
 window_ptrs
@@ -2283,9 +2248,9 @@ extend_amt
 //
 
 arithmetic_expression
-   : LPAREN_ arithmetic_separator* arithmetic_expression arithmetic_separator* RPAREN_
-   | arithmetic_expression arithmetic_separator* binary_arithmetic_operator arithmetic_separator* arithmetic_expression
-   | unary_arithmetic_operator arithmetic_separator* arithmetic_expression
+   : LPAREN_  arithmetic_expression  RPAREN_
+   | arithmetic_expression  binary_arithmetic_operator  arithmetic_expression
+   | unary_arithmetic_operator  arithmetic_expression
    | identifier
    | constant
    ;
@@ -2310,21 +2275,21 @@ unary_arithmetic_operator
    ;
 
 logic_expression
-   : LPAREN_ arithmetic_separator* logic_expression arithmetic_separator* RPAREN_
-   | logic_expression arithmetic_separator* logic_operation arithmetic_separator* logic_expression
-   | NOT arithmetic_separator* logic_expression
+   : LPAREN_  logic_expression  RPAREN_
+   | logic_expression  logic_operation  logic_expression
+   | NOT  logic_expression
    | logic_condition
    ;
 
 logic_condition
-   : arithmetic_expression arithmetic_separator* logic_condition_right_part (arithmetic_separator+ (OR|AND) arithmetic_separator+ logic_condition_right_part)*
+   : arithmetic_expression  logic_condition_right_part ( (OR|AND)  logic_condition_right_part)*
    | qualified_data_item
    ;
 
 logic_condition_right_part
-   : condition_operator arithmetic_separator* arithmetic_expression
-   | (IS arithmetic_separator+)? (NOT arithmetic_separator+)? (class_condition_name|sign_condition_name)
-   | (IS arithmetic_separator+)? (SUCCESS|FAILURE)
+   : condition_operator  arithmetic_expression
+   | (IS )? (NOT )? (class_condition_name|sign_condition_name)
+   | (IS )? (SUCCESS|FAILURE)
    ;
 
 logic_operation
@@ -2347,31 +2312,31 @@ class_condition_name
    ;
 
 condition_operator
-   : (IS arithmetic_separator*)? 
+   : (IS )? 
       (
-         (NOT arithmetic_separator*)?
+         (NOT )?
             (
-              GREATER (arithmetic_separator+ THAN)?
-            | GT_ (arithmetic_separator+ THAN)?
-            | LESS (arithmetic_separator+ THAN)?
-            | LT_ (arithmetic_separator+ THAN)?
-            | EQUAL (arithmetic_separator+ TO)?
-            | EQUAL_ (arithmetic_separator+ TO)?
+              GREATER ( THAN)?
+            | GT_ ( THAN)?
+            | LESS ( THAN)?
+            | LT_ ( THAN)?
+            | EQUAL ( TO)?
+            | EQUAL_ ( TO)?
             )
-         | GREATER (arithmetic_separator+ THAN)? arithmetic_separator+ OR arithmetic_separator+ EQUAL (arithmetic_separator+ TO)?
+         | GREATER ( THAN)?  OR  EQUAL ( TO)?
          | GE_
-         | LESS (arithmetic_separator+ THAN)? arithmetic_separator+ OR arithmetic_separator+ EQUAL (arithmetic_separator+ TO)?
+         | LESS ( THAN)?  OR  EQUAL ( TO)?
          | LE_
       )
    ;
 
 identifier_result
-   : qualified_data_item (arithmetic_separator* subscripting)? (arithmetic_separator* reference_modification)?
+   : qualified_data_item ( subscripting)? ( reference_modification)?
    ;
 
 identifier
    : identifier_result
-   | FUNCTION arithmetic_separator* function_name (arithmetic_separator* arguments)? (arithmetic_separator* reference_modification)?
+   | FUNCTION  function_name ( arguments)? ( reference_modification)?
    ;
 
 arguments
@@ -2379,11 +2344,11 @@ arguments
    ;
 
 subscripting
-   : LPAREN_ arithmetic_separator* (arithmetic_expression | ALL) (separator* (arithmetic_expression | ALL))* arithmetic_separator* RPAREN_
+   : LPAREN_  (arithmetic_expression | ALL) ( (arithmetic_expression | ALL))*  RPAREN_
    ;
 
 reference_modification
-   : LPAREN_ arithmetic_separator* leftmost_character_position arithmetic_separator* COLON_ (arithmetic_separator* length)? arithmetic_separator* RPAREN_
+   : LPAREN_  leftmost_character_position  COLON_ ( length)?  RPAREN_
    ;
 
 leftmost_character_position
@@ -2487,17 +2452,12 @@ fragment NL
    : '\r'?'\n'
    ;
 
-// comment
-
-fragment REST_OF_LINE
-   : .*? NL
+STRING_LITERAL
+   : ('n' | 'N')? '\'' ('\'\'' |~ ('\''))* '\''
+   | ('n' | 'N')?'"' ('""' | ~ ('"'))* '"'
    ;
 
 // keywords
-
-DECLARATIVES_IN_A_AREA  : D E C L A R A T I V E S {this.charPositionInLine < 16}?;
-END_IN_A_AREA           : E N D {this.charPositionInLine < 7}?;
-IDENTIFICATION_IN_A_AREA: I D E N T I F I C A T I O N {this.charPositionInLine < 18}?;
 
 ACCEPT                  : A C C E P T;
 ACCESS                  : A C C E S S;
@@ -2926,9 +2886,6 @@ ZEROS                   : Z E R O S;
 
 // symbols
 
-START_SLASH_ : '/' {this.charPositionInLine==1}?;
-START_STAR_  : '*' {this.charPositionInLine==1}?;
-
 PSEUDO_TEXT
    : '==' .*? '=='
    ;
@@ -2939,8 +2896,6 @@ PLUS_    : '+';
 MINUS_   : '-';
 STAR_    : '*';
 SLASH_   : '/';
-COMMA_   : ',';
-SEMI_    : ';';
 COLON_   : ':';
 EQUAL_   : '=';
 LT_      : '<';
@@ -2958,11 +2913,6 @@ LCURLY_  : '{';
 RCURLY_  : '}';
 
 // literals
-STRING_LITERAL
-   : ('n' | 'N')? '\'' ('\'\'' | ~ ('\''))* '\''
-   | ('n' | 'N')?'"' ('""' | ~ ('"'))* '"'
-   ;
-
 fragment SIGN_
    : '+'|'-'
    ;
@@ -2991,7 +2941,7 @@ HEX_LITERAL
    | ('x' | 'X')  '\'' HEXDIGIT_+ '\''
    ;
 
-// identifier (after literals!)
+// identifier
 
 fragment USER_DEFINED_WORD_EDGE
    : ('a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' | '$' )
@@ -3005,21 +2955,26 @@ USER_DEFINED_WORD
    : USER_DEFINED_WORD_EDGE (USER_DEFINED_WORD_MIDLE* USER_DEFINED_WORD_EDGE)?
    ;
 
+// comment
+
+LINE_COMMENT
+   : [/*] {this.charPositionInLine == 1}? ~[\r\n]* NL -> channel(HIDDEN)
+   ;
+
 // white space
 
-START_FOUR_SPACES
-   : '    '       {this.charPositionInLine==4}?
-   | ' ' '\t'     {this.charPositionInLine==2}?
-   | '  ' '\t'    {this.charPositionInLine==3}?
-   | '   ' '\t'   {this.charPositionInLine==4}?
-   | '\t'         {this.charPositionInLine==1}?
+COMMA_
+   : ',' -> channel(HIDDEN)
+   ;
+
+SEMI_
+   : ';' -> channel(HIDDEN)
    ;
 
 WHITESPACE
-   : SPACE_ //-> channel(HIDDEN)
+   : SPACE_ -> channel(HIDDEN)
    ;
 
 NEWLINE
-   : NL //-> channel(HIDDEN)
+   : NL -> channel(HIDDEN)
    ;
-
