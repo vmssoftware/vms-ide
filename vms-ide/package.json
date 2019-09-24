@@ -18,7 +18,7 @@
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
-    "main": "./out/index",
+    "main": "./out/extension",
     "activationEvents": [
         "*",
         "onView:vmssoftware.project-dep.projectDependencies",
@@ -48,7 +48,7 @@
         "onLanguage:mms",
         "onLanguage:vms-cobol",
         "onLanguage:vms-pascal",
-        "onLanguage:fortran",
+        "onLanguage:vms-fortran",
         "onLanguage:bliss",
         "onLanguage:vms-basic",
         "onCommand:workbench.action.tasks.runTask"
@@ -142,10 +142,12 @@
                 "configuration": "pascal.language-configuration.json"
             },
             {
-                "id": "fortran",
+                "id": "vms-fortran",
                 "extensions": [
                     ".f77",
-                    ".f90"
+                    ".f90",
+                    ".for",
+                    ".f"
                 ],
                 "configuration": "fortran.language-configuration.json"
             },
@@ -191,7 +193,7 @@
                 "path": "syntaxes/pascal.tmLanguage.json"
             },
             {
-                "language": "fortran",
+                "language": "vms-fortran",
                 "scopeName": "source.fortran",
                 "path": "syntaxes/fortran.tmLanguage.json"
             },
@@ -843,7 +845,7 @@
                 "language": "vms-pascal"
             },
             {
-                "language": "fortran"
+                "language": "vms-fortran"
             },
             {
                 "language": "kotlin"
@@ -1020,6 +1022,8 @@
         "MSG.antlr4ts": "antlr4ts -o src/msg -visitor src/msg/msg.g4",
         "MSG.antlr4tsLex": "antlr4ts -o src/msg src/msg/msgLex.g4",
         "Pascal.antlr4ts": "antlr4ts -o src/vms_pascal/parser -visitor src/vms_pascal/parser/pascal.g4",
+        "Fortran.antlr4ts": "antlr4ts -o src/vms_fortran/parser -visitor src/vms_fortran/parser/FortranParser.g4",
+        "Fortran.antlr4tsLex": "antlr4ts -o src/vms_fortran/parser src/vms_fortran/parser/FortranLexer.g4",
         "vscode:prepublish": "webpack --mode production",
         "vscode:prepublish_dev": "webpack --mode development",
         "VSCE": "vsce package"

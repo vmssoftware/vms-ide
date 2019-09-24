@@ -27,6 +27,16 @@
             "type": "npm",
             "script": "Pascal.antlr4ts",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "Fortran.antlr4tsLex",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "Fortran.antlr4ts",
+            "problemMatcher": []
         }
     ]
 }
