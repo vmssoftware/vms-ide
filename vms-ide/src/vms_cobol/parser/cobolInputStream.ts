@@ -1,4 +1,4 @@
-import { CharStream, IntStream } from "antlr4ts";
+import { CharStream, ANTLRInputStream, IntStream } from "antlr4ts";
 import { Interval } from "antlr4ts/misc";
 import { IMessage } from "./cobolErrorListener";
 
@@ -37,6 +37,9 @@ export class CobolInputStream implements CharStream {
     }
     
     constructor(private source: string, private conditionals?: string) {
+        if (conditionals) {
+            this.conditionals = conditionals.toLowerCase();
+        }
         this.pos = { 
             position: 0,
             rangeIdx: 0,
@@ -214,6 +217,20 @@ export class CobolInputStream implements CharStream {
             let lineConsumed = false;
             if (line.trim()) {
                 switch (line[0]) {
+                    case '\\':
+                        // conditional compilation
+                        if (this.conditionals) {
+                            let letter = line[1].toLowerCase();
+                            if (this.conditionals.includes(letter)) {
+                                // do not consume line, just skip first two letters
+                                this.skipRanges.push({
+                                    start: currentPosInFile,
+                                    end: currentPosInFile + 1,
+                                });
+                                break;
+                            }
+                        }
+                        // do not break - threat as comment
                     case '*':
                     case '/':
                         // skip whole line, but do not skip NL on previous line
@@ -305,21 +322,23 @@ export class CobolInputStream implements CharStream {
             }
             currentPosInFile += line.length + 1;
         }
+    }
 
-        // let testContent = "";
-        // let testPos: IPos = {
-        //     position: 0,
-        //     rangeIdx: 0,
-        // } as IPos;
-        // this.updateRange(testPos);
-        // do {
-        //     this.gotoTheNextUnskippedChar(testPos);
-        //     if (testPos.position < this.source.length) {
-        //         testContent += this.source[testPos.position];
-        //     }
-        //     ++testPos.position;
-        // } while(testPos.position < this.source.length);
-        // testContent = testContent;
+    public getFilteredSource() {
+        let testContent = "";
+        let testPos: IPos = {
+            position: 0,
+            rangeIdx: 0,
+        } as IPos;
+        this.updateRange(testPos);
+        do {
+            this.gotoTheNextUnskippedChar(testPos);
+            if (testPos.position < this.source.length) {
+                testContent += this.source[testPos.position];
+            }
+            ++testPos.position;
+        } while(testPos.position < this.source.length);
+        return testContent;
     }
 
     //------------------------------------------------------------

@@ -21,10 +21,7 @@ suite("COBOL tests", function(this: Mocha.Suite) {
     test("Test 1", async () => {
         let sourceBuf = fs.readFileSync("D:/vmssoftware.work/vms-ide/src/vms_cobol/test/test.cob");
         let source = sourceBuf.toString();
-        let input = new CobolInputStream(source);
-        for (let error of input.messages) {
-            console.error(error);
-        }
+        let input = new CobolInputStream(source, "ac");
         let lexer = new cobolLexer(input);
         let tokenStream = new CommonTokenStream(lexer);
         tokenStream.seek(0);
@@ -74,6 +71,8 @@ suite("COBOL tests", function(this: Mocha.Suite) {
         for (let error of parserErrors.messages) {
             console.error(`${error.line}:${error.charPositionInLine}(${error.size}) ${error.message}`);
         }
+
+        console.log(input.getFilteredSource());
 
         let str_tree = getSyntaxTreeStrings(parser, tree);
         for(let line of str_tree) {

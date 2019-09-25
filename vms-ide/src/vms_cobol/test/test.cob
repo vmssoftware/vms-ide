@@ -605,21 +605,21 @@ CLOSE EMP-FILE REPORT-FILE.
               COLLATING SEQUENCE IS alpha-ebcdic
               using in-file
               OUTPUT PROCEDURE IS first-pro THROUGH end-pro
-*              giving out-file
-*         NOT ON ERROR MOVE 1 to A
+\b              giving out-file
+\b         NOT ON ERROR MOVE 1 to A
        replace ==alpha== by ==NUM-1== ==num== by ==ALPHA-1==.
 
-*           examine ass in qqq tallying until first space replacing by "a".
-*           EXHIBIT changed (LIN + 1, 5) "ass" 
-*                           (LIN + 2, 5) space
-*                           (LIN + 3, 5) erase
-*              upon file-out.
+\b           examine ass in qqq tallying until first space replacing by "a".
+\b           EXHIBIT changed (LIN + 1, 5) "ass" 
+\b                           (LIN + 2, 5) space
+\b                           (LIN + 3, 5) erase
+\b              upon file-out.
 
-*       ENTRY 'point-1' 
-*              using by value ass in the of world
-*                    by reference hole of fame
-*              repeated 1 to 5
-*              returning result-code.
+\b       ENTRY 'point-1' 
+\b              using by value ass in the of world
+\b                    by reference hole of fame
+\b              repeated 1 to 5
+\b              returning result-code.
 
 
 END PROGRAM RMSSPECREGS.
