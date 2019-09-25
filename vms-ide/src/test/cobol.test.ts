@@ -19,9 +19,17 @@ suite("COBOL tests", function(this: Mocha.Suite) {
     });
 
     test("Test 1", async () => {
+
+        let streamError = false;
+        let streamErrorListener = {
+            syntaxError: (line: number, charPositionInLine: number, message: string): void => {
+                console.error(`${line}:${charPositionInLine} ${message}`);
+                streamError = true;
+            }
+        };
         let sourceBuf = fs.readFileSync("D:/vmssoftware.work/vms-ide/src/vms_cobol/test/test.cob");
         let source = sourceBuf.toString();
-        let input = new CobolInputStream(source, "ac");
+        let input = new CobolInputStream(streamErrorListener, source, "ac");
         let lexer = new cobolLexer(input);
         let tokenStream = new CommonTokenStream(lexer);
         tokenStream.seek(0);
@@ -58,10 +66,6 @@ suite("COBOL tests", function(this: Mocha.Suite) {
             {
                 throw e;
             }
-        }
-
-        for (let error of input.messages) {
-            console.error(`${error.line}:${error.charPositionInLine} ${error.message}`);
         }
 
         for (let error of lexerErrors.messages) {

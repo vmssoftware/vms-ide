@@ -4,28 +4,38 @@ import { ANTLRErrorListener, Recognizer, RecognitionException, Token, CommonToke
 import { CobolInputStream } from './cobolInputStream';
 
 export interface IMessage {
-    message: string,
-    line: number,
     charPositionInLine: number,
+    line: number,
+    message: string,
     size: number,
 };
 
-export class CobolLexerErrorListener implements ANTLRErrorListener<number> 
-{
+export interface IMessageHolder {
+    readonly messages: IMessage[];
+    clear(): void;
+}
 
+class MessageHolderImpl implements IMessageHolder {
     public messages: IMessage[] = [];
+    clear() {
+        this.messages = [];
+    }
+}
+
+
+
+export class CobolLexerErrorListener extends MessageHolderImpl implements ANTLRErrorListener<number> {
 
     constructor(private cobolInputStream: CobolInputStream) {
-
+        super();
     }
 
     syntaxError<T extends number>(recognizer: Recognizer<T, any>, offendingSymbol: T | undefined, line: number,
-        charPositionInLine: number, msg: string, e: RecognitionException | undefined): void 
-    {
-        ({line, charPositionInLine} = this.cobolInputStream.getRealPosition(line - 1, charPositionInLine));
+        charPositionInLine: number, msg: string, e: RecognitionException | undefined): void {
+        ({ line, charPositionInLine } = this.cobolInputStream.getRealPosition(line - 1, charPositionInLine));
         ++line;
         ++charPositionInLine;
-        let message : IMessage = {
+        let message: IMessage = {
             message: msg,
             size: 1,
             line,
@@ -35,29 +45,24 @@ export class CobolLexerErrorListener implements ANTLRErrorListener<number>
     }
 }
 
-export class CobolErrorListener implements ANTLRErrorListener<CommonToken> 
-{
-
-    public messages: IMessage[] = [];
+export class CobolErrorListener extends MessageHolderImpl implements ANTLRErrorListener<CommonToken> {
 
     constructor(private cobolInputStream: CobolInputStream) {
-
+        super();
     }
 
     syntaxError<T extends Token>(recognizer: Recognizer<T, any>, offendingSymbol: T | undefined, line: number,
-        charPositionInLine: number, msg: string, e: RecognitionException | undefined): void 
-    {
-        ({line, charPositionInLine} = this.cobolInputStream.getRealPosition(line - 1, charPositionInLine));
+        charPositionInLine: number, msg: string, e: RecognitionException | undefined): void {
+        ({ line, charPositionInLine } = this.cobolInputStream.getRealPosition(line - 1, charPositionInLine));
         ++line;
         ++charPositionInLine;
-        let message : IMessage = {
+        let message: IMessage = {
             message: msg,
             size: 1,
             line,
             charPositionInLine,
         };
-        if (offendingSymbol) 
-        {
+        if (offendingSymbol) {
             message.size = offendingSymbol.stopIndex - offendingSymbol.startIndex + 1;
         }
         this.messages.push(message);

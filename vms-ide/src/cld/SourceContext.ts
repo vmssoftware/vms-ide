@@ -15,6 +15,7 @@ import { LogFunction, LogType } from '../common/main';
 import { VerbSymbol, TypeSymbol, TypeRefSymbol, SyntaxSymbol, BuiltInTypeSymbol, ParameterSymbol, QualifierSymbol, KeywordSymbol, ContextSymbolTable, LabelSymbol, EntitySymbol, EntityCollection, WithTypeReference } from './ContextSymbolTable';
 import { BuiltInValueTypes, symbolDescriptionFromEnum } from './Symbol';
 import { DetailsListener } from './DetailsListener';
+import { parseTreeFromPosition } from '../common/parser/parseTree';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -478,49 +479,4 @@ export class SourceContext {
         return info;
     }
 
-}
-
-/**
- * Returns the parse tree which covers the given position or undefined if none could be found.
- */
-function parseTreeFromPosition(root: ParseTree, column: number, row: number): ParseTree | undefined {
-    // Does the root node actually contain the position? If not we don't need to look further.
-    if (root instanceof TerminalNode) {
-        let terminal = (root as TerminalNode);
-        let token = terminal.symbol;
-        if (token.line !== row) {
-            return undefined;
-        }
-
-        let tokenStop = token.charPositionInLine + (token.stopIndex - token.startIndex + 1);
-        if (token.charPositionInLine <= column && tokenStop >= column) {
-            return terminal;
-        }
-        return undefined;
-    } else {
-        let context = (root as ParserRuleContext);
-        if (!context.start || !context.stop) { // Invalid tree?
-            return undefined;
-        }
-
-        if (context.start.line > row || (context.start.line === row && column < context.start.charPositionInLine)) {
-            return undefined;
-        }
-
-        let tokenStop = context.stop.charPositionInLine + (context.stop.stopIndex - context.stop.startIndex + 1);
-        if (context.stop.line < row || (context.stop.line === row && tokenStop < column)) {
-            return undefined;
-        }
-
-        if (context.children) {
-            for (let child of context.children) {
-                let result = parseTreeFromPosition(child, column, row);
-                if (result) {
-                    return result;
-                }
-            }
-        }
-        return context;
-
-    }
 }

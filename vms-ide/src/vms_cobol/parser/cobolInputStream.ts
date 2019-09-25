@@ -1,6 +1,9 @@
-import { CharStream, ANTLRInputStream, IntStream } from "antlr4ts";
+import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
+
+import { CharStream, IntStream, ANTLRInputStream } from "antlr4ts";
 import { Interval } from "antlr4ts/misc";
-import { IMessage } from "./cobolErrorListener";
 
 const _rgxIsEmptyA = /^.(?: {4}| {0,3}\t)\s*(\S)/;
 
@@ -15,98 +18,65 @@ interface IPos {
     range: IRange | undefined,
 };
 
+export interface IErrorListener {
+    /**
+     * Collects errors
+     * @param line zero-based line number
+     * @param charPositionInLine zero-based char position in line
+     * @param msg message
+     */
+    syntaxError(line: number, charPositionInLine: number, msg: string): void;
+}
+
 export class CobolInputStream implements CharStream {
 
-    private pos: IPos;
+    private conditionals = "";
     private skipRanges: IRange[] = [];
     private filteredLineToRealLine: number[] = [];
     private realLinePos: number[] = [];
 
-    public  messages: IMessage[] = [];
+    private input: ANTLRInputStream;
 
     public get index() {
-        return this.pos.position;
+        return this.input.index;
     }
 
     public get size() {
-        return this.source.length;
+        return this.input.size;
     }
 
     public get sourceName() {
         return IntStream.UNKNOWN_SOURCE_NAME;
     }
     
-    constructor(private source: string, private conditionals?: string) {
+    /**
+     * 
+     * @param errorListener zero-based coordinates
+     * @param source 
+     * @param conditionals 
+     */
+    constructor(private errorListener: IErrorListener, private source: string, conditionals?: string) {
         if (conditionals) {
             this.conditionals = conditionals.toLowerCase();
         }
-        this.pos = { 
-            position: 0,
-            rangeIdx: 0,
-        } as IPos;
         this.preFilterSource();
-        this.updateRange(this.pos);
+        this.input = new ANTLRInputStream(this.getFilteredSource());
     }
 
     public reset() {
-        this.pos = { 
-            position: 0,
-            rangeIdx: 0,
-        } as IPos;
-        this.updateRange(this.pos);
+        this.input.reset();
     }
 
     public getText(interval: Interval): string {
-        
-        let pos: IPos = {
-            position: Math.max(interval.a, 0),
-            rangeIdx: 0
-        } as IPos;
-        this.updateRange(pos);
-
-        let stop = Math.min(interval.b, this.source.length - 1);
-
-        let retStr = "";
-
-        while(pos.position <= stop) {
-            this.gotoTheNextUnskippedChar(pos);
-            if (pos.position <= stop) {
-                retStr += this.source[pos.position];
-            }
-            ++pos.position;
-        }
-
-        return retStr;
+        return this.input.getText(interval);
     }    
     
     public consume(): void {
-        if (this.pos.position >= this.source.length) {
-            throw new Error("cannot consume EOF");
-        }
-        this.pos.position++;
-        this.gotoTheNextUnskippedChar(this.pos);
+        this.input.consume();
     }
     
     public LA(i: number): number {
-        if (i === 0) {
-            return 0;                               // undefined
-        }
-        if (i < 0) {
-            i++;                                    // e.g., translate LA(-1) to use offset i=0; then data[p+0-1]
-            if ((this.pos.position + i - 1) < 0) {
-                return IntStream.EOF;               // invalid; no char before first char
-            }
-        }
-        if ((this.pos.position + i - 1) >= this.source.length) {
-            return IntStream.EOF;                   // invalid; no char after last char
-        }
-        let pos = {
-            position: this.pos.position + i - 1,
-            rangeIdx: 0,
-        } as IPos;
-        this.updateRange(pos);
-        this.gotoTheNextUnskippedChar(pos);
-        return this.source.charCodeAt(pos.position);
+        return this.input.LA(i);
     }
     
     public mark(): number {
@@ -118,19 +88,7 @@ export class CobolInputStream implements CharStream {
     }
     
     public seek(index: number): void {
-        if (index < this.pos.position) {
-            this.pos.position = index;
-            this.pos.rangeIdx = 0;
-            this.pos.range = undefined;
-            this.updateRange(this.pos);
-            this.gotoTheNextUnskippedChar(this.pos);
-        } else if (index > this.pos.position) {
-            // seek forward, consume until p hits index or n (whichever comes first)
-            index = Math.min(index, this.source.length);
-            while (this.pos.position < index) {
-                this.consume();
-            }
-        }
+        this.input.seek(index);
     }
 
     //------------------------------------------------------------
@@ -261,13 +219,10 @@ export class CobolInputStream implements CharStream {
                                         prevLine += line.substring(matched[0].length);
                                         lineConsumed = true;
                                     } else {
-                                        let message : IMessage = {
-                                            message: `Continuation error - string literal have to start with ${lastQ}`,
-                                            size: 1,
-                                            line: i + 1,
-                                            charPositionInLine: matched[0].length,
-                                        };
-                                        this.messages.push(message);
+                                        this.errorListener.syntaxError(
+                                            i,
+                                            matched[0].length -1,
+                                            localize("string.continuation.error", "Continuation error - string literal have to start with {0}", lastQ));
                                     }
                                 } else {
                                     // previuos line doesn't end with quote - add whole line to the end of previous
@@ -306,13 +261,10 @@ export class CobolInputStream implements CharStream {
                                 }
                             }
                         } else {
-                            let message : IMessage = {
-                                message: `Continuation error - area A must be empty`,
-                                size: 1,
-                                line: i + 1,
-                                charPositionInLine: 1,
-                            };
-                            this.messages.push(message);
+                            this.errorListener.syntaxError(
+                                i,
+                                0,
+                                localize("string.continuation.error", "Continuation error - area A must be empty"));
                         }
                 }
                 if (!lineConsumed) {
