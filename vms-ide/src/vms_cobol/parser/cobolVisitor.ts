@@ -20,13 +20,16 @@ import { End_programContext } from "./cobolParser";
 import { Procedure_division_headerContext } from "./cobolParser";
 import { SectionContext } from "./cobolParser";
 import { DeclarativesContext } from "./cobolParser";
+import { End_declarativesContext } from "./cobolParser";
 import { Declaratives_sectionContext } from "./cobolParser";
 import { ParagraphContext } from "./cobolParser";
+import { Paragraph_nameContext } from "./cobolParser";
 import { SentenseContext } from "./cobolParser";
 import { Use_statementContext } from "./cobolParser";
 import { Group_data_nameContext } from "./cobolParser";
 import { Use_onContext } from "./cobolParser";
 import { Section_headerContext } from "./cobolParser";
+import { Section_nameContext } from "./cobolParser";
 import { UsingContext } from "./cobolParser";
 import { GivingContext } from "./cobolParser";
 import { StatementContext } from "./cobolParser";
@@ -565,6 +568,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitDeclaratives?: (ctx: DeclarativesContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cobolParser.end_declaratives`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEnd_declaratives?: (ctx: End_declarativesContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cobolParser.declaratives_section`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -577,6 +587,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitParagraph?: (ctx: ParagraphContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.paragraph_name`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitParagraph_name?: (ctx: Paragraph_nameContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.sentense`.
@@ -612,6 +629,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitSection_header?: (ctx: Section_headerContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.section_name`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSection_name?: (ctx: Section_nameContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.using`.

@@ -1,3 +1,5 @@
+// It is obligatory that CharStream must have this function:
+// calculateTabBasedCharPositionInLine(index: number, tabSize: number)
 grammar cobol;
 
 cobol_source
@@ -12,7 +14,7 @@ program
    ;
 
 identification_division
-   : IDENTIFICATION {$IDENTIFICATION.pos <= 4}? DIVISION DOT_
+   : {this.inputStream.LT(1).charPositionInLine < 4}? IDENTIFICATION DIVISION DOT_
      identification_division_paragraph*
    ;
 
@@ -81,7 +83,7 @@ figurative_constant
    ;
 
 end_program
-   : END {$END.pos <= 4}? PROGRAM program_name? DOT_
+   : {this.inputStream.LT(1).charPositionInLine < 4}? END PROGRAM program_name? DOT_
    ;
 
 procedure_division_header
@@ -94,9 +96,13 @@ section
    ;
 
 declaratives
-   : DECLARATIVES {$DECLARATIVES.pos <= 4}? DOT_
+   : {this.inputStream.LT(1).charPositionInLine < 4}? DECLARATIVES DOT_
      declaratives_section+
-     END {$END.pos <= 4}? DECLARATIVES DOT_
+     end_declaratives
+   ;
+
+end_declaratives
+   : {this.inputStream.LT(1).charPositionInLine < 4}? END DECLARATIVES DOT_
    ;
 
 declaratives_section
@@ -106,8 +112,12 @@ declaratives_section
    ;
 
 paragraph
-   : paragraph_name=USER_DEFINED_WORD {$paragraph_name.pos <= 4}? DOT_
+   : {this.inputStream.LT(1).charPositionInLine < 4}? paragraph_name DOT_
      sentense*
+   ;
+
+paragraph_name
+   : USER_DEFINED_WORD
    ;
 
 sentense
@@ -134,7 +144,11 @@ use_on
    ;
 
 section_header
-   : section_name = USER_DEFINED_WORD {$section_name.pos <= 4}? SECTION segment_number? DOT_
+   : {this.inputStream.LT(1).charPositionInLine < 4}? section_name SECTION segment_number? DOT_
+   ;
+
+section_name
+   : USER_DEFINED_WORD
    ;
 
 using
@@ -146,50 +160,52 @@ giving
    ;
 
 statement
-   : accept_statement
-   | add_statement
-   | alter_statement
-   | call_statement
-   | cancel_statement
-   | close_statement
-   | compute_statement
-   | continue_statement
-   | delete_statement
-   | display_statement
-   | divide_statement
-   | evaluate_statement
-   | exit_statement
-   | exit_program_statement
-   | generate_statement
-   | go_to_statement
-   | if_statement
-   | initialize_statement
-   | initiate_statement
-   | inspect_statement
-   | merge_statement
-   | move_statement
-   | multiply_statement
-   | open_statement
-   | perform_statement
-   | read_statement
-   | release_statement
-   | return_statement
-   | rewrite_statement
-   | search_statement
-   | set_statement
-   | sort_statement
-   | start_statement
-   | stop_statement
-   | string_statement
-   | subtract_statement
-   | suppress_statement
-   | terminate_statement
-   | unlock_statement
-   | unstring_statement
-   | write_statement
-   | replace_statement
-   | copy_statement
-   | record_statement
+   : {this.inputStream.LT(1).charPositionInLine >= 4}? 
+     (  accept_statement
+      | add_statement
+      | alter_statement
+      | call_statement
+      | cancel_statement
+      | close_statement
+      | compute_statement
+      | continue_statement
+      | delete_statement
+      | display_statement
+      | divide_statement
+      | evaluate_statement
+      | exit_statement
+      | exit_program_statement
+      | generate_statement
+      | go_to_statement
+      | if_statement
+      | initialize_statement
+      | initiate_statement
+      | inspect_statement
+      | merge_statement
+      | move_statement
+      | multiply_statement
+      | open_statement
+      | perform_statement
+      | read_statement
+      | release_statement
+      | return_statement
+      | rewrite_statement
+      | search_statement
+      | set_statement
+      | sort_statement
+      | start_statement
+      | stop_statement
+      | string_statement
+      | subtract_statement
+      | suppress_statement
+      | terminate_statement
+      | unlock_statement
+      | unstring_statement
+      | write_statement
+      | replace_statement
+      | copy_statement
+      | record_statement
+     )
    ;
 
 copy_statement

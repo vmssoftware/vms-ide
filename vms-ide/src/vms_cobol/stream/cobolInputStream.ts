@@ -4,6 +4,7 @@ const localize = nls.loadMessageBundle();
 
 import { CharStream, IntStream, ANTLRInputStream } from "antlr4ts";
 import { Interval } from "antlr4ts/misc";
+import { isLineEndsWithCobolSiringLiteral, CalculateTabBasedCharPositionInLine } from "../../common/parser/helpers";
 
 const _rgxIsEmptyA = /^.(?: {4}| {0,3}\t)\s*(\S)/;
 
@@ -34,8 +35,9 @@ export class CobolInputStream implements CharStream {
     private skipRanges: IRange[] = [];
     private filteredLineToRealLine: number[] = [];
     private realLinePos: number[] = [];
-
     private input: ANTLRInputStream;
+
+    public tabSize = 4;
 
     public get index() {
         return this.input.index;
@@ -55,7 +57,7 @@ export class CobolInputStream implements CharStream {
      * @param source 
      * @param conditionals 
      */
-    constructor(private errorListener: IErrorListener, private source: string, conditionals?: string) {
+    constructor(public errorListener: IErrorListener, public source: string, conditionals?: string) {
         if (conditionals) {
             this.conditionals = conditionals.toLowerCase();
         }
@@ -94,9 +96,9 @@ export class CobolInputStream implements CharStream {
     //------------------------------------------------------------
 
     /**
-     * Returns zero-based position in source file
-     * @param line zero-based line number after filtration
-     * @param charPositionInLine zero-based line number after filtration
+     * Returns zero-based position in source file before filtration
+     * @param line zero-based line after filtration
+     * @param charPositionInLine zero-based column after filtration
      */
     public getRealPosition(line: number, charPositionInLine: number) {
         if (line >= 0 && line < this.filteredLineToRealLine.length) {
@@ -107,9 +109,18 @@ export class CobolInputStream implements CharStream {
             } as IPos;
             this.updateRange(pos);
             this.gotoTheNextUnskippedChar(pos);
-            while(charPositionInLine-- > 0) {
-                ++pos.position;
-                this.gotoTheNextUnskippedChar(pos);
+            while(charPositionInLine > 0) {
+                if (pos.position < this.source.length) {
+                    let char = this.source[pos.position];
+                    if (char === '\t') {
+                        charPositionInLine -= this.tabSize - 1;
+                    }
+                }
+                if (charPositionInLine > 0) {
+                    ++pos.position;
+                    this.gotoTheNextUnskippedChar(pos);
+                    --charPositionInLine;
+                }
             };
             line = this.realLinePos.length - 1;
             while(line >= 0) {
@@ -202,7 +213,7 @@ export class CobolInputStream implements CharStream {
                         let matched = line.match(_rgxIsEmptyA);
                         if (matched) {
                             if (prevLine) {
-                                let {inString, lastQ} = CobolInputStream.isLineEndsWithCobolSiringLiteral(prevLine);
+                                let {inString, lastQ} = isLineEndsWithCobolSiringLiteral(prevLine);
                                 let interval: {start: number, end: number} | undefined;
                                 if (!inString) {
                                     let lastSymbol = prevLine[prevLine.length-1];
@@ -276,6 +287,9 @@ export class CobolInputStream implements CharStream {
         }
     }
 
+    /**
+     * returns filtered content
+     */
     public getFilteredSource() {
         let testContent = "";
         let testPos: IPos = {
@@ -283,41 +297,19 @@ export class CobolInputStream implements CharStream {
             rangeIdx: 0,
         } as IPos;
         this.updateRange(testPos);
+        let tabSpaces = ' '.repeat(this.tabSize);
         do {
             this.gotoTheNextUnskippedChar(testPos);
             if (testPos.position < this.source.length) {
-                testContent += this.source[testPos.position];
+                let char = this.source[testPos.position];
+                if (char === '\t') {
+                    testContent += tabSpaces;
+                } else {
+                    testContent += char;
+                }
             }
             ++testPos.position;
         } while(testPos.position < this.source.length);
         return testContent;
-    }
-
-    //------------------------------------------------------------
-
-    public static isLineEndsWithCobolSiringLiteral(line: string) {
-        let inString = false;
-        let lastQ = ' ';
-        for (let i = 0; i < line.length; ++i) {
-            if (inString) {
-                if (line[i] === lastQ) {
-                    if (i + 1 < line.length && line[i+1] === lastQ) {
-                        ++i;
-                        continue;
-                    }
-                    inString = false;
-                    continue;
-                }
-            } else {
-                switch (line[i]) {
-                    case "'":
-                    case '"':
-                        inString = true;
-                        lastQ = line[i]
-                        continue;
-                }
-            }
-        }
-        return { inString, lastQ };
     }
 }

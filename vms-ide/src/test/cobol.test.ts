@@ -6,7 +6,7 @@ import { cobolParser, Cobol_sourceContext } from "../vms_cobol/parser/cobolParse
 import { PredictionMode } from "antlr4ts/atn/PredictionMode";
 import { ParseCancellationException } from "antlr4ts/misc";
 import { getSyntaxTreeStrings } from "../common/print-syntax-tree";
-import { CobolInputStream } from "../vms_cobol/parser/cobolInputStream";
+import { CobolInputStream } from "../vms_cobol/stream/cobolInputStream";
 import { CobolLexerErrorListener, CobolErrorListener } from "../vms_cobol/parser/CobolErrorListener";
 
 suite("COBOL tests", function(this: Mocha.Suite) {

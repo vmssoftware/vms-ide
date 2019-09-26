@@ -10,9 +10,10 @@ import { LogFunction, LogType } from '../../common/main';
 import { IDiagnosticEntry, ESymbolKind, IDefinition, ISymbolInfo, ISourceContext, EDiagnosticType } from '../../common/parser/Facade';
 import { cobolParser, Cobol_sourceContext } from '../parser/cobolParser';
 import { ParserErrorListener, LexerErrorListener } from '../../common/parser/ErrorListeners';
-import { CobolInputStream } from '../parser/cobolInputStream';
+import { CobolInputStream } from '../stream/cobolInputStream';
 import { cobolLexer } from '../parser/cobolLexer';
 import { parseTreeFromPosition } from '../../common/parser/parseTree';
+import { CobolAnalysisListener } from './AnalysisListener';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -101,6 +102,7 @@ export class CobolSourceContext implements ISourceContext {
             this.tree = this.parser.cobol_source();
         } catch (e) {
             if (e instanceof ParseCancellationException) {
+                this.diagnostics.length = 0;
                 this.tokenStream.seek(0);
                 this.parser.reset();
                 this.parser.errorHandler = new DefaultErrorStrategy();
@@ -371,16 +373,14 @@ export class CobolSourceContext implements ISourceContext {
             for(const d of this.diagnostics) {
                 ({line: d.range.start.row, charPositionInLine: d.range.start.column} = this.input.getRealPosition(d.range.start.row - 1, d.range.start.column));
                 ({line: d.range.end.row, charPositionInLine: d.range.end.column} = this.input.getRealPosition(d.range.end.row - 1, d.range.end.column));
-                // ++d.range.start.row;
-                // ++d.range.end.row;
             }
         }
     }
 
     private runAnalysis() {
         if (!this.analysisDone) {
-            // let listener = new CobolAnalysisListener(this.diagnostics, this.logFn);
-            // ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree!);
+            let listener = new CobolAnalysisListener(this.diagnostics);
+            ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree!);
             this.analysisDone = true;
         }
     }

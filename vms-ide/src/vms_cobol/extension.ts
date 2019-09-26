@@ -61,11 +61,12 @@ export async function activate(context: ExtensionContext) {
 
     //----- Events -----
 
-    workspace.onDidOpenTextDocument((document: TextDocument) => {
-        if (document.languageId === Cobol.language && document.uri.scheme === Cobol.scheme) {
-            backend.attach(document.uri.fsPath, document.getText());
-        }
-    });
+    // workspace.onDidOpenTextDocument((document: TextDocument) => {
+    //     if (document.languageId === Cobol.language && document.uri.scheme === Cobol.scheme) {
+    //         backend.attach(document.uri.fsPath, document.getText());
+    //         processDiagnostic(document);
+    //     }
+    // });
 
     workspace.onDidCloseTextDocument((document: TextDocument) => {
         if (document.languageId === Cobol.language && document.uri.scheme === Cobol.scheme) {
@@ -108,14 +109,15 @@ export async function activate(context: ExtensionContext) {
     });
 
     window.onDidChangeActiveTextEditor((editor?: TextEditor) => {
-        // if(editor)
-        // {
-        //     if (editor.document.languageId === Pascal.language && editor.document.uri.scheme === Pascal.scheme) 
-        //     {
-        //         backend.setText(editor.document.fileName, editor.document.getText());
-        //         backend.reparse(editor.document.fileName);
-        //     }
-        // }
+        if(editor)
+        {
+            if (editor.document.languageId === Cobol.language && editor.document.uri.scheme === Cobol.scheme) 
+            {
+                backend.setText(editor.document.fileName, editor.document.getText());
+                backend.reparse(editor.document.fileName);
+                processDiagnostic(editor.document);
+            }
+        }
     });
 
     /**
