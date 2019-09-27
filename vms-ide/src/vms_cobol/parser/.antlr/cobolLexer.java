@@ -1,4 +1,4 @@
-// Generated from d:\vmssoftware.work\vms-ide\src\vms_cobol\parser\cobol.g4 by ANTLR 4.7.1
+// Generated from c:\work\vms_ide\vms-ide\src\vms_cobol\parser\cobol.g4 by ANTLR 4.7.1
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;

@@ -10,7 +10,6 @@ const ts = require('gulp-typescript');
 const typescript = require('typescript');
 const sourcemaps = require('gulp-sourcemaps');
 const del = require('del');
-const runSequence = require('run-sequence');
 const es = require('event-stream');
 const vsce = require('vsce');
 const nls = require('vscode-nls-dev');
@@ -24,30 +23,6 @@ const distDest = 'dist';
 
 // If all VS Code langaues are support you can use nls.coreLanguages
 const languages = [{id: 'ru'}];
-
-gulp.task('default', function(callback) {
-	runSequence('build', callback);
-});
-
-// gulp.task('compile', function(callback) {
-// 	runSequence('clean', 'internal-compile', callback);
-// });
-
-gulp.task('build', function(callback) {
-	runSequence('clean', 'internal-nls-compile', 'add-i18n', callback);
-});
-
-// gulp.task('publish', function(callback) {
-// 	runSequence('build', 'vsce:publish', callback);
-// });
-
-// gulp.task('package', function(callback) {
-// 	runSequence('build', 'vsce:package', callback);
-// });
-
-gulp.task('clean', function() {
-	return del(['out/**', 'package.nls.*.json', 'i18n-sample*.vsix']);
-})
 
 //---- internal
 
@@ -75,6 +50,10 @@ function compile(buildNls) {
 	return r.pipe(gulp.dest(outDest));
 }
 
+gulp.task('clean', function() {
+	return del(['out/**', 'package.nls.*.json', 'i18n-sample*.vsix']);
+})
+
 gulp.task('internal-compile', function() {
 	return compile(false);
 });
@@ -88,11 +67,11 @@ gulp.task('add-i18n', function() {
 		.pipe(nls.createAdditionalLanguageFiles(languages, 'i18n'))
 		.pipe(gulp.dest('.'));
 });
+gulp.task('build', gulp.series('clean', 'internal-nls-compile', 'add-i18n', function(callback) {
+	callback();
+}));
 
-// gulp.task('vsce:publish', function() {
-// 	return vsce.publish();
-// });
+gulp.task('default', gulp.series('build', function(callback) {
+	callback();
+}));
 
-// gulp.task('vsce:package', function() {
-// 	return vsce.createVSIX();
-// });

@@ -402,6 +402,7 @@ import { Assign_to_definitionContext } from "./cobolParser";
 import { File_specContext } from "./cobolParser";
 import { File_nameContext } from "./cobolParser";
 import { I_o_controlContext } from "./cobolParser";
+import { I_o_control_clauseContext } from "./cobolParser";
 import { Multiple_fileContext } from "./cobolParser";
 import { Multiple_file_definitionContext } from "./cobolParser";
 import { Multiple_file_nameContext } from "./cobolParser";
@@ -3240,6 +3241,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitI_o_control?: (ctx: I_o_controlContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.i_o_control_clause`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitI_o_control_clause?: (ctx: I_o_control_clauseContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.multiple_file`.
