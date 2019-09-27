@@ -7,22 +7,27 @@ import { ParseTreeWalker, TerminalNode, ParseTree, ParseTreeListener } from 'ant
 import { CommonTokenStream, BailErrorStrategy, DefaultErrorStrategy, ParserRuleContext, Token, RuleContext } from 'antlr4ts';
 import { PredictionMode } from 'antlr4ts/atn/PredictionMode';
 import { LogFunction, LogType } from '../../common/main';
-import { IDiagnosticEntry, ESymbolKind, IDefinition, ISymbolInfo, ISourceContext, EDiagnosticType } from '../../common/parser/Facade';
+import { IDiagnosticEntry, IDefinition, ISymbolInfo, ISourceContext, EDiagnosticType } from '../../common/parser/Facade';
 import { cobolParser, Cobol_sourceContext } from '../parser/cobolParser';
 import { ParserErrorListener, LexerErrorListener } from '../../common/parser/ErrorListeners';
 import { CobolInputStream } from '../stream/cobolInputStream';
 import { cobolLexer } from '../parser/cobolLexer';
 import { parseTreeFromPosition } from '../../common/parser/parseTree';
 import { CobolAnalysisListener } from './AnalysisListener';
+import { ECobolSymbolKind } from './Symbol';
+import { CobolSymbolTable } from './ContextSymbolTable';
+import { CobolDetailsListener } from './DetailsListener';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export class CobolSourceContext implements ISourceContext {
+export class CobolSourceContext implements ISourceContext<ECobolSymbolKind> {
 
     private sourceId: string;
     private streamErrors: IDiagnosticEntry[] = [];
     private diagnostics: IDiagnosticEntry[] = [];
+    private symbolTable: CobolSymbolTable;
+    private imports: string[] = [];
 
     public compilerConditions: string = "";
 
@@ -41,6 +46,8 @@ export class CobolSourceContext implements ISourceContext {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
         this.sourceId = path.basename(fileName, path.extname(fileName));
+
+        this.symbolTable =  new CobolSymbolTable(this.sourceId, { allowDuplicateSymbols: true }, this);
     }
 
     /**
@@ -114,9 +121,9 @@ export class CobolSourceContext implements ISourceContext {
         }
 
         if (this.tree) {
-            // this.symbolTable.tree = this.tree;
-            // let listener: CobolDetailsListener = new CobolDetailsListener(this.symbolTable, this.imports);
-            // ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree);
+            this.symbolTable.tree = this.tree;
+            let listener: CobolDetailsListener = new CobolDetailsListener(this.symbolTable, this.imports);
+            ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree);
             this.runAnalysis();
         }
 
@@ -156,7 +163,7 @@ export class CobolSourceContext implements ISourceContext {
         return index;
     }
 
-    public getCodeCompletionCandidates(column: number, row: number): ISymbolInfo[] {
+    public getCodeCompletionCandidates(column: number, row: number): ISymbolInfo<ECobolSymbolKind>[] {
         if (!this.parser || !this.tokenStream) {
             return [];
         }
@@ -185,7 +192,7 @@ export class CobolSourceContext implements ISourceContext {
         //core.debugOutputWithTransitions = true;
 
         let candidates = core.collectCandidates(index);
-        let result: ISymbolInfo[] = [];
+        let result: ISymbolInfo<ECobolSymbolKind>[] = [];
 
         let tokens: number[] = [];
         candidates.tokens.forEach((following: number[], type: number) => {
@@ -195,8 +202,8 @@ export class CobolSourceContext implements ISourceContext {
         const vocabulary = this.parser.vocabulary;
 
         candidates.tokens.forEach((following: number[], type: number) => {
-            const info: ISymbolInfo = {
-                kind: ESymbolKind.Unknown,
+            const info: ISymbolInfo<ECobolSymbolKind> = {
+                kind: ECobolSymbolKind.Unknown,
                 name: "",
                 source: this.fileName,
             };
@@ -248,9 +255,9 @@ export class CobolSourceContext implements ISourceContext {
         return result;
     }
 
-    public getSymbolOccurences(column: number, row: number): ISymbolInfo[] {
+    public getSymbolOccurences(column: number, row: number): ISymbolInfo<ECobolSymbolKind>[] {
 
-        const occurances: ISymbolInfo[] = [];
+        const occurances: ISymbolInfo<ECobolSymbolKind>[] = [];
 
         let terminal = parseTreeFromPosition(this.tree!, column, row);
         if (!terminal || !(terminal instanceof TerminalNode)) {
@@ -327,7 +334,7 @@ export class CobolSourceContext implements ISourceContext {
     //     return vars;
     // }
 
-    public symbolAtPosition(column: number, row: number): ISymbolInfo | undefined {
+    public symbolAtPosition(column: number, row: number): ISymbolInfo<ECobolSymbolKind> | undefined {
         let terminal = parseTreeFromPosition(this.tree!, column, row);
         if (!terminal || !(terminal instanceof TerminalNode)) {
             return undefined;
@@ -379,14 +386,14 @@ export class CobolSourceContext implements ISourceContext {
 
     private runAnalysis() {
         if (!this.analysisDone) {
-            let listener = new CobolAnalysisListener(this.diagnostics);
+            let listener = new CobolAnalysisListener(this.diagnostics, this.symbolTable);
             ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree!);
             this.analysisDone = true;
         }
     }
 
-    private symbolInfoFromToken(kind: ESymbolKind, token: Token) {
-        const info: ISymbolInfo = {
+    private symbolInfoFromToken(kind: ECobolSymbolKind, token: Token) {
+        const info: ISymbolInfo<ECobolSymbolKind> = {
             kind: kind,
             name:  token.text || "",
             source: this.fileName,
@@ -403,11 +410,11 @@ export class CobolSourceContext implements ISourceContext {
 
     //________________________________________________________________________________
 
-    public static getKindFromSymbol(symbol: Symbol): ESymbolKind {
+    public static getKindFromSymbol(symbol: Symbol): ECobolSymbolKind {
         // if (symbol instanceof OtherSymbol) {
         //     return ESymbolKind.Other;
         // }
-        return ESymbolKind.Unknown;
+        return ECobolSymbolKind.Unknown;
     }
 
     /**

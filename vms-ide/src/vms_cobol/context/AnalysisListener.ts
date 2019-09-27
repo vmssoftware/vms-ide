@@ -6,6 +6,7 @@ import { StatementContext } from "../parser/cobolParser";
 import { ParseTree, TerminalNode } from "antlr4ts/tree";
 import { Token, ParserRuleContext } from "antlr4ts";
 import { markToken } from "../../common/parser/helpers";
+import { CobolSymbolTable } from "./ContextSymbolTable";
 
 
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -13,8 +14,8 @@ const localize = nls.loadMessageBundle();
 
 export class CobolAnalysisListener implements cobolListener 
 {
-    constructor(public diagnostics: IDiagnosticEntry[]) 
-    {    }
+    constructor(public diagnostics: IDiagnosticEntry[], public symbolTable: CobolSymbolTable) {
+    }
     
     enterStatement(ctx: StatementContext)
     {

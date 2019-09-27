@@ -323,11 +323,11 @@ suppress_statement
 
 subtract_statement
    : SUBTRACT 
-      ( ( sub_num)+  FROM ( sub_num  GIVING)? ( identifier_result ( ROUNDED)?)+ 
-      |  (CORRESPONDING|CORR)  sub_grp  FROM  sub_grp ( ROUNDED)?
+      ( sub_num+ FROM (sub_num GIVING)? (identifier_result ROUNDED?)+ 
+      | (CORRESPONDING|CORR) sub_grp FROM sub_grp ROUNDED?
       )
-     ( on_size_variants)?
-     ( END_SUBTRACT)?
+     on_size_variants?
+     END_SUBTRACT?
    ;
 
 sub_grp
@@ -341,10 +341,10 @@ sub_num
 
 
 string_statement
-   : STRING (( string_src)+  DELIMITED  (BY )? (SIZE|string_delim) )+
-      INTO  string_dest ( (WITH )? POINTER  string_pointer)?
-     ( on_overflow_variants)?
-     ( END_STRING)?
+   : STRING (string_src+ DELIMITED BY? (SIZE|string_delim))+
+     INTO string_dest (WITH? POINTER string_pointer)?
+     on_overflow_variants?
+     END_STRING?
    ;
 
 string_pointer
@@ -376,11 +376,11 @@ stop_disp
    ;
 
 start_statement
-   : START  file_name
-     ( KEY  condition_operator  sort_key_data)?
-     ( regard_allow)?
-     ( invalid_key_variants)?
-     ( END_START)?
+   : START file_name
+     (KEY condition_operator sort_key_data)?
+     regard_allow?
+     invalid_key_variants?
+     END_START?
    ;
 
 sort_key_data
@@ -393,17 +393,17 @@ sort_statement
    ;
 
 sort_statement_form1
-   : SORT  file_name ( on_sort_key)+
-     ( (WITH )? DUPLICATES ( IN)? ( ORDER)?)?
-     ( (COLLATING )? SEQUENCE  (IS )? alpha_name)?
-     ( (INPUT  procedure_is|USING ( file_name)+ ))?
-     ( (OUTPUT  procedure_is|GIVING ( file_name)+ ))?
+   : SORT file_name on_sort_key+
+     (WITH? DUPLICATES IN? ORDER?)?
+     (COLLATING? SEQUENCE IS? alpha_name)?
+     (INPUT procedure_is|USING file_name+)?
+     (OUTPUT procedure_is|GIVING file_name+)?
    ;
 
 sort_statement_form2
-   : SORT  table_name ( on_sort_key)*
-     ( (WITH )? DUPLICATES ( IN)? ( ORDER)?)?
-     ( (COLLATING )? SEQUENCE  (IS )? alpha_name)?
+   : SORT table_name on_sort_key*
+     (WITH? DUPLICATES IN? ORDER?)?
+     (COLLATING? SEQUENCE IS? alpha_name)?
    ;
 
 table_name
@@ -411,11 +411,11 @@ table_name
    ;
 
 procedure_is
-   : PROCEDURE  (IS )? proc_thru_proc
+   : PROCEDURE IS? proc_thru_proc
    ;
 
 on_sort_key
-   : (ON )? (DESCENDING|ASCENDING)  (KEY )? sort_key ( sort_key)*
+   : ON? (DESCENDING|ASCENDING) KEY? sort_key sort_key*
    ;
 
 sort_key
@@ -432,27 +432,27 @@ set_statement
    ;
 
 set_statement_form1
-   : SET ( identifier_result)+  TO  set_val
+   : SET identifier_result+ TO set_val
    ;
 
 set_statement_form2
-   : SET ( identifier_result)+  (UP|DOWN)  BY  set_increm
+   : SET identifier_result+ (UP|DOWN) BY set_increm
    ;
 
 set_statement_form3
-   : SET ( identifier_result)+  TO  TRUE
+   : SET identifier_result+ TO TRUE
    ;
 
 set_statement_form4
-   : SET ( identifier_result  TO  (ON|OFF))+
+   : SET (identifier_result TO (ON|OFF))+
    ;
 
 set_statement_form5
-   : SET ( identifier_result)+  TO  REFERENCE  (OF )? identifier_result
+   : SET identifier_result+ TO REFERENCE OF? identifier_result
    ;
 
 set_statement_form6
-   : SET  identifier_result  TO  (SUCCESS|FAILURE)
+   : SET identifier_result TO (SUCCESS|FAILURE)
    ;
 
 set_increm
@@ -466,20 +466,20 @@ set_val
    ;
 
 search_statement
-   : SEARCH  src_table ( VARYING  search_pointer)?
-     ( at_end)?
-     ( ( WHEN  logic_expression ( statement)+)+  END_SEARCH
-     | ( WHEN  logic_expression (( statement)+ ( END_SEARCH)?| NEXT  SENTENCE))+
+   : SEARCH src_table (VARYING search_pointer)?
+     at_end?
+     ((WHEN logic_expression statement+)+ END_SEARCH
+     |(WHEN logic_expression (statement+ END_SEARCH?|NEXT SENTENCE))+
      )
-   | SEARCH  ALL  src_table
-     ( at_end)?
-      WHEN  search_condition
-     ( AND  search_condition)*
-     (( statement)+ ( END_SEARCH)?| NEXT  SENTENCE)
+   | SEARCH ALL src_table
+     at_end?
+     WHEN search_condition
+     (AND search_condition)*
+     (statement+ END_SEARCH?|NEXT SENTENCE)
    ;
 
 search_condition
-   : search_elemnt ( (IS )? EQUAL ( TO)? | (IS )? EQUAL_ ) search_arg 
+   : search_elemnt (IS? EQUAL TO?|IS? EQUAL_) search_arg 
    | condition_name
    ;
 
@@ -500,10 +500,10 @@ src_table
    ;
 
 rewrite_statement
-   : REWRITE  rewrite_rec_name ( FROM  src_item )?
-     ( ALLOWING  NO ( OTHERS)?)?
-     ( invalid_key_variants)?
-     ( END_REWRITE)?
+   : REWRITE rewrite_rec_name (FROM src_item)?
+     (ALLOWING NO OTHERS?)?
+     invalid_key_variants?
+     END_REWRITE?
    ;
 
 rewrite_rec_name
@@ -511,10 +511,10 @@ rewrite_rec_name
    ;
 
 return_statement
-   : RETURN  smrg_file ( RECORD)? ( INTO  dest_item)?
+   : RETURN smrg_file RECORD? (INTO dest_item)?
       at_end
-     ( NOT  at_end)?
-     ( END_RETURN)?
+     (NOT at_end)?
+     END_RETURN?
    ;
 
 smrg_file
@@ -522,7 +522,7 @@ smrg_file
    ;
 
 release_statement
-   : RELEASE  release_rec ( FROM  release_src_area)?
+   : RELEASE release_rec (FROM release_src_area)?
    ;
 
 release_src_area
@@ -534,9 +534,9 @@ release_rec
    ;
 
 record_statement
-   : RECORD  DEPENDENCY  path_name
-      ( TYPE ( IS)?  relation_type)?
-      ( (IN )? DICTIONARY)?
+   : RECORD DEPENDENCY path_name
+     (TYPE IS? relation_type)?
+     (IN? DICTIONARY)?
    ;
 
 relation_type
@@ -550,59 +550,59 @@ path_name
    ;
 
 read_statement
-   : READ  file_name ( (NEXT|PREVIOUS|PRIOR))? ( RECORD)? ( INTO  dest_item)?
-     (  read_options ( KEY ( IS)?  key_name )?
-     |  KEY ( IS)?  key_name ( read_options)?
+   : READ file_name (NEXT|PREVIOUS|PRIOR)? RECORD? (INTO dest_item)?
+     (read_options (KEY IS? key_name)?
+     | KEY IS? key_name read_options?
      )?
-     ( (at_end_variants|invalid_key_variants))?
-     ( END_READ)?
+     (at_end_variants|invalid_key_variants)?
+     END_READ?
    ;
 
 regard_allow
-   : REGARDLESS ( OF)? ( LOCK)?
-   | ALLOWING  (UPDATERS|READERS|NO ( OTHERS)?)
+   : REGARDLESS OF? LOCK?
+   | ALLOWING (UPDATERS|READERS|NO OTHERS?)
    ;
 
 read_options
-   :  (WITH )? (NO )? LOCK
+   : WITH? NO? LOCK
    | regard_allow
    ;
 
 perform_statement
-   : PERFORM ( proc_thru_proc)?
+   : PERFORM proc_thru_proc?
      (
       ( perform_times
       | perform_until
       | perform_varying
       )
      )?
-     (( statement)+  END_PERFORM)?
+     (statement+ END_PERFORM)?
    ;
 
 proc_thru_proc
-   : first_proc ( (THROUGH|THRU)  end_proc)?
+   : first_proc ((THROUGH|THRU) end_proc)?
    ;
 
 perform_times
-   : (identifier|NUMERIC_LITERAL)  TIMES
+   : (identifier|NUMERIC_LITERAL) TIMES
    ;
 
 with_test
-   : (WITH )? TEST  (BEFORE|AFTER)
+   : WITH? TEST (BEFORE|AFTER)
    ;
 
 perform_until
-   : (with_test )? UNTIL  logic_expression
+   : with_test? UNTIL logic_expression
    ;
 
 perform_varying
-   : (with_test )?
-     VARYING  perform_range  UNTIL  logic_expression
-     ( AFTER  perform_range  UNTIL  logic_expression)*
+   : with_test?
+     VARYING perform_range UNTIL logic_expression
+     (AFTER perform_range UNTIL logic_expression)*
    ;
 
 perform_range
-   : perform_var  FROM  perform_init  BY  perform_increm
+   : perform_var FROM perform_init BY perform_increm
    ;
 
 perform_increm
@@ -620,33 +620,33 @@ perform_var
    ;
 
 open_statement
-   : OPEN ( open_definition)+
-   | OPEN ( (OUTPUT|EXTEND) ( file_name ( (WITH )? NO  REWIND)? )+ )+
+   : OPEN open_definition+
+   | OPEN ((OUTPUT|EXTEND) (file_name (WITH? NO REWIND)?)+)+
    ;
 
 open_definition
-   : (INPUT|OUTPUT|EXTEND|I_O) ( file_name ( (WITH )? NO  REWIND)? ( open_file_attributes)? )+
+   : (INPUT|OUTPUT|EXTEND|I_O) (file_name (WITH? NO REWIND)? open_file_attributes?)+
    ;
 
 open_file_attributes
-   : (WITH )? LOCK
+   : WITH? LOCK
    | ALLOWING  
-      ( NO ( OTHERS)?
-      | ALL
-      | (  READERS ( WRITERS)? ( UPDATERS)?
-         | READERS  UPDATERS  WRITERS
-         | WRITERS ( READERS)? ( UPDATERS)?
-         | WRITERS  UPDATERS  READERS
-         | UPDATERS ( READERS)? ( WRITERS)?
-         | UPDATERS  WRITERS  READERS
-        )
+      (NO OTHERS?
+      |ALL
+      |( READERS WRITERS? UPDATERS?
+       | READERS UPDATERS WRITERS
+       | WRITERS READERS? UPDATERS?
+       | WRITERS UPDATERS READERS
+       | UPDATERS READERS? WRITERS?
+       | UPDATERS WRITERS READERS
+       )
       )
    ;
 
 multiply_statement
-   : MULTIPLY  mult_num  BY ( mult_num  GIVING)? ( identifier_result ( ROUNDED)?)+
-     ( on_size_variants)?
-     ( END_MULTIPLY)?
+   : MULTIPLY mult_num BY (mult_num GIVING)? (identifier_result ROUNDED?)+
+     on_size_variants?
+     END_MULTIPLY?
    ;
 
 mult_num
@@ -655,14 +655,14 @@ mult_num
    ;
 
 merge_statement
-   : MERGE  mergefile ( merge_on)+
-     ( (COLLATING )? SEQUENCE  (IS )? alpha_name )?
-      USING ( infile)+
+   : MERGE mergefile merge_on+
+     (COLLATING? SEQUENCE IS? alpha_name)?
+      USING infile+
       (output_proc|giving_file)
    ;
 
 output_proc
-   : OUTPUT  PROCEDURE  (IS )? proc_thru_proc
+   : OUTPUT PROCEDURE IS? proc_thru_proc
    ;
 
 first_proc
@@ -682,7 +682,7 @@ infile
    ;
 
 merge_on
-   : (ON )? (DESCENDING|ASCENDING) ( KEY)? ( mergekey)+
+   : ON? (DESCENDING|ASCENDING) KEY? mergekey+
    ;
 
 mergefile
@@ -694,12 +694,12 @@ mergekey
    ;
 
 inspect_statement
-   : INSPECT  src_string 
-      (inspect_tallying ( inspect_replacing)?| inspect_replacing | inspect_converting)
+   : INSPECT src_string 
+      (inspect_tallying inspect_replacing?|inspect_replacing|inspect_converting)
    ;
 
 inspect_converting
-   : CONVERTING  compare_chars  TO  convert_chars ( delim_definition)*
+   : CONVERTING compare_chars TO convert_chars delim_definition*
    ;
 
 convert_chars
@@ -711,11 +711,11 @@ compare_chars
    ;
 
 inspect_replacing
-   : REPLACING ( (replacing_characters|replacing_all))+
+   : REPLACING (replacing_characters|replacing_all)+
    ;
 
 replacing_all
-   : (ALL|LEADING|FIRST) ( compare_val  BY  replace_val ( delim_definition)*)+
+   : (ALL|LEADING|FIRST) (compare_val BY replace_val delim_definition*)+
    ;
 
 replace_val
@@ -723,7 +723,7 @@ replace_val
    ;
 
 replacing_characters
-   : CHARACTERS  BY  replace_char ( delim_definition)*
+   : CHARACTERS BY replace_char delim_definition*
    ;
 
 replace_char
@@ -731,23 +731,23 @@ replace_char
    ;
 
 inspect_tallying
-   : TALLYING ( tallying_for)+
+   : TALLYING tallying_for+
    ;
 
 tallying_for
-   : tally_ctr  FOR ( (tallying_for_characters|tallying_for_all))+
+   : tally_ctr FOR (tallying_for_characters|tallying_for_all)+
    ;
 
 tallying_for_characters
-   : CHARACTERS ( delim_definition)*
+   : CHARACTERS delim_definition*
    ;
 
 delim_definition
-   : (BEFORE|AFTER) ( INITIAL)?  delim_val
+   : (BEFORE|AFTER) INITIAL? delim_val
    ;
 
 tallying_for_all
-   : (ALL|LEADING) ( compare_val ( delim_definition)*)+
+   : (ALL|LEADING) (compare_val delim_definition*)+
    ;
 
 compare_val
@@ -773,12 +773,12 @@ initiate_statement
    ;
 
 initialize_statement
-   : INITIALIZE ( fld_name)+ ( replacing)*
+   : INITIALIZE fld_name+ replacing*
    ;
 
 replacing
    : REPLACING 
-      ( (ALPHABETIC|ALPHANUMERIC|NUMERIC|ALPHANUMERIC_EDITED|NUMERIC_EDITED)  (DATA )? BY  init_value)+
+      ((ALPHABETIC|ALPHANUMERIC|NUMERIC|ALPHANUMERIC_EDITED|NUMERIC_EDITED) DATA? BY init_value)+
    ;
 
 init_value
@@ -791,17 +791,17 @@ fld_name
    ;
 
 move_statement
-   : MOVE  ((CORRESPONDING|CORR) )? src_item  TO  dest_item
+   : MOVE (CORRESPONDING|CORR)? src_item TO dest_item
    ;
 
 if_statement
-   : IF  logic_expression ( THEN)?  (sentense | NEXT  SENTENCE)
-     ( ELSE  (sentense|NEXT  SENTENCE))?
-     ( END_IF)?
+   : IF logic_expression THEN? (sentense|NEXT SENTENCE)
+     (ELSE (sentense|NEXT SENTENCE))?
+     END_IF?
    ;
 
 generate_statement
-   : GENERATE  report_item
+   : GENERATE report_item
    ;
 
 report_item
@@ -813,12 +813,12 @@ exit_statement
    ;
 
 exit_program_statement
-   : EXIT  PROGRAM
+   : EXIT PROGRAM
    ;
 
 go_to_statement
-   : GO ( TO)? ( proc_name)?
-   | GO ( TO)? ( proc_name)+  DEPENDING ( ON)?  qualified_data_item
+   : GO TO? proc_name?
+   | GO TO? proc_name+ DEPENDING ON? qualified_data_item
    ;
 
 proc_name
@@ -826,15 +826,15 @@ proc_name
    ;
 
 evaluate_statement
-   : EVALUATE  subj_item (( ALSO)?  subj_item)*
-     ( WHEN  when_condition (( ALSO)?  when_condition)* ( sentense)?)+
-     ( WHEN  OTHER ( sentense)?)?
-     ( END_EVALUATE)?
+   : EVALUATE subj_item (ALSO? subj_item)*
+     (WHEN when_condition (ALSO? when_condition)* sentense?)+
+     (WHEN OTHER sentense?)?
+     END_EVALUATE?
    ;
 
 when_condition
    : logic_expression
-   | (NOT )? arithmetic_expression ( (THROUGH|THRU)  arithmetic_expression)?
+   | NOT? arithmetic_expression ((THROUGH|THRU) arithmetic_expression)?
    | ANY
    | TRUE
    | FALSE
@@ -853,16 +853,16 @@ divide_statement
    ;
 
 divide_statement_form1
-   : DIVIDE  divide_num  (INTO|BY) ( divide_num  GIVING)? ( identifier_result ( ROUNDED)?)+
-     ( on_size_variants)?
-     ( END_DIVIDE)?
+   : DIVIDE divide_num (INTO|BY) (divide_num GIVING)? (identifier_result ROUNDED?)+
+     on_size_variants?
+     END_DIVIDE?
    ;
 
 divide_statement_form2
-   : DIVIDE  divide_num  (INTO|BY) ( divide_num  GIVING)?  identifier_result ( ROUNDED)? 
-      REMAINDER  remaind
-     ( on_size_variants)?
-     ( END_DIVIDE)?
+   : DIVIDE divide_num (INTO|BY) (divide_num GIVING)? identifier_result ROUNDED? 
+      REMAINDER remaind
+     on_size_variants?
+     END_DIVIDE?
    ;
 
 remaind
@@ -1208,7 +1208,7 @@ input_source
    ;
 
 at_end
-   : (AT )? END ( sentense)?
+   : AT? END sentense?
    ;
 
 on_exception
@@ -1753,10 +1753,10 @@ identification_division_paragraph
 // program id
 
 program_id
-   : PROGRAM_ID  DOT_ 
-     program_name 
-     is_program? 
-     with_ident? 
+   : PROGRAM_ID DOT_
+     program_name
+     is_program?
+     with_ident?
      DOT_
    ;
 
@@ -1765,7 +1765,7 @@ program_name
    ;
 
 is_program
-   : (IS )? (COMMON | INITIAL) ( PROGRAM)?
+   : IS? (COMMON|INITIAL) PROGRAM?
    ;
 
 with_ident

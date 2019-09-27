@@ -2,10 +2,6 @@ import fs from 'fs';
 
 import { LogFunction } from '../main';
 
-export enum ESymbolKind {
-    Unknown,
-}
-
 /**
  * A range within a text. Just like the range object in vscode the end position is not included in the range.
  * Hence when start and end position are equal the range is empty.
@@ -21,7 +17,7 @@ export interface IDefinition {
     range: ILexicalRange;
 }
 
-export interface ISymbolInfo {
+export interface ISymbolInfo<ESymbolKind> {
     kind: ESymbolKind;
     name: string;
     source: string;
@@ -42,26 +38,26 @@ export interface IDiagnosticEntry {
     range: ILexicalRange;
 }
 
-export interface ISourceContext {
-    getCodeCompletionCandidates(column: number, row: number): ISymbolInfo[];
+export interface ISourceContext<ESymbolKind> {
+    getCodeCompletionCandidates(column: number, row: number): ISymbolInfo<ESymbolKind>[];
     getDiagnostics(): IDiagnosticEntry[];
-    getSymbolOccurences(column: number, row: number): ISymbolInfo[];
+    getSymbolOccurences(column: number, row: number): ISymbolInfo<ESymbolKind>[];
     parse(): void;
     setText(source: string): void;
-    symbolAtPosition(column: number, row: number): ISymbolInfo | undefined;
+    symbolAtPosition(column: number, row: number): ISymbolInfo<ESymbolKind> | undefined;
 }
 
-export interface IContextEntry {
-    context: ISourceContext;
+export interface IContextEntry<ESymbolKind> {
+    context: ISourceContext<ESymbolKind>;
 }
 
-export class ContextFacade {
+export class ContextFacade<ESymbolKind> {
     // Mapping file names to SourceContext instances.
-    private sourceContexts: Map<string, IContextEntry> = new Map<string, IContextEntry>();
+    private sourceContexts: Map<string, IContextEntry<ESymbolKind>> = new Map<string, IContextEntry<ESymbolKind>>();
 
     public logFn: LogFunction;
 
-    constructor(private contextFactory: (fileName: string, logFn?: LogFunction) => ISourceContext, logFn?: LogFunction) {
+    constructor(private contextFactory: (fileName: string, logFn?: LogFunction) => ISourceContext<ESymbolKind>, logFn?: LogFunction) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => { });
     }
@@ -77,7 +73,7 @@ export class ContextFacade {
         this.sourceContexts.delete(fileName);
     }
 
-    public getContext(fileName: string, source?: string): ISourceContext {
+    public getContext(fileName: string, source?: string): ISourceContext<ESymbolKind> {
         let contextEntry = this.sourceContexts.get(fileName);
         if (!contextEntry) {
             return this.loadSource(fileName, source);
@@ -85,7 +81,7 @@ export class ContextFacade {
         return contextEntry.context;
     }
 
-    public loadSource(fileName: string, source?: string): ISourceContext {
+    public loadSource(fileName: string, source?: string): ISourceContext<ESymbolKind> {
         let contextEntry = this.sourceContexts.get(fileName);
         if (!contextEntry) {
             if (!source) {
@@ -109,7 +105,7 @@ export class ContextFacade {
         return contextEntry.context;
     }
 
-    private parse(contextEntry: IContextEntry) {
+    private parse(contextEntry: IContextEntry<ESymbolKind>) {
         contextEntry.context.parse();
     }
 
@@ -135,17 +131,17 @@ export class ContextFacade {
         return context.getDiagnostics();
     }
 
-    public getCodeCompletionCandidates(fileName: string, column: number, row: number): ISymbolInfo[] {
+    public getCodeCompletionCandidates(fileName: string, column: number, row: number): ISymbolInfo<ESymbolKind>[] {
         let context = this.getContext(fileName);
         return context.getCodeCompletionCandidates(column, row);
     }
 
-    public symbolInfoAtPosition(fileName: string, column: number, row: number): ISymbolInfo | undefined {
+    public symbolInfoAtPosition(fileName: string, column: number, row: number): ISymbolInfo<ESymbolKind> | undefined {
         let context = this.getContext(fileName);
         return context.symbolAtPosition(column, row);
     }
 
-    public getSymbolOccurences(fileName: string, column: number, row: number): ISymbolInfo[] {
+    public getSymbolOccurences(fileName: string, column: number, row: number): ISymbolInfo<ESymbolKind>[] {
         let context = this.getContext(fileName);
         return context.getSymbolOccurences(column, row);
     }
