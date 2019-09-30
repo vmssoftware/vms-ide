@@ -13,10 +13,8 @@ import { SpecificationPartConstructContext } from "./FortranParser";
 import { DeclarationConstructContext } from "./FortranParser";
 import { ExecutionPartConstructContext } from "./FortranParser";
 import { SpecificationStatementContext } from "./FortranParser";
-import { InternalSubProgPartContext } from "./FortranParser";
 import { InternalSubprogramContext } from "./FortranParser";
-import { ModuleSubprogramPartConstructContext } from "./FortranParser";
-import { ModuleSubprogramContext } from "./FortranParser";
+import { InternalSubprogramPartContext } from "./FortranParser";
 import { ExecutableConstructContext } from "./FortranParser";
 import { ActionStatementContext } from "./FortranParser";
 import { DefinedOperatorContext } from "./FortranParser";
@@ -201,6 +199,7 @@ import { ParameterStatementContext } from "./FortranParser";
 import { NamedConstantDefListContext } from "./FortranParser";
 import { NamedConstantDefContext } from "./FortranParser";
 import { ImplicitStatementContext } from "./FortranParser";
+import { ImplicitBodyContext } from "./FortranParser";
 import { ImplicitSpecContext } from "./FortranParser";
 import { LetterSpecContext } from "./FortranParser";
 import { NamelistStatementContext } from "./FortranParser";
@@ -430,13 +429,6 @@ export interface FortranParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitSpecificationStatement?: (ctx: SpecificationStatementContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `FortranParser.internalSubProgPart`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitInternalSubProgPart?: (ctx: InternalSubProgPartContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `FortranParser.internalSubprogram`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -444,18 +436,11 @@ export interface FortranParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitInternalSubprogram?: (ctx: InternalSubprogramContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `FortranParser.moduleSubprogramPartConstruct`.
+	 * Visit a parse tree produced by `FortranParser.internalSubprogramPart`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitModuleSubprogramPartConstruct?: (ctx: ModuleSubprogramPartConstructContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `FortranParser.moduleSubprogram`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitModuleSubprogram?: (ctx: ModuleSubprogramContext) => Result;
+	visitInternalSubprogramPart?: (ctx: InternalSubprogramPartContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `FortranParser.executableConstruct`.
@@ -1744,6 +1729,13 @@ export interface FortranParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitImplicitStatement?: (ctx: ImplicitStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.implicitBody`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitImplicitBody?: (ctx: ImplicitBodyContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `FortranParser.implicitSpec`.

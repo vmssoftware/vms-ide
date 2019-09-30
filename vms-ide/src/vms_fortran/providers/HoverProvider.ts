@@ -20,7 +20,28 @@ export class FortranHoverProvider implements HoverProvider
             return undefined;
         }
 
-        if(info.kind === SymbolKind.RoutineDcl ||
+        if(info.info)
+        {
+            if(info.info.source === "")
+            {
+                data = info.name + ": " + info.info.name;                
+            }
+            else
+            {
+                if(info.info.definition)
+                {
+                    let startRow = info.info.definition.range.start.row-1;
+                    let endRow = info.info.definition!.range.end.row;
+                    let range = new Range(startRow, 0, endRow, 0);
+
+                    data = info.name + ": " + document.getText(range).trim();
+                }
+            }
+
+            info.kind = SymbolKind.VariableDcl;
+            showParseData = true;
+        }
+        else if(info.kind === SymbolKind.RoutineDcl ||
              info.kind === SymbolKind.TypeBlockDcl ||
              info.kind === SymbolKind.ConstBlockDcl ||
              info.kind === SymbolKind.RoutineHeader)
@@ -51,17 +72,17 @@ export class FortranHoverProvider implements HoverProvider
 
                 const matcherTypeData = /^\s*\d*?\s*([a-zA-Z]+(\s*\*\s*\d+|\s*\(\s*\S+\s*\)|\s*\*\s*\(\s*(\d+|\*)\s*\))?)/;
                 const matcherTypeDataColon = /^\s*\d*?\s*(.*\:\:)\s+/;
-                const matcheVariable = /^\s*([a-zA-Z0-9$_]+\s*([\(\/]\s*[a-zA-Z0-9$_]+(\s*,\s*[a-zA-Z0-9$_]+\s*)*\s*[\)\/]|\s*\(\s*\*\s*\)|\s*\*\s*\d+)?)\s*(\,|\!)/;
+                const matcheVariable = /^\s*([a-zA-Z0-9$_]+\s*([\(\/]\s*[a-zA-Z0-9$_]+(\s*,\s*[a-zA-Z0-9$_]+\s*)*\s*[\)\/]|\s*\(\s*\*\s*\)|\s*\*\s*\d+|\s*\=(\>)?\s*.+)?)\s*(\,|\!)/;
                 let type : string = "";
                 let matches : RegExpMatchArray | null;
 
                 if(data.includes("::"))
                 {
-                    matches = data.match(matcherTypeDataColon);                    
+                    matches = data.match(matcherTypeDataColon);
                 }
                 else
                 {
-                    matches = data.match(matcherTypeData);                    
+                    matches = data.match(matcherTypeData);
                 }                
 
                 if(matches && matches.length > 1)
@@ -99,3 +120,6 @@ export class FortranHoverProvider implements HoverProvider
         ]);
     }
 }
+
+//^implisit(([a-z]+)\((([a-z])(\-[a-z])?)(\,([a-z])(\-[a-z])?)*\))+
+//^implisit\s*(.+)

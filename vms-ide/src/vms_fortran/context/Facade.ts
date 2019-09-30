@@ -15,6 +15,7 @@ export enum SymbolKind
     Label,
     Entity,
     Block,
+    ImplicitBlockDcl,
     CompoundBlock,
     Routine,
     RoutineHeader,
@@ -23,6 +24,7 @@ export enum SymbolKind
     VariableDcl,
     VariableBlockDcl,
     VariableGlobalBlockDcl,
+    VariableLocalBlockDcl,
     TypeDcl,
     TypeBlockDcl,
     LabelDcl,
@@ -58,6 +60,7 @@ export interface SymbolInfo
     source: string;
     definition?: Definition;
     description?: string;  // Used for code completion. Provides a small description for certain symbols.
+    info?: SymbolInfo;
 }
 
 export enum DiagnosticType 
@@ -87,13 +90,15 @@ export class Facade
 {
     // Mapping file names to SourceContext instances.
     private filePaths: string[];
+    private rootFolderNames = new Array<string>();
     private sourceContexts: Map<string, ContextEntry> = new Map<string, ContextEntry>();
     private sourceReferenceContexts: Map<string, ContextEntry> = new Map<string, ContextEntry>();
 
 
-    constructor(files: string[]) 
+    constructor(files: string[], rootFolderNames: Array<string>) 
     {
         this.filePaths = files;
+        this.rootFolderNames = rootFolderNames;
     }
 
     public attach(fileName: string, source?: string) 
@@ -168,25 +173,44 @@ export class Facade
     private createDependencys(fileName: string)
     {
         let findFile = false;
-//create if file locate in project floder!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        for (let dep of this.filePaths)
+        
+        if(this.checkRootFolder(fileName, this.rootFolderNames))//if file locate in project floder
         {
-            if(dep === fileName)
+            for (let dep of this.filePaths)
             {
-                findFile = true;
+                if(dep === fileName)
+                {
+                    findFile = true;
+                    break;
+                }
+            }
+
+            if(!findFile)
+            {
+                this.filePaths.push(fileName);
+            }
+
+            for (let dep of this.filePaths)
+            {
+                this.loadGrammar(this.sourceReferenceContexts, false, dep);
+            }
+        }
+    }
+
+    private checkRootFolder(fileName: string, rootFolders: Array<string>): boolean
+    {
+        let result = false;
+        
+        for (let folder of rootFolders)
+        {
+            if(fileName.includes(folder))
+            {
+                result = true;
                 break;
             }
         }
-
-        if(!findFile)
-        {
-            this.filePaths.push(fileName);
-        }
-
-        for (let dep of this.filePaths)
-        {
-            this.loadGrammar(this.sourceReferenceContexts, false, dep);
-        }
+        
+        return result;
     }
 
     private addDependencys(contextEntry: ContextEntry)
@@ -232,7 +256,11 @@ export class Facade
         // }
 
         this.reparseDependency(contextEntry.context.fileName);
-        this.addDependencys(contextEntry);
+
+        if(this.checkRootFolder(contextEntry.context.fileName, this.rootFolderNames))//if file locate in project floder
+        {
+            this.addDependencys(contextEntry);
+        }
     }
 
     public setText(fileName: string, source: string) 

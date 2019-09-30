@@ -4,6 +4,7 @@ import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 import {
     ContextSymbolTable,
     LabelSymbol,
+    ImplicitBlockDclSymbol,
     RoutineSymbol,
     RoutineDclSymbol,
     RoutineBlockDclSymbol,
@@ -11,6 +12,7 @@ import {
     VariableDclSymbol,
     VariableBlockDclSymbol,
     VariableGlobalBlockDclSymbol,
+    VariableLocalBlockDclSymbol,
     TypeDclSymbol,
     ConstantDclSymbol,
     TypeBlockDclSymbol,
@@ -27,6 +29,7 @@ import {
 import { 
     ProgramContext,
     MainRangeContext,
+    ImplicitBodyContext,
     IdentifierContext,
     EntityDeclContext,
     ComponentDeclContext,
@@ -43,10 +46,6 @@ import {
     FunctionSubprogramContext,
     FunctionReferenceContext,
     CallStatementContext,
-    // TypeDefinitionContext,
-    // ConstantDefinitionPartContext,
-    // ConstantDefinitionContext,
-    // TypeDefinitionPartContext,
 } from '../parser/FortranParser';
 
 
@@ -61,6 +60,9 @@ export class DetailsListener implements FortranParserListener
 
         for(let item of blocks)
         {
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableLocalBlockDclSymbol, undefined, item.text);
+            this.currentSymbol.context = item;
+
             this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableGlobalBlockDclSymbol, undefined, item.text);
             this.currentSymbol.context = item;
         }
@@ -79,6 +81,19 @@ export class DetailsListener implements FortranParserListener
         this.currentSymbol.context = ctx;
     }
     exitMainRange(ctx: MainRangeContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
+    enterImplicitBody(ctx: ImplicitBodyContext) 
+    {
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(ImplicitBlockDclSymbol, undefined, ctx.text);
+        this.currentSymbol.context = ctx;
+    }
+    exitImplicitBody(ctx: ImplicitBodyContext) 
     {
         if (this.currentSymbol) 
         {
@@ -111,6 +126,21 @@ export class DetailsListener implements FortranParserListener
             let obj = ctx.objectName();
 
             if(obj)
+            {
+                let ident = getIdentifier(obj.identifier());
+
+                if(ident)
+                {
+                    this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, ident.text);
+                    this.currentSymbol.context = ident;
+                }
+            }
+        }        
+        else if(ctx.pointerAssignmentItem())
+        {
+            let objs = ctx.pointerAssignmentItem()!.name();
+
+            for(let obj of objs)
             {
                 let ident = getIdentifier(obj.identifier());
 

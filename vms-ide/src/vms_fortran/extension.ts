@@ -74,7 +74,7 @@ export async function activate(context: ExtensionContext)
         }
     }
 
-    const backend = new Facade(sourcePaths);
+    const backend = new Facade(sourcePaths, rootFolderNames);
 
     // Load interpreter + cache data for each open document, if there's any.
     for (let document of workspace.textDocuments) 
@@ -191,15 +191,34 @@ function addPathToFiles(sourcePaths : string[], path : string, fileNames : strin
 {
     for(let i = 0; i < fileNames.length; i++)
     {
-        if(fileNames[i].toLowerCase().includes(".f90") ||
-            fileNames[i].toLowerCase().includes(".f77") ||
-            fileNames[i].toLowerCase().includes(".for") ||
-            fileNames[i].toLowerCase().includes(".f"))
+        if(checkExtension(fileNames[i]))
         {
             fileNames[i] = path + "\\" + fileNames[i];
             sourcePaths.push(fileNames[i]);
         }
     }
+}
+
+function checkExtension(file: string) : boolean
+{
+    let result : boolean = false;
+
+    let extPos = file.lastIndexOf(".");
+
+    if(extPos !== -1)
+    {
+        let ext = file.substring(extPos).toLowerCase();
+
+        if(ext === ".f90" ||
+            ext === ".f77" ||
+            ext === ".for" ||
+            ext === ".f")
+        {
+            result = true;
+        }
+    }
+
+    return result;
 }
 
 // this method is called when your extension is deactivated

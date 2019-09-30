@@ -129,7 +129,7 @@ export class ContextSymbolTable extends SymbolTable
             }
             else
             {
-                let blocks = this.getAllSymbols(RoutineBlockDclSymbol, false);
+                let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, false);
                 let varDefs = this.getAllSymbols(VariableDclSymbol, false);
                 let definition = this.definitionFromSymbol(symbol);
 
@@ -148,6 +148,48 @@ export class ContextSymbolTable extends SymbolTable
                                 return result;
                             }
                             break;
+                        }
+                    }
+
+                    let findImplisit = false;
+
+                    for (let block of blocks)//search block witch contains symbol
+                    {
+                        let item = this.findSymbolImplicitBlock(symbol, block);
+
+                        if(item)
+                        {
+                            findImplisit = true;
+
+                            if(!item.name.toLowerCase().includes("implicitnone"))
+                            {
+                                let result = this.getSymbolInfo(symbol);
+
+                                if(result)
+                                {
+                                    result.info = this.getSymbolInfo(item);
+
+                                    return result;
+                                }
+                            }
+                            break;
+                        }
+                    }
+
+                    if(!findImplisit)
+                    {
+                        let result = this.getSymbolInfo(symbol);
+
+                        if(result)
+                        {
+                            const info: SymbolInfo = {
+                                kind: SymbolKind.ImplicitBlockDcl,
+                                name: "implicit integer(i-n), real(a-h,o-z)",
+                                source: "",
+                            };
+                            result.info = info;
+
+                            return result;
                         }
                     }
 
@@ -214,6 +256,40 @@ export class ContextSymbolTable extends SymbolTable
         return undefined;
     }
 
+    private findSymbolImplicitBlock(symbol: Symbol, block: Symbol): Symbol | undefined
+    {
+        let definition = this.definitionFromSymbol(symbol);
+
+        if(definition && block.context instanceof ParserRuleContext)
+        {
+            if(block.context.stop)
+            {
+                let startLine = block.context.start.line;
+                let stopLine = block.context.stop.line;                
+
+                if(definition.range.start.row >= startLine && definition.range.start.row <= stopLine)
+                {
+                    let implicitBlocks = this.getAllSymbols(ImplicitBlockDclSymbol, false);
+
+                    for(let item of implicitBlocks)
+                    {
+                        let definition = this.definitionFromSymbol(item);
+        
+                        if (definition) 
+                        {
+                            if(definition.range.start.row >= startLine && definition.range.start.row <= stopLine)
+                            {
+                                return item;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return undefined;
+    }
+
     private findSimbolDedlarationInBlock(symbol: Symbol, block: Symbol): Symbol | undefined
     {
         let definition = this.definitionFromSymbol(symbol);
@@ -242,7 +318,7 @@ export class ContextSymbolTable extends SymbolTable
                                 }
                             }
                         }
-                    }                           
+                    }
                 }
             }
         }
@@ -293,7 +369,7 @@ export class ContextSymbolTable extends SymbolTable
 
     private findLocalSimbolDedlaration(symbol: Symbol): Symbol | undefined
     {
-        let blocks = this.getAllSymbols(RoutineBlockDclSymbol, false);
+        let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, false);
 
         for (let block of blocks)//search block witch contain symbol
         {
@@ -446,7 +522,7 @@ export class ContextSymbolTable extends SymbolTable
         let localSymbol: Symbol | undefined;
         let localBlock: Symbol | undefined;
 
-        let blocks = this.getAllSymbols(RoutineBlockDclSymbol, localOnly);
+        let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, localOnly);
 
         for (let block of blocks)//search block witch contain symbol
         {
@@ -613,6 +689,10 @@ export class ContextSymbolTable extends SymbolTable
         {
             return SymbolKind.Block;
         }
+        if (symbol instanceof ImplicitBlockDclSymbol) 
+        {
+            return SymbolKind.ImplicitBlockDcl;
+        }
         if (symbol instanceof RoutineSymbol) 
         {
             return SymbolKind.Routine;
@@ -628,7 +708,7 @@ export class ContextSymbolTable extends SymbolTable
         if (symbol instanceof RoutineBlockDclSymbol) 
         {
             return SymbolKind.RoutineBlockDcl;
-        }        
+        }
         if (symbol instanceof VariableDclSymbol) 
         {
             return SymbolKind.VariableDcl;
@@ -640,6 +720,10 @@ export class ContextSymbolTable extends SymbolTable
         if (symbol instanceof VariableGlobalBlockDclSymbol) 
         {
             return SymbolKind.VariableGlobalBlockDcl;
+        }
+        if (symbol instanceof VariableLocalBlockDclSymbol) 
+        {
+            return SymbolKind.VariableLocalBlockDcl;
         }
         if (symbol instanceof TypeDclSymbol) 
         {
@@ -710,7 +794,9 @@ export class RoutineDclSymbol extends EntityCollection { }
 export class RoutineBlockDclSymbol extends EntityCollection { }
 export class VariableDclSymbol extends EntityCollection { }
 export class VariableBlockDclSymbol extends EntityCollection { }
+export class ImplicitBlockDclSymbol extends EntityCollection { }
 export class VariableGlobalBlockDclSymbol extends EntityCollection { }
+export class VariableLocalBlockDclSymbol extends EntityCollection { }
 export class TypeDclSymbol extends EntityCollection { }
 export class ConstantDclSymbol extends EntityCollection { }
 export class TypeBlockDclSymbol extends EntityCollection { }

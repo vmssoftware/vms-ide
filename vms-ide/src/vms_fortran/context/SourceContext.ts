@@ -305,7 +305,7 @@ export class SourceContext
             // FortranParser.COMMENT_2,
             // FortranParser.IDENT,
             // FortranParser.STRING_LITERAL,
-            // FortranParser.IDENTIFIER,
+            FortranParser.IDENTIFIER,
             // FortranParser.NUM_INT,
             // FortranParser.NUM_REAL,
             FortranParser.EOF,

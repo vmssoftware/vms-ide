@@ -13,10 +13,8 @@ import { SpecificationPartConstructContext } from "./FortranParser";
 import { DeclarationConstructContext } from "./FortranParser";
 import { ExecutionPartConstructContext } from "./FortranParser";
 import { SpecificationStatementContext } from "./FortranParser";
-import { InternalSubProgPartContext } from "./FortranParser";
 import { InternalSubprogramContext } from "./FortranParser";
-import { ModuleSubprogramPartConstructContext } from "./FortranParser";
-import { ModuleSubprogramContext } from "./FortranParser";
+import { InternalSubprogramPartContext } from "./FortranParser";
 import { ExecutableConstructContext } from "./FortranParser";
 import { ActionStatementContext } from "./FortranParser";
 import { DefinedOperatorContext } from "./FortranParser";
@@ -201,6 +199,7 @@ import { ParameterStatementContext } from "./FortranParser";
 import { NamedConstantDefListContext } from "./FortranParser";
 import { NamedConstantDefContext } from "./FortranParser";
 import { ImplicitStatementContext } from "./FortranParser";
+import { ImplicitBodyContext } from "./FortranParser";
 import { ImplicitSpecContext } from "./FortranParser";
 import { LetterSpecContext } from "./FortranParser";
 import { NamelistStatementContext } from "./FortranParser";
@@ -467,17 +466,6 @@ export interface FortranParserListener extends ParseTreeListener {
 	exitSpecificationStatement?: (ctx: SpecificationStatementContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `FortranParser.internalSubProgPart`.
-	 * @param ctx the parse tree
-	 */
-	enterInternalSubProgPart?: (ctx: InternalSubProgPartContext) => void;
-	/**
-	 * Exit a parse tree produced by `FortranParser.internalSubProgPart`.
-	 * @param ctx the parse tree
-	 */
-	exitInternalSubProgPart?: (ctx: InternalSubProgPartContext) => void;
-
-	/**
 	 * Enter a parse tree produced by `FortranParser.internalSubprogram`.
 	 * @param ctx the parse tree
 	 */
@@ -489,26 +477,15 @@ export interface FortranParserListener extends ParseTreeListener {
 	exitInternalSubprogram?: (ctx: InternalSubprogramContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `FortranParser.moduleSubprogramPartConstruct`.
+	 * Enter a parse tree produced by `FortranParser.internalSubprogramPart`.
 	 * @param ctx the parse tree
 	 */
-	enterModuleSubprogramPartConstruct?: (ctx: ModuleSubprogramPartConstructContext) => void;
+	enterInternalSubprogramPart?: (ctx: InternalSubprogramPartContext) => void;
 	/**
-	 * Exit a parse tree produced by `FortranParser.moduleSubprogramPartConstruct`.
+	 * Exit a parse tree produced by `FortranParser.internalSubprogramPart`.
 	 * @param ctx the parse tree
 	 */
-	exitModuleSubprogramPartConstruct?: (ctx: ModuleSubprogramPartConstructContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `FortranParser.moduleSubprogram`.
-	 * @param ctx the parse tree
-	 */
-	enterModuleSubprogram?: (ctx: ModuleSubprogramContext) => void;
-	/**
-	 * Exit a parse tree produced by `FortranParser.moduleSubprogram`.
-	 * @param ctx the parse tree
-	 */
-	exitModuleSubprogram?: (ctx: ModuleSubprogramContext) => void;
+	exitInternalSubprogramPart?: (ctx: InternalSubprogramPartContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `FortranParser.executableConstruct`.
@@ -2533,6 +2510,17 @@ export interface FortranParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitImplicitStatement?: (ctx: ImplicitStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.implicitBody`.
+	 * @param ctx the parse tree
+	 */
+	enterImplicitBody?: (ctx: ImplicitBodyContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.implicitBody`.
+	 * @param ctx the parse tree
+	 */
+	exitImplicitBody?: (ctx: ImplicitBodyContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `FortranParser.implicitSpec`.

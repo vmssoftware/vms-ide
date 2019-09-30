@@ -20,14 +20,14 @@ mainProgram
    ;
 
 mainRange
-   : bodyConstruct+ endProgramStatement
-   | internalSubProgPart endProgramStatement
+   : body endProgramStatement
    | endProgramStatement
    ;
 
 bodyConstruct
    : specificationPartConstruct
    | executableConstruct
+   | internalSubprogramPart
    ;
 
 body
@@ -77,25 +77,13 @@ specificationStatement
    | targetStatement
    ;
 
-internalSubProgPart
-   : body containsStatement internalSubprogram
-   | containsStatement internalSubprogram
-   | internalSubProgPart internalSubprogram
-   ;
-
 internalSubprogram
    : functionSubprogram
    | subroutineSubprogram
    ;
 
-moduleSubprogramPartConstruct
-   : containsStatement
-   | moduleSubprogram
-   ;
-
-moduleSubprogram
-   : functionSubprogram
-   | subroutineSubprogram
+internalSubprogramPart
+   : containsStatement internalSubprogram+
    ;
 
 executableConstruct
@@ -350,7 +338,7 @@ editElement
 
 mislexedFcon
    : R_CONST R_CONST       //% 2E15 .5
-   | identifier R_CONST       // % E15 .5 
+   | identifier R_CONST    // % E15 .5 
    ;
 
 formatsep
@@ -373,9 +361,9 @@ moduleBlock
 
 moduleBody
    : specificationPartConstruct
-   | moduleSubprogramPartConstruct
+   | internalSubprogramPart
    | moduleBody specificationPartConstruct
-   | moduleBody moduleSubprogramPartConstruct
+   | moduleBody internalSubprogramPart
    ;
 
 moduleStatement
@@ -678,7 +666,6 @@ functionDeclaration
 
 functionBody
    : body? endFunctionStatement
-   | internalSubProgPart endFunctionStatement
    ;
 
 functionPrefix
@@ -703,7 +690,6 @@ subroutineDeclaration
 
 subroutineBody
    : body? endSubroutineStatement
-   | internalSubProgPart endSubroutineStatement
    ;
 
 subroutineStatement
@@ -1171,8 +1157,12 @@ namedConstantDef
    ;
 
 implicitStatement
-   : label? IMPLICIT NONE eos
-   | label? IMPLICIT implicitSpec (COMMA implicitSpec)* eos
+   : label? implicitBody eos
+   ;
+
+implicitBody
+   : IMPLICIT NONE
+   | IMPLICIT implicitSpec (COMMA implicitSpec)*
    ;
 
 implicitSpec
