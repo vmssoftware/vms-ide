@@ -566,7 +566,7 @@ XOR
    : DOT X O R DOT
    ;
 
-EOR
+EOR_
    : DOT E O R DOT
    ;
 
@@ -648,7 +648,7 @@ SIZE
    : S I Z E
    ;
 
-EOR_S
+EOR
    : E O R
    ;
 

@@ -131,7 +131,7 @@ export class FortranLexer extends Lexer {
 	public static readonly EQV = 113;
 	public static readonly NEQV = 114;
 	public static readonly XOR = 115;
-	public static readonly EOR = 116;
+	public static readonly EOR_ = 116;
 	public static readonly LT = 117;
 	public static readonly LE = 118;
 	public static readonly GT = 119;
@@ -151,7 +151,7 @@ export class FortranLexer extends Lexer {
 	public static readonly REC = 133;
 	public static readonly ADVANCE = 134;
 	public static readonly SIZE = 135;
-	public static readonly EOR_S = 136;
+	public static readonly EOR = 136;
 	public static readonly UNIT = 137;
 	public static readonly ERR = 138;
 	public static readonly IOSTAT = 139;
@@ -250,9 +250,9 @@ export class FortranLexer extends Lexer {
 		"LPAREN", "RPAREN", "COLON", "ARROW", "TO_ASSIGN", "MINUS", "PLUS", "DIV", 
 		"STAR", "CONCAT", "POWER", "DOWN_LINE", "EQUAL", "NOT_EQUAL", "MORE_", 
 		"LESS", "MORE_EQUAL", "LESS_EQUAL", "LNOT", "LAND", "LOR", "EQV", "NEQV", 
-		"XOR", "EOR", "LT", "LE", "GT", "GE", "NE", "EQ", "TRUE", "FALSE", "IN", 
+		"XOR", "EOR_", "LT", "LE", "GT", "GE", "NE", "EQ", "TRUE", "FALSE", "IN", 
 		"OUT", "STAT", "LOGICAL", "KIND", "LEN", "FMT", "NML", "REC", "ADVANCE", 
-		"SIZE", "EOR_S", "UNIT", "ERR", "IOSTAT", "LET", "PRECISION", "IOSTART", 
+		"SIZE", "EOR", "UNIT", "ERR", "IOSTAT", "LET", "PRECISION", "IOSTART", 
 		"SEQUENTIAL", "DIRECT", "FILE", "STATUS", "ACCESS", "POSITION", "ACTION", 
 		"DELIM", "PAD", "FORM", "RECL", "RECORDSIZE", "BLANK", "EXIST", "OPENED", 
 		"NUMBER", "NAMED", "NAME", "FORMATTED", "UNFORMATTED", "NEXTREC", "READWRITE", 
@@ -298,20 +298,19 @@ export class FortranLexer extends Lexer {
 		"REF", "VAL", "LOC", "PERCENT", "DOT", "COMMA", "LPAREN", "RPAREN", "COLON", 
 		"ARROW", "TO_ASSIGN", "MINUS", "PLUS", "DIV", "STAR", "CONCAT", "POWER", 
 		"DOWN_LINE", "EQUAL", "NOT_EQUAL", "MORE_", "LESS", "MORE_EQUAL", "LESS_EQUAL", 
-		"LNOT", "LAND", "LOR", "EQV", "NEQV", "XOR", "EOR", "LT", "LE", "GT", 
+		"LNOT", "LAND", "LOR", "EQV", "NEQV", "XOR", "EOR_", "LT", "LE", "GT", 
 		"GE", "NE", "EQ", "TRUE", "FALSE", "IN", "OUT", "STAT", "LOGICAL", "KIND", 
-		"LEN", "FMT", "NML", "REC", "ADVANCE", "SIZE", "EOR_S", "UNIT", "ERR", 
-		"IOSTAT", "LET", "PRECISION", "IOSTART", "SEQUENTIAL", "DIRECT", "FILE", 
-		"STATUS", "ACCESS", "POSITION", "ACTION", "DELIM", "PAD", "FORM", "RECL", 
-		"RECORDSIZE", "BLANK", "EXIST", "OPENED", "NUMBER", "NAMED", "NAME", "FORMATTED", 
-		"UNFORMATTED", "NEXTREC", "READWRITE", "IOLENGTH", "ASSOCIATEVARIABLE", 
-		"BLOCKSIZE", "BUFFERCOUNT", "BUFFERED", "CARRIAGECONTROL", "CONVERT", 
-		"DEFAULTFILE", "DISPOSE", "DISP", "EXTENDSIZE", "INITIALSIZE", "KEY", 
-		"KEYED", "MAXREC", "NOSPANBLOCKS", "ORGANIZATION", "RECORDTYPE", "SHARED", 
-		"SIGN", "S_CONST", "CONTN", "CONT6", "CONTTAB", "EOS", "DEBUG_COMMENT", 
-		"WS", "I_CONST", "H_CONST", "B_CONST", "O_CONST", "Z_CONST", "P_CONST", 
-		"X_CONST", "F_CONST", "IDENTIFIER", "R_CONST", "COMMENT", "FIXED_COMMENT", 
-		"SconSingle", "SconDouble",
+		"LEN", "FMT", "NML", "REC", "ADVANCE", "SIZE", "EOR", "UNIT", "ERR", "IOSTAT", 
+		"LET", "PRECISION", "IOSTART", "SEQUENTIAL", "DIRECT", "FILE", "STATUS", 
+		"ACCESS", "POSITION", "ACTION", "DELIM", "PAD", "FORM", "RECL", "RECORDSIZE", 
+		"BLANK", "EXIST", "OPENED", "NUMBER", "NAMED", "NAME", "FORMATTED", "UNFORMATTED", 
+		"NEXTREC", "READWRITE", "IOLENGTH", "ASSOCIATEVARIABLE", "BLOCKSIZE", 
+		"BUFFERCOUNT", "BUFFERED", "CARRIAGECONTROL", "CONVERT", "DEFAULTFILE", 
+		"DISPOSE", "DISP", "EXTENDSIZE", "INITIALSIZE", "KEY", "KEYED", "MAXREC", 
+		"NOSPANBLOCKS", "ORGANIZATION", "RECORDTYPE", "SHARED", "SIGN", "S_CONST", 
+		"CONTN", "CONT6", "CONTTAB", "EOS", "DEBUG_COMMENT", "WS", "I_CONST", 
+		"H_CONST", "B_CONST", "O_CONST", "Z_CONST", "P_CONST", "X_CONST", "F_CONST", 
+		"IDENTIFIER", "R_CONST", "COMMENT", "FIXED_COMMENT", "SconSingle", "SconDouble",
 	];
 	public static readonly VOCABULARY: Vocabulary = new VocabularyImpl(FortranLexer._LITERAL_NAMES, FortranLexer._SYMBOLIC_NAMES, []);
 

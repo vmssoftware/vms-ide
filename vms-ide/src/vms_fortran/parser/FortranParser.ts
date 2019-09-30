@@ -143,7 +143,7 @@ export class FortranParser extends Parser {
 	public static readonly EQV = 113;
 	public static readonly NEQV = 114;
 	public static readonly XOR = 115;
-	public static readonly EOR = 116;
+	public static readonly EOR_ = 116;
 	public static readonly LT = 117;
 	public static readonly LE = 118;
 	public static readonly GT = 119;
@@ -163,7 +163,7 @@ export class FortranParser extends Parser {
 	public static readonly REC = 133;
 	public static readonly ADVANCE = 134;
 	public static readonly SIZE = 135;
-	public static readonly EOR_S = 136;
+	public static readonly EOR = 136;
 	public static readonly UNIT = 137;
 	public static readonly ERR = 138;
 	public static readonly IOSTAT = 139;
@@ -233,6 +233,7 @@ export class FortranParser extends Parser {
 	public static readonly FIXED_COMMENT = 203;
 	public static readonly SconSingle = 204;
 	public static readonly SconDouble = 205;
+	public static readonly EOR_S = 206;
 	public static readonly RULE_program = 0;
 	public static readonly RULE_programUnit = 1;
 	public static readonly RULE_mainProgram = 2;
@@ -694,20 +695,20 @@ export class FortranParser extends Parser {
 		"REF", "VAL", "LOC", "PERCENT", "DOT", "COMMA", "LPAREN", "RPAREN", "COLON", 
 		"ARROW", "TO_ASSIGN", "MINUS", "PLUS", "DIV", "STAR", "CONCAT", "POWER", 
 		"DOWN_LINE", "EQUAL", "NOT_EQUAL", "MORE_", "LESS", "MORE_EQUAL", "LESS_EQUAL", 
-		"LNOT", "LAND", "LOR", "EQV", "NEQV", "XOR", "EOR", "LT", "LE", "GT", 
+		"LNOT", "LAND", "LOR", "EQV", "NEQV", "XOR", "EOR_", "LT", "LE", "GT", 
 		"GE", "NE", "EQ", "TRUE", "FALSE", "IN", "OUT", "STAT", "LOGICAL", "KIND", 
-		"LEN", "FMT", "NML", "REC", "ADVANCE", "SIZE", "EOR_S", "UNIT", "ERR", 
-		"IOSTAT", "LET", "PRECISION", "IOSTART", "SEQUENTIAL", "DIRECT", "FILE", 
-		"STATUS", "ACCESS", "POSITION", "ACTION", "DELIM", "PAD", "FORM", "RECL", 
-		"RECORDSIZE", "BLANK", "EXIST", "OPENED", "NUMBER", "NAMED", "NAME", "FORMATTED", 
-		"UNFORMATTED", "NEXTREC", "READWRITE", "IOLENGTH", "ASSOCIATEVARIABLE", 
-		"BLOCKSIZE", "BUFFERCOUNT", "BUFFERED", "CARRIAGECONTROL", "CONVERT", 
-		"DEFAULTFILE", "DISPOSE", "DISP", "EXTENDSIZE", "INITIALSIZE", "KEY", 
-		"KEYED", "MAXREC", "NOSPANBLOCKS", "ORGANIZATION", "RECORDTYPE", "SHARED", 
-		"SIGN", "S_CONST", "CONTN", "CONT6", "CONTTAB", "EOS", "DEBUG_COMMENT", 
-		"WS", "I_CONST", "H_CONST", "B_CONST", "O_CONST", "Z_CONST", "P_CONST", 
-		"X_CONST", "F_CONST", "IDENTIFIER", "R_CONST", "COMMENT", "FIXED_COMMENT", 
-		"SconSingle", "SconDouble",
+		"LEN", "FMT", "NML", "REC", "ADVANCE", "SIZE", "EOR", "UNIT", "ERR", "IOSTAT", 
+		"LET", "PRECISION", "IOSTART", "SEQUENTIAL", "DIRECT", "FILE", "STATUS", 
+		"ACCESS", "POSITION", "ACTION", "DELIM", "PAD", "FORM", "RECL", "RECORDSIZE", 
+		"BLANK", "EXIST", "OPENED", "NUMBER", "NAMED", "NAME", "FORMATTED", "UNFORMATTED", 
+		"NEXTREC", "READWRITE", "IOLENGTH", "ASSOCIATEVARIABLE", "BLOCKSIZE", 
+		"BUFFERCOUNT", "BUFFERED", "CARRIAGECONTROL", "CONVERT", "DEFAULTFILE", 
+		"DISPOSE", "DISP", "EXTENDSIZE", "INITIALSIZE", "KEY", "KEYED", "MAXREC", 
+		"NOSPANBLOCKS", "ORGANIZATION", "RECORDTYPE", "SHARED", "SIGN", "S_CONST", 
+		"CONTN", "CONT6", "CONTTAB", "EOS", "DEBUG_COMMENT", "WS", "I_CONST", 
+		"H_CONST", "B_CONST", "O_CONST", "Z_CONST", "P_CONST", "X_CONST", "F_CONST", 
+		"IDENTIFIER", "R_CONST", "COMMENT", "FIXED_COMMENT", "SconSingle", "SconDouble", 
+		"EOR_S",
 	];
 	public static readonly VOCABULARY: Vocabulary = new VocabularyImpl(FortranParser._LITERAL_NAMES, FortranParser._SYMBOLIC_NAMES, []);
 
@@ -762,7 +763,7 @@ export class FortranParser extends Parser {
 				this.state = 696;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.PROGRAM) | (1 << FortranParser.MODULE) | (1 << FortranParser.INCLUDE) | (1 << FortranParser.USE) | (1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.STRUCTURE) | (1 << FortranParser.RECORD) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.FUNCTION) | (1 << FortranParser.BLOCK) | (1 << FortranParser.SUBROUTINE) | (1 << FortranParser.END) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.COMMON) | (1 << FortranParser.POINTER) | (1 << FortranParser.INTEGER) | (1 << FortranParser.BYTE) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.CHARACTER - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.GO - 32)) | (1 << (FortranParser.GOTO - 32)) | (1 << (FortranParser.WHERE - 32)) | (1 << (FortranParser.SELECT - 32)) | (1 << (FortranParser.SELECTCASE - 32)) | (1 << (FortranParser.IF - 32)) | (1 << (FortranParser.DO - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)) | (1 << (FortranParser.CONTINUE - 32)))) !== 0) || ((((_la - 64)) & ~0x1F) === 0 && ((1 << (_la - 64)) & ((1 << (FortranParser.STOP - 64)) | (1 << (FortranParser.ENDDO - 64)) | (1 << (FortranParser.PAUSE - 64)) | (1 << (FortranParser.WRITE - 64)) | (1 << (FortranParser.REWRITE - 64)) | (1 << (FortranParser.READ - 64)) | (1 << (FortranParser.PRINT - 64)) | (1 << (FortranParser.OPEN - 64)) | (1 << (FortranParser.FORMAT - 64)) | (1 << (FortranParser.CALL - 64)) | (1 << (FortranParser.CONTAINS - 64)) | (1 << (FortranParser.RESULT - 64)) | (1 << (FortranParser.RECURSIVE - 64)) | (1 << (FortranParser.RETURN - 64)) | (1 << (FortranParser.CLOSE - 64)) | (1 << (FortranParser.DOUBLE - 64)) | (1 << (FortranParser.COMPLEX - 64)) | (1 << (FortranParser.INQUIRE - 64)) | (1 << (FortranParser.BACKSPACE - 64)) | (1 << (FortranParser.ENDFILE - 64)) | (1 << (FortranParser.REWIND - 64)) | (1 << (FortranParser.DESCR - 64)) | (1 << (FortranParser.REF - 64)) | (1 << (FortranParser.VAL - 64)) | (1 << (FortranParser.LOC - 64)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.I_CONST || _la === FortranParser.IDENTIFIER);
+			} while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.PROGRAM) | (1 << FortranParser.MODULE) | (1 << FortranParser.INCLUDE) | (1 << FortranParser.USE) | (1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.STRUCTURE) | (1 << FortranParser.RECORD) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.FUNCTION) | (1 << FortranParser.BLOCK) | (1 << FortranParser.SUBROUTINE) | (1 << FortranParser.END) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.COMMON) | (1 << FortranParser.POINTER) | (1 << FortranParser.INTEGER) | (1 << FortranParser.BYTE) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.CHARACTER - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.GO - 32)) | (1 << (FortranParser.GOTO - 32)) | (1 << (FortranParser.WHERE - 32)) | (1 << (FortranParser.SELECT - 32)) | (1 << (FortranParser.SELECTCASE - 32)) | (1 << (FortranParser.IF - 32)) | (1 << (FortranParser.DO - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)) | (1 << (FortranParser.CONTINUE - 32)))) !== 0) || ((((_la - 64)) & ~0x1F) === 0 && ((1 << (_la - 64)) & ((1 << (FortranParser.STOP - 64)) | (1 << (FortranParser.ENDDO - 64)) | (1 << (FortranParser.PAUSE - 64)) | (1 << (FortranParser.WRITE - 64)) | (1 << (FortranParser.REWRITE - 64)) | (1 << (FortranParser.READ - 64)) | (1 << (FortranParser.PRINT - 64)) | (1 << (FortranParser.OPEN - 64)) | (1 << (FortranParser.FORMAT - 64)) | (1 << (FortranParser.CALL - 64)) | (1 << (FortranParser.CONTAINS - 64)) | (1 << (FortranParser.RESULT - 64)) | (1 << (FortranParser.RECURSIVE - 64)) | (1 << (FortranParser.RETURN - 64)) | (1 << (FortranParser.CLOSE - 64)) | (1 << (FortranParser.DOUBLE - 64)) | (1 << (FortranParser.COMPLEX - 64)) | (1 << (FortranParser.INQUIRE - 64)) | (1 << (FortranParser.BACKSPACE - 64)) | (1 << (FortranParser.ENDFILE - 64)) | (1 << (FortranParser.REWIND - 64)) | (1 << (FortranParser.DESCR - 64)) | (1 << (FortranParser.REF - 64)) | (1 << (FortranParser.VAL - 64)) | (1 << (FortranParser.LOC - 64)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || ((((_la - 192)) & ~0x1F) === 0 && ((1 << (_la - 192)) & ((1 << (FortranParser.I_CONST - 192)) | (1 << (FortranParser.IDENTIFIER - 192)) | (1 << (FortranParser.EOR_S - 192)))) !== 0));
 			}
 		}
 		catch (re) {
@@ -1967,7 +1968,7 @@ export class FortranParser extends Parser {
 			{
 			this.state = 834;
 			_la = this._input.LA(1);
-			if (!((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER)) {
+			if (!((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S)) {
 			this._errHandler.recoverInline(this);
 			} else {
 				if (this._input.LA(1) === Token.EOF) {
@@ -2018,7 +2019,7 @@ export class FortranParser extends Parser {
 			this.state = 842;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.COLON - 72)) | (1 << (FortranParser.DIV - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)) | (1 << (FortranParser.S_CONST - 157)))) !== 0) || ((((_la - 192)) & ~0x1F) === 0 && ((1 << (_la - 192)) & ((1 << (FortranParser.I_CONST - 192)) | (1 << (FortranParser.H_CONST - 192)) | (1 << (FortranParser.P_CONST - 192)) | (1 << (FortranParser.X_CONST - 192)) | (1 << (FortranParser.F_CONST - 192)) | (1 << (FortranParser.IDENTIFIER - 192)) | (1 << (FortranParser.R_CONST - 192)))) !== 0)) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.COLON - 72)) | (1 << (FortranParser.DIV - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)) | (1 << (FortranParser.S_CONST - 157)))) !== 0) || ((((_la - 192)) & ~0x1F) === 0 && ((1 << (_la - 192)) & ((1 << (FortranParser.I_CONST - 192)) | (1 << (FortranParser.H_CONST - 192)) | (1 << (FortranParser.P_CONST - 192)) | (1 << (FortranParser.X_CONST - 192)) | (1 << (FortranParser.F_CONST - 192)) | (1 << (FortranParser.IDENTIFIER - 192)) | (1 << (FortranParser.R_CONST - 192)) | (1 << (FortranParser.EOR_S - 192)))) !== 0)) {
 				{
 				this.state = 841;
 				this.formatItemList();
@@ -2434,7 +2435,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -2482,6 +2482,7 @@ export class FortranParser extends Parser {
 			case FortranParser.RECORDTYPE:
 			case FortranParser.SHARED:
 			case FortranParser.IDENTIFIER:
+			case FortranParser.EOR_S:
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 904;
@@ -2633,7 +2634,7 @@ export class FortranParser extends Parser {
 				this.state = 929;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 					{
 					this.state = 928;
 					this.endName();
@@ -3592,7 +3593,7 @@ export class FortranParser extends Parser {
 				this.state = 1031;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 					{
 					this.state = 1030;
 					this.endName();
@@ -3717,7 +3718,7 @@ export class FortranParser extends Parser {
 				this.state = 1060;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 					{
 					this.state = 1059;
 					this.onlyList();
@@ -4047,7 +4048,7 @@ export class FortranParser extends Parser {
 			this.state = 1117;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 1116;
 				this.blockDataName();
@@ -4103,7 +4104,7 @@ export class FortranParser extends Parser {
 				this.state = 1128;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 					{
 					this.state = 1127;
 					this.endName();
@@ -4699,7 +4700,7 @@ export class FortranParser extends Parser {
 			this.state = 1244;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 1243;
 				this.typeStatementName();
@@ -5258,7 +5259,7 @@ export class FortranParser extends Parser {
 				this.state = 1356;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)) | (1 << (FortranParser.STAR - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.EOR_S - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0)) {
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)) | (1 << (FortranParser.STAR - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0) || _la === FortranParser.EOR_S) {
 					{
 					this.state = 1355;
 					this.actualArg();
@@ -5276,7 +5277,7 @@ export class FortranParser extends Parser {
 					this.state = 1360;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-					if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)) | (1 << (FortranParser.STAR - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.EOR_S - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0)) {
+					if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)) | (1 << (FortranParser.STAR - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0) || _la === FortranParser.EOR_S) {
 						{
 						this.state = 1359;
 						this.actualArg();
@@ -5347,7 +5348,7 @@ export class FortranParser extends Parser {
 				this.state = 1381;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 					{
 					this.state = 1378;
 					this.name();
@@ -5747,7 +5748,7 @@ export class FortranParser extends Parser {
 				this.state = 1460;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 					{
 					this.state = 1459;
 					this.endName();
@@ -5960,7 +5961,7 @@ export class FortranParser extends Parser {
 			this.state = 1504;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.STAR - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.STAR - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 1496;
 				this.subroutinePar();
@@ -6063,7 +6064,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -6111,6 +6111,7 @@ export class FortranParser extends Parser {
 			case FortranParser.RECORDTYPE:
 			case FortranParser.SHARED:
 			case FortranParser.IDENTIFIER:
+			case FortranParser.EOR_S:
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1508;
@@ -6155,7 +6156,7 @@ export class FortranParser extends Parser {
 			this.state = 1521;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.STAR - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.STAR - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 1513;
 				this.functionPar();
@@ -6258,7 +6259,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -6306,6 +6306,7 @@ export class FortranParser extends Parser {
 			case FortranParser.RECORDTYPE:
 			case FortranParser.SHARED:
 			case FortranParser.IDENTIFIER:
+			case FortranParser.EOR_S:
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1525;
@@ -6366,7 +6367,7 @@ export class FortranParser extends Parser {
 				this.state = 1535;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 					{
 					this.state = 1534;
 					this.endName();
@@ -6516,7 +6517,7 @@ export class FortranParser extends Parser {
 			this.state = 1572;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.EOR_S - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0)) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0) || _la === FortranParser.EOR_S) {
 				{
 				this.state = 1571;
 				this.expr();
@@ -6604,7 +6605,7 @@ export class FortranParser extends Parser {
 			this.state = 1588;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 1587;
 				this.sFDummyArgNameList();
@@ -6819,7 +6820,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -6867,6 +6867,7 @@ export class FortranParser extends Parser {
 			case FortranParser.RECORDTYPE:
 			case FortranParser.SHARED:
 			case FortranParser.IDENTIFIER:
+			case FortranParser.EOR_S:
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 1616;
@@ -7391,7 +7392,7 @@ export class FortranParser extends Parser {
 			this.state = 1711;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 1710;
 				this.typeName();
@@ -7758,7 +7759,7 @@ export class FortranParser extends Parser {
 			this.state = 1790;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.EOR_S - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0)) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0) || _la === FortranParser.EOR_S) {
 				{
 				this.state = 1782;
 				this.expr();
@@ -8929,7 +8930,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -8984,6 +8984,7 @@ export class FortranParser extends Parser {
 			case FortranParser.Z_CONST:
 			case FortranParser.IDENTIFIER:
 			case FortranParser.R_CONST:
+			case FortranParser.EOR_S:
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2064;
@@ -9305,7 +9306,7 @@ export class FortranParser extends Parser {
 			this.state = 2103;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.EOR_S - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0)) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0) || _la === FortranParser.EOR_S) {
 				{
 				this.state = 2102;
 				this.lowerBound();
@@ -9412,7 +9413,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -9467,6 +9467,7 @@ export class FortranParser extends Parser {
 			case FortranParser.Z_CONST:
 			case FortranParser.IDENTIFIER:
 			case FortranParser.R_CONST:
+			case FortranParser.EOR_S:
 				{
 				this.state = 2108;
 				this.lowerBound();
@@ -9618,7 +9619,7 @@ export class FortranParser extends Parser {
 				this.state = 2139;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.EOR_S - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0)) {
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0) || _la === FortranParser.EOR_S) {
 					{
 					this.state = 2136;
 					this.lowerBound();
@@ -10018,7 +10019,7 @@ export class FortranParser extends Parser {
 				this.state = 2230;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 					{
 					this.state = 2229;
 					this.accessIdList();
@@ -10179,7 +10180,7 @@ export class FortranParser extends Parser {
 				this.state = 2262;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.DIV - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.DIV - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 					{
 					this.state = 2261;
 					this.savedEntityList();
@@ -10310,7 +10311,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -10358,6 +10358,7 @@ export class FortranParser extends Parser {
 			case FortranParser.RECORDTYPE:
 			case FortranParser.SHARED:
 			case FortranParser.IDENTIFIER:
+			case FortranParser.EOR_S:
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2275;
@@ -11235,7 +11236,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -11283,6 +11283,7 @@ export class FortranParser extends Parser {
 			case FortranParser.RECORDTYPE:
 			case FortranParser.SHARED:
 			case FortranParser.IDENTIFIER:
+			case FortranParser.EOR_S:
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2443;
@@ -12278,7 +12279,7 @@ export class FortranParser extends Parser {
 			this.state = 2641;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 2640;
 				this.commonBlockName();
@@ -12701,7 +12702,7 @@ export class FortranParser extends Parser {
 			this.state = 2720;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.COLON - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.EOR_S - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0)) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.COLON - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0) || _la === FortranParser.EOR_S) {
 				{
 				this.state = 2719;
 				this.sectionSubscript();
@@ -12720,7 +12721,7 @@ export class FortranParser extends Parser {
 					this.state = 2724;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-					if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.COLON - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.EOR_S - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0)) {
+					if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.COLON - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0) || _la === FortranParser.EOR_S) {
 						{
 						this.state = 2723;
 						this.sectionSubscript();
@@ -13020,7 +13021,7 @@ export class FortranParser extends Parser {
 			this.state = 2773;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.EOR_S - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0)) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0) || _la === FortranParser.EOR_S) {
 				{
 				this.state = 2772;
 				this.expr();
@@ -13393,7 +13394,7 @@ export class FortranParser extends Parser {
 				this.state = 2846;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.EOR_S - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0));
+			} while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0) || _la === FortranParser.EOR_S);
 			}
 		}
 		catch (re) {
@@ -13837,7 +13838,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -13888,6 +13888,7 @@ export class FortranParser extends Parser {
 			case FortranParser.I_CONST:
 			case FortranParser.H_CONST:
 			case FortranParser.IDENTIFIER:
+			case FortranParser.EOR_S:
 				{
 				this.state = 2922;
 				this.uFTerm(0);
@@ -14264,7 +14265,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -14314,6 +14314,7 @@ export class FortranParser extends Parser {
 			case FortranParser.S_CONST:
 			case FortranParser.H_CONST:
 			case FortranParser.IDENTIFIER:
+			case FortranParser.EOR_S:
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2978;
@@ -15976,7 +15977,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -16025,6 +16025,7 @@ export class FortranParser extends Parser {
 			case FortranParser.SHARED:
 			case FortranParser.I_CONST:
 			case FortranParser.IDENTIFIER:
+			case FortranParser.EOR_S:
 				{
 				this.state = 3283;
 				this.sFTerm(0);
@@ -16995,7 +16996,7 @@ export class FortranParser extends Parser {
 			this.state = 3495;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 3492;
 				this.ifConstructName();
@@ -17081,7 +17082,7 @@ export class FortranParser extends Parser {
 			this.state = 3517;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 3516;
 				this.ifConstructName();
@@ -17129,7 +17130,7 @@ export class FortranParser extends Parser {
 			this.state = 3526;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 3525;
 				this.ifConstructName();
@@ -17195,7 +17196,7 @@ export class FortranParser extends Parser {
 			this.state = 3539;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 3538;
 				this.ifConstructName();
@@ -17565,7 +17566,7 @@ export class FortranParser extends Parser {
 			this.state = 3608;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 3607;
 				this.name();
@@ -17615,7 +17616,7 @@ export class FortranParser extends Parser {
 			this.state = 3618;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 3617;
 				this.endName();
@@ -17737,7 +17738,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -17786,6 +17786,7 @@ export class FortranParser extends Parser {
 			case FortranParser.SHARED:
 			case FortranParser.EOS:
 			case FortranParser.IDENTIFIER:
+			case FortranParser.EOR_S:
 				this.enterOuterAlt(_localctx, 3);
 				// tslint:disable-next-line:no-empty
 				{
@@ -18231,7 +18232,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -18279,6 +18279,7 @@ export class FortranParser extends Parser {
 			case FortranParser.RECORDTYPE:
 			case FortranParser.SHARED:
 			case FortranParser.IDENTIFIER:
+			case FortranParser.EOR_S:
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 3726;
@@ -18389,7 +18390,7 @@ export class FortranParser extends Parser {
 			this.state = 3748;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 3747;
 				this.name();
@@ -18437,7 +18438,7 @@ export class FortranParser extends Parser {
 			this.state = 3757;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 3756;
 				this.endName();
@@ -18485,7 +18486,7 @@ export class FortranParser extends Parser {
 			this.state = 3766;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 				{
 				this.state = 3765;
 				this.endName();
@@ -19156,7 +19157,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -19207,6 +19207,7 @@ export class FortranParser extends Parser {
 			case FortranParser.I_CONST:
 			case FortranParser.H_CONST:
 			case FortranParser.IDENTIFIER:
+			case FortranParser.EOR_S:
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 3886;
@@ -19961,7 +19962,7 @@ export class FortranParser extends Parser {
 				this.state = 4049;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.EOR_S - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER) {
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)))) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & ((1 << (FortranParser.IN - 125)) | (1 << (FortranParser.OUT - 125)) | (1 << (FortranParser.STAT - 125)) | (1 << (FortranParser.LOGICAL - 125)) | (1 << (FortranParser.KIND - 125)) | (1 << (FortranParser.LEN - 125)) | (1 << (FortranParser.FMT - 125)) | (1 << (FortranParser.NML - 125)) | (1 << (FortranParser.REC - 125)) | (1 << (FortranParser.ADVANCE - 125)) | (1 << (FortranParser.SIZE - 125)) | (1 << (FortranParser.UNIT - 125)) | (1 << (FortranParser.ERR - 125)) | (1 << (FortranParser.IOSTAT - 125)) | (1 << (FortranParser.LET - 125)) | (1 << (FortranParser.PRECISION - 125)) | (1 << (FortranParser.IOSTART - 125)) | (1 << (FortranParser.SEQUENTIAL - 125)) | (1 << (FortranParser.DIRECT - 125)) | (1 << (FortranParser.FILE - 125)) | (1 << (FortranParser.STATUS - 125)) | (1 << (FortranParser.ACCESS - 125)) | (1 << (FortranParser.POSITION - 125)) | (1 << (FortranParser.ACTION - 125)) | (1 << (FortranParser.DELIM - 125)) | (1 << (FortranParser.PAD - 125)) | (1 << (FortranParser.FORM - 125)) | (1 << (FortranParser.RECL - 125)) | (1 << (FortranParser.BLANK - 125)) | (1 << (FortranParser.EXIST - 125)))) !== 0) || ((((_la - 157)) & ~0x1F) === 0 && ((1 << (_la - 157)) & ((1 << (FortranParser.OPENED - 157)) | (1 << (FortranParser.NUMBER - 157)) | (1 << (FortranParser.NAMED - 157)) | (1 << (FortranParser.NAME - 157)) | (1 << (FortranParser.FORMATTED - 157)) | (1 << (FortranParser.UNFORMATTED - 157)) | (1 << (FortranParser.NEXTREC - 157)) | (1 << (FortranParser.READWRITE - 157)) | (1 << (FortranParser.IOLENGTH - 157)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 157)) | (1 << (FortranParser.BLOCKSIZE - 157)) | (1 << (FortranParser.BUFFERCOUNT - 157)) | (1 << (FortranParser.BUFFERED - 157)) | (1 << (FortranParser.CARRIAGECONTROL - 157)) | (1 << (FortranParser.CONVERT - 157)) | (1 << (FortranParser.DEFAULTFILE - 157)) | (1 << (FortranParser.DISPOSE - 157)) | (1 << (FortranParser.DISP - 157)) | (1 << (FortranParser.EXTENDSIZE - 157)) | (1 << (FortranParser.INITIALSIZE - 157)) | (1 << (FortranParser.KEY - 157)) | (1 << (FortranParser.KEYED - 157)) | (1 << (FortranParser.MAXREC - 157)) | (1 << (FortranParser.NOSPANBLOCKS - 157)) | (1 << (FortranParser.ORGANIZATION - 157)) | (1 << (FortranParser.RECORDTYPE - 157)) | (1 << (FortranParser.SHARED - 157)))) !== 0) || _la === FortranParser.IDENTIFIER || _la === FortranParser.EOR_S) {
 					{
 					this.state = 4048;
 					this.inputItemList();
@@ -20075,7 +20076,7 @@ export class FortranParser extends Parser {
 			this.state = 4079;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.EOR_S - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0)) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << FortranParser.ONLY) | (1 << FortranParser.ENTRY) | (1 << FortranParser.TYPE) | (1 << FortranParser.PRIVATE) | (1 << FortranParser.PUBLIC) | (1 << FortranParser.SEQUENCE) | (1 << FortranParser.DIMENSION) | (1 << FortranParser.REAL) | (1 << FortranParser.EQUIVALENCE) | (1 << FortranParser.OPERATOR) | (1 << FortranParser.ASSIGNMENT) | (1 << FortranParser.ALLOCATE) | (1 << FortranParser.DEALLOCATE) | (1 << FortranParser.NULLIFY) | (1 << FortranParser.POINTER) | (1 << FortranParser.IMPLICIT) | (1 << FortranParser.NONE))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (FortranParser.NAMELIST - 32)) | (1 << (FortranParser.PARAMETER - 32)) | (1 << (FortranParser.ALLOCATABLE - 32)) | (1 << (FortranParser.INTENT - 32)) | (1 << (FortranParser.OPTIONAL - 32)) | (1 << (FortranParser.EXTERNAL - 32)) | (1 << (FortranParser.INTRINSIC - 32)) | (1 << (FortranParser.INTERFACE - 32)) | (1 << (FortranParser.SAVE - 32)) | (1 << (FortranParser.TARGET - 32)) | (1 << (FortranParser.DATA - 32)) | (1 << (FortranParser.ASSIGN - 32)) | (1 << (FortranParser.CYCLE - 32)) | (1 << (FortranParser.EXIT - 32)))) !== 0) || ((((_la - 72)) & ~0x1F) === 0 && ((1 << (_la - 72)) & ((1 << (FortranParser.FORMAT - 72)) | (1 << (FortranParser.CONTAINS - 72)) | (1 << (FortranParser.RESULT - 72)) | (1 << (FortranParser.RECURSIVE - 72)) | (1 << (FortranParser.INQUIRE - 72)) | (1 << (FortranParser.BACKSPACE - 72)) | (1 << (FortranParser.ENDFILE - 72)) | (1 << (FortranParser.REWIND - 72)) | (1 << (FortranParser.DESCR - 72)) | (1 << (FortranParser.REF - 72)) | (1 << (FortranParser.VAL - 72)) | (1 << (FortranParser.LOC - 72)) | (1 << (FortranParser.LPAREN - 72)) | (1 << (FortranParser.MINUS - 72)) | (1 << (FortranParser.PLUS - 72)))) !== 0) || ((((_la - 110)) & ~0x1F) === 0 && ((1 << (_la - 110)) & ((1 << (FortranParser.LNOT - 110)) | (1 << (FortranParser.TRUE - 110)) | (1 << (FortranParser.FALSE - 110)) | (1 << (FortranParser.IN - 110)) | (1 << (FortranParser.OUT - 110)) | (1 << (FortranParser.STAT - 110)) | (1 << (FortranParser.LOGICAL - 110)) | (1 << (FortranParser.KIND - 110)) | (1 << (FortranParser.LEN - 110)) | (1 << (FortranParser.FMT - 110)) | (1 << (FortranParser.NML - 110)) | (1 << (FortranParser.REC - 110)) | (1 << (FortranParser.ADVANCE - 110)) | (1 << (FortranParser.SIZE - 110)) | (1 << (FortranParser.UNIT - 110)) | (1 << (FortranParser.ERR - 110)) | (1 << (FortranParser.IOSTAT - 110)) | (1 << (FortranParser.LET - 110)) | (1 << (FortranParser.PRECISION - 110)))) !== 0) || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & ((1 << (FortranParser.IOSTART - 142)) | (1 << (FortranParser.SEQUENTIAL - 142)) | (1 << (FortranParser.DIRECT - 142)) | (1 << (FortranParser.FILE - 142)) | (1 << (FortranParser.STATUS - 142)) | (1 << (FortranParser.ACCESS - 142)) | (1 << (FortranParser.POSITION - 142)) | (1 << (FortranParser.ACTION - 142)) | (1 << (FortranParser.DELIM - 142)) | (1 << (FortranParser.PAD - 142)) | (1 << (FortranParser.FORM - 142)) | (1 << (FortranParser.RECL - 142)) | (1 << (FortranParser.BLANK - 142)) | (1 << (FortranParser.EXIST - 142)) | (1 << (FortranParser.OPENED - 142)) | (1 << (FortranParser.NUMBER - 142)) | (1 << (FortranParser.NAMED - 142)) | (1 << (FortranParser.NAME - 142)) | (1 << (FortranParser.FORMATTED - 142)) | (1 << (FortranParser.UNFORMATTED - 142)) | (1 << (FortranParser.NEXTREC - 142)) | (1 << (FortranParser.READWRITE - 142)) | (1 << (FortranParser.IOLENGTH - 142)) | (1 << (FortranParser.ASSOCIATEVARIABLE - 142)) | (1 << (FortranParser.BLOCKSIZE - 142)) | (1 << (FortranParser.BUFFERCOUNT - 142)) | (1 << (FortranParser.BUFFERED - 142)) | (1 << (FortranParser.CARRIAGECONTROL - 142)) | (1 << (FortranParser.CONVERT - 142)) | (1 << (FortranParser.DEFAULTFILE - 142)) | (1 << (FortranParser.DISPOSE - 142)))) !== 0) || ((((_la - 174)) & ~0x1F) === 0 && ((1 << (_la - 174)) & ((1 << (FortranParser.DISP - 174)) | (1 << (FortranParser.EXTENDSIZE - 174)) | (1 << (FortranParser.INITIALSIZE - 174)) | (1 << (FortranParser.KEY - 174)) | (1 << (FortranParser.KEYED - 174)) | (1 << (FortranParser.MAXREC - 174)) | (1 << (FortranParser.NOSPANBLOCKS - 174)) | (1 << (FortranParser.ORGANIZATION - 174)) | (1 << (FortranParser.RECORDTYPE - 174)) | (1 << (FortranParser.SHARED - 174)) | (1 << (FortranParser.S_CONST - 174)) | (1 << (FortranParser.I_CONST - 174)) | (1 << (FortranParser.H_CONST - 174)) | (1 << (FortranParser.B_CONST - 174)) | (1 << (FortranParser.O_CONST - 174)) | (1 << (FortranParser.Z_CONST - 174)) | (1 << (FortranParser.IDENTIFIER - 174)) | (1 << (FortranParser.R_CONST - 174)))) !== 0) || _la === FortranParser.EOR_S) {
 				{
 				this.state = 4078;
 				this.outputItemList();
@@ -20758,7 +20759,6 @@ export class FortranParser extends Parser {
 			case FortranParser.REC:
 			case FortranParser.ADVANCE:
 			case FortranParser.SIZE:
-			case FortranParser.EOR_S:
 			case FortranParser.UNIT:
 			case FortranParser.ERR:
 			case FortranParser.IOSTAT:
@@ -20808,6 +20808,7 @@ export class FortranParser extends Parser {
 			case FortranParser.S_CONST:
 			case FortranParser.H_CONST:
 			case FortranParser.IDENTIFIER:
+			case FortranParser.EOR_S:
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 4201;
@@ -22246,7 +22247,7 @@ export class FortranParser extends Parser {
 
 	private static readonly _serializedATNSegments: number = 9;
 	private static readonly _serializedATNSegment0: string =
-		"\x03\uC91D\uCABA\u058D\uAFBA\u4F53\u0607\uEA8B\uC241\x03\xCF\u11A6\x04" +
+		"\x03\uC91D\uCABA\u058D\uAFBA\u4F53\u0607\uEA8B\uC241\x03\xD0\u11A6\x04" +
 		"\x02\t\x02\x04\x03\t\x03\x04\x04\t\x04\x04\x05\t\x05\x04\x06\t\x06\x04" +
 		"\x07\t\x07\x04\b\t\b\x04\t\t\t\x04\n\t\n\x04\v\t\v\x04\f\t\f\x04\r\t\r" +
 		"\x04\x0E\t\x0E\x04\x0F\t\x0F\x04\x10\t\x10\x04\x11\t\x11\x04\x12\t\x12" +
@@ -22825,311 +22826,311 @@ export class FortranParser extends Parser {
 		"\u027E\x02\u0280\x02\u0282\x02\u0284\x02\u0286\x02\u0288\x02\u028A\x02" +
 		"\u028C\x02\u028E\x02\u0290\x02\u0292\x02\u0294\x02\u0296\x02\u0298\x02" +
 		"\u029A\x02\u029C\x02\u029E\x02\u02A0\x02\u02A2\x02\u02A4\x02\u02A6\x02" +
-		"\u02A8\x02\u02AA\x02\u02AC\x02\u02AE\x02\u02B0\x02\u02B2\x02\x02\r\x0F" +
-		"\x02\x07\t\f\x0E\x14\x1B\x1D\x1D \"$.?@JJLNSZ\x7F\x9B\x9D\xB9\xCA\xCA" +
-		"\x04\x02``ee\x03\x02\xC4\xC6\x03\x02\f\r\x03\x02[\\\x03\x02ef\x03\x02" +
-		"cd\x04\x02jow|\x03\x02st\x03\x02EF\x04\x02\t\tHH\x02\u1334\x02\u02B5\x03" +
-		"\x02\x02\x02\x04\u02C1\x03\x02\x02\x02\x06\u02C4\x03\x02\x02\x02\b\u02CC" +
-		"\x03\x02\x02\x02\n\u02D1\x03\x02\x02\x02\f\u02D4\x03\x02\x02\x02\x0E\u02DF" +
-		"\x03\x02\x02\x02\x10\u02E7\x03\x02\x02\x02\x12\u02ED\x03\x02\x02\x02\x14" +
-		"\u02FD\x03\x02\x02\x02\x16\u0301\x03\x02\x02\x02\x18\u0303\x03\x02\x02" +
-		"\x02\x1A\u030F\x03\x02\x02\x02\x1C\u032E\x03\x02\x02\x02\x1E\u0339\x03" +
-		"\x02\x02\x02 \u033C\x03\x02\x02\x02\"\u0340\x03\x02\x02\x02$\u0342\x03" +
-		"\x02\x02\x02&\u0344\x03\x02\x02\x02(\u0347\x03\x02\x02\x02*\u0351\x03" +
-		"\x02\x02\x02,\u0364\x03\x02\x02\x02.\u037B\x03\x02\x02\x020\u0386\x03" +
-		"\x02\x02\x022\u038D\x03\x02\x02\x024\u038F\x03\x02\x02\x026\u0392\x03" +
-		"\x02\x02\x028\u03A6\x03\x02\x02\x02:\u03AF\x03\x02\x02\x02<\u03B4\x03" +
-		"\x02\x02\x02>\u03C0\x03\x02\x02\x02@\u03C6\x03\x02\x02\x02B\u03C8\x03" +
-		"\x02\x02\x02D\u03CA\x03\x02\x02\x02F\u03CC\x03\x02\x02\x02H\u03CE\x03" +
-		"\x02\x02\x02J\u03D0\x03\x02\x02\x02L\u03D2\x03\x02\x02\x02N\u03D4\x03" +
-		"\x02\x02\x02P\u03D6\x03\x02\x02\x02R\u03D8\x03\x02\x02\x02T\u03DA\x03" +
-		"\x02\x02\x02V\u03DC\x03\x02\x02\x02X\u03DE\x03\x02\x02\x02Z\u03E0\x03" +
-		"\x02\x02\x02\\\u03E2\x03\x02\x02\x02^\u03E4\x03\x02\x02\x02`\u03E6\x03" +
-		"\x02\x02\x02b\u03E8\x03\x02\x02\x02d\u03EA\x03\x02\x02\x02f\u03EC\x03" +
-		"\x02\x02\x02h\u03EE\x03\x02\x02\x02j\u03F0\x03\x02\x02\x02l\u03F2\x03" +
-		"\x02\x02\x02n\u03F4\x03\x02\x02\x02p\u03F6\x03\x02\x02\x02r\u03F8\x03" +
-		"\x02\x02\x02t\u03FA\x03\x02\x02\x02v\u03FC\x03\x02\x02\x02x\u040C\x03" +
-		"\x02\x02\x02z\u040E\x03\x02\x02\x02|\u042A\x03\x02\x02\x02~\u042C\x03" +
-		"\x02\x02\x02\x80\u0434\x03\x02\x02\x02\x82\u043C\x03\x02\x02\x02\x84\u0447" +
-		"\x03\x02\x02\x02\x86\u0450\x03\x02\x02\x02\x88\u0453\x03\x02\x02\x02\x8A" +
-		"\u0457\x03\x02\x02\x02\x8C\u045A\x03\x02\x02\x02\x8E\u0472\x03\x02\x02" +
-		"\x02\x90\u0474\x03\x02\x02\x02\x92\u047E\x03\x02\x02\x02\x94\u0493\x03" +
-		"\x02\x02\x02\x96\u0496\x03\x02\x02\x02\x98\u04AA\x03\x02\x02\x02\x9A\u04B5" +
-		"\x03\x02\x02\x02\x9C\u04C0\x03\x02\x02\x02\x9E\u04C2\x03\x02\x02\x02\xA0" +
-		"\u04CC\x03\x02\x02\x02\xA2\u04D4\x03\x02\x02\x02\xA4\u04D7\x03\x02\x02" +
-		"\x02\xA6\u04E4\x03\x02\x02\x02\xA8\u04E7\x03\x02\x02\x02\xAA\u04ED\x03" +
-		"\x02\x02\x02\xAC\u04EF\x03\x02\x02\x02\xAE\u04F2\x03\x02\x02\x02\xB0\u0503" +
-		"\x03\x02\x02\x02\xB2\u050A\x03\x02\x02\x02\xB4\u051B\x03\x02\x02\x02\xB6" +
-		"\u051E\x03\x02\x02\x02\xB8\u052C\x03\x02\x02\x02\xBA\u0539\x03\x02\x02" +
-		"\x02\xBC\u055C\x03\x02\x02\x02\xBE\u056B\x03\x02\x02\x02\xC0\u0573\x03" +
-		"\x02\x02\x02\xC2\u057D\x03\x02\x02\x02\xC4\u0582\x03\x02\x02\x02\xC6\u0594" +
-		"\x03\x02\x02\x02\xC8\u0597\x03\x02\x02\x02\xCA\u05A9\x03\x02\x02\x02\xCC" +
-		"\u05B9\x03\x02\x02\x02\xCE\u05BC\x03\x02\x02\x02\xD0\u05C3\x03\x02\x02" +
-		"\x02\xD2\u05CB\x03\x02\x02\x02\xD4\u05D0\x03\x02\x02\x02\xD6\u05D9\x03" +
-		"\x02\x02\x02\xD8\u05E8\x03\x02\x02\x02\xDA\u05EA\x03\x02\x02\x02\xDC\u05F9" +
-		"\x03\x02\x02\x02\xDE\u0609\x03\x02\x02\x02\xE0\u061F\x03\x02\x02\x02\xE2" +
-		"\u0622\x03\x02\x02\x02\xE4\u062B\x03\x02\x02\x02\xE6\u0631\x03\x02\x02" +
-		"\x02\xE8\u063D\x03\x02\x02\x02\xEA\u064F\x03\x02\x02\x02\xEC\u0653\x03" +
-		"\x02\x02\x02\xEE\u0668\x03\x02\x02\x02\xF0\u066A\x03\x02\x02\x02\xF2\u0674" +
-		"\x03\x02\x02\x02\xF4\u0676\x03\x02\x02\x02\xF6\u0680\x03\x02\x02\x02\xF8" +
-		"\u068C\x03\x02\x02\x02\xFA\u06A9\x03\x02\x02\x02\xFC\u06AC\x03\x02\x02" +
-		"\x02\xFE\u06C9\x03\x02\x02\x02\u0100\u06CB\x03\x02\x02\x02\u0102\u06D9" +
-		"\x03\x02\x02\x02\u0104\u06DE\x03\x02\x02\x02\u0106\u06EC\x03\x02\x02\x02" +
-		"\u0108\u06EE\x03\x02\x02\x02\u010A\u06F6\x03\x02\x02\x02\u010C\u0704\x03" +
-		"\x02\x02\x02\u010E\u070C\x03\x02\x02\x02\u0110\u070E\x03\x02\x02\x02\u0112" +
-		"\u0742\x03\x02\x02\x02\u0114\u0769\x03\x02\x02\x02\u0116\u078B\x03\x02" +
-		"\x02\x02\u0118\u07A0\x03\x02\x02\x02\u011A\u07D3\x03\x02\x02\x02\u011C" +
-		"\u07DF\x03\x02\x02\x02\u011E\u0801\x03\x02\x02\x02\u0120\u0809\x03\x02" +
-		"\x02\x02\u0122\u0810\x03\x02\x02\x02\u0124\u0814\x03\x02\x02\x02\u0126" +
-		"\u0816\x03\x02\x02\x02\u0128\u081C\x03\x02\x02\x02\u012A\u0823\x03\x02" +
-		"\x02\x02\u012C\u0825\x03\x02\x02\x02\u012E\u0830\x03\x02\x02\x02\u0130" +
-		"\u0834\x03\x02\x02\x02\u0132\u0836\x03\x02\x02\x02\u0134\u0839\x03\x02" +
-		"\x02\x02\u0136\u0846\x03\x02\x02\x02\u0138\u0850\x03\x02\x02\x02\u013A" +
-		"\u0858\x03\x02\x02\x02\u013C\u086A\x03\x02\x02\x02\u013E\u0882\x03\x02" +
-		"\x02\x02\u0140\u0884\x03\x02\x02\x02\u0142\u088C\x03\x02\x02\x02\u0144" +
-		"\u089E\x03\x02\x02\x02\u0146\u08A0\x03\x02\x02\x02\u0148\u08A8\x03\x02" +
-		"\x02\x02\u014A\u08BC\x03\x02\x02\x02\u014C\u08BE\x03\x02\x02\x02\u014E" +
-		"\u08C8\x03\x02\x02\x02\u0150\u08DB\x03\x02\x02\x02\u0152\u08DD\x03\x02" +
-		"\x02\x02\u0154\u08EA\x03\x02\x02\x02\u0156\u08FC\x03\x02\x02\x02\u0158" +
-		"\u08FE\x03\x02\x02\x02\u015A\u0906\x03\x02\x02\x02\u015C\u091B\x03\x02" +
-		"\x02\x02\u015E\u091D\x03\x02\x02\x02\u0160\u0925\x03\x02\x02\x02\u0162" +
-		"\u093C\x03\x02\x02\x02\u0164\u093E\x03\x02\x02\x02\u0166\u094D\x03\x02" +
-		"\x02\x02\u0168\u095F\x03\x02\x02\x02\u016A\u0961\x03\x02\x02\x02\u016C" +
-		"\u096F\x03\x02\x02\x02\u016E\u0972\x03\x02\x02\x02\u0170\u0978\x03\x02" +
-		"\x02\x02\u0172\u0980\x03\x02\x02\x02\u0174\u0985\x03\x02\x02\x02\u0176" +
-		"\u098F\x03\x02\x02\x02\u0178\u0991\x03\x02\x02\x02\u017A\u09A2\x03\x02" +
-		"\x02\x02\u017C\u09A4\x03\x02\x02\x02\u017E\u09B2\x03\x02\x02\x02\u0180" +
-		"\u09BD\x03\x02\x02\x02\u0182\u09CF\x03\x02\x02\x02\u0184\u09D1\x03\x02" +
-		"\x02\x02\u0186\u09D9\x03\x02\x02\x02\u0188\u09DE\x03\x02\x02\x02\u018A" +
-		"\u09EE\x03\x02\x02\x02\u018C\u09F0\x03\x02\x02\x02\u018E\u09FC\x03\x02" +
-		"\x02\x02\u0190\u0A02\x03\x02\x02\x02\u0192\u0A11\x03\x02\x02\x02\u0194" +
-		"\u0A1C\x03\x02\x02\x02\u0196\u0A1F\x03\x02\x02\x02\u0198\u0A25\x03\x02" +
-		"\x02\x02\u019A\u0A2D\x03\x02\x02\x02\u019C\u0A3A\x03\x02\x02\x02\u019E" +
-		"\u0A3D\x03\x02\x02\x02\u01A0\u0A51\x03\x02\x02\x02\u01A2\u0A59\x03\x02" +
-		"\x02\x02\u01A4\u0A5B\x03\x02\x02\x02\u01A6\u0A65\x03\x02\x02\x02\u01A8" +
-		"\u0A84\x03\x02\x02\x02\u01AA\u0A86\x03\x02\x02\x02\u01AC\u0A92\x03\x02" +
-		"\x02\x02\u01AE\u0AA2\x03\x02\x02\x02\u01B0\u0AAF\x03\x02\x02\x02\u01B2" +
-		"\u0AB1\x03\x02\x02\x02\u01B4\u0AB5\x03\x02\x02\x02\u01B6\u0AC8\x03\x02" +
-		"\x02\x02\u01B8\u0AD4\x03\x02\x02\x02\u01BA\u0AD7\x03\x02\x02\x02\u01BC" +
-		"\u0AF7\x03\x02\x02\x02\u01BE\u0AF9\x03\x02\x02\x02\u01C0\u0B01\x03\x02" +
-		"\x02\x02\u01C2\u0B05\x03\x02\x02\x02\u01C4\u0B09\x03\x02\x02\x02\u01C6" +
-		"\u0B11\x03\x02\x02\x02\u01C8\u0B1E\x03\x02\x02\x02\u01CA\u0B23\x03\x02" +
-		"\x02\x02\u01CC\u0B2B\x03\x02\x02\x02\u01CE\u0B35\x03\x02\x02\x02\u01D0" +
-		"\u0B4A\x03\x02\x02\x02\u01D2\u0B69\x03\x02\x02\x02\u01D4\u0B70\x03\x02" +
-		"\x02\x02\u01D6\u0B7B\x03\x02\x02\x02\u01D8\u0B90\x03\x02\x02\x02\u01DA" +
-		"\u0B9C\x03\x02\x02\x02\u01DC\u0B9E\x03\x02\x02\x02\u01DE\u0BA9\x03\x02" +
-		"\x02\x02\u01E0\u0BB0\x03\x02\x02\x02\u01E2\u0BB2\x03\x02\x02\x02\u01E4" +
-		"\u0BC5\x03\x02\x02\x02\u01E6\u0BC7\x03\x02\x02\x02\u01E8\u0BC9\x03\x02" +
-		"\x02\x02\u01EA\u0BCF\x03\x02\x02\x02\u01EC\u0BD9\x03\x02\x02\x02\u01EE" +
-		"\u0BE4\x03\x02\x02\x02\u01F0\u0BE6\x03\x02\x02\x02\u01F2\u0BE8\x03\x02" +
-		"\x02\x02\u01F4\u0BEA\x03\x02\x02\x02\u01F6\u0BEC\x03\x02\x02\x02\u01F8" +
-		"\u0BF5\x03\x02\x02\x02\u01FA\u0BF7\x03\x02\x02\x02\u01FC\u0C00\x03\x02" +
-		"\x02\x02\u01FE\u0C03\x03\x02\x02\x02\u0200\u0C07\x03\x02\x02\x02\u0202" +
-		"\u0C10\x03\x02\x02\x02\u0204\u0C19\x03\x02\x02\x02\u0206\u0C22\x03\x02" +
-		"\x02\x02\u0208\u0C24\x03\x02\x02\x02\u020A\u0C26\x03\x02\x02\x02\u020C" +
-		"\u0C28\x03\x02\x02\x02\u020E\u0C2A\x03\x02\x02\x02\u0210\u0C2C\x03\x02" +
-		"\x02\x02\u0212\u0C95\x03\x02\x02\x02\u0214\u0CCA\x03\x02\x02\x02\u0216" +
-		"\u0CD9\x03\x02\x02\x02\u0218\u0CE4\x03\x02\x02\x02\u021A\u0CF5\x03\x02" +
-		"\x02\x02\u021C\u0D00\x03\x02\x02\x02\u021E\u0D02\x03\x02\x02\x02\u0220" +
-		"\u0D4E\x03\x02\x02\x02\u0222\u0D50\x03\x02\x02\x02\u0224\u0D53\x03\x02" +
-		"\x02\x02\u0226\u0D5B\x03\x02\x02\x02\u0228\u0D6E\x03\x02\x02\x02\u022A" +
-		"\u0D76\x03\x02\x02\x02\u022C\u0D79\x03\x02\x02\x02\u022E\u0D7F\x03\x02" +
-		"\x02\x02\u0230\u0D85\x03\x02\x02\x02\u0232\u0DA4\x03\x02\x02\x02\u0234" +
-		"\u0DB3\x03\x02\x02\x02\u0236\u0DC4\x03\x02\x02\x02\u0238\u0DCD\x03\x02" +
-		"\x02\x02\u023A\u0DDA\x03\x02\x02\x02\u023C\u0DE2\x03\x02\x02\x02\u023E" +
-		"\u0E02\x03\x02\x02\x02\u0240\u0E09\x03\x02\x02\x02\u0242\u0E0C\x03\x02" +
-		"\x02\x02\u0244\u0E12\x03\x02\x02\x02\u0246\u0E15\x03\x02\x02\x02\u0248" +
-		"\u0E1F\x03\x02\x02\x02\u024A\u0E35\x03\x02\x02\x02\u024C\u0E41\x03\x02" +
-		"\x02\x02\u024E\u0E45\x03\x02\x02\x02\u0250\u0E7E\x03\x02\x02\x02\u0252" +
-		"\u0E81\x03\x02\x02\x02\u0254\u0E99\x03\x02\x02\x02\u0256\u0E9B\x03\x02" +
-		"\x02\x02\u0258\u0E9E\x03\x02\x02\x02\u025A\u0EAB\x03\x02\x02\x02\u025C" +
-		"\u0EB4\x03\x02\x02\x02\u025E\u0EBF\x03\x02\x02\x02\u0260\u0EC2\x03\x02" +
-		"\x02\x02\u0262\u0EC9\x03\x02\x02\x02\u0264\u0EDC\x03\x02\x02\x02\u0266" +
-		"\u0EDE\x03\x02\x02\x02\u0268\u0EE1\x03\x02\x02\x02\u026A\u0F04\x03\x02" +
-		"\x02\x02\u026C\u0F07\x03\x02\x02\x02\u026E\u0F14\x03\x02\x02\x02\u0270" +
-		"\u0F17\x03\x02\x02\x02\u0272\u0F1D\x03\x02\x02\x02\u0274\u0F27\x03\x02" +
-		"\x02\x02\u0276\u0F32\x03\x02\x02\x02\u0278\u0F35\x03\x02\x02\x02\u027A" +
-		"\u0F3D\x03\x02\x02\x02\u027C\u0FA5\x03\x02\x02\x02\u027E\u0FA8\x03\x02" +
-		"\x02\x02\u0280\u0FB0\x03\x02\x02\x02\u0282\u0FCB\x03\x02\x02\x02\u0284" +
-		"\u0FE7\x03\x02\x02\x02\u0286\u0FEA\x03\x02\x02\x02\u0288\u0FF6\x03\x02" +
-		"\x02\x02\u028A\u101E\x03\x02\x02\x02\u028C\u102B\x03\x02\x02\x02\u028E" +
-		"\u103A\x03\x02\x02\x02\u0290\u1043\x03\x02\x02\x02\u0292\u104F\x03\x02" +
-		"\x02\x02\u0294\u1064\x03\x02\x02\x02\u0296\u1066\x03\x02\x02\x02\u0298" +
-		"\u106D\x03\x02\x02\x02\u029A\u1072\x03\x02\x02\x02\u029C\u1074\x03\x02" +
-		"\x02\x02\u029E\u107E\x03\x02\x02\x02\u02A0\u1080\x03\x02\x02\x02\u02A2" +
-		"\u109E\x03\x02\x02\x02\u02A4\u10B6\x03\x02\x02\x02\u02A6\u10CF\x03\x02" +
-		"\x02\x02\u02A8\u10F0\x03\x02\x02\x02\u02AA\u1109\x03\x02\x02\x02\u02AC" +
-		"\u1116\x03\x02\x02\x02\u02AE\u112D\x03\x02\x02\x02\u02B0\u118F\x03\x02" +
-		"\x02\x02\u02B2\u11A3\x03\x02\x02\x02\u02B4\u02B6\x05 \x11\x02\u02B5\u02B4" +
-		"\x03\x02\x02\x02\u02B5\u02B6\x03\x02\x02\x02\u02B6\u02B8\x03\x02\x02\x02" +
-		"\u02B7\u02B9\x05\x04\x03\x02\u02B8\u02B7\x03\x02\x02\x02\u02B9\u02BA\x03" +
-		"\x02\x02\x02\u02BA\u02B8\x03\x02\x02\x02\u02BA\u02BB\x03\x02\x02\x02\u02BB" +
-		"\x03\x03\x02\x02\x02\u02BC\u02C2\x05\x06\x04\x02\u02BD\u02C2\x05\xC4c" +
-		"\x02\u02BE\u02C2\x05\xCEh\x02\u02BF\u02C2\x05:\x1E\x02\u02C0\u02C2\x05" +
-		"\x86D\x02\u02C1\u02BC\x03\x02\x02\x02\u02C1\u02BD\x03\x02\x02\x02\u02C1" +
-		"\u02BE\x03\x02\x02\x02\u02C1\u02BF\x03\x02\x02\x02\u02C1\u02C0\x03\x02" +
-		"\x02\x02\u02C2\x05\x03\x02\x02\x02\u02C3\u02C5\x056\x1C\x02\u02C4\u02C3" +
-		"\x03\x02\x02\x02\u02C4\u02C5\x03\x02\x02\x02\u02C5\u02C6\x03\x02\x02\x02" +
-		"\u02C6\u02C7\x05\b\x05\x02\u02C7\x07\x03\x02\x02\x02\u02C8\u02C9\x05\f" +
-		"\x07\x02\u02C9\u02CA\x058\x1D\x02\u02CA\u02CD\x03\x02\x02\x02\u02CB\u02CD" +
-		"\x058\x1D\x02\u02CC\u02C8\x03\x02\x02\x02\u02CC\u02CB\x03\x02\x02\x02" +
-		"\u02CD\t\x03\x02\x02\x02\u02CE\u02D2\x05\x0E\b\x02\u02CF\u02D2\x05\x1A" +
-		"\x0E\x02\u02D0\u02D2\x05\x18\r\x02\u02D1\u02CE\x03\x02\x02\x02\u02D1\u02CF" +
-		"\x03\x02\x02\x02\u02D1\u02D0\x03\x02\x02\x02\u02D2\v\x03\x02\x02\x02\u02D3" +
-		"\u02D5\x05\n\x06\x02\u02D4\u02D3\x03\x02\x02\x02\u02D5\u02D6\x03\x02\x02" +
-		"\x02\u02D6\u02D4\x03\x02\x02\x02\u02D6\u02D7\x03\x02\x02\x02\u02D7\r\x03" +
-		"\x02\x02\x02\u02D8\u02E0\x05\u0188\xC5\x02\u02D9\u02E0\x05\u0182\xC2\x02" +
-		"\u02DA\u02E0\x05(\x15\x02\u02DB\u02E0\x05\xE0q\x02\u02DC\u02E0\x05\x10" +
-		"\t\x02\u02DD\u02E0\x05z>\x02\u02DE\u02E0\x05|?\x02\u02DF\u02D8\x03\x02" +
-		"\x02\x02\u02DF\u02D9\x03\x02\x02\x02\u02DF\u02DA\x03\x02\x02\x02\u02DF" +
-		"\u02DB\x03\x02\x02\x02\u02DF\u02DC\x03\x02\x02\x02\u02DF\u02DD\x03\x02" +
-		"\x02\x02\u02DF\u02DE\x03\x02\x02\x02\u02E0\x0F\x03\x02\x02\x02\u02E1\u02E8" +
-		"\x05\u0114\x8B\x02\u02E2\u02E8\x05\x14\v\x02\u02E3\u02E8\x05\xF4{\x02" +
-		"\u02E4\u02E8\x05\x90I\x02\u02E5\u02E8\x05\xA0Q\x02\u02E6\u02E8\x05\xAC" +
-		"W\x02\u02E7\u02E1\x03\x02\x02\x02\u02E7\u02E2\x03\x02\x02\x02\u02E7\u02E3" +
-		"\x03\x02\x02\x02\u02E7\u02E4\x03\x02\x02\x02\u02E7\u02E5\x03\x02\x02\x02" +
-		"\u02E7\u02E6\x03\x02\x02\x02\u02E8\x11\x03\x02\x02\x02\u02E9\u02EE\x05" +
-		"\x1A\x0E\x02\u02EA\u02EE\x05(\x15\x02\u02EB\u02EE\x05\u016E\xB8\x02\u02EC" +
-		"\u02EE\x05\xE0q\x02\u02ED\u02E9\x03\x02\x02\x02\u02ED\u02EA\x03\x02\x02" +
-		"\x02\u02ED\u02EB\x03\x02\x02\x02\u02ED\u02EC\x03\x02\x02\x02\u02EE\x13" +
-		"\x03\x02\x02\x02\u02EF\u02FE\x05\u014A\xA6\x02\u02F0\u02FE\x05\u015C\xAF" +
-		"\x02\u02F1\u02FE\x05\u019E\xD0\x02\u02F2\u02FE\x05\u016E\xB8\x02\u02F3" +
-		"\u02FE\x05\u0156\xAC\x02\u02F4\u02FE\x05\u0196\xCC\x02\u02F5\u02FE\x05" +
-		"\xB6\\\x02\u02F6\u02FE\x05\xB8]\x02\u02F7\u02FE\x05\u0150\xA9\x02\u02F8" +
-		"\u02FE\x05\u013E\xA0\x02\u02F9\u02FE\x05\u0190\xC9\x02\u02FA\u02FE\x05" +
-		"\u0144\xA3\x02\u02FB\u02FE\x05\u0162\xB2\x02\u02FC\u02FE\x05\u0168\xB5" +
-		"\x02\u02FD\u02EF\x03\x02\x02\x02\u02FD\u02F0\x03\x02\x02\x02\u02FD\u02F1" +
-		"\x03\x02\x02\x02\u02FD\u02F2\x03\x02\x02\x02\u02FD\u02F3\x03\x02\x02\x02" +
-		"\u02FD\u02F4\x03\x02\x02\x02\u02FD\u02F5\x03\x02\x02\x02\u02FD\u02F6\x03" +
-		"\x02\x02\x02\u02FD\u02F7\x03\x02\x02\x02\u02FD\u02F8\x03\x02\x02\x02\u02FD" +
-		"\u02F9\x03\x02\x02\x02\u02FD\u02FA\x03\x02\x02\x02\u02FD\u02FB\x03\x02" +
-		"\x02\x02\u02FD\u02FC\x03\x02\x02\x02\u02FE\x15\x03\x02\x02\x02\u02FF\u0302" +
-		"\x05\xC4c\x02\u0300\u0302\x05\xCEh\x02\u0301\u02FF\x03\x02\x02\x02\u0301" +
-		"\u0300\x03\x02\x02\x02\u0302\x17\x03\x02\x02\x02\u0303\u0305\x05\xE4s" +
-		"\x02\u0304\u0306\x05\x16\f\x02\u0305\u0304\x03\x02\x02\x02\u0306\u0307" +
-		"\x03\x02\x02\x02\u0307\u0305\x03\x02\x02\x02\u0307\u0308\x03\x02\x02\x02" +
-		"\u0308\x19\x03\x02\x02\x02\u0309\u0310\x05\x1C\x0F\x02\u030A\u0310\x05" +
-		"\u024E\u0128\x02\u030B\u0310\x05\u0230\u0119\x02\u030C\u0310\x05\u023E" +
-		"\u0120\x02\u030D\u0310\x05\u0226\u0114\x02\u030E\u0310\x05\u0258\u012D" +
-		"\x02\u030F\u0309\x03\x02\x02\x02\u030F\u030A\x03\x02\x02\x02\u030F\u030B" +
-		"\x03\x02\x02\x02\u030F\u030C\x03\x02\x02\x02\u030F\u030D\x03\x02\x02\x02" +
-		"\u030F\u030E\x03\x02\x02\x02\u0310\x1B\x03\x02\x02\x02\u0311\u032F\x05" +
-		"\u01BC\xDF\x02\u0312\u032F\x05\u025A\u012E\x02\u0313\u032F\x05\u01D2\xEA" +
-		"\x02\u0314\u032F\x05\u025C\u012F\x02\u0315\u032F\x05\u01CA\xE6\x02\u0316" +
-		"\u032F\x05\u021E\u0110\x02\u0317\u032F\x05\u0224\u0113\x02\u0318\u032F" +
-		"\x05\u026C\u0137\x02\u0319\u032F\x05\u0212\u010A\x02\u031A\u032F\x05\u0268" +
-		"\u0135\x02\u031B\u032F\x05\u02A6\u0154\x02\u031C\u032F\x05\xBC_\x02\u031D" +
-		"\u032F\x05\u027E\u0140\x02\u031E\u032F\x05\u0270\u0139\x02\u031F\u032F" +
-		"\x05\u02A8\u0155\x02\u0320\u032F\x05\u0260\u0131\x02\u0321\u032F\x05\u0262" +
-		"\u0132\x02\u0322\u032F\x05\u026A\u0136\x02\u0323\u032F\x05\u023A\u011E" +
-		"\x02\u0324\u032F\x05\u02AE\u0158\x02\u0325\u032F\x05\u0278\u013D\x02\u0326" +
-		"\u032F\x05\u0274\u013B\x02\u0327\u032F\x05\u0288\u0145\x02\u0328\u032F" +
-		"\x05\u0284\u0143\x02\u0329\u032F\x05\xE2r\x02\u032A\u032F\x05\u02AA\u0156" +
-		"\x02\u032B\u032F\x05\xE6t\x02\u032C\u032F\x05\u0272\u013A\x02\u032D\u032F" +
-		"\x05\u0286\u0144\x02\u032E\u0311\x03\x02\x02\x02\u032E\u0312\x03\x02\x02" +
-		"\x02\u032E\u0313\x03\x02\x02\x02\u032E\u0314\x03\x02\x02\x02\u032E\u0315" +
-		"\x03\x02\x02\x02\u032E\u0316\x03\x02\x02\x02\u032E\u0317\x03\x02\x02\x02" +
-		"\u032E\u0318\x03\x02\x02\x02\u032E\u0319\x03\x02\x02\x02\u032E\u031A\x03" +
-		"\x02\x02\x02\u032E\u031B\x03\x02\x02\x02\u032E\u031C\x03\x02\x02\x02\u032E" +
-		"\u031D\x03\x02\x02\x02\u032E\u031E\x03\x02\x02\x02\u032E\u031F\x03\x02" +
-		"\x02\x02\u032E\u0320\x03\x02\x02\x02\u032E\u0321\x03\x02\x02\x02\u032E" +
-		"\u0322\x03\x02\x02\x02\u032E\u0323\x03\x02\x02\x02\u032E\u0324\x03\x02" +
-		"\x02\x02\u032E\u0325\x03\x02\x02\x02\u032E\u0326\x03\x02\x02\x02\u032E" +
-		"\u0327\x03\x02\x02\x02\u032E\u0328\x03\x02\x02\x02\u032E\u0329\x03\x02" +
-		"\x02\x02\u032E\u032A\x03\x02\x02\x02\u032E\u032B\x03\x02\x02\x02\u032E" +
-		"\u032C\x03\x02\x02\x02\u032E\u032D\x03\x02\x02\x02\u032F\x1D\x03\x02\x02" +
-		"\x02\u0330\u033A\x05\u01EE\xF8\x02\u0331\u033A\x05\u01F0\xF9\x02\u0332" +
-		"\u033A\x05\u01F2\xFA\x02\u0333\u033A\x05\u01F8\xFD\x02\u0334\u033A\x05" +
-		"\u01FC\xFF\x02\u0335\u033A\x05\u0206\u0104\x02\u0336\u033A\x05\u0208\u0105" +
-		"\x02\u0337\u033A\x05\u020A\u0106\x02\u0338\u033A\x05\u020C\u0107\x02\u0339" +
-		"\u0330\x03\x02\x02\x02\u0339\u0331\x03\x02\x02\x02\u0339\u0332\x03\x02" +
-		"\x02\x02\u0339\u0333\x03\x02\x02\x02\u0339\u0334\x03\x02\x02\x02\u0339" +
-		"\u0335\x03\x02\x02\x02\u0339\u0336\x03\x02\x02\x02\u0339\u0337\x03\x02" +
-		"\x02\x02\u0339\u0338\x03\x02\x02\x02\u033A\x1F\x03\x02\x02\x02\u033B\u033D" +
-		"\x07\xBF\x02\x02\u033C\u033B\x03\x02\x02\x02\u033D\u033E\x03\x02\x02\x02" +
-		"\u033E\u033C\x03\x02\x02\x02\u033E\u033F\x03\x02\x02\x02\u033F!\x03\x02" +
-		"\x02\x02\u0340\u0341\x07\xC2\x02\x02\u0341#\x03\x02\x02\x02\u0342\u0343" +
-		"\x07\xC2\x02\x02\u0343%\x03\x02\x02\x02\u0344\u0345\t\x02\x02\x02\u0345" +
-		"\'\x03\x02\x02\x02\u0346\u0348\x05$\x13\x02\u0347\u0346\x03\x02\x02\x02" +
-		"\u0347\u0348\x03\x02\x02\x02\u0348\u0349\x03\x02\x02\x02\u0349\u034A\x07" +
-		"J\x02\x02\u034A\u034C\x07^\x02\x02\u034B\u034D\x05*\x16\x02\u034C\u034B" +
-		"\x03\x02\x02\x02\u034C\u034D\x03\x02\x02\x02\u034D\u034E\x03\x02\x02\x02" +
-		"\u034E\u034F\x07_\x02\x02\u034F\u0350\x05 \x11\x02\u0350)\x03\x02\x02" +
-		"\x02\u0351\u0356\x05,\x17\x02\u0352\u0353\x07]\x02\x02\u0353\u0355\x05" +
-		",\x17\x02\u0354\u0352\x03\x02\x02\x02\u0355\u0358\x03\x02\x02\x02\u0356" +
-		"\u0354\x03\x02\x02\x02\u0356\u0357\x03\x02\x02\x02\u0357+\x03\x02\x02" +
-		"\x02\u0358\u0356\x03\x02\x02\x02\u0359\u035A\b\x17\x01\x02\u035A\u0365" +
-		"\x05.\x18\x02\u035B\u0365\x054\x1B\x02\u035C\u035D\x054\x1B\x02\u035D" +
-		"\u035E\x05.\x18\x02\u035E\u0365\x03\x02\x02\x02\u035F\u0360\x05.\x18\x02" +
-		"\u0360\u0361\x07^\x02\x02\u0361\u0362\x05*\x16\x02\u0362\u0363\x07_\x02" +
-		"\x02\u0363\u0365\x03\x02\x02\x02\u0364\u0359\x03\x02\x02\x02\u0364\u035B" +
-		"\x03\x02\x02\x02\u0364\u035C\x03\x02\x02\x02\u0364\u035F\x03\x02\x02\x02" +
-		"\u0365\u036E\x03\x02\x02\x02\u0366\u0367\f\x05\x02\x02\u0367\u036D\x05" +
-		"4\x1B\x02\u0368\u0369\f\x04\x02\x02\u0369\u036A\x054\x1B\x02\u036A\u036B" +
-		"\x05.\x18\x02\u036B\u036D\x03\x02\x02\x02\u036C\u0366\x03\x02\x02\x02" +
-		"\u036C\u0368\x03\x02\x02\x02\u036D\u0370\x03\x02\x02\x02\u036E\u036C\x03" +
-		"\x02\x02\x02\u036E\u036F\x03\x02\x02\x02\u036F-\x03\x02\x02\x02\u0370" +
-		"\u036E\x03\x02\x02\x02\u0371\u037C\x050\x19\x02\u0372\u0373\x07\xC2\x02" +
-		"\x02\u0373\u037C\x050\x19\x02\u0374\u037C\x07\xC8\x02\x02\u0375\u037C" +
-		"\x07\xC7\x02\x02\u0376\u0377\x07\xC7\x02\x02\u0377\u037C\x050\x19\x02" +
-		"\u0378\u0379\x07\xC7\x02\x02\u0379\u037A\x07\xC2\x02\x02\u037A\u037C\x05" +
-		"0\x19\x02\u037B\u0371\x03\x02\x02\x02\u037B\u0372\x03\x02\x02\x02\u037B" +
-		"\u0374\x03\x02\x02\x02\u037B\u0375\x03\x02\x02\x02\u037B\u0376\x03\x02" +
-		"\x02\x02\u037B\u0378\x03\x02\x02\x02\u037C/\x03\x02\x02\x02\u037D\u0387" +
-		"\x07\xC9\x02\x02\u037E\u0387\x052\x1A\x02\u037F\u0387\x07\xBB\x02\x02" +
-		"\u0380\u0387\x07\xC3\x02\x02\u0381\u0387\x05&\x14\x02\u0382\u0383\x07" +
-		"^\x02\x02\u0383\u0384\x05*\x16\x02\u0384\u0385\x07_\x02\x02\u0385\u0387" +
-		"\x03\x02\x02\x02\u0386\u037D\x03\x02\x02\x02\u0386\u037E\x03\x02\x02\x02" +
-		"\u0386\u037F\x03\x02\x02\x02\u0386\u0380\x03\x02\x02\x02\u0386\u0381\x03" +
-		"\x02\x02\x02\u0386\u0382\x03\x02\x02\x02\u03871\x03\x02\x02\x02\u0388" +
-		"\u0389\x07\xCB\x02\x02\u0389\u038E\x07\xCB\x02\x02\u038A\u038B\x05&\x14" +
-		"\x02\u038B\u038C\x07\xCB\x02\x02\u038C\u038E\x03\x02\x02\x02\u038D\u0388" +
-		"\x03\x02\x02\x02\u038D\u038A\x03\x02\x02\x02\u038E3\x03\x02\x02\x02\u038F" +
-		"\u0390\t\x03\x02\x02\u03905\x03\x02\x02\x02\u0391\u0393\x05$\x13\x02\u0392" +
-		"\u0391\x03\x02\x02\x02\u0392\u0393\x03\x02\x02\x02\u0393\u0394\x03\x02" +
-		"\x02\x02\u0394\u0395\x07\x03\x02\x02\u0395\u0396\x05`1\x02\u0396\u0397" +
-		"\x05 \x11\x02\u03977\x03\x02\x02\x02\u0398\u039A\x05$\x13\x02\u0399\u0398" +
-		"\x03\x02\x02\x02\u0399\u039A\x03\x02\x02\x02\u039A\u039B\x03\x02\x02\x02" +
-		"\u039B\u039C\x07\x13\x02\x02\u039C\u03A7\x05 \x11\x02\u039D\u039F\x05" +
-		"$\x13\x02\u039E\u039D\x03\x02\x02\x02\u039E\u039F\x03\x02\x02\x02\u039F" +
-		"\u03A0\x03\x02\x02\x02\u03A0\u03A1\x07\x13\x02\x02\u03A1\u03A3\x07\x03" +
-		"\x02\x02\u03A2\u03A4\x05N(\x02\u03A3\u03A2\x03\x02\x02\x02\u03A3\u03A4" +
-		"\x03\x02\x02\x02\u03A4\u03A5\x03\x02\x02\x02\u03A5\u03A7\x05 \x11\x02" +
-		"\u03A6\u0399\x03\x02\x02\x02\u03A6\u039E\x03\x02\x02\x02\u03A79\x03\x02" +
-		"\x02\x02\u03A8\u03A9\x05> \x02\u03A9\u03AA\x05<\x1F\x02\u03AA\u03AB\x05" +
-		"x=\x02\u03AB\u03B0\x03\x02\x02\x02\u03AC\u03AD\x05> \x02\u03AD\u03AE\x05" +
-		"x=\x02\u03AE\u03B0\x03\x02\x02\x02\u03AF\u03A8\x03\x02\x02\x02\u03AF\u03AC" +
-		"\x03\x02\x02\x02\u03B0;\x03\x02\x02\x02\u03B1\u03B2\b\x1F\x01\x02\u03B2" +
-		"\u03B5\x05\x0E\b\x02\u03B3\u03B5\x05\x18\r\x02\u03B4\u03B1\x03\x02\x02" +
-		"\x02\u03B4\u03B3\x03\x02\x02\x02\u03B5\u03BC\x03\x02\x02\x02\u03B6\u03B7" +
-		"\f\x04\x02\x02\u03B7\u03BB\x05\x0E\b\x02\u03B8\u03B9\f\x03\x02\x02\u03B9" +
-		"\u03BB\x05\x18\r\x02\u03BA\u03B6\x03\x02\x02\x02\u03BA\u03B8\x03\x02\x02" +
-		"\x02\u03BB\u03BE\x03\x02\x02\x02\u03BC\u03BA\x03\x02\x02\x02\u03BC\u03BD" +
-		"\x03\x02\x02\x02\u03BD=\x03\x02\x02\x02\u03BE\u03BC\x03\x02\x02\x02\u03BF" +
-		"\u03C1\x05$\x13\x02\u03C0\u03BF\x03\x02\x02\x02\u03C0\u03C1\x03\x02\x02" +
-		"\x02\u03C1\u03C2\x03\x02\x02\x02\u03C2\u03C3\x07\x04\x02\x02\u03C3\u03C4" +
-		"\x05l7\x02\u03C4\u03C5\x05 \x11\x02\u03C5?\x03\x02\x02\x02\u03C6\u03C7" +
-		"\x05&\x14\x02\u03C7A\x03\x02\x02\x02\u03C8\u03C9\x05&\x14\x02\u03C9C\x03" +
-		"\x02\x02\x02\u03CA\u03CB\x05&\x14\x02\u03CBE\x03\x02\x02\x02\u03CC\u03CD" +
-		"\x05&\x14\x02\u03CDG\x03\x02\x02\x02\u03CE\u03CF\x05&\x14\x02\u03CFI\x03" +
-		"\x02\x02\x02\u03D0\u03D1\x05&\x14\x02\u03D1K\x03\x02\x02\x02\u03D2\u03D3" +
-		"\x05&\x14\x02\u03D3M\x03\x02\x02\x02\u03D4\u03D5\x05&\x14\x02\u03D5O\x03" +
-		"\x02\x02\x02\u03D6\u03D7\x05&\x14\x02\u03D7Q\x03\x02\x02\x02\u03D8\u03D9" +
-		"\x05&\x14\x02\u03D9S\x03\x02\x02\x02\u03DA\u03DB\x05&\x14\x02\u03DBU\x03" +
-		"\x02\x02\x02\u03DC\u03DD\x05&\x14\x02\u03DDW\x03\x02\x02\x02\u03DE\u03DF" +
-		"\x05&\x14\x02\u03DFY\x03\x02\x02\x02\u03E0\u03E1\x05&\x14\x02\u03E1[\x03" +
-		"\x02\x02\x02\u03E2\u03E3\x05&\x14\x02\u03E3]\x03\x02\x02\x02\u03E4\u03E5" +
-		"\x05&\x14\x02\u03E5_\x03\x02\x02\x02\u03E6\u03E7\x05&\x14\x02\u03E7a\x03" +
-		"\x02\x02\x02\u03E8\u03E9\x05&\x14\x02\u03E9c\x03\x02\x02\x02\u03EA\u03EB" +
-		"\x05&\x14\x02";
+		"\u02A8\x02\u02AA\x02\u02AC\x02\u02AE\x02\u02B0\x02\u02B2\x02\x02\r\x11" +
+		"\x02\x07\t\f\x0E\x14\x1B\x1D\x1D \"$.?@JJLNSZ\x7F\x89\x8B\x9B\x9D\xB9" +
+		"\xCA\xCA\xD0\xD0\x04\x02``ee\x03\x02\xC4\xC6\x03\x02\f\r\x03\x02[\\\x03" +
+		"\x02ef\x03\x02cd\x04\x02jow|\x03\x02st\x03\x02EF\x04\x02\t\tHH\x02\u1334" +
+		"\x02\u02B5\x03\x02\x02\x02\x04\u02C1\x03\x02\x02\x02\x06\u02C4\x03\x02" +
+		"\x02\x02\b\u02CC\x03\x02\x02\x02\n\u02D1\x03\x02\x02\x02\f\u02D4\x03\x02" +
+		"\x02\x02\x0E\u02DF\x03\x02\x02\x02\x10\u02E7\x03\x02\x02\x02\x12\u02ED" +
+		"\x03\x02\x02\x02\x14\u02FD\x03\x02\x02\x02\x16\u0301\x03\x02\x02\x02\x18" +
+		"\u0303\x03\x02\x02\x02\x1A\u030F\x03\x02\x02\x02\x1C\u032E\x03\x02\x02" +
+		"\x02\x1E\u0339\x03\x02\x02\x02 \u033C\x03\x02\x02\x02\"\u0340\x03\x02" +
+		"\x02\x02$\u0342\x03\x02\x02\x02&\u0344\x03\x02\x02\x02(\u0347\x03\x02" +
+		"\x02\x02*\u0351\x03\x02\x02\x02,\u0364\x03\x02\x02\x02.\u037B\x03\x02" +
+		"\x02\x020\u0386\x03\x02\x02\x022\u038D\x03\x02\x02\x024\u038F\x03\x02" +
+		"\x02\x026\u0392\x03\x02\x02\x028\u03A6\x03\x02\x02\x02:\u03AF\x03\x02" +
+		"\x02\x02<\u03B4\x03\x02\x02\x02>\u03C0\x03\x02\x02\x02@\u03C6\x03\x02" +
+		"\x02\x02B\u03C8\x03\x02\x02\x02D\u03CA\x03\x02\x02\x02F\u03CC\x03\x02" +
+		"\x02\x02H\u03CE\x03\x02\x02\x02J\u03D0\x03\x02\x02\x02L\u03D2\x03\x02" +
+		"\x02\x02N\u03D4\x03\x02\x02\x02P\u03D6\x03\x02\x02\x02R\u03D8\x03\x02" +
+		"\x02\x02T\u03DA\x03\x02\x02\x02V\u03DC\x03\x02\x02\x02X\u03DE\x03\x02" +
+		"\x02\x02Z\u03E0\x03\x02\x02\x02\\\u03E2\x03\x02\x02\x02^\u03E4\x03\x02" +
+		"\x02\x02`\u03E6\x03\x02\x02\x02b\u03E8\x03\x02\x02\x02d\u03EA\x03\x02" +
+		"\x02\x02f\u03EC\x03\x02\x02\x02h\u03EE\x03\x02\x02\x02j\u03F0\x03\x02" +
+		"\x02\x02l\u03F2\x03\x02\x02\x02n\u03F4\x03\x02\x02\x02p\u03F6\x03\x02" +
+		"\x02\x02r\u03F8\x03\x02\x02\x02t\u03FA\x03\x02\x02\x02v\u03FC\x03\x02" +
+		"\x02\x02x\u040C\x03\x02\x02\x02z\u040E\x03\x02\x02\x02|\u042A\x03\x02" +
+		"\x02\x02~\u042C\x03\x02\x02\x02\x80\u0434\x03\x02\x02\x02\x82\u043C\x03" +
+		"\x02\x02\x02\x84\u0447\x03\x02\x02\x02\x86\u0450\x03\x02\x02\x02\x88\u0453" +
+		"\x03\x02\x02\x02\x8A\u0457\x03\x02\x02\x02\x8C\u045A\x03\x02\x02\x02\x8E" +
+		"\u0472\x03\x02\x02\x02\x90\u0474\x03\x02\x02\x02\x92\u047E\x03\x02\x02" +
+		"\x02\x94\u0493\x03\x02\x02\x02\x96\u0496\x03\x02\x02\x02\x98\u04AA\x03" +
+		"\x02\x02\x02\x9A\u04B5\x03\x02\x02\x02\x9C\u04C0\x03\x02\x02\x02\x9E\u04C2" +
+		"\x03\x02\x02\x02\xA0\u04CC\x03\x02\x02\x02\xA2\u04D4\x03\x02\x02\x02\xA4" +
+		"\u04D7\x03\x02\x02\x02\xA6\u04E4\x03\x02\x02\x02\xA8\u04E7\x03\x02\x02" +
+		"\x02\xAA\u04ED\x03\x02\x02\x02\xAC\u04EF\x03\x02\x02\x02\xAE\u04F2\x03" +
+		"\x02\x02\x02\xB0\u0503\x03\x02\x02\x02\xB2\u050A\x03\x02\x02\x02\xB4\u051B" +
+		"\x03\x02\x02\x02\xB6\u051E\x03\x02\x02\x02\xB8\u052C\x03\x02\x02\x02\xBA" +
+		"\u0539\x03\x02\x02\x02\xBC\u055C\x03\x02\x02\x02\xBE\u056B\x03\x02\x02" +
+		"\x02\xC0\u0573\x03\x02\x02\x02\xC2\u057D\x03\x02\x02\x02\xC4\u0582\x03" +
+		"\x02\x02\x02\xC6\u0594\x03\x02\x02\x02\xC8\u0597\x03\x02\x02\x02\xCA\u05A9" +
+		"\x03\x02\x02\x02\xCC\u05B9\x03\x02\x02\x02\xCE\u05BC\x03\x02\x02\x02\xD0" +
+		"\u05C3\x03\x02\x02\x02\xD2\u05CB\x03\x02\x02\x02\xD4\u05D0\x03\x02\x02" +
+		"\x02\xD6\u05D9\x03\x02\x02\x02\xD8\u05E8\x03\x02\x02\x02\xDA\u05EA\x03" +
+		"\x02\x02\x02\xDC\u05F9\x03\x02\x02\x02\xDE\u0609\x03\x02\x02\x02\xE0\u061F" +
+		"\x03\x02\x02\x02\xE2\u0622\x03\x02\x02\x02\xE4\u062B\x03\x02\x02\x02\xE6" +
+		"\u0631\x03\x02\x02\x02\xE8\u063D\x03\x02\x02\x02\xEA\u064F\x03\x02\x02" +
+		"\x02\xEC\u0653\x03\x02\x02\x02\xEE\u0668\x03\x02\x02\x02\xF0\u066A\x03" +
+		"\x02\x02\x02\xF2\u0674\x03\x02\x02\x02\xF4\u0676\x03\x02\x02\x02\xF6\u0680" +
+		"\x03\x02\x02\x02\xF8\u068C\x03\x02\x02\x02\xFA\u06A9\x03\x02\x02\x02\xFC" +
+		"\u06AC\x03\x02\x02\x02\xFE\u06C9\x03\x02\x02\x02\u0100\u06CB\x03\x02\x02" +
+		"\x02\u0102\u06D9\x03\x02\x02\x02\u0104\u06DE\x03\x02\x02\x02\u0106\u06EC" +
+		"\x03\x02\x02\x02\u0108\u06EE\x03\x02\x02\x02\u010A\u06F6\x03\x02\x02\x02" +
+		"\u010C\u0704\x03\x02\x02\x02\u010E\u070C\x03\x02\x02\x02\u0110\u070E\x03" +
+		"\x02\x02\x02\u0112\u0742\x03\x02\x02\x02\u0114\u0769\x03\x02\x02\x02\u0116" +
+		"\u078B\x03\x02\x02\x02\u0118\u07A0\x03\x02\x02\x02\u011A\u07D3\x03\x02" +
+		"\x02\x02\u011C\u07DF\x03\x02\x02\x02\u011E\u0801\x03\x02\x02\x02\u0120" +
+		"\u0809\x03\x02\x02\x02\u0122\u0810\x03\x02\x02\x02\u0124\u0814\x03\x02" +
+		"\x02\x02\u0126\u0816\x03\x02\x02\x02\u0128\u081C\x03\x02\x02\x02\u012A" +
+		"\u0823\x03\x02\x02\x02\u012C\u0825\x03\x02\x02\x02\u012E\u0830\x03\x02" +
+		"\x02\x02\u0130\u0834\x03\x02\x02\x02\u0132\u0836\x03\x02\x02\x02\u0134" +
+		"\u0839\x03\x02\x02\x02\u0136\u0846\x03\x02\x02\x02\u0138\u0850\x03\x02" +
+		"\x02\x02\u013A\u0858\x03\x02\x02\x02\u013C\u086A\x03\x02\x02\x02\u013E" +
+		"\u0882\x03\x02\x02\x02\u0140\u0884\x03\x02\x02\x02\u0142\u088C\x03\x02" +
+		"\x02\x02\u0144\u089E\x03\x02\x02\x02\u0146\u08A0\x03\x02\x02\x02\u0148" +
+		"\u08A8\x03\x02\x02\x02\u014A\u08BC\x03\x02\x02\x02\u014C\u08BE\x03\x02" +
+		"\x02\x02\u014E\u08C8\x03\x02\x02\x02\u0150\u08DB\x03\x02\x02\x02\u0152" +
+		"\u08DD\x03\x02\x02\x02\u0154\u08EA\x03\x02\x02\x02\u0156\u08FC\x03\x02" +
+		"\x02\x02\u0158\u08FE\x03\x02\x02\x02\u015A\u0906\x03\x02\x02\x02\u015C" +
+		"\u091B\x03\x02\x02\x02\u015E\u091D\x03\x02\x02\x02\u0160\u0925\x03\x02" +
+		"\x02\x02\u0162\u093C\x03\x02\x02\x02\u0164\u093E\x03\x02\x02\x02\u0166" +
+		"\u094D\x03\x02\x02\x02\u0168\u095F\x03\x02\x02\x02\u016A\u0961\x03\x02" +
+		"\x02\x02\u016C\u096F\x03\x02\x02\x02\u016E\u0972\x03\x02\x02\x02\u0170" +
+		"\u0978\x03\x02\x02\x02\u0172\u0980\x03\x02\x02\x02\u0174\u0985\x03\x02" +
+		"\x02\x02\u0176\u098F\x03\x02\x02\x02\u0178\u0991\x03\x02\x02\x02\u017A" +
+		"\u09A2\x03\x02\x02\x02\u017C\u09A4\x03\x02\x02\x02\u017E\u09B2\x03\x02" +
+		"\x02\x02\u0180\u09BD\x03\x02\x02\x02\u0182\u09CF\x03\x02\x02\x02\u0184" +
+		"\u09D1\x03\x02\x02\x02\u0186\u09D9\x03\x02\x02\x02\u0188\u09DE\x03\x02" +
+		"\x02\x02\u018A\u09EE\x03\x02\x02\x02\u018C\u09F0\x03\x02\x02\x02\u018E" +
+		"\u09FC\x03\x02\x02\x02\u0190\u0A02\x03\x02\x02\x02\u0192\u0A11\x03\x02" +
+		"\x02\x02\u0194\u0A1C\x03\x02\x02\x02\u0196\u0A1F\x03\x02\x02\x02\u0198" +
+		"\u0A25\x03\x02\x02\x02\u019A\u0A2D\x03\x02\x02\x02\u019C\u0A3A\x03\x02" +
+		"\x02\x02\u019E\u0A3D\x03\x02\x02\x02\u01A0\u0A51\x03\x02\x02\x02\u01A2" +
+		"\u0A59\x03\x02\x02\x02\u01A4\u0A5B\x03\x02\x02\x02\u01A6\u0A65\x03\x02" +
+		"\x02\x02\u01A8\u0A84\x03\x02\x02\x02\u01AA\u0A86\x03\x02\x02\x02\u01AC" +
+		"\u0A92\x03\x02\x02\x02\u01AE\u0AA2\x03\x02\x02\x02\u01B0\u0AAF\x03\x02" +
+		"\x02\x02\u01B2\u0AB1\x03\x02\x02\x02\u01B4\u0AB5\x03\x02\x02\x02\u01B6" +
+		"\u0AC8\x03\x02\x02\x02\u01B8\u0AD4\x03\x02\x02\x02\u01BA\u0AD7\x03\x02" +
+		"\x02\x02\u01BC\u0AF7\x03\x02\x02\x02\u01BE\u0AF9\x03\x02\x02\x02\u01C0" +
+		"\u0B01\x03\x02\x02\x02\u01C2\u0B05\x03\x02\x02\x02\u01C4\u0B09\x03\x02" +
+		"\x02\x02\u01C6\u0B11\x03\x02\x02\x02\u01C8\u0B1E\x03\x02\x02\x02\u01CA" +
+		"\u0B23\x03\x02\x02\x02\u01CC\u0B2B\x03\x02\x02\x02\u01CE\u0B35\x03\x02" +
+		"\x02\x02\u01D0\u0B4A\x03\x02\x02\x02\u01D2\u0B69\x03\x02\x02\x02\u01D4" +
+		"\u0B70\x03\x02\x02\x02\u01D6\u0B7B\x03\x02\x02\x02\u01D8\u0B90\x03\x02" +
+		"\x02\x02\u01DA\u0B9C\x03\x02\x02\x02\u01DC\u0B9E\x03\x02\x02\x02\u01DE" +
+		"\u0BA9\x03\x02\x02\x02\u01E0\u0BB0\x03\x02\x02\x02\u01E2\u0BB2\x03\x02" +
+		"\x02\x02\u01E4\u0BC5\x03\x02\x02\x02\u01E6\u0BC7\x03\x02\x02\x02\u01E8" +
+		"\u0BC9\x03\x02\x02\x02\u01EA\u0BCF\x03\x02\x02\x02\u01EC\u0BD9\x03\x02" +
+		"\x02\x02\u01EE\u0BE4\x03\x02\x02\x02\u01F0\u0BE6\x03\x02\x02\x02\u01F2" +
+		"\u0BE8\x03\x02\x02\x02\u01F4\u0BEA\x03\x02\x02\x02\u01F6\u0BEC\x03\x02" +
+		"\x02\x02\u01F8\u0BF5\x03\x02\x02\x02\u01FA\u0BF7\x03\x02\x02\x02\u01FC" +
+		"\u0C00\x03\x02\x02\x02\u01FE\u0C03\x03\x02\x02\x02\u0200\u0C07\x03\x02" +
+		"\x02\x02\u0202\u0C10\x03\x02\x02\x02\u0204\u0C19\x03\x02\x02\x02\u0206" +
+		"\u0C22\x03\x02\x02\x02\u0208\u0C24\x03\x02\x02\x02\u020A\u0C26\x03\x02" +
+		"\x02\x02\u020C\u0C28\x03\x02\x02\x02\u020E\u0C2A\x03\x02\x02\x02\u0210" +
+		"\u0C2C\x03\x02\x02\x02\u0212\u0C95\x03\x02\x02\x02\u0214\u0CCA\x03\x02" +
+		"\x02\x02\u0216\u0CD9\x03\x02\x02\x02\u0218\u0CE4\x03\x02\x02\x02\u021A" +
+		"\u0CF5\x03\x02\x02\x02\u021C\u0D00\x03\x02\x02\x02\u021E\u0D02\x03\x02" +
+		"\x02\x02\u0220\u0D4E\x03\x02\x02\x02\u0222\u0D50\x03\x02\x02\x02\u0224" +
+		"\u0D53\x03\x02\x02\x02\u0226\u0D5B\x03\x02\x02\x02\u0228\u0D6E\x03\x02" +
+		"\x02\x02\u022A\u0D76\x03\x02\x02\x02\u022C\u0D79\x03\x02\x02\x02\u022E" +
+		"\u0D7F\x03\x02\x02\x02\u0230\u0D85\x03\x02\x02\x02\u0232\u0DA4\x03\x02" +
+		"\x02\x02\u0234\u0DB3\x03\x02\x02\x02\u0236\u0DC4\x03\x02\x02\x02\u0238" +
+		"\u0DCD\x03\x02\x02\x02\u023A\u0DDA\x03\x02\x02\x02\u023C\u0DE2\x03\x02" +
+		"\x02\x02\u023E\u0E02\x03\x02\x02\x02\u0240\u0E09\x03\x02\x02\x02\u0242" +
+		"\u0E0C\x03\x02\x02\x02\u0244\u0E12\x03\x02\x02\x02\u0246\u0E15\x03\x02" +
+		"\x02\x02\u0248\u0E1F\x03\x02\x02\x02\u024A\u0E35\x03\x02\x02\x02\u024C" +
+		"\u0E41\x03\x02\x02\x02\u024E\u0E45\x03\x02\x02\x02\u0250\u0E7E\x03\x02" +
+		"\x02\x02\u0252\u0E81\x03\x02\x02\x02\u0254\u0E99\x03\x02\x02\x02\u0256" +
+		"\u0E9B\x03\x02\x02\x02\u0258\u0E9E\x03\x02\x02\x02\u025A\u0EAB\x03\x02" +
+		"\x02\x02\u025C\u0EB4\x03\x02\x02\x02\u025E\u0EBF\x03\x02\x02\x02\u0260" +
+		"\u0EC2\x03\x02\x02\x02\u0262\u0EC9\x03\x02\x02\x02\u0264\u0EDC\x03\x02" +
+		"\x02\x02\u0266\u0EDE\x03\x02\x02\x02\u0268\u0EE1\x03\x02\x02\x02\u026A" +
+		"\u0F04\x03\x02\x02\x02\u026C\u0F07\x03\x02\x02\x02\u026E\u0F14\x03\x02" +
+		"\x02\x02\u0270\u0F17\x03\x02\x02\x02\u0272\u0F1D\x03\x02\x02\x02\u0274" +
+		"\u0F27\x03\x02\x02\x02\u0276\u0F32\x03\x02\x02\x02\u0278\u0F35\x03\x02" +
+		"\x02\x02\u027A\u0F3D\x03\x02\x02\x02\u027C\u0FA5\x03\x02\x02\x02\u027E" +
+		"\u0FA8\x03\x02\x02\x02\u0280\u0FB0\x03\x02\x02\x02\u0282\u0FCB\x03\x02" +
+		"\x02\x02\u0284\u0FE7\x03\x02\x02\x02\u0286\u0FEA\x03\x02\x02\x02\u0288" +
+		"\u0FF6\x03\x02\x02\x02\u028A\u101E\x03\x02\x02\x02\u028C\u102B\x03\x02" +
+		"\x02\x02\u028E\u103A\x03\x02\x02\x02\u0290\u1043\x03\x02\x02\x02\u0292" +
+		"\u104F\x03\x02\x02\x02\u0294\u1064\x03\x02\x02\x02\u0296\u1066\x03\x02" +
+		"\x02\x02\u0298\u106D\x03\x02\x02\x02\u029A\u1072\x03\x02\x02\x02\u029C" +
+		"\u1074\x03\x02\x02\x02\u029E\u107E\x03\x02\x02\x02\u02A0\u1080\x03\x02" +
+		"\x02\x02\u02A2\u109E\x03\x02\x02\x02\u02A4\u10B6\x03\x02\x02\x02\u02A6" +
+		"\u10CF\x03\x02\x02\x02\u02A8\u10F0\x03\x02\x02\x02\u02AA\u1109\x03\x02" +
+		"\x02\x02\u02AC\u1116\x03\x02\x02\x02\u02AE\u112D\x03\x02\x02\x02\u02B0" +
+		"\u118F\x03\x02\x02\x02\u02B2\u11A3\x03\x02\x02\x02\u02B4\u02B6\x05 \x11" +
+		"\x02\u02B5\u02B4\x03\x02\x02\x02\u02B5\u02B6\x03\x02\x02\x02\u02B6\u02B8" +
+		"\x03\x02\x02\x02\u02B7\u02B9\x05\x04\x03\x02\u02B8\u02B7\x03\x02\x02\x02" +
+		"\u02B9\u02BA\x03\x02\x02\x02\u02BA\u02B8\x03\x02\x02\x02\u02BA\u02BB\x03" +
+		"\x02\x02\x02\u02BB\x03\x03\x02\x02\x02\u02BC\u02C2\x05\x06\x04\x02\u02BD" +
+		"\u02C2\x05\xC4c\x02\u02BE\u02C2\x05\xCEh\x02\u02BF\u02C2\x05:\x1E\x02" +
+		"\u02C0\u02C2\x05\x86D\x02\u02C1\u02BC\x03\x02\x02\x02\u02C1\u02BD\x03" +
+		"\x02\x02\x02\u02C1\u02BE\x03\x02\x02\x02\u02C1\u02BF\x03\x02\x02\x02\u02C1" +
+		"\u02C0\x03\x02\x02\x02\u02C2\x05\x03\x02\x02\x02\u02C3\u02C5\x056\x1C" +
+		"\x02\u02C4\u02C3\x03\x02\x02\x02\u02C4\u02C5\x03\x02\x02\x02\u02C5\u02C6" +
+		"\x03\x02\x02\x02\u02C6\u02C7\x05\b\x05\x02\u02C7\x07\x03\x02\x02\x02\u02C8" +
+		"\u02C9\x05\f\x07\x02\u02C9\u02CA\x058\x1D\x02\u02CA\u02CD\x03\x02\x02" +
+		"\x02\u02CB\u02CD\x058\x1D\x02\u02CC\u02C8\x03\x02\x02\x02\u02CC\u02CB" +
+		"\x03\x02\x02\x02\u02CD\t\x03\x02\x02\x02\u02CE\u02D2\x05\x0E\b\x02\u02CF" +
+		"\u02D2\x05\x1A\x0E\x02\u02D0\u02D2\x05\x18\r\x02\u02D1\u02CE\x03\x02\x02" +
+		"\x02\u02D1\u02CF\x03\x02\x02\x02\u02D1\u02D0\x03\x02\x02\x02\u02D2\v\x03" +
+		"\x02\x02\x02\u02D3\u02D5\x05\n\x06\x02\u02D4\u02D3\x03\x02\x02\x02\u02D5" +
+		"\u02D6\x03\x02\x02\x02\u02D6\u02D4\x03\x02\x02\x02\u02D6\u02D7\x03\x02" +
+		"\x02\x02\u02D7\r\x03\x02\x02\x02\u02D8\u02E0\x05\u0188\xC5\x02\u02D9\u02E0" +
+		"\x05\u0182\xC2\x02\u02DA\u02E0\x05(\x15\x02\u02DB\u02E0\x05\xE0q\x02\u02DC" +
+		"\u02E0\x05\x10\t\x02\u02DD\u02E0\x05z>\x02\u02DE\u02E0\x05|?\x02\u02DF" +
+		"\u02D8\x03\x02\x02\x02\u02DF\u02D9\x03\x02\x02\x02\u02DF\u02DA\x03\x02" +
+		"\x02\x02\u02DF\u02DB\x03\x02\x02\x02\u02DF\u02DC\x03\x02\x02\x02\u02DF" +
+		"\u02DD\x03\x02\x02\x02\u02DF\u02DE\x03\x02\x02\x02\u02E0\x0F\x03\x02\x02" +
+		"\x02\u02E1\u02E8\x05\u0114\x8B\x02\u02E2\u02E8\x05\x14\v\x02\u02E3\u02E8" +
+		"\x05\xF4{\x02\u02E4\u02E8\x05\x90I\x02\u02E5\u02E8\x05\xA0Q\x02\u02E6" +
+		"\u02E8\x05\xACW\x02\u02E7\u02E1\x03\x02\x02\x02\u02E7\u02E2\x03\x02\x02" +
+		"\x02\u02E7\u02E3\x03\x02\x02\x02\u02E7\u02E4\x03\x02\x02\x02\u02E7\u02E5" +
+		"\x03\x02\x02\x02\u02E7\u02E6\x03\x02\x02\x02\u02E8\x11\x03\x02\x02\x02" +
+		"\u02E9\u02EE\x05\x1A\x0E\x02\u02EA\u02EE\x05(\x15\x02\u02EB\u02EE\x05" +
+		"\u016E\xB8\x02\u02EC\u02EE\x05\xE0q\x02\u02ED\u02E9\x03\x02\x02\x02\u02ED" +
+		"\u02EA\x03\x02\x02\x02\u02ED\u02EB\x03\x02\x02\x02\u02ED\u02EC\x03\x02" +
+		"\x02\x02\u02EE\x13\x03\x02\x02\x02\u02EF\u02FE\x05\u014A\xA6\x02\u02F0" +
+		"\u02FE\x05\u015C\xAF\x02\u02F1\u02FE\x05\u019E\xD0\x02\u02F2\u02FE\x05" +
+		"\u016E\xB8\x02\u02F3\u02FE\x05\u0156\xAC\x02\u02F4\u02FE\x05\u0196\xCC" +
+		"\x02\u02F5\u02FE\x05\xB6\\\x02\u02F6\u02FE\x05\xB8]\x02\u02F7\u02FE\x05" +
+		"\u0150\xA9\x02\u02F8\u02FE\x05\u013E\xA0\x02\u02F9\u02FE\x05\u0190\xC9" +
+		"\x02\u02FA\u02FE\x05\u0144\xA3\x02\u02FB\u02FE\x05\u0162\xB2\x02\u02FC" +
+		"\u02FE\x05\u0168\xB5\x02\u02FD\u02EF\x03\x02\x02\x02\u02FD\u02F0\x03\x02" +
+		"\x02\x02\u02FD\u02F1\x03\x02\x02\x02\u02FD\u02F2\x03\x02\x02\x02\u02FD" +
+		"\u02F3\x03\x02\x02\x02\u02FD\u02F4\x03\x02\x02\x02\u02FD\u02F5\x03\x02" +
+		"\x02\x02\u02FD\u02F6\x03\x02\x02\x02\u02FD\u02F7\x03\x02\x02\x02\u02FD" +
+		"\u02F8\x03\x02\x02\x02\u02FD\u02F9\x03\x02\x02\x02\u02FD\u02FA\x03\x02" +
+		"\x02\x02\u02FD\u02FB\x03\x02\x02\x02\u02FD\u02FC\x03\x02\x02\x02\u02FE" +
+		"\x15\x03\x02\x02\x02\u02FF\u0302\x05\xC4c\x02\u0300\u0302\x05\xCEh\x02" +
+		"\u0301\u02FF\x03\x02\x02\x02\u0301\u0300\x03\x02\x02\x02\u0302\x17\x03" +
+		"\x02\x02\x02\u0303\u0305\x05\xE4s\x02\u0304\u0306\x05\x16\f\x02\u0305" +
+		"\u0304\x03\x02\x02\x02\u0306\u0307\x03\x02\x02\x02\u0307\u0305\x03\x02" +
+		"\x02\x02\u0307\u0308\x03\x02\x02\x02\u0308\x19\x03\x02\x02\x02\u0309\u0310" +
+		"\x05\x1C\x0F\x02\u030A\u0310\x05\u024E\u0128\x02\u030B\u0310\x05\u0230" +
+		"\u0119\x02\u030C\u0310\x05\u023E\u0120\x02\u030D\u0310\x05\u0226\u0114" +
+		"\x02\u030E\u0310\x05\u0258\u012D\x02\u030F\u0309\x03\x02\x02\x02\u030F" +
+		"\u030A\x03\x02\x02\x02\u030F\u030B\x03\x02\x02\x02\u030F\u030C\x03\x02" +
+		"\x02\x02\u030F\u030D\x03\x02\x02\x02\u030F\u030E\x03\x02\x02\x02\u0310" +
+		"\x1B\x03\x02\x02\x02\u0311\u032F\x05\u01BC\xDF\x02\u0312\u032F\x05\u025A" +
+		"\u012E\x02\u0313\u032F\x05\u01D2\xEA\x02\u0314\u032F\x05\u025C\u012F\x02" +
+		"\u0315\u032F\x05\u01CA\xE6\x02\u0316\u032F\x05\u021E\u0110\x02\u0317\u032F" +
+		"\x05\u0224\u0113\x02\u0318\u032F\x05\u026C\u0137\x02\u0319\u032F\x05\u0212" +
+		"\u010A\x02\u031A\u032F\x05\u0268\u0135\x02\u031B\u032F\x05\u02A6\u0154" +
+		"\x02\u031C\u032F\x05\xBC_\x02\u031D\u032F\x05\u027E\u0140\x02\u031E\u032F" +
+		"\x05\u0270\u0139\x02\u031F\u032F\x05\u02A8\u0155\x02\u0320\u032F\x05\u0260" +
+		"\u0131\x02\u0321\u032F\x05\u0262\u0132\x02\u0322\u032F\x05\u026A\u0136" +
+		"\x02\u0323\u032F\x05\u023A\u011E\x02\u0324\u032F\x05\u02AE\u0158\x02\u0325" +
+		"\u032F\x05\u0278\u013D\x02\u0326\u032F\x05\u0274\u013B\x02\u0327\u032F" +
+		"\x05\u0288\u0145\x02\u0328\u032F\x05\u0284\u0143\x02\u0329\u032F\x05\xE2" +
+		"r\x02\u032A\u032F\x05\u02AA\u0156\x02\u032B\u032F\x05\xE6t\x02\u032C\u032F" +
+		"\x05\u0272\u013A\x02\u032D\u032F\x05\u0286\u0144\x02\u032E\u0311\x03\x02" +
+		"\x02\x02\u032E\u0312\x03\x02\x02\x02\u032E\u0313\x03\x02\x02\x02\u032E" +
+		"\u0314\x03\x02\x02\x02\u032E\u0315\x03\x02\x02\x02\u032E\u0316\x03\x02" +
+		"\x02\x02\u032E\u0317\x03\x02\x02\x02\u032E\u0318\x03\x02\x02\x02\u032E" +
+		"\u0319\x03\x02\x02\x02\u032E\u031A\x03\x02\x02\x02\u032E\u031B\x03\x02" +
+		"\x02\x02\u032E\u031C\x03\x02\x02\x02\u032E\u031D\x03\x02\x02\x02\u032E" +
+		"\u031E\x03\x02\x02\x02\u032E\u031F\x03\x02\x02\x02\u032E\u0320\x03\x02" +
+		"\x02\x02\u032E\u0321\x03\x02\x02\x02\u032E\u0322\x03\x02\x02\x02\u032E" +
+		"\u0323\x03\x02\x02\x02\u032E\u0324\x03\x02\x02\x02\u032E\u0325\x03\x02" +
+		"\x02\x02\u032E\u0326\x03\x02\x02\x02\u032E\u0327\x03\x02\x02\x02\u032E" +
+		"\u0328\x03\x02\x02\x02\u032E\u0329\x03\x02\x02\x02\u032E\u032A\x03\x02" +
+		"\x02\x02\u032E\u032B\x03\x02\x02\x02\u032E\u032C\x03\x02\x02\x02\u032E" +
+		"\u032D\x03\x02\x02\x02\u032F\x1D\x03\x02\x02\x02\u0330\u033A\x05\u01EE" +
+		"\xF8\x02\u0331\u033A\x05\u01F0\xF9\x02\u0332\u033A\x05\u01F2\xFA\x02\u0333" +
+		"\u033A\x05\u01F8\xFD\x02\u0334\u033A\x05\u01FC\xFF\x02\u0335\u033A\x05" +
+		"\u0206\u0104\x02\u0336\u033A\x05\u0208\u0105\x02\u0337\u033A\x05\u020A" +
+		"\u0106\x02\u0338\u033A\x05\u020C\u0107\x02\u0339\u0330\x03\x02\x02\x02" +
+		"\u0339\u0331\x03\x02\x02\x02\u0339\u0332\x03\x02\x02\x02\u0339\u0333\x03" +
+		"\x02\x02\x02\u0339\u0334\x03\x02\x02\x02\u0339\u0335\x03\x02\x02\x02\u0339" +
+		"\u0336\x03\x02\x02\x02\u0339\u0337\x03\x02\x02\x02\u0339\u0338\x03\x02" +
+		"\x02\x02\u033A\x1F\x03\x02\x02\x02\u033B\u033D\x07\xBF\x02\x02\u033C\u033B" +
+		"\x03\x02\x02\x02\u033D\u033E\x03\x02\x02\x02\u033E\u033C\x03\x02\x02\x02" +
+		"\u033E\u033F\x03\x02\x02\x02\u033F!\x03\x02\x02\x02\u0340\u0341\x07\xC2" +
+		"\x02\x02\u0341#\x03\x02\x02\x02\u0342\u0343\x07\xC2\x02\x02\u0343%\x03" +
+		"\x02\x02\x02\u0344\u0345\t\x02\x02\x02\u0345\'\x03\x02\x02\x02\u0346\u0348" +
+		"\x05$\x13\x02\u0347\u0346\x03\x02\x02\x02\u0347\u0348\x03\x02\x02\x02" +
+		"\u0348\u0349\x03\x02\x02\x02\u0349\u034A\x07J\x02\x02\u034A\u034C\x07" +
+		"^\x02\x02\u034B\u034D\x05*\x16\x02\u034C\u034B\x03\x02\x02\x02\u034C\u034D" +
+		"\x03\x02\x02\x02\u034D\u034E\x03\x02\x02\x02\u034E\u034F\x07_\x02\x02" +
+		"\u034F\u0350\x05 \x11\x02\u0350)\x03\x02\x02\x02\u0351\u0356\x05,\x17" +
+		"\x02\u0352\u0353\x07]\x02\x02\u0353\u0355\x05,\x17\x02\u0354\u0352\x03" +
+		"\x02\x02\x02\u0355\u0358\x03\x02\x02\x02\u0356\u0354\x03\x02\x02\x02\u0356" +
+		"\u0357\x03\x02\x02\x02\u0357+\x03\x02\x02\x02\u0358\u0356\x03\x02\x02" +
+		"\x02\u0359\u035A\b\x17\x01\x02\u035A\u0365\x05.\x18\x02\u035B\u0365\x05" +
+		"4\x1B\x02\u035C\u035D\x054\x1B\x02\u035D\u035E\x05.\x18\x02\u035E\u0365" +
+		"\x03\x02\x02\x02\u035F\u0360\x05.\x18\x02\u0360\u0361\x07^\x02\x02\u0361" +
+		"\u0362\x05*\x16\x02\u0362\u0363\x07_\x02\x02\u0363\u0365\x03\x02\x02\x02" +
+		"\u0364\u0359\x03\x02\x02\x02\u0364\u035B\x03\x02\x02\x02\u0364\u035C\x03" +
+		"\x02\x02\x02\u0364\u035F\x03\x02\x02\x02\u0365\u036E\x03\x02\x02\x02\u0366" +
+		"\u0367\f\x05\x02\x02\u0367\u036D\x054\x1B\x02\u0368\u0369\f\x04\x02\x02" +
+		"\u0369\u036A\x054\x1B\x02\u036A\u036B\x05.\x18\x02\u036B\u036D\x03\x02" +
+		"\x02\x02\u036C\u0366\x03\x02\x02\x02\u036C\u0368\x03\x02\x02\x02\u036D" +
+		"\u0370\x03\x02\x02\x02\u036E\u036C\x03\x02\x02\x02\u036E\u036F\x03\x02" +
+		"\x02\x02\u036F-\x03\x02\x02\x02\u0370\u036E\x03\x02\x02\x02\u0371\u037C" +
+		"\x050\x19\x02\u0372\u0373\x07\xC2\x02\x02\u0373\u037C\x050\x19\x02\u0374" +
+		"\u037C\x07\xC8\x02\x02\u0375\u037C\x07\xC7\x02\x02\u0376\u0377\x07\xC7" +
+		"\x02\x02\u0377\u037C\x050\x19\x02\u0378\u0379\x07\xC7\x02\x02\u0379\u037A" +
+		"\x07\xC2\x02\x02\u037A\u037C\x050\x19\x02\u037B\u0371\x03\x02\x02\x02" +
+		"\u037B\u0372\x03\x02\x02\x02\u037B\u0374\x03\x02\x02\x02\u037B\u0375\x03" +
+		"\x02\x02\x02\u037B\u0376\x03\x02\x02\x02\u037B\u0378\x03\x02\x02\x02\u037C" +
+		"/\x03\x02\x02\x02\u037D\u0387\x07\xC9\x02\x02\u037E\u0387\x052\x1A\x02" +
+		"\u037F\u0387\x07\xBB\x02\x02\u0380\u0387\x07\xC3\x02\x02\u0381\u0387\x05" +
+		"&\x14\x02\u0382\u0383\x07^\x02\x02\u0383\u0384\x05*\x16\x02\u0384\u0385" +
+		"\x07_\x02\x02\u0385\u0387\x03\x02\x02\x02\u0386\u037D\x03\x02\x02\x02" +
+		"\u0386\u037E\x03\x02\x02\x02\u0386\u037F\x03\x02\x02\x02\u0386\u0380\x03" +
+		"\x02\x02\x02\u0386\u0381\x03\x02\x02\x02\u0386\u0382\x03\x02\x02\x02\u0387" +
+		"1\x03\x02\x02\x02\u0388\u0389\x07\xCB\x02\x02\u0389\u038E\x07\xCB\x02" +
+		"\x02\u038A\u038B\x05&\x14\x02\u038B\u038C\x07\xCB\x02\x02\u038C\u038E" +
+		"\x03\x02\x02\x02\u038D\u0388\x03\x02\x02\x02\u038D\u038A\x03\x02\x02\x02" +
+		"\u038E3\x03\x02\x02\x02\u038F\u0390\t\x03\x02\x02\u03905\x03\x02\x02\x02" +
+		"\u0391\u0393\x05$\x13\x02\u0392\u0391\x03\x02\x02\x02\u0392\u0393\x03" +
+		"\x02\x02\x02\u0393\u0394\x03\x02\x02\x02\u0394\u0395\x07\x03\x02\x02\u0395" +
+		"\u0396\x05`1\x02\u0396\u0397\x05 \x11\x02\u03977\x03\x02\x02\x02\u0398" +
+		"\u039A\x05$\x13\x02\u0399\u0398\x03\x02\x02\x02\u0399\u039A\x03\x02\x02" +
+		"\x02\u039A\u039B\x03\x02\x02\x02\u039B\u039C\x07\x13\x02\x02\u039C\u03A7" +
+		"\x05 \x11\x02\u039D\u039F\x05$\x13\x02\u039E\u039D\x03\x02\x02\x02\u039E" +
+		"\u039F\x03\x02\x02\x02\u039F\u03A0\x03\x02\x02\x02\u03A0\u03A1\x07\x13" +
+		"\x02\x02\u03A1\u03A3\x07\x03\x02\x02\u03A2\u03A4\x05N(\x02\u03A3\u03A2" +
+		"\x03\x02\x02\x02\u03A3\u03A4\x03\x02\x02\x02\u03A4\u03A5\x03\x02\x02\x02" +
+		"\u03A5\u03A7\x05 \x11\x02\u03A6\u0399\x03\x02\x02\x02\u03A6\u039E\x03" +
+		"\x02\x02\x02\u03A79\x03\x02\x02\x02\u03A8\u03A9\x05> \x02\u03A9\u03AA" +
+		"\x05<\x1F\x02\u03AA\u03AB\x05x=\x02\u03AB\u03B0\x03\x02\x02\x02\u03AC" +
+		"\u03AD\x05> \x02\u03AD\u03AE\x05x=\x02\u03AE\u03B0\x03\x02\x02\x02\u03AF" +
+		"\u03A8\x03\x02\x02\x02\u03AF\u03AC\x03\x02\x02\x02\u03B0;\x03\x02\x02" +
+		"\x02\u03B1\u03B2\b\x1F\x01\x02\u03B2\u03B5\x05\x0E\b\x02\u03B3\u03B5\x05" +
+		"\x18\r\x02\u03B4\u03B1\x03\x02\x02\x02\u03B4\u03B3\x03\x02\x02\x02\u03B5" +
+		"\u03BC\x03\x02\x02\x02\u03B6\u03B7\f\x04\x02\x02\u03B7\u03BB\x05\x0E\b" +
+		"\x02\u03B8\u03B9\f\x03\x02\x02\u03B9\u03BB\x05\x18\r\x02\u03BA\u03B6\x03" +
+		"\x02\x02\x02\u03BA\u03B8\x03\x02\x02\x02\u03BB\u03BE\x03\x02\x02\x02\u03BC" +
+		"\u03BA\x03\x02\x02\x02\u03BC\u03BD\x03\x02\x02\x02\u03BD=\x03\x02\x02" +
+		"\x02\u03BE\u03BC\x03\x02\x02\x02\u03BF\u03C1\x05$\x13\x02\u03C0\u03BF" +
+		"\x03\x02\x02\x02\u03C0\u03C1\x03\x02\x02\x02\u03C1\u03C2\x03\x02\x02\x02" +
+		"\u03C2\u03C3\x07\x04\x02\x02\u03C3\u03C4\x05l7\x02\u03C4\u03C5\x05 \x11" +
+		"\x02\u03C5?\x03\x02\x02\x02\u03C6\u03C7\x05&\x14\x02\u03C7A\x03\x02\x02" +
+		"\x02\u03C8\u03C9\x05&\x14\x02\u03C9C\x03\x02\x02\x02\u03CA\u03CB\x05&" +
+		"\x14\x02\u03CBE\x03\x02\x02\x02\u03CC\u03CD\x05&\x14\x02\u03CDG\x03\x02" +
+		"\x02\x02\u03CE\u03CF\x05&\x14\x02\u03CFI\x03\x02\x02\x02\u03D0\u03D1\x05" +
+		"&\x14\x02\u03D1K\x03\x02\x02\x02\u03D2\u03D3\x05&\x14\x02\u03D3M\x03\x02" +
+		"\x02\x02\u03D4\u03D5\x05&\x14\x02\u03D5O\x03\x02\x02\x02\u03D6\u03D7\x05" +
+		"&\x14\x02\u03D7Q\x03\x02\x02\x02\u03D8\u03D9\x05&\x14\x02\u03D9S\x03\x02" +
+		"\x02\x02\u03DA\u03DB\x05&\x14\x02\u03DBU\x03\x02\x02\x02\u03DC\u03DD\x05" +
+		"&\x14\x02\u03DDW\x03\x02\x02\x02\u03DE\u03DF\x05&\x14\x02\u03DFY\x03\x02" +
+		"\x02\x02\u03E0\u03E1\x05&\x14\x02\u03E1[\x03\x02\x02\x02\u03E2\u03E3\x05" +
+		"&\x14\x02\u03E3]\x03\x02\x02\x02\u03E4\u03E5\x05&\x14\x02\u03E5_\x03\x02" +
+		"\x02\x02\u03E6\u03E7\x05&\x14\x02\u03E7a\x03\x02\x02\x02\u03E8\u03E9\x05" +
+		"&\x14\x02\u03E9c\x03\x02\x02\x02\u03EA\u03EB";
 	private static readonly _serializedATNSegment3: string =
-		"\u03EBe\x03\x02\x02\x02\u03EC\u03ED\x05&\x14\x02\u03EDg\x03\x02\x02\x02" +
-		"\u03EE\u03EF\x05&\x14\x02\u03EFi\x03\x02\x02\x02\u03F0\u03F1\x05&\x14" +
-		"\x02\u03F1k\x03\x02\x02\x02\u03F2\u03F3\x05&\x14\x02\u03F3m\x03\x02\x02" +
-		"\x02\u03F4\u03F5\x05&\x14\x02\u03F5o\x03\x02\x02\x02\u03F6\u03F7\x05&" +
-		"\x14\x02\u03F7q\x03\x02\x02\x02\u03F8\u03F9\x05&\x14\x02\u03F9s\x03\x02" +
-		"\x02\x02\u03FA\u03FB\x05&\x14\x02\u03FBu\x03\x02\x02\x02\u03FC\u03FD\x05" +
-		"&\x14\x02\u03FDw\x03\x02\x02\x02\u03FE\u0400\x05$\x13\x02\u03FF\u03FE" +
+		"\x05&\x14\x02\u03EBe\x03\x02\x02\x02\u03EC\u03ED\x05&\x14\x02\u03EDg\x03" +
+		"\x02\x02\x02\u03EE\u03EF\x05&\x14\x02\u03EFi\x03\x02\x02\x02\u03F0\u03F1" +
+		"\x05&\x14\x02\u03F1k\x03\x02\x02\x02\u03F2\u03F3\x05&\x14\x02\u03F3m\x03" +
+		"\x02\x02\x02\u03F4\u03F5\x05&\x14\x02\u03F5o\x03\x02\x02\x02\u03F6\u03F7" +
+		"\x05&\x14\x02\u03F7q\x03\x02\x02\x02\u03F8\u03F9\x05&\x14\x02\u03F9s\x03" +
+		"\x02\x02\x02\u03FA\u03FB\x05&\x14\x02\u03FBu\x03\x02\x02\x02\u03FC\u03FD" +
+		"\x05&\x14\x02\u03FDw\x03\x02\x02\x02\u03FE\u0400\x05$\x13\x02\u03FF\u03FE" +
 		"\x03\x02\x02\x02\u03FF\u0400\x03\x02\x02\x02\u0400\u0401\x03\x02\x02\x02" +
 		"\u0401\u0402\x07\x13\x02\x02\u0402\u040D\x05 \x11\x02\u0403\u0405\x05" +
 		"$\x13\x02\u0404\u0403\x03\x02\x02\x02\u0404\u0405\x03\x02\x02\x02\u0405" +
@@ -23434,245 +23435,246 @@ export class FortranParser extends Parser {
 		"\u06AA\x03\x02\x02\x02\u06A9\u068F\x03\x02\x02\x02\u06A9\u0696\x03\x02" +
 		"\x02\x02\u06A9\u069F\x03\x02\x02\x02\u06AA\xFB\x03\x02\x02\x02\u06AB\u06AD" +
 		"\x05$\x13\x02\u06AC\u06AB\x03\x02\x02\x02\u06AC\u06AD\x03\x02\x02\x02" +
-		"\u06AD\u06AE\x03\x02\x02\x02\u06AE\u06AF";
+		"\u06AD\u06AE\x03\x02";
 	private static readonly _serializedATNSegment4: string =
-		"\x07\x13\x02\x02\u06AF\u06B1\x07\t\x02\x02\u06B0\u06B2\x05L\'\x02\u06B1" +
-		"\u06B0\x03\x02\x02\x02\u06B1\u06B2\x03\x02\x02\x02\u06B2\u06B3\x03\x02" +
-		"\x02\x02\u06B3\u06B4\x05 \x11\x02\u06B4\xFD\x03\x02\x02\x02\u06B5\u06B7" +
-		"\x05$\x13\x02\u06B6\u06B5\x03\x02\x02\x02\u06B6\u06B7\x03\x02\x02\x02" +
-		"\u06B7\u06B8\x03\x02\x02\x02\u06B8\u06BB\x05\u0116\x8C\x02\u06B9\u06BA" +
-		"\x07]\x02\x02\u06BA\u06BC\x05\u0100\x81\x02\u06BB\u06B9\x03\x02\x02\x02" +
-		"\u06BB\u06BC\x03\x02\x02\x02\u06BC\u06BD\x03\x02\x02\x02\u06BD\u06BE\x07" +
-		"`\x02\x02\u06BE\u06BF\x07`\x02\x02\u06BF\u06C0\x05\u0108\x85\x02\u06C0" +
-		"\u06C1\x05 \x11\x02\u06C1\u06CA\x03\x02\x02\x02\u06C2\u06C4\x05$\x13\x02" +
-		"\u06C3\u06C2\x03\x02\x02\x02\u06C3\u06C4\x03\x02\x02\x02\u06C4\u06C5\x03" +
-		"\x02\x02\x02\u06C5\u06C6\x05\u0116\x8C\x02\u06C6\u06C7\x05\u0108\x85\x02" +
-		"\u06C7\u06C8\x05 \x11\x02\u06C8\u06CA\x03\x02\x02\x02\u06C9\u06B6\x03" +
-		"\x02\x02\x02\u06C9\u06C3\x03\x02\x02\x02\u06CA\xFF\x03\x02\x02\x02\u06CB" +
-		"\u06D0\x05\u0102\x82\x02\u06CC\u06CD\x07]\x02\x02\u06CD\u06CF\x05\u0102" +
-		"\x82\x02\u06CE\u06CC\x03\x02\x02\x02\u06CF\u06D2\x03\x02\x02\x02\u06D0" +
-		"\u06CE\x03\x02\x02\x02\u06D0\u06D1\x03\x02\x02\x02\u06D1\u0101\x03\x02" +
-		"\x02\x02\u06D2\u06D0\x03\x02\x02\x02\u06D3\u06DA\x07\x1D\x02\x02\u06D4" +
-		"\u06D5\x07\x14\x02\x02\u06D5\u06D6\x07^\x02\x02\u06D6\u06D7\x05\u0104" +
-		"\x83\x02\u06D7\u06D8\x07_\x02\x02\u06D8\u06DA\x03\x02\x02\x02\u06D9\u06D3" +
-		"\x03\x02\x02\x02\u06D9\u06D4\x03\x02\x02\x02\u06DA\u0103\x03\x02\x02\x02" +
-		"\u06DB\u06DF\x05\u012C\x97\x02\u06DC\u06DF\x05\u0138\x9D\x02\u06DD\u06DF" +
-		"\x05\"\x12\x02\u06DE\u06DB\x03\x02\x02\x02\u06DE\u06DC\x03\x02\x02\x02" +
-		"\u06DE\u06DD\x03\x02\x02\x02\u06DF\u0105\x03\x02\x02\x02\u06E0\u06E5\x05" +
-		"F$\x02\u06E1\u06E2\x07^\x02\x02\u06E2\u06E3\x05\u0104\x83\x02\u06E3\u06E4" +
-		"\x07_\x02\x02\u06E4\u06E6\x03\x02\x02\x02\u06E5\u06E1\x03\x02\x02\x02" +
-		"\u06E5\u06E6\x03\x02\x02\x02\u06E6\u06E9\x03\x02\x02\x02\u06E7\u06E8\x07" +
-		"f\x02\x02\u06E8\u06EA\x05\u0122\x92\x02\u06E9\u06E7\x03\x02\x02\x02\u06E9" +
-		"\u06EA\x03\x02\x02\x02\u06EA\u06ED\x03\x02\x02\x02\u06EB\u06ED\x05\u0220" +
-		"\u0111\x02\u06EC\u06E0\x03\x02\x02\x02\u06EC\u06EB\x03\x02\x02\x02\u06ED" +
-		"\u0107\x03\x02\x02\x02\u06EE\u06F3\x05\u0106\x84\x02\u06EF\u06F0\x07]" +
-		"\x02\x02\u06F0\u06F2\x05\u0106\x84\x02\u06F1\u06EF\x03\x02\x02\x02\u06F2" +
-		"\u06F5\x03\x02\x02\x02\u06F3\u06F1\x03\x02\x02\x02\u06F3\u06F4\x03\x02" +
-		"\x02\x02\u06F4\u0109\x03\x02\x02\x02\u06F5\u06F3\x03\x02\x02\x02\u06F6" +
-		"\u06F7\x05L\'\x02\u06F7\u0700\x07^\x02\x02\u06F8\u06FD\x05\u020E\u0108" +
-		"\x02\u06F9\u06FA\x07]\x02\x02\u06FA\u06FC\x05\u020E\u0108\x02\u06FB\u06F9" +
-		"\x03\x02\x02\x02\u06FC\u06FF\x03\x02\x02\x02\u06FD\u06FB\x03\x02\x02\x02" +
-		"\u06FD\u06FE\x03\x02\x02\x02\u06FE\u0701\x03\x02\x02\x02\u06FF\u06FD\x03" +
-		"\x02\x02\x02\u0700\u06F8\x03\x02\x02\x02\u0700\u0701\x03\x02\x02\x02\u0701" +
-		"\u0702\x03\x02\x02\x02\u0702\u0703\x07_\x02\x02\u0703\u010B\x03\x02\x02" +
-		"\x02\u0704\u0705\x07^\x02\x02\u0705\u0706\x07e\x02\x02\u0706\u0707\x05" +
-		"\u0110\x89\x02\u0707\u0708\x07e\x02\x02\u0708\u0709\x07_\x02\x02\u0709" +
-		"\u010D\x03\x02\x02\x02\u070A\u070D\x05\u020E\u0108\x02\u070B\u070D\x05" +
-		"\u0112\x8A\x02\u070C\u070A\x03\x02\x02\x02\u070C\u070B\x03\x02\x02\x02" +
-		"\u070D\u010F\x03\x02\x02\x02\u070E\u0713\x05\u010E\x88\x02\u070F\u0710" +
-		"\x07]\x02\x02\u0710\u0712\x05\u010E\x88\x02\u0711\u070F\x03\x02\x02\x02" +
-		"\u0712\u0715\x03\x02\x02\x02\u0713\u0711\x03\x02\x02\x02\u0713\u0714\x03" +
-		"\x02\x02\x02\u0714\u0111\x03\x02\x02\x02\u0715\u0713\x03\x02\x02\x02\u0716" +
-		"\u0717\x07^\x02\x02\u0717\u0718\x05\u020E\u0108\x02\u0718\u0719\x07]\x02" +
-		"\x02\u0719\u071A\x05Z.\x02\u071A\u071B\x07b\x02\x02\u071B\u071C\x05\u020E" +
-		"\u0108\x02\u071C\u071D\x07]\x02\x02\u071D\u071E\x05\u020E\u0108\x02\u071E" +
-		"\u071F\x07_\x02\x02\u071F\u0743\x03\x02\x02\x02\u0720\u0721\x07^\x02\x02" +
-		"\u0721\u0722\x05\u020E\u0108\x02\u0722\u0723\x07]\x02\x02\u0723\u0724" +
-		"\x05Z.\x02\u0724\u0725\x07b\x02\x02\u0725\u0726\x05\u020E\u0108\x02\u0726" +
-		"\u0727\x07]\x02\x02\u0727\u0728\x05\u020E\u0108\x02\u0728\u0729\x07]\x02" +
-		"\x02\u0729\u072A\x05\u020E\u0108\x02\u072A\u072B\x07_\x02\x02\u072B\u0743" +
-		"\x03\x02\x02\x02\u072C\u072D\x07^\x02\x02\u072D\u072E\x05\u0112\x8A\x02" +
-		"\u072E\u072F\x07]\x02\x02\u072F\u0730\x05Z.\x02\u0730\u0731\x07b\x02\x02" +
-		"\u0731\u0732\x05\u020E\u0108\x02\u0732\u0733\x07]\x02\x02\u0733\u0734" +
-		"\x05\u020E\u0108\x02\u0734\u0735\x07_\x02\x02\u0735\u0743\x03\x02\x02" +
-		"\x02\u0736\u0737\x07^\x02\x02\u0737\u0738\x05\u0112\x8A\x02\u0738\u0739" +
-		"\x07]\x02\x02\u0739\u073A\x05Z.\x02\u073A\u073B\x07b\x02\x02\u073B\u073C" +
-		"\x05\u020E\u0108\x02\u073C\u073D\x07]\x02\x02\u073D\u073E\x05\u020E\u0108" +
-		"\x02\u073E\u073F\x07]\x02\x02\u073F\u0740\x05\u020E\u0108\x02\u0740\u0741" +
-		"\x07_\x02\x02\u0741\u0743\x03\x02\x02\x02\u0742\u0716\x03\x02\x02\x02" +
-		"\u0742\u0720\x03\x02\x02\x02\u0742\u072C\x03\x02\x02\x02\u0742\u0736\x03" +
-		"\x02\x02\x02\u0743\u0113\x03\x02\x02\x02\u0744\u0746\x05$\x13\x02\u0745" +
-		"\u0744\x03\x02\x02\x02\u0745\u0746\x03\x02\x02\x02\u0746\u0747\x03\x02" +
-		"\x02\x02\u0747\u074C\x05\u0116\x8C\x02\u0748\u0749\x07]\x02\x02\u0749" +
-		"\u074B\x05\u0118\x8D\x02\u074A\u0748\x03\x02\x02\x02\u074B\u074E\x03\x02" +
-		"\x02\x02\u074C\u074A\x03\x02\x02\x02\u074C\u074D\x03\x02\x02\x02\u074D" +
-		"\u074F\x03\x02\x02\x02\u074E\u074C\x03\x02\x02\x02\u074F\u0750\x07`\x02" +
-		"\x02\u0750\u0751\x07`\x02\x02\u0751\u0756\x05\u011A\x8E\x02\u0752\u0753" +
-		"\x07]\x02\x02\u0753\u0755\x05\u011A\x8E\x02\u0754\u0752\x03\x02\x02\x02" +
-		"\u0755\u0758\x03\x02\x02\x02\u0756\u0754\x03\x02\x02\x02\u0756\u0757\x03" +
-		"\x02\x02\x02\u0757\u0759\x03\x02\x02\x02\u0758\u0756\x03\x02\x02\x02\u0759" +
-		"\u075A\x05 \x11\x02\u075A\u076A\x03\x02\x02\x02\u075B\u075D\x05$\x13\x02" +
-		"\u075C\u075B\x03\x02\x02\x02\u075C\u075D\x03\x02\x02\x02\u075D\u075E\x03" +
-		"\x02\x02\x02\u075E\u075F\x05\u0116\x8C\x02\u075F\u0764\x05\u011A\x8E\x02" +
-		"\u0760\u0761\x07]\x02\x02\u0761\u0763\x05\u011A\x8E\x02\u0762\u0760\x03" +
-		"\x02\x02\x02\u0763\u0766\x03\x02\x02\x02\u0764\u0762\x03\x02\x02\x02\u0764" +
-		"\u0765\x03\x02\x02\x02\u0765\u0767\x03\x02\x02\x02\u0766\u0764\x03\x02" +
-		"\x02\x02\u0767\u0768\x05 \x11\x02\u0768\u076A\x03\x02\x02\x02\u0769\u0745" +
-		"\x03\x02\x02\x02\u0769\u075C\x03\x02\x02\x02\u076A\u0115\x03\x02\x02\x02" +
-		"\u076B\u076D\x07\x1E\x02\x02\u076C\u076E\x05\u011C\x8F\x02\u076D\u076C" +
-		"\x03\x02\x02\x02\u076D\u076E\x03\x02\x02\x02\u076E\u078C\x03\x02\x02\x02" +
-		"\u076F\u0771\x07\x15\x02\x02\u0770\u0772\x05\u011C\x8F\x02\u0771\u0770" +
-		"\x03\x02\x02\x02\u0771\u0772\x03\x02\x02\x02\u0772\u078C\x03\x02\x02\x02" +
-		"\u0773\u078C\x07\x1F\x02\x02\u0774\u0775\x07Q\x02\x02\u0775\u078C\x07" +
-		"\x8F\x02\x02\u0776\u0777\x07Q\x02\x02\u0777\u078C\x07R\x02\x02\u0778\u077A" +
-		"\x07R\x02\x02\u0779\u077B\x05\u011C\x8F\x02\u077A\u0779\x03\x02\x02\x02" +
-		"\u077A\u077B\x03\x02\x02\x02\u077B\u078C\x03\x02\x02\x02\u077C\u077E\x07" +
-		"#\x02\x02\u077D\u077F\x05\u011E\x90\x02\u077E\u077D\x03\x02\x02\x02\u077E" +
-		"\u077F\x03\x02\x02\x02\u077F\u078C\x03\x02\x02\x02\u0780\u0782\x07\x82" +
-		"\x02\x02\u0781\u0783\x05\u011C\x8F\x02\u0782\u0781\x03\x02\x02\x02\u0782" +
-		"\u0783\x03\x02\x02\x02\u0783\u078C\x03\x02\x02\x02\u0784\u0785\x07\t\x02" +
-		"\x02\u0785\u0786\x07^\x02\x02\u0786\u0787\x05L\'\x02\u0787\u0788\x07_" +
-		"\x02\x02\u0788\u078C\x03\x02\x02\x02\u0789\u078A\x07#\x02\x02\u078A\u078C" +
-		"\x05\u0120\x91\x02\u078B\u076B\x03\x02\x02\x02\u078B\u076F\x03\x02\x02" +
-		"\x02\u078B\u0773\x03\x02\x02\x02\u078B\u0774\x03\x02\x02\x02\u078B\u0776" +
-		"\x03\x02\x02\x02\u078B\u0778\x03\x02\x02\x02\u078B\u077C\x03\x02\x02\x02" +
-		"\u078B\u0780\x03\x02\x02\x02\u078B\u0784\x03\x02\x02\x02\u078B\u0789\x03" +
-		"\x02\x02\x02\u078C\u0117\x03\x02\x02\x02\u078D\u07A1\x07$\x02\x02\u078E" +
-		"\u07A1\x05\u0126\x94\x02\u078F\u07A1\x07%\x02\x02\u0790\u0791\x07\x14" +
-		"\x02\x02\u0791\u0792\x07^\x02\x02\u0792\u0793\x05\u012A\x96\x02\u0793" +
-		"\u0794\x07_\x02\x02\u0794\u07A1\x03\x02\x02\x02\u0795\u07A1\x07(\x02\x02" +
-		"\u0796\u0797\x07&\x02\x02\u0797\u0798\x07^\x02\x02\u0798\u0799\x05\u0128" +
-		"\x95\x02\u0799\u079A\x07_\x02\x02\u079A\u07A1\x03\x02\x02\x02\u079B\u07A1" +
-		"\x07)\x02\x02\u079C\u07A1\x07\'\x02\x02\u079D\u07A1\x07\x1D\x02\x02\u079E" +
-		"\u07A1\x07+\x02\x02\u079F\u07A1\x07,\x02\x02\u07A0\u078D\x03\x02\x02\x02" +
-		"\u07A0\u078E\x03\x02\x02\x02\u07A0\u078F\x03\x02\x02\x02\u07A0\u0790\x03" +
-		"\x02\x02\x02\u07A0\u0795\x03\x02\x02\x02\u07A0\u0796\x03\x02\x02\x02\u07A0" +
-		"\u079B\x03\x02\x02\x02\u07A0\u079C\x03\x02\x02\x02\u07A0\u079D\x03\x02" +
-		"\x02\x02\u07A0\u079E\x03\x02\x02\x02\u07A0\u079F\x03\x02\x02\x02\u07A1" +
-		"\u0119\x03\x02\x02\x02\u07A2\u07A3\x05^0\x02\u07A3\u07A4\x07b\x02\x02" +
-		"\u07A4\u07A5\x05\u020E\u0108\x02\u07A5\u07D4\x03\x02\x02\x02\u07A6\u07A7" +
-		"\x05^0\x02\u07A7\u07A8\x07e\x02\x02\u07A8\u07A9\x05\u020E\u0108\x02\u07A9" +
-		"\u07AA\x07e\x02\x02\u07AA\u07D4\x03\x02\x02\x02\u07AB\u07AC\x05^0\x02" +
-		"\u07AC\u07AD\x07^\x02\x02\u07AD\u07AE\x05\u012A\x96\x02\u07AE\u07AF\x07" +
-		"_\x02\x02\u07AF\u07B0\x07b\x02\x02\u07B0\u07B1\x05\u020E\u0108\x02\u07B1" +
-		"\u07D4\x03\x02\x02\x02\u07B2\u07B3\x05^0\x02\u07B3\u07B4\x07f\x02\x02" +
-		"\u07B4\u07B5\x05\u0122\x92\x02\u07B5\u07B6\x07b\x02\x02\u07B6\u07B7\x05" +
-		"\u020E\u0108\x02\u07B7\u07D4\x03\x02\x02\x02\u07B8\u07B9\x05^0\x02\u07B9" +
-		"\u07BA\x07f\x02\x02\u07BA\u07BB\x05\u0122\x92\x02\u07BB\u07BC\x07^\x02" +
-		"\x02\u07BC\u07BD\x05\u012A\x96\x02\u07BD\u07BE\x07_\x02\x02\u07BE\u07BF" +
-		"\x07b\x02\x02\u07BF\u07C0\x05\u020E\u0108\x02\u07C0\u07D4\x03\x02\x02" +
-		"\x02\u07C1\u07D4\x05^0\x02\u07C2\u07C3\x05^0\x02\u07C3\u07C4\x07f\x02" +
-		"\x02\u07C4\u07C5\x05\u0122\x92\x02\u07C5\u07D4\x03\x02\x02\x02\u07C6\u07C7" +
-		"\x05^0\x02\u07C7\u07C8\x07^\x02\x02\u07C8\u07C9\x05\u012A\x96\x02\u07C9" +
-		"\u07CA\x07_\x02\x02\u07CA\u07D4\x03\x02\x02\x02\u07CB\u07CC\x05^0\x02" +
-		"\u07CC\u07CD\x07^\x02\x02\u07CD\u07CE\x05\u012A\x96\x02\u07CE\u07CF\x07" +
-		"_\x02\x02\u07CF\u07D0\x07f\x02\x02\u07D0\u07D1\x05\u0122\x92\x02\u07D1" +
-		"\u07D4\x03\x02\x02\x02\u07D2\u07D4\x05\u0220\u0111\x02\u07D3\u07A2\x03" +
-		"\x02\x02\x02\u07D3\u07A6\x03\x02\x02\x02\u07D3\u07AB\x03\x02\x02\x02\u07D3" +
-		"\u07B2\x03\x02\x02\x02\u07D3\u07B8\x03\x02\x02\x02\u07D3\u07C1\x03\x02" +
-		"\x02\x02\u07D3\u07C2\x03\x02\x02\x02\u07D3\u07C6\x03\x02\x02\x02\u07D3" +
-		"\u07CB\x03\x02\x02\x02\u07D3\u07D2\x03\x02\x02\x02\u07D4\u011B\x03\x02" +
-		"\x02\x02\u07D5\u07D8\x07^\x02\x02\u07D6\u07D7\x07,\x02\x02\u07D7\u07D9" +
-		"\x07b\x02\x02\u07D8\u07D6\x03\x02\x02\x02\u07D8\u07D9\x03\x02\x02\x02" +
-		"\u07D9\u07DA\x03\x02\x02\x02\u07DA\u07DB\x05\u020E\u0108\x02\u07DB\u07DC" +
-		"\x07_\x02\x02\u07DC\u07E0\x03\x02\x02\x02\u07DD\u07DE\x07f\x02\x02\u07DE" +
-		"\u07E0\x05\"\x12\x02\u07DF\u07D5\x03\x02\x02\x02\u07DF\u07DD\x03\x02\x02" +
-		"\x02\u07E0\u011D\x03\x02\x02\x02\u07E1\u07E2\x07^\x02\x02\u07E2\u07E3" +
-		"\x07\x84\x02\x02\u07E3\u07E4\x07b\x02\x02\u07E4\u07E5\x05\u0124\x93\x02" +
-		"\u07E5\u07E6\x07]\x02\x02\u07E6\u07E7\x07,\x02\x02\u07E7\u07E8\x07b\x02" +
-		"\x02\u07E8\u07E9\x05\u020E\u0108\x02\u07E9\u07EA\x07_\x02\x02\u07EA\u0802" +
-		"\x03\x02\x02\x02\u07EB\u07EC\x07^\x02\x02\u07EC\u07ED\x07\x84\x02\x02" +
-		"\u07ED\u07EE\x07b\x02\x02\u07EE\u07EF\x05\u0124\x93\x02\u07EF\u07F0\x07" +
-		"]\x02\x02\u07F0\u07F1\x05\u020E\u0108\x02\u07F1\u07F2\x07_\x02\x02\u07F2" +
-		"\u0802\x03\x02\x02\x02\u07F3\u07F4\x07^\x02\x02\u07F4\u07F5\x07\x84\x02" +
-		"\x02\u07F5\u07F6\x07b\x02\x02\u07F6\u07F7\x05\u0124\x93\x02\u07F7\u07F8" +
-		"\x07_\x02\x02\u07F8\u0802\x03\x02\x02\x02\u07F9\u07FC\x07^\x02\x02\u07FA" +
-		"\u07FB\x07,\x02\x02\u07FB\u07FD\x07b\x02\x02\u07FC\u07FA\x03\x02\x02\x02" +
-		"\u07FC\u07FD\x03\x02\x02\x02\u07FD\u07FE\x03\x02\x02\x02\u07FE\u07FF\x05" +
-		"\u020E\u0108\x02\u07FF\u0800\x07_\x02\x02\u0800\u0802\x03\x02\x02\x02" +
-		"\u0801\u07E1\x03\x02\x02\x02\u0801\u07EB\x03\x02\x02\x02\u0801\u07F3\x03" +
-		"\x02\x02\x02\u0801\u07F9\x03\x02\x02\x02\u0802\u011F\x03\x02\x02\x02\u0803" +
-		"\u0804\x07^\x02\x02\u0804\u0805\x05\u0124\x93\x02\u0805\u0806\x07_\x02" +
-		"\x02\u0806\u080A\x03\x02\x02\x02\u0807\u0808\x07f\x02\x02\u0808\u080A" +
-		"\x05\u0122\x92\x02\u0809\u0803\x03\x02\x02\x02\u0809\u0807\x03\x02\x02" +
-		"\x02\u080A\u0121\x03\x02\x02\x02\u080B\u080C\x07^\x02\x02\u080C\u080D" +
-		"\x05\u0124\x93\x02\u080D\u080E\x07_\x02\x02\u080E\u0811\x03\x02\x02\x02" +
-		"\u080F\u0811\x05\"\x12\x02\u0810\u080B\x03\x02\x02\x02\u0810\u080F\x03" +
-		"\x02\x02\x02\u0811\u0123\x03\x02\x02\x02\u0812\u0815\x05\u0210\u0109\x02" +
-		"\u0813\u0815\x07f\x02\x02\u0814\u0812\x03\x02\x02\x02\u0814\u0813\x03" +
-		"\x02\x02\x02\u0815\u0125\x03\x02\x02\x02\u0816\u0817\t\x05\x02\x02\u0817" +
-		"\u0127\x03\x02\x02\x02\u0818\u081D\x07\x7F\x02\x02\u0819\u081D\x07\x80" +
-		"\x02\x02\u081A\u081B\x07\x7F\x02\x02\u081B\u081D\x07\x80\x02\x02\u081C" +
-		"\u0818\x03\x02\x02\x02\u081C\u0819\x03\x02\x02\x02\u081C\u081A\x03\x02" +
-		"\x02\x02\u081D\u0129\x03\x02\x02\x02\u081E\u0824\x05\u0136\x9C\x02\u081F" +
-		"\u0824\x05\u0138\x9D\x02\u0820\u0824\x05\u012C\x97\x02\u0821\u0824\x05" +
-		"\u013C\x9F\x02\u0822\u0824\x05\"\x12\x02\u0823\u081E\x03\x02\x02\x02\u0823" +
-		"\u081F\x03\x02\x02\x02\u0823\u0820\x03\x02\x02\x02\u0823\u0821\x03\x02" +
-		"\x02\x02\u0823\u0822\x03\x02\x02\x02\u0824\u012B\x03\x02\x02\x02\u0825" +
-		"\u082A\x05\u012E\x98\x02\u0826\u0827\x07]\x02\x02\u0827\u0829\x05\u012E" +
-		"\x98\x02\u0828\u0826\x03\x02\x02\x02\u0829\u082C\x03\x02\x02\x02\u082A" +
-		"\u0828\x03\x02\x02\x02\u082A\u082B\x03\x02\x02\x02\u082B\u012D\x03\x02" +
-		"\x02\x02\u082C\u082A\x03\x02\x02\x02\u082D\u082E\x05\u0130\x99\x02\u082E" +
-		"\u082F\x07`\x02\x02\u082F\u0831\x03\x02\x02\x02\u0830\u082D\x03\x02\x02" +
-		"\x02\u0830\u0831\x03\x02\x02\x02\u0831\u0832\x03\x02\x02\x02\u0832\u0833" +
-		"\x05\u0132\x9A\x02\u0833\u012F\x03\x02\x02\x02\u0834\u0835\x05\u0210\u0109" +
-		"\x02\u0835\u0131\x03\x02\x02\x02\u0836\u0837\x05\u0210\u0109\x02\u0837" +
-		"\u0133\x03\x02\x02\x02\u0838\u083A\x05\u0130\x99\x02\u0839\u0838\x03\x02" +
-		"\x02\x02\u0839\u083A\x03\x02\x02\x02\u083A\u083B\x03\x02\x02\x02\u083B" +
-		"\u083C\x07`\x02\x02\u083C\u0135\x03\x02\x02\x02\u083D\u083E\b\x9C\x01" +
-		"\x02\u083E\u083F\x05\u0130\x99\x02\u083F\u0840\x07`\x02\x02\u0840\u0847" +
-		"\x03\x02\x02\x02\u0841\u0842\x05\u0138\x9D\x02\u0842\u0843\x07]\x02\x02" +
-		"\u0843\u0844\x05\u0130\x99\x02\u0844\u0845\x07`\x02\x02\u0845\u0847\x03" +
-		"\x02\x02\x02\u0846\u083D\x03\x02\x02\x02\u0846\u0841\x03\x02\x02\x02\u0847" +
-		"\u084D\x03\x02\x02\x02\u0848\u0849\f\x03\x02\x02\u0849\u084A\x07]\x02" +
-		"\x02\u084A\u084C\x05\u0134\x9B\x02\u084B\u0848\x03\x02\x02\x02\u084C\u084F" +
-		"\x03\x02\x02\x02\u084D\u084B\x03\x02\x02\x02\u084D\u084E\x03\x02\x02\x02" +
-		"\u084E\u0137\x03\x02\x02\x02\u084F\u084D\x03\x02\x02\x02\u0850\u0855\x05" +
-		"\u013A\x9E\x02\u0851\u0852\x07]\x02\x02\u0852\u0854\x05\u013A\x9E\x02" +
-		"\u0853\u0851\x03\x02\x02\x02\u0854\u0857\x03\x02\x02\x02\u0855\u0853\x03" +
-		"\x02\x02\x02\u0855\u0856\x03\x02\x02\x02\u0856\u0139\x03\x02\x02\x02\u0857" +
-		"\u0855\x03\x02\x02\x02\u0858\u0859\x07`\x02\x02\u0859\u013B\x03\x02\x02" +
-		"\x02\u085A\u085B\x05\u0130\x99\x02\u085B\u085C\x07`\x02\x02\u085C\u085E" +
-		"\x03\x02\x02\x02\u085D\u085A\x03\x02\x02\x02\u085D\u085E\x03\x02\x02\x02" +
-		"\u085E\u085F\x03\x02\x02\x02\u085F\u086B\x07f\x02\x02\u0860\u0861\x05" +
-		"\u012C\x97\x02\u0861\u0862\x07]\x02\x02\u0862\u0863\x07f\x02\x02\u0863" +
-		"\u086B\x03\x02\x02\x02\u0864\u0865\x05\u012C\x97\x02\u0865\u0866\x07]" +
-		"\x02\x02\u0866\u0867\x05\u0130\x99\x02\u0867\u0868\x07`\x02\x02\u0868" +
-		"\u0869\x07f\x02\x02\u0869\u086B\x03\x02\x02\x02\u086A\u085D\x03\x02\x02" +
-		"\x02\u086A\u0860\x03\x02\x02\x02\u086A\u0864\x03\x02\x02\x02\u086B\u013D" +
-		"\x03\x02\x02\x02\u086C\u086E\x05$\x13\x02\u086D\u086C\x03\x02\x02\x02" +
-		"\u086D\u086E\x03\x02\x02\x02\u086E\u086F\x03\x02\x02\x02\u086F\u0870\x07" +
-		"&\x02\x02\u0870\u0871\x07^\x02\x02\u0871\u0872\x05\u0128\x95\x02\u0872" +
-		"\u0873\x07_\x02\x02\u0873\u0874\x07`\x02\x02\u0874\u0875\x07`\x02\x02" +
-		"\u0875\u0876\x05\u0140\xA1\x02\u0876\u0877\x05 \x11\x02\u0877\u0883\x03" +
-		"\x02\x02\x02\u0878\u087A\x05$\x13\x02\u0879\u0878\x03\x02\x02\x02\u0879" +
-		"\u087A\x03\x02\x02\x02\u087A\u087B\x03\x02\x02\x02\u087B\u087C\x07&\x02" +
-		"\x02\u087C\u087D\x07^\x02\x02\u087D\u087E\x05\u0128\x95\x02\u087E\u087F" +
-		"\x07_\x02\x02\u087F\u0880\x05\u0140\xA1\x02\u0880\u0881\x05 \x11\x02\u0881" +
-		"\u0883\x03\x02\x02\x02\u0882\u086D\x03\x02\x02\x02\u0882\u0879\x03\x02" +
-		"\x02\x02\u0883\u013F\x03\x02\x02\x02\u0884\u0889\x05\u0142\xA2\x02\u0885" +
-		"\u0886\x07]\x02\x02\u0886\u0888\x05\u0142\xA2\x02\u0887\u0885\x03\x02" +
-		"\x02\x02\u0888\u088B\x03\x02\x02\x02\u0889\u0887\x03\x02\x02\x02\u0889" +
-		"\u088A\x03\x02\x02\x02\u088A\u0141\x03\x02\x02\x02\u088B\u0889\x03\x02" +
-		"\x02\x02\u088C\u088D\x05R*\x02\u088D\u0143\x03\x02\x02\x02\u088E\u0890" +
-		"\x05$\x13\x02\u088F\u088E\x03\x02\x02\x02\u088F\u0890\x03\x02\x02\x02" +
-		"\u0890\u0891\x03\x02\x02\x02\u0891\u0892\x07\'\x02\x02\u0892\u0893\x07" +
-		"`\x02\x02\u0893\u0894\x07`\x02\x02\u0894\u0895\x05\u0146\xA4\x02\u0895" +
-		"\u0896\x05 \x11\x02\u0896\u089F\x03\x02\x02\x02\u0897\u0899\x05$\x13\x02" +
-		"\u0898\u0897\x03\x02\x02\x02\u0898\u0899\x03\x02\x02\x02\u0899\u089A\x03" +
-		"\x02\x02\x02\u089A\u089B\x07\'\x02\x02\u089B\u089C\x05\u0146\xA4\x02\u089C" +
-		"\u089D\x05 \x11\x02\u089D\u089F\x03\x02\x02\x02\u089E\u088F\x03\x02\x02" +
-		"\x02\u089E\u0898\x03\x02\x02\x02\u089F\u0145\x03\x02\x02\x02\u08A0\u08A5" +
-		"\x05\u0148\xA5\x02\u08A1\u08A2\x07]\x02\x02\u08A2\u08A4\x05\u0148\xA5" +
-		"\x02\u08A3\u08A1\x03\x02\x02\x02\u08A4\u08A7\x03\x02\x02\x02\u08A5\u08A3" +
-		"\x03\x02\x02\x02\u08A5\u08A6\x03\x02\x02\x02\u08A6\u0147\x03\x02\x02\x02" +
-		"\u08A7\u08A5\x03\x02\x02\x02\u08A8\u08A9\x05R*\x02\u08A9\u0149\x03\x02" +
-		"\x02\x02\u08AA\u08AC\x05$\x13\x02\u08AB\u08AA\x03\x02\x02\x02\u08AB\u08AC" +
-		"\x03\x02\x02\x02\u08AC\u08AD\x03\x02\x02\x02\u08AD\u08AE\x05\u0126\x94" +
-		"\x02\u08AE\u08AF\x07`\x02\x02\u08AF\u08B0\x07`\x02\x02\u08B0\u08B1\x05" +
-		"\u014C\xA7\x02\u08B1\u08B2\x05 \x11\x02\u08B2\u08BD\x03\x02\x02\x02\u08B3" +
-		"\u08B5\x05$\x13\x02\u08B4\u08B3\x03\x02\x02\x02\u08B4\u08B5\x03\x02\x02" +
-		"\x02\u08B5\u08B6\x03\x02\x02\x02\u08B6\u08B8\x05\u0126\x94\x02\u08B7\u08B9" +
+		"\x02\x02\u06AE\u06AF\x07\x13\x02\x02\u06AF\u06B1\x07\t\x02\x02\u06B0\u06B2" +
+		"\x05L\'\x02\u06B1\u06B0\x03\x02\x02\x02\u06B1\u06B2\x03\x02\x02\x02\u06B2" +
+		"\u06B3\x03\x02\x02\x02\u06B3\u06B4\x05 \x11\x02\u06B4\xFD\x03\x02\x02" +
+		"\x02\u06B5\u06B7\x05$\x13\x02\u06B6\u06B5\x03\x02\x02\x02\u06B6\u06B7" +
+		"\x03\x02\x02\x02\u06B7\u06B8\x03\x02\x02\x02\u06B8\u06BB\x05\u0116\x8C" +
+		"\x02\u06B9\u06BA\x07]\x02\x02\u06BA\u06BC\x05\u0100\x81\x02\u06BB\u06B9" +
+		"\x03\x02\x02\x02\u06BB\u06BC\x03\x02\x02\x02\u06BC\u06BD\x03\x02\x02\x02" +
+		"\u06BD\u06BE\x07`\x02\x02\u06BE\u06BF\x07`\x02\x02\u06BF\u06C0\x05\u0108" +
+		"\x85\x02\u06C0\u06C1\x05 \x11\x02\u06C1\u06CA\x03\x02\x02\x02\u06C2\u06C4" +
+		"\x05$\x13\x02\u06C3\u06C2\x03\x02\x02\x02\u06C3\u06C4\x03\x02\x02\x02" +
+		"\u06C4\u06C5\x03\x02\x02\x02\u06C5\u06C6\x05\u0116\x8C\x02\u06C6\u06C7" +
+		"\x05\u0108\x85\x02\u06C7\u06C8\x05 \x11\x02\u06C8\u06CA\x03\x02\x02\x02" +
+		"\u06C9\u06B6\x03\x02\x02\x02\u06C9\u06C3\x03\x02\x02\x02\u06CA\xFF\x03" +
+		"\x02\x02\x02\u06CB\u06D0\x05\u0102\x82\x02\u06CC\u06CD\x07]\x02\x02\u06CD" +
+		"\u06CF\x05\u0102\x82\x02\u06CE\u06CC\x03\x02\x02\x02\u06CF\u06D2\x03\x02" +
+		"\x02\x02\u06D0\u06CE\x03\x02\x02\x02\u06D0\u06D1\x03\x02\x02\x02\u06D1" +
+		"\u0101\x03\x02\x02\x02\u06D2\u06D0\x03\x02\x02\x02\u06D3\u06DA\x07\x1D" +
+		"\x02\x02\u06D4\u06D5\x07\x14\x02\x02\u06D5\u06D6\x07^\x02\x02\u06D6\u06D7" +
+		"\x05\u0104\x83\x02\u06D7\u06D8\x07_\x02\x02\u06D8\u06DA\x03\x02\x02\x02" +
+		"\u06D9\u06D3\x03\x02\x02\x02\u06D9\u06D4\x03\x02\x02\x02\u06DA\u0103\x03" +
+		"\x02\x02\x02\u06DB\u06DF\x05\u012C\x97\x02\u06DC\u06DF\x05\u0138\x9D\x02" +
+		"\u06DD\u06DF\x05\"\x12\x02\u06DE\u06DB\x03\x02\x02\x02\u06DE\u06DC\x03" +
+		"\x02\x02\x02\u06DE\u06DD\x03\x02\x02\x02\u06DF\u0105\x03\x02\x02\x02\u06E0" +
+		"\u06E5\x05F$\x02\u06E1\u06E2\x07^\x02\x02\u06E2\u06E3\x05\u0104\x83\x02" +
+		"\u06E3\u06E4\x07_\x02\x02\u06E4\u06E6\x03\x02\x02\x02\u06E5\u06E1\x03" +
+		"\x02\x02\x02\u06E5\u06E6\x03\x02\x02\x02\u06E6\u06E9\x03\x02\x02\x02\u06E7" +
+		"\u06E8\x07f\x02\x02\u06E8\u06EA\x05\u0122\x92\x02\u06E9\u06E7\x03\x02" +
+		"\x02\x02\u06E9\u06EA\x03\x02\x02\x02\u06EA\u06ED\x03\x02\x02\x02\u06EB" +
+		"\u06ED\x05\u0220\u0111\x02\u06EC\u06E0\x03\x02\x02\x02\u06EC\u06EB\x03" +
+		"\x02\x02\x02\u06ED\u0107\x03\x02\x02\x02\u06EE\u06F3\x05\u0106\x84\x02" +
+		"\u06EF\u06F0\x07]\x02\x02\u06F0\u06F2\x05\u0106\x84\x02\u06F1\u06EF\x03" +
+		"\x02\x02\x02\u06F2\u06F5\x03\x02\x02\x02\u06F3\u06F1\x03\x02\x02\x02\u06F3" +
+		"\u06F4\x03\x02\x02\x02\u06F4\u0109\x03\x02\x02\x02\u06F5\u06F3\x03\x02" +
+		"\x02\x02\u06F6\u06F7\x05L\'\x02\u06F7\u0700\x07^\x02\x02\u06F8\u06FD\x05" +
+		"\u020E\u0108\x02\u06F9\u06FA\x07]\x02\x02\u06FA\u06FC\x05\u020E\u0108" +
+		"\x02\u06FB\u06F9\x03\x02\x02\x02\u06FC\u06FF\x03\x02\x02\x02\u06FD\u06FB" +
+		"\x03\x02\x02\x02\u06FD\u06FE\x03\x02\x02\x02\u06FE\u0701\x03\x02\x02\x02" +
+		"\u06FF\u06FD\x03\x02\x02\x02\u0700\u06F8\x03\x02\x02\x02\u0700\u0701\x03" +
+		"\x02\x02\x02\u0701\u0702\x03\x02\x02\x02\u0702\u0703\x07_\x02\x02\u0703" +
+		"\u010B\x03\x02\x02\x02\u0704\u0705\x07^\x02\x02\u0705\u0706\x07e\x02\x02" +
+		"\u0706\u0707\x05\u0110\x89\x02\u0707\u0708\x07e\x02\x02\u0708\u0709\x07" +
+		"_\x02\x02\u0709\u010D\x03\x02\x02\x02\u070A\u070D\x05\u020E\u0108\x02" +
+		"\u070B\u070D\x05\u0112\x8A\x02\u070C\u070A\x03\x02\x02\x02\u070C\u070B" +
+		"\x03\x02\x02\x02\u070D\u010F\x03\x02\x02\x02\u070E\u0713\x05\u010E\x88" +
+		"\x02\u070F\u0710\x07]\x02\x02\u0710\u0712\x05\u010E\x88\x02\u0711\u070F" +
+		"\x03\x02\x02\x02\u0712\u0715\x03\x02\x02\x02\u0713\u0711\x03\x02\x02\x02" +
+		"\u0713\u0714\x03\x02\x02\x02\u0714\u0111\x03\x02\x02\x02\u0715\u0713\x03" +
+		"\x02\x02\x02\u0716\u0717\x07^\x02\x02\u0717\u0718\x05\u020E\u0108\x02" +
+		"\u0718\u0719\x07]\x02\x02\u0719\u071A\x05Z.\x02\u071A\u071B\x07b\x02\x02" +
+		"\u071B\u071C\x05\u020E\u0108\x02\u071C\u071D\x07]\x02\x02\u071D\u071E" +
+		"\x05\u020E\u0108\x02\u071E\u071F\x07_\x02\x02\u071F\u0743\x03\x02\x02" +
+		"\x02\u0720\u0721\x07^\x02\x02\u0721\u0722\x05\u020E\u0108\x02\u0722\u0723" +
+		"\x07]\x02\x02\u0723\u0724\x05Z.\x02\u0724\u0725\x07b\x02\x02\u0725\u0726" +
+		"\x05\u020E\u0108\x02\u0726\u0727\x07]\x02\x02\u0727\u0728\x05\u020E\u0108" +
+		"\x02\u0728\u0729\x07]\x02\x02\u0729\u072A\x05\u020E\u0108\x02\u072A\u072B" +
+		"\x07_\x02\x02\u072B\u0743\x03\x02\x02\x02\u072C\u072D\x07^\x02\x02\u072D" +
+		"\u072E\x05\u0112\x8A\x02\u072E\u072F\x07]\x02\x02\u072F\u0730\x05Z.\x02" +
+		"\u0730\u0731\x07b\x02\x02\u0731\u0732\x05\u020E\u0108\x02\u0732\u0733" +
+		"\x07]\x02\x02\u0733\u0734\x05\u020E\u0108\x02\u0734\u0735\x07_\x02\x02" +
+		"\u0735\u0743\x03\x02\x02\x02\u0736\u0737\x07^\x02\x02\u0737\u0738\x05" +
+		"\u0112\x8A\x02\u0738\u0739\x07]\x02\x02\u0739\u073A\x05Z.\x02\u073A\u073B" +
+		"\x07b\x02\x02\u073B\u073C\x05\u020E\u0108\x02\u073C\u073D\x07]\x02\x02" +
+		"\u073D\u073E\x05\u020E\u0108\x02\u073E\u073F\x07]\x02\x02\u073F\u0740" +
+		"\x05\u020E\u0108\x02\u0740\u0741\x07_\x02\x02\u0741\u0743\x03\x02\x02" +
+		"\x02\u0742\u0716\x03\x02\x02\x02\u0742\u0720\x03\x02\x02\x02\u0742\u072C" +
+		"\x03\x02\x02\x02\u0742\u0736\x03\x02\x02\x02\u0743\u0113\x03\x02\x02\x02" +
+		"\u0744\u0746\x05$\x13\x02\u0745\u0744\x03\x02\x02\x02\u0745\u0746\x03" +
+		"\x02\x02\x02\u0746\u0747\x03\x02\x02\x02\u0747\u074C\x05\u0116\x8C\x02" +
+		"\u0748\u0749\x07]\x02\x02\u0749\u074B\x05\u0118\x8D\x02\u074A\u0748\x03" +
+		"\x02\x02\x02\u074B\u074E\x03\x02\x02\x02\u074C\u074A\x03\x02\x02\x02\u074C" +
+		"\u074D\x03\x02\x02\x02\u074D\u074F\x03\x02\x02\x02\u074E\u074C\x03\x02" +
+		"\x02\x02\u074F\u0750\x07`\x02\x02\u0750\u0751\x07`\x02\x02\u0751\u0756" +
+		"\x05\u011A\x8E\x02\u0752\u0753\x07]\x02\x02\u0753\u0755\x05\u011A\x8E" +
+		"\x02\u0754\u0752\x03\x02\x02\x02\u0755\u0758\x03\x02\x02\x02\u0756\u0754" +
+		"\x03\x02\x02\x02\u0756\u0757\x03\x02\x02\x02\u0757\u0759\x03\x02\x02\x02" +
+		"\u0758\u0756\x03\x02\x02\x02\u0759\u075A\x05 \x11\x02\u075A\u076A\x03" +
+		"\x02\x02\x02\u075B\u075D\x05$\x13\x02\u075C\u075B\x03\x02\x02\x02\u075C" +
+		"\u075D\x03\x02\x02\x02\u075D\u075E\x03\x02\x02\x02\u075E\u075F\x05\u0116" +
+		"\x8C\x02\u075F\u0764\x05\u011A\x8E\x02\u0760\u0761\x07]\x02\x02\u0761" +
+		"\u0763\x05\u011A\x8E\x02\u0762\u0760\x03\x02\x02\x02\u0763\u0766\x03\x02" +
+		"\x02\x02\u0764\u0762\x03\x02\x02\x02\u0764\u0765\x03\x02\x02\x02\u0765" +
+		"\u0767\x03\x02\x02\x02\u0766\u0764\x03\x02\x02\x02\u0767\u0768\x05 \x11" +
+		"\x02\u0768\u076A\x03\x02\x02\x02\u0769\u0745\x03\x02\x02\x02\u0769\u075C" +
+		"\x03\x02\x02\x02\u076A\u0115\x03\x02\x02\x02\u076B\u076D\x07\x1E\x02\x02" +
+		"\u076C\u076E\x05\u011C\x8F\x02\u076D\u076C\x03\x02\x02\x02\u076D\u076E" +
+		"\x03\x02\x02\x02\u076E\u078C\x03\x02\x02\x02\u076F\u0771\x07\x15\x02\x02" +
+		"\u0770\u0772\x05\u011C\x8F\x02\u0771\u0770\x03\x02\x02\x02\u0771\u0772" +
+		"\x03\x02\x02\x02\u0772\u078C\x03\x02\x02\x02\u0773\u078C\x07\x1F\x02\x02" +
+		"\u0774\u0775\x07Q\x02\x02\u0775\u078C\x07\x8F\x02\x02\u0776\u0777\x07" +
+		"Q\x02\x02\u0777\u078C\x07R\x02\x02\u0778\u077A\x07R\x02\x02\u0779\u077B" +
+		"\x05\u011C\x8F\x02\u077A\u0779\x03\x02\x02\x02\u077A\u077B\x03\x02\x02" +
+		"\x02\u077B\u078C\x03\x02\x02\x02\u077C\u077E\x07#\x02\x02\u077D\u077F" +
+		"\x05\u011E\x90\x02\u077E\u077D\x03\x02\x02\x02\u077E\u077F\x03\x02\x02" +
+		"\x02\u077F\u078C\x03\x02\x02\x02\u0780\u0782\x07\x82\x02\x02\u0781\u0783" +
+		"\x05\u011C\x8F\x02\u0782\u0781\x03\x02\x02\x02\u0782\u0783\x03\x02\x02" +
+		"\x02\u0783\u078C\x03\x02\x02\x02\u0784\u0785\x07\t\x02\x02\u0785\u0786" +
+		"\x07^\x02\x02\u0786\u0787\x05L\'\x02\u0787\u0788\x07_\x02\x02\u0788\u078C" +
+		"\x03\x02\x02\x02\u0789\u078A\x07#\x02\x02\u078A\u078C\x05\u0120\x91\x02" +
+		"\u078B\u076B\x03\x02\x02\x02\u078B\u076F\x03\x02\x02\x02\u078B\u0773\x03" +
+		"\x02\x02\x02\u078B\u0774\x03\x02\x02\x02\u078B\u0776\x03\x02\x02\x02\u078B" +
+		"\u0778\x03\x02\x02\x02\u078B\u077C\x03\x02\x02\x02\u078B\u0780\x03\x02" +
+		"\x02\x02\u078B\u0784\x03\x02\x02\x02\u078B\u0789\x03\x02\x02\x02\u078C" +
+		"\u0117\x03\x02\x02\x02\u078D\u07A1\x07$\x02\x02\u078E\u07A1\x05\u0126" +
+		"\x94\x02\u078F\u07A1\x07%\x02\x02\u0790\u0791\x07\x14\x02\x02\u0791\u0792" +
+		"\x07^\x02\x02\u0792\u0793\x05\u012A\x96\x02\u0793\u0794\x07_\x02\x02\u0794" +
+		"\u07A1\x03\x02\x02\x02\u0795\u07A1\x07(\x02\x02\u0796\u0797\x07&\x02\x02" +
+		"\u0797\u0798\x07^\x02\x02\u0798\u0799\x05\u0128\x95\x02\u0799\u079A\x07" +
+		"_\x02\x02\u079A\u07A1\x03\x02\x02\x02\u079B\u07A1\x07)\x02\x02\u079C\u07A1" +
+		"\x07\'\x02\x02\u079D\u07A1\x07\x1D\x02\x02\u079E\u07A1\x07+\x02\x02\u079F" +
+		"\u07A1\x07,\x02\x02\u07A0\u078D\x03\x02\x02\x02\u07A0\u078E\x03\x02\x02" +
+		"\x02\u07A0\u078F\x03\x02\x02\x02\u07A0\u0790\x03\x02\x02\x02\u07A0\u0795" +
+		"\x03\x02\x02\x02\u07A0\u0796\x03\x02\x02\x02\u07A0\u079B\x03\x02\x02\x02" +
+		"\u07A0\u079C\x03\x02\x02\x02\u07A0\u079D\x03\x02\x02\x02\u07A0\u079E\x03" +
+		"\x02\x02\x02\u07A0\u079F\x03\x02\x02\x02\u07A1\u0119\x03\x02\x02\x02\u07A2" +
+		"\u07A3\x05^0\x02\u07A3\u07A4\x07b\x02\x02\u07A4\u07A5\x05\u020E\u0108" +
+		"\x02\u07A5\u07D4\x03\x02\x02\x02\u07A6\u07A7\x05^0\x02\u07A7\u07A8\x07" +
+		"e\x02\x02\u07A8\u07A9\x05\u020E\u0108\x02\u07A9\u07AA\x07e\x02\x02\u07AA" +
+		"\u07D4\x03\x02\x02\x02\u07AB\u07AC\x05^0\x02\u07AC\u07AD\x07^\x02\x02" +
+		"\u07AD\u07AE\x05\u012A\x96\x02\u07AE\u07AF\x07_\x02\x02\u07AF\u07B0\x07" +
+		"b\x02\x02\u07B0\u07B1\x05\u020E\u0108\x02\u07B1\u07D4\x03\x02\x02\x02" +
+		"\u07B2\u07B3\x05^0\x02\u07B3\u07B4\x07f\x02\x02\u07B4\u07B5\x05\u0122" +
+		"\x92\x02\u07B5\u07B6\x07b\x02\x02\u07B6\u07B7\x05\u020E\u0108\x02\u07B7" +
+		"\u07D4\x03\x02\x02\x02\u07B8\u07B9\x05^0\x02\u07B9\u07BA\x07f\x02\x02" +
+		"\u07BA\u07BB\x05\u0122\x92\x02\u07BB\u07BC\x07^\x02\x02\u07BC\u07BD\x05" +
+		"\u012A\x96\x02\u07BD\u07BE\x07_\x02\x02\u07BE\u07BF\x07b\x02\x02\u07BF" +
+		"\u07C0\x05\u020E\u0108\x02\u07C0\u07D4\x03\x02\x02\x02\u07C1\u07D4\x05" +
+		"^0\x02\u07C2\u07C3\x05^0\x02\u07C3\u07C4\x07f\x02\x02\u07C4\u07C5\x05" +
+		"\u0122\x92\x02\u07C5\u07D4\x03\x02\x02\x02\u07C6\u07C7\x05^0\x02\u07C7" +
+		"\u07C8\x07^\x02\x02\u07C8\u07C9\x05\u012A\x96\x02\u07C9\u07CA\x07_\x02" +
+		"\x02\u07CA\u07D4\x03\x02\x02\x02\u07CB\u07CC\x05^0\x02\u07CC\u07CD\x07" +
+		"^\x02\x02\u07CD\u07CE\x05\u012A\x96\x02\u07CE\u07CF\x07_\x02\x02\u07CF" +
+		"\u07D0\x07f\x02\x02\u07D0\u07D1\x05\u0122\x92\x02\u07D1\u07D4\x03\x02" +
+		"\x02\x02\u07D2\u07D4\x05\u0220\u0111\x02\u07D3\u07A2\x03\x02\x02\x02\u07D3" +
+		"\u07A6\x03\x02\x02\x02\u07D3\u07AB\x03\x02\x02\x02\u07D3\u07B2\x03\x02" +
+		"\x02\x02\u07D3\u07B8\x03\x02\x02\x02\u07D3\u07C1\x03\x02\x02\x02\u07D3" +
+		"\u07C2\x03\x02\x02\x02\u07D3\u07C6\x03\x02\x02\x02\u07D3\u07CB\x03\x02" +
+		"\x02\x02\u07D3\u07D2\x03\x02\x02\x02\u07D4\u011B\x03\x02\x02\x02\u07D5" +
+		"\u07D8\x07^\x02\x02\u07D6\u07D7\x07,\x02\x02\u07D7\u07D9\x07b\x02\x02" +
+		"\u07D8\u07D6\x03\x02\x02\x02\u07D8\u07D9\x03\x02\x02\x02\u07D9\u07DA\x03" +
+		"\x02\x02\x02\u07DA\u07DB\x05\u020E\u0108\x02\u07DB\u07DC\x07_\x02\x02" +
+		"\u07DC\u07E0\x03\x02\x02\x02\u07DD\u07DE\x07f\x02\x02\u07DE\u07E0\x05" +
+		"\"\x12\x02\u07DF\u07D5\x03\x02\x02\x02\u07DF\u07DD\x03\x02\x02\x02\u07E0" +
+		"\u011D\x03\x02\x02\x02\u07E1\u07E2\x07^\x02\x02\u07E2\u07E3\x07\x84\x02" +
+		"\x02\u07E3\u07E4\x07b\x02\x02\u07E4\u07E5\x05\u0124\x93\x02\u07E5\u07E6" +
+		"\x07]\x02\x02\u07E6\u07E7\x07,\x02\x02\u07E7\u07E8\x07b\x02\x02\u07E8" +
+		"\u07E9\x05\u020E\u0108\x02\u07E9\u07EA\x07_\x02\x02\u07EA\u0802\x03\x02" +
+		"\x02\x02\u07EB\u07EC\x07^\x02\x02\u07EC\u07ED\x07\x84\x02\x02\u07ED\u07EE" +
+		"\x07b\x02\x02\u07EE\u07EF\x05\u0124\x93\x02\u07EF\u07F0\x07]\x02\x02\u07F0" +
+		"\u07F1\x05\u020E\u0108\x02\u07F1\u07F2\x07_\x02\x02\u07F2\u0802\x03\x02" +
+		"\x02\x02\u07F3\u07F4\x07^\x02\x02\u07F4\u07F5\x07\x84\x02\x02\u07F5\u07F6" +
+		"\x07b\x02\x02\u07F6\u07F7\x05\u0124\x93\x02\u07F7\u07F8\x07_\x02\x02\u07F8" +
+		"\u0802\x03\x02\x02\x02\u07F9\u07FC\x07^\x02\x02\u07FA\u07FB\x07,\x02\x02" +
+		"\u07FB\u07FD\x07b\x02\x02\u07FC\u07FA\x03\x02\x02\x02\u07FC\u07FD\x03" +
+		"\x02\x02\x02\u07FD\u07FE\x03\x02\x02\x02\u07FE\u07FF\x05\u020E\u0108\x02" +
+		"\u07FF\u0800\x07_\x02\x02\u0800\u0802\x03\x02\x02\x02\u0801\u07E1\x03" +
+		"\x02\x02\x02\u0801\u07EB\x03\x02\x02\x02\u0801\u07F3\x03\x02\x02\x02\u0801" +
+		"\u07F9\x03\x02\x02\x02\u0802\u011F\x03\x02\x02\x02\u0803\u0804\x07^\x02" +
+		"\x02\u0804\u0805\x05\u0124\x93\x02\u0805\u0806\x07_\x02\x02\u0806\u080A" +
+		"\x03\x02\x02\x02\u0807\u0808\x07f\x02\x02\u0808\u080A\x05\u0122\x92\x02" +
+		"\u0809\u0803\x03\x02\x02\x02\u0809\u0807\x03\x02\x02\x02\u080A\u0121\x03" +
+		"\x02\x02\x02\u080B\u080C\x07^\x02\x02\u080C\u080D\x05\u0124\x93\x02\u080D" +
+		"\u080E\x07_\x02\x02\u080E\u0811\x03\x02\x02\x02\u080F\u0811\x05\"\x12" +
+		"\x02\u0810\u080B\x03\x02\x02\x02\u0810\u080F\x03\x02\x02\x02\u0811\u0123" +
+		"\x03\x02\x02\x02\u0812\u0815\x05\u0210\u0109\x02\u0813\u0815\x07f\x02" +
+		"\x02\u0814\u0812\x03\x02\x02\x02\u0814\u0813\x03\x02\x02\x02\u0815\u0125" +
+		"\x03\x02\x02\x02\u0816\u0817\t\x05\x02\x02\u0817\u0127\x03\x02\x02\x02" +
+		"\u0818\u081D\x07\x7F\x02\x02\u0819\u081D\x07\x80\x02\x02\u081A\u081B\x07" +
+		"\x7F\x02\x02\u081B\u081D\x07\x80\x02\x02\u081C\u0818\x03\x02\x02\x02\u081C" +
+		"\u0819\x03\x02\x02\x02\u081C\u081A\x03\x02\x02\x02\u081D\u0129\x03\x02" +
+		"\x02\x02\u081E\u0824\x05\u0136\x9C\x02\u081F\u0824\x05\u0138\x9D\x02\u0820" +
+		"\u0824\x05\u012C\x97\x02\u0821\u0824\x05\u013C\x9F\x02\u0822\u0824\x05" +
+		"\"\x12\x02\u0823\u081E\x03\x02\x02\x02\u0823\u081F\x03\x02\x02\x02\u0823" +
+		"\u0820\x03\x02\x02\x02\u0823\u0821\x03\x02\x02\x02\u0823\u0822\x03\x02" +
+		"\x02\x02\u0824\u012B\x03\x02\x02\x02\u0825\u082A\x05\u012E\x98\x02\u0826" +
+		"\u0827\x07]\x02\x02\u0827\u0829\x05\u012E\x98\x02\u0828\u0826\x03\x02" +
+		"\x02\x02\u0829\u082C\x03\x02\x02\x02\u082A\u0828\x03\x02\x02\x02\u082A" +
+		"\u082B\x03\x02\x02\x02\u082B\u012D\x03\x02\x02\x02\u082C\u082A\x03\x02" +
+		"\x02\x02\u082D\u082E\x05\u0130\x99\x02\u082E\u082F\x07`\x02\x02\u082F" +
+		"\u0831\x03\x02\x02\x02\u0830\u082D\x03\x02\x02\x02\u0830\u0831\x03\x02" +
+		"\x02\x02\u0831\u0832\x03\x02\x02\x02\u0832\u0833\x05\u0132\x9A\x02\u0833" +
+		"\u012F\x03\x02\x02\x02\u0834\u0835\x05\u0210\u0109\x02\u0835\u0131\x03" +
+		"\x02\x02\x02\u0836\u0837\x05\u0210\u0109\x02\u0837\u0133\x03\x02\x02\x02" +
+		"\u0838\u083A\x05\u0130\x99\x02\u0839\u0838\x03\x02\x02\x02\u0839\u083A" +
+		"\x03\x02\x02\x02\u083A\u083B\x03\x02\x02\x02\u083B\u083C\x07`\x02\x02" +
+		"\u083C\u0135\x03\x02\x02\x02\u083D\u083E\b\x9C\x01\x02\u083E\u083F\x05" +
+		"\u0130\x99\x02\u083F\u0840\x07`\x02\x02\u0840\u0847\x03\x02\x02\x02\u0841" +
+		"\u0842\x05\u0138\x9D\x02\u0842\u0843\x07]\x02\x02\u0843\u0844\x05\u0130" +
+		"\x99\x02\u0844\u0845\x07`\x02\x02\u0845\u0847\x03\x02\x02\x02\u0846\u083D" +
+		"\x03\x02\x02\x02\u0846\u0841\x03\x02\x02\x02\u0847\u084D\x03\x02\x02\x02" +
+		"\u0848\u0849\f\x03\x02\x02\u0849\u084A\x07]\x02\x02\u084A\u084C\x05\u0134" +
+		"\x9B\x02\u084B\u0848\x03\x02\x02\x02\u084C\u084F\x03\x02\x02\x02\u084D" +
+		"\u084B\x03\x02\x02\x02\u084D\u084E\x03\x02\x02\x02\u084E\u0137\x03\x02" +
+		"\x02\x02\u084F\u084D\x03\x02\x02\x02\u0850\u0855\x05\u013A\x9E\x02\u0851" +
+		"\u0852\x07]\x02\x02\u0852\u0854\x05\u013A\x9E\x02\u0853\u0851\x03\x02" +
+		"\x02\x02\u0854\u0857\x03\x02\x02\x02\u0855\u0853\x03\x02\x02\x02\u0855" +
+		"\u0856\x03\x02\x02\x02\u0856\u0139\x03\x02\x02\x02\u0857\u0855\x03\x02" +
+		"\x02\x02\u0858\u0859\x07`\x02\x02\u0859\u013B\x03\x02\x02\x02\u085A\u085B" +
+		"\x05\u0130\x99\x02\u085B\u085C\x07`\x02\x02\u085C\u085E\x03\x02\x02\x02" +
+		"\u085D\u085A\x03\x02\x02\x02\u085D\u085E\x03\x02\x02\x02\u085E\u085F\x03" +
+		"\x02\x02\x02\u085F\u086B\x07f\x02\x02\u0860\u0861\x05\u012C\x97\x02\u0861" +
+		"\u0862\x07]\x02\x02\u0862\u0863\x07f\x02\x02\u0863\u086B\x03\x02\x02\x02" +
+		"\u0864\u0865\x05\u012C\x97\x02\u0865\u0866\x07]\x02\x02\u0866\u0867\x05" +
+		"\u0130\x99\x02\u0867\u0868\x07`\x02\x02\u0868\u0869\x07f\x02\x02\u0869" +
+		"\u086B\x03\x02\x02\x02\u086A\u085D\x03\x02\x02\x02\u086A\u0860\x03\x02" +
+		"\x02\x02\u086A\u0864\x03\x02\x02\x02\u086B\u013D\x03\x02\x02\x02\u086C" +
+		"\u086E\x05$\x13\x02\u086D\u086C\x03\x02\x02\x02\u086D\u086E\x03\x02\x02" +
+		"\x02\u086E\u086F\x03\x02\x02\x02\u086F\u0870\x07&\x02\x02\u0870\u0871" +
+		"\x07^\x02\x02\u0871\u0872\x05\u0128\x95\x02\u0872\u0873\x07_\x02\x02\u0873" +
+		"\u0874\x07`\x02\x02\u0874\u0875\x07`\x02\x02\u0875\u0876\x05\u0140\xA1" +
+		"\x02\u0876\u0877\x05 \x11\x02\u0877\u0883\x03\x02\x02\x02\u0878\u087A" +
+		"\x05$\x13\x02\u0879\u0878\x03\x02\x02\x02\u0879\u087A\x03\x02\x02\x02" +
+		"\u087A\u087B\x03\x02\x02\x02\u087B\u087C\x07&\x02\x02\u087C\u087D\x07" +
+		"^\x02\x02\u087D\u087E\x05\u0128\x95\x02\u087E\u087F\x07_\x02\x02\u087F" +
+		"\u0880\x05\u0140\xA1\x02\u0880\u0881\x05 \x11\x02\u0881\u0883\x03\x02" +
+		"\x02\x02\u0882\u086D\x03\x02\x02\x02\u0882\u0879\x03\x02\x02\x02\u0883" +
+		"\u013F\x03\x02\x02\x02\u0884\u0889\x05\u0142\xA2\x02\u0885\u0886\x07]" +
+		"\x02\x02\u0886\u0888\x05\u0142\xA2\x02\u0887\u0885\x03\x02\x02\x02\u0888" +
+		"\u088B\x03\x02\x02\x02\u0889\u0887\x03\x02\x02\x02\u0889\u088A\x03\x02" +
+		"\x02\x02\u088A\u0141\x03\x02\x02\x02\u088B\u0889\x03\x02\x02\x02\u088C" +
+		"\u088D\x05R*\x02\u088D\u0143\x03\x02\x02\x02\u088E\u0890\x05$\x13\x02" +
+		"\u088F\u088E\x03\x02\x02\x02\u088F\u0890\x03\x02\x02\x02\u0890\u0891\x03" +
+		"\x02\x02\x02\u0891\u0892\x07\'\x02\x02\u0892\u0893\x07`\x02\x02\u0893" +
+		"\u0894\x07`\x02\x02\u0894\u0895\x05\u0146\xA4\x02\u0895\u0896\x05 \x11" +
+		"\x02\u0896\u089F\x03\x02\x02\x02\u0897\u0899\x05$\x13\x02\u0898\u0897" +
+		"\x03\x02\x02\x02\u0898\u0899\x03\x02\x02\x02\u0899\u089A\x03\x02\x02\x02" +
+		"\u089A\u089B\x07\'\x02\x02\u089B\u089C\x05\u0146\xA4\x02\u089C\u089D\x05" +
+		" \x11\x02\u089D\u089F\x03\x02\x02\x02\u089E\u088F\x03\x02\x02\x02\u089E" +
+		"\u0898\x03\x02\x02\x02\u089F\u0145\x03\x02\x02\x02\u08A0\u08A5\x05\u0148" +
+		"\xA5\x02\u08A1\u08A2\x07]\x02\x02\u08A2\u08A4\x05\u0148\xA5\x02\u08A3" +
+		"\u08A1\x03\x02\x02\x02\u08A4\u08A7\x03\x02\x02\x02\u08A5\u08A3\x03\x02" +
+		"\x02\x02\u08A5\u08A6\x03\x02\x02\x02\u08A6\u0147\x03\x02\x02\x02\u08A7" +
+		"\u08A5\x03\x02\x02\x02\u08A8\u08A9\x05R*\x02\u08A9\u0149\x03\x02\x02\x02" +
+		"\u08AA\u08AC\x05$\x13\x02\u08AB\u08AA\x03\x02\x02\x02\u08AB\u08AC\x03" +
+		"\x02\x02\x02\u08AC\u08AD\x03\x02\x02\x02\u08AD\u08AE\x05\u0126\x94\x02" +
+		"\u08AE\u08AF\x07`\x02\x02\u08AF\u08B0\x07`\x02\x02\u08B0\u08B1\x05\u014C" +
+		"\xA7\x02\u08B1\u08B2\x05 \x11\x02\u08B2\u08BD\x03\x02\x02\x02\u08B3\u08B5" +
+		"\x05$\x13\x02\u08B4\u08B3\x03\x02\x02\x02\u08B4\u08B5\x03\x02\x02\x02" +
+		"\u08B5\u08B6\x03\x02\x02\x02\u08B6\u08B8\x05\u0126\x94\x02\u08B7\u08B9" +
 		"\x05\u014C\xA7\x02\u08B8\u08B7\x03\x02\x02\x02\u08B8\u08B9\x03\x02\x02" +
 		"\x02\u08B9\u08BA\x03\x02\x02\x02\u08BA\u08BB\x05 \x11\x02\u08BB\u08BD" +
 		"\x03\x02\x02\x02\u08BC\u08AB\x03\x02\x02\x02\u08BC\u08B4\x03\x02\x02\x02" +
@@ -23756,20 +23758,19 @@ export class FortranParser extends Parser {
 		"\u096C\x07^\x02\x02\u096C\u096D\x05\u012A\x96\x02\u096D\u096E\x07_\x02" +
 		"\x02\u096E\u0970\x03\x02\x02\x02\u096F\u0969\x03\x02\x02\x02\u096F\u096A" +
 		"\x03\x02\x02\x02\u0970\u016D\x03\x02\x02\x02\u0971\u0973\x05$\x13\x02" +
-		"\u0972\u0971\x03\x02\x02\x02\u0972\u0973\x03\x02\x02\x02\u0973\u0974\x03" +
-		"\x02";
+		"\u0972\u0971\x03\x02\x02\x02\u0972\u0973\x03\x02\x02\x02";
 	private static readonly _serializedATNSegment5: string =
-		"\x02\x02\u0974\u0975\x07-\x02\x02\u0975\u0976\x05\u0170\xB9\x02\u0976" +
-		"\u0977\x05 \x11\x02\u0977\u016F\x03\x02\x02\x02\u0978\u097D\x05\u0172" +
-		"\xBA\x02\u0979\u097A\x07]\x02\x02\u097A\u097C\x05\u0172\xBA\x02\u097B" +
-		"\u0979\x03\x02\x02\x02\u097C\u097F\x03\x02\x02\x02\u097D\u097B\x03\x02" +
-		"\x02\x02\u097D\u097E\x03\x02\x02\x02\u097E\u0171\x03\x02\x02\x02\u097F" +
-		"\u097D\x03\x02\x02\x02\u0980\u0981\x05\u0174\xBB\x02\u0981\u0982\x07e" +
-		"\x02\x02\u0982\u0983\x05\u0178\xBD\x02\u0983\u0984\x07e\x02\x02\u0984" +
-		"\u0173\x03\x02\x02\x02\u0985\u098A\x05\u0176\xBC\x02\u0986\u0987\x07]" +
-		"\x02\x02\u0987\u0989\x05\u0176\xBC\x02\u0988\u0986\x03\x02\x02\x02\u0989" +
-		"\u098C\x03\x02\x02\x02\u098A\u0988\x03\x02\x02\x02\u098A\u098B\x03\x02" +
-		"\x02\x02\u098B\u0175\x03\x02\x02\x02\u098C\u098A\x03\x02\x02\x02\u098D" +
+		"\u0973\u0974\x03\x02\x02\x02\u0974\u0975\x07-\x02\x02\u0975\u0976\x05" +
+		"\u0170\xB9\x02\u0976\u0977\x05 \x11\x02\u0977\u016F\x03\x02\x02\x02\u0978" +
+		"\u097D\x05\u0172\xBA\x02\u0979\u097A\x07]\x02\x02\u097A\u097C\x05\u0172" +
+		"\xBA\x02\u097B\u0979\x03\x02\x02\x02\u097C\u097F\x03\x02\x02\x02\u097D" +
+		"\u097B\x03\x02\x02\x02\u097D\u097E\x03\x02\x02\x02\u097E\u0171\x03\x02" +
+		"\x02\x02\u097F\u097D\x03\x02\x02\x02\u0980\u0981\x05\u0174\xBB\x02\u0981" +
+		"\u0982\x07e\x02\x02\u0982\u0983\x05\u0178\xBD\x02\u0983\u0984\x07e\x02" +
+		"\x02\u0984\u0173\x03\x02\x02\x02\u0985\u098A\x05\u0176\xBC\x02\u0986\u0987" +
+		"\x07]\x02\x02\u0987\u0989\x05\u0176\xBC\x02\u0988\u0986\x03\x02\x02\x02" +
+		"\u0989\u098C\x03\x02\x02\x02\u098A\u0988\x03\x02\x02\x02\u098A\u098B\x03" +
+		"\x02\x02\x02\u098B\u0175\x03\x02\x02\x02\u098C\u098A\x03\x02\x02\x02\u098D" +
 		"\u0990\x05\u01A8\xD5\x02\u098E\u0990\x05\u017C\xBF\x02\u098F\u098D\x03" +
 		"\x02\x02\x02\u098F\u098E\x03\x02\x02\x02\u0990\u0177\x03\x02\x02\x02\u0991" +
 		"\u0996\x05\u017A\xBE\x02\u0992\u0993\x07]\x02\x02\u0993\u0995\x05\u017A" +
@@ -24081,201 +24082,201 @@ export class FortranParser extends Parser {
 		"\xD7\x02\u0C3E\u0C3F\x07b\x02\x02\u0C3F\u0C40\x05\u020E\u0108\x02\u0C40" +
 		"\u0C41\x05 \x11\x02\u0C41\u0C96\x03\x02\x02\x02\u0C42\u0C44\x05$\x13\x02" +
 		"\u0C43\u0C42\x03\x02\x02\x02\u0C43\u0C44\x03\x02\x02\x02\u0C44\u0C45\x03" +
-		"\x02\x02\x02\u0C45\u0C46\x05@!\x02\u0C46\u0C47\x07^\x02\x02\u0C47\u0C48" +
-		"\x05\u0214\u010B\x02";
+		"\x02\x02\x02\u0C45\u0C46\x05@!\x02\u0C46\u0C47\x07^\x02\x02\u0C47\u0C48";
 	private static readonly _serializedATNSegment6: string =
-		"\u0C48\u0C49\x07_\x02\x02\u0C49\u0C4A\t\x06\x02\x02\u0C4A\u0C4B\x05@!" +
-		"\x02\u0C4B\u0C4C\x07b\x02\x02\u0C4C\u0C4D\x05\u020E\u0108\x02\u0C4D\u0C4E" +
-		"\x05 \x11\x02\u0C4E\u0C96\x03\x02\x02\x02\u0C4F\u0C51\x05$\x13\x02\u0C50" +
-		"\u0C4F\x03\x02\x02\x02\u0C50\u0C51\x03\x02\x02\x02\u0C51\u0C52\x03\x02" +
-		"\x02\x02\u0C52\u0C53\x05@!\x02\u0C53\u0C54\x07^\x02\x02\u0C54\u0C55\x05" +
-		"\u0214\u010B\x02\u0C55\u0C56\x07_\x02\x02\u0C56\u0C57\t\x06\x02\x02\u0C57" +
-		"\u0C58\x05\u01AC\xD7\x02\u0C58\u0C59\x07b\x02\x02\u0C59\u0C5A\x05\u020E" +
-		"\u0108\x02\u0C5A\u0C5B\x05 \x11\x02\u0C5B\u0C96\x03\x02\x02\x02\u0C5C" +
-		"\u0C5E\x05$\x13\x02\u0C5D\u0C5C\x03\x02\x02\x02\u0C5D\u0C5E\x03\x02\x02" +
-		"\x02\u0C5E\u0C5F\x03\x02\x02\x02\u0C5F\u0C60\x05@!\x02\u0C60\u0C61\x07" +
-		"^\x02\x02\u0C61\u0C62\x05\xE8u\x02\u0C62\u0C63\x07_\x02\x02\u0C63\u0C64" +
-		"\t\x06\x02\x02\u0C64\u0C65\x05@!\x02\u0C65\u0C66\x07b\x02\x02\u0C66\u0C67" +
-		"\x05\u020E\u0108\x02\u0C67\u0C68\x05 \x11\x02\u0C68\u0C96\x03\x02\x02" +
-		"\x02\u0C69\u0C6B\x05$\x13\x02\u0C6A\u0C69\x03\x02\x02\x02\u0C6A\u0C6B" +
-		"\x03\x02\x02\x02\u0C6B\u0C6C\x03\x02\x02\x02\u0C6C\u0C6D\x05@!\x02\u0C6D" +
-		"\u0C6E\x07^\x02\x02\u0C6E\u0C6F\x05\xE8u\x02\u0C6F\u0C70\x07_\x02\x02" +
-		"\u0C70\u0C71\t\x06\x02\x02\u0C71\u0C72\x05\u01AC\xD7\x02\u0C72\u0C73\x07" +
-		"b\x02\x02\u0C73\u0C74\x05\u020E\u0108\x02\u0C74\u0C75\x05 \x11\x02\u0C75" +
-		"\u0C96\x03\x02\x02\x02\u0C76\u0C78\x05$\x13\x02\u0C77\u0C76\x03\x02\x02" +
-		"\x02\u0C77\u0C78\x03\x02\x02\x02\u0C78\u0C79\x03\x02\x02\x02\u0C79\u0C7A" +
-		"\x05@!\x02\u0C7A\u0C7B\x07b\x02\x02\u0C7B\u0C7C\x05\u020E\u0108\x02\u0C7C" +
-		"\u0C7D\x05 \x11\x02\u0C7D\u0C96\x03\x02\x02\x02\u0C7E\u0C80\x05$\x13\x02" +
-		"\u0C7F\u0C7E\x03\x02\x02\x02\u0C7F\u0C80\x03\x02\x02\x02\u0C80\u0C81\x03" +
-		"\x02\x02\x02\u0C81\u0C82\x05@!\x02\u0C82\u0C83\x07^\x02\x02\u0C83\u0C84" +
-		"\x05\u0214\u010B\x02\u0C84\u0C85\x07_\x02\x02\u0C85\u0C86\x07b\x02\x02" +
-		"\u0C86\u0C87\x05\u020E\u0108\x02\u0C87\u0C88\x05 \x11\x02\u0C88\u0C96" +
-		"\x03\x02\x02\x02\u0C89\u0C8B\x05$\x13\x02\u0C8A\u0C89\x03\x02\x02\x02" +
-		"\u0C8A\u0C8B\x03\x02\x02\x02\u0C8B\u0C8C\x03\x02\x02\x02\u0C8C\u0C8D\x05" +
-		"@!\x02\u0C8D\u0C8E\x07^\x02\x02\u0C8E\u0C8F\x05\u0214\u010B\x02\u0C8F" +
-		"\u0C90\x07_\x02\x02\u0C90\u0C91\x05\u01B2\xDA\x02\u0C91\u0C92\x07b\x02" +
-		"\x02\u0C92\u0C93\x05\u020E\u0108\x02\u0C93\u0C94\x05 \x11\x02\u0C94\u0C96" +
-		"\x03\x02\x02\x02\u0C95\u0C2F\x03\x02\x02\x02\u0C95\u0C39\x03\x02\x02\x02" +
-		"\u0C95\u0C43\x03\x02\x02\x02\u0C95\u0C50\x03\x02\x02\x02\u0C95\u0C5D\x03" +
-		"\x02\x02\x02\u0C95\u0C6A\x03\x02\x02\x02\u0C95\u0C77\x03\x02\x02\x02\u0C95" +
-		"\u0C7F\x03\x02\x02\x02\u0C95\u0C8A\x03\x02\x02\x02\u0C96\u0213\x03\x02" +
-		"\x02\x02\u0C97\u0C98\b\u010B\x01\x02\u0C98\u0C99\x05\u0216\u010C\x02\u0C99" +
-		"\u0C9A\x07`\x02\x02\u0C9A\u0C9B\x05\u020E\u0108\x02\u0C9B\u0C9C\x07`\x02" +
-		"\x02\u0C9C\u0C9D\x05\u020E\u0108\x02\u0C9D\u0CCB\x03\x02\x02\x02\u0C9E" +
-		"\u0C9F\x05\u0216\u010C\x02\u0C9F\u0CA0\x07`\x02\x02\u0CA0\u0CA1\x07`\x02" +
-		"\x02\u0CA1\u0CA2\x05\u020E\u0108\x02\u0CA2\u0CCB\x03\x02\x02\x02\u0CA3" +
-		"\u0CA4\x07`\x02\x02\u0CA4\u0CA5\x05\u020E\u0108\x02\u0CA5\u0CA6\x07`\x02" +
-		"\x02\u0CA6\u0CA7\x05\u020E\u0108\x02\u0CA7\u0CCB\x03\x02\x02\x02\u0CA8" +
-		"\u0CA9\x07`\x02\x02\u0CA9\u0CAA\x07`\x02\x02\u0CAA\u0CCB\x05\u020E\u0108" +
-		"\x02\u0CAB\u0CCB\x07`\x02\x02\u0CAC\u0CAD\x07`\x02\x02\u0CAD\u0CCB\x05" +
-		"\u020E\u0108\x02\u0CAE\u0CCB\x05\u0216\u010C\x02\u0CAF\u0CB0\x05\u0216" +
-		"\u010C\x02\u0CB0\u0CB1\x07`\x02\x02\u0CB1\u0CCB\x03\x02\x02\x02\u0CB2" +
-		"\u0CB3\x05\u0216\u010C\x02\u0CB3\u0CB4\x07`\x02\x02\u0CB4\u0CB5\x05\u020E" +
-		"\u0108\x02\u0CB5\u0CCB\x03\x02\x02\x02\u0CB6\u0CB7\x05\xE8u\x02\u0CB7" +
-		"\u0CB8\x07]\x02\x02\u0CB8\u0CB9\x07`\x02\x02\u0CB9\u0CCB\x03\x02\x02\x02" +
-		"\u0CBA\u0CBB\x05\xE8u\x02\u0CBB\u0CBC\x07]\x02\x02\u0CBC\u0CBD\x07`\x02" +
-		"\x02\u0CBD\u0CBE\x05\u020E\u0108\x02\u0CBE\u0CCB\x03\x02\x02\x02\u0CBF" +
-		"\u0CC0\x05\xE8u\x02\u0CC0\u0CC1\x07]\x02\x02\u0CC1\u0CC2\x05\u0216\u010C" +
-		"\x02\u0CC2\u0CC3\x07`\x02\x02\u0CC3\u0CCB\x03\x02\x02\x02\u0CC4\u0CC5" +
-		"\x05\xE8u\x02\u0CC5\u0CC6\x07]\x02\x02\u0CC6\u0CC7\x05\u0216\u010C\x02" +
-		"\u0CC7\u0CC8\x07`\x02\x02\u0CC8\u0CC9\x05\u020E\u0108\x02\u0CC9\u0CCB" +
-		"\x03\x02\x02\x02\u0CCA\u0C97\x03\x02\x02\x02\u0CCA\u0C9E\x03\x02\x02\x02" +
-		"\u0CCA\u0CA3\x03\x02\x02\x02\u0CCA\u0CA8\x03\x02\x02\x02\u0CCA\u0CAB\x03" +
-		"\x02\x02\x02\u0CCA\u0CAC\x03\x02\x02\x02\u0CCA\u0CAE\x03\x02\x02\x02\u0CCA" +
-		"\u0CAF\x03\x02\x02\x02\u0CCA\u0CB2\x03\x02\x02\x02\u0CCA\u0CB6\x03\x02" +
-		"\x02\x02\u0CCA\u0CBA\x03\x02\x02\x02\u0CCA\u0CBF\x03\x02\x02\x02\u0CCA" +
-		"\u0CC4\x03\x02\x02\x02\u0CCB\u0CD1\x03\x02\x02\x02\u0CCC\u0CCD\f\x07\x02" +
-		"\x02\u0CCD\u0CCE\x07]\x02\x02\u0CCE\u0CD0\x05\u01B0\xD9\x02\u0CCF\u0CCC" +
-		"\x03\x02\x02\x02\u0CD0\u0CD3\x03\x02\x02\x02\u0CD1\u0CCF\x03\x02\x02\x02" +
-		"\u0CD1\u0CD2\x03\x02\x02\x02\u0CD2\u0215\x03\x02\x02\x02\u0CD3\u0CD1\x03" +
-		"\x02\x02\x02\u0CD4\u0CD5\b\u010C\x01\x02\u0CD5\u0CDA\x05\u0218\u010D\x02" +
-		"\u0CD6\u0CD7\x05\u01F4\xFB\x02\u0CD7\u0CD8\x05\u01EA\xF6\x02\u0CD8\u0CDA" +
-		"\x03\x02\x02\x02\u0CD9\u0CD4\x03\x02\x02\x02\u0CD9\u0CD6\x03\x02\x02\x02" +
-		"\u0CDA\u0CE1\x03\x02\x02\x02\u0CDB\u0CDC\f\x03\x02\x02\u0CDC\u0CDD\x05" +
-		"\u01F2\xFA\x02\u0CDD\u0CDE\x05\u01EA\xF6\x02\u0CDE\u0CE0\x03\x02\x02\x02" +
-		"\u0CDF\u0CDB\x03\x02\x02\x02\u0CE0\u0CE3\x03\x02\x02\x02\u0CE1\u0CDF\x03" +
-		"\x02\x02\x02\u0CE1\u0CE2\x03\x02\x02\x02\u0CE2\u0217\x03\x02\x02\x02\u0CE3" +
-		"\u0CE1\x03\x02\x02\x02\u0CE4\u0CE5\b\u010D\x01\x02\u0CE5\u0CE6\x05\u021A" +
-		"\u010E\x02\u0CE6\u0CED\x03\x02\x02\x02\u0CE7\u0CE8\f\x03\x02\x02\u0CE8" +
-		"\u0CE9\x05\u01F0\xF9\x02\u0CE9\u0CEA\x05\u01E8\xF5\x02\u0CEA\u0CEC\x03" +
-		"\x02\x02\x02\u0CEB\u0CE7\x03\x02\x02\x02\u0CEC\u0CEF\x03\x02\x02\x02\u0CED" +
-		"\u0CEB\x03\x02\x02\x02\u0CED\u0CEE\x03\x02\x02\x02\u0CEE\u0219\x03\x02" +
-		"\x02\x02\u0CEF\u0CED\x03\x02\x02\x02\u0CF0\u0CF6\x05\u021C\u010F\x02\u0CF1" +
-		"\u0CF2\x05\u021C\u010F\x02\u0CF2\u0CF3\x05\u01EE\xF8\x02\u0CF3\u0CF4\x05" +
-		"\u01E8\xF5\x02\u0CF4\u0CF6\x03\x02\x02\x02\u0CF5\u0CF0\x03\x02\x02\x02" +
-		"\u0CF5\u0CF1\x03\x02\x02\x02\u0CF6\u021B\x03\x02\x02\x02\u0CF7\u0D01\x05" +
-		"\"\x12\x02\u0CF8\u0D01\x05\u010C\x87\x02\u0CF9\u0D01\x05@!\x02\u0CFA\u0D01" +
-		"\x05\u01AC\xD7\x02\u0CFB\u0D01\x05\xBA^\x02\u0CFC\u0CFD\x07^\x02\x02\u0CFD" +
-		"\u0CFE\x05\u020E\u0108\x02\u0CFE\u0CFF\x07_\x02\x02\u0CFF\u0D01\x03\x02" +
-		"\x02\x02\u0D00\u0CF7\x03\x02\x02\x02\u0D00\u0CF8\x03\x02\x02\x02\u0D00" +
-		"\u0CF9\x03\x02\x02\x02\u0D00\u0CFA\x03\x02\x02\x02\u0D00\u0CFB\x03\x02" +
-		"\x02\x02\u0D00\u0CFC\x03\x02\x02\x02\u0D01\u021D\x03\x02\x02\x02\u0D02" +
-		"\u0D03\x05\u0220\u0111\x02\u0D03\u0D04\x05 \x11\x02\u0D04\u021F\x03\x02" +
-		"\x02\x02\u0D05\u0D07\x05$\x13\x02\u0D06\u0D05\x03\x02\x02\x02\u0D06\u0D07" +
-		"\x03\x02\x02\x02\u0D07\u0D08\x03\x02\x02\x02\u0D08\u0D09\x05@!\x02\u0D09" +
-		"\u0D0A\x07a\x02\x02\u0D0A\u0D0B\x05\u0222\u0112\x02\u0D0B\u0D4F\x03\x02" +
-		"\x02\x02\u0D0C\u0D0E\x05$\x13\x02\u0D0D\u0D0C\x03\x02\x02\x02\u0D0D\u0D0E" +
-		"\x03\x02\x02\x02\u0D0E\u0D0F\x03\x02\x02\x02\u0D0F\u0D10\x05@!\x02\u0D10" +
-		"\u0D11\t\x06\x02\x02\u0D11\u0D12\x05@!\x02\u0D12\u0D13\x07a\x02\x02\u0D13" +
-		"\u0D14\x05\u0222\u0112\x02\u0D14\u0D4F\x03\x02\x02\x02\u0D15\u0D17\x05" +
-		"$\x13\x02\u0D16\u0D15\x03\x02\x02\x02\u0D16\u0D17\x03\x02\x02\x02\u0D17" +
-		"\u0D18\x03\x02\x02\x02\u0D18\u0D19\x05@!\x02\u0D19\u0D1A\t\x06\x02\x02" +
-		"\u0D1A\u0D1B\x05\u01AC\xD7\x02\u0D1B\u0D1C\x07a\x02\x02\u0D1C\u0D1D\x05" +
-		"\u0222\u0112\x02\u0D1D\u0D4F\x03\x02\x02\x02\u0D1E\u0D20\x05$\x13\x02" +
-		"\u0D1F\u0D1E\x03\x02\x02\x02\u0D1F\u0D20\x03\x02\x02\x02\u0D20\u0D21\x03" +
-		"\x02\x02\x02\u0D21\u0D22\x05@!\x02\u0D22\u0D23\x07^\x02\x02\u0D23\u0D24" +
-		"\x05\u0214\u010B\x02\u0D24\u0D25\x07_\x02\x02\u0D25\u0D26\t\x06\x02\x02" +
-		"\u0D26\u0D27\x05@!\x02\u0D27\u0D28\x07a\x02\x02\u0D28\u0D29\x05\u0222" +
-		"\u0112\x02\u0D29\u0D4F\x03\x02\x02\x02\u0D2A\u0D2C\x05$\x13\x02\u0D2B" +
-		"\u0D2A\x03\x02\x02\x02\u0D2B\u0D2C\x03\x02\x02\x02\u0D2C\u0D2D\x03\x02" +
-		"\x02\x02\u0D2D\u0D2E\x05@!\x02\u0D2E\u0D2F\x07^\x02\x02\u0D2F\u0D30\x05" +
-		"\u0214\u010B\x02\u0D30\u0D31\x07_\x02\x02\u0D31\u0D32\t\x06\x02\x02\u0D32" +
-		"\u0D33\x05\u01AC\xD7\x02\u0D33\u0D34\x07a\x02\x02\u0D34\u0D35\x05\u0222" +
-		"\u0112\x02\u0D35\u0D4F\x03\x02\x02\x02\u0D36\u0D38\x05$\x13\x02\u0D37" +
-		"\u0D36\x03\x02\x02\x02\u0D37\u0D38\x03\x02\x02\x02\u0D38\u0D39\x03\x02" +
-		"\x02\x02\u0D39\u0D3A\x05@!\x02\u0D3A\u0D3B\x07^\x02\x02\u0D3B\u0D3C\x05" +
-		"\xE8u\x02\u0D3C\u0D3D\x07_\x02\x02\u0D3D\u0D3E\t\x06\x02\x02\u0D3E\u0D3F" +
-		"\x05@!\x02\u0D3F\u0D40\x07a\x02\x02\u0D40\u0D41\x05\u0222\u0112\x02\u0D41" +
-		"\u0D4F\x03\x02\x02\x02\u0D42\u0D44\x05$\x13\x02\u0D43\u0D42\x03\x02\x02" +
-		"\x02\u0D43\u0D44\x03\x02\x02\x02\u0D44\u0D45\x03\x02\x02\x02\u0D45\u0D46" +
-		"\x05@!\x02\u0D46\u0D47\x07^\x02\x02\u0D47\u0D48\x05\xE8u\x02\u0D48\u0D49" +
-		"\x07_\x02\x02\u0D49\u0D4A\t\x06\x02\x02\u0D4A\u0D4B\x05\u01AC\xD7\x02" +
-		"\u0D4B\u0D4C\x07a\x02\x02\u0D4C\u0D4D\x05\u0222\u0112\x02\u0D4D\u0D4F" +
-		"\x03\x02\x02\x02\u0D4E\u0D06\x03\x02\x02\x02\u0D4E\u0D0D\x03\x02\x02\x02" +
-		"\u0D4E\u0D16\x03\x02\x02\x02\u0D4E\u0D1F\x03\x02\x02\x02\u0D4E\u0D2B\x03" +
-		"\x02\x02\x02\u0D4E\u0D37\x03\x02\x02\x02\u0D4E\u0D43\x03\x02\x02\x02\u0D4F" +
-		"\u0221\x03\x02\x02\x02\u0D50\u0D51\x05\u020E\u0108\x02\u0D51\u0223\x03" +
-		"\x02\x02\x02\u0D52\u0D54\x05$\x13\x02\u0D53\u0D52\x03\x02\x02\x02\u0D53" +
-		"\u0D54\x03\x02\x02\x02\u0D54\u0D55\x03\x02\x02\x02\u0D55\u0D56\x072\x02" +
-		"\x02\u0D56\u0D57\x07^\x02\x02\u0D57\u0D58\x05\u022A\u0116\x02\u0D58\u0D59" +
-		"\x07_\x02\x02\u0D59\u0D5A\x05\u0212\u010A\x02\u0D5A\u0225\x03\x02\x02" +
-		"\x02\u0D5B\u0D5F\x05\u0228\u0115\x02\u0D5C\u0D5E\x05\u0212\u010A\x02\u0D5D" +
-		"\u0D5C\x03\x02\x02\x02\u0D5E\u0D61\x03\x02\x02\x02\u0D5F\u0D5D\x03\x02" +
-		"\x02\x02\u0D5F\u0D60\x03\x02\x02\x02\u0D60\u0D69\x03\x02\x02\x02\u0D61" +
-		"\u0D5F\x03\x02\x02\x02\u0D62\u0D66\x05\u022C\u0117\x02\u0D63\u0D65\x05" +
-		"\u0212\u010A\x02\u0D64\u0D63\x03\x02\x02\x02\u0D65\u0D68\x03\x02\x02\x02" +
-		"\u0D66\u0D64\x03\x02\x02\x02\u0D66\u0D67\x03\x02\x02\x02\u0D67\u0D6A\x03" +
-		"\x02\x02\x02\u0D68\u0D66\x03\x02\x02\x02\u0D69\u0D62\x03\x02\x02\x02\u0D69" +
-		"\u0D6A\x03\x02\x02\x02\u0D6A\u0D6B\x03\x02\x02\x02\u0D6B\u0D6C\x05\u022E" +
-		"\u0118\x02\u0D6C\u0227\x03\x02\x02\x02\u0D6D\u0D6F\x05$\x13\x02\u0D6E" +
-		"\u0D6D\x03\x02\x02\x02\u0D6E\u0D6F\x03\x02\x02\x02\u0D6F\u0D70\x03\x02" +
-		"\x02\x02\u0D70\u0D71\x072\x02\x02\u0D71\u0D72\x07^\x02\x02\u0D72\u0D73" +
-		"\x05\u022A\u0116\x02\u0D73\u0D74\x07_\x02\x02\u0D74\u0D75\x05 \x11\x02" +
-		"\u0D75\u0229\x03\x02\x02\x02\u0D76\u0D77\x05\u020E\u0108\x02\u0D77\u022B" +
-		"\x03\x02\x02\x02\u0D78\u0D7A\x05$\x13\x02\u0D79\u0D78\x03\x02\x02\x02" +
-		"\u0D79\u0D7A\x03\x02\x02\x02\u0D7A\u0D7B\x03\x02\x02\x02\u0D7B\u0D7C\x07" +
-		"3\x02\x02\u0D7C\u0D7D\x05 \x11\x02\u0D7D\u022D\x03\x02\x02\x02\u0D7E\u0D80" +
-		"\x05$\x13\x02\u0D7F\u0D7E\x03\x02\x02\x02\u0D7F\u0D80\x03\x02\x02\x02" +
-		"\u0D80\u0D81\x03\x02\x02\x02\u0D81\u0D82\x07\x13\x02\x02\u0D82\u0D83\x07" +
-		"2\x02\x02\u0D83\u0D84\x05 \x11\x02\u0D84\u022F\x03\x02\x02\x02\u0D85\u0D89" +
-		"\x05\u0232\u011A\x02\u0D86\u0D88\x05\x12\n\x02\u0D87\u0D86\x03\x02\x02" +
-		"\x02\u0D88\u0D8B\x03\x02\x02\x02\u0D89\u0D87\x03\x02\x02\x02\u0D89\u0D8A" +
-		"\x03\x02\x02\x02\u0D8A\u0D95\x03\x02\x02\x02\u0D8B\u0D89\x03\x02\x02\x02" +
-		"\u0D8C\u0D90\x05\u0234\u011B\x02\u0D8D\u0D8F\x05\x12\n\x02\u0D8E\u0D8D" +
-		"\x03\x02\x02\x02\u0D8F\u0D92\x03\x02\x02\x02\u0D90\u0D8E\x03\x02\x02\x02" +
-		"\u0D90\u0D91\x03\x02\x02\x02\u0D91\u0D94\x03\x02\x02\x02\u0D92\u0D90\x03" +
-		"\x02\x02\x02\u0D93\u0D8C\x03\x02\x02\x02\u0D94\u0D97\x03\x02\x02\x02\u0D95" +
-		"\u0D93\x03\x02\x02\x02\u0D95\u0D96\x03\x02\x02\x02\u0D96\u0D9F\x03\x02" +
-		"\x02\x02\u0D97\u0D95\x03\x02\x02\x02\u0D98\u0D9C\x05\u0236\u011C\x02\u0D99" +
-		"\u0D9B\x05\x12\n\x02\u0D9A\u0D99\x03\x02\x02\x02\u0D9B\u0D9E\x03\x02\x02" +
-		"\x02\u0D9C\u0D9A\x03\x02\x02\x02\u0D9C\u0D9D\x03\x02\x02\x02\u0D9D\u0DA0" +
-		"\x03\x02\x02\x02\u0D9E\u0D9C\x03\x02\x02\x02\u0D9F\u0D98\x03\x02\x02\x02" +
-		"\u0D9F\u0DA0\x03\x02\x02\x02\u0DA0\u0DA1\x03\x02\x02\x02\u0DA1\u0DA2\x05" +
-		"\u0238\u011D\x02\u0DA2\u0231\x03\x02\x02\x02\u0DA3\u0DA5\x05$\x13\x02" +
-		"\u0DA4\u0DA3\x03\x02\x02\x02\u0DA4\u0DA5\x03\x02\x02\x02\u0DA5\u0DA9\x03" +
-		"\x02\x02\x02\u0DA6\u0DA7\x05v<\x02\u0DA7\u0DA8\x07`\x02\x02\u0DA8\u0DAA" +
-		"\x03\x02\x02\x02\u0DA9\u0DA6\x03\x02\x02\x02\u0DA9\u0DAA\x03\x02\x02\x02" +
-		"\u0DAA\u0DAB\x03\x02\x02\x02\u0DAB\u0DAC\x078\x02\x02\u0DAC\u0DAD\x07" +
-		"^\x02\x02\u0DAD\u0DAE\x05\u023C\u011F\x02\u0DAE\u0DAF\x07_\x02\x02\u0DAF" +
-		"\u0DB0\x079\x02\x02\u0DB0\u0DB1\x05 \x11\x02\u0DB1\u0233\x03\x02\x02\x02" +
-		"\u0DB2\u0DB4\x05$\x13\x02\u0DB3\u0DB2\x03\x02\x02\x02\u0DB3\u0DB4\x03" +
-		"\x02\x02\x02\u0DB4\u0DB8\x03\x02\x02\x02\u0DB5\u0DB6\x07:\x02\x02\u0DB6" +
-		"\u0DB9\x078\x02\x02\u0DB7\u0DB9\x07<\x02\x02\u0DB8\u0DB5\x03\x02\x02\x02" +
-		"\u0DB8\u0DB7\x03\x02\x02\x02\u0DB9\u0DBA\x03\x02\x02\x02\u0DBA\u0DBB\x07" +
-		"^\x02\x02\u0DBB\u0DBC\x05\u023C\u011F\x02\u0DBC\u0DBD\x07_\x02\x02\u0DBD" +
-		"\u0DBF\x079\x02\x02\u0DBE\u0DC0\x05v<\x02\u0DBF\u0DBE\x03\x02\x02\x02" +
-		"\u0DBF\u0DC0\x03\x02\x02\x02\u0DC0\u0DC1\x03\x02\x02\x02\u0DC1\u0DC2\x05" +
-		" \x11\x02\u0DC2\u0235\x03\x02\x02\x02\u0DC3\u0DC5\x05$\x13\x02\u0DC4\u0DC3" +
-		"\x03\x02\x02\x02\u0DC4\u0DC5\x03\x02\x02\x02\u0DC5\u0DC6\x03\x02\x02\x02" +
-		"\u0DC6\u0DC8\x07:\x02\x02\u0DC7\u0DC9\x05v<\x02\u0DC8\u0DC7\x03\x02\x02" +
-		"\x02\u0DC8\u0DC9\x03\x02\x02\x02\u0DC9\u0DCA\x03\x02\x02\x02\u0DCA\u0DCB" +
-		"\x05 \x11\x02\u0DCB\u0237\x03\x02\x02\x02\u0DCC\u0DCE\x05$\x13\x02\u0DCD" +
-		"\u0DCC\x03\x02\x02\x02\u0DCD\u0DCE\x03\x02\x02\x02\u0DCE\u0DD2\x03\x02" +
-		"\x02\x02\u0DCF\u0DD0\x07\x13\x02\x02\u0DD0\u0DD3\x078\x02\x02\u0DD1\u0DD3" +
-		"\x07;\x02\x02\u0DD2\u0DCF\x03\x02\x02\x02\u0DD2\u0DD1\x03\x02\x02\x02" +
-		"\u0DD3\u0DD5\x03\x02\x02\x02\u0DD4\u0DD6\x05v<\x02\u0DD5\u0DD4\x03\x02" +
-		"\x02\x02\u0DD5\u0DD6\x03\x02\x02\x02\u0DD6\u0DD7\x03\x02\x02\x02\u0DD7" +
-		"\u0DD8\x05 \x11\x02\u0DD8\u0239\x03\x02\x02\x02\u0DD9\u0DDB\x05$\x13\x02" +
-		"\u0DDA\u0DD9\x03\x02\x02\x02\u0DDA\u0DDB\x03\x02\x02\x02\u0DDB\u0DDC\x03" +
-		"\x02\x02\x02\u0DDC\u0DDD\x078\x02\x02\u0DDD\u0DDE\x07^\x02\x02\u0DDE\u0DDF" +
-		"\x05\u023C\u011F\x02\u0DDF\u0DE0\x07_\x02\x02\u0DE0\u0DE1\x05\x1C\x0F" +
-		"\x02\u0DE1\u023B\x03\x02\x02\x02\u0DE2\u0DE3\x05\u020E\u0108\x02\u0DE3" +
-		"\u023D\x03\x02\x02\x02\u0DE4\u0DE6\x05$\x13\x02\u0DE5\u0DE4\x03\x02\x02" +
-		"\x02\u0DE5\u0DE6\x03\x02\x02\x02\u0DE6\u0DE7\x03\x02\x02\x02\u0DE7\u0DE8" +
-		"\x05@!\x02\u0DE8\u0DEC\x07`\x02\x02\u0DE9\u0DEA\x074\x02\x02\u0DEA\u0DED" +
-		"\x075\x02\x02\u0DEB\u0DED\x076\x02\x02\u0DEC\u0DE9\x03\x02\x02\x02\u0DEC" +
-		"\u0DEB\x03\x02\x02\x02\u0DED\u0DEE\x03\x02\x02\x02\u0DEE\u0DEF\x07^\x02" +
-		"\x02\u0DEF\u0DF0\x05\u020E\u0108\x02\u0DF0\u0DF1\x07_\x02\x02\u0DF1\u0DF2" +
+		"\x05\u0214\u010B\x02\u0C48\u0C49\x07_\x02\x02\u0C49\u0C4A\t\x06\x02\x02" +
+		"\u0C4A\u0C4B\x05@!\x02\u0C4B\u0C4C\x07b\x02\x02\u0C4C\u0C4D\x05\u020E" +
+		"\u0108\x02\u0C4D\u0C4E\x05 \x11\x02\u0C4E\u0C96\x03\x02\x02\x02\u0C4F" +
+		"\u0C51\x05$\x13\x02\u0C50\u0C4F\x03\x02\x02\x02\u0C50\u0C51\x03\x02\x02" +
+		"\x02\u0C51\u0C52\x03\x02\x02\x02\u0C52\u0C53\x05@!\x02\u0C53\u0C54\x07" +
+		"^\x02\x02\u0C54\u0C55\x05\u0214\u010B\x02\u0C55\u0C56\x07_\x02\x02\u0C56" +
+		"\u0C57\t\x06\x02\x02\u0C57\u0C58\x05\u01AC\xD7\x02\u0C58\u0C59\x07b\x02" +
+		"\x02\u0C59\u0C5A\x05\u020E\u0108\x02\u0C5A\u0C5B\x05 \x11\x02\u0C5B\u0C96" +
+		"\x03\x02\x02\x02\u0C5C\u0C5E\x05$\x13\x02\u0C5D\u0C5C\x03\x02\x02\x02" +
+		"\u0C5D\u0C5E\x03\x02\x02\x02\u0C5E\u0C5F\x03\x02\x02\x02\u0C5F\u0C60\x05" +
+		"@!\x02\u0C60\u0C61\x07^\x02\x02\u0C61\u0C62\x05\xE8u\x02\u0C62\u0C63\x07" +
+		"_\x02\x02\u0C63\u0C64\t\x06\x02\x02\u0C64\u0C65\x05@!\x02\u0C65\u0C66" +
+		"\x07b\x02\x02\u0C66\u0C67\x05\u020E\u0108\x02\u0C67\u0C68\x05 \x11\x02" +
+		"\u0C68\u0C96\x03\x02\x02\x02\u0C69\u0C6B\x05$\x13\x02\u0C6A\u0C69\x03" +
+		"\x02\x02\x02\u0C6A\u0C6B\x03\x02\x02\x02\u0C6B\u0C6C\x03\x02\x02\x02\u0C6C" +
+		"\u0C6D\x05@!\x02\u0C6D\u0C6E\x07^\x02\x02\u0C6E\u0C6F\x05\xE8u\x02\u0C6F" +
+		"\u0C70\x07_\x02\x02\u0C70\u0C71\t\x06\x02\x02\u0C71\u0C72\x05\u01AC\xD7" +
+		"\x02\u0C72\u0C73\x07b\x02\x02\u0C73\u0C74\x05\u020E\u0108\x02\u0C74\u0C75" +
+		"\x05 \x11\x02\u0C75\u0C96\x03\x02\x02\x02\u0C76\u0C78\x05$\x13\x02\u0C77" +
+		"\u0C76\x03\x02\x02\x02\u0C77\u0C78\x03\x02\x02\x02\u0C78\u0C79\x03\x02" +
+		"\x02\x02\u0C79\u0C7A\x05@!\x02\u0C7A\u0C7B\x07b\x02\x02\u0C7B\u0C7C\x05" +
+		"\u020E\u0108\x02\u0C7C\u0C7D\x05 \x11\x02\u0C7D\u0C96\x03\x02\x02\x02" +
+		"\u0C7E\u0C80\x05$\x13\x02\u0C7F\u0C7E\x03\x02\x02\x02\u0C7F\u0C80\x03" +
+		"\x02\x02\x02\u0C80\u0C81\x03\x02\x02\x02\u0C81\u0C82\x05@!\x02\u0C82\u0C83" +
+		"\x07^\x02\x02\u0C83\u0C84\x05\u0214\u010B\x02\u0C84\u0C85\x07_\x02\x02" +
+		"\u0C85\u0C86\x07b\x02\x02\u0C86\u0C87\x05\u020E\u0108\x02\u0C87\u0C88" +
+		"\x05 \x11\x02\u0C88\u0C96\x03\x02\x02\x02\u0C89\u0C8B\x05$\x13\x02\u0C8A" +
+		"\u0C89\x03\x02\x02\x02\u0C8A\u0C8B\x03\x02\x02\x02\u0C8B\u0C8C\x03\x02" +
+		"\x02\x02\u0C8C\u0C8D\x05@!\x02\u0C8D\u0C8E\x07^\x02\x02\u0C8E\u0C8F\x05" +
+		"\u0214\u010B\x02\u0C8F\u0C90\x07_\x02\x02\u0C90\u0C91\x05\u01B2\xDA\x02" +
+		"\u0C91\u0C92\x07b\x02\x02\u0C92\u0C93\x05\u020E\u0108\x02\u0C93\u0C94" +
+		"\x05 \x11\x02\u0C94\u0C96\x03\x02\x02\x02\u0C95\u0C2F\x03\x02\x02\x02" +
+		"\u0C95\u0C39\x03\x02\x02\x02\u0C95\u0C43\x03\x02\x02\x02\u0C95\u0C50\x03" +
+		"\x02\x02\x02\u0C95\u0C5D\x03\x02\x02\x02\u0C95\u0C6A\x03\x02\x02\x02\u0C95" +
+		"\u0C77\x03\x02\x02\x02\u0C95\u0C7F\x03\x02\x02\x02\u0C95\u0C8A\x03\x02" +
+		"\x02\x02\u0C96\u0213\x03\x02\x02\x02\u0C97\u0C98\b\u010B\x01\x02\u0C98" +
+		"\u0C99\x05\u0216\u010C\x02\u0C99\u0C9A\x07`\x02\x02\u0C9A\u0C9B\x05\u020E" +
+		"\u0108\x02\u0C9B\u0C9C\x07`\x02\x02\u0C9C\u0C9D\x05\u020E\u0108\x02\u0C9D" +
+		"\u0CCB\x03\x02\x02\x02\u0C9E\u0C9F\x05\u0216\u010C\x02\u0C9F\u0CA0\x07" +
+		"`\x02\x02\u0CA0\u0CA1\x07`\x02\x02\u0CA1\u0CA2\x05\u020E\u0108\x02\u0CA2" +
+		"\u0CCB\x03\x02\x02\x02\u0CA3\u0CA4\x07`\x02\x02\u0CA4\u0CA5\x05\u020E" +
+		"\u0108\x02\u0CA5\u0CA6\x07`\x02\x02\u0CA6\u0CA7\x05\u020E\u0108\x02\u0CA7" +
+		"\u0CCB\x03\x02\x02\x02\u0CA8\u0CA9\x07`\x02\x02\u0CA9\u0CAA\x07`\x02\x02" +
+		"\u0CAA\u0CCB\x05\u020E\u0108\x02\u0CAB\u0CCB\x07`\x02\x02\u0CAC\u0CAD" +
+		"\x07`\x02\x02\u0CAD\u0CCB\x05\u020E\u0108\x02\u0CAE\u0CCB\x05\u0216\u010C" +
+		"\x02\u0CAF\u0CB0\x05\u0216\u010C\x02\u0CB0\u0CB1\x07`\x02\x02\u0CB1\u0CCB" +
+		"\x03\x02\x02\x02\u0CB2\u0CB3\x05\u0216\u010C\x02\u0CB3\u0CB4\x07`\x02" +
+		"\x02\u0CB4\u0CB5\x05\u020E\u0108\x02\u0CB5\u0CCB\x03\x02\x02\x02\u0CB6" +
+		"\u0CB7\x05\xE8u\x02\u0CB7\u0CB8\x07]\x02\x02\u0CB8\u0CB9\x07`\x02\x02" +
+		"\u0CB9\u0CCB\x03\x02\x02\x02\u0CBA\u0CBB\x05\xE8u\x02\u0CBB\u0CBC\x07" +
+		"]\x02\x02\u0CBC\u0CBD\x07`\x02\x02\u0CBD\u0CBE\x05\u020E\u0108\x02\u0CBE" +
+		"\u0CCB\x03\x02\x02\x02\u0CBF\u0CC0\x05\xE8u\x02\u0CC0\u0CC1\x07]\x02\x02" +
+		"\u0CC1\u0CC2\x05\u0216\u010C\x02\u0CC2\u0CC3\x07`\x02\x02\u0CC3\u0CCB" +
+		"\x03\x02\x02\x02\u0CC4\u0CC5\x05\xE8u\x02\u0CC5\u0CC6\x07]\x02\x02\u0CC6" +
+		"\u0CC7\x05\u0216\u010C\x02\u0CC7\u0CC8\x07`\x02\x02\u0CC8\u0CC9\x05\u020E" +
+		"\u0108\x02\u0CC9\u0CCB\x03\x02\x02\x02\u0CCA\u0C97\x03\x02\x02\x02\u0CCA" +
+		"\u0C9E\x03\x02\x02\x02\u0CCA\u0CA3\x03\x02\x02\x02\u0CCA\u0CA8\x03\x02" +
+		"\x02\x02\u0CCA\u0CAB\x03\x02\x02\x02\u0CCA\u0CAC\x03\x02\x02\x02\u0CCA" +
+		"\u0CAE\x03\x02\x02\x02\u0CCA\u0CAF\x03\x02\x02\x02\u0CCA\u0CB2\x03\x02" +
+		"\x02\x02\u0CCA\u0CB6\x03\x02\x02\x02\u0CCA\u0CBA\x03\x02\x02\x02\u0CCA" +
+		"\u0CBF\x03\x02\x02\x02\u0CCA\u0CC4\x03\x02\x02\x02\u0CCB\u0CD1\x03\x02" +
+		"\x02\x02\u0CCC\u0CCD\f\x07\x02\x02\u0CCD\u0CCE\x07]\x02\x02\u0CCE\u0CD0" +
+		"\x05\u01B0\xD9\x02\u0CCF\u0CCC\x03\x02\x02\x02\u0CD0\u0CD3\x03\x02\x02" +
+		"\x02\u0CD1\u0CCF\x03\x02\x02\x02\u0CD1\u0CD2\x03\x02\x02\x02\u0CD2\u0215" +
+		"\x03\x02\x02\x02\u0CD3\u0CD1\x03\x02\x02\x02\u0CD4\u0CD5\b\u010C\x01\x02" +
+		"\u0CD5\u0CDA\x05\u0218\u010D\x02\u0CD6\u0CD7\x05\u01F4\xFB\x02\u0CD7\u0CD8" +
+		"\x05\u01EA\xF6\x02\u0CD8\u0CDA\x03\x02\x02\x02\u0CD9\u0CD4\x03\x02\x02" +
+		"\x02\u0CD9\u0CD6\x03\x02\x02\x02\u0CDA\u0CE1\x03\x02\x02\x02\u0CDB\u0CDC" +
+		"\f\x03\x02\x02\u0CDC\u0CDD\x05\u01F2\xFA\x02\u0CDD\u0CDE\x05\u01EA\xF6" +
+		"\x02\u0CDE\u0CE0\x03\x02\x02\x02\u0CDF\u0CDB\x03\x02\x02\x02\u0CE0\u0CE3" +
+		"\x03\x02\x02\x02\u0CE1\u0CDF\x03\x02\x02\x02\u0CE1\u0CE2\x03\x02\x02\x02" +
+		"\u0CE2\u0217\x03\x02\x02\x02\u0CE3\u0CE1\x03\x02\x02\x02\u0CE4\u0CE5\b" +
+		"\u010D\x01\x02\u0CE5\u0CE6\x05\u021A\u010E\x02\u0CE6\u0CED\x03\x02\x02" +
+		"\x02\u0CE7\u0CE8\f\x03\x02\x02\u0CE8\u0CE9\x05\u01F0\xF9\x02\u0CE9\u0CEA" +
+		"\x05\u01E8\xF5\x02\u0CEA\u0CEC\x03\x02\x02\x02\u0CEB\u0CE7\x03\x02\x02" +
+		"\x02\u0CEC\u0CEF\x03\x02\x02\x02\u0CED\u0CEB\x03\x02\x02\x02\u0CED\u0CEE" +
+		"\x03\x02\x02\x02\u0CEE\u0219\x03\x02\x02\x02\u0CEF\u0CED\x03\x02\x02\x02" +
+		"\u0CF0\u0CF6\x05\u021C\u010F\x02\u0CF1\u0CF2\x05\u021C\u010F\x02\u0CF2" +
+		"\u0CF3\x05\u01EE\xF8\x02\u0CF3\u0CF4\x05\u01E8\xF5\x02\u0CF4\u0CF6\x03" +
+		"\x02\x02\x02\u0CF5\u0CF0\x03\x02\x02\x02\u0CF5\u0CF1\x03\x02\x02\x02\u0CF6" +
+		"\u021B\x03\x02\x02\x02\u0CF7\u0D01\x05\"\x12\x02\u0CF8\u0D01\x05\u010C" +
+		"\x87\x02\u0CF9\u0D01\x05@!\x02\u0CFA\u0D01\x05\u01AC\xD7\x02\u0CFB\u0D01" +
+		"\x05\xBA^\x02\u0CFC\u0CFD\x07^\x02\x02\u0CFD\u0CFE\x05\u020E\u0108\x02" +
+		"\u0CFE\u0CFF\x07_\x02\x02\u0CFF\u0D01\x03\x02\x02\x02\u0D00\u0CF7\x03" +
+		"\x02\x02\x02\u0D00\u0CF8\x03\x02\x02\x02\u0D00\u0CF9\x03\x02\x02\x02\u0D00" +
+		"\u0CFA\x03\x02\x02\x02\u0D00\u0CFB\x03\x02\x02\x02\u0D00\u0CFC\x03\x02" +
+		"\x02\x02\u0D01\u021D\x03\x02\x02\x02\u0D02\u0D03\x05\u0220\u0111\x02\u0D03" +
+		"\u0D04\x05 \x11\x02\u0D04\u021F\x03\x02\x02\x02\u0D05\u0D07\x05$\x13\x02" +
+		"\u0D06\u0D05\x03\x02\x02\x02\u0D06\u0D07\x03\x02\x02\x02\u0D07\u0D08\x03" +
+		"\x02\x02\x02\u0D08\u0D09\x05@!\x02\u0D09\u0D0A\x07a\x02\x02\u0D0A\u0D0B" +
+		"\x05\u0222\u0112\x02\u0D0B\u0D4F\x03\x02\x02\x02\u0D0C\u0D0E\x05$\x13" +
+		"\x02\u0D0D\u0D0C\x03\x02\x02\x02\u0D0D\u0D0E\x03\x02\x02\x02\u0D0E\u0D0F" +
+		"\x03\x02\x02\x02\u0D0F\u0D10\x05@!\x02\u0D10\u0D11\t\x06\x02\x02\u0D11" +
+		"\u0D12\x05@!\x02\u0D12\u0D13\x07a\x02\x02\u0D13\u0D14\x05\u0222\u0112" +
+		"\x02\u0D14\u0D4F\x03\x02\x02\x02\u0D15\u0D17\x05$\x13\x02\u0D16\u0D15" +
+		"\x03\x02\x02\x02\u0D16\u0D17\x03\x02\x02\x02\u0D17\u0D18\x03\x02\x02\x02" +
+		"\u0D18\u0D19\x05@!\x02\u0D19\u0D1A\t\x06\x02\x02\u0D1A\u0D1B\x05\u01AC" +
+		"\xD7\x02\u0D1B\u0D1C\x07a\x02\x02\u0D1C\u0D1D\x05\u0222\u0112\x02\u0D1D" +
+		"\u0D4F\x03\x02\x02\x02\u0D1E\u0D20\x05$\x13\x02\u0D1F\u0D1E\x03\x02\x02" +
+		"\x02\u0D1F\u0D20\x03\x02\x02\x02\u0D20\u0D21\x03\x02\x02\x02\u0D21\u0D22" +
+		"\x05@!\x02\u0D22\u0D23\x07^\x02\x02\u0D23\u0D24\x05\u0214\u010B\x02\u0D24" +
+		"\u0D25\x07_\x02\x02\u0D25\u0D26\t\x06\x02\x02\u0D26\u0D27\x05@!\x02\u0D27" +
+		"\u0D28\x07a\x02\x02\u0D28\u0D29\x05\u0222\u0112\x02\u0D29\u0D4F\x03\x02" +
+		"\x02\x02\u0D2A\u0D2C\x05$\x13\x02\u0D2B\u0D2A\x03\x02\x02\x02\u0D2B\u0D2C" +
+		"\x03\x02\x02\x02\u0D2C\u0D2D\x03\x02\x02\x02\u0D2D\u0D2E\x05@!\x02\u0D2E" +
+		"\u0D2F\x07^\x02\x02\u0D2F\u0D30\x05\u0214\u010B\x02\u0D30\u0D31\x07_\x02" +
+		"\x02\u0D31\u0D32\t\x06\x02\x02\u0D32\u0D33\x05\u01AC\xD7\x02\u0D33\u0D34" +
+		"\x07a\x02\x02\u0D34\u0D35\x05\u0222\u0112\x02\u0D35\u0D4F\x03\x02\x02" +
+		"\x02\u0D36\u0D38\x05$\x13\x02\u0D37\u0D36\x03\x02\x02\x02\u0D37\u0D38" +
+		"\x03\x02\x02\x02\u0D38\u0D39\x03\x02\x02\x02\u0D39\u0D3A\x05@!\x02\u0D3A" +
+		"\u0D3B\x07^\x02\x02\u0D3B\u0D3C\x05\xE8u\x02\u0D3C\u0D3D\x07_\x02\x02" +
+		"\u0D3D\u0D3E\t\x06\x02\x02\u0D3E\u0D3F\x05@!\x02\u0D3F\u0D40\x07a\x02" +
+		"\x02\u0D40\u0D41\x05\u0222\u0112\x02\u0D41\u0D4F\x03\x02\x02\x02\u0D42" +
+		"\u0D44\x05$\x13\x02\u0D43\u0D42\x03\x02\x02\x02\u0D43\u0D44\x03\x02\x02" +
+		"\x02\u0D44\u0D45\x03\x02\x02\x02\u0D45\u0D46\x05@!\x02\u0D46\u0D47\x07" +
+		"^\x02\x02\u0D47\u0D48\x05\xE8u\x02\u0D48\u0D49\x07_\x02\x02\u0D49\u0D4A" +
+		"\t\x06\x02\x02\u0D4A\u0D4B\x05\u01AC\xD7\x02\u0D4B\u0D4C\x07a\x02\x02" +
+		"\u0D4C\u0D4D\x05\u0222\u0112\x02\u0D4D\u0D4F\x03\x02\x02\x02\u0D4E\u0D06" +
+		"\x03\x02\x02\x02\u0D4E\u0D0D\x03\x02\x02\x02\u0D4E\u0D16\x03\x02\x02\x02" +
+		"\u0D4E\u0D1F\x03\x02\x02\x02\u0D4E\u0D2B\x03\x02\x02\x02\u0D4E\u0D37\x03" +
+		"\x02\x02\x02\u0D4E\u0D43\x03\x02\x02\x02\u0D4F\u0221\x03\x02\x02\x02\u0D50" +
+		"\u0D51\x05\u020E\u0108\x02\u0D51\u0223\x03\x02\x02\x02\u0D52\u0D54\x05" +
+		"$\x13\x02\u0D53\u0D52\x03\x02\x02\x02\u0D53\u0D54\x03\x02\x02\x02\u0D54" +
+		"\u0D55\x03\x02\x02\x02\u0D55\u0D56\x072\x02\x02\u0D56\u0D57\x07^\x02\x02" +
+		"\u0D57\u0D58\x05\u022A\u0116\x02\u0D58\u0D59\x07_\x02\x02\u0D59\u0D5A" +
+		"\x05\u0212\u010A\x02\u0D5A\u0225\x03\x02\x02\x02\u0D5B\u0D5F\x05\u0228" +
+		"\u0115\x02\u0D5C\u0D5E\x05\u0212\u010A\x02\u0D5D\u0D5C\x03\x02\x02\x02" +
+		"\u0D5E\u0D61\x03\x02\x02\x02\u0D5F\u0D5D\x03\x02\x02\x02\u0D5F\u0D60\x03" +
+		"\x02\x02\x02\u0D60\u0D69\x03\x02\x02\x02\u0D61\u0D5F\x03\x02\x02\x02\u0D62" +
+		"\u0D66\x05\u022C\u0117\x02\u0D63\u0D65\x05\u0212\u010A\x02\u0D64\u0D63" +
+		"\x03\x02\x02\x02\u0D65\u0D68\x03\x02\x02\x02\u0D66\u0D64\x03\x02\x02\x02" +
+		"\u0D66\u0D67\x03\x02\x02\x02\u0D67\u0D6A\x03\x02\x02\x02\u0D68\u0D66\x03" +
+		"\x02\x02\x02\u0D69\u0D62\x03\x02\x02\x02\u0D69\u0D6A\x03\x02\x02\x02\u0D6A" +
+		"\u0D6B\x03\x02\x02\x02\u0D6B\u0D6C\x05\u022E\u0118\x02\u0D6C\u0227\x03" +
+		"\x02\x02\x02\u0D6D\u0D6F\x05$\x13\x02\u0D6E\u0D6D\x03\x02\x02\x02\u0D6E" +
+		"\u0D6F\x03\x02\x02\x02\u0D6F\u0D70\x03\x02\x02\x02\u0D70\u0D71\x072\x02" +
+		"\x02\u0D71\u0D72\x07^\x02\x02\u0D72\u0D73\x05\u022A\u0116\x02\u0D73\u0D74" +
+		"\x07_\x02\x02\u0D74\u0D75\x05 \x11\x02\u0D75\u0229\x03\x02\x02\x02\u0D76" +
+		"\u0D77\x05\u020E\u0108\x02\u0D77\u022B\x03\x02\x02\x02\u0D78\u0D7A\x05" +
+		"$\x13\x02\u0D79\u0D78\x03\x02\x02\x02\u0D79\u0D7A\x03\x02\x02\x02\u0D7A" +
+		"\u0D7B\x03\x02\x02\x02\u0D7B\u0D7C\x073\x02\x02\u0D7C\u0D7D\x05 \x11\x02" +
+		"\u0D7D\u022D\x03\x02\x02\x02\u0D7E\u0D80\x05$\x13\x02\u0D7F\u0D7E\x03" +
+		"\x02\x02\x02\u0D7F\u0D80\x03\x02\x02\x02\u0D80\u0D81\x03\x02\x02\x02\u0D81" +
+		"\u0D82\x07\x13\x02\x02\u0D82\u0D83\x072\x02\x02\u0D83\u0D84\x05 \x11\x02" +
+		"\u0D84\u022F\x03\x02\x02\x02\u0D85\u0D89\x05\u0232\u011A\x02\u0D86\u0D88" +
+		"\x05\x12\n\x02\u0D87\u0D86\x03\x02\x02\x02\u0D88\u0D8B\x03\x02\x02\x02" +
+		"\u0D89\u0D87\x03\x02\x02\x02\u0D89\u0D8A\x03\x02\x02\x02\u0D8A\u0D95\x03" +
+		"\x02\x02\x02\u0D8B\u0D89\x03\x02\x02\x02\u0D8C\u0D90\x05\u0234\u011B\x02" +
+		"\u0D8D\u0D8F\x05\x12\n\x02\u0D8E\u0D8D\x03\x02\x02\x02\u0D8F\u0D92\x03" +
+		"\x02\x02\x02\u0D90\u0D8E\x03\x02\x02\x02\u0D90\u0D91\x03\x02\x02\x02\u0D91" +
+		"\u0D94\x03\x02\x02\x02\u0D92\u0D90\x03\x02\x02\x02\u0D93\u0D8C\x03\x02" +
+		"\x02\x02\u0D94\u0D97\x03\x02\x02\x02\u0D95\u0D93\x03\x02\x02\x02\u0D95" +
+		"\u0D96\x03\x02\x02\x02\u0D96\u0D9F\x03\x02\x02\x02\u0D97\u0D95\x03\x02" +
+		"\x02\x02\u0D98\u0D9C\x05\u0236\u011C\x02\u0D99\u0D9B\x05\x12\n\x02\u0D9A" +
+		"\u0D99\x03\x02\x02\x02\u0D9B\u0D9E\x03\x02\x02\x02\u0D9C\u0D9A\x03\x02" +
+		"\x02\x02\u0D9C\u0D9D\x03\x02\x02\x02\u0D9D\u0DA0\x03\x02\x02\x02\u0D9E" +
+		"\u0D9C\x03\x02\x02\x02\u0D9F\u0D98\x03\x02\x02\x02\u0D9F\u0DA0\x03\x02" +
+		"\x02\x02\u0DA0\u0DA1\x03\x02\x02\x02\u0DA1\u0DA2\x05\u0238\u011D\x02\u0DA2" +
+		"\u0231\x03\x02\x02\x02\u0DA3\u0DA5\x05$\x13\x02\u0DA4\u0DA3\x03\x02\x02" +
+		"\x02\u0DA4\u0DA5\x03\x02\x02\x02\u0DA5\u0DA9\x03\x02\x02\x02\u0DA6\u0DA7" +
+		"\x05v<\x02\u0DA7\u0DA8\x07`\x02\x02\u0DA8\u0DAA\x03\x02\x02\x02\u0DA9" +
+		"\u0DA6\x03\x02\x02\x02\u0DA9\u0DAA\x03\x02\x02\x02\u0DAA\u0DAB\x03\x02" +
+		"\x02\x02\u0DAB\u0DAC\x078\x02\x02\u0DAC\u0DAD\x07^\x02\x02\u0DAD\u0DAE" +
+		"\x05\u023C\u011F\x02\u0DAE\u0DAF\x07_\x02\x02\u0DAF\u0DB0\x079\x02\x02" +
+		"\u0DB0\u0DB1\x05 \x11\x02\u0DB1\u0233\x03\x02\x02\x02\u0DB2\u0DB4\x05" +
+		"$\x13\x02\u0DB3\u0DB2\x03\x02\x02\x02\u0DB3\u0DB4\x03\x02\x02\x02\u0DB4" +
+		"\u0DB8\x03\x02\x02\x02\u0DB5\u0DB6\x07:\x02\x02\u0DB6\u0DB9\x078\x02\x02" +
+		"\u0DB7\u0DB9\x07<\x02\x02\u0DB8\u0DB5\x03\x02\x02\x02\u0DB8\u0DB7\x03" +
+		"\x02\x02\x02\u0DB9\u0DBA\x03\x02\x02\x02\u0DBA\u0DBB\x07^\x02\x02\u0DBB" +
+		"\u0DBC\x05\u023C\u011F\x02\u0DBC\u0DBD\x07_\x02\x02\u0DBD\u0DBF\x079\x02" +
+		"\x02\u0DBE\u0DC0\x05v<\x02\u0DBF\u0DBE\x03\x02\x02\x02\u0DBF\u0DC0\x03" +
+		"\x02\x02\x02\u0DC0\u0DC1\x03\x02\x02\x02\u0DC1\u0DC2\x05 \x11\x02\u0DC2" +
+		"\u0235\x03\x02\x02\x02\u0DC3\u0DC5\x05$\x13\x02\u0DC4\u0DC3\x03\x02\x02" +
+		"\x02\u0DC4\u0DC5\x03\x02\x02\x02\u0DC5\u0DC6\x03\x02\x02\x02\u0DC6\u0DC8" +
+		"\x07:\x02\x02\u0DC7\u0DC9\x05v<\x02\u0DC8\u0DC7\x03\x02\x02\x02\u0DC8" +
+		"\u0DC9\x03\x02\x02\x02\u0DC9\u0DCA\x03\x02\x02\x02\u0DCA\u0DCB\x05 \x11" +
+		"\x02\u0DCB\u0237\x03\x02\x02\x02\u0DCC\u0DCE\x05$\x13\x02\u0DCD\u0DCC" +
+		"\x03\x02\x02\x02\u0DCD\u0DCE\x03\x02\x02\x02\u0DCE\u0DD2\x03\x02\x02\x02" +
+		"\u0DCF\u0DD0\x07\x13\x02\x02\u0DD0\u0DD3\x078\x02\x02\u0DD1\u0DD3\x07" +
+		";\x02\x02\u0DD2\u0DCF\x03\x02\x02\x02\u0DD2\u0DD1\x03\x02\x02\x02\u0DD3" +
+		"\u0DD5\x03\x02\x02\x02\u0DD4\u0DD6\x05v<\x02\u0DD5\u0DD4\x03\x02\x02\x02" +
+		"\u0DD5\u0DD6\x03\x02\x02\x02\u0DD6\u0DD7\x03\x02\x02\x02\u0DD7\u0DD8\x05" +
+		" \x11\x02\u0DD8\u0239\x03\x02\x02\x02\u0DD9\u0DDB\x05$\x13\x02\u0DDA\u0DD9" +
+		"\x03\x02\x02\x02\u0DDA\u0DDB\x03\x02\x02\x02\u0DDB\u0DDC\x03\x02\x02\x02" +
+		"\u0DDC\u0DDD\x078\x02\x02\u0DDD\u0DDE\x07^\x02\x02\u0DDE\u0DDF\x05\u023C" +
+		"\u011F\x02\u0DDF\u0DE0\x07_\x02\x02\u0DE0\u0DE1\x05\x1C\x0F\x02\u0DE1" +
+		"\u023B\x03\x02\x02\x02\u0DE2\u0DE3\x05\u020E\u0108\x02\u0DE3\u023D\x03" +
+		"\x02\x02\x02\u0DE4\u0DE6\x05$\x13\x02\u0DE5\u0DE4\x03\x02\x02\x02\u0DE5" +
+		"\u0DE6\x03\x02\x02\x02\u0DE6\u0DE7\x03\x02\x02\x02\u0DE7\u0DE8\x05@!\x02" +
+		"\u0DE8\u0DEC\x07`\x02\x02\u0DE9\u0DEA\x074\x02\x02\u0DEA\u0DED\x075\x02" +
+		"\x02\u0DEB\u0DED\x076\x02\x02\u0DEC\u0DE9\x03\x02\x02\x02\u0DEC\u0DEB" +
+		"\x03\x02\x02\x02\u0DED\u0DEE\x03\x02\x02\x02\u0DEE\u0DEF\x07^\x02\x02" +
+		"\u0DEF\u0DF0\x05\u020E\u0108\x02\u0DF0\u0DF1\x07_\x02\x02\u0DF1\u0DF2" +
 		"\x05 \x11\x02\u0DF2\u0DF3\x05\u0240\u0121\x02\u0DF3\u0E03\x03\x02\x02" +
 		"\x02\u0DF4\u0DF6\x05$\x13\x02\u0DF5\u0DF4\x03\x02\x02\x02\u0DF5\u0DF6" +
 		"\x03\x02\x02\x02\u0DF6\u0DFA\x03\x02\x02\x02\u0DF7\u0DF8\x074\x02\x02" +
@@ -24404,179 +24405,178 @@ export class FortranParser extends Parser {
 		"\u0EFE\x03\x02\x02\x02\u0F01\u0F02\x07_\x02\x02\u0F02\u0F03\x05 \x11\x02" +
 		"\u0F03\u0F05\x03\x02\x02\x02\u0F04\u0EEA\x03\x02\x02\x02\u0F04\u0EF1\x03" +
 		"\x02\x02\x02\u0F05\u026B\x03\x02\x02\x02\u0F06\u0F08\x05$\x13\x02\u0F07" +
-		"\u0F06\x03\x02\x02\x02\u0F07\u0F08\x03\x02\x02\x02\u0F08\u0F09\x03\x02" +
-		"\x02\x02\u0F09\u0F0A";
+		"\u0F06\x03\x02\x02\x02\u0F07\u0F08\x03\x02\x02\x02\u0F08\u0F09\x03\x02";
 	private static readonly _serializedATNSegment7: string =
-		"\x078\x02\x02\u0F0A\u0F0B\x07^\x02\x02\u0F0B\u0F0C\x05\u026E\u0138\x02" +
-		"\u0F0C\u0F0D\x07_\x02\x02\u0F0D\u0F0E\x05\u0264\u0133\x02\u0F0E\u0F0F" +
-		"\x07]\x02\x02\u0F0F\u0F10\x05\u0264\u0133\x02\u0F10\u0F11\x07]\x02\x02" +
-		"\u0F11\u0F12\x05\u0264\u0133\x02\u0F12\u0F13\x05 \x11\x02\u0F13\u026D" +
-		"\x03\x02\x02\x02\u0F14\u0F15\x05\u020E\u0108\x02\u0F15\u026F\x03\x02\x02" +
-		"\x02\u0F16\u0F18\x05$\x13\x02\u0F17\u0F16\x03\x02\x02\x02\u0F17\u0F18" +
-		"\x03\x02\x02\x02\u0F18\u0F19\x03\x02\x02\x02\u0F19\u0F1A\x07A\x02\x02" +
-		"\u0F1A\u0F1B\x05 \x11\x02\u0F1B\u0271\x03\x02\x02\x02\u0F1C\u0F1E\x05" +
-		"$\x13\x02\u0F1D\u0F1C\x03\x02\x02\x02\u0F1D\u0F1E\x03\x02\x02\x02\u0F1E" +
-		"\u0F1F\x03\x02\x02\x02\u0F1F\u0F22\x07B\x02\x02\u0F20\u0F23\x05\"\x12" +
-		"\x02\u0F21\u0F23\x07\xBB\x02\x02\u0F22\u0F20\x03\x02\x02\x02\u0F22\u0F21" +
-		"\x03\x02\x02\x02\u0F22\u0F23\x03\x02\x02\x02\u0F23\u0F24\x03\x02\x02\x02" +
-		"\u0F24\u0F25\x05 \x11\x02\u0F25\u0273\x03\x02\x02\x02\u0F26\u0F28\x05" +
-		"$\x13\x02\u0F27\u0F26\x03\x02\x02\x02\u0F27\u0F28\x03\x02\x02\x02\u0F28" +
-		"\u0F29\x03\x02\x02\x02\u0F29\u0F2C\x07D\x02\x02\u0F2A\u0F2D\x05\"\x12" +
-		"\x02\u0F2B\u0F2D\x07\xBB\x02\x02\u0F2C\u0F2A\x03\x02\x02\x02\u0F2C\u0F2B" +
-		"\x03\x02\x02\x02\u0F2C\u0F2D\x03\x02\x02\x02\u0F2D\u0F2E\x03\x02\x02\x02" +
-		"\u0F2E\u0F2F\x05 \x11\x02\u0F2F\u0275\x03\x02\x02\x02\u0F30\u0F33\x05" +
-		"\u01D4\xEB\x02\u0F31\u0F33\x07f\x02\x02\u0F32\u0F30\x03\x02\x02\x02\u0F32" +
-		"\u0F31\x03\x02\x02\x02\u0F33\u0277\x03\x02\x02\x02\u0F34\u0F36\x05$\x13" +
-		"\x02\u0F35\u0F34\x03\x02\x02\x02\u0F35\u0F36\x03\x02\x02\x02\u0F36\u0F37" +
-		"\x03\x02\x02\x02\u0F37\u0F38\x07I\x02\x02\u0F38\u0F39\x07^\x02\x02\u0F39" +
-		"\u0F3A\x05\u027A\u013E\x02\u0F3A\u0F3B\x07_\x02\x02\u0F3B\u0F3C\x05 \x11" +
-		"\x02\u0F3C\u0279\x03\x02\x02\x02\u0F3D\u0F42\x05\u027C\u013F\x02\u0F3E" +
-		"\u0F3F\x07]\x02\x02\u0F3F\u0F41\x05\u027C\u013F\x02\u0F40\u0F3E\x03\x02" +
-		"\x02\x02\u0F41\u0F44\x03\x02\x02\x02\u0F42\u0F40\x03\x02\x02\x02\u0F42" +
-		"\u0F43\x03\x02\x02\x02\u0F43\u027B\x03\x02\x02\x02\u0F44\u0F42\x03\x02" +
-		"\x02\x02\u0F45\u0FA6\x05\u0276\u013C\x02\u0F46\u0F47\x07\x8B\x02\x02\u0F47" +
-		"\u0F48\x07b\x02\x02\u0F48\u0FA6\x05\u0276\u013C\x02\u0F49\u0F4A\x07\x8D" +
-		"\x02\x02\u0F4A\u0F4B\x07b\x02\x02\u0F4B\u0FA6\x05\u01A6\xD4\x02\u0F4C" +
-		"\u0F4D\x07\x8C\x02\x02\u0F4D\u0F4E\x07b\x02\x02\u0F4E\u0FA6\x05\u0264" +
-		"\u0133\x02\u0F4F\u0F50\x07\x93\x02\x02\u0F50\u0F51\x07b\x02\x02\u0F51" +
-		"\u0FA6\x05\u01DC\xEF\x02\u0F52\u0F53\x07\xA2\x02\x02\u0F53\u0F54\x07b" +
-		"\x02\x02\u0F54\u0FA6\x05\u01DC\xEF\x02\u0F55\u0F56\x07\x94\x02\x02\u0F56" +
-		"\u0F57\x07b\x02\x02\u0F57\u0FA6\x05\u01DC\xEF\x02\u0F58\u0F59\x07\t\x02" +
-		"\x02\u0F59\u0F5A\x07b\x02\x02\u0F5A\u0FA6\x05\u01DC\xEF\x02\u0F5B\u0F5C" +
-		"\x07\x95\x02\x02\u0F5C\u0F5D\x07b\x02\x02\u0F5D\u0FA6\x05\u01DC\xEF\x02" +
-		"\u0F5E\u0F5F\x07\x9A\x02\x02\u0F5F\u0F60\x07b\x02\x02\u0F60\u0FA6\x05" +
-		"\u01DC\xEF\x02\u0F61\u0F62\x07\x9B\x02\x02\u0F62\u0F63\x07b\x02\x02\u0F63" +
-		"\u0FA6\x05\u020E\u0108\x02\u0F64\u0F65\x07\x9C\x02\x02\u0F65\u0F66\x07" +
-		"b\x02\x02\u0F66\u0FA6\x05\u020E\u0108\x02\u0F67\u0F68\x07\x9D\x02\x02" +
-		"\u0F68\u0F69\x07b\x02\x02\u0F69\u0FA6\x05\u01DC\xEF\x02\u0F6A\u0F6B\x07" +
-		"\x96\x02\x02\u0F6B\u0F6C\x07b\x02\x02\u0F6C\u0FA6\x05\u01DC\xEF\x02\u0F6D" +
-		"\u0F6E\x07\x97\x02\x02\u0F6E\u0F6F\x07b\x02\x02\u0F6F\u0FA6\x05\u01DC" +
-		"\xEF\x02\u0F70\u0F71\x07\x98\x02\x02\u0F71\u0F72\x07b\x02\x02\u0F72\u0FA6" +
-		"\x05\u01DC\xEF\x02\u0F73\u0F74\x07\x99\x02\x02\u0F74\u0F75\x07b\x02\x02" +
-		"\u0F75\u0FA6\x05\u01DC\xEF\x02\u0F76\u0F77\x07\xA8\x02\x02\u0F77\u0F78" +
-		"\x07b\x02\x02\u0F78\u0FA6\x05\u01A6\xD4\x02\u0F79\u0F7A\x07\xA9\x02\x02" +
-		"\u0F7A\u0F7B\x07b\x02\x02\u0F7B\u0FA6\x05\u020E\u0108\x02\u0F7C\u0F7D" +
-		"\x07\xAA\x02\x02\u0F7D\u0F7E\x07b\x02\x02\u0F7E\u0FA6\x05\u020E\u0108" +
-		"\x02\u0F7F\u0F80\x07\xAB\x02\x02\u0F80\u0F81\x07b\x02\x02\u0F81\u0FA6" +
-		"\x05\u01DC\xEF\x02\u0F82\u0F83\x07\xAC\x02\x02\u0F83\u0F84\x07b\x02\x02" +
-		"\u0F84\u0FA6\x05\u01DC\xEF\x02\u0F85\u0F86\x07\xAD\x02\x02\u0F86\u0F87" +
-		"\x07b\x02\x02\u0F87\u0FA6\x05\u01DC\xEF\x02\u0F88\u0F89\x07\xAE\x02\x02" +
-		"\u0F89\u0F8A\x07b\x02\x02\u0F8A\u0FA6\x05\u01DC\xEF\x02\u0F8B\u0F8C\x07" +
-		"\xAF\x02\x02\u0F8C\u0F8D\x07b\x02\x02\u0F8D\u0FA6\x05\u01DC\xEF\x02\u0F8E" +
-		"\u0F8F\x07\xB0\x02\x02\u0F8F\u0F90\x07b\x02\x02\u0F90\u0FA6\x05\u01DC" +
-		"\xEF\x02\u0F91\u0F92\x07\xB1\x02\x02\u0F92\u0F93\x07b\x02\x02\u0F93\u0FA6" +
-		"\x05\u020E\u0108\x02\u0F94\u0F95\x07\xB2\x02\x02\u0F95\u0F96\x07b\x02" +
-		"\x02\u0F96\u0FA6\x05\u020E\u0108\x02\u0F97\u0F98\x07\xB3\x02\x02\u0F98" +
-		"\u0F99\x07b\x02\x02\u0F99\u0FA6\x05\u020E\u0108\x02\u0F9A\u0F9B\x07\xB5" +
-		"\x02\x02\u0F9B\u0F9C\x07b\x02\x02\u0F9C\u0FA6\x05\u020E\u0108\x02\u0F9D" +
-		"\u0FA6\x07\xB6\x02\x02\u0F9E\u0F9F\x07\xB7\x02\x02\u0F9F\u0FA0\x07b\x02" +
-		"\x02\u0FA0\u0FA6\x05\u01DC\xEF\x02\u0FA1\u0FA2\x07\xB8\x02\x02\u0FA2\u0FA3" +
-		"\x07b\x02\x02\u0FA3\u0FA6\x05\u01DC\xEF\x02\u0FA4\u0FA6\x07\xB9\x02\x02" +
-		"\u0FA5\u0F45\x03\x02\x02\x02\u0FA5\u0F46\x03\x02\x02\x02\u0FA5\u0F49\x03" +
-		"\x02\x02\x02\u0FA5\u0F4C\x03\x02\x02\x02\u0FA5\u0F4F\x03\x02\x02\x02\u0FA5" +
-		"\u0F52\x03\x02\x02\x02\u0FA5\u0F55\x03\x02\x02\x02\u0FA5\u0F58\x03\x02" +
-		"\x02\x02\u0FA5\u0F5B\x03\x02\x02\x02\u0FA5\u0F5E\x03\x02\x02\x02\u0FA5" +
-		"\u0F61\x03\x02\x02\x02\u0FA5\u0F64\x03\x02\x02\x02\u0FA5\u0F67\x03\x02" +
-		"\x02\x02\u0FA5\u0F6A\x03\x02\x02\x02\u0FA5\u0F6D\x03\x02\x02\x02\u0FA5" +
-		"\u0F70\x03\x02\x02\x02\u0FA5\u0F73\x03\x02\x02\x02\u0FA5\u0F76\x03\x02" +
-		"\x02\x02\u0FA5\u0F79\x03\x02\x02\x02\u0FA5\u0F7C\x03\x02\x02\x02\u0FA5" +
-		"\u0F7F\x03\x02\x02\x02\u0FA5\u0F82\x03\x02\x02\x02\u0FA5\u0F85\x03\x02" +
-		"\x02\x02\u0FA5\u0F88\x03\x02\x02\x02\u0FA5\u0F8B\x03\x02\x02\x02\u0FA5" +
-		"\u0F8E\x03\x02\x02\x02\u0FA5\u0F91\x03\x02\x02\x02\u0FA5\u0F94\x03\x02" +
-		"\x02\x02\u0FA5\u0F97\x03\x02\x02\x02\u0FA5\u0F9A\x03\x02\x02\x02\u0FA5" +
-		"\u0F9D\x03\x02\x02\x02\u0FA5\u0F9E\x03\x02\x02\x02\u0FA5\u0FA1\x03\x02" +
-		"\x02\x02\u0FA5\u0FA4\x03\x02\x02\x02\u0FA6\u027D\x03\x02\x02\x02\u0FA7" +
-		"\u0FA9\x05$\x13\x02\u0FA8\u0FA7\x03\x02\x02\x02\u0FA8\u0FA9\x03\x02\x02" +
-		"\x02\u0FA9\u0FAA\x03\x02\x02\x02\u0FAA\u0FAB\x07P\x02\x02\u0FAB\u0FAC" +
-		"\x07^\x02\x02\u0FAC\u0FAD\x05\u0280\u0141\x02\u0FAD\u0FAE\x07_\x02\x02" +
-		"\u0FAE\u0FAF\x05 \x11\x02\u0FAF\u027F\x03\x02\x02\x02\u0FB0\u0FB5\x05" +
-		"\u0282\u0142\x02\u0FB1\u0FB2\x07]\x02\x02\u0FB2\u0FB4\x05\u0282\u0142" +
-		"\x02\u0FB3\u0FB1\x03\x02\x02\x02\u0FB4\u0FB7\x03\x02\x02\x02\u0FB5\u0FB3" +
-		"\x03\x02\x02\x02\u0FB5\u0FB6\x03\x02\x02\x02\u0FB6\u0281\x03\x02\x02\x02" +
-		"\u0FB7\u0FB5\x03\x02\x02\x02\u0FB8\u0FCC\x05\u0276\u013C\x02\u0FB9\u0FBA" +
-		"\x07\x8B\x02\x02\u0FBA\u0FBB\x07b\x02\x02\u0FBB\u0FCC\x05\u0276\u013C" +
-		"\x02\u0FBC\u0FBD\x07\x8D\x02\x02\u0FBD\u0FBE\x07b\x02\x02\u0FBE\u0FCC" +
-		"\x05\u01A6\xD4\x02\u0FBF\u0FC0\x07\x8C\x02\x02\u0FC0\u0FC1\x07b\x02\x02" +
-		"\u0FC1\u0FCC\x05\u0264\u0133\x02\u0FC2\u0FC3\x07\x94\x02\x02\u0FC3\u0FC4" +
-		"\x07b\x02\x02\u0FC4\u0FCC\x05\u01DC\xEF\x02\u0FC5\u0FC6\x07\xAF\x02\x02" +
-		"\u0FC6\u0FC7\x07b\x02\x02\u0FC7\u0FCC\x05\u01DC\xEF\x02\u0FC8\u0FC9\x07" +
-		"\xB0\x02\x02\u0FC9\u0FCA\x07b\x02\x02\u0FCA\u0FCC\x05\u01DC\xEF\x02\u0FCB" +
-		"\u0FB8\x03\x02\x02\x02\u0FCB\u0FB9\x03\x02\x02\x02\u0FCB\u0FBC\x03\x02" +
-		"\x02\x02\u0FCB\u0FBF\x03\x02\x02\x02\u0FCB\u0FC2\x03\x02\x02\x02\u0FCB" +
-		"\u0FC5\x03\x02\x02\x02\u0FCB\u0FC8\x03\x02\x02\x02\u0FCC\u0283\x03\x02" +
-		"\x02\x02\u0FCD\u0FCF\x05$\x13\x02\u0FCE\u0FCD\x03\x02\x02\x02\u0FCE\u0FCF" +
-		"\x03\x02\x02\x02\u0FCF\u0FD0\x03\x02\x02\x02\u0FD0\u0FD1\x07G\x02\x02" +
-		"\u0FD1\u0FD3\x05\u028E\u0148\x02\u0FD2\u0FD4\x05\u029C\u014F\x02\u0FD3" +
-		"\u0FD2\x03\x02\x02\x02\u0FD3\u0FD4\x03\x02\x02\x02\u0FD4\u0FD5\x03\x02" +
-		"\x02\x02\u0FD5\u0FD6\x05 \x11\x02\u0FD6\u0FE8\x03\x02\x02\x02\u0FD7\u0FD9" +
-		"\x05$\x13\x02\u0FD8\u0FD7\x03\x02\x02\x02\u0FD8\u0FD9\x03\x02\x02\x02" +
-		"\u0FD9\u0FDA\x03\x02\x02\x02\u0FDA\u0FDB\x07G\x02\x02\u0FDB\u0FDC\x05" +
-		"\u0294\u014B\x02\u0FDC\u0FDD\x05 \x11\x02\u0FDD\u0FE8\x03\x02\x02\x02" +
-		"\u0FDE\u0FE0\x05$\x13\x02\u0FDF\u0FDE\x03\x02\x02\x02\u0FDF\u0FE0\x03" +
-		"\x02\x02\x02\u0FE0\u0FE1\x03\x02\x02\x02\u0FE1\u0FE2\x07G\x02\x02\u0FE2" +
-		"\u0FE3\x05\u0294\u014B\x02\u0FE3\u0FE4\x07]\x02\x02\u0FE4\u0FE5\x05\u029C" +
-		"\u014F\x02\u0FE5\u0FE6\x05 \x11\x02\u0FE6\u0FE8\x03\x02\x02\x02\u0FE7" +
-		"\u0FCE\x03\x02\x02\x02\u0FE7\u0FD8\x03\x02\x02\x02\u0FE7\u0FDF\x03\x02" +
-		"\x02\x02\u0FE8\u0285\x03\x02\x02\x02\u0FE9\u0FEB\x05$\x13\x02\u0FEA\u0FE9" +
-		"\x03\x02\x02\x02\u0FEA\u0FEB\x03\x02\x02\x02\u0FEB\u0FEC\x03\x02\x02\x02" +
-		"\u0FEC\u0FED\t\v\x02\x02\u0FED\u0FEE\x07^\x02\x02\u0FEE\u0FEF\x05\u028C" +
-		"\u0147\x02\u0FEF\u0FF1\x07_\x02\x02\u0FF0\u0FF2\x05\u02A0\u0151\x02\u0FF1" +
-		"\u0FF0\x03\x02\x02\x02\u0FF1\u0FF2\x03\x02\x02\x02\u0FF2\u0FF3\x03\x02" +
-		"\x02\x02\u0FF3\u0FF4\x05 \x11\x02\u0FF4\u0287\x03\x02\x02\x02\u0FF5\u0FF7" +
-		"\x05$\x13\x02\u0FF6\u0FF5\x03\x02\x02\x02\u0FF6\u0FF7\x03\x02\x02\x02" +
-		"\u0FF7\u0FF8\x03\x02\x02\x02\u0FF8\u0FF9\t\f\x02\x02\u0FF9\u0FFC\x05\u0298" +
-		"\u014D\x02\u0FFA\u0FFB\x07]\x02\x02\u0FFB\u0FFD\x05\u02A0\u0151\x02\u0FFC" +
-		"\u0FFA\x03\x02\x02\x02\u0FFC\u0FFD\x03\x02\x02\x02\u0FFD\u0FFE\x03\x02" +
-		"\x02\x02\u0FFE\u0FFF\x05 \x11\x02\u0FFF\u0289\x03\x02\x02\x02\u1000\u1001" +
-		"\x07\x8B\x02\x02\u1001\u1002\x07b\x02\x02\u1002\u101F\x05\u0276\u013C" +
-		"\x02\u1003\u1004\x07\x85\x02\x02\u1004\u1005\x07b\x02\x02\u1005\u101F" +
-		"\x05\u0298\u014D\x02\u1006\u1007\x07\x86\x02\x02\u1007\u1008\x07b\x02" +
-		"\x02\u1008\u101F\x05J&\x02\u1009\u100A\x07\x87\x02\x02\u100A\u100B\x07" +
-		"b\x02\x02\u100B\u101F\x05\u020E\u0108\x02\u100C\u100D\x07\x8D\x02\x02" +
-		"\u100D\u100E\x07b\x02\x02\u100E\u101F\x05\u01A6\xD4\x02\u100F\u1010\x07" +
-		"\x8C\x02\x02\u1010\u1011\x07b\x02\x02\u1011\u101F\x05\u0264\u0133\x02" +
-		"\u1012\u1013\x07\x13\x02\x02\u1013\u1014\x07b\x02\x02\u1014\u101F\x05" +
-		"\u0264\u0133\x02\u1015\u1016\x07\x88\x02\x02\u1016\u1017\x07b\x02\x02" +
-		"\u1017\u101F\x05\u01DC\xEF\x02\u1018\u1019\x07\x89\x02\x02\u1019\u101A" +
-		"\x07b\x02\x02\u101A\u101F\x05\u01A8\xD5\x02\u101B\u101C\x07\x8A\x02\x02" +
-		"\u101C\u101D\x07b\x02\x02\u101D\u101F\x05\u0264\u0133\x02\u101E\u1000" +
-		"\x03\x02\x02\x02\u101E\u1003\x03\x02\x02\x02\u101E\u1006\x03\x02\x02\x02" +
-		"\u101E\u1009\x03\x02\x02\x02\u101E\u100C\x03\x02\x02\x02\u101E\u100F\x03" +
-		"\x02\x02\x02\u101E\u1012\x03\x02\x02\x02\u101E\u1015\x03\x02\x02\x02\u101E" +
-		"\u1018\x03\x02\x02\x02\u101E\u101B\x03\x02\x02\x02\u101F\u028B\x03\x02" +
-		"\x02\x02\u1020\u1021\b\u0147\x01\x02\u1021\u1022\x05\u0276\u013C\x02\u1022" +
-		"\u1024\x07]\x02\x02\u1023\u1025\x05\u0298\u014D\x02\u1024\u1023\x03\x02" +
-		"\x02\x02\u1024\u1025\x03\x02\x02\x02\u1025\u102C\x03\x02\x02\x02\u1026" +
-		"\u1027\x05\u0276\u013C\x02\u1027\u1028\x07]\x02\x02\u1028\u1029\x05\u028A" +
-		"\u0146\x02\u1029\u102C\x03\x02\x02\x02\u102A\u102C\x05\u028A\u0146\x02" +
-		"\u102B\u1020\x03\x02\x02\x02\u102B\u1026\x03\x02\x02\x02\u102B\u102A\x03" +
-		"\x02\x02\x02\u102C\u1032\x03\x02\x02\x02\u102D\u102E\f\x03\x02\x02\u102E" +
-		"\u102F\x07]\x02\x02\u102F\u1031\x05\u028A\u0146\x02\u1030\u102D\x03\x02" +
-		"\x02\x02\u1031\u1034\x03\x02\x02\x02\u1032\u1030\x03\x02\x02\x02\u1032" +
-		"\u1033\x03\x02\x02\x02\u1033\u028D\x03\x02\x02\x02\u1034\u1032\x03\x02" +
-		"\x02\x02\u1035\u103B\x05\u0290\u0149\x02\u1036\u1037\x07^\x02\x02\u1037" +
-		"\u1038\x05\u0292\u014A\x02\u1038\u1039\x07_\x02\x02\u1039\u103B\x03\x02" +
-		"\x02\x02\u103A\u1035\x03\x02\x02\x02\u103A\u1036\x03\x02\x02\x02\u103B" +
-		"\u028F\x03\x02\x02\x02\u103C\u103D\x07^\x02\x02\u103D\u103E\x05\u01D4" +
-		"\xEB\x02\u103E\u103F\x07_\x02\x02\u103F\u1044\x03\x02\x02\x02\u1040\u1041" +
-		"\x07^\x02\x02\u1041\u1042\x07f\x02\x02\u1042\u1044\x07_\x02\x02\u1043" +
-		"\u103C\x03\x02\x02\x02\u1043\u1040\x03\x02\x02\x02\u1044\u0291\x03\x02" +
-		"\x02\x02\u1045\u1046\b\u014A\x01\x02\u1046\u1047\x05\u0276\u013C\x02\u1047" +
-		"\u1048\x07]\x02\x02\u1048\u1049\x05\u028A\u0146\x02\u1049\u1050\x03\x02" +
-		"\x02\x02\u104A\u104B\x05\u0276\u013C\x02\u104B\u104C\x07]\x02\x02\u104C" +
-		"\u104D\x05\u0298\u014D\x02\u104D\u1050\x03\x02\x02\x02\u104E\u1050\x05" +
-		"\u028A\u0146\x02\u104F\u1045\x03\x02\x02\x02\u104F\u104A\x03\x02\x02\x02" +
-		"\u104F\u104E\x03\x02\x02\x02\u1050\u1056\x03\x02\x02\x02\u1051\u1052\f" +
-		"\x03\x02\x02\u1052\u1053\x07]\x02\x02\u1053\u1055\x05\u028A\u0146\x02" +
-		"\u1054\u1051\x03\x02\x02\x02\u1055\u1058\x03\x02\x02\x02\u1056\u1054\x03" +
-		"\x02\x02\x02\u1056\u1057\x03\x02\x02\x02\u1057\u0293\x03\x02\x02\x02\u1058" +
-		"\u1056\x03\x02\x02\x02\u1059\u1065\x05\u0264\u0133\x02\u105A\u1065\x07" +
-		"f\x02\x02\u105B\u1065\x05\u01E0\xF1\x02\u105C\u105D\x05\u01E0\xF1\x02" +
-		"\u105D\u105E\x05\u01F8\xFD\x02\u105E\u105F\x05\u01DE\xF0\x02\u105F\u1065" +
-		"\x03\x02\x02\x02\u1060\u1061\x05\u0296\u014C\x02\u1061\u1062\x05\u01F8" +
-		"\xFD\x02\u1062\u1063\x05\u01DE\xF0\x02\u1063\u1065\x03\x02\x02\x02\u1064" +
-		"\u1059\x03\x02\x02\x02\u1064\u105A\x03\x02\x02\x02\u1064\u105B\x03\x02" +
-		"\x02\x02\u1064\u105C\x03\x02\x02\x02\u1064\u1060\x03\x02\x02\x02\u1065" +
+		"\x02\x02\u0F09\u0F0A\x078\x02\x02\u0F0A\u0F0B\x07^\x02\x02\u0F0B\u0F0C" +
+		"\x05\u026E\u0138\x02\u0F0C\u0F0D\x07_\x02\x02\u0F0D\u0F0E\x05\u0264\u0133" +
+		"\x02\u0F0E\u0F0F\x07]\x02\x02\u0F0F\u0F10\x05\u0264\u0133\x02\u0F10\u0F11" +
+		"\x07]\x02\x02\u0F11\u0F12\x05\u0264\u0133\x02\u0F12\u0F13\x05 \x11\x02" +
+		"\u0F13\u026D\x03\x02\x02\x02\u0F14\u0F15\x05\u020E\u0108\x02\u0F15\u026F" +
+		"\x03\x02\x02\x02\u0F16\u0F18\x05$\x13\x02\u0F17\u0F16\x03\x02\x02\x02" +
+		"\u0F17\u0F18\x03\x02\x02\x02\u0F18\u0F19\x03\x02\x02\x02\u0F19\u0F1A\x07" +
+		"A\x02\x02\u0F1A\u0F1B\x05 \x11\x02\u0F1B\u0271\x03\x02\x02\x02\u0F1C\u0F1E" +
+		"\x05$\x13\x02\u0F1D\u0F1C\x03\x02\x02\x02\u0F1D\u0F1E\x03\x02\x02\x02" +
+		"\u0F1E\u0F1F\x03\x02\x02\x02\u0F1F\u0F22\x07B\x02\x02\u0F20\u0F23\x05" +
+		"\"\x12\x02\u0F21\u0F23\x07\xBB\x02\x02\u0F22\u0F20\x03\x02\x02\x02\u0F22" +
+		"\u0F21\x03\x02\x02\x02\u0F22\u0F23\x03\x02\x02\x02\u0F23\u0F24\x03\x02" +
+		"\x02\x02\u0F24\u0F25\x05 \x11\x02\u0F25\u0273\x03\x02\x02\x02\u0F26\u0F28" +
+		"\x05$\x13\x02\u0F27\u0F26\x03\x02\x02\x02\u0F27\u0F28\x03\x02\x02\x02" +
+		"\u0F28\u0F29\x03\x02\x02\x02\u0F29\u0F2C\x07D\x02\x02\u0F2A\u0F2D\x05" +
+		"\"\x12\x02\u0F2B\u0F2D\x07\xBB\x02\x02\u0F2C\u0F2A\x03\x02\x02\x02\u0F2C" +
+		"\u0F2B\x03\x02\x02\x02\u0F2C\u0F2D\x03\x02\x02\x02\u0F2D\u0F2E\x03\x02" +
+		"\x02\x02\u0F2E\u0F2F\x05 \x11\x02\u0F2F\u0275\x03\x02\x02\x02\u0F30\u0F33" +
+		"\x05\u01D4\xEB\x02\u0F31\u0F33\x07f\x02\x02\u0F32\u0F30\x03\x02\x02\x02" +
+		"\u0F32\u0F31\x03\x02\x02\x02\u0F33\u0277\x03\x02\x02\x02\u0F34\u0F36\x05" +
+		"$\x13\x02\u0F35\u0F34\x03\x02\x02\x02\u0F35\u0F36\x03\x02\x02\x02\u0F36" +
+		"\u0F37\x03\x02\x02\x02\u0F37\u0F38\x07I\x02\x02\u0F38\u0F39\x07^\x02\x02" +
+		"\u0F39\u0F3A\x05\u027A\u013E\x02\u0F3A\u0F3B\x07_\x02\x02\u0F3B\u0F3C" +
+		"\x05 \x11\x02\u0F3C\u0279\x03\x02\x02\x02\u0F3D\u0F42\x05\u027C\u013F" +
+		"\x02\u0F3E\u0F3F\x07]\x02\x02\u0F3F\u0F41\x05\u027C\u013F\x02\u0F40\u0F3E" +
+		"\x03\x02\x02\x02\u0F41\u0F44\x03\x02\x02\x02\u0F42\u0F40\x03\x02\x02\x02" +
+		"\u0F42\u0F43\x03\x02\x02\x02\u0F43\u027B\x03\x02\x02\x02\u0F44\u0F42\x03" +
+		"\x02\x02\x02\u0F45\u0FA6\x05\u0276\u013C\x02\u0F46\u0F47\x07\x8B\x02\x02" +
+		"\u0F47\u0F48\x07b\x02\x02\u0F48\u0FA6\x05\u0276\u013C\x02\u0F49\u0F4A" +
+		"\x07\x8D\x02\x02\u0F4A\u0F4B\x07b\x02\x02\u0F4B\u0FA6\x05\u01A6\xD4\x02" +
+		"\u0F4C\u0F4D\x07\x8C\x02\x02\u0F4D\u0F4E\x07b\x02\x02\u0F4E\u0FA6\x05" +
+		"\u0264\u0133\x02\u0F4F\u0F50\x07\x93\x02\x02\u0F50\u0F51\x07b\x02\x02" +
+		"\u0F51\u0FA6\x05\u01DC\xEF\x02\u0F52\u0F53\x07\xA2\x02\x02\u0F53\u0F54" +
+		"\x07b\x02\x02\u0F54\u0FA6\x05\u01DC\xEF\x02\u0F55\u0F56\x07\x94\x02\x02" +
+		"\u0F56\u0F57\x07b\x02\x02\u0F57\u0FA6\x05\u01DC\xEF\x02\u0F58\u0F59\x07" +
+		"\t\x02\x02\u0F59\u0F5A\x07b\x02\x02\u0F5A\u0FA6\x05\u01DC\xEF\x02\u0F5B" +
+		"\u0F5C\x07\x95\x02\x02\u0F5C\u0F5D\x07b\x02\x02\u0F5D\u0FA6\x05\u01DC" +
+		"\xEF\x02\u0F5E\u0F5F\x07\x9A\x02\x02\u0F5F\u0F60\x07b\x02\x02\u0F60\u0FA6" +
+		"\x05\u01DC\xEF\x02\u0F61\u0F62\x07\x9B\x02\x02\u0F62\u0F63\x07b\x02\x02" +
+		"\u0F63\u0FA6\x05\u020E\u0108\x02\u0F64\u0F65\x07\x9C\x02\x02\u0F65\u0F66" +
+		"\x07b\x02\x02\u0F66\u0FA6\x05\u020E\u0108\x02\u0F67\u0F68\x07\x9D\x02" +
+		"\x02\u0F68\u0F69\x07b\x02\x02\u0F69\u0FA6\x05\u01DC\xEF\x02\u0F6A\u0F6B" +
+		"\x07\x96\x02\x02\u0F6B\u0F6C\x07b\x02\x02\u0F6C\u0FA6\x05\u01DC\xEF\x02" +
+		"\u0F6D\u0F6E\x07\x97\x02\x02\u0F6E\u0F6F\x07b\x02\x02\u0F6F\u0FA6\x05" +
+		"\u01DC\xEF\x02\u0F70\u0F71\x07\x98\x02\x02\u0F71\u0F72\x07b\x02\x02\u0F72" +
+		"\u0FA6\x05\u01DC\xEF\x02\u0F73\u0F74\x07\x99\x02\x02\u0F74\u0F75\x07b" +
+		"\x02\x02\u0F75\u0FA6\x05\u01DC\xEF\x02\u0F76\u0F77\x07\xA8\x02\x02\u0F77" +
+		"\u0F78\x07b\x02\x02\u0F78\u0FA6\x05\u01A6\xD4\x02\u0F79\u0F7A\x07\xA9" +
+		"\x02\x02\u0F7A\u0F7B\x07b\x02\x02\u0F7B\u0FA6\x05\u020E\u0108\x02\u0F7C" +
+		"\u0F7D\x07\xAA\x02\x02\u0F7D\u0F7E\x07b\x02\x02\u0F7E\u0FA6\x05\u020E" +
+		"\u0108\x02\u0F7F\u0F80\x07\xAB\x02\x02\u0F80\u0F81\x07b\x02\x02\u0F81" +
+		"\u0FA6\x05\u01DC\xEF\x02\u0F82\u0F83\x07\xAC\x02\x02\u0F83\u0F84\x07b" +
+		"\x02\x02\u0F84\u0FA6\x05\u01DC\xEF\x02\u0F85\u0F86\x07\xAD\x02\x02\u0F86" +
+		"\u0F87\x07b\x02\x02\u0F87\u0FA6\x05\u01DC\xEF\x02\u0F88\u0F89\x07\xAE" +
+		"\x02\x02\u0F89\u0F8A\x07b\x02\x02\u0F8A\u0FA6\x05\u01DC\xEF\x02\u0F8B" +
+		"\u0F8C\x07\xAF\x02\x02\u0F8C\u0F8D\x07b\x02\x02\u0F8D\u0FA6\x05\u01DC" +
+		"\xEF\x02\u0F8E\u0F8F\x07\xB0\x02\x02\u0F8F\u0F90\x07b\x02\x02\u0F90\u0FA6" +
+		"\x05\u01DC\xEF\x02\u0F91\u0F92\x07\xB1\x02\x02\u0F92\u0F93\x07b\x02\x02" +
+		"\u0F93\u0FA6\x05\u020E\u0108\x02\u0F94\u0F95\x07\xB2\x02\x02\u0F95\u0F96" +
+		"\x07b\x02\x02\u0F96\u0FA6\x05\u020E\u0108\x02\u0F97\u0F98\x07\xB3\x02" +
+		"\x02\u0F98\u0F99\x07b\x02\x02\u0F99\u0FA6\x05\u020E\u0108\x02\u0F9A\u0F9B" +
+		"\x07\xB5\x02\x02\u0F9B\u0F9C\x07b\x02\x02\u0F9C\u0FA6\x05\u020E\u0108" +
+		"\x02\u0F9D\u0FA6\x07\xB6\x02\x02\u0F9E\u0F9F\x07\xB7\x02\x02\u0F9F\u0FA0" +
+		"\x07b\x02\x02\u0FA0\u0FA6\x05\u01DC\xEF\x02\u0FA1\u0FA2\x07\xB8\x02\x02" +
+		"\u0FA2\u0FA3\x07b\x02\x02\u0FA3\u0FA6\x05\u01DC\xEF\x02\u0FA4\u0FA6\x07" +
+		"\xB9\x02\x02\u0FA5\u0F45\x03\x02\x02\x02\u0FA5\u0F46\x03\x02\x02\x02\u0FA5" +
+		"\u0F49\x03\x02\x02\x02\u0FA5\u0F4C\x03\x02\x02\x02\u0FA5\u0F4F\x03\x02" +
+		"\x02\x02\u0FA5\u0F52\x03\x02\x02\x02\u0FA5\u0F55\x03\x02\x02\x02\u0FA5" +
+		"\u0F58\x03\x02\x02\x02\u0FA5\u0F5B\x03\x02\x02\x02\u0FA5\u0F5E\x03\x02" +
+		"\x02\x02\u0FA5\u0F61\x03\x02\x02\x02\u0FA5\u0F64\x03\x02\x02\x02\u0FA5" +
+		"\u0F67\x03\x02\x02\x02\u0FA5\u0F6A\x03\x02\x02\x02\u0FA5\u0F6D\x03\x02" +
+		"\x02\x02\u0FA5\u0F70\x03\x02\x02\x02\u0FA5\u0F73\x03\x02\x02\x02\u0FA5" +
+		"\u0F76\x03\x02\x02\x02\u0FA5\u0F79\x03\x02\x02\x02\u0FA5\u0F7C\x03\x02" +
+		"\x02\x02\u0FA5\u0F7F\x03\x02\x02\x02\u0FA5\u0F82\x03\x02\x02\x02\u0FA5" +
+		"\u0F85\x03\x02\x02\x02\u0FA5\u0F88\x03\x02\x02\x02\u0FA5\u0F8B\x03\x02" +
+		"\x02\x02\u0FA5\u0F8E\x03\x02\x02\x02\u0FA5\u0F91\x03\x02\x02\x02\u0FA5" +
+		"\u0F94\x03\x02\x02\x02\u0FA5\u0F97\x03\x02\x02\x02\u0FA5\u0F9A\x03\x02" +
+		"\x02\x02\u0FA5\u0F9D\x03\x02\x02\x02\u0FA5\u0F9E\x03\x02\x02\x02\u0FA5" +
+		"\u0FA1\x03\x02\x02\x02\u0FA5\u0FA4\x03\x02\x02\x02\u0FA6\u027D\x03\x02" +
+		"\x02\x02\u0FA7\u0FA9\x05$\x13\x02\u0FA8\u0FA7\x03\x02\x02\x02\u0FA8\u0FA9" +
+		"\x03\x02\x02\x02\u0FA9\u0FAA\x03\x02\x02\x02\u0FAA\u0FAB\x07P\x02\x02" +
+		"\u0FAB\u0FAC\x07^\x02\x02\u0FAC\u0FAD\x05\u0280\u0141\x02\u0FAD\u0FAE" +
+		"\x07_\x02\x02\u0FAE\u0FAF\x05 \x11\x02\u0FAF\u027F\x03\x02\x02\x02\u0FB0" +
+		"\u0FB5\x05\u0282\u0142\x02\u0FB1\u0FB2\x07]\x02\x02\u0FB2\u0FB4\x05\u0282" +
+		"\u0142\x02\u0FB3\u0FB1\x03\x02\x02\x02\u0FB4\u0FB7\x03\x02\x02\x02\u0FB5" +
+		"\u0FB3\x03\x02\x02\x02\u0FB5\u0FB6\x03\x02\x02\x02\u0FB6\u0281\x03\x02" +
+		"\x02\x02\u0FB7\u0FB5\x03\x02\x02\x02\u0FB8\u0FCC\x05\u0276\u013C\x02\u0FB9" +
+		"\u0FBA\x07\x8B\x02\x02\u0FBA\u0FBB\x07b\x02\x02\u0FBB\u0FCC\x05\u0276" +
+		"\u013C\x02\u0FBC\u0FBD\x07\x8D\x02\x02\u0FBD\u0FBE\x07b\x02\x02\u0FBE" +
+		"\u0FCC\x05\u01A6\xD4\x02\u0FBF\u0FC0\x07\x8C\x02\x02\u0FC0\u0FC1\x07b" +
+		"\x02\x02\u0FC1\u0FCC\x05\u0264\u0133\x02\u0FC2\u0FC3\x07\x94\x02\x02\u0FC3" +
+		"\u0FC4\x07b\x02\x02\u0FC4\u0FCC\x05\u01DC\xEF\x02\u0FC5\u0FC6\x07\xAF" +
+		"\x02\x02\u0FC6\u0FC7\x07b\x02\x02\u0FC7\u0FCC\x05\u01DC\xEF\x02\u0FC8" +
+		"\u0FC9\x07\xB0\x02\x02\u0FC9\u0FCA\x07b\x02\x02\u0FCA\u0FCC\x05\u01DC" +
+		"\xEF\x02\u0FCB\u0FB8\x03\x02\x02\x02\u0FCB\u0FB9\x03\x02\x02\x02\u0FCB" +
+		"\u0FBC\x03\x02\x02\x02\u0FCB\u0FBF\x03\x02\x02\x02\u0FCB\u0FC2\x03\x02" +
+		"\x02\x02\u0FCB\u0FC5\x03\x02\x02\x02\u0FCB\u0FC8\x03\x02\x02\x02\u0FCC" +
+		"\u0283\x03\x02\x02\x02\u0FCD\u0FCF\x05$\x13\x02\u0FCE\u0FCD\x03\x02\x02" +
+		"\x02\u0FCE\u0FCF\x03\x02\x02\x02\u0FCF\u0FD0\x03\x02\x02\x02\u0FD0\u0FD1" +
+		"\x07G\x02\x02\u0FD1\u0FD3\x05\u028E\u0148\x02\u0FD2\u0FD4\x05\u029C\u014F" +
+		"\x02\u0FD3\u0FD2\x03\x02\x02\x02\u0FD3\u0FD4\x03\x02\x02\x02\u0FD4\u0FD5" +
+		"\x03\x02\x02\x02\u0FD5\u0FD6\x05 \x11\x02\u0FD6\u0FE8\x03\x02\x02\x02" +
+		"\u0FD7\u0FD9\x05$\x13\x02\u0FD8\u0FD7\x03\x02\x02\x02\u0FD8\u0FD9\x03" +
+		"\x02\x02\x02\u0FD9\u0FDA\x03\x02\x02\x02\u0FDA\u0FDB\x07G\x02\x02\u0FDB" +
+		"\u0FDC\x05\u0294\u014B\x02\u0FDC\u0FDD\x05 \x11\x02\u0FDD\u0FE8\x03\x02" +
+		"\x02\x02\u0FDE\u0FE0\x05$\x13\x02\u0FDF\u0FDE\x03\x02\x02\x02\u0FDF\u0FE0" +
+		"\x03\x02\x02\x02\u0FE0\u0FE1\x03\x02\x02\x02\u0FE1\u0FE2\x07G\x02\x02" +
+		"\u0FE2\u0FE3\x05\u0294\u014B\x02\u0FE3\u0FE4\x07]\x02\x02\u0FE4\u0FE5" +
+		"\x05\u029C\u014F\x02\u0FE5\u0FE6\x05 \x11\x02\u0FE6\u0FE8\x03\x02\x02" +
+		"\x02\u0FE7\u0FCE\x03\x02\x02\x02\u0FE7\u0FD8\x03\x02\x02\x02\u0FE7\u0FDF" +
+		"\x03\x02\x02\x02\u0FE8\u0285\x03\x02\x02\x02\u0FE9\u0FEB\x05$\x13\x02" +
+		"\u0FEA\u0FE9\x03\x02\x02\x02\u0FEA\u0FEB\x03\x02\x02\x02\u0FEB\u0FEC\x03" +
+		"\x02\x02\x02\u0FEC\u0FED\t\v\x02\x02\u0FED\u0FEE\x07^\x02\x02\u0FEE\u0FEF" +
+		"\x05\u028C\u0147\x02\u0FEF\u0FF1\x07_\x02\x02\u0FF0\u0FF2\x05\u02A0\u0151" +
+		"\x02\u0FF1\u0FF0\x03\x02\x02\x02\u0FF1\u0FF2\x03\x02\x02\x02\u0FF2\u0FF3" +
+		"\x03\x02\x02\x02\u0FF3\u0FF4\x05 \x11\x02\u0FF4\u0287\x03\x02\x02\x02" +
+		"\u0FF5\u0FF7\x05$\x13\x02\u0FF6\u0FF5\x03\x02\x02\x02\u0FF6\u0FF7\x03" +
+		"\x02\x02\x02\u0FF7\u0FF8\x03\x02\x02\x02\u0FF8\u0FF9\t\f\x02\x02\u0FF9" +
+		"\u0FFC\x05\u0298\u014D\x02\u0FFA\u0FFB\x07]\x02\x02\u0FFB\u0FFD\x05\u02A0" +
+		"\u0151\x02\u0FFC\u0FFA\x03\x02\x02\x02\u0FFC\u0FFD\x03\x02\x02\x02\u0FFD" +
+		"\u0FFE\x03\x02\x02\x02\u0FFE\u0FFF\x05 \x11\x02\u0FFF\u0289\x03\x02\x02" +
+		"\x02\u1000\u1001\x07\x8B\x02\x02\u1001\u1002\x07b\x02\x02\u1002\u101F" +
+		"\x05\u0276\u013C\x02\u1003\u1004\x07\x85\x02\x02\u1004\u1005\x07b\x02" +
+		"\x02\u1005\u101F\x05\u0298\u014D\x02\u1006\u1007\x07\x86\x02\x02\u1007" +
+		"\u1008\x07b\x02\x02\u1008\u101F\x05J&\x02\u1009\u100A\x07\x87\x02\x02" +
+		"\u100A\u100B\x07b\x02\x02\u100B\u101F\x05\u020E\u0108\x02\u100C\u100D" +
+		"\x07\x8D\x02\x02\u100D\u100E\x07b\x02\x02\u100E\u101F\x05\u01A6\xD4\x02" +
+		"\u100F\u1010\x07\x8C\x02\x02\u1010\u1011\x07b\x02\x02\u1011\u101F\x05" +
+		"\u0264\u0133\x02\u1012\u1013\x07\x13\x02\x02\u1013\u1014\x07b\x02\x02" +
+		"\u1014\u101F\x05\u0264\u0133\x02\u1015\u1016\x07\x88\x02\x02\u1016\u1017" +
+		"\x07b\x02\x02\u1017\u101F\x05\u01DC\xEF\x02\u1018\u1019\x07\x89\x02\x02" +
+		"\u1019\u101A\x07b\x02\x02\u101A\u101F\x05\u01A8\xD5\x02\u101B\u101C\x07" +
+		"\xD0\x02\x02\u101C\u101D\x07b\x02\x02\u101D\u101F\x05\u0264\u0133\x02" +
+		"\u101E\u1000\x03\x02\x02\x02\u101E\u1003\x03\x02\x02\x02\u101E\u1006\x03" +
+		"\x02\x02\x02\u101E\u1009\x03\x02\x02\x02\u101E\u100C\x03\x02\x02\x02\u101E" +
+		"\u100F\x03\x02\x02\x02\u101E\u1012\x03\x02\x02\x02\u101E\u1015\x03\x02" +
+		"\x02\x02\u101E\u1018\x03\x02\x02\x02\u101E\u101B\x03\x02\x02\x02\u101F" +
+		"\u028B\x03\x02\x02\x02\u1020\u1021\b\u0147\x01\x02\u1021\u1022\x05\u0276" +
+		"\u013C\x02\u1022\u1024\x07]\x02\x02\u1023\u1025\x05\u0298\u014D\x02\u1024" +
+		"\u1023\x03\x02\x02\x02\u1024\u1025\x03\x02\x02\x02\u1025\u102C\x03\x02" +
+		"\x02\x02\u1026\u1027\x05\u0276\u013C\x02\u1027\u1028\x07]\x02\x02\u1028" +
+		"\u1029\x05\u028A\u0146\x02\u1029\u102C\x03\x02\x02\x02\u102A\u102C\x05" +
+		"\u028A\u0146\x02\u102B\u1020\x03\x02\x02\x02\u102B\u1026\x03\x02\x02\x02" +
+		"\u102B\u102A\x03\x02\x02\x02\u102C\u1032\x03\x02\x02\x02\u102D\u102E\f" +
+		"\x03\x02\x02\u102E\u102F\x07]\x02\x02\u102F\u1031\x05\u028A\u0146\x02" +
+		"\u1030\u102D\x03\x02\x02\x02\u1031\u1034\x03\x02\x02\x02\u1032\u1030\x03" +
+		"\x02\x02\x02\u1032\u1033\x03\x02\x02\x02\u1033\u028D\x03\x02\x02\x02\u1034" +
+		"\u1032\x03\x02\x02\x02\u1035\u103B\x05\u0290\u0149\x02\u1036\u1037\x07" +
+		"^\x02\x02\u1037\u1038\x05\u0292\u014A\x02\u1038\u1039\x07_\x02\x02\u1039" +
+		"\u103B\x03\x02\x02\x02\u103A\u1035\x03\x02\x02\x02\u103A\u1036\x03\x02" +
+		"\x02\x02\u103B\u028F\x03\x02\x02\x02\u103C\u103D\x07^\x02\x02\u103D\u103E" +
+		"\x05\u01D4\xEB\x02\u103E\u103F\x07_\x02\x02\u103F\u1044\x03\x02\x02\x02" +
+		"\u1040\u1041\x07^\x02\x02\u1041\u1042\x07f\x02\x02\u1042\u1044\x07_\x02" +
+		"\x02\u1043\u103C\x03\x02\x02\x02\u1043\u1040\x03\x02\x02\x02\u1044\u0291" +
+		"\x03\x02\x02\x02\u1045\u1046\b\u014A\x01\x02\u1046\u1047\x05\u0276\u013C" +
+		"\x02\u1047\u1048\x07]\x02\x02\u1048\u1049\x05\u028A\u0146\x02\u1049\u1050" +
+		"\x03\x02\x02\x02\u104A\u104B\x05\u0276\u013C\x02\u104B\u104C\x07]\x02" +
+		"\x02\u104C\u104D\x05\u0298\u014D\x02\u104D\u1050\x03\x02\x02\x02\u104E" +
+		"\u1050\x05\u028A\u0146\x02\u104F\u1045\x03\x02\x02\x02\u104F\u104A\x03" +
+		"\x02\x02\x02\u104F\u104E\x03\x02\x02\x02\u1050\u1056\x03\x02\x02\x02\u1051" +
+		"\u1052\f\x03\x02\x02\u1052\u1053\x07]\x02\x02\u1053\u1055\x05\u028A\u0146" +
+		"\x02\u1054\u1051\x03\x02\x02\x02\u1055\u1058\x03\x02\x02\x02\u1056\u1054" +
+		"\x03\x02\x02\x02\u1056\u1057\x03\x02\x02\x02\u1057\u0293\x03\x02\x02\x02" +
+		"\u1058\u1056\x03\x02\x02\x02\u1059\u1065\x05\u0264\u0133\x02\u105A\u1065" +
+		"\x07f\x02\x02\u105B\u1065\x05\u01E0\xF1\x02\u105C\u105D\x05\u01E0\xF1" +
+		"\x02\u105D\u105E\x05\u01F8\xFD\x02\u105E\u105F\x05\u01DE\xF0\x02\u105F" +
+		"\u1065\x03\x02\x02\x02\u1060\u1061\x05\u0296\u014C\x02\u1061\u1062\x05" +
+		"\u01F8\xFD\x02\u1062\u1063\x05\u01DE\xF0\x02\u1063\u1065\x03\x02\x02\x02" +
+		"\u1064\u1059\x03\x02\x02\x02\u1064\u105A\x03\x02\x02\x02\u1064\u105B\x03" +
+		"\x02\x02\x02\u1064\u105C\x03\x02\x02\x02\u1064\u1060\x03\x02\x02\x02\u1065" +
 		"\u0295\x03\x02\x02\x02\u1066\u1067\x07^\x02\x02\u1067\u1068\x05\u01D4" +
 		"\xEB\x02\u1068\u1069\x07_\x02\x02\u1069\u0297\x03\x02\x02\x02\u106A\u106E" +
 		"\x05\u0264\u0133\x02\u106B\u106E\x05\u01DC\xEF\x02\u106C\u106E\x07f\x02" +
@@ -24735,39 +24735,38 @@ export class FortranParser extends Parser {
 		"\u04A4\u04AA\u04B5\u04C0\u04C9\u04D0\u04D7\u04DE\u04E4\u04E7\u04F2\u04FD" +
 		"\u0503\u050F\u051B\u051E\u0526\u052C\u0534\u053C\u0541\u0548\u054E\u0552" +
 		"\u0556\u055C\u0561\u0567\u056B\u0573\u057A\u0582\u0594\u0597\u05A6\u05A9" +
-		"\u05AC\u05B1\u05B6\u05B9\u05BC\u05C3\u05C8\u05CB\u05D0\u05D5\u05DF\u05E2" +
-		"\u05E8\u05F0\u05F3\u05F9";
+		"\u05AC\u05B1\u05B6\u05B9\u05BC\u05C3\u05C8\u05CB\u05D0\u05D5\u05DF\u05E2";
 	private static readonly _serializedATNSegment8: string =
-		"\u05FC\u0601\u0605\u0609\u060C\u0614\u061F\u0622\u0626\u062B\u0631\u0636" +
-		"\u0642\u064F\u0653\u0668\u0674\u067A\u0680\u0683\u0688\u068C\u068F\u0696" +
-		"\u069F\u06A9\u06AC\u06B1\u06B6\u06BB\u06C3\u06C9\u06D0\u06D9\u06DE\u06E5" +
-		"\u06E9\u06EC\u06F3\u06FD\u0700\u070C\u0713\u0742\u0745\u074C\u0756\u075C" +
-		"\u0764\u0769\u076D\u0771\u077A\u077E\u0782\u078B\u07A0\u07D3\u07D8\u07DF" +
-		"\u07FC\u0801\u0809\u0810\u0814\u081C\u0823\u082A\u0830\u0839\u0846\u084D" +
-		"\u0855\u085D\u086A\u086D\u0879\u0882\u0889\u088F\u0898\u089E\u08A5\u08AB" +
-		"\u08B4\u08B8\u08BC\u08C3\u08C8\u08CB\u08D4\u08D8\u08DB\u08E2\u08EA\u08ED" +
-		"\u08F6\u08FC\u0903\u090C\u0915\u091B\u0922\u092A\u092D\u0936\u093C\u0943" +
-		"\u094D\u0950\u0959\u095F\u0966\u096F\u0972\u097D\u098A\u098F\u0996\u09A2" +
-		"\u09AE\u09B7\u09BD\u09C0\u09C9\u09CF\u09D6\u09DE\u09EB\u09EE\u09F7\u09FF" +
-		"\u0A02\u0A07\u0A0C\u0A19\u0A1F\u0A2A\u0A33\u0A3A\u0A3D\u0A41\u0A45\u0A4C" +
-		"\u0A53\u0A59\u0A60\u0A65\u0A6F\u0A7E\u0A84\u0A92\u0A9C\u0A9E\u0AA2\u0AA6" +
-		"\u0AAA\u0AAF\u0ABD\u0AC8\u0AD4\u0AD7\u0ADB\u0ADF\u0AE2\u0AEF\u0AF7\u0AFE" +
-		"\u0B03\u0B0E\u0B18\u0B20\u0B23\u0B30\u0B35\u0B4A\u0B50\u0B54\u0B61\u0B69" +
-		"\u0B70\u0B78\u0B86\u0B88\u0B90\u0B9C\u0BA2\u0BA9\u0BB0\u0BC5\u0BCD\u0BD5" +
-		"\u0BD9\u0BE1\u0BF2\u0BFD\u0C03\u0C0D\u0C16\u0C1F\u0C2F\u0C39\u0C43\u0C50" +
-		"\u0C5D\u0C6A\u0C77\u0C7F\u0C8A\u0C95\u0CCA\u0CD1\u0CD9\u0CE1\u0CED\u0CF5" +
-		"\u0D00\u0D06\u0D0D\u0D16\u0D1F\u0D2B\u0D37\u0D43\u0D4E\u0D53\u0D5F\u0D66" +
-		"\u0D69\u0D6E\u0D79\u0D7F\u0D89\u0D90\u0D95\u0D9C\u0D9F\u0DA4\u0DA9\u0DB3" +
-		"\u0DB8\u0DBF\u0DC4\u0DC8\u0DCD\u0DD2\u0DD5\u0DDA\u0DE5\u0DEC\u0DF5\u0DFA" +
-		"\u0E02\u0E09\u0E0E\u0E12\u0E15\u0E1A\u0E1F\u0E24\u0E2E\u0E35\u0E41\u0E45" +
-		"\u0E48\u0E4F\u0E56\u0E5B\u0E65\u0E6E\u0E77\u0E7E\u0E81\u0E86\u0E97\u0E99" +
-		"\u0E9E\u0EA3\u0EA6\u0EAB\u0EAF\u0EB4\u0EB8\u0EBF\u0EC2\u0EC9\u0ED2\u0ED7" +
-		"\u0EE1\u0EEA\u0EF1\u0EF6\u0EFE\u0F04\u0F07\u0F17\u0F1D\u0F22\u0F27\u0F2C" +
-		"\u0F32\u0F35\u0F42\u0FA5\u0FA8\u0FB5\u0FCB\u0FCE\u0FD3\u0FD8\u0FDF\u0FE7" +
-		"\u0FEA\u0FF1\u0FF6\u0FFC\u101E\u1024\u102B\u1032\u103A\u1043\u104F\u1056" +
-		"\u1064\u106D\u1072\u1079\u107E\u1085\u109E\u10B6\u10B9\u10C0\u10C9\u10CF" +
-		"\u10D2\u10D7\u10DD\u10E2\u10EA\u10F0\u10F3\u10FA\u1103\u1109\u110D\u1116" +
-		"\u1119\u1122\u112D\u118F\u1198\u11A0\u11A3";
+		"\u05E8\u05F0\u05F3\u05F9\u05FC\u0601\u0605\u0609\u060C\u0614\u061F\u0622" +
+		"\u0626\u062B\u0631\u0636\u0642\u064F\u0653\u0668\u0674\u067A\u0680\u0683" +
+		"\u0688\u068C\u068F\u0696\u069F\u06A9\u06AC\u06B1\u06B6\u06BB\u06C3\u06C9" +
+		"\u06D0\u06D9\u06DE\u06E5\u06E9\u06EC\u06F3\u06FD\u0700\u070C\u0713\u0742" +
+		"\u0745\u074C\u0756\u075C\u0764\u0769\u076D\u0771\u077A\u077E\u0782\u078B" +
+		"\u07A0\u07D3\u07D8\u07DF\u07FC\u0801\u0809\u0810\u0814\u081C\u0823\u082A" +
+		"\u0830\u0839\u0846\u084D\u0855\u085D\u086A\u086D\u0879\u0882\u0889\u088F" +
+		"\u0898\u089E\u08A5\u08AB\u08B4\u08B8\u08BC\u08C3\u08C8\u08CB\u08D4\u08D8" +
+		"\u08DB\u08E2\u08EA\u08ED\u08F6\u08FC\u0903\u090C\u0915\u091B\u0922\u092A" +
+		"\u092D\u0936\u093C\u0943\u094D\u0950\u0959\u095F\u0966\u096F\u0972\u097D" +
+		"\u098A\u098F\u0996\u09A2\u09AE\u09B7\u09BD\u09C0\u09C9\u09CF\u09D6\u09DE" +
+		"\u09EB\u09EE\u09F7\u09FF\u0A02\u0A07\u0A0C\u0A19\u0A1F\u0A2A\u0A33\u0A3A" +
+		"\u0A3D\u0A41\u0A45\u0A4C\u0A53\u0A59\u0A60\u0A65\u0A6F\u0A7E\u0A84\u0A92" +
+		"\u0A9C\u0A9E\u0AA2\u0AA6\u0AAA\u0AAF\u0ABD\u0AC8\u0AD4\u0AD7\u0ADB\u0ADF" +
+		"\u0AE2\u0AEF\u0AF7\u0AFE\u0B03\u0B0E\u0B18\u0B20\u0B23\u0B30\u0B35\u0B4A" +
+		"\u0B50\u0B54\u0B61\u0B69\u0B70\u0B78\u0B86\u0B88\u0B90\u0B9C\u0BA2\u0BA9" +
+		"\u0BB0\u0BC5\u0BCD\u0BD5\u0BD9\u0BE1\u0BF2\u0BFD\u0C03\u0C0D\u0C16\u0C1F" +
+		"\u0C2F\u0C39\u0C43\u0C50\u0C5D\u0C6A\u0C77\u0C7F\u0C8A\u0C95\u0CCA\u0CD1" +
+		"\u0CD9\u0CE1\u0CED\u0CF5\u0D00\u0D06\u0D0D\u0D16\u0D1F\u0D2B\u0D37\u0D43" +
+		"\u0D4E\u0D53\u0D5F\u0D66\u0D69\u0D6E\u0D79\u0D7F\u0D89\u0D90\u0D95\u0D9C" +
+		"\u0D9F\u0DA4\u0DA9\u0DB3\u0DB8\u0DBF\u0DC4\u0DC8\u0DCD\u0DD2\u0DD5\u0DDA" +
+		"\u0DE5\u0DEC\u0DF5\u0DFA\u0E02\u0E09\u0E0E\u0E12\u0E15\u0E1A\u0E1F\u0E24" +
+		"\u0E2E\u0E35\u0E41\u0E45\u0E48\u0E4F\u0E56\u0E5B\u0E65\u0E6E\u0E77\u0E7E" +
+		"\u0E81\u0E86\u0E97\u0E99\u0E9E\u0EA3\u0EA6\u0EAB\u0EAF\u0EB4\u0EB8\u0EBF" +
+		"\u0EC2\u0EC9\u0ED2\u0ED7\u0EE1\u0EEA\u0EF1\u0EF6\u0EFE\u0F04\u0F07\u0F17" +
+		"\u0F1D\u0F22\u0F27\u0F2C\u0F32\u0F35\u0F42\u0FA5\u0FA8\u0FB5\u0FCB\u0FCE" +
+		"\u0FD3\u0FD8\u0FDF\u0FE7\u0FEA\u0FF1\u0FF6\u0FFC\u101E\u1024\u102B\u1032" +
+		"\u103A\u1043\u104F\u1056\u1064\u106D\u1072\u1079\u107E\u1085\u109E\u10B6" +
+		"\u10B9\u10C0\u10C9\u10CF\u10D2\u10D7\u10DD\u10E2\u10EA\u10F0\u10F3\u10FA" +
+		"\u1103\u1109\u110D\u1116\u1119\u1122\u112D\u118F\u1198\u11A0\u11A3";
 	public static readonly _serializedATN: string = Utils.join(
 		[
 			FortranParser._serializedATNSegment0,
