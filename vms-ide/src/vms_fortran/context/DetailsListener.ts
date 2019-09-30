@@ -13,6 +13,7 @@ import {
     VariableBlockDclSymbol,
     VariableGlobalBlockDclSymbol,
     VariableLocalBlockDclSymbol,
+    VariableInnerBlockDclSymbol,
     TypeDclSymbol,
     ConstantDclSymbol,
     TypeBlockDclSymbol,
@@ -29,6 +30,7 @@ import {
 import { 
     ProgramContext,
     MainRangeContext,
+    InternalSubprogramContext,
     ImplicitBodyContext,
     IdentifierContext,
     EntityDeclContext,
@@ -81,6 +83,19 @@ export class DetailsListener implements FortranParserListener
         this.currentSymbol.context = ctx;
     }
     exitMainRange(ctx: MainRangeContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
+    enterInternalSubprogram(ctx: InternalSubprogramContext) 
+    {
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableInnerBlockDclSymbol, undefined, ctx.text);
+        this.currentSymbol.context = ctx;
+    }
+    exitInternalSubprogram(ctx: InternalSubprogramContext) 
     {
         if (this.currentSymbol) 
         {

@@ -25,6 +25,7 @@ export enum SymbolKind
     VariableBlockDcl,
     VariableGlobalBlockDcl,
     VariableLocalBlockDcl,
+    VariableInnerBlockDcl,
     TypeDcl,
     TypeBlockDcl,
     LabelDcl,
