@@ -84,7 +84,7 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
         }
 
         const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
-        let cd = `set def ${converter.directory}`;
+        let cd = `set default ${converter.directory}`;
         result = await shell.execCmd(cd);
         if (!TestExecResult(result)) {
             logFn(LogType.error, () => localize("cd.failed", "Cannot set default directory."));
@@ -93,7 +93,7 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
         }
 
         // create temporary dir for extracting
-        const createDir = `create/dir [.${ensured.projectSection.outdir}.${libName}]`;
+        const createDir = `create/directory [.${ensured.projectSection.outdir}.${libName}]`;
         result = await shell.execCmd(createDir);
         if (!TestExecResult(result)) {
             logFn(LogType.error, () => localize("create.failed", "Cannot create output directory."));
@@ -101,7 +101,7 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
             return false;
         }
 
-        cd = `set def [.${ensured.projectSection.outdir}.${libName}]`;
+        cd = `set default [.${ensured.projectSection.outdir}.${libName}]`;
         result = await shell.execCmd(cd);
         if (!TestExecResult(result)) {
             logFn(LogType.error, () => localize("cd.failed", "Cannot set default directory."));
@@ -168,7 +168,7 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
         if (!TestExecResult(result)) {
             logFn(LogType.error, () => localize("cd.failed", "Cannot set default directory."));
         }
-        const delTree = `del/tree [.${ensured.projectSection.outdir}.${libName}...]*.*;*`;
+        const delTree = `delete/tree [.${ensured.projectSection.outdir}.${libName}...]*.*;*`;
         result = await shell.execCmd(delTree);
         if (!TestExecResult(result)) {
             logFn(LogType.information, () => localize("del.failed", "Cannot delete intermediate files: {0}", `[${ensured.projectSection.outdir}.${libName}]`));

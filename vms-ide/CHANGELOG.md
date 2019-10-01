@@ -1,5 +1,9 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.2.6
+* Fixed issue when extension is crashed while opening C project.
+* Fixed duplicating algorithms in SSH settings.
+
 ## 1.2.3 - 1.2.5
 * Function breakpoints. Data breakpoints without UI.
 
