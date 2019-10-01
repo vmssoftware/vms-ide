@@ -5,7 +5,8 @@ import { DiagnosticEntry, DiagnosticType } from './Facade';
 import { Token } from "antlr4ts";
 //import { TerminalNode } from "antlr4ts/tree";
 import { 
-    ProgramContext
+    ProgramContext,
+    LetterNameContext
 } from "../parser/FortranParser";
 import { ContextSymbolTable } from "./ContextSymbolTable";
 //import { Symbol, ScopedSymbol } from "antlr4-c3";
@@ -20,6 +21,14 @@ export class AnalysisListener implements FortranParserListener
     
     enterProgram(ctx: ProgramContext) 
     {
+    }
+
+    enterLetterName(ctx: LetterNameContext) 
+    {
+        if(ctx.text.length > 1)
+        {
+            this.markToken(ctx.start, `extraneous input '${ctx.text}' expecting letter`);
+        }        
     }
 
     /**
