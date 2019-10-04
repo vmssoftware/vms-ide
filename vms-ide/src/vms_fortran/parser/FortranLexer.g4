@@ -142,6 +142,14 @@ RECORD
    : R E C O R D
    ;
 
+UNION
+   : U N I O N
+   ;
+
+MAP
+   : M A P
+   ;
+
 PRIVATE
    : P R I V A T E
    ;
@@ -814,6 +822,46 @@ INITIALSIZE
 
 KEY
    : K E Y
+   ;
+
+KEYID
+   : K E Y I D
+   ;
+
+KEYEQ
+   : K E Y E Q
+   ;
+
+KEYGE
+   : K E Y G E
+   ;
+
+KEYLE
+   : K E Y L E
+   ;
+
+KEYGT
+   : K E Y G T
+   ;
+
+KEYLT
+   : K E Y L T
+   ;
+
+KEYNXT
+   : K E Y N X T
+   ;
+
+KEYNXTNE
+   : K E Y N X T N E
+   ;
+
+ASCENDING
+   : A S C E N D I N G
+   ;
+
+DESCENDING
+   : D E S C E N D I N G
    ;
 
 KEYED

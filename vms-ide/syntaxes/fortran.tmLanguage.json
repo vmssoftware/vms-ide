@@ -3,7 +3,9 @@
 	"name": "Fortran",
 	"scopeName": "source.fortran",
 	"fileTypes": [
-		"f90",
+		"f",
+		"for",
+		"f77",
 		"F90",
 		"f95",
 		"F95",

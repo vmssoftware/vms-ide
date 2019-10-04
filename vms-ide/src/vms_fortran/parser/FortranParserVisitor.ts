@@ -90,6 +90,14 @@ import { EndStructureStatementContext } from "./FortranParser";
 import { StructureBodyContext } from "./FortranParser";
 import { RecordBlockContext } from "./FortranParser";
 import { RecordStatementContext } from "./FortranParser";
+import { UnionBlockContext } from "./FortranParser";
+import { UnionStatementContext } from "./FortranParser";
+import { UnionBlockPartContext } from "./FortranParser";
+import { EndUnionStatementContext } from "./FortranParser";
+import { MapBlockContext } from "./FortranParser";
+import { MapStatementContext } from "./FortranParser";
+import { MapBlockPartContext } from "./FortranParser";
+import { EndMapStatementContext } from "./FortranParser";
 import { ModuleProcedureStatementContext } from "./FortranParser";
 import { ProcedureNameListContext } from "./FortranParser";
 import { GenericSpecContext } from "./FortranParser";
@@ -966,6 +974,62 @@ export interface FortranParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitRecordStatement?: (ctx: RecordStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.unionBlock`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUnionBlock?: (ctx: UnionBlockContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.unionStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUnionStatement?: (ctx: UnionStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.unionBlockPart`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUnionBlockPart?: (ctx: UnionBlockPartContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.endUnionStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEndUnionStatement?: (ctx: EndUnionStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.mapBlock`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMapBlock?: (ctx: MapBlockContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.mapStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMapStatement?: (ctx: MapStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.mapBlockPart`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMapBlockPart?: (ctx: MapBlockPartContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.endMapStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEndMapStatement?: (ctx: EndMapStatementContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `FortranParser.moduleProcedureStatement`.

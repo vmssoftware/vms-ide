@@ -31,7 +31,7 @@ export async function activate(context: ExtensionContext)
     DiagnosticTypeMap.set(DiagnosticType.Error, DiagnosticSeverity.Error);
 
     let barMessage: StatusBarItem =  window.createStatusBarItem(StatusBarAlignment.Left);
-    barMessage.text = `$(bug) ${"Loading ..."}`;
+    barMessage.text = `$(sync) ${"parsing ..."}`;
     barMessage.show();
 
     let sourcePaths: string[] = [];

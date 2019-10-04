@@ -51,6 +51,7 @@ declarationConstruct
    | interfaceBlock
    | structureBlock
    | recordBlock
+   | unionBlock
    ;
 
 executionPartConstruct
@@ -164,7 +165,7 @@ identifier
    | REC
    | ADVANCE
    | SIZE
-   | EOR_S
+   | EOR
    | UNIT
    | ERR
    | IOSTAT
@@ -205,6 +206,16 @@ identifier
    | EXTENDSIZE
    | INITIALSIZE
    | KEY
+   | KEYID
+   | KEYEQ
+   | KEYGE
+   | KEYLE
+   | KEYGT
+   | KEYLT
+   | KEYNXT
+   | KEYNXTNE
+   | ASCENDING
+   | DESCENDING
    | KEYED
    | MAXREC
    | NOSPANBLOCKS
@@ -608,6 +619,42 @@ recordStatement
    : label? RECORD DIV genericName DIV (typeStatementName (COMMA typeStatementName)*) eos
    ;
 
+unionBlock
+   : unionStatement unionBlockPart+ endUnionStatement
+   ;
+
+unionStatement
+   : label? UNION eos
+   ;
+
+unionBlockPart
+   : mapBlock
+   ;
+
+endUnionStatement
+   : label? END UNION eos
+   ;
+
+mapBlock
+   : mapStatement mapBlockPart+ endMapStatement
+   ;
+
+mapStatement
+   : label? MAP eos
+   ;
+
+mapBlockPart
+   : typeDeclarationStatement
+   | specificationStatement
+   | derivedTypeDef
+   | interfaceBlock
+   | structureBlock
+   | recordBlock
+   ;
+
+endMapStatement
+   : label? END MAP eos
+   ;
 
 
 moduleProcedureStatement
@@ -1803,7 +1850,7 @@ connectSpec
    | DISP TO_ASSIGN cExpr
    | EXTENDSIZE TO_ASSIGN expr
    | INITIALSIZE TO_ASSIGN expr
-   | KEY TO_ASSIGN expr
+   | KEY TO_ASSIGN LPAREN I_CONST COLON I_CONST (COLON (INTEGER | CHARACTER) (COLON (ASCENDING | DESCENDING))?)? RPAREN
    | MAXREC TO_ASSIGN expr
    | NOSPANBLOCKS
    | ORGANIZATION TO_ASSIGN cExpr
@@ -1853,11 +1900,19 @@ ioControlSpec
    | END TO_ASSIGN lblRef
    | ADVANCE TO_ASSIGN  cExpr
    | SIZE TO_ASSIGN variable
-   | EOR_S TO_ASSIGN lblRef
+   | EOR TO_ASSIGN lblRef
+   | KEYID TO_ASSIGN  lblRef
+   | KEYEQ TO_ASSIGN  expr
+   | KEYGE TO_ASSIGN  expr
+   | KEYLE TO_ASSIGN  expr
+   | KEYGT TO_ASSIGN  expr
+   | KEYLT TO_ASSIGN  expr
+   | KEYNXT TO_ASSIGN  expr
+   | KEYNXTNE TO_ASSIGN  expr
    ;
 
 ioControlSpecList
-   : unitIdentifier COMMA formatIdentifier?
+   : unitIdentifier (COMMA formatIdentifier)?
    | unitIdentifier COMMA ioControlSpec
    | ioControlSpec
    | ioControlSpecList COMMA ioControlSpec

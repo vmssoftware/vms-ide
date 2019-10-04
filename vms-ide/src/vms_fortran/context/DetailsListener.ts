@@ -616,9 +616,9 @@ function getIdentifier(ident: IdentifierContext | undefined): TerminalNode | und
         {
             item = ident.SIZE();
         }
-        else if(ident.EOR_S())
+        else if(ident.EOR())
         {
-            item = ident.EOR_S();
+            item = ident.EOR();
         }
         else if(ident.UNIT())
         {
@@ -787,6 +787,46 @@ function getIdentifier(ident: IdentifierContext | undefined): TerminalNode | und
         else if(ident.KEY())
         {
             item = ident.KEY();
+        }
+        else if(ident.KEYEQ())
+        {
+            item = ident.KEYEQ();
+        }
+        else if(ident.KEYGE())
+        {
+            item = ident.KEYGE();
+        }
+        else if(ident.KEYLE())
+        {
+            item = ident.KEYLE();
+        }
+        else if(ident.KEYGT())
+        {
+            item = ident.KEYGT();
+        }
+        else if(ident.KEYGT())
+        {
+            item = ident.KEYGT();
+        }
+        else if(ident.KEYLT())
+        {
+            item = ident.KEYLT();
+        }
+        else if(ident.KEYNXT())
+        {
+            item = ident.KEYNXT();
+        }
+        else if(ident.KEYNXTNE())
+        {
+            item = ident.KEYNXTNE();
+        }
+        else if(ident.ASCENDING())
+        {
+            item = ident.ASCENDING();
+        }
+        else if(ident.DESCENDING())
+        {
+            item = ident.DESCENDING();
         }
         else if(ident.KEYED())
         {

@@ -90,6 +90,14 @@ import { EndStructureStatementContext } from "./FortranParser";
 import { StructureBodyContext } from "./FortranParser";
 import { RecordBlockContext } from "./FortranParser";
 import { RecordStatementContext } from "./FortranParser";
+import { UnionBlockContext } from "./FortranParser";
+import { UnionStatementContext } from "./FortranParser";
+import { UnionBlockPartContext } from "./FortranParser";
+import { EndUnionStatementContext } from "./FortranParser";
+import { MapBlockContext } from "./FortranParser";
+import { MapStatementContext } from "./FortranParser";
+import { MapBlockPartContext } from "./FortranParser";
+import { EndMapStatementContext } from "./FortranParser";
 import { ModuleProcedureStatementContext } from "./FortranParser";
 import { ProcedureNameListContext } from "./FortranParser";
 import { GenericSpecContext } from "./FortranParser";
@@ -1311,6 +1319,94 @@ export interface FortranParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitRecordStatement?: (ctx: RecordStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.unionBlock`.
+	 * @param ctx the parse tree
+	 */
+	enterUnionBlock?: (ctx: UnionBlockContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.unionBlock`.
+	 * @param ctx the parse tree
+	 */
+	exitUnionBlock?: (ctx: UnionBlockContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.unionStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterUnionStatement?: (ctx: UnionStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.unionStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitUnionStatement?: (ctx: UnionStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.unionBlockPart`.
+	 * @param ctx the parse tree
+	 */
+	enterUnionBlockPart?: (ctx: UnionBlockPartContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.unionBlockPart`.
+	 * @param ctx the parse tree
+	 */
+	exitUnionBlockPart?: (ctx: UnionBlockPartContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.endUnionStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterEndUnionStatement?: (ctx: EndUnionStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.endUnionStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitEndUnionStatement?: (ctx: EndUnionStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.mapBlock`.
+	 * @param ctx the parse tree
+	 */
+	enterMapBlock?: (ctx: MapBlockContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.mapBlock`.
+	 * @param ctx the parse tree
+	 */
+	exitMapBlock?: (ctx: MapBlockContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.mapStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterMapStatement?: (ctx: MapStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.mapStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitMapStatement?: (ctx: MapStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.mapBlockPart`.
+	 * @param ctx the parse tree
+	 */
+	enterMapBlockPart?: (ctx: MapBlockPartContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.mapBlockPart`.
+	 * @param ctx the parse tree
+	 */
+	exitMapBlockPart?: (ctx: MapBlockPartContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.endMapStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterEndMapStatement?: (ctx: EndMapStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.endMapStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitEndMapStatement?: (ctx: EndMapStatementContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `FortranParser.moduleProcedureStatement`.
