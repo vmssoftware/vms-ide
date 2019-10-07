@@ -1,7 +1,7 @@
 "use strict";
 
 import { ANTLRErrorListener, Recognizer, RecognitionException, Token, CommonToken } from 'antlr4ts';
-import { CobolInputStream } from '../stream/cobolInputStream';
+import { CobolInputStream } from '../vms_cobol/stream/cobolInputStream';
 
 export interface IMessage {
     charPositionInLine: number,

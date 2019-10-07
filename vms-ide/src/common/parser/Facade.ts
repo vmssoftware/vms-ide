@@ -21,8 +21,8 @@ export interface ISymbolInfo<ESymbolKind> {
     kind: ESymbolKind;
     name: string;
     source: string;
-    definition?: IDefinition;
-    description?: string;  // Used for code completion. Provides a small description for certain symbols.
+    definition?: IDefinition;   // Place where symbol is defined, not where it is used
+    description?: string;       // Used for code completion. Provides a small description for certain symbols.
 }
 
 export enum EDiagnosticType {
@@ -44,7 +44,7 @@ export interface ISourceContext<ESymbolKind> {
     getSymbolOccurences(column: number, row: number): ISymbolInfo<ESymbolKind>[];
     parse(): void;
     setText(source: string): void;
-    symbolAtPosition(column: number, row: number): ISymbolInfo<ESymbolKind> | undefined;
+    symbolInfoAtPosition(column: number, row: number): ISymbolInfo<ESymbolKind> | undefined;
 }
 
 export interface IContextEntry<ESymbolKind> {
@@ -138,7 +138,7 @@ export class ContextFacade<ESymbolKind> {
 
     public symbolInfoAtPosition(fileName: string, column: number, row: number): ISymbolInfo<ESymbolKind> | undefined {
         let context = this.getContext(fileName);
-        return context.symbolAtPosition(column, row);
+        return context.symbolInfoAtPosition(column, row);
     }
 
     public getSymbolOccurences(fileName: string, column: number, row: number): ISymbolInfo<ESymbolKind>[] {

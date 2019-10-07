@@ -12,6 +12,7 @@ import { EDiagnosticType, ContextFacade } from "../common/parser/Facade";
 import { CobolSourceContext } from "./context/SourceContext";
 import { GetConfigHelperFromApi } from "../ext-api/ext-api";
 import { LogFunction } from "../common/main";
+import { CobolHoverProvider } from "./providers/HoverProvider";
 
 const locale = env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -52,7 +53,7 @@ export async function activate(context: ExtensionContext) {
 
     barMessage.hide();
 
-    // context.subscriptions.push(languages.registerHoverProvider(Cobol, new PascalHoverProvider(backend)));
+     context.subscriptions.push(languages.registerHoverProvider(Cobol, new CobolHoverProvider(backend)));
     // context.subscriptions.push(languages.registerDefinitionProvider(Cobol, new PascalDefinitionProvider(backend)));    
     // context.subscriptions.push(languages.registerCompletionItemProvider(Cobol, new PascalCompletionItemProvider(backend),
     //     ".", " ", "<", ">", "=", "("));

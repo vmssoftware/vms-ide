@@ -5,92 +5,56 @@ import { ISymbolInfo, IDefinition } from '../../common/parser/Facade';
 import { CobolSourceContext } from './SourceContext';
 import { Interval } from 'antlr4ts/misc';
 import { ParseTree, TerminalNode } from 'antlr4ts/tree';
-import { symbolDescriptionFromEnum, ECobolSymbolKind } from './Symbol';
+import { symbolDescriptionFromEnum, ECobolSymbolKind, getKindFromSymbol } from './Symbol';
 
-export class CobolSymbolTable extends SymbolTable 
-{
+export class CobolSymbolTable extends SymbolTable {
     public tree?: ParserRuleContext; // Set by the owning source context after each parse run.
 
-    public references: Map<Symbol, Set<Symbol>> = new Map<Symbol, Set<Symbol>>();
+    /**
+     * First element in ParseTree[] is name definition context
+     */
+    public occurance = new Map<Symbol, ParseTree[]>();
 
-    constructor(name: string, options: SymbolTableOptions, public owner?: CobolSourceContext) 
-    {
+    constructor(name: string, options: SymbolTableOptions, public owner?: CobolSourceContext) {
         super(name, options);
     }
 
-    public clear() 
-    {
+    public clear() {
         // Before clearing the dependencies make sure the owners are updated.
-        this.references.clear();
         super.clear();
+        this.occurance.clear();
     }
 
-    public addNewSymbol(kind: ECobolSymbolKind, name: string, ctx: ParserRuleContext) 
-    {
-        const symbol = this.addNewSymbolOfType(CobolSymbolTable.getSymbolFromKind(kind), undefined, name);
-        symbol.context = ctx;
-    }
-
-    public symbolExists(name: string, kind: ECobolSymbolKind, localOnly: boolean): boolean 
-    {
-        return this.getSymbolOfType(name, kind, localOnly) !== undefined;
-    }
-
-    public contextForSymbol(symbolName: string, kind: ECobolSymbolKind, localOnly: boolean): ParseTree | undefined 
-    {
-        let symbol = this.getSymbolOfType(symbolName, kind, localOnly);
-
-        if (!symbol) 
-        {
-            return undefined;
+    public getEnclosingSymbolForContext(ctx: ParseTree | undefined) : Symbol | undefined {
+        if (ctx) {
+            return this.getEnclosingSymbolForContextReccurent(this, ctx);
         }
-
-        return symbol.context;
-    }
-
-    public getSymbolDefinition(symbol: string | Symbol | undefined): ECobolSymbolKind | undefined
-    {
-        if (!symbol) 
-        {
-            return undefined;
-        }
-
-        if (!(symbol instanceof Symbol)) 
-        {
-            let temp = this.resolve(symbol);
-
-            if (!temp) 
-            {
-                return undefined;
-            }
-
-            symbol = temp;
-        }
-
         return undefined;
     }
 
+    private getEnclosingSymbolForContextReccurent(root: ScopedSymbol, ctx: ParseTree) : Symbol {
+        let ctxInterval = ctx.sourceInterval;
+        for (let child of root.children) {
+            if (child.context) {
+                let childInterval = child.context.sourceInterval;
+                if (childInterval.a <= ctxInterval.a && ctxInterval.b <= childInterval.b) {
+                    if (child instanceof ScopedSymbol) {
+                        return this.getEnclosingSymbolForContextReccurent(child, ctx);
+                    }
+                    return child;
+                }
+            }
+        }
+        return root;
+    }
 
-    public getSymbolInfo(symbol: string | Symbol | undefined): ISymbolInfo<ECobolSymbolKind> | undefined 
-    {
-        if (!symbol) 
-        {
+    public getSymbolInfo(symbol: string | Symbol | undefined): ISymbolInfo<ECobolSymbolKind> | undefined {
+        symbol = this.ensureSymbol(symbol);
+        if (!symbol) {
             return undefined;
         }
 
-        if (!(symbol instanceof Symbol)) 
-        {
-            let temp = this.resolve(symbol);
-
-            if (!temp) 
-            {
-                return undefined;
-            }
-
-            symbol = temp;
-        }
-
-        let kind = CobolSymbolTable.getKindFromSymbol(symbol);
+        let kind = getKindFromSymbol(symbol);
         let name = (symbol as Symbol).name;
 
         let definitionSymbol = this.definitionSymbolForContext(symbol.context);
@@ -103,47 +67,42 @@ export class CobolSymbolTable extends SymbolTable
             definition: this.definitionFromSymbol(symbol),
         };
 
-        if (definitionSymbol) 
-        {
-            result.description = symbolDescriptionFromEnum(CobolSymbolTable.getKindFromSymbol(definitionSymbol));
+        if (definitionSymbol) {
+            result.description = symbolDescriptionFromEnum(getKindFromSymbol(definitionSymbol));
         }
 
         return result;
     }
-    
+
     /**
      * Returns the definition info for the given rule context.
      */
-    public definitionForContext(ctx: ParseTree | undefined): IDefinition | undefined 
-    {
+    public definitionForContext(ctx: ParseTree | undefined): IDefinition | undefined {
         return this.definitionFromSymbol(this.definitionSymbolForContext(ctx));
     }
 
-    public definitionFromSymbol(definition?: Symbol): IDefinition | undefined 
-    {
-        if (definition && definition.context && definition.context instanceof ParserRuleContext) 
-        {
+    public definitionFromSymbol(definition?: Symbol): IDefinition | undefined {
+        if (definition && definition.context && definition.context instanceof ParserRuleContext) {
             const rule = definition.context;
             const result: IDefinition = {
                 text: rule.text,
-                range: 
+                range:
                 {
                     start: { column: rule.start.charPositionInLine, row: rule.start.line },
                     end: { column: rule.start.charPositionInLine + rule.text.length, row: rule.stop ? rule.stop.line : rule.start.line }
                 }
             };
 
-            let range = <Interval> { a: definition.context.start.startIndex, b: definition.context.stop!.stopIndex };
+            let range = <Interval>{ a: definition.context.start.startIndex, b: definition.context.stop!.stopIndex };
             let cs = definition.context.start.tokenSource!.inputStream;
             result.text = cs!.getText(range);
 
             return result;
         }
-        else if (definition && definition.context && definition.context instanceof TerminalNode) 
-        {
+        else if (definition && definition.context && definition.context instanceof TerminalNode) {
             const result: IDefinition = {
                 text: definition.context.text,
-                range: 
+                range:
                 {
                     start: { column: definition.context.symbol.charPositionInLine, row: definition.context.symbol.line },
                     end: { column: definition.context.symbol.charPositionInLine + definition.context.text.length, row: definition.context.symbol.line }
@@ -159,92 +118,44 @@ export class CobolSymbolTable extends SymbolTable
     /**
      * Returns the definition info for the given rule context.
      */
-    public definitionSymbolForContext(ctx: ParseTree | undefined): Symbol | undefined 
-    {
-        if (!ctx) 
-        {
+    public definitionSymbolForContext(ctx: ParseTree | undefined): Symbol | undefined {
+        if (!ctx) {
             return undefined;
         }
 
         const symbol = this.symbolWithContext(ctx);
 
-        if (symbol) 
-        {
+        if (symbol) {
             return symbol;
         }
 
         return undefined;
     }
 
-    public linkSymbols(master: Symbol, slave: Symbol) 
-    {
-        let slaves = this.references.get(master);
-
-        if (!slaves) 
-        {
-            slaves = new Set<Symbol>();
-            this.references.set(master, slaves);
-        }
-    }
-
-    /**
-     * Only for master definition
-     * @param master 
-     */
-    public getReferenceCount(master: Symbol): number 
-    {
-        let slaves = this.references.get(master);
-
-        if (slaves) 
-        {
-            return slaves.size;
-        }
-
-        return 0;
-    }
-
-    public getSymbolOccurences(symbol: Symbol, column: number, row: number, localOnly: boolean): ISymbolInfo<ECobolSymbolKind>[] 
-    {
+    public getSymbolOccurences(symbol: Symbol, column: number, row: number, localOnly: boolean): ISymbolInfo<ECobolSymbolKind>[] {
         let result: ISymbolInfo<ECobolSymbolKind>[] = [];
-        let localSymbol: Symbol | undefined;
-        let localBlock: Symbol | undefined;
 
         return result;
     }
 
-    public getSymbolOfType(name: string, kind: ECobolSymbolKind, localOnly: boolean): Symbol | undefined 
-    {
-        const resolved = this.resolve(name, localOnly);
-
-        if (resolved && CobolSymbolTable.getKindFromSymbol(resolved) === kind) 
-        {
-            return resolved;
+    public getFirstSymbolOfType<T extends Symbol>(t: new (...args: any[]) => T, name: string): T | undefined {
+        for (let symbol of super.getNestedSymbolsOfType(t)) {
+            if (symbol.name === name) {
+                return symbol;
+            }
         }
-
         return undefined;
     }
 
-    //*****************************************************************
-    //                              Static
-    //*****************************************************************
-
-    public static getSymbolFromKind(kind: ECobolSymbolKind) : typeof Symbol
-    {
-        switch (kind) 
-        {
-            case ECobolSymbolKind.Unknown:
-            default:
-                return Symbol;
+    /**
+     * If symbol is Symbol, returns it. If symbol is string, resolves it.
+     * @param symbol 
+     * @returns Symbol or undefined
+     */
+    public ensureSymbol(symbol: string | Symbol | undefined): Symbol | undefined {
+        if (typeof symbol === "string") {
+            return this.resolve(symbol);
         }
+        return symbol;
     }
-
-    public static getKindFromSymbol(symbol: Symbol): ECobolSymbolKind 
-    {
-        if (symbol instanceof Symbol) 
-        {
-            return ECobolSymbolKind.Unknown;
-        }
-        return ECobolSymbolKind.Unknown;
-    }
-
 }

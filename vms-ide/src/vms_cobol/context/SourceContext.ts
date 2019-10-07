@@ -122,9 +122,14 @@ export class CobolSourceContext implements ISourceContext<ECobolSymbolKind> {
 
         if (this.tree) {
             this.symbolTable.tree = this.tree;
-            let listener: CobolDetailsListener = new CobolDetailsListener(this.symbolTable, this.imports);
-            ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree);
-            this.runAnalysis();
+            this.symbolTable.clear();
+            try {
+                let listener: CobolDetailsListener = new CobolDetailsListener(this.symbolTable, this.imports);
+                ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree);
+                this.runAnalysis();
+            } catch(e) {
+                this.logFn(LogType.error, () => String(e), true);
+            }
         }
 
         this.updateDiagnosticRanges();
@@ -135,8 +140,12 @@ export class CobolSourceContext implements ISourceContext<ECobolSymbolKind> {
         if (this.streamErrors.length > 0) {
             ret.push(...this.streamErrors);
         } else {
-            this.runAnalysis();
-            ret.push(...this.diagnostics);
+            try {
+                this.runAnalysis();
+                ret.push(...this.diagnostics);
+            } catch(e) {
+                this.logFn(LogType.error, () => String(e), true);
+            }
         }
         return ret;
     }
@@ -334,43 +343,16 @@ export class CobolSourceContext implements ISourceContext<ECobolSymbolKind> {
     //     return vars;
     // }
 
-    public symbolAtPosition(column: number, row: number): ISymbolInfo<ECobolSymbolKind> | undefined {
-        let terminal = parseTreeFromPosition(this.tree!, column, row);
-        if (!terminal || !(terminal instanceof TerminalNode)) {
+    public symbolAtPosition(column: number, row: number): Symbol | undefined {
+        let node = parseTreeFromPosition(this.tree!, column, row);
+        if (!node || !(node instanceof TerminalNode)) {
             return undefined;
         }
+        return this.symbolTable.symbolWithContext(node);
+    }
 
-        let parent = (terminal.parent as RuleContext);
-        switch (parent.ruleIndex) {
-            // case  msgParser.RULE_expressionVariable: {
-            //     const source = this.symbolsForExpression.get(terminal.text.toUpperCase());
-            //     if (source) {
-            //         if (source.literal) {
-            //             const info = this.symbolInfoFromToken(ESymbolKind.Literal, terminal.symbol);
-            //             info.description = "Defined in literal";
-            //             return info;
-            //         } else if (source.message && source.prefix) {
-            //             const info = this.symbolInfoFromToken(ESymbolKind.Variable, terminal.symbol);
-            //             info.description = `Constructed: ${source.prefix.text} + ${source.message.text}`;
-            //             return info;
-            //         }
-            //     }
-            //     break;
-            // }
-            // case msgParser.RULE_literalName: {
-            //     return this.symbolInfoFromToken(ESymbolKind.Literal, terminal.symbol);
-            // }
-            // case msgParser.RULE_messageName: {
-            //     return this.symbolInfoFromToken(ESymbolKind.Message, terminal.symbol);
-            // }
-            // case msgParser.RULE_prefixQualifierValue: {
-            //     return this.symbolInfoFromToken(ESymbolKind.FacilityPrefix, terminal.symbol);
-            // }
-            // case msgParser.RULE_facilityName: {
-            //     return this.symbolInfoFromToken(ESymbolKind.FacilityName, terminal.symbol);
-            // }
-        }
-        return undefined;
+    public symbolInfoAtPosition(column: number, row: number): ISymbolInfo<ECobolSymbolKind> | undefined {
+        return this.symbolTable.getSymbolInfo(this.symbolAtPosition(column, row));
     }
 
     //________________________________________________________________________________

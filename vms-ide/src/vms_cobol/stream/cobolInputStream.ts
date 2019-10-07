@@ -179,8 +179,14 @@ export class CobolInputStream implements CharStream {
         let prevLine: string | undefined;
         let currentPosInFile = 0;
         let lastFilteredPos = 0;
+        let lastFilteredEolLen = 0;
         for(let i = 0; i < lines.length; ++i) {
             let line = lines[i];
+            let eolLen = 1;
+            while (line.endsWith("\r")) {
+                ++eolLen;
+                line = line.substr(0, line.length - 1);
+            }
             this.realLinePos.push(currentPosInFile);
             this.filteredLineToRealLine.push(i);
             let lineConsumed = false;
@@ -224,7 +230,7 @@ export class CobolInputStream implements CharStream {
                                 if (inString) {
                                     if (matched[1] === lastQ) {
                                         interval = {
-                                            start: lastFilteredPos - 1,
+                                            start: lastFilteredPos - lastFilteredEolLen,
                                             end: currentPosInFile + matched[0].length - 1,
                                         };
                                         prevLine += line.substring(matched[0].length);
@@ -241,13 +247,14 @@ export class CobolInputStream implements CharStream {
                                     prevLine = prevLine.trimRight();
                                     spaceLen -= prevLine.length;
                                     interval = {
-                                        start: lastFilteredPos - spaceLen - 1,
+                                        start: lastFilteredPos - spaceLen - lastFilteredEolLen,
                                         end: currentPosInFile + matched[0].length - 2,
                                     };
                                     prevLine += line.substring(matched[0].length - 1);
                                     lineConsumed = true;
                                 }
-                                lastFilteredPos = currentPosInFile + line.length + 1;
+                                lastFilteredPos = currentPosInFile + line.length + eolLen;
+                                lastFilteredEolLen = eolLen;
                                 if (interval) {
                                     // test overlapped intervals
                                     let num = this.skipRanges.length - 1;
@@ -280,10 +287,11 @@ export class CobolInputStream implements CharStream {
                 }
                 if (!lineConsumed) {
                     prevLine = line;
-                    lastFilteredPos = currentPosInFile + line.length + 1;
+                    lastFilteredPos = currentPosInFile + line.length + eolLen;
+                    lastFilteredEolLen = eolLen;
                 }
             }
-            currentPosInFile += line.length + 1;
+            currentPosInFile += line.length + eolLen;
         }
     }
 

@@ -232,15 +232,17 @@ import { On_overflowContext } from "./cobolParser";
 import { At_eopContext } from "./cobolParser";
 import { Invalid_keyContext } from "./cobolParser";
 import { File_sectionContext } from "./cobolParser";
+import { File_descriptionContext } from "./cobolParser";
+import { Sort_merge_file_descriptionContext } from "./cobolParser";
 import { Working_storage_sectionContext } from "./cobolParser";
 import { Linkage_sectionContext } from "./cobolParser";
 import { Report_sectionContext } from "./cobolParser";
+import { Report_descriptionContext } from "./cobolParser";
 import { Screen_sectionContext } from "./cobolParser";
 import { File_description_entryContext } from "./cobolParser";
 import { Sort_merge_file_description_entryContext } from "./cobolParser";
 import { Report_description_entryContext } from "./cobolParser";
 import { Fd_clauseContext } from "./cobolParser";
-import { Record_description_entryContext } from "./cobolParser";
 import { Data_description_entryContext } from "./cobolParser";
 import { Level_numberContext } from "./cobolParser";
 import { Data_description_clauseContext } from "./cobolParser";
@@ -263,8 +265,7 @@ import { Times_definitionContext } from "./cobolParser";
 import { Table_sizeContext } from "./cobolParser";
 import { Min_timesContext } from "./cobolParser";
 import { Max_timesContext } from "./cobolParser";
-import { Report_group_description_entryContext } from "./cobolParser";
-import { Report_group_data_descriptionContext } from "./cobolParser";
+import { Report_group_data_description_entryContext } from "./cobolParser";
 import { Report_group_data_description_clauseContext } from "./cobolParser";
 import { Sign_isContext } from "./cobolParser";
 import { SumContext } from "./cobolParser";
@@ -290,7 +291,6 @@ import { UsageContext } from "./cobolParser";
 import { Usage_definitionContext } from "./cobolParser";
 import { PictureContext } from "./cobolParser";
 import { Character_stringContext } from "./cobolParser";
-import { Char_str_partContext } from "./cobolParser";
 import { Other_data_itemContext } from "./cobolParser";
 import { Data_nameContext } from "./cobolParser";
 import { Sd_clauseContext } from "./cobolParser";
@@ -320,10 +320,9 @@ import { Scr_pic_toContext } from "./cobolParser";
 import { Nonnumeric_literalContext } from "./cobolParser";
 import { Src_numberContext } from "./cobolParser";
 import { Color_numContext } from "./cobolParser";
-import { Identification_division_paragraphContext } from "./cobolParser";
 import { Program_idContext } from "./cobolParser";
 import { Program_nameContext } from "./cobolParser";
-import { Is_programContext } from "./cobolParser";
+import { Common_initialContext } from "./cobolParser";
 import { With_identContext } from "./cobolParser";
 import { Ident_stringContext } from "./cobolParser";
 import { InstallationContext } from "./cobolParser";
@@ -347,11 +346,19 @@ import { Segment_limitContext } from "./cobolParser";
 import { Segment_numberContext } from "./cobolParser";
 import { Special_namesContext } from "./cobolParser";
 import { Special_names_contentContext } from "./cobolParser";
+import { Predefined_name_relationContext } from "./cobolParser";
+import { Predefined_nameContext } from "./cobolParser";
+import { Switch_definitionContext } from "./cobolParser";
+import { Switch_clause_onContext } from "./cobolParser";
+import { Switch_clause_offContext } from "./cobolParser";
+import { Cond_nameContext } from "./cobolParser";
+import { Switch_nameContext } from "./cobolParser";
+import { Switch_numContext } from "./cobolParser";
 import { Qualified_data_itemContext } from "./cobolParser";
 import { CurrencyContext } from "./cobolParser";
 import { Currency_definitionContext } from "./cobolParser";
-import { Literal_7Context } from "./cobolParser";
-import { Literal_8Context } from "./cobolParser";
+import { Currency_stringContext } from "./cobolParser";
+import { Currency_charContext } from "./cobolParser";
 import { Class_Context } from "./cobolParser";
 import { Class_nameContext } from "./cobolParser";
 import { User_classContext } from "./cobolParser";
@@ -367,23 +374,16 @@ import { User_alphaContext } from "./cobolParser";
 import { First_literalContext } from "./cobolParser";
 import { Last_literalContext } from "./cobolParser";
 import { Same_literalContext } from "./cobolParser";
-import { Switch_Context } from "./cobolParser";
-import { Switch_clause_onContext } from "./cobolParser";
-import { Switch_clause_offContext } from "./cobolParser";
-import { Cond_nameContext } from "./cobolParser";
-import { Switch_nameContext } from "./cobolParser";
-import { Switch_numContext } from "./cobolParser";
 import { Top_of_page_nameContext } from "./cobolParser";
-import { Predefined_deviceContext } from "./cobolParser";
-import { Device_nameContext } from "./cobolParser";
-import { Arg_envContext } from "./cobolParser";
-import { Arg_env_nameContext } from "./cobolParser";
+import { User_nameContext } from "./cobolParser";
 import { File_controlContext } from "./cobolParser";
 import { SelectContext } from "./cobolParser";
 import { File_statusContext } from "./cobolParser";
 import { File_statContext } from "./cobolParser";
 import { Record_keyContext } from "./cobolParser";
 import { Record_key_definitionContext } from "./cobolParser";
+import { Seg_keyContext } from "./cobolParser";
+import { Rec_keyContext } from "./cobolParser";
 import { Access_modeContext } from "./cobolParser";
 import { ReserveContext } from "./cobolParser";
 import { Reserve_numContext } from "./cobolParser";
@@ -2966,6 +2966,28 @@ export interface cobolListener extends ParseTreeListener {
 	exitFile_section?: (ctx: File_sectionContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `cobolParser.file_description`.
+	 * @param ctx the parse tree
+	 */
+	enterFile_description?: (ctx: File_descriptionContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.file_description`.
+	 * @param ctx the parse tree
+	 */
+	exitFile_description?: (ctx: File_descriptionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sort_merge_file_description`.
+	 * @param ctx the parse tree
+	 */
+	enterSort_merge_file_description?: (ctx: Sort_merge_file_descriptionContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sort_merge_file_description`.
+	 * @param ctx the parse tree
+	 */
+	exitSort_merge_file_description?: (ctx: Sort_merge_file_descriptionContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `cobolParser.working_storage_section`.
 	 * @param ctx the parse tree
 	 */
@@ -2997,6 +3019,17 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitReport_section?: (ctx: Report_sectionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.report_description`.
+	 * @param ctx the parse tree
+	 */
+	enterReport_description?: (ctx: Report_descriptionContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.report_description`.
+	 * @param ctx the parse tree
+	 */
+	exitReport_description?: (ctx: Report_descriptionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.screen_section`.
@@ -3052,17 +3085,6 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFd_clause?: (ctx: Fd_clauseContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.record_description_entry`.
-	 * @param ctx the parse tree
-	 */
-	enterRecord_description_entry?: (ctx: Record_description_entryContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.record_description_entry`.
-	 * @param ctx the parse tree
-	 */
-	exitRecord_description_entry?: (ctx: Record_description_entryContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.data_description_entry`.
@@ -3307,26 +3329,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitMax_times?: (ctx: Max_timesContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.report_group_description_entry`.
+	 * Enter a parse tree produced by `cobolParser.report_group_data_description_entry`.
 	 * @param ctx the parse tree
 	 */
-	enterReport_group_description_entry?: (ctx: Report_group_description_entryContext) => void;
+	enterReport_group_data_description_entry?: (ctx: Report_group_data_description_entryContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.report_group_description_entry`.
+	 * Exit a parse tree produced by `cobolParser.report_group_data_description_entry`.
 	 * @param ctx the parse tree
 	 */
-	exitReport_group_description_entry?: (ctx: Report_group_description_entryContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.report_group_data_description`.
-	 * @param ctx the parse tree
-	 */
-	enterReport_group_data_description?: (ctx: Report_group_data_descriptionContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.report_group_data_description`.
-	 * @param ctx the parse tree
-	 */
-	exitReport_group_data_description?: (ctx: Report_group_data_descriptionContext) => void;
+	exitReport_group_data_description_entry?: (ctx: Report_group_data_description_entryContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.report_group_data_description_clause`.
@@ -3602,17 +3613,6 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitCharacter_string?: (ctx: Character_stringContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.char_str_part`.
-	 * @param ctx the parse tree
-	 */
-	enterChar_str_part?: (ctx: Char_str_partContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.char_str_part`.
-	 * @param ctx the parse tree
-	 */
-	exitChar_str_part?: (ctx: Char_str_partContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.other_data_item`.
@@ -3934,17 +3934,6 @@ export interface cobolListener extends ParseTreeListener {
 	exitColor_num?: (ctx: Color_numContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.identification_division_paragraph`.
-	 * @param ctx the parse tree
-	 */
-	enterIdentification_division_paragraph?: (ctx: Identification_division_paragraphContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.identification_division_paragraph`.
-	 * @param ctx the parse tree
-	 */
-	exitIdentification_division_paragraph?: (ctx: Identification_division_paragraphContext) => void;
-
-	/**
 	 * Enter a parse tree produced by `cobolParser.program_id`.
 	 * @param ctx the parse tree
 	 */
@@ -3967,15 +3956,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitProgram_name?: (ctx: Program_nameContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.is_program`.
+	 * Enter a parse tree produced by `cobolParser.common_initial`.
 	 * @param ctx the parse tree
 	 */
-	enterIs_program?: (ctx: Is_programContext) => void;
+	enterCommon_initial?: (ctx: Common_initialContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.is_program`.
+	 * Exit a parse tree produced by `cobolParser.common_initial`.
 	 * @param ctx the parse tree
 	 */
-	exitIs_program?: (ctx: Is_programContext) => void;
+	exitCommon_initial?: (ctx: Common_initialContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.with_ident`.
@@ -4231,6 +4220,94 @@ export interface cobolListener extends ParseTreeListener {
 	exitSpecial_names_content?: (ctx: Special_names_contentContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `cobolParser.predefined_name_relation`.
+	 * @param ctx the parse tree
+	 */
+	enterPredefined_name_relation?: (ctx: Predefined_name_relationContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.predefined_name_relation`.
+	 * @param ctx the parse tree
+	 */
+	exitPredefined_name_relation?: (ctx: Predefined_name_relationContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.predefined_name`.
+	 * @param ctx the parse tree
+	 */
+	enterPredefined_name?: (ctx: Predefined_nameContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.predefined_name`.
+	 * @param ctx the parse tree
+	 */
+	exitPredefined_name?: (ctx: Predefined_nameContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.switch_definition`.
+	 * @param ctx the parse tree
+	 */
+	enterSwitch_definition?: (ctx: Switch_definitionContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.switch_definition`.
+	 * @param ctx the parse tree
+	 */
+	exitSwitch_definition?: (ctx: Switch_definitionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.switch_clause_on`.
+	 * @param ctx the parse tree
+	 */
+	enterSwitch_clause_on?: (ctx: Switch_clause_onContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.switch_clause_on`.
+	 * @param ctx the parse tree
+	 */
+	exitSwitch_clause_on?: (ctx: Switch_clause_onContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.switch_clause_off`.
+	 * @param ctx the parse tree
+	 */
+	enterSwitch_clause_off?: (ctx: Switch_clause_offContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.switch_clause_off`.
+	 * @param ctx the parse tree
+	 */
+	exitSwitch_clause_off?: (ctx: Switch_clause_offContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.cond_name`.
+	 * @param ctx the parse tree
+	 */
+	enterCond_name?: (ctx: Cond_nameContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.cond_name`.
+	 * @param ctx the parse tree
+	 */
+	exitCond_name?: (ctx: Cond_nameContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.switch_name`.
+	 * @param ctx the parse tree
+	 */
+	enterSwitch_name?: (ctx: Switch_nameContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.switch_name`.
+	 * @param ctx the parse tree
+	 */
+	exitSwitch_name?: (ctx: Switch_nameContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.switch_num`.
+	 * @param ctx the parse tree
+	 */
+	enterSwitch_num?: (ctx: Switch_numContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.switch_num`.
+	 * @param ctx the parse tree
+	 */
+	exitSwitch_num?: (ctx: Switch_numContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `cobolParser.qualified_data_item`.
 	 * @param ctx the parse tree
 	 */
@@ -4264,26 +4341,26 @@ export interface cobolListener extends ParseTreeListener {
 	exitCurrency_definition?: (ctx: Currency_definitionContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.literal_7`.
+	 * Enter a parse tree produced by `cobolParser.currency_string`.
 	 * @param ctx the parse tree
 	 */
-	enterLiteral_7?: (ctx: Literal_7Context) => void;
+	enterCurrency_string?: (ctx: Currency_stringContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.literal_7`.
+	 * Exit a parse tree produced by `cobolParser.currency_string`.
 	 * @param ctx the parse tree
 	 */
-	exitLiteral_7?: (ctx: Literal_7Context) => void;
+	exitCurrency_string?: (ctx: Currency_stringContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.literal_8`.
+	 * Enter a parse tree produced by `cobolParser.currency_char`.
 	 * @param ctx the parse tree
 	 */
-	enterLiteral_8?: (ctx: Literal_8Context) => void;
+	enterCurrency_char?: (ctx: Currency_charContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.literal_8`.
+	 * Exit a parse tree produced by `cobolParser.currency_char`.
 	 * @param ctx the parse tree
 	 */
-	exitLiteral_8?: (ctx: Literal_8Context) => void;
+	exitCurrency_char?: (ctx: Currency_charContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.class_`.
@@ -4451,72 +4528,6 @@ export interface cobolListener extends ParseTreeListener {
 	exitSame_literal?: (ctx: Same_literalContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.switch_`.
-	 * @param ctx the parse tree
-	 */
-	enterSwitch_?: (ctx: Switch_Context) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.switch_`.
-	 * @param ctx the parse tree
-	 */
-	exitSwitch_?: (ctx: Switch_Context) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.switch_clause_on`.
-	 * @param ctx the parse tree
-	 */
-	enterSwitch_clause_on?: (ctx: Switch_clause_onContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.switch_clause_on`.
-	 * @param ctx the parse tree
-	 */
-	exitSwitch_clause_on?: (ctx: Switch_clause_onContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.switch_clause_off`.
-	 * @param ctx the parse tree
-	 */
-	enterSwitch_clause_off?: (ctx: Switch_clause_offContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.switch_clause_off`.
-	 * @param ctx the parse tree
-	 */
-	exitSwitch_clause_off?: (ctx: Switch_clause_offContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.cond_name`.
-	 * @param ctx the parse tree
-	 */
-	enterCond_name?: (ctx: Cond_nameContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.cond_name`.
-	 * @param ctx the parse tree
-	 */
-	exitCond_name?: (ctx: Cond_nameContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.switch_name`.
-	 * @param ctx the parse tree
-	 */
-	enterSwitch_name?: (ctx: Switch_nameContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.switch_name`.
-	 * @param ctx the parse tree
-	 */
-	exitSwitch_name?: (ctx: Switch_nameContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.switch_num`.
-	 * @param ctx the parse tree
-	 */
-	enterSwitch_num?: (ctx: Switch_numContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.switch_num`.
-	 * @param ctx the parse tree
-	 */
-	exitSwitch_num?: (ctx: Switch_numContext) => void;
-
-	/**
 	 * Enter a parse tree produced by `cobolParser.top_of_page_name`.
 	 * @param ctx the parse tree
 	 */
@@ -4528,48 +4539,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitTop_of_page_name?: (ctx: Top_of_page_nameContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.predefined_device`.
+	 * Enter a parse tree produced by `cobolParser.user_name`.
 	 * @param ctx the parse tree
 	 */
-	enterPredefined_device?: (ctx: Predefined_deviceContext) => void;
+	enterUser_name?: (ctx: User_nameContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.predefined_device`.
+	 * Exit a parse tree produced by `cobolParser.user_name`.
 	 * @param ctx the parse tree
 	 */
-	exitPredefined_device?: (ctx: Predefined_deviceContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.device_name`.
-	 * @param ctx the parse tree
-	 */
-	enterDevice_name?: (ctx: Device_nameContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.device_name`.
-	 * @param ctx the parse tree
-	 */
-	exitDevice_name?: (ctx: Device_nameContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.arg_env`.
-	 * @param ctx the parse tree
-	 */
-	enterArg_env?: (ctx: Arg_envContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.arg_env`.
-	 * @param ctx the parse tree
-	 */
-	exitArg_env?: (ctx: Arg_envContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.arg_env_name`.
-	 * @param ctx the parse tree
-	 */
-	enterArg_env_name?: (ctx: Arg_env_nameContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.arg_env_name`.
-	 * @param ctx the parse tree
-	 */
-	exitArg_env_name?: (ctx: Arg_env_nameContext) => void;
+	exitUser_name?: (ctx: User_nameContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.file_control`.
@@ -4636,6 +4614,28 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitRecord_key_definition?: (ctx: Record_key_definitionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.seg_key`.
+	 * @param ctx the parse tree
+	 */
+	enterSeg_key?: (ctx: Seg_keyContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.seg_key`.
+	 * @param ctx the parse tree
+	 */
+	exitSeg_key?: (ctx: Seg_keyContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.rec_key`.
+	 * @param ctx the parse tree
+	 */
+	enterRec_key?: (ctx: Rec_keyContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.rec_key`.
+	 * @param ctx the parse tree
+	 */
+	exitRec_key?: (ctx: Rec_keyContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.access_mode`.
