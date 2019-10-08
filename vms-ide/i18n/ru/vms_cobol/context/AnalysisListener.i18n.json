@@ -9,5 +9,6 @@
     "ambigous_name": "Ambigous name",
     "number_in_range": "Must be from {0} to {1}",
     "dot_must_end_some": "Must be at the end of nonempty content",
+    "invalid_switch_num": "Invalid switch number",
     "must_be_in_B": "This token must be in B area"
 }

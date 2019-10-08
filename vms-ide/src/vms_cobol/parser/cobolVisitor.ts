@@ -346,6 +346,8 @@ import { Segment_limitContext } from "./cobolParser";
 import { Segment_numberContext } from "./cobolParser";
 import { Special_namesContext } from "./cobolParser";
 import { Special_names_contentContext } from "./cobolParser";
+import { Cursor_isContext } from "./cobolParser";
+import { Crt_isContext } from "./cobolParser";
 import { Predefined_name_relationContext } from "./cobolParser";
 import { Predefined_nameContext } from "./cobolParser";
 import { Switch_definitionContext } from "./cobolParser";
@@ -2849,6 +2851,20 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitSpecial_names_content?: (ctx: Special_names_contentContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.cursor_is`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitCursor_is?: (ctx: Cursor_isContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.crt_is`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitCrt_is?: (ctx: Crt_isContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.predefined_name_relation`.

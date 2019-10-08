@@ -1878,8 +1878,16 @@ special_names_content
      (class_)*
      (currency)*
      (DECIMAL_POINT IS? COMMA)?
-     (CURSOR IS? qualified_data_item)?
-     (CRT STATUS IS? qualified_data_item)?
+     cursor_is?
+     crt_is?
+   ;
+
+cursor_is
+   : CURSOR IS? qualified_data_item
+   ;
+
+crt_is
+   : CRT STATUS IS? qualified_data_item
    ;
 
 predefined_name_relation
@@ -1939,7 +1947,7 @@ currency
    ;
 
 currency_definition
-   : (currency_string WITH? PICTURE SYMBOL)? currency_char
+   : (currency_string WITH? PICTURE (SYMBOL|SYMBOL_IN_PICTURE))? currency_char
    ;
 
 currency_string

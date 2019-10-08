@@ -597,12 +597,6 @@ USER_DEFINED_WORD
    : USER_DEFINED_WORD_EDGE (USER_DEFINED_WORD_MIDLE* USER_DEFINED_WORD_EDGE)?
    ;
 
-// comment
-
-// LINE_COMMENT
-//    : [/*] {this.charPositionInLine == 1}? ~[\r\n]* NL -> channel(HIDDEN)
-//    ;
-
 // white space
 
 COMMA_
@@ -633,10 +627,10 @@ fragment SEP_IN_PICTURE
    : [,; \r\n\t]
    ;
 
+SYMBOL_IN_PICTURE: SEP_IN_PICTURE* S Y M B O L SEP_IN_PICTURE* -> popMode;
+
 IS_IN_PICTURE: SEP_IN_PICTURE* I S SEP_IN_PICTURE*;
 
 CHARACTER_STRING
-   : SEP_IN_PICTURE* (~[. \r\n\t]|'.'~[ \r\n\t])+
-//    { this.inputStream.LA(1) === ' '.charCodeAt(0) || (this.inputStream.LA(1) === '.'.charCodeAt(0) && ' \r\n\t'.includes(String.fromCharCode(this.inputStream.LA(2)))) }? 
-    -> popMode;
+   : SEP_IN_PICTURE* (~[. \r\n\t]|'.'~[ \r\n\t])+ -> popMode;
 

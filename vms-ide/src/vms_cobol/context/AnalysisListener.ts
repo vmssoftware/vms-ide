@@ -19,6 +19,10 @@ import {
     Special_namesContext,
     StatementContext,
     Fd_clauseContext,
+    Switch_definitionContext,
+    Switch_numContext,
+    Symbol_charContext,
+    Cursor_isContext,
 } from "../parser/cobolParser";
 
 import {
@@ -36,10 +40,12 @@ import {
 import {
     ALPHABET_Symbol,
     ProgramSymbol,
+    SWITCH_Symbol,
+    SYMBOLIC_CHARACTERS_Symbol,
 } from "./Symbol";
 
 import {
-    Symbol
+    Symbol, ScopedSymbol
 } from "antlr4-c3";
 
 
@@ -150,6 +156,33 @@ export class CobolAnalysisListener implements cobolListener {
             if (last_dot !== undefined) {
                 markToken(this.diagnostics, last_dot.symbol, localize("dot_must_end_some", "Must be at the end of nonempty content"))
             }
+        }
+    }
+
+    enterSwitch_num(ctx: Switch_numContext) {
+        if (!ctx.text.match(this.rgxPositiveInt)) {
+            markToken(this.diagnostics, ctx.start, localize("must_be_integer", "Must be integer"));
+        }
+        let switchNum = Number.parseInt(ctx.text);
+        if (switchNum <= 0 || switchNum > 16) {
+            markToken(this.diagnostics, ctx.start, localize("invalid_switch_num", "Invalid switch number (must be from 1 to 16)"));
+        }
+    }
+
+    enterSymbol_char(ctx: Symbol_charContext) {
+        let symbCharSymbol = this.symbolTable.symbolWithContext(ctx);
+        if (symbCharSymbol instanceof SYMBOLIC_CHARACTERS_Symbol) {
+            if (symbCharSymbol.resolve(symbCharSymbol.name) !== symbCharSymbol) {
+                markToken(this.diagnostics, ctx.start, localize("isnt_unique", "Isn't unique"));
+            }
+        }
+    }
+
+    enterCursor_is(ctx: Cursor_isContext) {
+        let identifierCtx = ctx.qualified_data_item();
+        let nodes = identifierCtx.USER_DEFINED_WORD();
+        for(let node of nodes) {
+            // try get unambigous reference
         }
     }
 

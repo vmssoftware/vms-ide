@@ -382,3 +382,4 @@ export class SectionSymbol extends ScopedSymbol {
 }
 export class DeclarativesSectionSymbol extends SectionSymbol { }
 export class ParagraphSymbol extends ScopedSymbol { }
+export class IndexedBySymbol extends Symbol { }

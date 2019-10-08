@@ -40,6 +40,7 @@ import {
     Symbol_charContext,
     cobolParser,
     Working_storage_sectionContext,
+    Indexed_byContext,
 } from '../parser/cobolParser';
 
 import {
@@ -73,6 +74,7 @@ import {
     SectionSymbol,
     SegKeySymbol,
     SortMergeFileSymbol,
+    IndexedBySymbol,
 } from './Symbol';
 
 import {
@@ -96,7 +98,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterCobol_source(ctx: Cobol_sourceContext) {
-        this.promoteCurrentSymbolTo(CobolSourceSymbol, ctx);
+        this.promoteCurrentSymbol(CobolSourceSymbol, ctx);
     }
 
     exitCobol_source(ctx: Cobol_sourceContext) {
@@ -104,7 +106,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterProgram(ctx: ProgramContext) {
-        this.promoteCurrentSymbolTo(ProgramSymbol, ctx);
+        this.promoteCurrentSymbol(ProgramSymbol, ctx);
     }
 
     exitProgram(ctx: ProgramContext) {
@@ -166,7 +168,7 @@ export class CobolDetailsListener implements cobolListener {
             }
         }
         if (symbolType !== undefined) {
-            this.promoteCurrentSymbolTo(symbolType, ctx, ctx.user_name());
+            this.promoteCurrentSymbol(symbolType, ctx, ctx.user_name());
         }
     }
 
@@ -175,7 +177,17 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterSwitch_definition(ctx: Switch_definitionContext) {
-        this.promoteCurrentSymbolTo(SWITCH_Symbol, ctx, ctx.switch_name());
+        let symb = this.promoteCurrentSymbol(SWITCH_Symbol, ctx, ctx.switch_name());
+        // let numCtx = ctx.switch_num();
+        // if (numCtx) {
+        //     symb.switchNum = Number.parseInt(numCtx.text);
+        // } else {
+        //     let numNode = ctx.SWITCH_N();
+        //     if (numNode) {
+        //         let dashPos = numNode.text.indexOf('-');
+        //         symb.switchNum = Number.parseInt(numNode.text.substr(dashPos + 1));
+        //     }
+        // }
     }
 
     exitSwitch_definition(ctx: Switch_definitionContext) {
@@ -183,7 +195,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterSwitch_clause_on(ctx: Switch_clause_onContext) {
-        this.promoteCurrentSymbolTo(SWITCH_STATUS_Symbol, ctx, ctx.cond_name());
+        this.promoteCurrentSymbol(SWITCH_STATUS_Symbol, ctx, ctx.cond_name());
     }
 
     exitSwitch_clause_on(ctx: Switch_clause_onContext) {
@@ -191,7 +203,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterSwitch_clause_off(ctx: Switch_clause_offContext) {
-        this.promoteCurrentSymbolTo(SWITCH_STATUS_Symbol, ctx, ctx.cond_name());
+        this.promoteCurrentSymbol(SWITCH_STATUS_Symbol, ctx, ctx.cond_name());
     }
 
     exitSwitch_clause_off(ctx: Switch_clause_offContext) {
@@ -199,7 +211,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterAlphabet(ctx: AlphabetContext) {
-        this.promoteCurrentSymbolTo(ALPHABET_Symbol, ctx, ctx.alpha_name());
+        this.promoteCurrentSymbol(ALPHABET_Symbol, ctx, ctx.alpha_name());
     }
 
     exitAlphabet(ctx: AlphabetContext) {
@@ -207,7 +219,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterSymbol_char(ctx: Symbol_charContext) {
-        this.promoteCurrentSymbolTo(SYMBOLIC_CHARACTERS_Symbol, ctx, ctx);
+        this.promoteCurrentSymbol(SYMBOLIC_CHARACTERS_Symbol, ctx, ctx);
     }
 
     exitSymbol_char(ctx: Symbol_charContext) {
@@ -215,7 +227,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterClass_(ctx: Class_Context) {
-        this.promoteCurrentSymbolTo(CLASS_Symbol, ctx, ctx.class_name());
+        this.promoteCurrentSymbol(CLASS_Symbol, ctx, ctx.class_name());
     }
 
     exitClass_(ctx: Class_Context) {
@@ -223,7 +235,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterCurrency_definition(ctx: Currency_definitionContext) {
-        let symb = this.promoteCurrentSymbolTo(CURRENCY_Symbol, ctx, ctx.currency_char());
+        let symb = this.promoteCurrentSymbol(CURRENCY_Symbol, ctx, ctx.currency_char());
         let currency_str_ctx = ctx.currency_string();
         if (currency_str_ctx) {
             symb.currency_str = currency_str_ctx.text;
@@ -235,7 +247,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterFile_description(ctx: File_descriptionContext) {
-        this.promoteCurrentSymbolTo(FileSymbol, ctx, ctx.file_description_entry().file_name());
+        this.promoteCurrentSymbol(FileSymbol, ctx, ctx.file_description_entry().file_name());
     }
 
     enterFd_clause(ctx: Fd_clauseContext) {
@@ -249,7 +261,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterSort_merge_file_description(ctx: Sort_merge_file_descriptionContext) {
-        this.promoteCurrentSymbolTo(SortMergeFileSymbol, ctx, ctx.sort_merge_file_description_entry().file_name());
+        this.promoteCurrentSymbol(SortMergeFileSymbol, ctx, ctx.sort_merge_file_description_entry().file_name());
     }
 
     exitSort_merge_file_description(ctx: Sort_merge_file_descriptionContext) {
@@ -257,7 +269,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterReport_description(ctx: Report_descriptionContext) {
-        this.promoteCurrentSymbolTo(ReportFileSymbol, ctx, ctx.report_description_entry().report_name());
+        this.promoteCurrentSymbol(ReportFileSymbol, ctx, ctx.report_description_entry().report_name());
     }
 
     exitReport_description(ctx: Report_descriptionContext) {
@@ -275,12 +287,44 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterData_description_entry(ctx: Data_description_entryContext) {
-        let symb = this.promoteCurrentSymbolTo(DataRecordSymbol, ctx, ctx.data_name());
-        symb.level = Number.parseInt(ctx.level_number().text);
+        let symb: DataRecordSymbol | undefined;
+        let levelNum = Number.parseInt(ctx.level_number().text);
+        if (this.currentSymbol instanceof ScopedSymbol) {
+            // go down to last DataRecordSymbol
+            let lastChild = this.currentSymbol.lastChild;
+            let dataRecord: DataRecordSymbol | undefined;
+            while (lastChild instanceof DataRecordSymbol) {
+                dataRecord = lastChild;
+                lastChild = lastChild.lastChild;
+            }
+            // go up until level > levelNum
+            while (dataRecord) {
+                if (dataRecord.level !== undefined) {
+                    if (dataRecord.level === levelNum) {
+                        this.currentSymbol = dataRecord.parent;
+                        break;
+                    }
+                    if (dataRecord.level < levelNum) {
+                        this.currentSymbol = dataRecord;
+                        break;
+                    }
+                    if (dataRecord.parent instanceof DataRecordSymbol) {
+                        dataRecord = dataRecord.parent;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        symb = this.promoteCurrentSymbol(DataRecordSymbol, ctx, ctx.data_name());
+        symb.level = levelNum;
     }
 
     exitData_description_entry(ctx: Data_description_entryContext) {
-        this.backToParent(ctx);
+        // go to first non-datarecord parent
+        while (this.currentSymbol instanceof DataRecordSymbol) {
+            this.currentSymbol = this.currentSymbol.parent;
+        }
     }
 
     enterData_description_clause(ctx: Data_description_clauseContext) {
@@ -290,7 +334,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterReport_group_data_description_entry(ctx: Report_group_data_description_entryContext) {
-        let symb = this.promoteCurrentSymbolTo(ReportGroupSymbol, ctx, ctx.data_name());
+        let symb = this.promoteCurrentSymbol(ReportGroupSymbol, ctx, ctx.data_name());
         symb.level = Number.parseInt(ctx.level_number().text);
     }
 
@@ -299,7 +343,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterScreen_description_entry(ctx: Screen_description_entryContext) {
-        let symb = this.promoteCurrentSymbolTo(ReportGroupSymbol, ctx, ctx.screen_name());
+        let symb = this.promoteCurrentSymbol(ReportGroupSymbol, ctx, ctx.screen_name());
         symb.level = Number.parseInt(ctx.level_number().text);
     }
 
@@ -310,13 +354,13 @@ export class CobolDetailsListener implements cobolListener {
     enterRecord_key_definition(ctx: Record_key_definitionContext) {
         let segKeyCtx = ctx.seg_key();
         if (segKeyCtx) {
-            this.promoteCurrentSymbolTo(SegKeySymbol, ctx, segKeyCtx);
+            this.promoteCurrentSymbol(SegKeySymbol, ctx, segKeyCtx);
             this.backToParent(ctx);
         }
     }
 
     enterSection(ctx: SectionContext) {
-        this.promoteCurrentSymbolTo(SectionSymbol, ctx, ctx.section_header().section_name());
+        this.promoteCurrentSymbol(SectionSymbol, ctx, ctx.section_header().section_name());
     }
 
     exitSection(ctx: SectionContext) {
@@ -331,7 +375,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterDeclaratives_section(ctx: Declaratives_sectionContext) {
-        this.promoteCurrentSymbolTo(DeclarativesSectionSymbol, ctx, ctx.section_header().section_name());
+        this.promoteCurrentSymbol(DeclarativesSectionSymbol, ctx, ctx.section_header().section_name());
     }
 
     exitDeclaratives_section(ctx: Declaratives_sectionContext) {
@@ -339,16 +383,24 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterParagraph(ctx: ParagraphContext) {
-        this.promoteCurrentSymbolTo(ParagraphSymbol, ctx, ctx.paragraph_name());
+        this.promoteCurrentSymbol(ParagraphSymbol, ctx, ctx.paragraph_name());
     }
 
     exitParagraph(ctx: ParagraphContext) {
         this.backToParent(ctx);
     }
 
+    enterIndexed_by(ctx: Indexed_byContext) {
+        let names = ctx.ind_name();
+        for(let nameCtx of names) {
+            this.promoteCurrentSymbol(IndexedBySymbol, nameCtx, nameCtx);
+            this.backToParent(nameCtx);
+        }
+    }
+
     //*****************************************************************************************************************************
 
-    private promoteCurrentSymbolTo<T extends Symbol>(t: new (...args: any[]) => T, enclosingCtx: ParserRuleContext, nameCtx?: ParserRuleContext, ...args: any[]): T {
+    private promoteCurrentSymbol<T extends Symbol>(t: new (...args: any[]) => T, enclosingCtx: ParserRuleContext, nameCtx?: ParserRuleContext, ...args: any[]): T {
         let name = nameCtx ? nameCtx.text.toUpperCase() : "";
         this.currentSymbol = this.createAndTryAddSymbolTo(this.currentSymbol, t, name, ...args);
         this.currentSymbol.context = enclosingCtx;

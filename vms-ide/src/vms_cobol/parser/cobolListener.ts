@@ -346,6 +346,8 @@ import { Segment_limitContext } from "./cobolParser";
 import { Segment_numberContext } from "./cobolParser";
 import { Special_namesContext } from "./cobolParser";
 import { Special_names_contentContext } from "./cobolParser";
+import { Cursor_isContext } from "./cobolParser";
+import { Crt_isContext } from "./cobolParser";
 import { Predefined_name_relationContext } from "./cobolParser";
 import { Predefined_nameContext } from "./cobolParser";
 import { Switch_definitionContext } from "./cobolParser";
@@ -4218,6 +4220,28 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitSpecial_names_content?: (ctx: Special_names_contentContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.cursor_is`.
+	 * @param ctx the parse tree
+	 */
+	enterCursor_is?: (ctx: Cursor_isContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.cursor_is`.
+	 * @param ctx the parse tree
+	 */
+	exitCursor_is?: (ctx: Cursor_isContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.crt_is`.
+	 * @param ctx the parse tree
+	 */
+	enterCrt_is?: (ctx: Crt_isContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.crt_is`.
+	 * @param ctx the parse tree
+	 */
+	exitCrt_is?: (ctx: Crt_isContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.predefined_name_relation`.

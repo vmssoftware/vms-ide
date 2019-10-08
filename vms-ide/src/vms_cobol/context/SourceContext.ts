@@ -128,7 +128,7 @@ export class CobolSourceContext implements ISourceContext<ECobolSymbolKind> {
                 ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree);
                 this.runAnalysis();
             } catch(e) {
-                this.logFn(LogType.error, () => String(e), true);
+                this.logFn(LogType.error, () => String(e));
             }
         }
 
@@ -144,7 +144,7 @@ export class CobolSourceContext implements ISourceContext<ECobolSymbolKind> {
                 this.runAnalysis();
                 ret.push(...this.diagnostics);
             } catch(e) {
-                this.logFn(LogType.error, () => String(e), true);
+                this.logFn(LogType.error, () => String(e));
             }
         }
         return ret;
