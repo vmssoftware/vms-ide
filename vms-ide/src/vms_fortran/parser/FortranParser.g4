@@ -13,6 +13,11 @@ programUnit
    | subroutineSubprogram
    | moduleBlock
    | blockDataSubprogramBlock
+   | optionsStatement
+   ;
+
+optionsStatement
+   : OPTIONS (DIV identifier (TO_ASSIGN identifier)?)+ eos
    ;
 
 mainProgram
@@ -189,6 +194,7 @@ identifier
    | NUMBER
    | NAMED
    | NAME
+   | TITLE
    | FORMATTED
    | UNFORMATTED
    | NEXTREC
@@ -336,6 +342,7 @@ formatEdit
    | P_CONST
    | P_CONST editElement
    | P_CONST I_CONST editElement
+   | BACKSLASH
    ;
 
 editElement
@@ -353,7 +360,7 @@ mislexedFcon
    ;
 
 formatsep
-   : DIV | COLON
+   : DIV | CONCAT | COLON
    ;
 
 programStatement
@@ -767,8 +774,8 @@ endSubroutineStatement
    ;
 
 entryStatement
-   : label? ENTRY entryName subroutineParList eos
-   | label? ENTRY entryName subroutineParList RESULT LPAREN name RPAREN eos
+   : label? ENTRY entryName (subroutineParList)? eos
+   | label? ENTRY entryName (subroutineParList)? RESULT LPAREN name RPAREN eos
    ;
 
 returnStatement
@@ -946,8 +953,9 @@ entityDecl
    | objectName STAR charLength LPAREN arraySpec RPAREN TO_ASSIGN expr
    | objectName
    | objectName STAR charLength
-   | objectName LPAREN arraySpec RPAREN
+   | objectName LPAREN arraySpec RPAREN 
    | objectName LPAREN arraySpec RPAREN STAR charLength
+   | objectName LPAREN arraySpec RPAREN DIV expr (COMMA expr)* DIV
    | pointerAssignmentItem
    ;
 
@@ -1828,6 +1836,7 @@ connectSpec
    | ERR TO_ASSIGN lblRef
    | FILE TO_ASSIGN cExpr
    | NAME TO_ASSIGN cExpr
+   | TITLE TO_ASSIGN cExpr
    | STATUS TO_ASSIGN cExpr
    | TYPE TO_ASSIGN cExpr
    | ACCESS TO_ASSIGN cExpr

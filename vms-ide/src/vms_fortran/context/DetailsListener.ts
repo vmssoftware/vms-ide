@@ -5,6 +5,7 @@ import {
     ContextSymbolTable,
     LabelSymbol,
     ImplicitBlockDclSymbol,
+    IncludeDclSymbol,
     RoutineSymbol,
     RoutineDclSymbol,
     RoutineBlockDclSymbol,
@@ -17,9 +18,7 @@ import {
     TypeDclSymbol,
     ConstantDclSymbol,
     TypeBlockDclSymbol,
-    LabelBlockDclSymbol,
     ConstBlockDclSymbol,
-    UnitBlockDclSymbol,
 } from './ContextSymbolTable';
 
 import { 
@@ -32,6 +31,7 @@ import {
     MainRangeContext,
     InternalSubprogramContext,
     ImplicitBodyContext,
+    IncludeStatementContext,
     IdentifierContext,
     EntityDeclContext,
     ComponentDeclContext,
@@ -109,6 +109,19 @@ export class DetailsListener implements FortranParserListener
         this.currentSymbol.context = ctx;
     }
     exitImplicitBody(ctx: ImplicitBodyContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
+    enterIncludeStatement(ctx: IncludeStatementContext) 
+    {
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(IncludeDclSymbol, undefined, ctx.S_CONST().text);
+        this.currentSymbol.context = ctx.S_CONST();
+    }
+    exitIncludeStatement(ctx: IncludeStatementContext) 
     {
         if (this.currentSymbol) 
         {
@@ -444,7 +457,7 @@ export class DetailsListener implements FortranParserListener
 
     enterDeclarationConstruct(ctx: DeclarationConstructContext) 
     {
-        this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, ctx.text);//???symbol type
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableBlockDclSymbol, undefined, ctx.text);
         this.currentSymbol.context = ctx;
     }
     exitDeclarationConstruct(ctx: DeclarationConstructContext) 

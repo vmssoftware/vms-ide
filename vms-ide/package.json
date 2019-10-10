@@ -147,7 +147,8 @@
                     ".f77",
                     ".f90",
                     ".for",
-                    ".f"
+                    ".f",
+                    ".inc"
                 ],
                 "configuration": "fortran.language-configuration.json"
             },
@@ -361,6 +362,11 @@
             ]
         },
         "commands": [
+            {
+                "command": "extension.vms-fortran.reparse",
+                "title": "%vms_fortran.extension.vms_reparse%",
+                "category": "%command.category%"
+            },
             {
                 "command": "extension.vms-debug.terminal",
                 "title": "%vms_debug.extension.vms_terminal%",

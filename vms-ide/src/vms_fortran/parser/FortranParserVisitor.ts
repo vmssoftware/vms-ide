@@ -5,6 +5,7 @@ import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
 
 import { ProgramContext } from "./FortranParser";
 import { ProgramUnitContext } from "./FortranParser";
+import { OptionsStatementContext } from "./FortranParser";
 import { MainProgramContext } from "./FortranParser";
 import { MainRangeContext } from "./FortranParser";
 import { BodyConstructContext } from "./FortranParser";
@@ -379,6 +380,13 @@ export interface FortranParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitProgramUnit?: (ctx: ProgramUnitContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.optionsStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitOptionsStatement?: (ctx: OptionsStatementContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `FortranParser.mainProgram`.

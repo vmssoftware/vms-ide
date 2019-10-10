@@ -16,6 +16,7 @@ export enum SymbolKind
     Entity,
     Block,
     ImplicitBlockDcl,
+    IncludeDcl,
     CompoundBlock,
     Routine,
     RoutineHeader,
@@ -102,10 +103,18 @@ export class Facade
         this.rootFolderNames = rootFolderNames;
     }
 
+    public setParameters(files: string[], rootFolderNames: Array<string>) 
+    {
+        this.filePaths = files;
+        this.rootFolderNames = rootFolderNames;
+        this.sourceContexts.clear();
+        this.sourceReferenceContexts.clear();
+    }
+
     public attach(fileName: string, source?: string) 
     {
         this.createDependencys(fileName);
-        
+
         const context = this.getContext(fileName, source);
 
         return context;
@@ -255,8 +264,6 @@ export class Facade
         //         contextEntry.context.addAsReferenceTo(depContext);
         //     }
         // }
-
-        this.reparseDependency(contextEntry.context.fileName);
 
         if(this.checkRootFolder(contextEntry.context.fileName, this.rootFolderNames))//if file locate in project floder
         {

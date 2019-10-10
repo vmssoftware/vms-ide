@@ -24,7 +24,7 @@ export class FortranHoverProvider implements HoverProvider
         {
             if(info.info.source === "")
             {
-                data = info.name + ": " + info.info.name;                
+                data = info.name + ": " + info.info.name;
             }
             else
             {
@@ -34,7 +34,70 @@ export class FortranHoverProvider implements HoverProvider
                     let endRow = info.info.definition!.range.end.row;
                     let range = new Range(startRow, 0, endRow, 0);
 
-                    data = info.name + ": " + document.getText(range).trim();
+                    if(document.fileName !== info.source)
+                    {
+                        document = await workspace.openTextDocument(Uri.file(info.source));
+                    }
+
+                    let textData = document.getText(range).trim();
+                    let textDataL = textData.toLowerCase();
+
+                    if(textDataL.includes("implicit"))
+                    {
+                        data = info.name + ": " + textData;
+                    }
+                    else
+                    {
+                        if(info.definition)
+                        {
+                            data = textData;
+
+                            const matcherTypeData = /^\s*\d*?\s*([a-zA-Z]+(\s*\*\s*\d+|\s*\(\s*\S+\s*\)|\s*\*\s*\(\s*(\d+|\*)\s*\))?)/;
+                            const matcherTypeDataColon = /^\s*\d*?\s*(.*\:\:)\s+/;
+                            const matcheVariable = /^\s*([a-zA-Z0-9$_]+\s*([\(\/]\s*[a-zA-Z0-9$_]+(\s*,\s*[a-zA-Z0-9$_]+\s*)*\s*[\)\/]|\s*\(\s*\*\s*\)|\s*\*\s*\d+|\s*\=(\>)?\s*.+)?)\s*(\,|\!)/;
+                            let type : string = "";
+                            let matches : RegExpMatchArray | null;
+
+                            if(data.includes("::"))
+                            {
+                                matches = data.match(matcherTypeDataColon);
+                            }
+                            else
+                            {
+                                matches = data.match(matcherTypeData);
+                            }
+
+                            if(matches && matches.length > 1)
+                            {
+                                type = matches[1];
+                            }
+
+                            let startRow = info.definition.range.start.row-1;
+                            let endRow = info.definition.range.end.row;
+                            let range = new Range(startRow, 0, endRow, 0);
+
+                            if(document.fileName !== info.source)
+                            {
+                                document = await workspace.openTextDocument(Uri.file(info.source));
+                            }
+
+                            data = document.getText(range);
+                            
+                            data = data.substr(info.definition.range.start.column);
+
+                            if(data.includes(",") || data.includes("!"))
+                            {
+                                matches = data.match(matcheVariable);
+
+                                if(matches && matches.length > 1)
+                                {
+                                    data = matches[1];
+                                }
+                            } 
+                            
+                            data = type + " " + data;
+                        }
+                    }
                 }
             }
 
@@ -68,7 +131,7 @@ export class FortranHoverProvider implements HoverProvider
                     document = await workspace.openTextDocument(Uri.file(info.source));
                 }
 
-                data = document.getText(range);                
+                data = document.getText(range);
 
                 const matcherTypeData = /^\s*\d*?\s*([a-zA-Z]+(\s*\*\s*\d+|\s*\(\s*\S+\s*\)|\s*\*\s*\(\s*(\d+|\*)\s*\))?)/;
                 const matcherTypeDataColon = /^\s*\d*?\s*(.*\:\:)\s+/;
@@ -83,7 +146,7 @@ export class FortranHoverProvider implements HoverProvider
                 else
                 {
                     matches = data.match(matcherTypeData);
-                }                
+                }
 
                 if(matches && matches.length > 1)
                 {
@@ -99,7 +162,7 @@ export class FortranHoverProvider implements HoverProvider
                 // else 
                 if(data.includes(",") || data.includes("!"))
                 {
-                    matches = data.match(matcheVariable);  
+                    matches = data.match(matcheVariable);
 
                     if(matches && matches.length > 1)
                     {

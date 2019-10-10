@@ -80,17 +80,8 @@ export class ContextSymbolTable extends SymbolTable
         }
 
         let showRoutine = false;
-        let routines = this.getAllSymbols(RoutineSymbol, false);
         let defRoutines = this.getAllSymbols(RoutineDclSymbol, false);
 
-        for(let item of routines)
-        {
-            if(item.name.toLowerCase() === symbol.name.toLowerCase())
-            {
-                showRoutine = true;
-                break;
-            }
-        }
         for(let item of defRoutines)
         {
             if(item.name.toLowerCase() === symbol.name.toLowerCase())
@@ -129,16 +120,16 @@ export class ContextSymbolTable extends SymbolTable
             }
             else
             {
-                let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, false);
-                let innerBlocks = this.getAllSymbols(VariableInnerBlockDclSymbol, false);
-                let varDefs = this.getAllSymbols(VariableDclSymbol, false);
+                //search variables in current file + include 
+                let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, true);
+                let innerBlocks = this.getAllSymbols(VariableInnerBlockDclSymbol, true);
                 let definition = this.definitionFromSymbol(symbol);
 
                 if(definition)
                 {
                     for (let block of innerBlocks)//search inner block witch contain symbol
                     {
-                        let item = this.findSimbolDedlarationInBlock(symbol, block);
+                        let item = this.findSimbolDedlarationInBlock(symbol, block, true);
 
                         if(item)
                         {
@@ -146,6 +137,9 @@ export class ContextSymbolTable extends SymbolTable
 
                             if(result)
                             {
+                                // let symbolBlock = this.findSimbolBlockDedlaration(item);
+                                // result.info = this.getSymbolInfo(symbolBlock);
+
                                 return result;
                             }
                             break;
@@ -154,7 +148,7 @@ export class ContextSymbolTable extends SymbolTable
 
                     for (let block of blocks)//search block witch contain symbol
                     {
-                        let item = this.findSimbolDedlarationInBlock(symbol, block);
+                        let item = this.findSimbolDedlarationInBlock(symbol, block, true);
 
                         if(item)
                         {
@@ -162,6 +156,9 @@ export class ContextSymbolTable extends SymbolTable
 
                             if(result)
                             {
+                                // let symbolBlock = this.findSimbolBlockDedlaration(item);
+                                // result.info = this.getSymbolInfo(symbolBlock);
+
                                 return result;
                             }
                             break;
@@ -176,7 +173,7 @@ export class ContextSymbolTable extends SymbolTable
                         if(this.checkSymbolLocationBlock(symbol, block))
                         {
                             findSymbolBlock = true;
-                            let item = this.findSymbolImplicitBlock(symbol, block);                            
+                            let item = this.findSymbolImplicitBlock(symbol, block, true);
 
                             if(item)
                             {
@@ -204,7 +201,7 @@ export class ContextSymbolTable extends SymbolTable
                         {
                             if(this.checkSymbolLocationBlock(symbol, block))
                             {
-                                let item = this.findSymbolImplicitBlock(symbol, block);                            
+                                let item = this.findSymbolImplicitBlock(symbol, block, true);
 
                                 if(item)
                                 {
@@ -227,6 +224,85 @@ export class ContextSymbolTable extends SymbolTable
                         }
                     }
 
+                    //search in include files
+                    for (let block of blocks)
+                    {
+                        if(this.checkSymbolLocationBlock(symbol, block))
+                        {                            
+                            let inclides = this.getAllSymbols(IncludeDclSymbol, true);
+                            let VariableDcls = this.getAllSymbols(VariableLocalBlockDclSymbol, false);
+
+                            for (let inclide of inclides)
+                            {
+                                if(this.checkSymbolLocationBlock(inclide, block))
+                                {
+                                    // INCLUDE ’file-name [/[NO]LIST]’
+                                    // INCLUDE ’[text-lib] (module-name) [/[NO]LIST]’
+                                    //get file name from include
+                                    let includeFileName = "";
+                                    const matcherIncModuleName = /^\'\s*\S*\s*\(\s*(\S+)\s*\)/;
+                                    const matcherFilName = /^\'\s*(\S+)\s*(\'|\/)/;
+                                    let matches : RegExpMatchArray | null;
+
+                                    if(inclide.name.includes("("))
+                                    {
+                                        matches = inclide.name.match(matcherIncModuleName);
+                                    }
+                                    else
+                                    {
+                                        matches = inclide.name.match(matcherFilName);
+                                    }
+
+                                    if(matches && matches.length > 1)
+                                    {
+                                       includeFileName = matches[1];
+                                    }
+
+                                    for (let variable of VariableDcls)
+                                    {
+                                        let symbolOwner = (variable.symbolTable as ContextSymbolTable).owner;                                        
+                                        
+                                        if(symbolOwner)
+                                        {
+                                            if(symbolOwner.fileName.includes(includeFileName) && variable.symbolTable)
+                                            {
+                                                //let symbolBlock : Symbol | undefined;
+                                                //search symbol
+                                                for(let item of variable.symbolTable.children)
+                                                {
+                                                    if(ContextSymbolTable.getKindFromSymbol(item) === SymbolKind.VariableDcl)//check symbol type
+                                                    {
+                                                        if(item.name.toLowerCase() === symbol.name.toLowerCase())
+                                                        {
+                                                            let result = this.getSymbolInfo(item);
+
+                                                            if(result)
+                                                            {
+                                                                // result.info = this.getSymbolInfo(symbolBlock);
+
+                                                                return result;
+                                                            }
+                                                        }
+                                                    }
+                                                    // else if(ContextSymbolTable.getKindFromSymbol(item) === SymbolKind.VariableBlockDcl)//check symbol type
+                                                    // {
+                                                    //     let name = item.name.toLowerCase();
+
+                                                    //     if(name.includes(symbol.name.toLowerCase()))
+                                                    //     {
+                                                    //         symbolBlock = item;
+                                                    //     }
+                                                    // }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+
                     if(!findImplisit)
                     {
                         let result = this.getSymbolInfo(symbol);
@@ -241,43 +317,6 @@ export class ContextSymbolTable extends SymbolTable
                             result.info = info;
 
                             return result;
-                        }
-                    }
-
-                    //search in global symbols
-                    let globalVarsBlocks = this.getAllSymbols(VariableGlobalBlockDclSymbol, false);
-                    
-                    for (let block of globalVarsBlocks)
-                    {
-                        if(block.context instanceof ParserRuleContext)
-                        {
-                            if(block.context.stop)
-                            {
-                                let startLine = block.context.start.line;
-                                let stopLine = block.context.stop.line;
-
-                                for(let item of varDefs)
-                                {
-                                    if(item.name.toLowerCase() === symbol.name.toLowerCase())
-                                    {
-                                        let definition = this.definitionFromSymbol(item);
-                        
-                                        if (definition) 
-                                        {
-                                            if(definition.range.start.row >= startLine && definition.range.start.row <= stopLine)
-                                            {
-                                                let result = this.getSymbolInfo(item);
-
-                                                if(result)
-                                                {
-                                                    return result;
-                                                }
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -307,7 +346,7 @@ export class ContextSymbolTable extends SymbolTable
         return undefined;
     }
 
-    private findSymbolImplicitBlock(symbol: Symbol, block: Symbol): Symbol | undefined
+    private findSymbolImplicitBlock(symbol: Symbol, block: Symbol, local: boolean): Symbol | undefined
     {
         let definition = this.definitionFromSymbol(symbol);
 
@@ -316,11 +355,11 @@ export class ContextSymbolTable extends SymbolTable
             if(block.context.stop)
             {
                 let startLine = block.context.start.line;
-                let stopLine = block.context.stop.line;                
+                let stopLine = block.context.stop.line;
 
                 if(definition.range.start.row >= startLine && definition.range.start.row <= stopLine)
                 {
-                    let implicitBlocks = this.getAllSymbols(ImplicitBlockDclSymbol, false);
+                    let implicitBlocks = this.getAllSymbols(ImplicitBlockDclSymbol, local);
 
                     for(let item of implicitBlocks)
                     {
@@ -350,7 +389,7 @@ export class ContextSymbolTable extends SymbolTable
             if(block.context.stop)
             {
                 let startLine = block.context.start.line;
-                let stopLine = block.context.stop.line;                
+                let stopLine = block.context.stop.line;
 
                 if(definition.range.start.row >= startLine && definition.range.start.row <= stopLine)
                 {
@@ -362,7 +401,7 @@ export class ContextSymbolTable extends SymbolTable
         return false;
     }
 
-    private findSimbolDedlarationInBlock(symbol: Symbol, block: Symbol): Symbol | undefined
+    private findSimbolDedlarationInBlock(symbol: Symbol, block: Symbol, local: boolean): Symbol | undefined
     {
         let definition = this.definitionFromSymbol(symbol);
 
@@ -372,7 +411,7 @@ export class ContextSymbolTable extends SymbolTable
             {
                 let startLine = block.context.start.line;
                 let stopLine = block.context.stop.line;
-                let varDefs = this.getAllSymbols(VariableDclSymbol, false);
+                let varDefs = this.getAllSymbols(VariableDclSymbol, local);
 
                 if(definition.range.start.row >= startLine && definition.range.start.row <= stopLine)
                 {
@@ -386,7 +425,7 @@ export class ContextSymbolTable extends SymbolTable
                             {
                                 if(definition.range.start.row >= startLine && definition.range.start.row <= stopLine)
                                 {
-                                     return item;
+                                    return item;
                                 }
                             }
                         }
@@ -396,6 +435,35 @@ export class ContextSymbolTable extends SymbolTable
         }
 
         return undefined;
+    }
+
+    private findSimbolBlockDedlaration(symbol: Symbol): Symbol | undefined
+    {
+        let definition = this.definitionFromSymbol(symbol);
+        let symbolBlock : Symbol | undefined;
+                
+        if (definition) 
+        {
+            let position = definition.range.start.row;
+            let blockDefs = this.getAllSymbols(VariableBlockDclSymbol, true);
+
+            for(let item of blockDefs)
+            {
+                let definitionBlock = this.definitionFromSymbol(item);
+
+                if (definitionBlock) 
+                {
+                    if(position >= definitionBlock.range.start.row && position <= definitionBlock.range.end.row)
+                    {
+                        //return item;
+                        symbolBlock = item;
+                    }
+                }
+            }
+        }
+
+        //return undefined;
+        return symbolBlock;
     }
 
     private findSimbolInfoDedlaration(symbol: Symbol, definitionSymbols: Set<Symbol>, blocks: Set<Symbol>): SymbolInfo | undefined
@@ -433,23 +501,6 @@ export class ContextSymbolTable extends SymbolTable
                 }
 
                 break;
-            }
-        }
-
-        return undefined;
-    }
-
-    private findLocalSimbolDedlaration(symbol: Symbol): Symbol | undefined
-    {
-        let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, false);
-
-        for (let block of blocks)//search block witch contain symbol
-        {
-            let local = this.findSimbolDedlarationInBlock(symbol, block);
-
-            if(local)
-            {
-                return local;
             }
         }
 
@@ -598,13 +649,13 @@ export class ContextSymbolTable extends SymbolTable
 
         for (let block of blocks)//search block witch contain symbol
         {
-            localSymbol = this.findSimbolDedlarationInBlock(symbol, block);
+            localSymbol = this.findSimbolDedlarationInBlock(symbol, block, false);//?????????????????
 
             if(localSymbol)
             {
                 localBlock = block;
                 break;
-            }            
+            }
         }
 
         if(localSymbol && localBlock)
@@ -647,7 +698,7 @@ export class ContextSymbolTable extends SymbolTable
                     {
                         for (let block of blocks)//search block witch contain symbol
                         {
-                            localSymbol = this.findSimbolDedlarationInBlock(item, block);
+                            localSymbol = this.findSimbolDedlarationInBlock(item, block, false);//??????????????????????//
                 
                             if(localSymbol)
                             {
@@ -765,6 +816,10 @@ export class ContextSymbolTable extends SymbolTable
         {
             return SymbolKind.ImplicitBlockDcl;
         }
+        if (symbol instanceof IncludeDclSymbol) 
+        {
+            return SymbolKind.IncludeDcl;
+        }
         if (symbol instanceof RoutineSymbol) 
         {
             return SymbolKind.Routine;
@@ -871,6 +926,7 @@ export class RoutineBlockDclSymbol extends EntityCollection { }
 export class VariableDclSymbol extends EntityCollection { }
 export class VariableBlockDclSymbol extends EntityCollection { }
 export class ImplicitBlockDclSymbol extends EntityCollection { }
+export class IncludeDclSymbol extends EntityCollection { }
 export class VariableGlobalBlockDclSymbol extends EntityCollection { }
 export class VariableLocalBlockDclSymbol extends EntityCollection { }
 export class VariableInnerBlockDclSymbol extends EntityCollection { }

@@ -5,6 +5,7 @@ import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 
 import { ProgramContext } from "./FortranParser";
 import { ProgramUnitContext } from "./FortranParser";
+import { OptionsStatementContext } from "./FortranParser";
 import { MainProgramContext } from "./FortranParser";
 import { MainRangeContext } from "./FortranParser";
 import { BodyConstructContext } from "./FortranParser";
@@ -384,6 +385,17 @@ export interface FortranParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitProgramUnit?: (ctx: ProgramUnitContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.optionsStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterOptionsStatement?: (ctx: OptionsStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.optionsStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitOptionsStatement?: (ctx: OptionsStatementContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `FortranParser.mainProgram`.

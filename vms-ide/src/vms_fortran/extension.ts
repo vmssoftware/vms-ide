@@ -18,78 +18,26 @@ import * as vscode from "vscode";
 //const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
 export const Fortran = { language: 'vms-fortran', scheme: 'file' };
+const diagnosticCollection = languages.createDiagnosticCollection(Fortran.language);
+const DiagnosticTypeMap: Map<DiagnosticType, DiagnosticSeverity> = new Map();
+let backend: Facade;
 
 
 export async function activate(context: ExtensionContext) 
-{    
-    const diagnosticCollection = languages.createDiagnosticCollection(Fortran.language);
+{
+    context.subscriptions.push(vscode.commands.registerCommand('extension.vms-fortran.reparse', () =>
+	{
+		reparseProject();
+    }));
 
-    const DiagnosticTypeMap: Map<DiagnosticType, DiagnosticSeverity> = new Map();
     DiagnosticTypeMap.set(DiagnosticType.Hint, DiagnosticSeverity.Hint);
     DiagnosticTypeMap.set(DiagnosticType.Info, DiagnosticSeverity.Information);
     DiagnosticTypeMap.set(DiagnosticType.Warning, DiagnosticSeverity.Warning);
     DiagnosticTypeMap.set(DiagnosticType.Error, DiagnosticSeverity.Error);
 
-    let barMessage: StatusBarItem =  window.createStatusBarItem(StatusBarAlignment.Left);
-    barMessage.text = `$(sync) ${"parsing ..."}`;
-    barMessage.show();
+    await reparseProject();
 
-    let sourcePaths: string[] = [];
-    let rootFolderName: string = "";
-    let rootFolderNames = new Array<string>();
-    let configManager = new ConfigManager(rootFolderName);
-    
-    if(vscode.workspace.workspaceFolders)
-    {
-        let listFolders = await configManager.getDependencyList();
-
-        if(listFolders)
-        {
-            for(let folder of listFolders)
-            {
-                let path = "";
-
-                for(let item of vscode.workspace.workspaceFolders)
-                {
-                    if(item.name === folder)
-                    {
-                        path = item.uri.fsPath;
-                        rootFolderNames.push(path);
-                        break;
-                    }
-                }
-
-                if(path !== "")
-                {
-                    let fileM = new ConfigManager(folder);
-                    let sectionCur = await fileM.getProjectSection();
-
-                    if (sectionCur)
-                    {
-                        let sources = await fileM.loadPathListFiles(sectionCur.source);
-                        addPathToFiles(sourcePaths, path, sources);
-                    }
-                }
-            }
-        }
-    }
-
-    const backend = new Facade(sourcePaths, rootFolderNames);
-
-    // Load interpreter + cache data for each open document, if there's any.
-    for (let document of workspace.textDocuments) 
-    {
-        if (document.languageId === Fortran.language) 
-        {
-            // parse file and show diagnostics
-            backend.attach(document.uri.fsPath, document.getText());
-            processDiagnostic(document);
-        }
-    }
-    
-    barMessage.hide();
-
-    context.subscriptions.push(languages.registerHoverProvider(Fortran, new FortranHoverProvider(backend)));
+    context.subscriptions. push(languages.registerHoverProvider(Fortran, new FortranHoverProvider(backend)));
     context.subscriptions.push(languages.registerDefinitionProvider(Fortran, new FortranDefinitionProvider(backend)));    
     context.subscriptions.push(languages.registerCompletionItemProvider(Fortran, new FortranCompletionItemProvider(backend),
         ".", " ", "<", ">", "=", "("));
@@ -103,6 +51,7 @@ export async function activate(context: ExtensionContext)
         if (document.languageId === Fortran.language && document.uri.scheme === Fortran.scheme) 
         {
             backend.attach(document.uri.fsPath, document.getText());
+            processDiagnostic(document);
         }
     });
 
@@ -167,24 +116,93 @@ export async function activate(context: ExtensionContext)
         //     }
         // }
     });
+}
 
-    function processDiagnostic(document: TextDocument) 
+async function reparseProject() : Promise<void>
+{
+    let barMessage: StatusBarItem =  window.createStatusBarItem(StatusBarAlignment.Left);
+    barMessage.text = `$(sync) ${"parsing ..."}`;
+    barMessage.show();
+
+    let sourcePaths: string[] = [];
+    let rootFolderName: string = "";
+    let rootFolderNames = new Array<string>();
+    let configManager = new ConfigManager(rootFolderName);
+
+    if(vscode.workspace.workspaceFolders)
     {
-        let diagnostics = [];
-        backend.setText(document.fileName, document.getText());
-        let entries = backend.getDiagnostics(document.fileName);
+        let listFolders = await configManager.getDependencyList();
 
-        for (let entry of entries) 
+        if(listFolders)
         {
-            let startRow = entry.range.start.row === 0 ? 0 : entry.range.start.row - 1;
-            let endRow = entry.range.end.row === 0 ? 0 : entry.range.end.row - 1;
-            let range = new Range(startRow, entry.range.start.column, endRow, entry.range.end.column);
-            let diagnostic = new Diagnostic(range, entry.message, DiagnosticTypeMap.get(entry.type));
-            diagnostics.push(diagnostic);
-        }
+            for(let folder of listFolders)
+            {
+                let path = "";
 
-        diagnosticCollection.set(document.uri, diagnostics);
+                for(let item of vscode.workspace.workspaceFolders)
+                {
+                    if(item.name === folder)
+                    {
+                        path = item.uri.fsPath;
+                        rootFolderNames.push(path);
+                        break;
+                    }
+                }
+
+                if(path !== "")
+                {
+                    let fileM = new ConfigManager(folder);
+                    let sectionCur = await fileM.getProjectSection();
+
+                    if (sectionCur)
+                    {
+                        let sources = await fileM.loadPathListFiles(sectionCur.source);
+                        addPathToFiles(sourcePaths, path, sources);
+                    }
+                }
+            }
+        }
     }
+
+    if(backend)
+    {
+        backend.setParameters(sourcePaths, rootFolderNames);
+    }
+    else
+    {
+        backend = new Facade(sourcePaths, rootFolderNames);
+    }
+
+    // Load interpreter + cache data for each open document, if there's any.
+    for (let document of workspace.textDocuments) 
+    {
+        if (document.languageId === Fortran.language) 
+        {
+            // parse file and show diagnostics
+            backend.attach(document.uri.fsPath, document.getText());
+            processDiagnostic(document);
+        }
+    }
+
+    barMessage.hide();
+}
+
+function processDiagnostic(document: TextDocument) 
+{
+    let diagnostics = [];
+    backend.setText(document.fileName, document.getText());
+    let entries = backend.getDiagnostics(document.fileName);
+
+    for (let entry of entries) 
+    {
+        let startRow = entry.range.start.row === 0 ? 0 : entry.range.start.row - 1;
+        let endRow = entry.range.end.row === 0 ? 0 : entry.range.end.row - 1;
+        let range = new Range(startRow, entry.range.start.column, endRow, entry.range.end.column);
+        let diagnostic = new Diagnostic(range, entry.message, DiagnosticTypeMap.get(entry.type));
+        diagnostics.push(diagnostic);
+    }
+
+    diagnosticCollection.set(document.uri, diagnostics);
 }
 
 function addPathToFiles(sourcePaths : string[], path : string, fileNames : string[])
@@ -212,7 +230,8 @@ function checkExtension(file: string) : boolean
         if(ext === ".f90" ||
             ext === ".f77" ||
             ext === ".for" ||
-            ext === ".f")
+            ext === ".f" ||
+            ext === ".inc")
         {
             result = true;
         }

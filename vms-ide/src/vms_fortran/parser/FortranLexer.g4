@@ -106,6 +106,10 @@ fragment Z
    ;
 
 
+OPTIONS
+   : O P T I O N S
+   ;
+
 PROGRAM
    : P R O G R A M
    ;
@@ -466,6 +470,70 @@ LOC
    : '%'L O C
    ;
 
+LNOT
+   : '.' N O T '.'
+   ;
+
+LAND
+   :  '.' A N D '.'
+   ;
+
+LOR
+   : '.' O R '.'
+   ;
+
+EQV
+   : '.' E Q V '.'
+   ;
+
+NEQV
+   : '.' N E Q V '.'
+   ;
+
+XOR
+   : '.' X O R '.'
+   ;
+
+EOR_
+   : '.' E O R '.'
+   ;
+
+LT
+   : '.' L T '.'
+   ;
+
+LE
+   : '.' L E '.'
+   ;
+
+GT
+   : '.' G T '.'
+   ;
+
+GE
+   : '.' G E '.'
+   ;
+
+NE
+   : '.' N E '.'
+   ;
+
+EQ
+   : '.' E Q '.'
+   ;
+
+TRUE
+   : '.' T R U E '.'
+   ;
+
+FALSE
+   : '.' F A L S E '.'
+   ;
+
+SHARP
+   : '#'
+   ;
+
 PERCENT
    : '%'
    ;
@@ -504,6 +572,10 @@ MINUS
 
 PLUS
    : '+'
+   ;
+
+BACKSLASH
+   : '\\'
    ;
 
 DIV
@@ -548,66 +620,6 @@ MORE_EQUAL
 
 LESS_EQUAL
    : '<='
-   ;
-
-LNOT
-   : DOT N O T DOT
-   ;
-
-LAND
-   :  DOT A N D DOT
-   ;
-
-LOR
-   : DOT O R DOT
-   ;
-
-EQV
-   : DOT E Q V DOT
-   ;
-
-NEQV
-   : DOT N E Q V DOT
-   ;
-
-XOR
-   : DOT X O R DOT
-   ;
-
-EOR_
-   : DOT E O R DOT
-   ;
-
-LT
-   : DOT L T DOT
-   ;
-
-LE
-   : DOT L E DOT
-   ;
-
-GT
-   : DOT G T DOT
-   ;
-
-GE
-   : DOT G E DOT
-   ;
-
-NE
-   : DOT N E DOT
-   ;
-
-EQ
-   : DOT E Q DOT
-   ;
-
-TRUE
-   : DOT T R U E DOT
-   ;
-
-FALSE
-   : DOT F A L S E DOT
    ;
 
 
@@ -756,6 +768,10 @@ NAME
    : N A M E
    ;
 
+TITLE
+   : T I T L E
+   ;   
+
 FORMATTED
    : F O R M A T T E D
    ;
@@ -893,7 +909,7 @@ SIGN
    ;
 
 fragment CONTINUATION
-   : ~ [ 0\t\r]
+   : ~ [ 0\t\r\n]
    ;
 
 fragment CHAR
@@ -942,6 +958,7 @@ WS
 
 I_CONST
    : ([0-9])+
+   | ((SIGN? [0-9]([0-9])?)? SHARP) ([0-9A-Za-z])+
    ;
 
 H_CONST
@@ -987,13 +1004,14 @@ F_CONST
    ;
 
 IDENTIFIER
-   : [a-zA-Z_$] ([a-zA-Z_0-9$])*
+   : [a-zA-Z_$] ([a-zA-Z_0-9$@])*
    ;
 
 R_CONST
    : ([0-9])+ (DOT [0-9]*)? ([eEdDqQ] SIGN? ([0-9])+)
    | ([0-9])* DOT ([0-9])+ ([eEdDqQ] SIGN? ([0-9])+)?
-   | ([0-9])+ DOT ([0-9])* ([eEdDqQ] SIGN? ([0-9])+)?
+   | ([0-9])+ DOT ([0-9])* ([eEdDqQ] SIGN? ([0-9])+)
+   | ([0-9])+ DOT {(this.inputStream.LA(1) < 'A'.charCodeAt(0))}?
    // : DOT ([0-9])* ([eEdDqQ] SIGN? ([0-9])+)?
    // | ([0-9])+ DOT ([0-9])* ([eEdDqQ] SIGN? ([0-9])+)?
    // | ([0-9])+ [eEdDqQ] SIGN? ([0-9])+
@@ -1002,7 +1020,7 @@ R_CONST
 
 
 COMMENT
-   : '!' (~ [\r\n])*
+   : '!' (~ [\r\n])* ([\n][*Cc!] (~ [\r\n])*)?
    ;
 
 // FIXED_COMMENT
