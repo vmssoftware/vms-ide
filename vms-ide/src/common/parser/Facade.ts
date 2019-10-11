@@ -18,11 +18,11 @@ export interface IDefinition {
 }
 
 export interface ISymbolInfo<ESymbolKind> {
+    definition?: IDefinition;   // Place where symbol is defined, not where it is used
+    description: string;        // Provides a small description for certain symbols
     kind: ESymbolKind;
     name: string;
     source: string;
-    definition?: IDefinition;   // Place where symbol is defined, not where it is used
-    description?: string;       // Used for code completion. Provides a small description for certain symbols.
 }
 
 export enum EDiagnosticType {
@@ -39,11 +39,26 @@ export interface IDiagnosticEntry {
 }
 
 export interface ISourceContext<ESymbolKind> {
-    getCodeCompletionCandidates(column: number, row: number): ISymbolInfo<ESymbolKind>[];
+    /**
+     * Zero-based
+     * @param column 
+     * @param row 
+     */
+    getCodeCompletionCandidates(column: number, row: number): string[];
     getDiagnostics(): IDiagnosticEntry[];
-    getSymbolOccurences(column: number, row: number): ISymbolInfo<ESymbolKind>[];
+    /**
+     * Zero-based
+     * @param column 
+     * @param row 
+     */
+    getSymbolOccurences(column: number, row: number): IDefinition[];
     parse(): void;
     setText(source: string): void;
+    /**
+     * Zero-based
+     * @param column 
+     * @param row 
+     */
     symbolInfoAtPosition(column: number, row: number): ISymbolInfo<ESymbolKind> | undefined;
 }
 
@@ -51,7 +66,7 @@ export interface IContextEntry<ESymbolKind> {
     context: ISourceContext<ESymbolKind>;
 }
 
-export class ContextFacade<ESymbolKind> {
+export class FacadeImpl<ESymbolKind> {
     // Mapping file names to SourceContext instances.
     private sourceContexts: Map<string, IContextEntry<ESymbolKind>> = new Map<string, IContextEntry<ESymbolKind>>();
 
@@ -131,17 +146,35 @@ export class ContextFacade<ESymbolKind> {
         return context.getDiagnostics();
     }
 
-    public getCodeCompletionCandidates(fileName: string, column: number, row: number): ISymbolInfo<ESymbolKind>[] {
+    /**
+     * Zero-based
+     * @param fileName 
+     * @param column 
+     * @param row 
+     */
+    public getCodeCompletionCandidates(fileName: string, column: number, row: number): string[] {
         let context = this.getContext(fileName);
         return context.getCodeCompletionCandidates(column, row);
     }
 
+    /**
+     * Zero-based
+     * @param fileName 
+     * @param column 
+     * @param row 
+     */
     public symbolInfoAtPosition(fileName: string, column: number, row: number): ISymbolInfo<ESymbolKind> | undefined {
         let context = this.getContext(fileName);
         return context.symbolInfoAtPosition(column, row);
     }
 
-    public getSymbolOccurences(fileName: string, column: number, row: number): ISymbolInfo<ESymbolKind>[] {
+    /**
+     * Zero-based
+     * @param fileName 
+     * @param column 
+     * @param row 
+     */
+    public getSymbolOccurences(fileName: string, column: number, row: number): IDefinition[] {
         let context = this.getContext(fileName);
         return context.getSymbolOccurences(column, row);
     }

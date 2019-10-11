@@ -7,7 +7,6 @@ import {
 
 export enum ECobolSymbolKind {
     Unknown,
-    CobolSource,
     Program,
     CARD_READER,
     PAPER_TAPE_READER,
@@ -33,6 +32,7 @@ export enum ECobolSymbolKind {
     DataRecord,
     Section,
     Paragraph,
+    IndexedBy,
 }
 
 /**
@@ -41,8 +41,6 @@ export enum ECobolSymbolKind {
 export function symbolDescriptionFromEnum(kind: ECobolSymbolKind): string {
     // Could be localized.
     switch (kind) {
-        case ECobolSymbolKind.CobolSource:
-            return "CobolSource";
         case ECobolSymbolKind.Program:
             return "Program";
         case ECobolSymbolKind.CARD_READER:
@@ -93,6 +91,8 @@ export function symbolDescriptionFromEnum(kind: ECobolSymbolKind): string {
             return "Section";
         case ECobolSymbolKind.Paragraph:
             return "Paragraph";
+        case ECobolSymbolKind.IndexedBy:
+            return "IndexedBy";
         case ECobolSymbolKind.Unknown:
         default:
             return "Unknown type";
@@ -104,8 +104,6 @@ export function symbolDescriptionFromEnum(kind: ECobolSymbolKind): string {
  */
 export function translateSymbolKind(kind: ECobolSymbolKind): vscode.SymbolKind {
     switch (kind) {
-        case ECobolSymbolKind.CobolSource:
-            return vscode.SymbolKind.File;
         case ECobolSymbolKind.Program:
             return vscode.SymbolKind.Module;
         case ECobolSymbolKind.CARD_READER:
@@ -135,6 +133,8 @@ export function translateSymbolKind(kind: ECobolSymbolKind): vscode.SymbolKind {
         case ECobolSymbolKind.Section:
         case ECobolSymbolKind.Paragraph:
             return vscode.SymbolKind.Function;
+        case ECobolSymbolKind.IndexedBy:
+            return vscode.SymbolKind.Variable;
         case ECobolSymbolKind.Unknown:
         default:
             return vscode.SymbolKind.Null;
@@ -146,8 +146,6 @@ export function translateSymbolKind(kind: ECobolSymbolKind): vscode.SymbolKind {
  */
 export function translateCompletionKind(kind: ECobolSymbolKind): vscode.CompletionItemKind {
     switch (kind) {
-        case ECobolSymbolKind.CobolSource:
-            return vscode.CompletionItemKind.File;
         case ECobolSymbolKind.Program:
             return vscode.CompletionItemKind.Module;
         case ECobolSymbolKind.CARD_READER:
@@ -177,7 +175,8 @@ export function translateCompletionKind(kind: ECobolSymbolKind): vscode.Completi
         case ECobolSymbolKind.Section:
         case ECobolSymbolKind.Paragraph:
             return vscode.CompletionItemKind.Function;
-        case ECobolSymbolKind.Unknown:
+        case ECobolSymbolKind.IndexedBy:
+                return vscode.CompletionItemKind.Variable;
         case ECobolSymbolKind.Unknown:
         default:
             return vscode.CompletionItemKind.Text;
@@ -190,8 +189,6 @@ export function translateCompletionKind(kind: ECobolSymbolKind): vscode.Completi
  */
 export function getSymbolFromKind(kind: ECobolSymbolKind): typeof Symbol {
     switch (kind) {
-        case ECobolSymbolKind.CobolSource:
-            return CobolSourceSymbol;
         case ECobolSymbolKind.Program:
             return ProgramSymbol;
         case ECobolSymbolKind.CARD_READER:
@@ -242,6 +239,8 @@ export function getSymbolFromKind(kind: ECobolSymbolKind): typeof Symbol {
             return SectionSymbol;
         case ECobolSymbolKind.Paragraph:
             return ParagraphSymbol;
+        case ECobolSymbolKind.IndexedBy:
+            return IndexedBySymbol;
         case ECobolSymbolKind.Unknown:
         default:
             return Symbol;
@@ -253,9 +252,6 @@ export function getSymbolFromKind(kind: ECobolSymbolKind): typeof Symbol {
  * @param symbol 
  */
 export function getKindFromSymbol(symbol: Symbol): ECobolSymbolKind {
-    if (symbol instanceof CobolSourceSymbol) {
-        return ECobolSymbolKind.CobolSource;
-    }
     if (symbol instanceof ProgramSymbol) {
         return ECobolSymbolKind.Program;
     }
@@ -331,13 +327,18 @@ export function getKindFromSymbol(symbol: Symbol): ECobolSymbolKind {
     if (symbol instanceof ParagraphSymbol) {
         return ECobolSymbolKind.Paragraph;
     }
+    if (symbol instanceof IndexedBySymbol) {
+        return ECobolSymbolKind.IndexedBy;
+    }
     if (symbol instanceof Symbol) {
         return ECobolSymbolKind.Unknown;
     }
     return ECobolSymbolKind.Unknown;
 }
+export class IdentifierSymbol extends ScopedSymbol {
+    public isGlobal?: boolean;
+}
 
-export class CobolSourceSymbol extends ScopedSymbol { }
 export class ProgramSymbol extends ScopedSymbol { }
 export class CARD_READER_Symbol extends Symbol { }
 export class PAPER_TAPE_READER_Symbol extends Symbol { }
@@ -362,20 +363,15 @@ export class CLASS_Symbol extends Symbol { }
 export class CURRENCY_Symbol extends Symbol {
     public currency_str?: string;
 }
-export class FileSymbol extends ScopedSymbol {
-    public isGlobal?: boolean;
-}
+export class FileSymbol extends IdentifierSymbol { }
 export class SortMergeFileSymbol extends ScopedSymbol { }
-export class ReportFileSymbol extends ScopedSymbol {
-    public isGlobal?: boolean;
-}
-export class ReportGroupSymbol extends ScopedSymbol {
+export class ReportFileSymbol extends IdentifierSymbol { }
+export class DataRecordSymbol extends IdentifierSymbol {
     public level?: number;
+    public picture?: string;
+    public usage?: EDataUsage;
 }
-export class DataRecordSymbol extends ScopedSymbol {
-    public level?: number;
-    public isGlobal?: boolean;
-}
+export class ReportGroupSymbol extends DataRecordSymbol { }
 export class SegKeySymbol extends Symbol { }
 export class SectionSymbol extends ScopedSymbol {
     public segment?: number;
@@ -383,3 +379,33 @@ export class SectionSymbol extends ScopedSymbol {
 export class DeclarativesSectionSymbol extends SectionSymbol { }
 export class ParagraphSymbol extends ScopedSymbol { }
 export class IndexedBySymbol extends Symbol { }
+
+export enum EDataUsage {
+    BINARY,
+    BINARY_CHAR,
+    BINARY_SHORT,
+    BINARY_LONG,
+    BINARY_DOUBLE,
+    COMPUTATIONAL,
+    COMPUTATIONAL_1,
+    COMPUTATIONAL_2,
+    COMPUTATIONAL_3,
+    COMPUTATIONAL_4,
+    COMPUTATIONAL_5,
+    COMPUTATIONAL_X,
+    COMP,
+    COMP_1,
+    COMP_2,
+    COMP_3,
+    COMP_4,
+    COMP_5,
+    COMP_X,
+    DISPLAY,
+    FLOAT_SHORT,
+    FLOAT_LONG,
+    FLOAT_EXTENDED,
+    INDEX,
+    PACKED_DECIMAL,
+    POINTER,
+    POINTER_64,
+}

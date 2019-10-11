@@ -8,11 +8,13 @@ import {
     StatusBarItem, StatusBarAlignment
 } from 'vscode';
 
-import { EDiagnosticType, ContextFacade } from "../common/parser/Facade";
+import { EDiagnosticType, FacadeImpl } from "../common/parser/Facade";
 import { CobolSourceContext } from "./context/SourceContext";
 import { GetConfigHelperFromApi } from "../ext-api/ext-api";
 import { LogFunction } from "../common/main";
-import { CobolHoverProvider } from "./providers/HoverProvider";
+import { HoverProviderImpl } from "../common/parser/HoverProvider";
+import { DefinitionProviderImpl } from "../common/parser/DefinitionProvider";
+import { RenameProviderImpl } from "../common/parser/RenameProvider";
 
 const locale = env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -40,7 +42,7 @@ export async function activate(context: ExtensionContext) {
 
     const logFn = configApi.createLogFunction("VMS-IDE");
 
-    const backend = new ContextFacade((fileName: string, logFn?: LogFunction) => new CobolSourceContext(fileName, logFn), logFn);
+    const backend = new FacadeImpl((fileName: string, logFn?: LogFunction) => new CobolSourceContext(fileName, logFn), logFn);
 
     // Load interpreter + cache data for each open document, if there's any.
     for (let document of workspace.textDocuments) {
@@ -53,11 +55,11 @@ export async function activate(context: ExtensionContext) {
 
     barMessage.hide();
 
-     context.subscriptions.push(languages.registerHoverProvider(Cobol, new CobolHoverProvider(backend)));
-    // context.subscriptions.push(languages.registerDefinitionProvider(Cobol, new PascalDefinitionProvider(backend)));    
+    context.subscriptions.push(languages.registerHoverProvider(Cobol, new HoverProviderImpl(backend)));
+    context.subscriptions.push(languages.registerDefinitionProvider(Cobol, new DefinitionProviderImpl(backend)));
+    context.subscriptions.push(languages.registerRenameProvider(Cobol, new RenameProviderImpl(backend)));
     // context.subscriptions.push(languages.registerCompletionItemProvider(Cobol, new PascalCompletionItemProvider(backend),
     //     ".", " ", "<", ">", "=", "("));
-    // context.subscriptions.push(languages.registerRenameProvider(Cobol, new PascalRenameProvider(backend)));
     // context.subscriptions.push(languages.registerReferenceProvider(Cobol, new PascalReferenceProvider(backend)));
 
     //----- Events -----

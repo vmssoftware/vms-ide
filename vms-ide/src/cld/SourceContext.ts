@@ -15,7 +15,7 @@ import { LogFunction, LogType } from '../common/main';
 import { VerbSymbol, TypeSymbol, TypeRefSymbol, SyntaxSymbol, BuiltInTypeSymbol, ParameterSymbol, QualifierSymbol, KeywordSymbol, ContextSymbolTable, LabelSymbol, EntitySymbol, EntityCollection, WithTypeReference } from './ContextSymbolTable';
 import { BuiltInValueTypes, symbolDescriptionFromEnum } from './Symbol';
 import { DetailsListener } from './DetailsListener';
-import { parseTreeFromPosition } from '../common/parser/parseTree';
+import { parseTreeFromPosition } from '../common/parser/Helpers';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -391,7 +391,7 @@ export class SourceContext {
 
         if (!defSymbol) {
             // get symbol under cursor
-            const context = parseTreeFromPosition(this.tree!, startColumn, line);
+            const context = parseTreeFromPosition(this.tree!, startColumn, line - 1);
             if (context && context.parent) {
                 // get its define context name
                 const defineCtx: ParserRuleContext | undefined = findDefineNameForContext(context.parent as ParserRuleContext);
@@ -454,7 +454,7 @@ export class SourceContext {
 
     public symbolAtPosition(column: number, row: number): Symbol | undefined {
         if (this.tree) {
-            const context = parseTreeFromPosition(this.tree, column, row);
+            const context = parseTreeFromPosition(this.tree, column, row - 1);
             // we found a terminal rule, so get its parent to find symbol (because context of symbols is always ParserRule not TerminalNode)
             if (context && context.parent) {
                 return this.symbolTable.symbolWithContext(context.parent);

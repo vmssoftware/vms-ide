@@ -14,7 +14,7 @@ import { AnalysisListener} from './AnalysisListener';
 import { SyntaxSymbol, BuiltInTypeSymbol, ContextSymbolTable } from './ContextSymbolTable';
 import { BuiltInValueTypes, symbolDescriptionFromEnum } from './Symbol';
 import { DetailsListener } from './DetailsListener';
-import { parseTreeFromPosition } from '../../common/parser/parseTree';
+import { parseTreeFromPosition } from '../../common/parser/Helpers';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -413,7 +413,7 @@ export class SourceContext
     {
         if (this.tree) 
         {
-            const context = parseTreeFromPosition(this.tree, column, row);
+            const context = parseTreeFromPosition(this.tree, column, row - 1);
             // we found a terminal rule, so get its parent to find symbol (because context of symbols is always ParserRule not TerminalNode)
             if (context && context.parent) 
             {

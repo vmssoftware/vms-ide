@@ -675,11 +675,11 @@ output_proc
    ;
 
 first_proc
-   : USER_DEFINED_WORD
+   : qualified_data_item
    ;
 
 end_proc
-   : USER_DEFINED_WORD
+   : qualified_data_item
    ;
 
 giving_file

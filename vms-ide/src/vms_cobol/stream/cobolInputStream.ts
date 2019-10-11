@@ -4,7 +4,7 @@ const localize = nls.loadMessageBundle();
 
 import { CharStream, IntStream, ANTLRInputStream } from "antlr4ts";
 import { Interval } from "antlr4ts/misc";
-import { isLineEndsWithCobolSiringLiteral, CalculateTabBasedCharPositionInLine } from "../../common/parser/helpers";
+import { isLineEndsWithCobolSiringLiteral } from "../../common/parser/Helpers";
 
 const _rgxIsEmptyA = /^.(?: {4}| {0,3}\t)\s*(\S)/;
 
@@ -33,7 +33,13 @@ export class CobolInputStream implements CharStream {
 
     private conditionals = "";
     private skipRanges: IRange[] = [];
+    /**
+     * real line number = filteredLineToRealLine[ filtered line number ]
+     */
     private filteredLineToRealLine: number[] = [];
+    /**
+     * Source position for real lines
+     */
     private realLinePos: number[] = [];
     private input: ANTLRInputStream;
 
@@ -94,6 +100,43 @@ export class CobolInputStream implements CharStream {
     }
 
     //------------------------------------------------------------
+
+    /**
+     * Returns zero-based position in source after filtration
+     * @param realLine zero-based line before filtration
+     * @param realCharPositionInLine zero-based column before filtration
+     */
+    public getFilteredPosition(realLine: number, realCharPositionInLine: number) {
+        let line = 0;
+        let charPositionInLine = 0;
+        while(line < this.filteredLineToRealLine.length) {
+            if (this.filteredLineToRealLine[line] > realLine) {
+                --line;
+                let stopPos = this.realLinePos[realLine] + realCharPositionInLine;
+                let startPos = this.realLinePos[this.filteredLineToRealLine[line]];
+                let pos: IPos = {
+                    position: startPos,
+                    rangeIdx: 0,
+                } as IPos;
+                this.updateRange(pos);
+                this.gotoTheNextUnskippedChar(pos);
+                while(pos.position < stopPos) {
+                    if (pos.position < this.source.length) {
+                        let char = this.source[pos.position];
+                        if (char === '\t') {
+                            charPositionInLine += this.tabSize - 1;
+                        }
+                    }
+                    ++pos.position;
+                    ++charPositionInLine;
+                    this.gotoTheNextUnskippedChar(pos);
+                }
+                break;
+            }
+            line++;
+        }
+        return {line, charPositionInLine};
+    }
 
     /**
      * Returns zero-based position in source file before filtration

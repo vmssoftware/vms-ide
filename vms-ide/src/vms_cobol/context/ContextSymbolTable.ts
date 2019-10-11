@@ -1,19 +1,28 @@
 "use strict";
 import { ParserRuleContext } from 'antlr4ts';
 import { SymbolTable, Symbol, ScopedSymbol, SymbolTableOptions, NamespaceSymbol } from "antlr4-c3";
+import { ParseTree } from 'antlr4ts/tree';
+
+import { ProgramContext } from '../parser/cobolParser';
+
 import { ISymbolInfo, IDefinition } from '../../common/parser/Facade';
+import { firstContainingContext, definitionForContext, isNodeIncludes } from '../../common/parser/Helpers';
+
 import { CobolSourceContext } from './SourceContext';
-import { Interval } from 'antlr4ts/misc';
-import { ParseTree, TerminalNode } from 'antlr4ts/tree';
-import { symbolDescriptionFromEnum, ECobolSymbolKind, getKindFromSymbol } from './Symbol';
+import { symbolDescriptionFromEnum, ECobolSymbolKind, getKindFromSymbol, ProgramSymbol, IdentifierSymbol } from './Symbol';
+
+/**
+ * First element in ParseTree[] is name definition context
+ */
+export interface ILink {
+    master: Symbol;
+    references: ParseTree[];
+}
 
 export class CobolSymbolTable extends SymbolTable {
     public tree?: ParserRuleContext; // Set by the owning source context after each parse run.
 
-    /**
-     * First element in ParseTree[] is name definition context
-     */
-    public occurance = new Map<Symbol, ParseTree[]>();
+    public occurance = new Map<string, ILink[]>();
 
     constructor(name: string, options: SymbolTableOptions, public owner?: CobolSourceContext) {
         super(name, options);
@@ -25,6 +34,131 @@ export class CobolSymbolTable extends SymbolTable {
         this.occurance.clear();
     }
 
+    /**
+     * Add names to occurances of origin
+     * @param namePath 
+     * @param origin 
+     */
+    public addOccurance(namePath: ParseTree[], origin: Symbol): boolean {
+        let retCode = false;
+        if (namePath.length > 0) {
+            let passSymbol: Symbol | undefined = origin;
+            let idxName = 0;
+            let upperName = namePath[idxName].text.toUpperCase();
+            while (passSymbol) {
+                if (passSymbol.name.toUpperCase() === upperName) {
+                    let links = this.occurance.get(upperName);
+                    if (links) {
+                        for (let link of links) {
+                            if (link.master === passSymbol) {
+                                link.references.push(namePath[idxName]);
+                            }
+                        }
+                    }
+                    ++idxName;
+                    if (idxName < namePath.length) {
+                        upperName = namePath[idxName].text.toUpperCase();
+                    } else {
+                        retCode = true;
+                        break;
+                    }
+                }
+                if (passSymbol instanceof ProgramSymbol) {
+                    break;
+                }
+                passSymbol = passSymbol.parent;
+            }
+        }
+        return retCode;
+    }
+
+    /**
+     * Resolve data items, sections and paragraphs
+     * @param namePath 
+     * @param ctx 
+     * @param localOnly please, set to true for sections & paragraphs
+     */
+    public resolveIdentifier(namePath: string[], ctx: ParseTree, localOnly?: boolean): Symbol[] {
+        let matched = this.collectCandidates(namePath);
+        let retSymbols: Symbol[] = [];
+        if (matched.length > 0) {
+            let currentScopeSymbol = this.getEnclosingSymbolForContext(ctx);
+            let requireGlobal = false;
+            while (currentScopeSymbol) {
+                // for each matched candidtae find if they are in the same scope
+                for (let candidate of matched) {
+                    let current: Symbol | undefined = candidate;
+                    while(current) {
+                        if (current === currentScopeSymbol) {
+                            if (!requireGlobal || (candidate instanceof IdentifierSymbol && candidate.isGlobal)) {
+                                retSymbols.push(candidate);
+                            }
+                            break;
+                        }
+                        // do not pass through program
+                        if (current instanceof ProgramSymbol) {
+                            break;
+                        }
+                        current = current.parent;
+                    }
+                }
+                if (retSymbols.length > 0) {
+                    break;
+                }
+                // global flag required
+                if (currentScopeSymbol instanceof ProgramSymbol) {
+                    if (localOnly) {
+                        break;
+                    }
+                    requireGlobal = true;
+                }
+                // go to enclosing scope and test again
+                currentScopeSymbol = currentScopeSymbol.parent;
+            }
+        }
+        return retSymbols;
+    }
+
+    /**
+     * collect all matched candidates
+     * @param namePath 
+     */
+    private collectCandidates(namePath: string[]): Symbol[] {
+        let matched: Symbol[] = [];
+        if (namePath.length > 0) {
+            // 1. collect all candidates
+            namePath = namePath.map(x => x.toUpperCase());
+            let name = namePath[0];
+            let links = this.occurance.get(name);
+            if (links) {
+                // for each candidate
+                for (let candidate of links.map(x => x.master)) {
+                    let idxName = 1;
+                    // go through from origin to program and collect info
+                    let current: Symbol | undefined = candidate;
+                    while (current) {
+                        if (current instanceof ProgramSymbol) {
+                            break;
+                        }
+                        if (idxName < namePath.length && current.name.toUpperCase() === namePath[idxName]) {
+                            ++idxName;
+                        }
+                        current = current.parent;
+                    }
+                    // if all names passed
+                    if (idxName === namePath.length) {
+                        matched.push(candidate);
+                    }
+                }
+            }
+        }
+        return matched;
+    }
+
+    /**
+     * Get first enclosing symbol for given context
+     * @param ctx 
+     */
     public getEnclosingSymbolForContext(ctx: ParseTree | undefined) : Symbol | undefined {
         if (ctx) {
             return this.getEnclosingSymbolForContextReccurent(this, ctx);
@@ -48,6 +182,10 @@ export class CobolSymbolTable extends SymbolTable {
         return root;
     }
 
+    /**
+     * Get information of given symbol (symbol is the place where it is defined)
+     * @param symbol 
+     */
     public getSymbolInfo(symbol: string | Symbol | undefined): ISymbolInfo<ECobolSymbolKind> | undefined {
         symbol = this.ensureSymbol(symbol);
         if (!symbol) {
@@ -55,93 +193,90 @@ export class CobolSymbolTable extends SymbolTable {
         }
 
         let kind = getKindFromSymbol(symbol);
-        let name = (symbol as Symbol).name;
+        let name = this.getSymbolPath(symbol);
 
-        let definitionSymbol = this.definitionSymbolForContext(symbol.context);
-
-        let symbolTable = symbol.symbolTable as CobolSymbolTable;
         const result: ISymbolInfo<ECobolSymbolKind> = {
-            kind: kind,
-            name: name,
-            source: (symbol.context && symbolTable && symbolTable.owner) ? symbolTable.owner.fileName : "Cobol runtime",
-            definition: this.definitionFromSymbol(symbol),
+            kind,
+            name,
+            source: this.owner?this.owner.fileName:"",
+            definition: this.getSymbolNameDefinition(symbol),
+            description: symbolDescriptionFromEnum(kind),
         };
 
-        if (definitionSymbol) {
-            result.description = symbolDescriptionFromEnum(getKindFromSymbol(definitionSymbol));
-        }
-
         return result;
     }
 
-    /**
-     * Returns the definition info for the given rule context.
-     */
-    public definitionForContext(ctx: ParseTree | undefined): IDefinition | undefined {
-        return this.definitionFromSymbol(this.definitionSymbolForContext(ctx));
+    public getSymbolPath<T extends Symbol>(symbolParam: string | Symbol | undefined, stopType?: new (...args: any[]) => T): string {
+        let symbol = this.ensureSymbol(symbolParam);
+        if (!symbol) {
+            return "<anonymous>";
+        }
+        let retStr = "";
+        while(symbol) {
+            retStr = (retStr? retStr + "\\" : "") + (symbol.name?symbol.name:"<anonymous>");
+            symbol = symbol.parent;
+            if (symbol === this || stopType && symbol instanceof stopType) {
+                break;
+            }
+        }
+        return retStr;
     }
 
-    public definitionFromSymbol(definition?: Symbol): IDefinition | undefined {
-        if (definition && definition.context && definition.context instanceof ParserRuleContext) {
-            const rule = definition.context;
-            const result: IDefinition = {
-                text: rule.text,
-                range:
-                {
-                    start: { column: rule.start.charPositionInLine, row: rule.start.line },
-                    end: { column: rule.start.charPositionInLine + rule.text.length, row: rule.stop ? rule.stop.line : rule.start.line }
+    /**
+     * Get where this symbol appears
+     * @param symbol 
+     */
+    public getSymbolNameDefinition(symbol: Symbol): IDefinition | undefined {
+        let links = this.occurance.get(symbol.name.toUpperCase());
+            if (links) {
+            for(let link of links) {
+                if (link.master === symbol) {
+                    if (link.references.length > 0) {
+                        return definitionForContext(link.references[0]);
+                    }
+                    break;
                 }
-            };
-
-            let range = <Interval>{ a: definition.context.start.startIndex, b: definition.context.stop!.stopIndex };
-            let cs = definition.context.start.tokenSource!.inputStream;
-            result.text = cs!.getText(range);
-
-            return result;
+            }
         }
-        else if (definition && definition.context && definition.context instanceof TerminalNode) {
-            const result: IDefinition = {
-                text: definition.context.text,
-                range:
-                {
-                    start: { column: definition.context.symbol.charPositionInLine, row: definition.context.symbol.line },
-                    end: { column: definition.context.symbol.charPositionInLine + definition.context.text.length, row: definition.context.symbol.line }
-                }
-            };
-
-            return result;
-        }
-
         return undefined;
     }
 
     /**
-     * Returns the definition info for the given rule context.
+     * Get where this symbol appears
+     * @param symbol 
      */
-    public definitionSymbolForContext(ctx: ParseTree | undefined): Symbol | undefined {
-        if (!ctx) {
-            return undefined;
+    public getSymbolOccurences(symbol: Symbol): IDefinition[] {
+        let result: IDefinition[] = [];
+        let links = this.occurance.get(symbol.name.toUpperCase());
+            if (links) {
+            for(let link of links) {
+                if (link.master === symbol) {
+                    for (let node of link.references) {
+                        let def = definitionForContext(node);
+                        if (def) {
+                            result.push(def);
+                        }
+                    }
+                    break;
+                }
+            }
         }
-
-        const symbol = this.symbolWithContext(ctx);
-
-        if (symbol) {
-            return symbol;
-        }
-
-        return undefined;
-    }
-
-    public getSymbolOccurences(symbol: Symbol, column: number, row: number, localOnly: boolean): ISymbolInfo<ECobolSymbolKind>[] {
-        let result: ISymbolInfo<ECobolSymbolKind>[] = [];
-
         return result;
     }
 
-    public getFirstSymbolOfType<T extends Symbol>(t: new (...args: any[]) => T, name: string): T | undefined {
-        for (let symbol of super.getNestedSymbolsOfType(t)) {
-            if (symbol.name === name) {
-                return symbol;
+    /**
+     * Get master symbol for current context (if it was added before of course)
+     * @param ctx 
+     */
+    public getMasterSymbol(ctx: ParseTree) {
+        let links = this.occurance.get(ctx.text.toUpperCase());
+        if (links) {
+            for(let link of links) {
+                for (let node of link.references) {
+                    if (isNodeIncludes(node, ctx)) {
+                        return link.master;
+                    }
+                }
             }
         }
         return undefined;

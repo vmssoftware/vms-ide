@@ -10,7 +10,6 @@ import {
 
 import {
     Configuration_sectionContext,
-    Identification_divisionContext,
     Memory_size_amountContext,
     ProgramContext,
     Program_collatingContext,
@@ -18,20 +17,26 @@ import {
     Segment_limitContext,
     Special_namesContext,
     StatementContext,
-    Fd_clauseContext,
-    Switch_definitionContext,
     Switch_numContext,
     Symbol_charContext,
     Cursor_isContext,
+    Identifier_resultContext,
+    Qualified_data_itemContext,
+    Crt_isContext,
+    Symb_ch_def_in_alphabetContext,
+    First_procContext,
+    Src_stringContext,
+    End_programContext,
+    Data_description_entryContext,
 } from "../parser/cobolParser";
 
 import {
     findChildInA,
     firstContainingContext,
     markToken,
-    mostContainingContext,
     testRange,
-} from "../../common/parser/helpers";
+    markContext,
+} from "../../common/parser/Helpers";
 
 import {
     CobolSymbolTable,
@@ -39,21 +44,26 @@ import {
 
 import {
     ALPHABET_Symbol,
-    ProgramSymbol,
-    SWITCH_Symbol,
     SYMBOLIC_CHARACTERS_Symbol,
+    DataRecordSymbol,
+    ParagraphSymbol,
+    SectionSymbol,
+    DeclarativesSectionSymbol,
+    ProgramSymbol,
+    EDataUsage,
 } from "./Symbol";
 
 import {
     Symbol, ScopedSymbol
 } from "antlr4-c3";
+import { ParseTree } from "antlr4ts/tree";
+import { ParserRuleContext } from "antlr4ts";
 
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export class CobolAnalysisListener implements cobolListener {
-    private programNames = new Set<string>();
 
     public readonly rgxPositiveInt = /^([1-9][0-9]*|[0-9])$/;
 
@@ -63,22 +73,18 @@ export class CobolAnalysisListener implements cobolListener {
     enterProgram_id(ctx: Program_idContext) {
         testRange(this.diagnostics, ctx.program_name().text.length, 1, 31,
             localize("text_length_1_31", "Must contain 1 to 31 characters"), ctx.program_name().start);
-        if (this.programNames.has(ctx.program_name().text.toUpperCase())) {
-            markToken(this.diagnostics, ctx.program_name().start, localize("isnt_unique", "Isn't unique"));
-        } else {
-            this.programNames.add(ctx.program_name().text.toUpperCase());
-        }
+
         let with_ident_ctx = ctx.with_ident();
-        // compiler doesn't test ident length must be in range 1-31
-        // if (with_ident_ctx !== undefined) {
-        //     testRange(this.diagnostics, with_ident_ctx.ident_string().text.length, 1, 31,
-        //         localize("text_length_1_31", "Must contain 1 to 31 characters"), with_ident_ctx.ident_string().start);
-        // }
+        if (with_ident_ctx !== undefined) {
+            testRange(this.diagnostics, with_ident_ctx.ident_string().text.length, 1, 31,
+                localize("text_length_1_31", "Must contain 1 to 31 characters"), with_ident_ctx.ident_string().start);
+        }
+
         let programCtx = firstContainingContext(ctx, ProgramContext);
         if (programCtx !== undefined && programCtx.parent instanceof ProgramContext) {
             // this is contained program
             if (with_ident_ctx !== undefined) {
-                markToken(this.diagnostics, with_ident_ctx.start, localize("not_in_contained_program", "Cannot be used in a contained program"));
+                markContext(this.diagnostics, with_ident_ctx, localize("not_in_contained_program", "Cannot be used in a contained program"));
             }
         } else {
             let common_initial = ctx.common_initial();
@@ -91,81 +97,51 @@ export class CobolAnalysisListener implements cobolListener {
         }
     }
 
+    enterEnd_program(ctx: End_programContext) {
+        this.testIdentifier(ctx.program_name(), true, ProgramSymbol);
+    }
+
     enterConfiguration_section(ctx: Configuration_sectionContext) {
         let programCtx = firstContainingContext(ctx, ProgramContext);
         if (programCtx && programCtx.parent instanceof ProgramContext) {
             // this is the program inside the other program
-            markToken(this.diagnostics, ctx.start, localize("not_in_contained_program", "Cannot be used in a contained program"));
+            markContext(this.diagnostics, ctx, localize("not_in_contained_program", "Cannot be used in a contained program"));
         }
     }
 
     enterMemory_size_amount(ctx: Memory_size_amountContext) {
         if (!ctx.text.match(this.rgxPositiveInt)) {
-            markToken(this.diagnostics, ctx.start, localize("must_be_integer", "Must be integer"));
+            markContext(this.diagnostics, ctx, localize("must_be_integer", "Must be integer"));
         }
     }
 
     enterProgram_collating(ctx: Program_collatingContext) {
-        let alpha_name = ctx.alpha_name().text.toUpperCase();
-        let alphabet_defined = false;
-        let alphabet_name_count = 0;
-        let programCtx = mostContainingContext(ctx, ProgramContext);
-        if (programCtx) {
-            let programSymbol = this.symbolTable.symbolWithContext(programCtx);
-            if (programSymbol instanceof ProgramSymbol) {
-                for (let alphabet of programSymbol.children) {
-                    if (alphabet.name === alpha_name) {
-                        ++alphabet_name_count;
-                        if (alphabet instanceof ALPHABET_Symbol) {
-                            alphabet.usedInProgramCollating = true;
-                            alphabet_defined = true;
-                            let nameCtxs = this.symbolTable.occurance.get(alphabet);
-                            if (nameCtxs) {
-                                nameCtxs.push(ctx.alpha_name());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (!alphabet_defined) {
-            if (alphabet_name_count === 0) {
-                markToken(this.diagnostics, ctx.alpha_name().start, localize("undefined_name", "Undefined name"));
-            } else {
-                markToken(this.diagnostics, ctx.alpha_name().start, localize("illegal_type", "Illegal type"));
-            }
-        }
-        if (alphabet_name_count > 1) {
-            markToken(this.diagnostics, ctx.alpha_name().start, localize("ambigous_name", "Ambigous name"));
-        }
+        this.testIdentifier(ctx.alpha_name(), false, ALPHABET_Symbol);
     }
 
     enterSegment_limit(ctx: Segment_limitContext) {
         let txt = ctx.segment_number().text;
         if (!txt.match(this.rgxPositiveInt)) {
-            markToken(this.diagnostics, ctx.segment_number().start, localize("must_be_integer", "Must be integer"));
+            markContext(this.diagnostics, ctx.segment_number(), localize("must_be_integer", "Must be integer"));
         }
         let n = Number.parseInt(txt);
-        testRange(this.diagnostics, n, 1, 49, localize("number_in_range", "Must be from {0} to {1}", 1, 49), ctx.segment_number().start);
+        testRange(this.diagnostics, n, 1, 49, localize("number_in_range", "Must be from {0} to {1}", 1, 49), ctx.segment_number());
     }
 
     enterSpecial_names(ctx: Special_namesContext) {
         let contentCtx = ctx.special_names_content();
-        if (contentCtx === undefined || contentCtx.text.length === 0) {
-            let last_dot = ctx.DOT_(1);
-            if (last_dot !== undefined) {
-                markToken(this.diagnostics, last_dot.symbol, localize("dot_must_end_some", "Must be at the end of nonempty content"))
-            }
+        if ((contentCtx === undefined || contentCtx.text.length === 0) && ctx.DOT_().length > 1) {
+            markToken(this.diagnostics, ctx.DOT_(1).symbol, localize("dot_must_end_some", "Must be at the end of nonempty content"))
         }
     }
 
     enterSwitch_num(ctx: Switch_numContext) {
         if (!ctx.text.match(this.rgxPositiveInt)) {
-            markToken(this.diagnostics, ctx.start, localize("must_be_integer", "Must be integer"));
+            markContext(this.diagnostics, ctx, localize("must_be_integer", "Must be integer"));
         }
         let switchNum = Number.parseInt(ctx.text);
         if (switchNum <= 0 || switchNum > 16) {
-            markToken(this.diagnostics, ctx.start, localize("invalid_switch_num", "Invalid switch number (must be from 1 to 16)"));
+            markContext(this.diagnostics, ctx, localize("invalid_switch_num", "Invalid switch number (must be from 1 to 16)"));
         }
     }
 
@@ -173,17 +149,43 @@ export class CobolAnalysisListener implements cobolListener {
         let symbCharSymbol = this.symbolTable.symbolWithContext(ctx);
         if (symbCharSymbol instanceof SYMBOLIC_CHARACTERS_Symbol) {
             if (symbCharSymbol.resolve(symbCharSymbol.name) !== symbCharSymbol) {
-                markToken(this.diagnostics, ctx.start, localize("isnt_unique", "Isn't unique"));
+                markContext(this.diagnostics, ctx, localize("isnt_unique", "Isn't unique"));
             }
         }
     }
 
+    enterSymb_ch_def_in_alphabet(ctx: Symb_ch_def_in_alphabetContext) {
+        this.testIdentifier(ctx.alpha_name(), false, ALPHABET_Symbol);
+    }
+
     enterCursor_is(ctx: Cursor_isContext) {
-        let identifierCtx = ctx.qualified_data_item();
-        let nodes = identifierCtx.USER_DEFINED_WORD();
-        for(let node of nodes) {
-            // try get unambigous reference
+        let symbol = this.testQualifiedIdentifier(ctx.qualified_data_item(), false, DataRecordSymbol);
+        if (symbol instanceof DataRecordSymbol) {
+            if (!this.testCursorData(symbol)) {
+                markContext(this.diagnostics, ctx, localize("invalid_data", "Invalid data description"));
+            }
         }
+    }
+
+    enterCrt_is(ctx: Crt_isContext) {
+        let symbol = this.testQualifiedIdentifier(ctx.qualified_data_item(), false, DataRecordSymbol);
+        if (symbol instanceof DataRecordSymbol) {
+            if (!this.testCRTData(symbol)) {
+                markContext(this.diagnostics, ctx, localize("invalid_data", "Invalid data description"));
+            }
+        }
+    }
+
+    enterSrc_string(ctx: Src_stringContext) {
+        this.testQualifiedIdentifier(ctx.qualified_data_item(), false, DataRecordSymbol);
+    }
+
+    enterFirst_proc(ctx: First_procContext) {
+        this.testQualifiedIdentifier(ctx.qualified_data_item(), true, ParagraphSymbol, SectionSymbol, DeclarativesSectionSymbol);
+    }
+
+    enterIdentifier_result(ctx: Identifier_resultContext) {
+        this.testQualifiedIdentifier(ctx.qualified_data_item());
     }
 
     enterStatement(ctx: StatementContext) {
@@ -193,4 +195,108 @@ export class CobolAnalysisListener implements cobolListener {
         }
     }
 
+    /****************************************************************************************************/
+
+    private testQualifiedIdentifier<T extends Symbol>(
+            identifierCtx?: Qualified_data_itemContext,
+            localOnly?: boolean,
+            ...allowedTypes: (new (...args: any[]) => T)[])
+                : Symbol | undefined {
+        if (identifierCtx) {
+            return this.testNamePath(identifierCtx, identifierCtx.USER_DEFINED_WORD(), localOnly, ...allowedTypes);
+        }
+        return undefined;
+    }
+
+    private testIdentifier<T extends Symbol>(
+            identifierCtx?: ParserRuleContext,
+            localOnly?: boolean,
+            ...allowedTypes: (new (...args: any[]) => T)[])
+                : Symbol | undefined {
+        if (identifierCtx) {
+            return this.testNamePath(identifierCtx, [identifierCtx], localOnly, ...allowedTypes);
+        }
+        return undefined;
+    }
+
+    private testNamePath<T extends Symbol>(
+            ctx: ParserRuleContext,
+            namePath: ParseTree[],
+            localOnly?: boolean,
+            ...allowedTypes: (new (...args: any[]) => T)[])
+                : Symbol | undefined {
+        let symbols = this.symbolTable.resolveIdentifier(namePath.map(x => x.text), ctx, localOnly);
+        if (symbols.length == 0) {
+            markContext(this.diagnostics, ctx, localize("undefined_name", "Undefined name"));
+            return undefined;
+        } else if (symbols.length > 1) {
+            markContext(this.diagnostics, ctx, localize("ambigous_name", "Ambigous name"));
+            return undefined;
+        }
+        let symbol = symbols[0];
+        this.symbolTable.addOccurance(namePath, symbol);
+        if (allowedTypes.length > 0) {
+            let allowed = false;
+            for(let t of allowedTypes) {
+                if (symbol instanceof t) {
+                    allowed = true;
+                    break;
+                }
+            }
+            if (!allowed) {
+                markContext(this.diagnostics, ctx, localize("illegal_type", "Illegal type"));
+            }
+        }
+        return symbol;
+    }
+
+    private testCursorData(cursorDataDecord: DataRecordSymbol) {
+        if (cursorDataDecord.usage !== EDataUsage.DISPLAY) {
+            return false;
+        }
+        if (cursorDataDecord.picture) {
+            let expandedPicture = CobolAnalysisListener.expandPicture(cursorDataDecord.picture);
+            if (expandedPicture === "9999" || expandedPicture === "999999") {
+                return true;
+            }
+        } else {
+            if (cursorDataDecord.children.length == 2) {
+                let field1 = cursorDataDecord.children[0];
+                let field2 = cursorDataDecord.children[1];
+                if (field1 instanceof DataRecordSymbol && 
+                    field2 instanceof DataRecordSymbol &&
+                    field1.usage === EDataUsage.DISPLAY &&
+                    field2.usage === EDataUsage.DISPLAY &&
+                    field1.picture && 
+                    field2.picture) {
+                    let expandedPicture = CobolAnalysisListener.expandPicture(field1.picture) + 
+                                          CobolAnalysisListener.expandPicture(field2.picture);
+                    if (expandedPicture === "9999" || expandedPicture === "999999") {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private testCRTData(crtDataDecord: DataRecordSymbol) {
+        if (crtDataDecord.usage !== EDataUsage.DISPLAY) {
+            return false;
+        }
+        if (crtDataDecord.children.length == 3) {
+            let field1 = crtDataDecord.children[0];
+            let field2 = crtDataDecord.children[1];
+            return field1 instanceof DataRecordSymbol && field1.picture && "9X".includes(field1.picture) &&
+                   field2 instanceof DataRecordSymbol && field2.picture && "9X".includes(field2.picture);
+        }
+        return false;
+    }
+
+    public static expandPicture(picture: string) {
+        let retStr = picture.replace(/(.)\((\d+)\)/g, (match, symbol, count) => {
+            return String(symbol).repeat(+count);
+        });
+        return retStr;
+    }
 }

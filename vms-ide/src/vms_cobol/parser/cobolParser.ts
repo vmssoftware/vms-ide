@@ -8222,7 +8222,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2109;
-			this.match(cobolParser.USER_DEFINED_WORD);
+			this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -8247,7 +8247,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2111;
-			this.match(cobolParser.USER_DEFINED_WORD);
+			this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -27717,8 +27717,8 @@ export class cobolParser extends Parser {
 		"\x02\u0837\xE5\x03\x02\x02\x02\u0838\u0839\x07\u0114\x02\x02\u0839\u083B" +
 		"\x07\u0129\x02\x02\u083A\u083C\x07\xDE\x02\x02\u083B\u083A\x03\x02\x02" +
 		"\x02\u083B\u083C\x03\x02\x02\x02\u083C\u083D\x03\x02\x02\x02\u083D\u083E" +
-		"\x05\xC8e\x02\u083E\xE7\x03\x02\x02\x02\u083F\u0840\x07\u01C5\x02\x02" +
-		"\u0840\xE9\x03\x02\x02\x02\u0841\u0842\x07\u01C5\x02\x02\u0842\xEB\x03" +
+		"\x05\xC8e\x02\u083E\xE7\x03\x02\x02\x02\u083F\u0840\x05\u02C4\u0163\x02" +
+		"\u0840\xE9\x03\x02\x02\x02\u0841\u0842\x05\u02C4\u0163\x02\u0842\xEB\x03" +
 		"\x02\x02\x02\u0843\u0844\x07\xC3\x02\x02\u0844\u0845\x05\u0320\u0191\x02" +
 		"\u0845\xED\x03\x02\x02\x02\u0846\u0847\x07\u01C5\x02\x02\u0847\xEF\x03" +
 		"\x02\x02\x02\u0848\u084A\x07\u010B\x02\x02\u0849\u0848\x03\x02\x02\x02" +
@@ -34163,7 +34163,9 @@ export class Output_procContext extends ParserRuleContext {
 
 
 export class First_procContext extends ParserRuleContext {
-	public USER_DEFINED_WORD(): TerminalNode { return this.getToken(cobolParser.USER_DEFINED_WORD, 0); }
+	public qualified_data_item(): Qualified_data_itemContext {
+		return this.getRuleContext(0, Qualified_data_itemContext);
+	}
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
@@ -34193,7 +34195,9 @@ export class First_procContext extends ParserRuleContext {
 
 
 export class End_procContext extends ParserRuleContext {
-	public USER_DEFINED_WORD(): TerminalNode { return this.getToken(cobolParser.USER_DEFINED_WORD, 0); }
+	public qualified_data_item(): Qualified_data_itemContext {
+		return this.getRuleContext(0, Qualified_data_itemContext);
+	}
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}

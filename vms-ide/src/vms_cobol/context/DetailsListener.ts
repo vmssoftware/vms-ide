@@ -4,7 +4,7 @@ import {
 } from '../parser/cobolListener';
 
 import {
-    CobolSymbolTable,
+    CobolSymbolTable, ILink,
 } from './ContextSymbolTable';
 
 import {
@@ -52,7 +52,6 @@ import {
     CLASS_Symbol,
     CONSOLE_Symbol,
     CURRENCY_Symbol,
-    CobolSourceSymbol,
     DataRecordSymbol,
     DeclarativesSectionSymbol,
     ENVIRONMENT_NAME_Symbol,
@@ -75,15 +74,13 @@ import {
     SegKeySymbol,
     SortMergeFileSymbol,
     IndexedBySymbol,
+    IdentifierSymbol,
+    EDataUsage,
 } from './Symbol';
 
 import {
     ParserRuleContext,
 } from 'antlr4ts';
-
-import {
-    firstContainingContext,
-} from '../../common/parser/helpers';
 
 import {
     TerminalNode,
@@ -94,15 +91,9 @@ export class CobolDetailsListener implements cobolListener {
 
     private currentSymbol: Symbol | undefined;
 
+    public static readonly _separator = "\t\r\n ,;";
+
     constructor(private symbolTable: CobolSymbolTable, private imports: string[]) {
-    }
-
-    enterCobol_source(ctx: Cobol_sourceContext) {
-        this.promoteCurrentSymbol(CobolSourceSymbol, ctx);
-    }
-
-    exitCobol_source(ctx: Cobol_sourceContext) {
-        this.backToParent(ctx);
     }
 
     enterProgram(ctx: ProgramContext) {
@@ -114,10 +105,18 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterProgram_id(ctx: Program_idContext) {
-        // let programSymbol = this.symbolTable.getEnclosingSymbolForContext(ctx);
         if (this.currentSymbol instanceof ProgramSymbol) {
             this.currentSymbol.name = ctx.program_name().text.toUpperCase();
-            this.symbolTable.occurance.set(this.currentSymbol, [ctx.program_name()]);
+            let link: ILink = {
+                master: this.currentSymbol,
+                references: [ctx.program_name()] 
+            };
+            let entry = this.symbolTable.occurance.get(this.currentSymbol.name);
+            if (entry) {
+                entry.push(link);
+            } else {
+                this.symbolTable.occurance.set(this.currentSymbol.name, [link]);
+            }
         }
     }
 
@@ -251,7 +250,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterFd_clause(ctx: Fd_clauseContext) {
-        if (ctx.GLOBAL() && this.currentSymbol instanceof FileSymbol) {
+        if (ctx.GLOBAL() && this.currentSymbol instanceof IdentifierSymbol) {
             this.currentSymbol.isGlobal = true;
         }
     }
@@ -277,13 +276,9 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterRd_clause(ctx: Rd_clauseContext) {
-        if (ctx.GLOBAL() && this.currentSymbol instanceof ReportFileSymbol) {
+        if (ctx.GLOBAL() && this.currentSymbol instanceof IdentifierSymbol) {
             this.currentSymbol.isGlobal = true;
         }
-    }
-
-    enterWorking_storage_section(ctx: Working_storage_sectionContext) {
-        
     }
 
     enterData_description_entry(ctx: Data_description_entryContext) {
@@ -318,6 +313,10 @@ export class CobolDetailsListener implements cobolListener {
         }
         symb = this.promoteCurrentSymbol(DataRecordSymbol, ctx, ctx.data_name());
         symb.level = levelNum;
+        if (symb.parent instanceof IdentifierSymbol) {
+            symb.isGlobal = symb.parent.isGlobal;
+        }
+        symb.usage = EDataUsage.DISPLAY;
     }
 
     exitData_description_entry(ctx: Data_description_entryContext) {
@@ -328,8 +327,64 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterData_description_clause(ctx: Data_description_clauseContext) {
-        if (ctx.GLOBAL() && this.currentSymbol instanceof DataRecordSymbol) {
-            this.currentSymbol.isGlobal = true;
+        if (this.currentSymbol instanceof DataRecordSymbol) {
+            // GLOBAL
+            if (ctx.GLOBAL()) {
+                this.currentSymbol.isGlobal = true;
+                return;
+            }
+            // PICTURE
+            let pictureCtx = ctx.picture();
+            if (pictureCtx) {
+                let pictureStr = pictureCtx.character_string().text;
+                let trimLeftPos = 0;
+                while(trimLeftPos < pictureStr.length && CobolDetailsListener._separator.includes(pictureStr[trimLeftPos])) {
+                    ++trimLeftPos;
+                }
+                let trimRightPos = pictureStr.length - 1;
+                while(trimRightPos > 0 && CobolDetailsListener._separator.includes(pictureStr[trimRightPos])) {
+                    --trimRightPos;
+                }
+                this.currentSymbol.picture = pictureStr.substring(trimLeftPos, trimRightPos + 1);
+                return;
+            } 
+            // USAGE
+            let usageCtx = ctx.usage();
+            if (usageCtx) {
+                let usageTypeNode = usageCtx.usage_definition().getChild(0);
+                if (usageTypeNode instanceof TerminalNode) {
+                    switch(usageTypeNode.symbol.type) {
+                        case cobolParser.BINARY: this.currentSymbol.usage = EDataUsage.BINARY; break;
+                        case cobolParser.BINARY_CHAR: this.currentSymbol.usage = EDataUsage.BINARY_CHAR; break;
+                        case cobolParser.BINARY_SHORT: this.currentSymbol.usage = EDataUsage.BINARY_SHORT; break;
+                        case cobolParser.BINARY_LONG: this.currentSymbol.usage = EDataUsage.BINARY_LONG; break;
+                        case cobolParser.BINARY_DOUBLE: this.currentSymbol.usage = EDataUsage.BINARY_DOUBLE; break;
+                        case cobolParser.COMPUTATIONAL: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL; break;
+                        case cobolParser.COMPUTATIONAL_1: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL_1; break;
+                        case cobolParser.COMPUTATIONAL_2: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL_2; break;
+                        case cobolParser.COMPUTATIONAL_3: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL_3; break;
+                        case cobolParser.COMPUTATIONAL_4: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL_4; break;
+                        case cobolParser.COMPUTATIONAL_5: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL_5; break;
+                        case cobolParser.COMPUTATIONAL_X: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL_X; break;
+                        case cobolParser.COMP: this.currentSymbol.usage = EDataUsage.COMP; break;
+                        case cobolParser.COMP_1: this.currentSymbol.usage = EDataUsage.COMP_1; break;
+                        case cobolParser.COMP_2: this.currentSymbol.usage = EDataUsage.COMP_2; break;
+                        case cobolParser.COMP_3: this.currentSymbol.usage = EDataUsage.COMP_3; break;
+                        case cobolParser.COMP_4: this.currentSymbol.usage = EDataUsage.COMP_4; break;
+                        case cobolParser.COMP_5: this.currentSymbol.usage = EDataUsage.COMP_5; break;
+                        case cobolParser.COMP_X: this.currentSymbol.usage = EDataUsage.COMP_X; break;
+                        case cobolParser.DISPLAY: this.currentSymbol.usage = EDataUsage.DISPLAY; break;
+                        case cobolParser.FLOAT_SHORT: this.currentSymbol.usage = EDataUsage.FLOAT_SHORT; break;
+                        case cobolParser.FLOAT_LONG: this.currentSymbol.usage = EDataUsage.FLOAT_LONG; break;
+                        case cobolParser.FLOAT_EXTENDED: this.currentSymbol.usage = EDataUsage.FLOAT_EXTENDED; break;
+                        case cobolParser.INDEX: this.currentSymbol.usage = EDataUsage.INDEX; break;
+                        case cobolParser.PACKED_DECIMAL: this.currentSymbol.usage = EDataUsage.PACKED_DECIMAL; break;
+                        case cobolParser.POINTER: this.currentSymbol.usage = EDataUsage.POINTER; break;
+                        case cobolParser.POINTER_64: this.currentSymbol.usage = EDataUsage.POINTER_64; break;
+                    }
+                }
+                return;
+            }
         }
     }
 
@@ -405,7 +460,16 @@ export class CobolDetailsListener implements cobolListener {
         this.currentSymbol = this.createAndTryAddSymbolTo(this.currentSymbol, t, name, ...args);
         this.currentSymbol.context = enclosingCtx;
         if (nameCtx) {
-            this.symbolTable.occurance.set(this.currentSymbol, [nameCtx]);
+            let link: ILink = {
+                master: this.currentSymbol,
+                references: [nameCtx] 
+            };
+            let entry = this.symbolTable.occurance.get(this.currentSymbol.name);
+            if (entry) {
+                entry.push(link);
+            } else {
+                this.symbolTable.occurance.set(this.currentSymbol.name, [link]);
+            }
         }
         return this.currentSymbol as T;
     }

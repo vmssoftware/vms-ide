@@ -1,6 +1,56 @@
-import { CharStream, Token } from "antlr4ts";
-import { EDiagnosticType, IDiagnosticEntry } from "./Facade";
+import { CharStream, Token, ParserRuleContext } from "antlr4ts";
 import { ParseTree, TerminalNode } from "antlr4ts/tree";
+
+import { EDiagnosticType, IDiagnosticEntry, IDefinition } from "./Facade";
+
+/**
+ * Returns the parse tree which covers the given position or undefined if none could be found.
+ * @param root 
+ * @param column zero-based
+ * @param row zero-based
+ */
+export function parseTreeFromPosition(root: ParseTree, column: number, row: number): ParseTree | undefined {
+    // assumed row 1-based, column 0-based
+    ++row;
+    // Does the root node actually contain the position? If not we don't need to look further.
+    if (root instanceof TerminalNode) {
+        let terminal = (root as TerminalNode);
+        let token = terminal.symbol;
+        if (token.line !== row) {
+            return undefined;
+        }
+
+        let tokenStop = token.charPositionInLine + (token.stopIndex - token.startIndex + 1);
+        if (token.charPositionInLine <= column && tokenStop >= column) {
+            return terminal;
+        }
+        return undefined;
+    } else {
+        let context = (root as ParserRuleContext);
+        if (!context.start || !context.stop) { // Invalid tree?
+            return undefined;
+        }
+
+        if (context.start.line > row || (context.start.line === row && column < context.start.charPositionInLine)) {
+            return undefined;
+        }
+
+        let tokenStop = context.stop.charPositionInLine + (context.stop.stopIndex - context.stop.startIndex + 1);
+        if (context.stop.line < row || (context.stop.line === row && tokenStop < column)) {
+            return undefined;
+        }
+
+        if (context.children) {
+            for (let child of context.children) {
+                let result = parseTreeFromPosition(child, column, row - 1);
+                if (result) {
+                    return result;
+                }
+            }
+        }
+        return context;
+    }
+}
 
 /**
  * Get char position in line based on tab size
@@ -68,6 +118,27 @@ export function isLineEndsWithCobolSiringLiteral(line: string) {
 }
 
 /**
+ * Mark whole context
+ * @param diagnostics 
+ * @param ctx 
+ * @param message 
+ * @param type 
+ */
+export function markContext(diagnostics: IDiagnosticEntry[], ctx: ParserRuleContext, message: string, type = EDiagnosticType.Error) {
+    let start = ctx.start;
+    let stop = ctx.stop? ctx.stop : start;
+    diagnostics.push({
+        type,
+        message,
+        range:
+        {
+            start: { column: start.charPositionInLine, row: start.line },
+            end: { column: stop.charPositionInLine + (stop.text?stop.text.length:0), row: stop.line },
+        },
+    });
+}
+
+/**
  * Test value range and create diagnostic entry about given value and push it into array if value is out of range
  * @param diagnostics 
  * @param value 
@@ -77,9 +148,13 @@ export function isLineEndsWithCobolSiringLiteral(line: string) {
  * @param token 
  * @param type 
  */
-export function testRange(diagnostics: IDiagnosticEntry[], value: number, minvalue: number, maxvalue: number, message: string, token: Token, type = EDiagnosticType.Error) {
+export function testRange(diagnostics: IDiagnosticEntry[], value: number, minvalue: number, maxvalue: number, message: string, token: Token | ParserRuleContext, type = EDiagnosticType.Error) {
     if (value < minvalue || maxvalue < value) {
-        markToken(diagnostics, token, message, type);
+        if (token instanceof ParserRuleContext) {
+            markContext(diagnostics, token, message, type);
+        } else {
+            markToken(diagnostics, token, message, type);
+        }
     }
 }
 
@@ -91,7 +166,7 @@ export function testRange(diagnostics: IDiagnosticEntry[], value: number, minval
  * @param type 
  */
 export function markToken(diagnostics: IDiagnosticEntry[], token: Token, message: string, type = EDiagnosticType.Error) {
-    markText(diagnostics, message, token.charPositionInLine, token.line, (token.text ? token.text.length : 0), type);
+    markTextInLine(diagnostics, message, token.charPositionInLine, token.line, (token.text ? token.text.length : 0), type);
 }
 
 /**
@@ -103,7 +178,7 @@ export function markToken(diagnostics: IDiagnosticEntry[], token: Token, message
  * @param length 
  * @param type 
  */
-export function markText(diagnostics: IDiagnosticEntry[], message: string, column: number, row: number, length: number, type = EDiagnosticType.Error) {
+export function markTextInLine(diagnostics: IDiagnosticEntry[], message: string, column: number, row: number, length: number, type = EDiagnosticType.Error) {
     diagnostics.push({
         type,
         message,
@@ -164,6 +239,62 @@ export function firstContainingContext<T extends ParseTree>(tree: ParseTree | un
             return tree;
         }
         tree = tree.parent;
+    }
+    return undefined;
+}
+
+export function isNodeIncludes(node: ParseTree, testNode: ParseTree) : boolean {
+    if (node === testNode) {
+        return true;
+    }
+    let found = false;
+    let idx = 0;
+    while (!found && idx < node.childCount) {
+        let tmp = node.getChild(idx);
+        found = isNodeIncludes(tmp, testNode);
+        ++idx;
+    }
+    return found;
+}
+
+/**
+ * Range is zero-based
+ * @param ctx 
+ */
+export function definitionForParserRuleContext(ctx: ParserRuleContext) : IDefinition {
+    let stop = ctx.stop? ctx.stop : ctx.start;
+    return {
+        text: ctx.text,
+        range: {
+            start: { column: ctx.start.charPositionInLine, row: ctx.start.line - 1},
+            end: { column: stop.charPositionInLine + (stop.text?stop.text.length:0), row: stop.line - 1},
+        }
+    };
+}
+
+/**
+ * Range is zero-based
+ * @param ctx 
+ */
+export function definitionForTerminalNode(ctx: TerminalNode) : IDefinition {
+    return {
+        text: ctx.text,
+        range: {
+            start: { column: ctx.symbol.charPositionInLine, row: ctx.symbol.line - 1},
+            end: { column: ctx.symbol.charPositionInLine + ctx.text.length, row: ctx.symbol.line - 1},
+        }
+    };
+}
+
+/**
+ * Range is zero-based
+ * @param ctx 
+ */
+export function definitionForContext(ctx?: ParseTree): IDefinition | undefined {
+    if (ctx instanceof ParserRuleContext) {
+        return definitionForParserRuleContext(ctx);
+    } else if (ctx instanceof TerminalNode) {
+        return definitionForTerminalNode(ctx);
     }
     return undefined;
 }

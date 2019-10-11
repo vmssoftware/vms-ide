@@ -13,7 +13,7 @@ import { ContextSymbolTable, OtherSymbol } from './ContextSymbolTable';
 import { AnalysisListener, VariableSource } from './AnalysisListener';
 import { LogFunction, LogType } from '../common/main';
 import { msgLex } from './msgLex';
-import { parseTreeFromPosition } from '../common/parser/parseTree';
+import { parseTreeFromPosition } from '../common/parser/Helpers';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -432,7 +432,7 @@ export class SourceContext {
             return occurances;
         }
 
-        let terminal = parseTreeFromPosition(this.tree!, column, row);
+        let terminal = parseTreeFromPosition(this.tree!, column, row - 1);
         if (!terminal || !(terminal instanceof TerminalNode) || terminal.symbol.type === msgParser.WHITESPACE) {
             return occurances;
         }
@@ -511,7 +511,7 @@ export class SourceContext {
         if (!this.symbolsForExpression) {
             return undefined;
         }
-        let terminal = parseTreeFromPosition(this.tree!, column, row);
+        let terminal = parseTreeFromPosition(this.tree!, column, row - 1);
         if (!terminal || !(terminal instanceof TerminalNode) || terminal.symbol.type === msgParser.WHITESPACE) {
             return undefined;
         }
