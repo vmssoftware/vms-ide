@@ -88,9 +88,17 @@ fragment NL
    : '\r'?'\n'
    ;
 
+fragment STRING_LITERAL_Q
+   : ('\'\'' |~ ('\''))*
+   ;
+
+fragment STRING_LITERAL_QQ
+   : ('""' | ~ ('"'))*
+   ;
+
 STRING_LITERAL
-   : ('n' | 'N')? '\'' ('\'\'' |~ ('\''))* '\''
-   | ('n' | 'N')?'"' ('""' | ~ ('"'))* '"'
+   : ('n' | 'N')? '\'' STRING_LITERAL_Q '\''
+   | ('n' | 'N')? '"' STRING_LITERAL_QQ '"'
    ;
 
 // keywords

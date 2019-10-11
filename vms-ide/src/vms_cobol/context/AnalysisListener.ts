@@ -28,6 +28,8 @@ import {
     Src_stringContext,
     End_programContext,
     Data_description_entryContext,
+    User_alphaContext,
+    Currency_charContext,
 } from "../parser/cobolParser";
 
 import {
@@ -56,7 +58,7 @@ import {
 import {
     Symbol, ScopedSymbol
 } from "antlr4-c3";
-import { ParseTree } from "antlr4ts/tree";
+import { ParseTree, TerminalNode } from "antlr4ts/tree";
 import { ParserRuleContext } from "antlr4ts";
 
 
@@ -145,6 +147,20 @@ export class CobolAnalysisListener implements cobolListener {
         }
     }
 
+    enterUser_alpha(ctx: User_alphaContext) {
+        if (ctx.THROUGH() || ctx.THRU() || ctx.ALSO().length > 0) {
+            this.testTerminalNodeStringLength(ctx.first_literal().STRING_LITERAL(), 1);
+            let lastLitCtx = ctx.last_literal();
+            if (lastLitCtx) {
+                this.testTerminalNodeStringLength(lastLitCtx.STRING_LITERAL(), 1);
+            }
+            let sameLitCtxArr = ctx.same_literal();
+            for (let sameLitCtx of sameLitCtxArr) {
+                this.testTerminalNodeStringLength(sameLitCtx.STRING_LITERAL(), 1);
+            }
+        }
+    }
+
     enterSymbol_char(ctx: Symbol_charContext) {
         let symbCharSymbol = this.symbolTable.symbolWithContext(ctx);
         if (symbCharSymbol instanceof SYMBOLIC_CHARACTERS_Symbol) {
@@ -156,6 +172,18 @@ export class CobolAnalysisListener implements cobolListener {
 
     enterSymb_ch_def_in_alphabet(ctx: Symb_ch_def_in_alphabetContext) {
         this.testIdentifier(ctx.alpha_name(), false, ALPHABET_Symbol);
+    }
+
+    enterCurrency_char(ctx: Currency_charContext) {
+        let content = this.stringLiteralContent(ctx.STRING_LITERAL().text);
+        if (content.length !== 1) {
+            markContext(this.diagnostics, ctx, localize("must_be_N_char", "Must be {0} character(s)", 1));
+        } else {
+            let _rgx = /[0-9]|[ABCDPRSVXZ]|[a-z]| |[-+*,.;"=/()]/;
+            if (content.match(_rgx)) {
+                markContext(this.diagnostics, ctx, localize("invalid_currency", "Invalid currency char"));
+            }
+        }
     }
 
     enterCursor_is(ctx: Cursor_isContext) {
@@ -255,7 +283,7 @@ export class CobolAnalysisListener implements cobolListener {
             return false;
         }
         if (cursorDataDecord.picture) {
-            let expandedPicture = CobolAnalysisListener.expandPicture(cursorDataDecord.picture);
+            let expandedPicture = this.expandPicture(cursorDataDecord.picture);
             if (expandedPicture === "9999" || expandedPicture === "999999") {
                 return true;
             }
@@ -269,8 +297,8 @@ export class CobolAnalysisListener implements cobolListener {
                     field2.usage === EDataUsage.DISPLAY &&
                     field1.picture && 
                     field2.picture) {
-                    let expandedPicture = CobolAnalysisListener.expandPicture(field1.picture) + 
-                                          CobolAnalysisListener.expandPicture(field2.picture);
+                    let expandedPicture = this.expandPicture(field1.picture) + 
+                                          this.expandPicture(field2.picture);
                     if (expandedPicture === "9999" || expandedPicture === "999999") {
                         return true;
                     }
@@ -293,10 +321,33 @@ export class CobolAnalysisListener implements cobolListener {
         return false;
     }
 
-    public static expandPicture(picture: string) {
+    private testTerminalNodeStringLength(node: TerminalNode | undefined, length: number) {
+        if (!node) {
+            return false;
+        }
+        if (this.stringLiteralContent(node.text).length === length) {
+            return true;
+        }
+        markToken(this.diagnostics, node.symbol, localize("must_be_N_char", "Must be {0} character(s)", length));
+        return false;
+    }
+
+    private expandPicture(picture: string) {
         let retStr = picture.replace(/(.)\((\d+)\)/g, (match, symbol, count) => {
             return String(symbol).repeat(+count);
         });
         return retStr;
+    }
+
+    private stringLiteralContent(literal: string) {
+        if (literal.length > 0) {
+            switch (literal[0]) {
+                case 'N':
+                case 'n':
+                    return literal.substr(2, literal.length - 3);
+            }
+            return literal.substr(1, literal.length - 2);
+        }
+        return "";
     }
 }
