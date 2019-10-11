@@ -1021,6 +1021,14 @@ function getIdentifier(ident: IdentifierContext | undefined): TerminalNode | und
         {
             item = ident.REWIND();
         }
+        else if(ident.DELETE())
+        {
+            item = ident.DELETE();
+        }
+        else if(ident.UNLOCK())
+        {
+            item = ident.UNLOCK();
+        }
         else if(ident.DESCR())
         {
             item = ident.DESCR();

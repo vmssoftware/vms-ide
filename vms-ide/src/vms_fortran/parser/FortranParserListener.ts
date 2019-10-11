@@ -65,6 +65,7 @@ import { NamedConstantUseContext } from "./FortranParser";
 import { IfConstructNameContext } from "./FortranParser";
 import { EndModuleStatementContext } from "./FortranParser";
 import { IncludeStatementContext } from "./FortranParser";
+import { DictionaryStatementContext } from "./FortranParser";
 import { UseStatementContext } from "./FortranParser";
 import { RenameListContext } from "./FortranParser";
 import { OnlyListContext } from "./FortranParser";
@@ -353,7 +354,9 @@ import { OutputImpliedDoContext } from "./FortranParser";
 import { BackspaceStatementContext } from "./FortranParser";
 import { EndfileStatementContext } from "./FortranParser";
 import { RewindStatementContext } from "./FortranParser";
+import { DeleteStatementContext } from "./FortranParser";
 import { PositionSpecContext } from "./FortranParser";
+import { DeleteSpecContext } from "./FortranParser";
 import { InquireStatementContext } from "./FortranParser";
 import { InquireSpecContext } from "./FortranParser";
 import { InquireSpecListContext } from "./FortranParser";
@@ -1045,6 +1048,17 @@ export interface FortranParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitIncludeStatement?: (ctx: IncludeStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.dictionaryStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterDictionaryStatement?: (ctx: DictionaryStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.dictionaryStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitDictionaryStatement?: (ctx: DictionaryStatementContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `FortranParser.useStatement`.
@@ -4215,6 +4229,17 @@ export interface FortranParserListener extends ParseTreeListener {
 	exitRewindStatement?: (ctx: RewindStatementContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `FortranParser.deleteStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterDeleteStatement?: (ctx: DeleteStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.deleteStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitDeleteStatement?: (ctx: DeleteStatementContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `FortranParser.positionSpec`.
 	 * @param ctx the parse tree
 	 */
@@ -4224,6 +4249,17 @@ export interface FortranParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitPositionSpec?: (ctx: PositionSpecContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.deleteSpec`.
+	 * @param ctx the parse tree
+	 */
+	enterDeleteSpec?: (ctx: DeleteSpecContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.deleteSpec`.
+	 * @param ctx the parse tree
+	 */
+	exitDeleteSpec?: (ctx: DeleteSpecContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `FortranParser.inquireStatement`.

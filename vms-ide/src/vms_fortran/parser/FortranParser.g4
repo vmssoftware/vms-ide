@@ -46,6 +46,7 @@ specificationPartConstruct
    | entryStatement
    | declarationConstruct
    | includeStatement
+   | dictionaryStatement
    | useStatement
    ;
 
@@ -131,6 +132,7 @@ actionStatement
    | stmtFunctionStatement
    | stopStatement
    | writeStatement
+   | deleteStatement
    ;
 
 definedOperator
@@ -231,6 +233,7 @@ identifier
    // | PROGRAM
    // | MODULE
    // | INCLUDE
+   // | DICTIONARY
    // | USE
    | ONLY
    | ENTRY
@@ -312,6 +315,8 @@ identifier
    | BACKSPACE
    | ENDFILE
    | REWIND
+   | DELETE
+   | UNLOCK
    | DESCR
    | REF
    | VAL
@@ -507,6 +512,10 @@ endModuleStatement
 
 includeStatement
    : INCLUDE S_CONST eos
+   ;
+
+dictionaryStatement
+   : DICTIONARY S_CONST eos
    ;
 
 useStatement
@@ -760,7 +769,7 @@ subroutinePar
    ;
 
 functionParList
-   : LPAREN (functionPar (COMMA functionPar)*)? RPAREN
+   : (LPAREN (functionPar (COMMA functionPar)*)? RPAREN)?
    ;
 
 functionPar
@@ -1886,13 +1895,13 @@ closeSpec
    ;
 
 readStatement
-   : label? READ rdCtlSpec inputItemList? eos
+   : label? READ rdCtlSpec COMMA? inputItemList? eos
    | label? READ rdFmtId eos
    | label? READ rdFmtId COMMA inputItemList eos
    ;
 
 writeStatement
-   : label? (WRITE | REWRITE) LPAREN ioControlSpecList RPAREN outputItemList? eos
+   : label? (WRITE | REWRITE) LPAREN ioControlSpecList RPAREN COMMA? outputItemList? eos
    ;
 
 printStatement
@@ -1995,8 +2004,8 @@ backspaceStatement
    ;
 
 endfileStatement
-   : label? (END FILE | ENDFILE) unitIdentifier eos
-   | label? (END FILE | ENDFILE) LPAREN positionSpec (COMMA positionSpec)* RPAREN eos
+   : label? (END FILE | ENDFILE | UNLOCK) unitIdentifier eos
+   | label? (END FILE | ENDFILE | UNLOCK) LPAREN positionSpec (COMMA positionSpec)* RPAREN eos
    ;
 
 rewindStatement
@@ -2004,11 +2013,20 @@ rewindStatement
    | label? REWIND LPAREN positionSpec (COMMA positionSpec)* RPAREN eos
    ;
 
+deleteStatement
+   : label? DELETE LPAREN deleteSpec (COMMA deleteSpec)* RPAREN eos
+   ;
+
 positionSpec
    : (UNIT TO_ASSIGN)? unitIdentifier
    | IOSTAT TO_ASSIGN scalarVariable
    | ERR TO_ASSIGN lblRef
    ;
+
+deleteSpec
+   : positionSpec
+   | REC TO_ASSIGN expr
+   ;   
 
 inquireStatement
    : label? INQUIRE LPAREN inquireSpecList RPAREN eos

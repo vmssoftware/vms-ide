@@ -65,6 +65,7 @@ import { NamedConstantUseContext } from "./FortranParser";
 import { IfConstructNameContext } from "./FortranParser";
 import { EndModuleStatementContext } from "./FortranParser";
 import { IncludeStatementContext } from "./FortranParser";
+import { DictionaryStatementContext } from "./FortranParser";
 import { UseStatementContext } from "./FortranParser";
 import { RenameListContext } from "./FortranParser";
 import { OnlyListContext } from "./FortranParser";
@@ -353,7 +354,9 @@ import { OutputImpliedDoContext } from "./FortranParser";
 import { BackspaceStatementContext } from "./FortranParser";
 import { EndfileStatementContext } from "./FortranParser";
 import { RewindStatementContext } from "./FortranParser";
+import { DeleteStatementContext } from "./FortranParser";
 import { PositionSpecContext } from "./FortranParser";
+import { DeleteSpecContext } from "./FortranParser";
 import { InquireStatementContext } from "./FortranParser";
 import { InquireSpecContext } from "./FortranParser";
 import { InquireSpecListContext } from "./FortranParser";
@@ -800,6 +803,13 @@ export interface FortranParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitIncludeStatement?: (ctx: IncludeStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.dictionaryStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDictionaryStatement?: (ctx: DictionaryStatementContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `FortranParser.useStatement`.
@@ -2818,11 +2828,25 @@ export interface FortranParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitRewindStatement?: (ctx: RewindStatementContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `FortranParser.deleteStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDeleteStatement?: (ctx: DeleteStatementContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `FortranParser.positionSpec`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitPositionSpec?: (ctx: PositionSpecContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.deleteSpec`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDeleteSpec?: (ctx: DeleteSpecContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `FortranParser.inquireStatement`.

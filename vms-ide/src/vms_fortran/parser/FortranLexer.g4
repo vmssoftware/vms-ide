@@ -122,6 +122,10 @@ INCLUDE
    : I N C L U D E
    ;
 
+DICTIONARY
+   : D I C T I O N A R Y
+   ;   
+
 USE
    : U S E
    ;
@@ -452,6 +456,14 @@ ENDFILE
 
 REWIND
    : R E W I N D
+   ;
+
+DELETE
+   : D E L E T E
+   ;
+
+UNLOCK
+   : U N L O C K
    ;
 
 DESCR

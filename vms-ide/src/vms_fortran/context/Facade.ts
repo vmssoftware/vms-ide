@@ -250,6 +250,19 @@ export class Facade
         }
     }
 
+    private updateDependency(fileName: string, contextEntryIn: ContextEntry)
+    {
+        let contextEntry = this.sourceReferenceContexts.get(fileName);
+
+        if (contextEntry) 
+        {
+            this.sourceReferenceContexts.delete(fileName);
+            let contextEntry1 = {...contextEntryIn};
+            //contextEntry = { context: source, refCount: 0, dependencies: [], grammar: fileName };
+            this.sourceReferenceContexts.set(fileName, contextEntry1);
+        }
+    }
+
     private parseGrammar(contextEntry: ContextEntry) 
     {
         contextEntry.dependencies = [];
@@ -267,6 +280,8 @@ export class Facade
 
         if(this.checkRootFolder(contextEntry.context.fileName, this.rootFolderNames))//if file locate in project floder
         {
+            //this.updateDependency(contextEntry.context.fileName, contextEntry);//think how can I replace context not parse!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            this.reparseDependency(contextEntry.context.fileName);
             this.addDependencys(contextEntry);
         }
     }

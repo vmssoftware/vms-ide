@@ -60,8 +60,14 @@ export class SourceContext
      */
     public setText(source: string) 
     {
-        // let input = new ANTLRInputStream(source.toUpperCase()+"\n");  // convert to upper case and add NEWLINE to force end of last line
-        let input = new ANTLRInputStream("\r" + source + "\n");  // just add NEWLINE to force end of last line
+        let letter = source.charAt(0).toLowerCase();
+
+        if(letter === 'c' || letter === '*')
+        {
+            source = "\r" + source;
+        }
+
+        let input = new ANTLRInputStream(source + "\n");  // just add NEWLINE to force end of last line
         let lexer = new FortranLexer(input);
 
         // There won't be lexer errors actually. They are silently bubbled up and will cause parser errors.
