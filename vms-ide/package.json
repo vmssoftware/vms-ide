@@ -368,6 +368,11 @@
                 "category": "%command.category%"
             },
             {
+                "command": "extension.vms-pascal.reparse",
+                "title": "%vms_pascal.extension.vms_reparse%",
+                "category": "%command.category%"
+            },
+            {
                 "command": "extension.vms-debug.terminal",
                 "title": "%vms_debug.extension.vms_terminal%",
                 "category": "%command.category%"

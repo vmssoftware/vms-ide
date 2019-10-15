@@ -18,76 +18,24 @@ import * as vscode from "vscode";
 //const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
 export const Pascal = { language: 'vms-pascal', scheme: 'file' };
+const diagnosticCollection = languages.createDiagnosticCollection(Pascal.language);
+const DiagnosticTypeMap: Map<DiagnosticType, DiagnosticSeverity> = new Map();
+let backend: Facade;
 
 
 export async function activate(context: ExtensionContext) 
 {    
-    const diagnosticCollection = languages.createDiagnosticCollection(Pascal.language);
+    context.subscriptions.push(vscode.commands.registerCommand('extension.vms-pascal.reparse', () =>
+	{
+		reparseProject();
+    }));
 
-    const DiagnosticTypeMap: Map<DiagnosticType, DiagnosticSeverity> = new Map();
     DiagnosticTypeMap.set(DiagnosticType.Hint, DiagnosticSeverity.Hint);
     DiagnosticTypeMap.set(DiagnosticType.Info, DiagnosticSeverity.Information);
     DiagnosticTypeMap.set(DiagnosticType.Warning, DiagnosticSeverity.Warning);
     DiagnosticTypeMap.set(DiagnosticType.Error, DiagnosticSeverity.Error);
 
-    let barMessage: StatusBarItem =  window.createStatusBarItem(StatusBarAlignment.Left);
-    barMessage.text = `$(bug) ${"Loading ..."}`;
-    barMessage.show();
-
-    let sourcePaths: string[] = [];
-    let rootFolderName: string = "";
-    let rootFolderNames = new Array<string>();
-    let configManager = new ConfigManager(rootFolderName);
-    
-    if(vscode.workspace.workspaceFolders)
-    {
-        let listFolders = await configManager.getDependencyList();
-
-        if(listFolders)
-        {
-            for(let folder of listFolders)
-            {
-                let path = "";
-
-                for(let item of vscode.workspace.workspaceFolders)
-                {
-                    if(item.name === folder)
-                    {
-                        path = item.uri.fsPath;
-                        rootFolderNames.push(path);
-                        break;
-                    }
-                }
-
-                if(path !== "")
-                {
-                    let fileM = new ConfigManager(folder);
-                    let sectionCur = await fileM.getProjectSection();
-
-                    if (sectionCur)
-                    {
-                        let sources = await fileM.loadPathListFiles(sectionCur.source);
-                        addPathToFiles(sourcePaths, path, sources);
-                    }
-                }
-            }
-        }
-    }
-
-    const backend = new Facade(sourcePaths);
-
-    // Load interpreter + cache data for each open document, if there's any.
-    for (let document of workspace.textDocuments) 
-    {
-        if (document.languageId === Pascal.language) 
-        {
-            // parse file and show diagnostics
-            backend.attach(document.uri.fsPath, document.getText());
-            processDiagnostic(document);
-        }
-    }
-    
-    barMessage.hide();
+    await reparseProject();
 
     context.subscriptions.push(languages.registerHoverProvider(Pascal, new PascalHoverProvider(backend)));
     context.subscriptions.push(languages.registerDefinitionProvider(Pascal, new PascalDefinitionProvider(backend)));    
@@ -103,6 +51,7 @@ export async function activate(context: ExtensionContext)
         if (document.languageId === Pascal.language && document.uri.scheme === Pascal.scheme) 
         {
             backend.attach(document.uri.fsPath, document.getText());
+            processDiagnostic(document);
         }
     });
 
@@ -167,36 +116,124 @@ export async function activate(context: ExtensionContext)
         //     }
         // }
     });
+}
 
-    function processDiagnostic(document: TextDocument) 
+async function reparseProject() : Promise<void>
+{
+    let barMessage: StatusBarItem =  window.createStatusBarItem(StatusBarAlignment.Left);
+    barMessage.text = `$(sync) ${"parsing ..."}`;
+    barMessage.show();
+
+    let sourcePaths: string[] = [];
+    let rootFolderName: string = "";
+    let rootFolderNames = new Array<string>();
+    let configManager = new ConfigManager(rootFolderName);
+
+    if(vscode.workspace.workspaceFolders)
     {
-        let diagnostics = [];
-        backend.setText(document.fileName, document.getText());
-        let entries = backend.getDiagnostics(document.fileName);
+        let listFolders = await configManager.getDependencyList();
 
-        for (let entry of entries) 
+        if(listFolders)
         {
-            let startRow = entry.range.start.row === 0 ? 0 : entry.range.start.row - 1;
-            let endRow = entry.range.end.row === 0 ? 0 : entry.range.end.row - 1;
-            let range = new Range(startRow, entry.range.start.column, endRow, entry.range.end.column);
-            let diagnostic = new Diagnostic(range, entry.message, DiagnosticTypeMap.get(entry.type));
-            diagnostics.push(diagnostic);
-        }
+            for(let folder of listFolders)
+            {
+                let path = "";
 
-        diagnosticCollection.set(document.uri, diagnostics);
+                for(let item of vscode.workspace.workspaceFolders)
+                {
+                    if(item.name === folder)
+                    {
+                        path = item.uri.fsPath;
+                        rootFolderNames.push(path);
+                        break;
+                    }
+                }
+
+                if(path !== "")
+                {
+                    let fileM = new ConfigManager(folder);
+                    let sectionCur = await fileM.getProjectSection();
+
+                    if (sectionCur)
+                    {
+                        let sources = await fileM.loadPathListFiles(sectionCur.source);
+                        addPathToFiles(sourcePaths, path, sources);
+                    }
+                }
+            }
+        }
     }
+
+    if(backend)
+    {
+        backend.setParameters(sourcePaths, rootFolderNames);
+    }
+    else
+    {
+        backend = new Facade(sourcePaths, rootFolderNames);
+    }
+
+    // Load interpreter + cache data for each open document, if there's any.
+    for (let document of workspace.textDocuments) 
+    {
+        if (document.languageId === Pascal.language) 
+        {
+            // parse file and show diagnostics
+            backend.attach(document.uri.fsPath, document.getText());
+            processDiagnostic(document);
+        }
+    }
+
+    barMessage.hide();
+}
+
+function processDiagnostic(document: TextDocument) 
+{
+    let diagnostics = [];
+    backend.setText(document.fileName, document.getText());
+    let entries = backend.getDiagnostics(document.fileName);
+
+    for (let entry of entries) 
+    {
+        let startRow = entry.range.start.row === 0 ? 0 : entry.range.start.row - 1;
+        let endRow = entry.range.end.row === 0 ? 0 : entry.range.end.row - 1;
+        let range = new Range(startRow, entry.range.start.column, endRow, entry.range.end.column);
+        let diagnostic = new Diagnostic(range, entry.message, DiagnosticTypeMap.get(entry.type));
+        diagnostics.push(diagnostic);
+    }
+
+    diagnosticCollection.set(document.uri, diagnostics);
 }
 
 function addPathToFiles(sourcePaths : string[], path : string, fileNames : string[])
 {
     for(let i = 0; i < fileNames.length; i++)
     {
-        if(fileNames[i].toLowerCase().includes(".pas"))
+        if(checkExtension(fileNames[i]))
         {
             fileNames[i] = path + "\\" + fileNames[i];
             sourcePaths.push(fileNames[i]);
         }
     }
+}
+
+function checkExtension(file: string) : boolean
+{
+    let result : boolean = false;
+
+    let extPos = file.lastIndexOf(".");
+
+    if(extPos !== -1)
+    {
+        let ext = file.substring(extPos).toLowerCase();
+
+        if(ext === ".pas")
+        {
+            result = true;
+        }
+    }
+
+    return result;
 }
 
 // this method is called when your extension is deactivated
