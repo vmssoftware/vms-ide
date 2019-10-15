@@ -155,11 +155,6 @@ export class FortranHoverProvider implements HoverProvider
                 
                 data = data.substr(info.definition.range.start.column);
 
-                // if(data.includes("/"))
-                // {
-                //     data = data.substr(0, data.indexOf("/"));
-                // }
-                // else 
                 if(data.includes(",") || data.includes("!"))
                 {
                     matches = data.match(matcheVariable);
@@ -170,7 +165,7 @@ export class FortranHoverProvider implements HoverProvider
                     }
                 } 
                 
-                data = type + " " + /*info.definition.text +*/ data;
+                data = " " + type + " " + /*info.definition.text +*/ data;
                 
                 showParseData = true;
             }

@@ -23,6 +23,9 @@
 			"include": "#comments"
 		},
 		{
+			"include": "#line-end-comment"
+		},
+		{
 			"include": "#constants"
 		},
 		{
@@ -863,9 +866,28 @@
 			]
 		},
 		"comments": {
-			"name": "comment.line.fortran",
-			"begin": "!",
-			"end": "(?=\\n)"
+			"patterns": [
+				{
+						"name": "comment.line.fortran",
+						"begin": "!",
+						"end": "\\n"
+				},
+				{
+						"name": "comment.line.fortran",
+						"begin": "^[cC\\*]",
+						"end": "\\n"
+				},
+				{
+						"name": "comment.line.fortran",
+						"begin": "^ *!",
+						"end": "\\n"
+				}
+		]
+		},
+		"line-end-comment": {
+				"name": "comment.line-end.fortran",
+				"begin": "(?<=^.{72})(?!\\n)",
+				"end": "(?=\\n)"
 		},
 		"constants": {
 			"patterns": [

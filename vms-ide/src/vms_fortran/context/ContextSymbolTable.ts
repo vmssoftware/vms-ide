@@ -642,7 +642,6 @@ export class ContextSymbolTable extends SymbolTable
     public getSymbolOccurences(symbol: Symbol, column: number, row: number, localOnly: boolean): SymbolInfo[] 
     {
         let result: SymbolInfo[] = [];
-        let localSymbol: Symbol | undefined;
         let localBlock: Symbol | undefined;
         let searchRoutine = false;
         let defRoutines = this.getAllSymbols(RoutineDclSymbol, false);
