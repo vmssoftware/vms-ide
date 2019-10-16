@@ -1,8 +1,8 @@
 import { TextDocument, Position, CancellationToken, Range, Uri, ProviderResult, WorkspaceEdit, RenameProvider } from 'vscode';
 import { FacadeImpl } from './Facade';
 
-export class RenameProviderImpl<T> implements RenameProvider {
-    constructor(private backend: FacadeImpl<T>) {
+export class RenameProviderImpl implements RenameProvider {
+    constructor(private backend: FacadeImpl) {
     }
     public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {
         const occurences = this.backend.getSymbolOccurences(document.fileName, position.character, position.line);

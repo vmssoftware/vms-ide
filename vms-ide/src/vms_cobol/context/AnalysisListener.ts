@@ -10,26 +10,33 @@ import {
 
 import {
     Configuration_sectionContext,
+    Crt_isContext,
+    Currency_charContext,
+    Cursor_isContext,
+    End_programContext,
     Memory_size_amountContext,
     ProgramContext,
     Program_collatingContext,
     Program_idContext,
+    Qualified_data_itemContext,
     Segment_limitContext,
     Special_namesContext,
     StatementContext,
     Switch_numContext,
-    Symbol_charContext,
-    Cursor_isContext,
-    Identifier_resultContext,
-    Qualified_data_itemContext,
-    Crt_isContext,
     Symb_ch_def_in_alphabetContext,
-    First_procContext,
-    Src_stringContext,
-    End_programContext,
-    Data_description_entryContext,
+    Symbol_charContext,
     User_alphaContext,
-    Currency_charContext,
+    Input_sourceContext,
+    Figurative_constant_witout_all_zeroContext,
+    Figurative_constant_zeroContext,
+    Figurative_constant_witout_zeroContext,
+    Proc_nameContext,
+    File_nameContext,
+    Report_nameContext,
+    Function_nameContext,
+    Class_condition_nameContext,
+    Sign_condition_nameContext,
+    Bool_condition_nameContext,
 } from "../parser/cobolParser";
 
 import {
@@ -41,7 +48,7 @@ import {
 } from "../../common/parser/Helpers";
 
 import {
-    CobolSymbolTable,
+    CobolSymbolTable, ILink,
 } from "./ContextSymbolTable";
 
 import {
@@ -53,6 +60,22 @@ import {
     DeclarativesSectionSymbol,
     ProgramSymbol,
     EDataUsage,
+    CURRENCY_Symbol,
+    DEVICE_Symbol,
+    FigurativeConstantSymbol,
+    FileSymbol,
+    SortMergeFileSymbol,
+    ReportFileSymbol,
+    getSymbolFromKind,
+    IdentifierSymbol,
+    CLASS_Symbol,
+    SIGN_Symbol,
+    BOOL_Symbol,
+    _IntrincisFunctions,
+    _PredefinedData,
+    EGlobalType,
+    IntrincisFunctionSymbol,
+    IPreDefinition,
 } from "./Symbol";
 
 import {
@@ -70,6 +93,7 @@ export class CobolAnalysisListener implements cobolListener {
     public readonly rgxPositiveInt = /^([1-9][0-9]*|[0-9])$/;
 
     constructor(public diagnostics: IDiagnosticEntry[], public symbolTable: CobolSymbolTable) {
+        this.addPredefinitions();
     }
 
     enterProgram_id(ctx: Program_idContext) {
@@ -100,7 +124,7 @@ export class CobolAnalysisListener implements cobolListener {
     }
 
     enterEnd_program(ctx: End_programContext) {
-        this.testIdentifier(ctx.program_name(), true, ProgramSymbol);
+        this.verifyName(ctx.program_name(), true, [ProgramSymbol]);
     }
 
     enterConfiguration_section(ctx: Configuration_sectionContext) {
@@ -118,7 +142,7 @@ export class CobolAnalysisListener implements cobolListener {
     }
 
     enterProgram_collating(ctx: Program_collatingContext) {
-        this.testIdentifier(ctx.alpha_name(), false, ALPHABET_Symbol);
+        this.verifyName(ctx.alpha_name(), false, [ALPHABET_Symbol]);
     }
 
     enterSegment_limit(ctx: Segment_limitContext) {
@@ -171,10 +195,27 @@ export class CobolAnalysisListener implements cobolListener {
     }
 
     enterSymb_ch_def_in_alphabet(ctx: Symb_ch_def_in_alphabetContext) {
-        this.testIdentifier(ctx.alpha_name(), false, ALPHABET_Symbol);
+        this.verifyName(ctx.alpha_name(), false, [ALPHABET_Symbol]);
     }
 
     enterCurrency_char(ctx: Currency_charContext) {
+        let programCtx = firstContainingContext(ctx, ProgramContext);
+        let symbols = this.symbolTable.resolveIdentifier([ctx.text], programCtx);
+        let theSame: CURRENCY_Symbol | undefined;
+        for (let symbol of symbols) {
+            if (symbol instanceof CURRENCY_Symbol) {
+                // CURRENCY_Symbol holds Currency_definitionContext
+                if (symbol.context === ctx.parent) {
+                    // clear all occurances before this symbol
+                    theSame = undefined;
+                } else {
+                    theSame = symbol;
+                }
+            }
+        }
+        if (theSame && theSame.context instanceof ParserRuleContext) {
+            markContext(this.diagnostics, theSame.context, localize("already_defined", "Already defined"));
+        }
         let content = this.stringLiteralContent(ctx.STRING_LITERAL().text);
         if (content.length !== 1) {
             markContext(this.diagnostics, ctx, localize("must_be_N_char", "Must be {0} character(s)", 1));
@@ -187,7 +228,7 @@ export class CobolAnalysisListener implements cobolListener {
     }
 
     enterCursor_is(ctx: Cursor_isContext) {
-        let symbol = this.testQualifiedIdentifier(ctx.qualified_data_item(), false, DataRecordSymbol);
+        let symbol = this.verifyQualifiedName(ctx.qualified_data_item(), false, [DataRecordSymbol]);
         if (symbol instanceof DataRecordSymbol) {
             if (!this.testCursorData(symbol)) {
                 markContext(this.diagnostics, ctx, localize("invalid_data", "Invalid data description"));
@@ -196,7 +237,7 @@ export class CobolAnalysisListener implements cobolListener {
     }
 
     enterCrt_is(ctx: Crt_isContext) {
-        let symbol = this.testQualifiedIdentifier(ctx.qualified_data_item(), false, DataRecordSymbol);
+        let symbol = this.verifyQualifiedName(ctx.qualified_data_item(), false, [DataRecordSymbol]);
         if (symbol instanceof DataRecordSymbol) {
             if (!this.testCRTData(symbol)) {
                 markContext(this.diagnostics, ctx, localize("invalid_data", "Invalid data description"));
@@ -204,16 +245,12 @@ export class CobolAnalysisListener implements cobolListener {
         }
     }
 
-    enterSrc_string(ctx: Src_stringContext) {
-        this.testQualifiedIdentifier(ctx.qualified_data_item(), false, DataRecordSymbol);
+    enterProc_name(ctx: Proc_nameContext) {
+        this.verifyQualifiedName(ctx.qualified_data_item(), true, [ParagraphSymbol, SectionSymbol, DeclarativesSectionSymbol]);
     }
 
-    enterFirst_proc(ctx: First_procContext) {
-        this.testQualifiedIdentifier(ctx.qualified_data_item(), true, ParagraphSymbol, SectionSymbol, DeclarativesSectionSymbol);
-    }
-
-    enterIdentifier_result(ctx: Identifier_resultContext) {
-        this.testQualifiedIdentifier(ctx.qualified_data_item());
+    enterQualified_data_item(ctx: Qualified_data_itemContext) {
+        this.verifyQualifiedName(ctx);
     }
 
     enterStatement(ctx: StatementContext) {
@@ -223,37 +260,116 @@ export class CobolAnalysisListener implements cobolListener {
         }
     }
 
+    enterInput_source(ctx: Input_sourceContext) {
+        this.verifyName(ctx, false, [DEVICE_Symbol]);
+    }
+
+    enterFigurative_constant_witout_all_zero(ctx: Figurative_constant_witout_all_zeroContext) {
+        this.verifyName(ctx, false, undefined, [FigurativeConstantSymbol]);
+    }
+
+    enterFigurative_constant_zero(ctx: Figurative_constant_zeroContext) {
+        this.verifyName(ctx, false, undefined, [FigurativeConstantSymbol]);
+    }
+
+    enterFigurative_constant_witout_zero(ctx: Figurative_constant_witout_zeroContext) {
+        if (ctx.ALL()) {
+            this.verifyName(ctx, false, undefined, [FigurativeConstantSymbol]);
+        }
+    }
+
+    enterFile_name(ctx: File_nameContext) {
+        this.verifyName(ctx, false, [FileSymbol, SortMergeFileSymbol]);
+    }
+
+    enterReport_name(ctx: Report_nameContext) {
+        this.verifyName(ctx, false, [ReportFileSymbol]);
+    }
+
+    enterClass_condition_name(ctx: Class_condition_nameContext) {
+        this.verifyName(ctx, false, [CLASS_Symbol]);
+    }
+
+    enterSign_condition_name(ctx: Sign_condition_nameContext) {
+        this.verifyName(ctx, false, undefined, [SIGN_Symbol]);
+    }
+
+    enterBool_condition_name(ctx: Bool_condition_nameContext) {
+        this.verifyName(ctx, false, undefined, [BOOL_Symbol]);
+    }
+
+    enterFunction_name(ctx: Function_nameContext) {
+        this.verifyName(ctx, false, [IntrincisFunctionSymbol]);
+    }
+
+    /****************************************************************************************************/
+    /****************************************************************************************************/
+    /****************************************************************************************************/
     /****************************************************************************************************/
 
-    private testQualifiedIdentifier<T extends Symbol>(
+    /**
+     * Side effect - add to occurances
+     * @param identifierCtx 
+     * @param localOnly 
+     * @param allowTypes 
+     */
+    private verifyQualifiedName(
             identifierCtx?: Qualified_data_itemContext,
             localOnly?: boolean,
-            ...allowedTypes: (new (...args: any[]) => T)[])
+            allowTypes?: (new (...args: any[]) => Symbol)[],
+            filterTypes?: (new (...args: any[]) => Symbol)[])
                 : Symbol | undefined {
         if (identifierCtx) {
-            return this.testNamePath(identifierCtx, identifierCtx.USER_DEFINED_WORD(), localOnly, ...allowedTypes);
+            return this.verifyNamePath(identifierCtx, identifierCtx.USER_DEFINED_WORD(), localOnly, allowTypes, filterTypes);
         }
         return undefined;
     }
 
-    private testIdentifier<T extends Symbol>(
+    /**
+     * Side effect - add to occurances
+     * @param identifierCtx 
+     * @param localOnly 
+     * @param allowTypes 
+     */
+    private verifyName(
             identifierCtx?: ParserRuleContext,
             localOnly?: boolean,
-            ...allowedTypes: (new (...args: any[]) => T)[])
+            allowTypes?: (new (...args: any[]) => Symbol)[],
+            filterTypes?: (new (...args: any[]) => Symbol)[])
                 : Symbol | undefined {
         if (identifierCtx) {
-            return this.testNamePath(identifierCtx, [identifierCtx], localOnly, ...allowedTypes);
+            return this.verifyNamePath(identifierCtx, [identifierCtx], localOnly, allowTypes, filterTypes);
         }
         return undefined;
     }
 
-    private testNamePath<T extends Symbol>(
+    /**
+     * Side effect - add to occurances
+     * @param ctx 
+     * @param namePath 
+     * @param localOnly 
+     * @param allowTypes 
+     */
+    private verifyNamePath(
             ctx: ParserRuleContext,
             namePath: ParseTree[],
             localOnly?: boolean,
-            ...allowedTypes: (new (...args: any[]) => T)[])
+            allowTypes?: (new (...args: any[]) => Symbol)[],
+            filterTypes?: (new (...args: any[]) => Symbol)[])
                 : Symbol | undefined {
         let symbols = this.symbolTable.resolveIdentifier(namePath.map(x => x.text), ctx, localOnly);
+        if (filterTypes && filterTypes.length > 0) {
+            let filteredSymbols: Symbol[] = [];
+            for (let symbol of symbols) {
+                for(let t of filterTypes) {
+                    if (symbol instanceof t) {
+                        filteredSymbols.push(symbol);
+                        break;
+                    }
+                }
+            }
+            symbols = filteredSymbols;
+        }
         if (symbols.length == 0) {
             markContext(this.diagnostics, ctx, localize("undefined_name", "Undefined name"));
             return undefined;
@@ -263,9 +379,9 @@ export class CobolAnalysisListener implements cobolListener {
         }
         let symbol = symbols[0];
         this.symbolTable.addOccurance(namePath, symbol);
-        if (allowedTypes.length > 0) {
+        if (allowTypes && allowTypes.length > 0) {
             let allowed = false;
-            for(let t of allowedTypes) {
+            for(let t of allowTypes) {
                 if (symbol instanceof t) {
                     allowed = true;
                     break;
@@ -350,4 +466,64 @@ export class CobolAnalysisListener implements cobolListener {
         }
         return "";
     }
+
+    /**
+     * Add pre-defined special registers and figurative constants to real data
+     */
+    private addPredefinitions() {
+        for (let intrincisFunction of _IntrincisFunctions) {
+            let symbolToAdd = this.symbolTable.addNewSymbolOfType(IntrincisFunctionSymbol, this.symbolTable, intrincisFunction.name);
+            symbolToAdd.functionDefinition = intrincisFunction;
+            symbolToAdd.isGlobal = true;
+            this.symbolTable.createOccurance(symbolToAdd);
+        }
+        for (let predefinedNode of _PredefinedData) {
+            // by default, add new symbols into symbolTable root
+            let symbols: Symbol[] = [this.symbolTable];
+            if (predefinedNode.parentKind) {
+                let symbolType = getSymbolFromKind(predefinedNode.parentKind);
+                symbols = this.symbolTable.getNestedSymbolsOfType(symbolType);
+            }
+            for (let symbol of symbols) {
+                if (symbol instanceof ScopedSymbol) {
+                    for (let predefinition of predefinedNode.predefinitions) {
+                        create(symbol, predefinition, this.symbolTable);
+                    }
+                }
+            }
+        }
+
+        function create(parentSymbol: ScopedSymbol, predefinition: IPreDefinition, symbolTable: CobolSymbolTable, forceGlobal?: boolean) {
+            let symbolToAdd = symbolTable.addNewSymbolOfType(predefinition.type, parentSymbol, predefinition.name);
+            if (symbolToAdd instanceof DataRecordSymbol) {
+                symbolToAdd.level = 1;
+                symbolToAdd.picture = predefinition.picture?predefinition.picture:"X";
+                symbolToAdd.usage = predefinition.usage?predefinition.usage:EDataUsage.DISPLAY;
+                symbolToAdd.requireQualification = predefinition.requireQualification;
+            }
+            if (symbolToAdd instanceof IdentifierSymbol) {
+                if (forceGlobal) {
+                    symbolToAdd.isGlobal = true;
+                } else {
+                    switch(predefinition.global) {
+                        case EGlobalType.alwaysTrue:
+                            symbolToAdd.isGlobal = true;
+                            break;
+                        case EGlobalType.alwaysFalse:
+                            symbolToAdd.isGlobal = false;
+                            break;
+                        case EGlobalType.fromParent:
+                            if (parentSymbol instanceof IdentifierSymbol) {
+                                symbolToAdd.isGlobal = parentSymbol.isGlobal;
+                            }
+                            break;
+                        default:
+                            symbolToAdd.isGlobal = true;
+                    }
+                }
+            }
+            symbolTable.createOccurance(symbolToAdd);
+        }
+    }
+
 }

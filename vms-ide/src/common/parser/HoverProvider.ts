@@ -2,8 +2,8 @@ import { HoverProvider, TextDocument, Position, CancellationToken, Hover } from 
 import { FacadeImpl } from "./Facade";
 import * as path from 'path';
 
-export class HoverProviderImpl<T> implements HoverProvider {
-    constructor(private backend: FacadeImpl<T>) {
+export class HoverProviderImpl implements HoverProvider {
+    constructor(private backend: FacadeImpl) {
     }
     public async provideHover(document: TextDocument, position: Position, token: CancellationToken) {
         let info = this.backend.symbolInfoAtPosition(document.fileName, position.character, position.line);
@@ -16,8 +16,8 @@ export class HoverProviderImpl<T> implements HoverProvider {
                 defStr += ` at ${info.definition.range.start.row + 1}:${info.definition.range.start.column + 1}`;
             }
             return new Hover([
-                `**${info.description}** ${defStr}`,
-                info.name
+                `**${info.kind}** ${defStr}`,
+                info.description
             ]);
         }
         return undefined;

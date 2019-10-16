@@ -582,8 +582,10 @@ fragment EXPONENT_
    ;
 
 NUMERIC_LITERAL
-   : DIGIT_+ ('.' DIGIT_+ EXPONENT_? )?
+   : DIGIT_+ '.' DIGIT_+ EXPONENT_?
+   | DIGIT_+ '.' EXPONENT_
    | '.' DIGIT_+ EXPONENT_?
+   | DIGIT_+
    ;
 
 HEX_LITERAL

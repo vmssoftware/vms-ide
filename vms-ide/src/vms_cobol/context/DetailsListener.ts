@@ -15,13 +15,13 @@ import {
 import {
     AlphabetContext,
     Class_Context,
-    Cobol_sourceContext,
     Currency_definitionContext,
     Data_description_clauseContext,
     Data_description_entryContext,
     Declaratives_sectionContext,
     Fd_clauseContext,
     File_descriptionContext,
+    Indexed_byContext,
     ParagraphContext,
     Predefined_name_relationContext,
     ProgramContext,
@@ -39,8 +39,6 @@ import {
     Switch_definitionContext,
     Symbol_charContext,
     cobolParser,
-    Working_storage_sectionContext,
-    Indexed_byContext,
 } from '../parser/cobolParser';
 
 import {
@@ -107,16 +105,7 @@ export class CobolDetailsListener implements cobolListener {
     enterProgram_id(ctx: Program_idContext) {
         if (this.currentSymbol instanceof ProgramSymbol) {
             this.currentSymbol.name = ctx.program_name().text.toUpperCase();
-            let link: ILink = {
-                master: this.currentSymbol,
-                references: [ctx.program_name()] 
-            };
-            let entry = this.symbolTable.occurance.get(this.currentSymbol.name);
-            if (entry) {
-                entry.push(link);
-            } else {
-                this.symbolTable.occurance.set(this.currentSymbol.name, [link]);
-            }
+            this.symbolTable.createOccurance(this.currentSymbol, ctx.program_name());
         }
     }
 
@@ -460,16 +449,7 @@ export class CobolDetailsListener implements cobolListener {
         this.currentSymbol = this.createAndTryAddSymbolTo(this.currentSymbol, t, name, ...args);
         this.currentSymbol.context = enclosingCtx;
         if (nameCtx) {
-            let link: ILink = {
-                master: this.currentSymbol,
-                references: [nameCtx] 
-            };
-            let entry = this.symbolTable.occurance.get(this.currentSymbol.name);
-            if (entry) {
-                entry.push(link);
-            } else {
-                this.symbolTable.occurance.set(this.currentSymbol.name, [link]);
-            }
+            this.symbolTable.createOccurance(this.currentSymbol, nameCtx);
         }
         return this.currentSymbol as T;
     }

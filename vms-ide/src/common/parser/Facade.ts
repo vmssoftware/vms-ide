@@ -17,12 +17,11 @@ export interface IDefinition {
     range: ILexicalRange;
 }
 
-export interface ISymbolInfo<ESymbolKind> {
+export interface ISymbolInfo {
     definition?: IDefinition;   // Place where symbol is defined, not where it is used
-    description: string;        // Provides a small description for certain symbols
-    kind: ESymbolKind;
-    name: string;
-    source: string;
+    kind: string;               // Provides a small description for symbol kind
+    description: string;        // Full path to the symbol (and type of arguments if it is a program or function)
+    source: string;             // Source file
 }
 
 export enum EDiagnosticType {
@@ -38,7 +37,7 @@ export interface IDiagnosticEntry {
     range: ILexicalRange;
 }
 
-export interface ISourceContext<ESymbolKind> {
+export interface ISourceContext {
     /**
      * Zero-based
      * @param column 
@@ -59,20 +58,20 @@ export interface ISourceContext<ESymbolKind> {
      * @param column 
      * @param row 
      */
-    symbolInfoAtPosition(column: number, row: number): ISymbolInfo<ESymbolKind> | undefined;
+    symbolInfoAtPosition(column: number, row: number): ISymbolInfo | undefined;
 }
 
-export interface IContextEntry<ESymbolKind> {
-    context: ISourceContext<ESymbolKind>;
+export interface IContextEntry {
+    context: ISourceContext;
 }
 
-export class FacadeImpl<ESymbolKind> {
+export class FacadeImpl {
     // Mapping file names to SourceContext instances.
-    private sourceContexts: Map<string, IContextEntry<ESymbolKind>> = new Map<string, IContextEntry<ESymbolKind>>();
+    private sourceContexts: Map<string, IContextEntry> = new Map<string, IContextEntry>();
 
     public logFn: LogFunction;
 
-    constructor(private contextFactory: (fileName: string, logFn?: LogFunction) => ISourceContext<ESymbolKind>, logFn?: LogFunction) {
+    constructor(private contextFactory: (fileName: string, logFn?: LogFunction) => ISourceContext, logFn?: LogFunction) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => { });
     }
@@ -88,7 +87,7 @@ export class FacadeImpl<ESymbolKind> {
         this.sourceContexts.delete(fileName);
     }
 
-    public getContext(fileName: string, source?: string): ISourceContext<ESymbolKind> {
+    public getContext(fileName: string, source?: string): ISourceContext {
         let contextEntry = this.sourceContexts.get(fileName);
         if (!contextEntry) {
             return this.loadSource(fileName, source);
@@ -96,7 +95,7 @@ export class FacadeImpl<ESymbolKind> {
         return contextEntry.context;
     }
 
-    public loadSource(fileName: string, source?: string): ISourceContext<ESymbolKind> {
+    public loadSource(fileName: string, source?: string): ISourceContext {
         let contextEntry = this.sourceContexts.get(fileName);
         if (!contextEntry) {
             if (!source) {
@@ -120,7 +119,7 @@ export class FacadeImpl<ESymbolKind> {
         return contextEntry.context;
     }
 
-    private parse(contextEntry: IContextEntry<ESymbolKind>) {
+    private parse(contextEntry: IContextEntry) {
         contextEntry.context.parse();
     }
 
@@ -163,7 +162,7 @@ export class FacadeImpl<ESymbolKind> {
      * @param column 
      * @param row 
      */
-    public symbolInfoAtPosition(fileName: string, column: number, row: number): ISymbolInfo<ESymbolKind> | undefined {
+    public symbolInfoAtPosition(fileName: string, column: number, row: number): ISymbolInfo | undefined {
         let context = this.getContext(fileName);
         return context.symbolInfoAtPosition(column, row);
     }

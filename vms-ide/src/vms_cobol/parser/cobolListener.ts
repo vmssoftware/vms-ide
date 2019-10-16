@@ -13,6 +13,7 @@ import { Word_in_area_AContext } from "./cobolParser";
 import { Word_in_area_BContext } from "./cobolParser";
 import { AuthorContext } from "./cobolParser";
 import { Figurative_constant_witout_all_zeroContext } from "./cobolParser";
+import { Figurative_constant_zeroContext } from "./cobolParser";
 import { Figurative_constant_witout_allContext } from "./cobolParser";
 import { Figurative_constant_witout_zeroContext } from "./cobolParser";
 import { Figurative_constantContext } from "./cobolParser";
@@ -24,7 +25,6 @@ import { End_declarativesContext } from "./cobolParser";
 import { Declaratives_sectionContext } from "./cobolParser";
 import { ParagraphContext } from "./cobolParser";
 import { Paragraph_nameContext } from "./cobolParser";
-import { SentenseContext } from "./cobolParser";
 import { Use_statementContext } from "./cobolParser";
 import { Group_data_nameContext } from "./cobolParser";
 import { Use_onContext } from "./cobolParser";
@@ -192,8 +192,6 @@ import { Using_prefixContext } from "./cobolParser";
 import { ArgumentContext } from "./cobolParser";
 import { Prog_nameContext } from "./cobolParser";
 import { Alter_statementContext } from "./cobolParser";
-import { Alter_new_procContext } from "./cobolParser";
-import { Alter_procContext } from "./cobolParser";
 import { Add_statementContext } from "./cobolParser";
 import { Add_grpContext } from "./cobolParser";
 import { Add_numContext } from "./cobolParser";
@@ -428,8 +426,9 @@ import { Binary_arithmetic_operatorContext } from "./cobolParser";
 import { Unary_arithmetic_operatorContext } from "./cobolParser";
 import { Logic_expressionContext } from "./cobolParser";
 import { Logic_conditionContext } from "./cobolParser";
-import { Logic_condition_right_partContext } from "./cobolParser";
+import { Logic_condition_abbrevContext } from "./cobolParser";
 import { Logic_operationContext } from "./cobolParser";
+import { Bool_condition_nameContext } from "./cobolParser";
 import { Sign_condition_nameContext } from "./cobolParser";
 import { Class_condition_nameContext } from "./cobolParser";
 import { Condition_operatorContext } from "./cobolParser";
@@ -559,6 +558,17 @@ export interface cobolListener extends ParseTreeListener {
 	exitFigurative_constant_witout_all_zero?: (ctx: Figurative_constant_witout_all_zeroContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `cobolParser.figurative_constant_zero`.
+	 * @param ctx the parse tree
+	 */
+	enterFigurative_constant_zero?: (ctx: Figurative_constant_zeroContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.figurative_constant_zero`.
+	 * @param ctx the parse tree
+	 */
+	exitFigurative_constant_zero?: (ctx: Figurative_constant_zeroContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `cobolParser.figurative_constant_witout_all`.
 	 * @param ctx the parse tree
 	 */
@@ -678,17 +688,6 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitParagraph_name?: (ctx: Paragraph_nameContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.sentense`.
-	 * @param ctx the parse tree
-	 */
-	enterSentense?: (ctx: SentenseContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.sentense`.
-	 * @param ctx the parse tree
-	 */
-	exitSentense?: (ctx: SentenseContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.use_statement`.
@@ -2526,28 +2525,6 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitAlter_statement?: (ctx: Alter_statementContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.alter_new_proc`.
-	 * @param ctx the parse tree
-	 */
-	enterAlter_new_proc?: (ctx: Alter_new_procContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.alter_new_proc`.
-	 * @param ctx the parse tree
-	 */
-	exitAlter_new_proc?: (ctx: Alter_new_procContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.alter_proc`.
-	 * @param ctx the parse tree
-	 */
-	enterAlter_proc?: (ctx: Alter_procContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.alter_proc`.
-	 * @param ctx the parse tree
-	 */
-	exitAlter_proc?: (ctx: Alter_procContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.add_statement`.
@@ -5124,15 +5101,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitLogic_condition?: (ctx: Logic_conditionContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.logic_condition_right_part`.
+	 * Enter a parse tree produced by `cobolParser.logic_condition_abbrev`.
 	 * @param ctx the parse tree
 	 */
-	enterLogic_condition_right_part?: (ctx: Logic_condition_right_partContext) => void;
+	enterLogic_condition_abbrev?: (ctx: Logic_condition_abbrevContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.logic_condition_right_part`.
+	 * Exit a parse tree produced by `cobolParser.logic_condition_abbrev`.
 	 * @param ctx the parse tree
 	 */
-	exitLogic_condition_right_part?: (ctx: Logic_condition_right_partContext) => void;
+	exitLogic_condition_abbrev?: (ctx: Logic_condition_abbrevContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.logic_operation`.
@@ -5144,6 +5121,17 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitLogic_operation?: (ctx: Logic_operationContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.bool_condition_name`.
+	 * @param ctx the parse tree
+	 */
+	enterBool_condition_name?: (ctx: Bool_condition_nameContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.bool_condition_name`.
+	 * @param ctx the parse tree
+	 */
+	exitBool_condition_name?: (ctx: Bool_condition_nameContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.sign_condition_name`.

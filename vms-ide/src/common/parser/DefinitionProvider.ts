@@ -1,8 +1,8 @@
 import { TextDocument, Position, CancellationToken, Range, Location, Uri, ProviderResult, DefinitionProvider } from 'vscode';
 import { FacadeImpl } from './Facade';
 
-export class DefinitionProviderImpl<T> implements DefinitionProvider {
-    constructor(private backend: FacadeImpl<T>) { 
+export class DefinitionProviderImpl implements DefinitionProvider {
+    constructor(private backend: FacadeImpl) { 
     }
     public provideDefinition(document: TextDocument, position: Position, token: CancellationToken): ProviderResult<Location> {
         let info = this.backend.symbolInfoAtPosition(document.fileName, position.character, position.line);

@@ -107,11 +107,10 @@ export class CobolInputStream implements CharStream {
      * @param realCharPositionInLine zero-based column before filtration
      */
     public getFilteredPosition(realLine: number, realCharPositionInLine: number) {
-        let line = 0;
+        let line = this.filteredLineToRealLine.length - 1;
         let charPositionInLine = 0;
-        while(line < this.filteredLineToRealLine.length) {
-            if (this.filteredLineToRealLine[line] > realLine) {
-                --line;
+        while(line > 0) {
+            if (this.filteredLineToRealLine[line] <= realLine) {
                 let stopPos = this.realLinePos[realLine] + realCharPositionInLine;
                 let startPos = this.realLinePos[this.filteredLineToRealLine[line]];
                 let pos: IPos = {
@@ -133,7 +132,7 @@ export class CobolInputStream implements CharStream {
                 }
                 break;
             }
-            line++;
+            --line;
         }
         return {line, charPositionInLine};
     }

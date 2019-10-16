@@ -1,27 +1,87 @@
 import * as path from 'path';
 import * as nls from "vscode-nls";
 
-import { Symbol, CodeCompletionCore } from "antlr4-c3";
-import { ParseCancellationException } from 'antlr4ts/misc';
-import { ParseTreeWalker, TerminalNode, ParseTreeListener } from 'antlr4ts/tree';
-import { CommonTokenStream, BailErrorStrategy, DefaultErrorStrategy, Token } from 'antlr4ts';
-import { PredictionMode } from 'antlr4ts/atn/PredictionMode';
-import { LogFunction, LogType } from '../../common/main';
-import { IDiagnosticEntry, IDefinition, ISymbolInfo, ISourceContext, EDiagnosticType } from '../../common/parser/Facade';
-import { cobolParser, Cobol_sourceContext } from '../parser/cobolParser';
-import { ParserErrorListener, LexerErrorListener } from '../../common/parser/ErrorListeners';
-import { CobolInputStream } from '../stream/cobolInputStream';
-import { cobolLexer } from '../parser/cobolLexer';
-import { parseTreeFromPosition } from '../../common/parser/Helpers';
-import { CobolAnalysisListener } from './AnalysisListener';
-import { ECobolSymbolKind } from './Symbol';
-import { CobolSymbolTable } from './ContextSymbolTable';
-import { CobolDetailsListener } from './DetailsListener';
+import {
+    Symbol,
+    CodeCompletionCore
+} from "antlr4-c3";
+
+import {
+    ParseCancellationException
+} from 'antlr4ts/misc';
+
+import {
+    ParseTreeWalker,
+    TerminalNode,
+    ParseTreeListener
+} from 'antlr4ts/tree';
+
+import {
+    CommonTokenStream,
+    BailErrorStrategy,
+    DefaultErrorStrategy,
+    Token
+} from 'antlr4ts';
+
+import {
+    PredictionMode
+} from 'antlr4ts/atn/PredictionMode';
+
+import {
+    LogFunction,
+    LogType
+} from '../../common/main';
+
+import {
+    IDiagnosticEntry,
+    IDefinition,
+    ISymbolInfo,
+    ISourceContext,
+    EDiagnosticType
+} from '../../common/parser/Facade';
+
+import {
+    cobolParser,
+    Cobol_sourceContext
+} from '../parser/cobolParser';
+
+import {
+    ParserErrorListener,
+    LexerErrorListener
+} from '../../common/parser/ErrorListeners';
+
+import {
+    CobolInputStream
+} from '../stream/cobolInputStream';
+
+import {
+    cobolLexer
+} from '../parser/cobolLexer';
+
+import {
+    parseTreeFromPosition
+} from '../../common/parser/Helpers';
+
+import {
+    CobolAnalysisListener
+} from './AnalysisListener';
+
+import {
+    ECobolSymbolKind, ProgramSymbol, programDetails,
+} from './Symbol';
+
+import {
+    CobolSymbolTable
+} from './ContextSymbolTable';
+
+import {
+    CobolDetailsListener
+} from './DetailsListener';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-export class CobolSourceContext implements ISourceContext<ECobolSymbolKind> {
+export class CobolSourceContext implements ISourceContext {
 
     private sourceId: string;
     private streamErrors: IDiagnosticEntry[] = [];
@@ -123,12 +183,16 @@ export class CobolSourceContext implements ISourceContext<ECobolSymbolKind> {
         if (this.tree) {
             this.symbolTable.tree = this.tree;
             this.symbolTable.clear();
-            try {
-                let listener: CobolDetailsListener = new CobolDetailsListener(this.symbolTable, this.imports);
-                ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree);
-                this.runAnalysis();
-            } catch(e) {
-                this.logFn(LogType.debug, () => String(e));
+            if (this.streamErrors.length ===0 && this.diagnostics.length === 0) {
+                try {
+                    let listener: CobolDetailsListener = new CobolDetailsListener(this.symbolTable, this.imports);
+                    ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree);
+                    this.runAnalysis();
+                } catch(e) {
+                    this.logFn(LogType.debug, () => String(e));
+                }
+            } else {
+                this.analysisDone = true;
             }
         }
 
@@ -232,14 +296,21 @@ export class CobolSourceContext implements ISourceContext<ECobolSymbolKind> {
      * @param column 
      * @param row 
      */
-    public symbolInfoAtPosition(column: number, row: number): ISymbolInfo<ECobolSymbolKind> | undefined {
-        let info: ISymbolInfo<ECobolSymbolKind> | undefined;
+    public symbolInfoAtPosition(column: number, row: number): ISymbolInfo | undefined {
+        let info: ISymbolInfo | undefined;
         if (this.input) {
             ({line: row, charPositionInLine: column} = this.input.getFilteredPosition(row, column));
-            info = this.symbolTable.getSymbolInfo(this.masterSymbolAtPosition(column, row));
+            let masterSymbol = this.masterSymbolAtPosition(column, row);
+            info = this.symbolTable.getSymbolInfo(masterSymbol);
             if (info && info.definition) {
                 ({line: info.definition.range.start.row, charPositionInLine: info.definition.range.start.column} = this.input.getRealPosition(info.definition.range.start.row, info.definition.range.start.column));
                 ({line: info.definition.range.end.row, charPositionInLine: info.definition.range.end.column} = this.input.getRealPosition(info.definition.range.end.row, info.definition.range.end.column));
+            }
+            if (info && masterSymbol instanceof ProgramSymbol) {
+                let details = programDetails(masterSymbol);
+                if (details) {
+                    info.description = details;
+                }
             }
         }
         return info;

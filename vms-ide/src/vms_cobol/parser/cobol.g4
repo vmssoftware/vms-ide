@@ -76,9 +76,15 @@ figurative_constant_witout_all_zero
    | QUOTES
    ;
 
+figurative_constant_zero
+   : ZERO
+   | ZEROS
+   | ZEROES
+   ;
+
 figurative_constant_witout_all
    : figurative_constant_witout_all_zero
-   | ZERO
+   | figurative_constant_zero
    ;
 
 figurative_constant_witout_zero
@@ -88,7 +94,7 @@ figurative_constant_witout_zero
 
 figurative_constant
    : figurative_constant_witout_zero
-   | ZERO
+   | figurative_constant_zero
    ;
 
 end_program
@@ -122,15 +128,11 @@ declaratives_section
 
 paragraph
    : {this.inputStream.LT(1).charPositionInLine < 4}? paragraph_name DOT_
-     sentense*
+     (statement+ DOT_)*
    ;
 
 paragraph_name
    : USER_DEFINED_WORD
-   ;
-
-sentense
-   : statement+ DOT_?
    ;
 
 use_statement
@@ -589,7 +591,7 @@ perform_statement
    ;
 
 proc_thru_proc
-   : first_proc ((THROUGH|THRU) end_proc)?
+   : proc_name ((THROUGH|THRU) proc_name)?
    ;
 
 perform_times
@@ -774,7 +776,7 @@ tally_ctr
    ;
 
 src_string
-   : qualified_data_item
+   : identifier
    ;
 
 initiate_statement
@@ -804,8 +806,8 @@ move_statement
    ;
 
 if_statement
-   : IF logic_expression THEN? (sentense|NEXT SENTENCE)
-     (ELSE (sentense|NEXT SENTENCE))?
+   : IF logic_expression THEN? (statement+|NEXT SENTENCE)
+     (ELSE (statement+|NEXT SENTENCE))?
      END_IF?
    ;
 
@@ -831,13 +833,13 @@ go_to_statement
    ;
 
 proc_name
-   : USER_DEFINED_WORD
+   : qualified_data_item
    ;
 
 evaluate_statement
    : EVALUATE subj_item (ALSO? subj_item)*
-     (WHEN when_condition (ALSO? when_condition)* sentense?)+
-     (WHEN OTHER sentense?)?
+     (WHEN when_condition (ALSO? when_condition)* statement*)+
+     (WHEN OTHER statement*)?
      END_EVALUATE?
    ;
 
@@ -1029,14 +1031,7 @@ prog_name
    ;
 
 alter_statement
-   : ALTER (alter_proc TO (PROCEED TO)? alter_new_proc )+
-   ;
-
-alter_new_proc
-   : USER_DEFINED_WORD
-   ;
-alter_proc
-   : USER_DEFINED_WORD
+   : ALTER (proc_name TO (PROCEED TO)? proc_name )+
    ;
 
 add_statement
@@ -1142,10 +1137,10 @@ accept_at
    ;
 
 accept_at_line
-   : LINE NUMBER? (NUMERIC_LITERAL|qualified_data_item)
+   : LINE NUMBER? (NUMERIC_LITERAL|identifier)
    ;
 accept_at_column
-   : COLUMN NUMBER? (NUMERIC_LITERAL|qualified_data_item)
+   : COLUMN NUMBER? (NUMERIC_LITERAL|identifier)
    ;
 
 accept_form4_clause
@@ -1169,13 +1164,13 @@ accept_form3_clause
    ;
 
 key_dest_item
-   : qualified_data_item
+   : identifier
    ;
 
 def_value
    : figurative_constant
    | STRING_LITERAL
-   | qualified_data_item
+   | identifier
    | CURRENT VALUE?
    ;
 
@@ -1193,12 +1188,12 @@ prot_fill_lit
 
 prot_size_value
    : NUMERIC_LITERAL 
-   | qualified_data_item
+   | identifier
    ;
 
 number_value
    : line_num
-   | qualified_data_item (PLUS line_num?)?
+   | identifier (PLUS line_num?)?
    | PLUS line_num?
    ;
 
@@ -1218,27 +1213,27 @@ input_source
    ;
 
 at_end
-   : AT? END sentense?
+   : AT? END statement*
    ;
 
 on_exception
-   : ON? EXCEPTION sentense?
+   : ON? EXCEPTION statement*
    ;
 
 on_size
-   : ON? SIZE ERROR sentense?
+   : ON? SIZE ERROR statement*
    ;
 
 on_overflow
-   : ON? OVERFLOW sentense?
+   : ON? OVERFLOW statement*
    ;
 
 at_eop
-   : AT? (END_OF_PAGE|EOP) sentense?
+   : AT? (END_OF_PAGE|EOP) statement*
    ;
 
 invalid_key
-   : INVALID KEY? sentense?
+   : INVALID KEY? statement*
    ;
 
 file_section
@@ -2297,19 +2292,24 @@ logic_expression
    ;
 
 logic_condition
-   : arithmetic_expression logic_condition_right_part ((OR|AND) logic_condition_right_part)*
+   : arithmetic_expression condition_operator arithmetic_expression (logic_operation logic_condition_abbrev)*
+   | arithmetic_expression IS? NOT? (class_condition_name|sign_condition_name) (logic_operation logic_condition_abbrev)*
+   | arithmetic_expression IS? (SUCCESS|FAILURE)
    | qualified_data_item
    ;
 
-logic_condition_right_part
-   : condition_operator arithmetic_expression
-   | IS? NOT? (class_condition_name|sign_condition_name)
-   | IS? (SUCCESS|FAILURE)
+logic_condition_abbrev
+   : condition_operator? arithmetic_expression
    ;
 
 logic_operation
    : AND
    | OR
+   ;
+
+bool_condition_name
+   : SUCCESS
+   | FAILURE
    ;
 
 sign_condition_name
