@@ -5,7 +5,7 @@ import {
 
 import {
     CobolSymbolTable, ILink,
-} from './ContextSymbolTable';
+} from './CobolSymbolTable';
 
 import {
     ScopedSymbol,
@@ -74,7 +74,7 @@ import {
     IndexedBySymbol,
     IdentifierSymbol,
     EDataUsage,
-} from './Symbol';
+} from './CobolSymbol';
 
 import {
     ParserRuleContext,

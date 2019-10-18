@@ -1,0 +1,10 @@
+{
+    "not_in_contained_program": "Cannot be used in a contained program",
+    "must_in_contained_program": "May be used only in a contained program",
+    "dot_must_end_some": "Must be at the end of nonempty content",
+    "isnt_unique": "Isn't unique",
+    "already_defined": "Already defined",
+    "invalid_currency": "Invalid currency char",
+    "invalid_data": "Invalid data description",
+    "must_be_in_B": "This token must be in B area"
+}

@@ -3,13 +3,11 @@ import { ParserRuleContext } from 'antlr4ts';
 import { SymbolTable, Symbol, ScopedSymbol, SymbolTableOptions, NamespaceSymbol } from "antlr4-c3";
 import { ParseTree } from 'antlr4ts/tree';
 
-import { ProgramContext } from '../parser/cobolParser';
-
 import { ISymbolInfo, IDefinition } from '../../common/parser/Facade';
-import { firstContainingContext, definitionForContext, isNodeIncludes } from '../../common/parser/Helpers';
+import { definitionForContext, isNodeIncludes } from '../../common/parser/Helpers';
 
-import { CobolSourceContext } from './SourceContext';
-import { symbolDescriptionFromEnum, ECobolSymbolKind, getKindFromSymbol, ProgramSymbol, IdentifierSymbol, DataRecordSymbol } from './Symbol';
+import { CobolSourceContext } from './CobolSourceContext';
+import { symbolDescriptionFromEnum, getKindFromSymbol, ProgramSymbol, IdentifierSymbol, DataRecordSymbol } from './CobolSymbol';
 
 /**
  * First element in ParseTree[] is name definition context
@@ -97,28 +95,34 @@ export class CobolSymbolTable extends SymbolTable {
         if (matched.length > 0) {
             let currentScopeSymbol = this.getEnclosingSymbolForContext(ctx);
             let requireGlobal = false;
+            // in first try to add candidates from the nearest scope
             while (currentScopeSymbol) {
                 // for each matched candidate find if they are in the same scope
                 for (let candidate of matched) {
-                    let current: Symbol | undefined = candidate;
-                    while(current) {
-                        if (current === currentScopeSymbol) {
-                            if (!requireGlobal || (!(candidate instanceof IdentifierSymbol) || candidate.isGlobal)) {
-                                retSymbols.push(candidate);
+                    // most global candidates will be added later
+                    if (!(candidate.parent instanceof SymbolTable)) {
+                        let current: Symbol | undefined = candidate;
+                        while(current) {
+                            if (current === currentScopeSymbol) {
+                                if (!requireGlobal || (!(candidate instanceof IdentifierSymbol) || candidate.isGlobal)) {
+                                    retSymbols.push(candidate);
+                                }
+                                break;
                             }
-                            break;
+                            // do not pass through program while finding appropriate scope, 
+                            // so upper program doesn't see symbols from lower program
+                            if (current instanceof ProgramSymbol) {
+                                break;
+                            }
+                            current = current.parent;
                         }
-                        // do not pass through program
-                        if (!(candidate instanceof ProgramSymbol) && current instanceof ProgramSymbol) {
-                            break;
-                        }
-                        current = current.parent;
                     }
                 }
                 if (retSymbols.length > 0) {
                     break;
                 }
-                // global flag required
+                // when passing through program, global flag will be required
+                // so lower program will see symbols from upper program only if they are global
                 if (currentScopeSymbol instanceof ProgramSymbol) {
                     if (localOnly) {
                         break;
@@ -127,6 +131,12 @@ export class CobolSymbolTable extends SymbolTable {
                 }
                 // go to enclosing scope and test again
                 currentScopeSymbol = currentScopeSymbol.parent;
+            }
+            // add most global candidates at the end
+            for (let candidate of matched) {
+                if (candidate.parent instanceof SymbolTable) {
+                    retSymbols.push(candidate);
+                }
             }
         }
         return retSymbols;
@@ -150,6 +160,7 @@ export class CobolSymbolTable extends SymbolTable {
                     // go through from origin to program and collect info
                     let current: Symbol | undefined = candidate;
                     while (current) {
+                        // only data symbols may occur in path
                         if (current instanceof ProgramSymbol) {
                             break;
                         }
@@ -214,7 +225,7 @@ export class CobolSymbolTable extends SymbolTable {
             description: name,
             source: this.owner?this.owner.fileName:"",
             definition: this.getSymbolNameDefinition(symbol),
-            kind: symbolDescriptionFromEnum(kind),
+            kindString: symbolDescriptionFromEnum(kind),
         };
 
         return result;

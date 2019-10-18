@@ -16,7 +16,7 @@ export class HoverProviderImpl implements HoverProvider {
                 defStr += ` at ${info.definition.range.start.row + 1}:${info.definition.range.start.column + 1}`;
             }
             return new Hover([
-                `**${info.kind}** ${defStr}`,
+                `**${info.kindString}** ${defStr}`,
                 info.description
             ]);
         }

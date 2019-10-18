@@ -18,29 +18,41 @@ program
    ;
 
 identification_division
+   : identification_division_header
+     program_id
+     author?
+     installation?
+     date_written?
+     date_compiled?
+     security?
+     options_?
+   ;
+
+identification_division_header
    : {this.inputStream.LT(1).charPositionInLine < 4}? IDENTIFICATION DIVISION DOT_
-      program_id
-      author?
-      installation?
-      date_written?
-      date_compiled?
-      security?
-      options_?
    ;
 
 environment_division
-   : ENVIRONMENT DIVISION DOT_
+   : environment_division_header
      configuration_section?
      input_output_section?
    ;
 
+environment_division_header
+   : ENVIRONMENT DIVISION DOT_
+   ;
+
 data_division
-   : DATA DIVISION DOT_
+   : data_division_header
      file_section?
      working_storage_section?
      linkage_section?
      report_section?
      screen_section?
+   ;
+
+data_division_header
+   : DATA DIVISION DOT_
    ;
 
 procedure_division
@@ -60,10 +72,13 @@ word_in_area_B
    ;
 
 author
-   : AUTHOR DOT_ word_in_area_B*
+   : author_header
+     word_in_area_B*
    ;
 
-// author =====
+author_header
+   : AUTHOR DOT_
+   ;
 
 figurative_constant_witout_all_zero
    : SPACE
@@ -89,7 +104,7 @@ figurative_constant_witout_all
 
 figurative_constant_witout_zero
    : figurative_constant_witout_all_zero
-   | ALL STRING_LITERAL
+   | ALL STRING_LITERAL_
    ;
 
 figurative_constant
@@ -98,11 +113,26 @@ figurative_constant
    ;
 
 end_program
-   : {this.inputStream.LT(1).charPositionInLine < 4}? END PROGRAM program_name DOT_
+   : end_program_header
+     program_name DOT_
+   ;
+
+end_program_header
+   : {this.inputStream.LT(1).charPositionInLine < 4}? END PROGRAM 
    ;
 
 procedure_division_header
-   : PROCEDURE DIVISION using? giving? DOT_
+   : procedure_division_header_start
+     using? giving?
+     procedure_division_header_end
+   ;
+
+procedure_division_header_start
+   : PROCEDURE DIVISION
+   ;
+
+procedure_division_header_end
+   : DOT_
    ;
 
 section
@@ -111,9 +141,13 @@ section
    ;
 
 declaratives
-   : {this.inputStream.LT(1).charPositionInLine < 4}? DECLARATIVES DOT_
+   : declaratives_header
      declaratives_section+
      end_declaratives
+   ;
+
+declaratives_header
+   : {this.inputStream.LT(1).charPositionInLine < 4}? DECLARATIVES DOT_
    ;
 
 end_declaratives
@@ -132,7 +166,7 @@ paragraph
    ;
 
 paragraph_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 use_statement
@@ -159,7 +193,7 @@ section_header
    ;
 
 section_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 using
@@ -227,30 +261,30 @@ copy_statement
    ;
 
 copy_replacing
-   : PSEUDO_TEXT
-   | USER_DEFINED_WORD+
-   | STRING_LITERAL
-   | NUMERIC_LITERAL
+   : PSEUDO_TEXT_
+   | USER_DEFINED_WORD_+
+   | STRING_LITERAL_
+   | NUMERIC_LITERAL_
    ;
 
 record_name
-   : USER_DEFINED_WORD
-   | STRING_LITERAL
+   : USER_DEFINED_WORD_
+   | STRING_LITERAL_
    ;
 
 library_name
-   : USER_DEFINED_WORD
-   | STRING_LITERAL
+   : USER_DEFINED_WORD_
+   | STRING_LITERAL_
    ;
 
 text_name
-   : USER_DEFINED_WORD
-   | STRING_LITERAL
+   : USER_DEFINED_WORD_
+   | STRING_LITERAL_
    ;
 
 replace_statement
    : REPLACE OFF
-   | REPLACE (PSEUDO_TEXT BY PSEUDO_TEXT)+
+   | REPLACE (PSEUDO_TEXT_ BY PSEUDO_TEXT_)+
    ;
 
 write_statement
@@ -273,7 +307,7 @@ advance_value
 
 advance_num
    : identifier
-   | NUMERIC_LITERAL
+   | NUMERIC_LITERAL_
    ;
 
 unstring_statement
@@ -312,7 +346,7 @@ unstring_delim_clause
 
 unstring_delim
    : identifier
-   | STRING_LITERAL
+   | STRING_LITERAL_
    | figurative_constant_witout_all
    ;
 
@@ -346,7 +380,7 @@ sub_grp
    ;
 
 sub_num
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    | identifier
    ;
 
@@ -372,7 +406,7 @@ string_delim
 
 string_src
    : qualified_data_item
-   | STRING_LITERAL
+   | STRING_LITERAL_
    | figurative_constant
    ;
 
@@ -381,8 +415,8 @@ stop_statement
    ;
 
 stop_disp
-   : STRING_LITERAL
-   | NUMERIC_LITERAL
+   : STRING_LITERAL_
+   | NUMERIC_LITERAL_
    | figurative_constant_witout_all
    ;
 
@@ -399,26 +433,15 @@ sort_key_data
    ;
 
 sort_statement
-   : sort_statement_form1
-   | sort_statement_form2
-   ;
-
-sort_statement_form1
-   : SORT file_name on_sort_key+
+   : SORT sort_name on_sort_key*
      (WITH? DUPLICATES IN? ORDER?)?
      (COLLATING? SEQUENCE IS? alpha_name)?
      (INPUT procedure_is|USING file_name+)?
      (OUTPUT procedure_is|GIVING file_name+)?
    ;
 
-sort_statement_form2
-   : SORT table_name on_sort_key*
-     (WITH? DUPLICATES IN? ORDER?)?
-     (COLLATING? SEQUENCE IS? alpha_name)?
-   ;
-
-table_name
-   : qualified_data_item
+sort_name
+   : qualified_data_item   // file_name or table_name depends on clauses
    ;
 
 procedure_is
@@ -468,12 +491,12 @@ set_statement_form6
 
 set_increm
    : identifier
-   | NUMERIC_LITERAL
+   | NUMERIC_LITERAL_
    ;
 
 set_val
    : identifier
-   | NUMERIC_LITERAL
+   | NUMERIC_LITERAL_
    ;
 
 search_statement
@@ -529,7 +552,7 @@ return_statement
    ;
 
 smrg_file
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 release_statement
@@ -551,13 +574,13 @@ record_statement
    ;
 
 relation_type
-   : USER_DEFINED_WORD
-   | STRING_LITERAL
+   : USER_DEFINED_WORD_
+   | STRING_LITERAL_
    ;
 
 path_name
-   : USER_DEFINED_WORD
-   | STRING_LITERAL
+   : USER_DEFINED_WORD_
+   | STRING_LITERAL_
    ;
 
 read_statement
@@ -595,7 +618,7 @@ proc_thru_proc
    ;
 
 perform_times
-   : (identifier|NUMERIC_LITERAL) TIMES
+   : (identifier|NUMERIC_LITERAL_) TIMES
    ;
 
 with_test
@@ -618,12 +641,12 @@ perform_range
 
 perform_increm
    : identifier
-   | NUMERIC_LITERAL
+   | NUMERIC_LITERAL_
    ;
 
 perform_init
    : identifier
-   | NUMERIC_LITERAL
+   | NUMERIC_LITERAL_
    ;
 
 perform_var
@@ -662,7 +685,7 @@ multiply_statement
 
 mult_num
    : identifier
-   | NUMERIC_LITERAL
+   | NUMERIC_LITERAL_
    ;
 
 merge_statement
@@ -689,7 +712,7 @@ giving_file
    ;
 
 infile
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 merge_on
@@ -697,7 +720,7 @@ merge_on
    ;
 
 mergefile
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 mergekey
@@ -763,7 +786,7 @@ tallying_for_all
 
 compare_val
    : qualified_data_item
-   | STRING_LITERAL
+   | STRING_LITERAL_
    | figurative_constant_witout_all
    ;
 
@@ -882,7 +905,7 @@ remaind
 
 divide_num
    : identifier
-   | NUMERIC_LITERAL
+   | NUMERIC_LITERAL_
    ;
 
 display_statement
@@ -919,15 +942,15 @@ src_item
    ;
 
 display_upon
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 disp_f3_line
-   : LINE NUMBER? (identifier|NUMERIC_LITERAL)
+   : LINE NUMBER? (identifier|NUMERIC_LITERAL_)
    ;
 
 disp_f3_column
-   : COLUMN NUMBER? (identifier|NUMERIC_LITERAL)
+   : COLUMN NUMBER? (identifier|NUMERIC_LITERAL_)
    ;
 
 display_form1_clause
@@ -959,7 +982,7 @@ at_column_number
    ;
 
 out_dest
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 delete_statement
@@ -1020,14 +1043,14 @@ using_prefix
    ;   
 
 argument
-   : qualified_data_item
-   | NUMERIC_LITERAL
-   | STRING_LITERAL
+   : identifier
+   | NUMERIC_LITERAL_
+   | STRING_LITERAL_
    ;
 
 prog_name
-   : USER_DEFINED_WORD
-   | STRING_LITERAL
+   : USER_DEFINED_WORD_
+   | STRING_LITERAL_
    ;
 
 alter_statement
@@ -1048,7 +1071,7 @@ add_grp
    ;
 
 add_num
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    | identifier
    ;
 
@@ -1098,7 +1121,7 @@ accept_form6
    ;
 
 accept6_item
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 accept_form1
@@ -1137,10 +1160,10 @@ accept_at
    ;
 
 accept_at_line
-   : LINE NUMBER? (NUMERIC_LITERAL|identifier)
+   : LINE NUMBER? (NUMERIC_LITERAL_|identifier)
    ;
 accept_at_column
-   : COLUMN NUMBER? (NUMERIC_LITERAL|identifier)
+   : COLUMN NUMBER? (NUMERIC_LITERAL_|identifier)
    ;
 
 accept_form4_clause
@@ -1169,7 +1192,7 @@ key_dest_item
 
 def_value
    : figurative_constant
-   | STRING_LITERAL
+   | STRING_LITERAL_
    | identifier
    | CURRENT VALUE?
    ;
@@ -1183,11 +1206,11 @@ protected_value
    ;
 
 prot_fill_lit
-   : STRING_LITERAL
+   : STRING_LITERAL_
    ;
 
 prot_size_value
-   : NUMERIC_LITERAL 
+   : NUMERIC_LITERAL_ 
    | identifier
    ;
 
@@ -1209,7 +1232,7 @@ dest_item
    ;
 
 input_source
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 at_end
@@ -1317,7 +1340,7 @@ data_description_entry
    ;
 
 level_number
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 data_description_clause
@@ -1364,7 +1387,7 @@ value_is_definition_thru
    ;
 
 external_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 ref_data_name
@@ -1372,8 +1395,10 @@ ref_data_name
    ;
 
 value_is_literal
-   : STRING_LITERAL
-   | NUMERIC_LITERAL
+   : STRING_LITERAL_
+   | NUMERIC_LITERAL_
+   | figurative_constant
+   | USER_DEFINED_WORD_
    ;
 
 occurs
@@ -1385,7 +1410,7 @@ indexed_by
    ;
 
 ind_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 key_is
@@ -1402,13 +1427,13 @@ times_definition
    ;
 
 table_size
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 min_times
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 max_times
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 report_group_data_description_entry
@@ -1443,16 +1468,16 @@ sum
    ;
 
 control_foot_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    | FINAL
    ;
 
 detail_report_group_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 sum_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 source_name
@@ -1460,7 +1485,7 @@ source_name
    ;
 
 column_number
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 type_is_definition
@@ -1479,7 +1504,7 @@ type_is_definition
    ;
 
 type_control_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    | FINAL
    ;
 
@@ -1494,7 +1519,7 @@ line_num_definition
    | PLUS line_num
    ;
 line_num
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 rd_clause
@@ -1510,23 +1535,23 @@ rd_clause
    ;
 
 footing_line_rd
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 last_detail_line
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 first_detail_line
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 heading_line
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 page_size_rd
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 control_name
@@ -1534,7 +1559,7 @@ control_name
    ;
 
 report_code
-   : STRING_LITERAL
+   : STRING_LITERAL_
    ;
 
 usage
@@ -1572,19 +1597,19 @@ usage_definition
    ;
 
 picture
-   : (PICTURE|PIC) (IS|IS_IN_PICTURE)? character_string
+   : (PICTURE|PIC) (IS|IS_IN_PICTURE_)? character_string
    ;
 
 character_string
-   : CHARACTER_STRING
+   : CHARACTER_STRING_
    ;
 
 other_data_item
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 data_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 sd_clause
@@ -1597,7 +1622,7 @@ report_is
    ;
 
 report_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 linage
@@ -1608,22 +1633,22 @@ linage
    ;
 
 bottom_lines
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    | qualified_data_item
    ;
 
 top_lines
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    | qualified_data_item
    ;
 
 footing_line
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    | qualified_data_item
    ;
 
 page_size
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    | qualified_data_item
    ;
 
@@ -1632,7 +1657,7 @@ data_rec
    ;
 
 rec_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 value_of_id
@@ -1640,7 +1665,7 @@ value_of_id
    ;
 
 value_of_id_definition
-   : STRING_LITERAL
+   : STRING_LITERAL_
    | qualified_data_item
    ;
 
@@ -1666,11 +1691,11 @@ depending_item
    ;
 
 shortest_rec
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 longest_rec
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 screen_description_entry
@@ -1680,7 +1705,7 @@ screen_description_entry
    ;
 
 screen_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 screen_description_clause
@@ -1721,16 +1746,16 @@ scr_pic_to
    ;
 
 nonnumeric_literal
-   : STRING_LITERAL
+   : STRING_LITERAL_
    ;
 
 src_number
    : qualified_data_item
-   | NUMERIC_LITERAL
+   | NUMERIC_LITERAL_
    ;
 
 color_num
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 // program id
@@ -1744,7 +1769,7 @@ program_id
    ;
 
 program_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 common_initial
@@ -1756,7 +1781,7 @@ with_ident
    ;
 
 ident_string
-   : STRING_LITERAL
+   : STRING_LITERAL_
    ;
 
 // installation
@@ -1819,7 +1844,7 @@ computer_type
    : ALPHA
    | I64
    | VAX
-   | USER_DEFINED_WORD
+   | USER_DEFINED_WORD_
    ;
 
 with_debugging
@@ -1836,7 +1861,7 @@ memory_size
    ;
 
 memory_size_amount
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 memory_size_unit
@@ -1850,7 +1875,7 @@ program_collating
    ;
 
 alpha_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 segment_limit
@@ -1858,7 +1883,7 @@ segment_limit
    ;
 
 segment_number
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 special_names
@@ -1906,7 +1931,7 @@ predefined_name
    ;
 
 switch_definition
-   : (SWITCH switch_num|SWITCH_N)
+   : (SWITCH switch_num|SWITCH_N_)
      (IS? switch_name)?
      ( switch_clause_on switch_clause_off?
      | switch_clause_off switch_clause_on?
@@ -1922,19 +1947,19 @@ switch_clause_off
    ;
 
 cond_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 switch_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 switch_num
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 qualified_data_item
-   : USER_DEFINED_WORD ((IN|OF) USER_DEFINED_WORD)*
+   : USER_DEFINED_WORD_ ((IN|OF) USER_DEFINED_WORD_)*
    ;
 
 currency
@@ -1942,15 +1967,15 @@ currency
    ;
 
 currency_definition
-   : (currency_string WITH? PICTURE (SYMBOL|SYMBOL_IN_PICTURE))? currency_char
+   : (currency_string WITH? PICTURE (SYMBOL|SYMBOL_IN_PICTURE_))? currency_char
    ;
 
 currency_string
-   : STRING_LITERAL
+   : STRING_LITERAL_
    ;
 
 currency_char
-   : STRING_LITERAL
+   : STRING_LITERAL_
    ;
 
 class_
@@ -1958,7 +1983,7 @@ class_
    ;
 
 class_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 user_class
@@ -1983,11 +2008,11 @@ symb_ch_def_in_alphabet
    ;
 
 symbol_char
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 char_val
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 alphabet
@@ -2009,26 +2034,26 @@ user_alpha
    ;
 
 first_literal
-   : STRING_LITERAL
-   | NUMERIC_LITERAL
+   : STRING_LITERAL_
+   | NUMERIC_LITERAL_
    ;
 
 last_literal
-   : STRING_LITERAL
-   | NUMERIC_LITERAL
+   : STRING_LITERAL_
+   | NUMERIC_LITERAL_
    ;
 
 same_literal
-   : STRING_LITERAL
-   | NUMERIC_LITERAL
+   : STRING_LITERAL_
+   | NUMERIC_LITERAL_
    ;
 
 top_of_page_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 user_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 file_control
@@ -2072,7 +2097,7 @@ record_key_definition
    ;
 
 seg_key
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 rec_key
@@ -2094,7 +2119,7 @@ reserve
    ;
 
 reserve_num
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 record_delimiter
@@ -2106,7 +2131,7 @@ padding
    ;
 
 pad_char
-   : STRING_LITERAL
+   : STRING_LITERAL_
    ;
 
 organization
@@ -2138,11 +2163,11 @@ block_contains
    ;
 
 smallest_block
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 blocksize
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 assign_to
@@ -2155,14 +2180,14 @@ assign_to_definition
    ;
 
 file_spec
-   : STRING_LITERAL
+   : STRING_LITERAL_
    | qualified_data_item
    | DISK
    | PRINTER
    ;
 
 file_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 i_o_control
@@ -2186,11 +2211,11 @@ multiple_file_definition
    ;
 
 multiple_file_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 pos_integer
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 rerun
@@ -2204,11 +2229,11 @@ rerun_definition
    ;
 
 clock_count
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 condition_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 rerun_def_file
@@ -2217,7 +2242,7 @@ rerun_def_file
    ;
 
 rec_count
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 same
@@ -2225,7 +2250,7 @@ same
    ;
 
 same_area_file
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
    ;
 
 apply
@@ -2244,15 +2269,15 @@ apply_definition
    ;
 
 window_ptrs
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 preall_amt
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 extend_amt
-   : NUMERIC_LITERAL
+   : NUMERIC_LITERAL_
    ;
 
 //
@@ -2266,8 +2291,8 @@ arithmetic_expression
    ;
 
 constant
-   : NUMERIC_LITERAL
-   | STRING_LITERAL
+   : NUMERIC_LITERAL_
+   | STRING_LITERAL_
    | figurative_constant
    ;
 
@@ -2323,7 +2348,7 @@ class_condition_name
    | ALPHABETIC
    | ALPHABETIC_LOWER
    | ALPHABETIC_UPPER
-   | USER_DEFINED_WORD
+   | USER_DEFINED_WORD_
    ;
 
 condition_operator
@@ -2359,7 +2384,7 @@ arguments
    ;
 
 subscripting
-   : LPAREN_ (arithmetic_expression|ALL) (arithmetic_expression|ALL)* RPAREN_
+   : LPAREN_ (arithmetic_expression|ALL)+ RPAREN_
    ;
 
 reference_modification
@@ -2375,5 +2400,6 @@ length
    ;
 
 function_name
-   : USER_DEFINED_WORD
+   : USER_DEFINED_WORD_
+   | RANDOM
    ;

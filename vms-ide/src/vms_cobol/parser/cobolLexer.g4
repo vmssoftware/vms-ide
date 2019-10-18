@@ -96,7 +96,7 @@ fragment STRING_LITERAL_QQ
    : ('""' | ~ ('"'))*
    ;
 
-STRING_LITERAL
+STRING_LITERAL_
    : ('n' | 'N')? '\'' STRING_LITERAL_Q '\''
    | ('n' | 'N')? '"' STRING_LITERAL_QQ '"'
    ;
@@ -474,7 +474,7 @@ SUCCESS                 : S U C C E S S;
 SUM                     : S U M;
 SUPPRESS                : S U P P R E S S;
 SWITCH                  : S W I T C H;
-SWITCH_N                : S W I T C H '-' [1-8];
+SWITCH_N_               : S W I T C H '-' [1-8];
 SYMBOL                  : S Y M B O L;
 SYMBOLIC                : S Y M B O L I C;
 SYNC                    : S Y N C;
@@ -532,7 +532,7 @@ PICTURE                 : P I C T U R E -> pushMode(pictureMode);
 
 // symbols
 
-PSEUDO_TEXT
+PSEUDO_TEXT_
    : '==' .*? '=='
    ;
 
@@ -581,14 +581,14 @@ fragment EXPONENT_
    : ('e' | 'E') SIGN_? DIGIT_+
    ;
 
-NUMERIC_LITERAL
+NUMERIC_LITERAL_
    : DIGIT_+ '.' DIGIT_+ EXPONENT_?
    | DIGIT_+ '.' EXPONENT_
    | '.' DIGIT_+ EXPONENT_?
    | DIGIT_+
    ;
 
-HEX_LITERAL
+HEX_LITERAL_
    : ('x' | 'X')  '"' HEXDIGIT_+ '"'
    | ('x' | 'X')  '\'' HEXDIGIT_+ '\''
    ;
@@ -603,7 +603,7 @@ fragment USER_DEFINED_WORD_MIDLE
    : ('a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' | '$' | '-' )
    ;
 
-USER_DEFINED_WORD
+USER_DEFINED_WORD_
    : USER_DEFINED_WORD_EDGE (USER_DEFINED_WORD_MIDLE* USER_DEFINED_WORD_EDGE)?
    ;
 
@@ -617,17 +617,17 @@ SEMI_
    : ';' -> channel(HIDDEN)
    ;
 
-WHITESPACE
+WHITESPACE_
    : SPACE_ -> channel(HIDDEN)
    ;
 
-NEWLINE
+NEWLINE_
    : NL -> channel(HIDDEN)
    ;
 
 // last one
 
-ANY_CHAR
+ANY_CHAR_
    : .
    ;
 
@@ -637,10 +637,15 @@ fragment SEP_IN_PICTURE
    : [,; \r\n\t]
    ;
 
-SYMBOL_IN_PICTURE: SEP_IN_PICTURE* S Y M B O L SEP_IN_PICTURE* -> popMode;
+SYMBOL_IN_PICTURE_
+   : SEP_IN_PICTURE* S Y M B O L SEP_IN_PICTURE* -> popMode
+   ;
 
-IS_IN_PICTURE: SEP_IN_PICTURE* I S SEP_IN_PICTURE*;
+IS_IN_PICTURE_
+   : SEP_IN_PICTURE* I S SEP_IN_PICTURE*
+   ;
 
-CHARACTER_STRING
-   : SEP_IN_PICTURE* (~[. \r\n\t]|'.'~[ \r\n\t])+ -> popMode;
+CHARACTER_STRING_
+   : SEP_IN_PICTURE* (~[. \r\n\t]|'.'~[ \r\n\t])+ -> popMode
+   ;
 

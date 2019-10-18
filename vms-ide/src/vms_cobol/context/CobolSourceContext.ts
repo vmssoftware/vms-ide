@@ -3,7 +3,8 @@ import * as nls from "vscode-nls";
 
 import {
     Symbol,
-    CodeCompletionCore
+    CodeCompletionCore,
+    ScopedSymbol
 } from "antlr4-c3";
 
 import {
@@ -37,7 +38,8 @@ import {
     IDefinition,
     ISymbolInfo,
     ISourceContext,
-    EDiagnosticType
+    EDiagnosticType,
+    ICompletion
 } from '../../common/parser/Facade';
 
 import {
@@ -62,21 +64,21 @@ import {
     parseTreeFromPosition
 } from '../../common/parser/Helpers';
 
-import {
-    CobolAnalysisListener
-} from './AnalysisListener';
 
 import {
-    ECobolSymbolKind, ProgramSymbol, programDetails,
-} from './Symbol';
+    ProgramSymbol, programDetails, _IntrincisFunctions, _PredefinedData, IFunction, IPredefinedNode, IntrincisFunctionSymbol, getSymbolFromKind, IPreDefinition, DataRecordSymbol, EDataUsage, IdentifierSymbol, EGlobalType,
+} from './CobolSymbol';
 
 import {
     CobolSymbolTable
-} from './ContextSymbolTable';
+} from './CobolSymbolTable';
 
 import {
     CobolDetailsListener
-} from './DetailsListener';
+} from './CobolDetailsListener';
+import { CobolAnalisisHelper } from './CobolAnalisisHelpers';
+import { CobolAnalysisVisitor } from './CobolAnalysisVisitor';
+import { _RuleTokensMap } from './RuleCompletion';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -135,7 +137,7 @@ export class CobolSourceContext implements ISourceContext {
             }
         }
         this.streamErrors.length = 0;
-        this.input = new CobolInputStream(streamErrorListener, source, this.compilerConditions);
+        this.input = new CobolInputStream(streamErrorListener, source + "\n", this.compilerConditions);
 
         if (this.streamErrors.length === 0) {
             let lexer = new cobolLexer(this.input);
@@ -187,6 +189,7 @@ export class CobolSourceContext implements ISourceContext {
                 try {
                     let listener: CobolDetailsListener = new CobolDetailsListener(this.symbolTable, this.imports);
                     ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree);
+                    this.addPredefinitions(_IntrincisFunctions, _PredefinedData);
                     this.runAnalysis();
                 } catch(e) {
                     this.logFn(LogType.debug, () => String(e));
@@ -219,7 +222,7 @@ export class CobolSourceContext implements ISourceContext {
      * @param column 
      * @param row 
      */
-    public getCodeCompletionCandidates(column: number, row: number): string[] {
+    public getCodeCompletionCandidates(column: number, row: number): ICompletion[] {
         if (!this.parser || !this.tokenStream) {
             return [];
         }
@@ -231,13 +234,122 @@ export class CobolSourceContext implements ISourceContext {
         let core = new CodeCompletionCore(this.parser);
         core.showResult = false;
         core.ignoredTokens = new Set([
-            //TODO: add ignored tokens
+            // add ignored tokens
+            cobolLexer.STRING_LITERAL_,
+            cobolLexer.SWITCH_N_,
+            cobolLexer.PSEUDO_TEXT_,
+            cobolLexer.EXCLAM_,
+            cobolLexer.UNDER_,
+            cobolLexer.PLUS_,
+            cobolLexer.MINUS_,
+            cobolLexer.STAR_,
+            cobolLexer.SLASH_,
+            cobolLexer.COLON_,
+            cobolLexer.EQUAL_,
+            cobolLexer.LT_,
+            cobolLexer.LE_,
+            cobolLexer.GE_,
+            cobolLexer.GT_,
+            cobolLexer.LPAREN_,
+            cobolLexer.RPAREN_,
+            cobolLexer.LBRACK_,
+            cobolLexer.RBRACK_,
+            cobolLexer.POINTER_,
+            cobolLexer.ATP_,
+            cobolLexer.DOT_,
+            cobolLexer.LCURLY_,
+            cobolLexer.RCURLY_,
+            cobolLexer.NUMERIC_LITERAL_,
+            cobolLexer.HEX_LITERAL_,
+            cobolLexer.USER_DEFINED_WORD_,
+            cobolLexer.COMMA_,
+            cobolLexer.SEMI_,
+            cobolLexer.WHITESPACE_,
+            cobolLexer.NEWLINE_,
+            cobolLexer.ANY_CHAR_,
+            cobolLexer.SYMBOL_IN_PICTURE_,
+            cobolLexer.IS_IN_PICTURE_,
+            cobolLexer.CHARACTER_STRING_,
             Token.EOF,
             -2, // Erroneously inserted. Needs fix in antlr4-c3.
         ]);
 
         core.preferredRules = new Set([
-            //TODO: add preferred rules
+        //add preferred rules
+            // cobolParser.RULE_cobol_source,
+            // cobolParser.RULE_program_id,
+            // cobolParser.RULE_author,
+            // cobolParser.RULE_end_program,
+            // cobolParser.RULE_procedure_division,
+            // cobolParser.RULE_procedure_division_header,
+            // cobolParser.RULE_data_division,
+            // cobolParser.RULE_environment_division,
+            // cobolParser.RULE_identification_division,
+            // cobolParser.RULE_program_id,
+            // cobolParser.RULE_program_name,
+            // cobolParser.RULE_common_initial,
+            // cobolParser.RULE_with_ident,
+            // cobolParser.RULE_ident_string,
+            // cobolParser.RULE_installation,
+            // cobolParser.RULE_date_written,
+            // cobolParser.RULE_date_compiled,
+            // cobolParser.RULE_security,
+            // cobolParser.RULE_options_,
+            // cobolParser.RULE_arithmetic,
+            // cobolParser.RULE_configuration_section,
+            // cobolParser.RULE_input_output_section,
+            // cobolParser.RULE_source_computer,
+            // cobolParser.RULE_computer_type,
+            // cobolParser.RULE_with_debugging,
+            // cobolParser.RULE_object_computer,
+            // cobolParser.RULE_memory_size,
+            // cobolParser.RULE_memory_size_amount,
+            // cobolParser.RULE_memory_size_unit,
+            // cobolParser.RULE_program_collating,
+            // cobolParser.RULE_alpha_name,
+            // cobolParser.RULE_segment_limit,
+            // cobolParser.RULE_segment_number,
+            // cobolParser.RULE_special_names,
+            // cobolParser.RULE_special_names_content,
+            // cobolParser.RULE_cursor_is,
+            // cobolParser.RULE_crt_is,
+            // cobolParser.RULE_predefined_name_relation,
+            // cobolParser.RULE_predefined_name,
+            // cobolParser.RULE_switch_definition,
+            // cobolParser.RULE_switch_clause_on,
+            // cobolParser.RULE_switch_clause_off,
+            // cobolParser.RULE_cond_name,
+            // cobolParser.RULE_switch_name,
+            // cobolParser.RULE_switch_num,
+            // cobolParser.RULE_qualified_data_item,
+            // cobolParser.RULE_currency,
+            // cobolParser.RULE_currency_definition,
+            // cobolParser.RULE_currency_string,
+            // cobolParser.RULE_currency_char,
+            // cobolParser.RULE_class_,
+            // cobolParser.RULE_class_name,
+            // cobolParser.RULE_user_class,
+            // cobolParser.RULE_symbolic_chars,
+            // cobolParser.RULE_symb_ch_definition,
+            // cobolParser.RULE_symb_ch_def_clause,
+            // cobolParser.RULE_symb_ch_def_in_alphabet,
+            // cobolParser.RULE_symbol_char,
+            // cobolParser.RULE_char_val,
+            // cobolParser.RULE_alphabet,
+            // cobolParser.RULE_alpha_value,
+            // cobolParser.RULE_user_alpha,
+            // cobolParser.RULE_first_literal,
+            // cobolParser.RULE_last_literal,
+            // cobolParser.RULE_same_literal,
+            // cobolParser.RULE_top_of_page_name,
+            // cobolParser.RULE_program,
+            // cobolParser.RULE_word_in_area_A,
+            // cobolParser.RULE_word_in_area_B,
+            // cobolParser.RULE_figurative_constant_witout_all_zero,
+            // cobolParser.RULE_figurative_constant_zero,
+            // cobolParser.RULE_figurative_constant_witout_all,
+            // cobolParser.RULE_figurative_constant_witout_zero,
+            // cobolParser.RULE_figurative_constant,
         ]);
 
         // Search the token index which covers our caret position.
@@ -252,19 +364,57 @@ export class CobolSourceContext implements ISourceContext {
         //core.debugOutputWithTransitions = true;
 
         let candidates = core.collectCandidates(index);
-        let result: string[] = [];
+        let result: ICompletion[] = [];
 
         const vocabulary = this.parser.vocabulary;
 
+        let addTokenType = new Set<number>();
         candidates.tokens.forEach((following: number[], type: number) => {
-            let value = vocabulary.getLiteralName(type) || vocabulary.getDisplayName(type);
-            result.push( "'\"".includes(value[0]) ? value.substr(1, value.length - 2) : value); // Remove quotes.
+            addTokenType.add(type);
+            following.forEach(type => addTokenType.add(type));
         });
 
+        let addStringValue = new Set<string>();
         candidates.rules.forEach((callStack, key) => {
-            switch (key) {
-                //TODO: add known rule types
+            let rule = _RuleTokensMap.get(key);
+            if (rule) {
+                rule.forEach(value => {
+                    if (typeof value === "string") {
+                        addStringValue.add(value);
+                    } else {
+                        addTokenType.add(value);
+                    }
+                })
             }
+        });
+
+        addTokenType.forEach(type => {
+            let value = vocabulary.getLiteralName(type);
+            if (!value) {
+                value = vocabulary.getDisplayName(type);
+                // only token wich doesn't end with underscore can be present as its name
+                if (!value.endsWith("_")) {
+                    value = value.replace(/_/g, "-");
+                } else {
+                    value = undefined;
+                }
+            } else if (value.length > 2){
+                // remove quotas
+                if ("'\"".includes(value[0])) {
+                    value = value.substr(1, value.length - 2);
+                }
+            }
+            if (value) {
+                addStringValue.add(value);
+            }
+        });
+
+        addStringValue.forEach(value => {
+            let info: ICompletion = {
+                candidate: value,
+                // description: "token",
+            };
+            result.push(info);
         });
 
         return result;
@@ -332,7 +482,7 @@ export class CobolSourceContext implements ISourceContext {
         this.tokenStream.fill();
         for (index = 0; ; ++index) {
             let token = this.tokenStream.get(index);
-            if (token.type === Token.EOF || token.line > row) {
+            if (token.type === Token.EOF || token.line > row + 1) {
                 break;
             }
             if (token.line == row + 1) {
@@ -370,10 +520,70 @@ export class CobolSourceContext implements ISourceContext {
     }
 
     private runAnalysis() {
-        if (!this.analysisDone) {
-            let listener = new CobolAnalysisListener(this.diagnostics, this.symbolTable);
-            ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree!);
+        if (!this.analysisDone && this.tree) {
+            let helper = new CobolAnalisisHelper(this.diagnostics, this.symbolTable);
+            let visitor = new CobolAnalysisVisitor(helper);
+            this.tree.accept(visitor);
+            //let listener = new CobolAnalysisListener(helper);
+            //ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree!);
             this.analysisDone = true;
         }
     }
+
+    private addPredefinitions(intrincisFunctions: IFunction[], predefinedData: IPredefinedNode[]) {
+        for (let intrincisFunction of intrincisFunctions) {
+            let symbolToAdd = this.symbolTable.addNewSymbolOfType(IntrincisFunctionSymbol, this.symbolTable, intrincisFunction.name);
+            symbolToAdd.functionDefinition = intrincisFunction;
+            symbolToAdd.isGlobal = true;
+            this.symbolTable.createOccurance(symbolToAdd);
+        }
+        for (let predefinedNode of predefinedData) {
+            // by default, add new symbols into symbolTable root
+            let symbols: Symbol[] = [this.symbolTable];
+            if (predefinedNode.parentKind) {
+                let symbolType = getSymbolFromKind(predefinedNode.parentKind);
+                symbols = this.symbolTable.getNestedSymbolsOfType(symbolType);
+            }
+            for (let symbol of symbols) {
+                if (symbol instanceof ScopedSymbol) {
+                    for (let predefinition of predefinedNode.predefinitions) {
+                        create(symbol, predefinition, this.symbolTable);
+                    }
+                }
+            }
+        }
+
+        function create(parentSymbol: ScopedSymbol, predefinition: IPreDefinition, symbolTable: CobolSymbolTable, forceGlobal?: boolean) {
+            let symbolToAdd = symbolTable.addNewSymbolOfType(predefinition.type, parentSymbol, predefinition.name);
+            if (symbolToAdd instanceof DataRecordSymbol) {
+                symbolToAdd.level = 1;
+                symbolToAdd.picture = predefinition.picture?predefinition.picture:"X";
+                symbolToAdd.usage = predefinition.usage? predefinition.usage : EDataUsage.DISPLAY;
+                symbolToAdd.requireQualification = predefinition.requireQualification;
+            }
+            if (symbolToAdd instanceof IdentifierSymbol) {
+                if (forceGlobal) {
+                    symbolToAdd.isGlobal = true;
+                } else {
+                    switch(predefinition.global) {
+                        case EGlobalType.alwaysTrue:
+                            symbolToAdd.isGlobal = true;
+                            break;
+                        case EGlobalType.alwaysFalse:
+                            symbolToAdd.isGlobal = false;
+                            break;
+                        case EGlobalType.fromParent:
+                            if (parentSymbol instanceof IdentifierSymbol) {
+                                symbolToAdd.isGlobal = parentSymbol.isGlobal;
+                            }
+                            break;
+                        default:
+                            symbolToAdd.isGlobal = true;
+                    }
+                }
+            }
+            symbolTable.createOccurance(symbolToAdd);
+        }
+    }
+
 }

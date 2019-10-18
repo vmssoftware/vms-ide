@@ -118,15 +118,32 @@ export function isLineEndsWithCobolSiringLiteral(line: string) {
 }
 
 /**
- * Mark whole context
+ * Mark Token or ParserRuleContext or TerminalNode
  * @param diagnostics 
- * @param ctx 
+ * @param source 
  * @param message 
  * @param type 
  */
-export function markContext(diagnostics: IDiagnosticEntry[], ctx: ParserRuleContext, message: string, type = EDiagnosticType.Error) {
-    let start = ctx.start;
-    let stop = ctx.stop? ctx.stop : start;
+export function mark(diagnostics: IDiagnosticEntry[], source: Token | ParserRuleContext | TerminalNode, message: string, type = EDiagnosticType.Error) {
+    if (source instanceof ParserRuleContext) {
+        markTokens(diagnostics, source.start, source.stop, message, type);
+    } else if (source instanceof TerminalNode) {
+        markTokens(diagnostics, source.symbol, source.symbol, message, type);
+    } else {
+        markTokens(diagnostics, source, source, message, type);
+    }
+}
+
+/**
+ * Mark source from start to stop
+ * @param diagnostics 
+ * @param start
+ * @param stop 
+ * @param message 
+ * @param type 
+ */
+function markTokens(diagnostics: IDiagnosticEntry[], start: Token, stop: Token | undefined, message: string, type = EDiagnosticType.Error) {
+    stop = stop || start;
     diagnostics.push({
         type,
         message,
@@ -135,58 +152,6 @@ export function markContext(diagnostics: IDiagnosticEntry[], ctx: ParserRuleCont
             start: { column: start.charPositionInLine, row: start.line },
             end: { column: stop.charPositionInLine + (stop.text?stop.text.length:0), row: stop.line },
         },
-    });
-}
-
-/**
- * Test value range and create diagnostic entry about given value and push it into array if value is out of range
- * @param diagnostics 
- * @param value 
- * @param minvalue 
- * @param maxvalue 
- * @param message 
- * @param token 
- * @param type 
- */
-export function testRange(diagnostics: IDiagnosticEntry[], value: number, minvalue: number, maxvalue: number, message: string, token: Token | ParserRuleContext, type = EDiagnosticType.Error) {
-    if (value < minvalue || maxvalue < value) {
-        if (token instanceof ParserRuleContext) {
-            markContext(diagnostics, token, message, type);
-        } else {
-            markToken(diagnostics, token, message, type);
-        }
-    }
-}
-
-/**
- * Create diagnostic entry about given token and push it into array
- * @param diagnostics 
- * @param token 
- * @param message 
- * @param type 
- */
-export function markToken(diagnostics: IDiagnosticEntry[], token: Token, message: string, type = EDiagnosticType.Error) {
-    markTextInLine(diagnostics, message, token.charPositionInLine, token.line, (token.text ? token.text.length : 0), type);
-}
-
-/**
- * Create diagnostic entry about given text and push it into array
- * @param diagnostics array to add diagnostic entry
- * @param message 
- * @param column 
- * @param row 
- * @param length 
- * @param type 
- */
-export function markTextInLine(diagnostics: IDiagnosticEntry[], message: string, column: number, row: number, length: number, type = EDiagnosticType.Error) {
-    diagnostics.push({
-        type,
-        message,
-        range:
-        {
-            start: { column, row },
-            end: { column: column + length, row }
-        }
     });
 }
 

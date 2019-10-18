@@ -427,34 +427,33 @@ export enum EDataUsage {
 export class IdentifierSymbol extends ScopedSymbol {
     public isGlobal?: boolean;
 }
-export class DEVICE_Symbol extends Symbol { }
+export class SpecialNameSymbol extends Symbol { }
+export class DeviceSymbol extends SpecialNameSymbol { }
 //**************************************************/
 export class ProgramSymbol extends IdentifierSymbol { 
     // TODO: using, giving types
 }
-export class CARD_READER_Symbol extends DEVICE_Symbol { }
-export class PAPER_TAPE_READER_Symbol extends DEVICE_Symbol { }
-export class CONSOLE_Symbol extends DEVICE_Symbol { }
-export class LINE_PRINTER_Symbol extends DEVICE_Symbol { }
-export class PAPER_TAPE_PUNCH_Symbol extends DEVICE_Symbol { }
-export class SYSIN_Symbol extends DEVICE_Symbol { }
-export class SYSOUT_Symbol extends DEVICE_Symbol { }
-export class SYSERR_Symbol extends DEVICE_Symbol { }
-export class C01_Symbol extends Symbol { }
-export class ARGUMENT_NUMBER_Symbol extends Symbol { }
-export class ARGUMENT_VALUE_Symbol extends Symbol { }
-export class ENVIRONMENT_NAME_Symbol extends Symbol { }
-export class ENVIRONMENT_VALUE_Symbol extends Symbol { }
-export class SWITCH_Symbol extends Symbol { }
-export class SWITCH_STATUS_Symbol extends Symbol { }
-export class ALPHABET_Symbol extends Symbol {
+export class CARD_READER_Symbol extends DeviceSymbol { }
+export class PAPER_TAPE_READER_Symbol extends DeviceSymbol { }
+export class CONSOLE_Symbol extends DeviceSymbol { }
+export class LINE_PRINTER_Symbol extends DeviceSymbol { }
+export class PAPER_TAPE_PUNCH_Symbol extends DeviceSymbol { }
+export class SYSIN_Symbol extends DeviceSymbol { }
+export class SYSOUT_Symbol extends DeviceSymbol { }
+export class SYSERR_Symbol extends DeviceSymbol { }
+export class C01_Symbol extends SpecialNameSymbol { }
+export class ARGUMENT_NUMBER_Symbol extends SpecialNameSymbol { }
+export class ARGUMENT_VALUE_Symbol extends SpecialNameSymbol { }
+export class ENVIRONMENT_NAME_Symbol extends SpecialNameSymbol { }
+export class ENVIRONMENT_VALUE_Symbol extends SpecialNameSymbol { }
+export class SWITCH_Symbol extends SpecialNameSymbol { }
+export class SWITCH_STATUS_Symbol extends SpecialNameSymbol { }
+export class ALPHABET_Symbol extends SpecialNameSymbol {
     public usedInProgramCollating?: boolean;
 }
-export class SYMBOLIC_CHARACTERS_Symbol extends Symbol { }
-export class CLASS_Symbol extends Symbol { }
-export class SIGN_Symbol extends Symbol { }
-export class BOOL_Symbol extends Symbol { }
-export class CURRENCY_Symbol extends Symbol {
+export class SYMBOLIC_CHARACTERS_Symbol extends SpecialNameSymbol { }
+export class CLASS_Symbol extends SpecialNameSymbol { }
+export class CURRENCY_Symbol extends SpecialNameSymbol {
     public currency_str?: string;
 }
 export class FileSymbol extends IdentifierSymbol { }
@@ -479,6 +478,8 @@ export class FigurativeConstantSymbol extends DataRecordSymbol { }
 export class IntrincisFunctionSymbol extends ProgramSymbol {
     functionDefinition?: IFunction;
 }
+export class SIGN_Symbol extends Symbol { }
+export class BOOL_Symbol extends Symbol { }
 
 //**************************************************/
 //**************************************************/
@@ -487,33 +488,470 @@ export class IntrincisFunctionSymbol extends ProgramSymbol {
 export function programDetails(programSymbol: ProgramSymbol): string | undefined {
     if (programSymbol instanceof IntrincisFunctionSymbol) {
         if (programSymbol.functionDefinition) {
-            return `${programSymbol.name} ( ) : ${EFunctionType[programSymbol.functionDefinition.resultType]}`;
+            let details = programSymbol.name;
+            details += " (";
+            if (programSymbol.functionDefinition.arguments) {
+                let sep = "";
+                for (let arg of programSymbol.functionDefinition.arguments) {
+                    if (arg.optional) {
+                        details += " [";
+                    }
+                    details += sep;
+                    details += arg.name? arg.name + ": " : "";
+                    if (Array.isArray(arg.type)) {
+                        details += arg.type.map(argType => EValueType[argType]).join(" | ");
+                    } else {
+                        details += EValueType[arg.type];
+                    }
+                    if (arg.optional) {
+                        details += "]";
+                    }
+                    sep = ", ";
+                    if (arg.tail) {
+                        details += " ... ";
+                    }
+                }
+            }
+            details += "): ";
+            if (Array.isArray(programSymbol.functionDefinition.type)) {
+                details += programSymbol.functionDefinition.type.map(argType => EValueType[argType]).join(" | ");
+            } else {
+                details += EValueType[programSymbol.functionDefinition.type];
+            }
+            return details;
         }
     }
     return undefined;
 }
 
-export enum EFunctionType {
+export enum EValueType {
     Integer,
     Numeric,
     Alphanumeric,
     ArgType,
+    Any,
 };
 
-export interface IFunction {
-    name: string,
-    resultType: EFunctionType,
-    argTypes: EFunctionType[][],
+export interface IValue {
+    name?: string,
+    type: EValueType[] | EValueType,
+    optional?: boolean;
+    tail?: boolean;
+};
+
+export interface IFunction extends IValue {
+    arguments?: IValue[],
 };
 
 export const _IntrincisFunctions: IFunction[] = [
     {   name: "ACOS",
-        resultType: EFunctionType.Numeric,
-        argTypes: [[EFunctionType.Numeric]],
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "arg",
+                type: EValueType.Numeric
+            }
+        ],
     },
     {   name: "ANNUITY",
-        resultType: EFunctionType.Numeric,
-        argTypes: [[EFunctionType.Numeric], [EFunctionType.Integer]],
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "interest-rate",
+                type: EValueType.Numeric,
+            }, 
+            {   name: "num-periods",
+                type: EValueType.Integer,
+            }
+        ],
+    },
+    {   name: "ARGCOUNT",
+        type: EValueType.Integer,
+    },
+    {   name: "ASIN",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "arg",
+                type: EValueType.Numeric
+            }
+        ],
+    },
+    {   name: "ATAN",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "arg",
+                type: EValueType.Numeric
+            }
+        ],
+    },
+    {   name: "CHAR",
+        type: EValueType.Alphanumeric,
+        arguments: [
+            {   name: "position",
+                type: EValueType.Integer
+            }
+        ],
+    },
+    {   name: "COS",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "angle",
+                type: EValueType.Numeric
+            }
+        ],
+    },
+    {   name: "CURRENT-DATE",
+        type: EValueType.Alphanumeric,
+    },
+    {   name: "DATE-OF-INTEGER",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "num-days",
+                type: EValueType.Integer
+            }
+        ],
+    },
+    {   name: "DATE-TO-YYYYMMDD",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "date",
+                type: EValueType.Integer
+            },
+            {   name: "year-add",
+                type: EValueType.Integer,
+                optional: true,
+            }
+        ],
+    },
+    {   name: "DAY-OF-INTEGER",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "num-days",
+                type: EValueType.Integer
+            }
+        ],
+    },
+    {   name: "DAY-TO-YYYYDDD",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "day",
+                type: EValueType.Integer
+            },
+            {   name: "year-add",
+                type: EValueType.Integer,
+                optional: true,
+            }
+        ],
+    },
+    {   name: "FACTORIAL",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "num",
+                type: EValueType.Integer
+            }
+        ],
+    },
+    {   name: "INTEGER",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "num",
+                type: EValueType.Numeric
+            }
+        ],
+    },
+    {   name: "INTEGER-OF-DATE",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "date",
+                type: EValueType.Integer
+            }
+        ],
+    },
+    {   name: "INTEGER-OF-DAY",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "day",
+                type: EValueType.Integer
+            }
+        ],
+    },
+    {   name: "INTEGER-PART",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "num",
+                type: EValueType.Numeric
+            }
+        ],
+    },
+    {   name: "LENGTH",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "arg",
+                type: EValueType.Any
+            }
+        ],
+    },
+    {   name: "LOG",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "num",
+                type: EValueType.Numeric
+            }
+        ],
+    },
+    {   name: "LOG10",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "num",
+                type: EValueType.Numeric
+            }
+        ],
+    },
+    {   name: "LOWER-CASE",
+        type: EValueType.Alphanumeric,
+        arguments: [
+            {   name: "string",
+                type: EValueType.Alphanumeric
+            }
+        ],
+    },
+    {   name: "MAX",
+        type: EValueType.ArgType,
+        arguments: [
+            {   name: "arg",
+                type: EValueType.Any,
+                tail: true,
+            }
+        ],
+    },
+    {   name: "MEAN",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "arg",
+                type: EValueType.Numeric,
+                tail: true,
+            }
+        ],
+    },
+    {   name: "MEDIAN",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "arg",
+                type: EValueType.Numeric,
+                tail: true,
+            }
+        ],
+    },
+    {   name: "MIDRANGE",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "arg",
+                type: EValueType.Numeric,
+                tail: true,
+            }
+        ],
+    },
+    {   name: "MIN",
+        type: EValueType.ArgType,
+        arguments: [
+            {   name: "arg",
+                type: EValueType.Any,
+                tail: true,
+            }
+        ],
+    },
+    {   name: "MOD",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "int1",
+                type: EValueType.Integer
+            },
+            {   name: "int2",
+                type: EValueType.Integer
+            }
+        ],
+    },
+    {   name: "NUMVAL",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "string",
+                type: EValueType.Alphanumeric
+            }
+        ],
+    },
+    {   name: "NUMVAL-C",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "string",
+                type: EValueType.Alphanumeric
+            },
+            {   name: "currency",
+                type: EValueType.Alphanumeric
+            }
+        ],
+    },
+    {   name: "ORD",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "char",
+                type: EValueType.Alphanumeric
+            }
+        ],
+    },
+    {   name: "ORD-MAX",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "arg",
+                type: EValueType.Any,
+                tail: true,
+            }
+        ],
+    },
+    {   name: "ORD-MIN",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "arg",
+                type: EValueType.Any,
+                tail: true,
+            }
+        ],
+    },
+    {   name: "PRESENT-VALUE",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "rate",
+                type: EValueType.Numeric,
+            },
+            {   name: "amt",
+                type: EValueType.Numeric,
+                tail: true,
+            }
+        ],
+    },
+    {   name: "RANDOM",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "seed",
+                type: EValueType.Integer,
+                optional: true,
+            }
+        ],
+    },
+    {   name: "RANGE",
+        type: [EValueType.Numeric, EValueType.Integer],
+        arguments: [
+            {   name: "num",
+                type: [EValueType.Numeric, EValueType.Integer],
+                tail: true,
+            }
+        ],
+    },
+    {   name: "REM",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "dividend",
+                type: [EValueType.Numeric, EValueType.Integer],
+            },
+            {   name: "divider",
+                type: [EValueType.Numeric, EValueType.Integer],
+            }
+        ],
+    },
+    {   name: "REVERSE",
+        type: EValueType.Alphanumeric,
+        arguments: [
+            {   name: "string",
+                type: EValueType.Alphanumeric,
+            }
+        ],
+    },
+    {   name: "SIN",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "angle",
+                type: EValueType.Numeric,
+            }
+        ],
+    },
+    {   name: "SQRT",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "num",
+                type: [EValueType.Numeric, EValueType.Integer],
+            }
+        ],
+    },
+    {   name: "STANDARD-DEVIATION",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "arg",
+                type: [EValueType.Numeric, EValueType.Integer],
+                tail: true,
+            }
+        ],
+    },
+    {   name: "SUM",
+        type: [EValueType.Numeric, EValueType.Integer],
+        arguments: [
+            {   name: "arg",
+                type: [EValueType.Numeric, EValueType.Integer],
+                tail: true,
+            }
+        ],
+    },
+    {   name: "TAN",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "arg",
+                type: [EValueType.Numeric, EValueType.Integer],
+            }
+        ],
+    },
+    {   name: "TEST-DATE-YYYYMMDD",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "date",
+                type: EValueType.Integer,
+            }
+        ],
+    },
+    {   name: "TEST-DAY-YYYYDDD",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "day",
+                type: EValueType.Integer,
+            }
+        ],
+    },
+    {   name: "UPPER-CASE",
+        type: EValueType.Alphanumeric,
+        arguments: [
+            {   name: "string",
+                type: EValueType.Alphanumeric,
+            }
+        ],
+    },
+    {   name: "VARIANCE",
+        type: EValueType.Numeric,
+        arguments: [
+            {   name: "arg",
+                type: [EValueType.Integer, EValueType.Numeric],
+                tail: true,
+            }
+        ],
+    },
+    {   name: "WHEN-COMPILED",
+        type: EValueType.Alphanumeric,
+    },
+    {   name: "YEAR-TO-YYYY",
+        type: EValueType.Integer,
+        arguments: [
+            {   name: "date",
+                type: EValueType.Integer,
+            },
+            {   name: "add-year",
+                type: EValueType.Integer,
+                optional: true,
+            }
+        ],
     },
 ];
 
@@ -565,10 +1003,10 @@ export const _PredefinedData: IPredefinedNode[] = [
             {   name: "ALPHABETIC",
                 type: CLASS_Symbol,
             },
-            {   name: "ALPHABETIC_LOWER",
+            {   name: "ALPHABETIC-LOWER",
                 type: CLASS_Symbol,
             },
-            {   name: "ALPHABETIC_UPPER",
+            {   name: "ALPHABETIC-UPPER",
                 type: CLASS_Symbol,
             },
             {   name: "ALL",

@@ -16,7 +16,7 @@ import * as Utils from "antlr4ts/misc/Utils";
 
 
 export class cobolLexer extends Lexer {
-	public static readonly STRING_LITERAL = 1;
+	public static readonly STRING_LITERAL_ = 1;
 	public static readonly ACCEPT = 2;
 	public static readonly ACCESS = 3;
 	public static readonly ADD = 4;
@@ -388,7 +388,7 @@ export class cobolLexer extends Lexer {
 	public static readonly SUM = 370;
 	public static readonly SUPPRESS = 371;
 	public static readonly SWITCH = 372;
-	public static readonly SWITCH_N = 373;
+	public static readonly SWITCH_N_ = 373;
 	public static readonly SYMBOL = 374;
 	public static readonly SYMBOLIC = 375;
 	public static readonly SYNC = 376;
@@ -442,7 +442,7 @@ export class cobolLexer extends Lexer {
 	public static readonly ZEROS = 424;
 	public static readonly PIC = 425;
 	public static readonly PICTURE = 426;
-	public static readonly PSEUDO_TEXT = 427;
+	public static readonly PSEUDO_TEXT_ = 427;
 	public static readonly EXCLAM_ = 428;
 	public static readonly UNDER_ = 429;
 	public static readonly PLUS_ = 430;
@@ -464,17 +464,17 @@ export class cobolLexer extends Lexer {
 	public static readonly DOT_ = 446;
 	public static readonly LCURLY_ = 447;
 	public static readonly RCURLY_ = 448;
-	public static readonly NUMERIC_LITERAL = 449;
-	public static readonly HEX_LITERAL = 450;
-	public static readonly USER_DEFINED_WORD = 451;
+	public static readonly NUMERIC_LITERAL_ = 449;
+	public static readonly HEX_LITERAL_ = 450;
+	public static readonly USER_DEFINED_WORD_ = 451;
 	public static readonly COMMA_ = 452;
 	public static readonly SEMI_ = 453;
-	public static readonly WHITESPACE = 454;
-	public static readonly NEWLINE = 455;
-	public static readonly ANY_CHAR = 456;
-	public static readonly SYMBOL_IN_PICTURE = 457;
-	public static readonly IS_IN_PICTURE = 458;
-	public static readonly CHARACTER_STRING = 459;
+	public static readonly WHITESPACE_ = 454;
+	public static readonly NEWLINE_ = 455;
+	public static readonly ANY_CHAR_ = 456;
+	public static readonly SYMBOL_IN_PICTURE_ = 457;
+	public static readonly IS_IN_PICTURE_ = 458;
+	public static readonly CHARACTER_STRING_ = 459;
 	public static readonly pictureMode = 1;
 
 	// tslint:disable:no-trailing-whitespace
@@ -490,7 +490,7 @@ export class cobolLexer extends Lexer {
 	public static readonly ruleNames: string[] = [
 		"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", 
 		"O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "SPACE_", 
-		"NL", "STRING_LITERAL_Q", "STRING_LITERAL_QQ", "STRING_LITERAL", "ACCEPT", 
+		"NL", "STRING_LITERAL_Q", "STRING_LITERAL_QQ", "STRING_LITERAL_", "ACCEPT", 
 		"ACCESS", "ADD", "ADVANCING", "AFTER", "ALL", "ALLOWING", "ALPHA", "ALPHABET", 
 		"ALPHABETIC", "ALPHABETIC_LOWER", "ALPHABETIC_UPPER", "ALPHANUMERIC", 
 		"ALPHANUMERIC_EDITED", "ALSO", "ALTER", "ALTERNATE", "AND", "ANY", "APPLY", 
@@ -547,20 +547,20 @@ export class cobolLexer extends Lexer {
 		"SORT", "SORT_MERGE", "SOURCE", "SOURCE_COMPUTER", "SPACE", "SPACES", 
 		"SPECIAL_NAMES", "STANDARD", "STANDARD_1", "STANDARD_2", "START", "STATUS", 
 		"STOP", "STRING", "SUBTRACT", "SUCCESS", "SUM", "SUPPRESS", "SWITCH", 
-		"SWITCH_N", "SYMBOL", "SYMBOLIC", "SYNC", "SYNCHRONIZED", "SYSERR", "SYSIN", 
+		"SWITCH_N_", "SYMBOL", "SYMBOLIC", "SYNC", "SYNCHRONIZED", "SYSERR", "SYSIN", 
 		"SYSOUT", "TALLYING", "TAPE", "TERMINATE", "TEST", "THAN", "THEN", "THROUGH", 
 		"THRU", "TIME", "TIMES", "TO", "TOP", "TRAILING", "TRUE", "TYPE", "UNDERLINE", 
 		"UNDERLINED", "UNIT", "UNLOCK", "UNSIGNED", "UNSTRING", "UNTIL", "UP", 
 		"UPDATERS", "UPON", "USAGE", "USE", "USING", "VALUE", "VALUES", "VARYING", 
 		"VAX", "WHEN", "WINDOW", "WITH", "WORDS", "WORKING_STORAGE", "WRITE", 
 		"WRITERS", "YYYYDDD", "YYYYMMDD", "ZERO", "ZEROES", "ZEROS", "PIC", "PICTURE", 
-		"PSEUDO_TEXT", "EXCLAM_", "UNDER_", "PLUS_", "MINUS_", "STAR_", "SLASH_", 
+		"PSEUDO_TEXT_", "EXCLAM_", "UNDER_", "PLUS_", "MINUS_", "STAR_", "SLASH_", 
 		"COLON_", "EQUAL_", "LT_", "LE_", "GE_", "GT_", "LPAREN_", "RPAREN_", 
 		"LBRACK_", "RBRACK_", "POINTER_", "ATP_", "DOT_", "LCURLY_", "RCURLY_", 
-		"SIGN_", "DIGIT_", "DIGIT1_", "HEXDIGIT_", "EXPONENT_", "NUMERIC_LITERAL", 
-		"HEX_LITERAL", "USER_DEFINED_WORD_EDGE", "USER_DEFINED_WORD_MIDLE", "USER_DEFINED_WORD", 
-		"COMMA_", "SEMI_", "WHITESPACE", "NEWLINE", "ANY_CHAR", "SEP_IN_PICTURE", 
-		"SYMBOL_IN_PICTURE", "IS_IN_PICTURE", "CHARACTER_STRING",
+		"SIGN_", "DIGIT_", "DIGIT1_", "HEXDIGIT_", "EXPONENT_", "NUMERIC_LITERAL_", 
+		"HEX_LITERAL_", "USER_DEFINED_WORD_EDGE", "USER_DEFINED_WORD_MIDLE", "USER_DEFINED_WORD_", 
+		"COMMA_", "SEMI_", "WHITESPACE_", "NEWLINE_", "ANY_CHAR_", "SEP_IN_PICTURE", 
+		"SYMBOL_IN_PICTURE_", "IS_IN_PICTURE_", "CHARACTER_STRING_",
 	];
 
 	private static readonly _LITERAL_NAMES: Array<string | undefined> = [
@@ -630,8 +630,8 @@ export class cobolLexer extends Lexer {
 		"'{'", "'}'", undefined, undefined, undefined, "','", "';'",
 	];
 	private static readonly _SYMBOLIC_NAMES: Array<string | undefined> = [
-		undefined, "STRING_LITERAL", "ACCEPT", "ACCESS", "ADD", "ADVANCING", "AFTER", 
-		"ALL", "ALLOWING", "ALPHA", "ALPHABET", "ALPHABETIC", "ALPHABETIC_LOWER", 
+		undefined, "STRING_LITERAL_", "ACCEPT", "ACCESS", "ADD", "ADVANCING", 
+		"AFTER", "ALL", "ALLOWING", "ALPHA", "ALPHABET", "ALPHABETIC", "ALPHABETIC_LOWER", 
 		"ALPHABETIC_UPPER", "ALPHANUMERIC", "ALPHANUMERIC_EDITED", "ALSO", "ALTER", 
 		"ALTERNATE", "AND", "ANY", "APPLY", "ARE", "AREA", "AREAS", "ARGUMENT_NUMBER", 
 		"ARGUMENT_VALUE", "ARITHMETIC", "ASCENDING", "ASCII", "ASSIGN", "AT", 
@@ -687,19 +687,19 @@ export class cobolLexer extends Lexer {
 		"SORT", "SORT_MERGE", "SOURCE", "SOURCE_COMPUTER", "SPACE", "SPACES", 
 		"SPECIAL_NAMES", "STANDARD", "STANDARD_1", "STANDARD_2", "START", "STATUS", 
 		"STOP", "STRING", "SUBTRACT", "SUCCESS", "SUM", "SUPPRESS", "SWITCH", 
-		"SWITCH_N", "SYMBOL", "SYMBOLIC", "SYNC", "SYNCHRONIZED", "SYSERR", "SYSIN", 
+		"SWITCH_N_", "SYMBOL", "SYMBOLIC", "SYNC", "SYNCHRONIZED", "SYSERR", "SYSIN", 
 		"SYSOUT", "TALLYING", "TAPE", "TERMINATE", "TEST", "THAN", "THEN", "THROUGH", 
 		"THRU", "TIME", "TIMES", "TO", "TOP", "TRAILING", "TRUE", "TYPE", "UNDERLINE", 
 		"UNDERLINED", "UNIT", "UNLOCK", "UNSIGNED", "UNSTRING", "UNTIL", "UP", 
 		"UPDATERS", "UPON", "USAGE", "USE", "USING", "VALUE", "VALUES", "VARYING", 
 		"VAX", "WHEN", "WINDOW", "WITH", "WORDS", "WORKING_STORAGE", "WRITE", 
 		"WRITERS", "YYYYDDD", "YYYYMMDD", "ZERO", "ZEROES", "ZEROS", "PIC", "PICTURE", 
-		"PSEUDO_TEXT", "EXCLAM_", "UNDER_", "PLUS_", "MINUS_", "STAR_", "SLASH_", 
+		"PSEUDO_TEXT_", "EXCLAM_", "UNDER_", "PLUS_", "MINUS_", "STAR_", "SLASH_", 
 		"COLON_", "EQUAL_", "LT_", "LE_", "GE_", "GT_", "LPAREN_", "RPAREN_", 
 		"LBRACK_", "RBRACK_", "POINTER_", "ATP_", "DOT_", "LCURLY_", "RCURLY_", 
-		"NUMERIC_LITERAL", "HEX_LITERAL", "USER_DEFINED_WORD", "COMMA_", "SEMI_", 
-		"WHITESPACE", "NEWLINE", "ANY_CHAR", "SYMBOL_IN_PICTURE", "IS_IN_PICTURE", 
-		"CHARACTER_STRING",
+		"NUMERIC_LITERAL_", "HEX_LITERAL_", "USER_DEFINED_WORD_", "COMMA_", "SEMI_", 
+		"WHITESPACE_", "NEWLINE_", "ANY_CHAR_", "SYMBOL_IN_PICTURE_", "IS_IN_PICTURE_", 
+		"CHARACTER_STRING_",
 	];
 	public static readonly VOCABULARY: Vocabulary = new VocabularyImpl(cobolLexer._LITERAL_NAMES, cobolLexer._SYMBOLIC_NAMES, []);
 

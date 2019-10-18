@@ -19,9 +19,14 @@ export interface IDefinition {
 
 export interface ISymbolInfo {
     definition?: IDefinition;   // Place where symbol is defined, not where it is used
-    kind: string;               // Provides a small description for symbol kind
+    kindString: string;         // Provides a small description for symbol kind
     description: string;        // Full path to the symbol (and type of arguments if it is a program or function)
     source: string;             // Source file
+}
+
+export interface ICompletion {
+    candidate: string;
+    description?: string;
 }
 
 export enum EDiagnosticType {
@@ -43,7 +48,7 @@ export interface ISourceContext {
      * @param column 
      * @param row 
      */
-    getCodeCompletionCandidates(column: number, row: number): string[];
+    getCodeCompletionCandidates(column: number, row: number): ICompletion[];
     getDiagnostics(): IDiagnosticEntry[];
     /**
      * Zero-based
@@ -151,7 +156,7 @@ export class FacadeImpl {
      * @param column 
      * @param row 
      */
-    public getCodeCompletionCandidates(fileName: string, column: number, row: number): string[] {
+    public getCodeCompletionCandidates(fileName: string, column: number, row: number): ICompletion[] {
         let context = this.getContext(fileName);
         return context.getCodeCompletionCandidates(column, row);
     }

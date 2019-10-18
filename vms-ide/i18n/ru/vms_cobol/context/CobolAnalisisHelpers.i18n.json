@@ -1,0 +1,8 @@
+{
+    "text_length_range": "Must contain {0} to {1} characters",
+    "number_in_range": "Must be from {0} to {1}",
+    "not_an_integer": "Not an integer",
+    "undefined_name": "Undefined name",
+    "ambigous_name": "Ambigous name",
+    "illegal_type": "Illegal type"
+}

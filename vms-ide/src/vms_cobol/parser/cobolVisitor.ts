@@ -6,21 +6,29 @@ import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
 import { Cobol_sourceContext } from "./cobolParser";
 import { ProgramContext } from "./cobolParser";
 import { Identification_divisionContext } from "./cobolParser";
+import { Identification_division_headerContext } from "./cobolParser";
 import { Environment_divisionContext } from "./cobolParser";
+import { Environment_division_headerContext } from "./cobolParser";
 import { Data_divisionContext } from "./cobolParser";
+import { Data_division_headerContext } from "./cobolParser";
 import { Procedure_divisionContext } from "./cobolParser";
 import { Word_in_area_AContext } from "./cobolParser";
 import { Word_in_area_BContext } from "./cobolParser";
 import { AuthorContext } from "./cobolParser";
+import { Author_headerContext } from "./cobolParser";
 import { Figurative_constant_witout_all_zeroContext } from "./cobolParser";
 import { Figurative_constant_zeroContext } from "./cobolParser";
 import { Figurative_constant_witout_allContext } from "./cobolParser";
 import { Figurative_constant_witout_zeroContext } from "./cobolParser";
 import { Figurative_constantContext } from "./cobolParser";
 import { End_programContext } from "./cobolParser";
+import { End_program_headerContext } from "./cobolParser";
 import { Procedure_division_headerContext } from "./cobolParser";
+import { Procedure_division_header_startContext } from "./cobolParser";
+import { Procedure_division_header_endContext } from "./cobolParser";
 import { SectionContext } from "./cobolParser";
 import { DeclarativesContext } from "./cobolParser";
+import { Declaratives_headerContext } from "./cobolParser";
 import { End_declarativesContext } from "./cobolParser";
 import { Declaratives_sectionContext } from "./cobolParser";
 import { ParagraphContext } from "./cobolParser";
@@ -67,9 +75,7 @@ import { Stop_dispContext } from "./cobolParser";
 import { Start_statementContext } from "./cobolParser";
 import { Sort_key_dataContext } from "./cobolParser";
 import { Sort_statementContext } from "./cobolParser";
-import { Sort_statement_form1Context } from "./cobolParser";
-import { Sort_statement_form2Context } from "./cobolParser";
-import { Table_nameContext } from "./cobolParser";
+import { Sort_nameContext } from "./cobolParser";
 import { Procedure_isContext } from "./cobolParser";
 import { On_sort_keyContext } from "./cobolParser";
 import { Sort_keyContext } from "./cobolParser";
@@ -472,6 +478,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitIdentification_division?: (ctx: Identification_divisionContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cobolParser.identification_division_header`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitIdentification_division_header?: (ctx: Identification_division_headerContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cobolParser.environment_division`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -479,11 +492,25 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitEnvironment_division?: (ctx: Environment_divisionContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cobolParser.environment_division_header`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEnvironment_division_header?: (ctx: Environment_division_headerContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cobolParser.data_division`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitData_division?: (ctx: Data_divisionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.data_division_header`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitData_division_header?: (ctx: Data_division_headerContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.procedure_division`.
@@ -512,6 +539,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitAuthor?: (ctx: AuthorContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.author_header`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAuthor_header?: (ctx: Author_headerContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.figurative_constant_witout_all_zero`.
@@ -556,11 +590,32 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitEnd_program?: (ctx: End_programContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cobolParser.end_program_header`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEnd_program_header?: (ctx: End_program_headerContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cobolParser.procedure_division_header`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitProcedure_division_header?: (ctx: Procedure_division_headerContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.procedure_division_header_start`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitProcedure_division_header_start?: (ctx: Procedure_division_header_startContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.procedure_division_header_end`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitProcedure_division_header_end?: (ctx: Procedure_division_header_endContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.section`.
@@ -575,6 +630,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitDeclaratives?: (ctx: DeclarativesContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.declaratives_header`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDeclaratives_header?: (ctx: Declaratives_headerContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.end_declaratives`.
@@ -899,25 +961,11 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitSort_statement?: (ctx: Sort_statementContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sort_statement_form1`.
+	 * Visit a parse tree produced by `cobolParser.sort_name`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSort_statement_form1?: (ctx: Sort_statement_form1Context) => Result;
-
-	/**
-	 * Visit a parse tree produced by `cobolParser.sort_statement_form2`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitSort_statement_form2?: (ctx: Sort_statement_form2Context) => Result;
-
-	/**
-	 * Visit a parse tree produced by `cobolParser.table_name`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitTable_name?: (ctx: Table_nameContext) => Result;
+	visitSort_name?: (ctx: Sort_nameContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.procedure_is`.

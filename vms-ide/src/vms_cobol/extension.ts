@@ -9,12 +9,13 @@ import {
 } from 'vscode';
 
 import { EDiagnosticType, FacadeImpl } from "../common/parser/Facade";
-import { CobolSourceContext } from "./context/SourceContext";
+import { CobolSourceContext } from "./context/CobolSourceContext";
 import { GetConfigHelperFromApi } from "../ext-api/ext-api";
 import { LogFunction } from "../common/main";
 import { HoverProviderImpl } from "../common/parser/HoverProvider";
 import { DefinitionProviderImpl } from "../common/parser/DefinitionProvider";
 import { RenameProviderImpl } from "../common/parser/RenameProvider";
+import { CompletionItemProviderImpl } from "../common/parser/CompletionProvider";
 
 const locale = env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -58,9 +59,9 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(languages.registerHoverProvider(Cobol, new HoverProviderImpl(backend)));
     context.subscriptions.push(languages.registerDefinitionProvider(Cobol, new DefinitionProviderImpl(backend)));
     context.subscriptions.push(languages.registerRenameProvider(Cobol, new RenameProviderImpl(backend)));
-    // context.subscriptions.push(languages.registerCompletionItemProvider(Cobol, new PascalCompletionItemProvider(backend),
-    //     ".", " ", "<", ">", "=", "("));
-    // context.subscriptions.push(languages.registerReferenceProvider(Cobol, new PascalReferenceProvider(backend)));
+    context.subscriptions.push(languages.registerCompletionItemProvider(Cobol, new CompletionItemProviderImpl(backend),
+         ".", " ", "<", ">", "=", "("));
+    // context.subscriptions.push(languages.registerReferenceProvider(Cobol, new ReferenceProviderImpl(backend)));
 
     //----- Events -----
 
