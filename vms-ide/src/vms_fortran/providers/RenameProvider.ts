@@ -8,7 +8,7 @@ export class FortranRenameProvider implements RenameProvider
     public provideRenameEdits(document: TextDocument, position: Position, newName: string,
         token: CancellationToken): ProviderResult<WorkspaceEdit> 
     {
-        const occurences = this.backend.getSymbolOccurences(document.fileName, position.character, position.line + 1);
+        const occurences = this.backend.getSymbolOccurences(document.fileName, position.character+1, position.line + 1);
 
         if (occurences.length) 
         {

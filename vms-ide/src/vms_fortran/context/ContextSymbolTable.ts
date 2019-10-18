@@ -79,6 +79,131 @@ export class ContextSymbolTable extends SymbolTable
             symbol = temp;
         }
 
+        //search variables in current file + include 
+        let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, true);
+        let innerBlocks = this.getAllSymbols(VariableInnerBlockDclSymbol, true);
+        let definition = this.definitionFromSymbol(symbol);
+
+        if(definition)
+        {
+            for (let block of innerBlocks)//search inner block witch contain symbol
+            {
+                let item = this.findSimbolDedlarationInBlock(symbol, block, true);
+
+                if(item)
+                {
+                    let result = this.getSymbolInfo(item);
+
+                    if(result)
+                    {
+                        // let symbolBlock = this.findSimbolBlockDedlaration(item);
+                        // result.info = this.getSymbolInfo(symbolBlock);
+
+                        return result;
+                    }
+                    break;
+                }
+            }
+
+            for (let block of blocks)//search block witch contain symbol
+            {
+                let item = this.findSimbolDedlarationInBlock(symbol, block, true);
+
+                if(item)
+                {
+                    let result = this.getSymbolInfo(item);
+
+                    if(result)
+                    {
+                        // let symbolBlock = this.findSimbolBlockDedlaration(item);
+                        // result.info = this.getSymbolInfo(symbolBlock);
+
+                        return result;
+                    }
+                    break;
+                }
+            }
+
+            //search in include files
+            for (let block of blocks)
+            {
+                if(this.checkSymbolLocationBlock(symbol, block))
+                {                            
+                    let inclides = this.getAllSymbols(IncludeDclSymbol, true);
+                    let VariableDcls = this.getAllSymbols(VariableLocalBlockDclSymbol, false);
+
+                    for (let inclide of inclides)
+                    {
+                        if(this.checkSymbolLocationBlock(inclide, block))
+                        {
+                            // INCLUDE ’file-name [/[NO]LIST]’
+                            // INCLUDE ’[text-lib] (module-name) [/[NO]LIST]’
+                            //get file name from include
+                            let includeFileName = "";
+                            const matcherIncModuleName = /^\'\s*\S*\s*\(\s*(\S+)\s*\)/;
+                            const matcherFilName = /^\'\s*(\S+)\s*(\'|\/)/;
+                            let matches : RegExpMatchArray | null;
+
+                            if(inclide.name.includes("("))
+                            {
+                                matches = inclide.name.match(matcherIncModuleName);
+                            }
+                            else
+                            {
+                                matches = inclide.name.match(matcherFilName);
+                            }
+
+                            if(matches && matches.length > 1)
+                            {
+                               includeFileName = matches[1];
+                            }
+
+                            for (let variable of VariableDcls)
+                            {
+                                let symbolOwner = (variable.symbolTable as ContextSymbolTable).owner;
+
+                                if(symbolOwner)
+                                {
+                                    if(symbolOwner.fileName.includes(includeFileName) && variable.symbolTable)
+                                    {
+                                        //let symbolBlock : Symbol | undefined;
+                                        //search symbol
+                                        for(let item of variable.symbolTable.children)
+                                        {
+                                            if(ContextSymbolTable.getKindFromSymbol(item) === SymbolKind.VariableDcl)//check symbol type
+                                            {
+                                                if(item.name.toLowerCase() === symbol.name.toLowerCase())
+                                                {
+                                                    let result = this.getSymbolInfo(item);
+
+                                                    if(result)
+                                                    {
+                                                        // result.info = this.getSymbolInfo(symbolBlock);
+
+                                                        return result;
+                                                    }
+                                                }
+                                            }
+                                            // else if(ContextSymbolTable.getKindFromSymbol(item) === SymbolKind.VariableBlockDcl)//check symbol type
+                                            // {
+                                            //     let name = item.name.toLowerCase();
+
+                                            //     if(name.includes(symbol.name.toLowerCase()))
+                                            //     {
+                                            //         symbolBlock = item;
+                                            //     }
+                                            // }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
         let showRoutine = false;
         let defRoutines = this.getAllSymbols(RoutineDclSymbol, false);
 
@@ -120,51 +245,8 @@ export class ContextSymbolTable extends SymbolTable
             }
             else
             {
-                //search variables in current file + include 
-                let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, true);
-                let innerBlocks = this.getAllSymbols(VariableInnerBlockDclSymbol, true);
-                let definition = this.definitionFromSymbol(symbol);
-
                 if(definition)
                 {
-                    for (let block of innerBlocks)//search inner block witch contain symbol
-                    {
-                        let item = this.findSimbolDedlarationInBlock(symbol, block, true);
-
-                        if(item)
-                        {
-                            let result = this.getSymbolInfo(item);
-
-                            if(result)
-                            {
-                                // let symbolBlock = this.findSimbolBlockDedlaration(item);
-                                // result.info = this.getSymbolInfo(symbolBlock);
-
-                                return result;
-                            }
-                            break;
-                        }
-                    }
-
-                    for (let block of blocks)//search block witch contain symbol
-                    {
-                        let item = this.findSimbolDedlarationInBlock(symbol, block, true);
-
-                        if(item)
-                        {
-                            let result = this.getSymbolInfo(item);
-
-                            if(result)
-                            {
-                                // let symbolBlock = this.findSimbolBlockDedlaration(item);
-                                // result.info = this.getSymbolInfo(symbolBlock);
-
-                                return result;
-                            }
-                            break;
-                        }
-                    }
-
                     let findSymbolBlock = false;
                     let findImplisit = false;
 
@@ -221,85 +303,6 @@ export class ContextSymbolTable extends SymbolTable
                                 }
                                 break;
                             }
-                        }
-                    }
-
-                    //search in include files
-                    for (let block of blocks)
-                    {
-                        if(this.checkSymbolLocationBlock(symbol, block))
-                        {                            
-                            let inclides = this.getAllSymbols(IncludeDclSymbol, true);
-                            let VariableDcls = this.getAllSymbols(VariableLocalBlockDclSymbol, false);
-
-                            for (let inclide of inclides)
-                            {
-                                if(this.checkSymbolLocationBlock(inclide, block))
-                                {
-                                    // INCLUDE ’file-name [/[NO]LIST]’
-                                    // INCLUDE ’[text-lib] (module-name) [/[NO]LIST]’
-                                    //get file name from include
-                                    let includeFileName = "";
-                                    const matcherIncModuleName = /^\'\s*\S*\s*\(\s*(\S+)\s*\)/;
-                                    const matcherFilName = /^\'\s*(\S+)\s*(\'|\/)/;
-                                    let matches : RegExpMatchArray | null;
-
-                                    if(inclide.name.includes("("))
-                                    {
-                                        matches = inclide.name.match(matcherIncModuleName);
-                                    }
-                                    else
-                                    {
-                                        matches = inclide.name.match(matcherFilName);
-                                    }
-
-                                    if(matches && matches.length > 1)
-                                    {
-                                       includeFileName = matches[1];
-                                    }
-
-                                    for (let variable of VariableDcls)
-                                    {
-                                        let symbolOwner = (variable.symbolTable as ContextSymbolTable).owner;
-
-                                        if(symbolOwner)
-                                        {
-                                            if(symbolOwner.fileName.includes(includeFileName) && variable.symbolTable)
-                                            {
-                                                //let symbolBlock : Symbol | undefined;
-                                                //search symbol
-                                                for(let item of variable.symbolTable.children)
-                                                {
-                                                    if(ContextSymbolTable.getKindFromSymbol(item) === SymbolKind.VariableDcl)//check symbol type
-                                                    {
-                                                        if(item.name.toLowerCase() === symbol.name.toLowerCase())
-                                                        {
-                                                            let result = this.getSymbolInfo(item);
-
-                                                            if(result)
-                                                            {
-                                                                // result.info = this.getSymbolInfo(symbolBlock);
-
-                                                                return result;
-                                                            }
-                                                        }
-                                                    }
-                                                    // else if(ContextSymbolTable.getKindFromSymbol(item) === SymbolKind.VariableBlockDcl)//check symbol type
-                                                    // {
-                                                    //     let name = item.name.toLowerCase();
-
-                                                    //     if(name.includes(symbol.name.toLowerCase()))
-                                                    //     {
-                                                    //         symbolBlock = item;
-                                                    //     }
-                                                    // }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            break;
                         }
                     }
 
@@ -643,41 +646,23 @@ export class ContextSymbolTable extends SymbolTable
     {
         let result: SymbolInfo[] = [];
         let localBlock: Symbol | undefined;
-        let searchRoutine = false;
-        let defRoutines = this.getAllSymbols(RoutineDclSymbol, false);
+        
+        //search variables
+        let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, true);
+        let innerBlocks = this.getAllSymbols(VariableInnerBlockDclSymbol, true);
 
-        for(let item of defRoutines)
+        for (let block of innerBlocks)//search block witch contain symbol
         {
-            if(item.name.toLowerCase() === symbol.name.toLowerCase())
+            if(this.checkSymbolLocationBlock(symbol, block))
             {
-                searchRoutine = true;
+                localBlock = block;
                 break;
             }
         }
-        
-        if(searchRoutine)
-        {            
-            let references = this.getAllSymbols(LabelSymbol, false);
 
-            for(let item of references)
-            {
-                if(item.name.toLowerCase() === symbol.name.toLowerCase())
-                {
-                    const info = this.getSymbolInfo(item);
-
-                    if (info && info.kind === SymbolKind.Label) 
-                    {
-                        result.push(info);
-                    }
-                }
-            }
-        }
-        else//search variables
+        if(!localBlock)
         {
-            let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, true);
-            let innerBlocks = this.getAllSymbols(VariableInnerBlockDclSymbol, true);
-
-            for (let block of innerBlocks)//search block witch contain symbol
+            for (let block of blocks)//search block witch contain symbol
             {
                 if(this.checkSymbolLocationBlock(symbol, block))
                 {
@@ -685,104 +670,124 @@ export class ContextSymbolTable extends SymbolTable
                     break;
                 }
             }
+        }
 
-            if(!localBlock)
+        if(localBlock)
+        {
+            if(localBlock.context instanceof ParserRuleContext && localBlock.context.stop)
             {
-                for (let block of blocks)//search block witch contain symbol
+                let startLine = localBlock.context.start.line;
+                let stopLine = localBlock.context.stop.line;
+
+                if (localBlock instanceof ScopedSymbol) 
                 {
-                    if(this.checkSymbolLocationBlock(symbol, block))
+                    let references = this.getAllNestedSymbols(symbol.name);
+
+                    for(let item of references)
                     {
-                        localBlock = block;
-                        break;
-                    }
-                }
-            }
-    
-            if(localBlock)
-            {
-                if(localBlock.context instanceof ParserRuleContext && localBlock.context.stop)
-                {
-                    let startLine = localBlock.context.start.line;
-                    let stopLine = localBlock.context.stop.line;
-    
-                    if (localBlock instanceof ScopedSymbol) 
-                    {
-                        let references = this.getAllNestedSymbols(symbol.name);
-    
-                        for(let item of references)
+                        const info = this.getSymbolInfo(item);
+        
+                        if (info && info.definition && info.kind === SymbolKind.Label) 
                         {
-                            const info = this.getSymbolInfo(item);
-            
-                            if (info && info.definition && info.kind === SymbolKind.Label) 
+                            if(info.definition.range.start.row >= startLine && info.definition.range.start.row <= stopLine)
                             {
-                                if(info.definition.range.start.row >= startLine && info.definition.range.start.row <= stopLine)
-                                {
-                                    result.push(info);
-                                }
+                                result.push(info);
                             }
                         }
                     }
                 }
+            }
 
-                //search in include files
-                if(this.checkSymbolLocationBlock(symbol, localBlock))
-                {                            
-                    let inclides = this.getAllSymbols(IncludeDclSymbol, true);
-                    let VariableDcls = this.getAllSymbols(VariableLocalBlockDclSymbol, false);
+            //search in include files
+            if(this.checkSymbolLocationBlock(symbol, localBlock))
+            {                            
+                let inclides = this.getAllSymbols(IncludeDclSymbol, true);
+                let VariableDcls = this.getAllSymbols(VariableLocalBlockDclSymbol, false);
 
-                    for (let inclide of inclides)
+                for (let inclide of inclides)
+                {
+                    if(this.checkSymbolLocationBlock(inclide, localBlock))
                     {
-                        if(this.checkSymbolLocationBlock(inclide, localBlock))
+                        // INCLUDE ’file-name [/[NO]LIST]’
+                        // INCLUDE ’[text-lib] (module-name) [/[NO]LIST]’
+                        //get file name from include
+                        let includeFileName = "";
+                        const matcherIncModuleName = /^\'\s*\S*\s*\(\s*(\S+)\s*\)/;
+                        const matcherFilName = /^\'\s*(\S+)\s*(\'|\/)/;
+                        let matches : RegExpMatchArray | null;
+
+                        if(inclide.name.includes("("))
                         {
-                            // INCLUDE ’file-name [/[NO]LIST]’
-                            // INCLUDE ’[text-lib] (module-name) [/[NO]LIST]’
-                            //get file name from include
-                            let includeFileName = "";
-                            const matcherIncModuleName = /^\'\s*\S*\s*\(\s*(\S+)\s*\)/;
-                            const matcherFilName = /^\'\s*(\S+)\s*(\'|\/)/;
-                            let matches : RegExpMatchArray | null;
+                            matches = inclide.name.match(matcherIncModuleName);
+                        }
+                        else
+                        {
+                            matches = inclide.name.match(matcherFilName);
+                        }
 
-                            if(inclide.name.includes("("))
-                            {
-                                matches = inclide.name.match(matcherIncModuleName);
-                            }
-                            else
-                            {
-                                matches = inclide.name.match(matcherFilName);
-                            }
+                        if(matches && matches.length > 1)
+                        {
+                            includeFileName = matches[1];
+                        }
 
-                            if(matches && matches.length > 1)
+                        for (let variable of VariableDcls)
+                        {
+                            let symbolOwner = (variable.symbolTable as ContextSymbolTable).owner;
+                            
+                            if(symbolOwner)
                             {
-                                includeFileName = matches[1];
-                            }
-
-                            for (let variable of VariableDcls)
-                            {
-                                let symbolOwner = (variable.symbolTable as ContextSymbolTable).owner;
-                                
-                                if(symbolOwner)
+                                if(symbolOwner.fileName.includes(includeFileName) && variable.symbolTable)
                                 {
-                                    if(symbolOwner.fileName.includes(includeFileName) && variable.symbolTable)
+                                    //search symbol
+                                    for(let item of variable.symbolTable.children)
                                     {
-                                        //search symbol
-                                        for(let item of variable.symbolTable.children)
+                                        if(ContextSymbolTable.getKindFromSymbol(item) === SymbolKind.Label)//check symbol type
                                         {
-                                            if(ContextSymbolTable.getKindFromSymbol(item) === SymbolKind.Label)//check symbol type
+                                            if(item.name.toLowerCase() === symbol.name.toLowerCase())
                                             {
-                                                if(item.name.toLowerCase() === symbol.name.toLowerCase())
-                                                {
-                                                    let info = this.getSymbolInfo(item);
+                                                let info = this.getSymbolInfo(item);
 
-                                                    if(info)
-                                                    {
-                                                        result.push(info);
-                                                    }
+                                                if(info)
+                                                {
+                                                    result.push(info);
                                                 }
                                             }
                                         }
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            let searchRoutine = false;
+            let defRoutines = this.getAllSymbols(RoutineDclSymbol, false);
+
+            for(let item of defRoutines)
+            {
+                if(item.name.toLowerCase() === symbol.name.toLowerCase())
+                {
+                    searchRoutine = true;
+                    break;
+                }
+            }
+            
+            if(searchRoutine)
+            {            
+                let references = this.getAllSymbols(LabelSymbol, false);
+
+                for(let item of references)
+                {
+                    if(item.name.toLowerCase() === symbol.name.toLowerCase())
+                    {
+                        const info = this.getSymbolInfo(item);
+
+                        if (info && info.kind === SymbolKind.Label) 
+                        {
+                            result.push(info);
                         }
                     }
                 }

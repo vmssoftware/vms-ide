@@ -1,5 +1,5 @@
 import { HoverProvider, TextDocument, Position, CancellationToken, Hover, Range, Uri, workspace } from "vscode";
-import { SymbolKind, Facade } from "../context/Facade";
+import { SymbolKind, Facade, SymbolInfo } from "../context/Facade";
 import { symbolDescriptionFromEnum } from '../context/Symbol';
 import { Fortran } from '../extension';
 import * as path from 'path';
@@ -24,7 +24,7 @@ export class FortranHoverProvider implements HoverProvider
         {
             if(info.info.source === "")
             {
-                data = info.name + ": " + info.info.name;
+                data = " " + info.name + ": " + info.info.name;
             }
             else
             {
@@ -44,59 +44,7 @@ export class FortranHoverProvider implements HoverProvider
 
                     if(textDataL.includes("implicit"))
                     {
-                        data = info.name + ": " + textData;
-                    }
-                    else
-                    {
-                        if(info.definition)
-                        {
-                            data = textData;
-
-                            const matcherTypeData = /^\s*\d*?\s*([a-zA-Z]+(\s*\*\s*\d+|\s*\(\s*\S+\s*\)|\s*\*\s*\(\s*(\d+|\*)\s*\))?)/;
-                            const matcherTypeDataColon = /^\s*\d*?\s*(.*\:\:)\s+/;
-                            const matcheVariable = /^\s*([a-zA-Z0-9$_]+\s*([\(\/]\s*[a-zA-Z0-9$_]+(\s*,\s*[a-zA-Z0-9$_]+\s*)*\s*[\)\/]|\s*\(\s*\*\s*\)|\s*\*\s*\d+|\s*\=(\>)?\s*.+)?)\s*(\,|\!)/;
-                            let type : string = "";
-                            let matches : RegExpMatchArray | null;
-
-                            if(data.includes("::"))
-                            {
-                                matches = data.match(matcherTypeDataColon);
-                            }
-                            else
-                            {
-                                matches = data.match(matcherTypeData);
-                            }
-
-                            if(matches && matches.length > 1)
-                            {
-                                type = matches[1];
-                            }
-
-                            let startRow = info.definition.range.start.row-1;
-                            let endRow = info.definition.range.end.row;
-                            let range = new Range(startRow, 0, endRow, 0);
-
-                            if(document.fileName !== info.source)
-                            {
-                                document = await workspace.openTextDocument(Uri.file(info.source));
-                            }
-
-                            data = document.getText(range);
-                            
-                            data = data.substr(info.definition.range.start.column);
-
-                            if(data.includes(",") || data.includes("!"))
-                            {
-                                matches = data.match(matcheVariable);
-
-                                if(matches && matches.length > 1)
-                                {
-                                    data = matches[1];
-                                }
-                            } 
-                            
-                            data = type + " " + data;
-                        }
+                        data = " " + info.name + ": " + textData;
                     }
                 }
             }
@@ -115,7 +63,7 @@ export class FortranHoverProvider implements HoverProvider
                 let endRow = info.definition.range.end.row;
                 let range = new Range(startRow, 0, endRow, 0);
 
-                data = document.getText(range).trim();
+                data = " " + document.getText(range).trim();
             }
         }
         else
@@ -133,25 +81,11 @@ export class FortranHoverProvider implements HoverProvider
 
                 data = document.getText(range);
 
-                const matcherTypeData = /^\s*\d*?\s*([a-zA-Z]+(\s*\*\s*\d+|\s*\(\s*\S+\s*\)|\s*\*\s*\(\s*(\d+|\*)\s*\))?)/;
-                const matcherTypeDataColon = /^\s*\d*?\s*(.*\:\:)\s+/;
                 const matcheVariable = /^\s*([a-zA-Z0-9$_]+\s*([\(\/]\s*[a-zA-Z0-9$_]+(\s*,\s*[a-zA-Z0-9$_]+\s*)*\s*[\)\/]|\s*\(\s*\*\s*\)|\s*\*\s*\d+|\s*\=(\>)?\s*.+)?)\s*(\,|\!)/;
                 let type : string = "";
                 let matches : RegExpMatchArray | null;
 
-                if(data.includes("::"))
-                {
-                    matches = data.match(matcherTypeDataColon);
-                }
-                else
-                {
-                    matches = data.match(matcherTypeData);
-                }
-
-                if(matches && matches.length > 1)
-                {
-                    type = matches[1];
-                }
+                type = await this.getType(document, info);
                 
                 data = data.substr(info.definition.range.start.column);
 
@@ -176,6 +110,75 @@ export class FortranHoverProvider implements HoverProvider
             "**" + description + "**\ndefined in: " + path.basename(info.source),
             { language: Fortran.language, value: (showParseData ? data : info.definition? info.definition.text : data) }
         ]);
+    }
+
+    private async getType(document: TextDocument, info: SymbolInfo): Promise<string>
+    {
+        let run = true;
+        let data : string = "";
+        const matcherContinuation = /^(\s\s\s\s\s[^ 0\t\r\n])|(\t[1-9]\s+)/;
+        const matcherTypeData = /^\s*\d*?\s*([a-zA-Z]+(\s*\*\s*\d+|\s*\(\s*\S+\s*\)|\s*\*\s*\(\s*(\d+|\*)\s*\))?)/;
+        const matcherTypeDataColon = /^\s*\d*?\s*(.*\:\:)\s+/;
+        let type : string = "";
+        let counter : number = 0;
+        let matches : RegExpMatchArray | null;
+
+        if(info.definition)
+        {
+            while(run)
+            {
+                let startRow = info.definition.range.start.row-1 - counter;
+                let endRow = info.definition.range.end.row - counter;
+
+                data = await this.getTextLine(document, info, startRow, endRow);
+
+                matches = data.match(matcherContinuation);
+
+                if(!matches)//not continuation
+                {
+                    run = false;
+                }
+                else
+                {
+                    counter++;
+                }
+            }
+
+            if(data.includes("::"))
+            {
+                matches = data.match(matcherTypeDataColon);
+            }
+            else
+            {
+                matches = data.match(matcherTypeData);
+            }
+
+            if(matches && matches.length > 1)
+            {
+                type = matches[1];
+            }
+        }
+
+        return type;
+    }
+
+    private async getTextLine(document: TextDocument, info: SymbolInfo, startRow: number, endRow: number): Promise<string>
+    {
+        let data : string = "";
+
+        if(info.definition)
+        {
+            let range = new Range(startRow, 0, endRow, 0);
+
+            if(document.fileName !== info.source)
+            {
+                document = await workspace.openTextDocument(Uri.file(info.source));
+            }
+
+            data = document.getText(range);
+        }
+
+        return data;
     }
 }
 
