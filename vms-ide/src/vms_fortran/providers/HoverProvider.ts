@@ -81,7 +81,7 @@ export class FortranHoverProvider implements HoverProvider
 
                 data = document.getText(range);
 
-                const matcheVariable = /^\s*([a-zA-Z0-9$_]+\s*([\(\/]\s*[a-zA-Z0-9$_]+(\s*,\s*[a-zA-Z0-9$_]+\s*)*\s*[\)\/]|\s*\(\s*\*\s*\)|\s*\*\s*\d+|\s*\=(\>)?\s*.+)?)\s*(\,|\!)/;
+                const matcheVariable = /^\s*([a-zA-Z0-9$_]+\s*([\(\/]\s*[a-zA-Z0-9$_]+(\s*,\s*[a-zA-Z0-9$_]+\s*)*\s*[\)\/]|\s*\*?\(\s*\*\s*\)|\s*\*\s*\d+|\s*\=(\>)?\s*.+|\(.+\))?)\s*(\,|\!)/;
                 let type : string = "";
                 let matches : RegExpMatchArray | null;
 
