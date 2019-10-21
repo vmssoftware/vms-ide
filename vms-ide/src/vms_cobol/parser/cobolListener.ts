@@ -12,7 +12,6 @@ import { Environment_division_headerContext } from "./cobolParser";
 import { Data_divisionContext } from "./cobolParser";
 import { Data_division_headerContext } from "./cobolParser";
 import { Procedure_divisionContext } from "./cobolParser";
-import { Word_in_area_AContext } from "./cobolParser";
 import { Word_in_area_BContext } from "./cobolParser";
 import { AuthorContext } from "./cobolParser";
 import { Author_headerContext } from "./cobolParser";
@@ -551,17 +550,6 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitProcedure_division?: (ctx: Procedure_divisionContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.word_in_area_A`.
-	 * @param ctx the parse tree
-	 */
-	enterWord_in_area_A?: (ctx: Word_in_area_AContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.word_in_area_A`.
-	 * @param ctx the parse tree
-	 */
-	exitWord_in_area_A?: (ctx: Word_in_area_AContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.word_in_area_B`.

@@ -12,7 +12,6 @@ import { Environment_division_headerContext } from "./cobolParser";
 import { Data_divisionContext } from "./cobolParser";
 import { Data_division_headerContext } from "./cobolParser";
 import { Procedure_divisionContext } from "./cobolParser";
-import { Word_in_area_AContext } from "./cobolParser";
 import { Word_in_area_BContext } from "./cobolParser";
 import { AuthorContext } from "./cobolParser";
 import { Author_headerContext } from "./cobolParser";
@@ -518,13 +517,6 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitProcedure_division?: (ctx: Procedure_divisionContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `cobolParser.word_in_area_A`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitWord_in_area_A?: (ctx: Word_in_area_AContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.word_in_area_B`.

@@ -14,14 +14,17 @@ import {
 import {
     ParseTreeWalker,
     TerminalNode,
-    ParseTreeListener
+    ParseTreeListener,
+    ParseTree
 } from 'antlr4ts/tree';
 
 import {
     CommonTokenStream,
     BailErrorStrategy,
     DefaultErrorStrategy,
-    Token
+    Token,
+    ParserRuleContext,
+    CommonToken
 } from 'antlr4ts';
 
 import {
@@ -44,7 +47,15 @@ import {
 
 import {
     cobolParser,
-    Cobol_sourceContext
+    Cobol_sourceContext,
+    Identification_divisionContext,
+    AuthorContext,
+    Word_in_area_BContext,
+    ProgramContext,
+    InstallationContext,
+    Date_writtenContext,
+    Date_compiledContext,
+    SecurityContext
 } from '../parser/cobolParser';
 
 import {
@@ -66,7 +77,7 @@ import {
 
 
 import {
-    ProgramSymbol, programDetails, _IntrincisFunctions, _PredefinedData, IFunction, IPredefinedNode, IntrincisFunctionSymbol, getSymbolFromKind, IPreDefinition, DataRecordSymbol, EDataUsage, IdentifierSymbol, EGlobalType,
+    ProgramSymbol, programDetails, _IntrincisFunctions, _PredefinedData, IFunction, IPredefinedNode, IntrincisFunctionSymbol, getSymbolFromKind, IPreDefinition, DataRecordSymbol, EDataUsage, IdentifierSymbol, EGlobalType, symbolDescriptionFromEnum, ECobolSymbolKind,
 } from './CobolSymbol';
 
 import {
@@ -78,7 +89,6 @@ import {
 } from './CobolDetailsListener';
 import { CobolAnalisisHelper } from './CobolAnalisisHelpers';
 import { CobolAnalysisVisitor } from './CobolAnalysisVisitor';
-import { _RuleTokensMap } from './RuleCompletion';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -137,6 +147,7 @@ export class CobolSourceContext implements ISourceContext {
             }
         }
         this.streamErrors.length = 0;
+        // EOL is OBLIGATORY for correct code completion
         this.input = new CobolInputStream(streamErrorListener, source + "\n", this.compilerConditions);
 
         if (this.streamErrors.length === 0) {
@@ -185,17 +196,14 @@ export class CobolSourceContext implements ISourceContext {
         if (this.tree) {
             this.symbolTable.tree = this.tree;
             this.symbolTable.clear();
-            if (this.streamErrors.length ===0 && this.diagnostics.length === 0) {
-                try {
-                    let listener: CobolDetailsListener = new CobolDetailsListener(this.symbolTable, this.imports);
-                    ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree);
-                    this.addPredefinitions(_IntrincisFunctions, _PredefinedData);
-                    this.runAnalysis();
-                } catch(e) {
-                    this.logFn(LogType.debug, () => String(e));
-                }
-            } else {
-                this.analysisDone = true;
+            this.hideTokensWithPredicate();
+            try {
+                let listener: CobolDetailsListener = new CobolDetailsListener(this.symbolTable, this.imports);
+                ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree);
+                this.addPredefinitions(_IntrincisFunctions, _PredefinedData);
+                this.runAnalysis();
+            } catch(e) {
+                this.logFn(LogType.debug, () => String(e));
             }
         }
 
@@ -261,7 +269,7 @@ export class CobolSourceContext implements ISourceContext {
             cobolLexer.RCURLY_,
             cobolLexer.NUMERIC_LITERAL_,
             cobolLexer.HEX_LITERAL_,
-            cobolLexer.USER_DEFINED_WORD_,
+            // cobolLexer.USER_DEFINED_WORD_,
             cobolLexer.COMMA_,
             cobolLexer.SEMI_,
             cobolLexer.WHITESPACE_,
@@ -276,80 +284,7 @@ export class CobolSourceContext implements ISourceContext {
 
         core.preferredRules = new Set([
         //add preferred rules
-            // cobolParser.RULE_cobol_source,
-            // cobolParser.RULE_program_id,
-            // cobolParser.RULE_author,
-            // cobolParser.RULE_end_program,
-            // cobolParser.RULE_procedure_division,
-            // cobolParser.RULE_procedure_division_header,
-            // cobolParser.RULE_data_division,
-            // cobolParser.RULE_environment_division,
-            // cobolParser.RULE_identification_division,
-            // cobolParser.RULE_program_id,
-            // cobolParser.RULE_program_name,
-            // cobolParser.RULE_common_initial,
-            // cobolParser.RULE_with_ident,
-            // cobolParser.RULE_ident_string,
-            // cobolParser.RULE_installation,
-            // cobolParser.RULE_date_written,
-            // cobolParser.RULE_date_compiled,
-            // cobolParser.RULE_security,
-            // cobolParser.RULE_options_,
-            // cobolParser.RULE_arithmetic,
-            // cobolParser.RULE_configuration_section,
-            // cobolParser.RULE_input_output_section,
-            // cobolParser.RULE_source_computer,
-            // cobolParser.RULE_computer_type,
-            // cobolParser.RULE_with_debugging,
-            // cobolParser.RULE_object_computer,
-            // cobolParser.RULE_memory_size,
-            // cobolParser.RULE_memory_size_amount,
-            // cobolParser.RULE_memory_size_unit,
-            // cobolParser.RULE_program_collating,
-            // cobolParser.RULE_alpha_name,
-            // cobolParser.RULE_segment_limit,
-            // cobolParser.RULE_segment_number,
-            // cobolParser.RULE_special_names,
-            // cobolParser.RULE_special_names_content,
-            // cobolParser.RULE_cursor_is,
-            // cobolParser.RULE_crt_is,
-            // cobolParser.RULE_predefined_name_relation,
-            // cobolParser.RULE_predefined_name,
-            // cobolParser.RULE_switch_definition,
-            // cobolParser.RULE_switch_clause_on,
-            // cobolParser.RULE_switch_clause_off,
-            // cobolParser.RULE_cond_name,
-            // cobolParser.RULE_switch_name,
-            // cobolParser.RULE_switch_num,
-            // cobolParser.RULE_qualified_data_item,
-            // cobolParser.RULE_currency,
-            // cobolParser.RULE_currency_definition,
-            // cobolParser.RULE_currency_string,
-            // cobolParser.RULE_currency_char,
-            // cobolParser.RULE_class_,
-            // cobolParser.RULE_class_name,
-            // cobolParser.RULE_user_class,
-            // cobolParser.RULE_symbolic_chars,
-            // cobolParser.RULE_symb_ch_definition,
-            // cobolParser.RULE_symb_ch_def_clause,
-            // cobolParser.RULE_symb_ch_def_in_alphabet,
-            // cobolParser.RULE_symbol_char,
-            // cobolParser.RULE_char_val,
-            // cobolParser.RULE_alphabet,
-            // cobolParser.RULE_alpha_value,
-            // cobolParser.RULE_user_alpha,
-            // cobolParser.RULE_first_literal,
-            // cobolParser.RULE_last_literal,
-            // cobolParser.RULE_same_literal,
-            // cobolParser.RULE_top_of_page_name,
-            // cobolParser.RULE_program,
-            // cobolParser.RULE_word_in_area_A,
-            // cobolParser.RULE_word_in_area_B,
-            // cobolParser.RULE_figurative_constant_witout_all_zero,
-            // cobolParser.RULE_figurative_constant_zero,
-            // cobolParser.RULE_figurative_constant_witout_all,
-            // cobolParser.RULE_figurative_constant_witout_zero,
-            // cobolParser.RULE_figurative_constant,
+            cobolParser.RULE_function_name,
         ]);
 
         // Search the token index which covers our caret position.
@@ -369,22 +304,34 @@ export class CobolSourceContext implements ISourceContext {
         const vocabulary = this.parser.vocabulary;
 
         let addTokenType = new Set<number>();
+        let addStringValue = new Set<string>();
         candidates.tokens.forEach((following: number[], type: number) => {
-            addTokenType.add(type);
-            following.forEach(type => addTokenType.add(type));
+            switch(type) {
+                case cobolParser.USER_DEFINED_WORD_:
+                    this.symbolTable.occurance.forEach( (value, key) => {
+                        addStringValue.add(key);
+                    })
+                    break;
+                default:
+                    addTokenType.add(type);
+                    break;
+            }
+            //following.forEach(type => addTokenType.add(type));
         });
 
-        let addStringValue = new Set<string>();
         candidates.rules.forEach((callStack, key) => {
-            let rule = _RuleTokensMap.get(key);
-            if (rule) {
-                rule.forEach(value => {
-                    if (typeof value === "string") {
-                        addStringValue.add(value);
-                    } else {
-                        addTokenType.add(value);
-                    }
-                })
+            switch(key) {
+                case cobolParser.RULE_function_name:
+                    _IntrincisFunctions.forEach(x => {
+                        if (x.name) {
+                            let info: ICompletion = {
+                                candidate: x.name,
+                                description: symbolDescriptionFromEnum(ECobolSymbolKind.IntrincisFunction),
+                            };
+                            result.push(info);
+                        }
+                    })
+                    break;
             }
         });
 
@@ -468,13 +415,43 @@ export class CobolSourceContext implements ISourceContext {
 
     //________________________________________________________________________________
 
+    private hideTokensWithPredicate() {
+        if (!this.tree || !this.tokenStream) {
+            return -1;
+        }
+        let nodes: ParseTree[] = [this.tree];
+        while(nodes.length) {
+            let node = nodes.pop();
+            if (node instanceof ParserRuleContext && node.children) {
+                if (node instanceof Cobol_sourceContext ||
+                    node instanceof ProgramContext ||
+                    node instanceof Identification_divisionContext ||
+                    node instanceof InstallationContext ||
+                    node instanceof Date_writtenContext ||
+                    node instanceof Date_compiledContext ||
+                    node instanceof SecurityContext ||
+                    node instanceof AuthorContext) {
+                    nodes.push(...node.children!);
+                }
+                if (node instanceof Word_in_area_BContext) {
+                    for(let t of node.children!) {
+                        if (t instanceof TerminalNode && t.symbol instanceof CommonToken) {
+                            let symbol = t.symbol as CommonToken;
+                            symbol.channel = 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Zero-based
      * @param row 
      * @param column 
      */
     private getTokenIndexByPosition(row: number, column: number) {
-        if (!this.parser || !this.tokenStream) {
+        if (!this.tokenStream) {
             return -1;
         }
         // Search the token index which covers our caret position.

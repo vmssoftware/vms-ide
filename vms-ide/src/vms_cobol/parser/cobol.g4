@@ -29,7 +29,8 @@ identification_division
    ;
 
 identification_division_header
-   : {this.inputStream.LT(1).charPositionInLine < 4}? IDENTIFICATION DIVISION DOT_
+   : //{this.inputStream.LT(1).charPositionInLine < 4}? 
+     IDENTIFICATION DIVISION DOT_
    ;
 
 environment_division
@@ -61,11 +62,9 @@ procedure_division
      (section*|paragraph*)
    ;
 
-// author =====
-
-word_in_area_A
-   : {this.inputStream.LT(1).charPositionInLine < 4}? .
-   ;
+// word_in_area_A
+//    : {this.inputStream.LT(1).charPositionInLine < 4}? .
+//    ;
 
 word_in_area_B
    : {this.inputStream.LT(1).charPositionInLine >= 4}? .
@@ -118,7 +117,8 @@ end_program
    ;
 
 end_program_header
-   : {this.inputStream.LT(1).charPositionInLine < 4}? END PROGRAM 
+   : //{this.inputStream.LT(1).charPositionInLine < 4}?
+     END PROGRAM 
    ;
 
 procedure_division_header
@@ -147,11 +147,13 @@ declaratives
    ;
 
 declaratives_header
-   : {this.inputStream.LT(1).charPositionInLine < 4}? DECLARATIVES DOT_
+   : //{this.inputStream.LT(1).charPositionInLine < 4}?
+     DECLARATIVES DOT_
    ;
 
 end_declaratives
-   : {this.inputStream.LT(1).charPositionInLine < 4}? END DECLARATIVES DOT_
+   : //{this.inputStream.LT(1).charPositionInLine < 4}?
+     END DECLARATIVES DOT_
    ;
 
 declaratives_section
@@ -161,7 +163,8 @@ declaratives_section
    ;
 
 paragraph
-   : {this.inputStream.LT(1).charPositionInLine < 4}? paragraph_name DOT_
+   : //{this.inputStream.LT(1).charPositionInLine < 4}?
+     paragraph_name DOT_
      (statement+ DOT_)*
    ;
 
@@ -189,7 +192,8 @@ use_on
    ;
 
 section_header
-   : {this.inputStream.LT(1).charPositionInLine < 4}? section_name SECTION segment_number? DOT_
+   : //{this.inputStream.LT(1).charPositionInLine < 4}?
+     section_name SECTION segment_number? DOT_
    ;
 
 section_name
@@ -205,7 +209,7 @@ giving
    ;
 
 statement
-   : {this.inputStream.LT(1).charPositionInLine >= 4}? 
+   : //{this.inputStream.LT(1).charPositionInLine >= 4}?
      (  accept_statement
       | add_statement
       | alter_statement
