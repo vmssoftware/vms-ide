@@ -1865,133 +1865,6 @@
 				}
 			]
 		},
-		"derived-type-definition": {
-			"name": "meta.derived-type.definition.fortran",
-			"begin": "(?i)\\b(type)\\b(?!\\s*(\\(|is\\b|\\=))",
-			"beginCaptures": {
-				"1": {
-					"name": "keyword.control.type.fortran"
-				}
-			},
-			"end": "(?=[;!\\n])",
-			"patterns": [
-				{
-					"comment": "Attribute list.",
-					"contentName": "meta.attribute-list.fortran",
-					"begin": "\\G(?=\\s*(,|::))",
-					"end": "(::)|(?=[;!\\n])",
-					"endCaptures": {
-						"1": {
-							"name": "keyword.operator.double-colon.fortran"
-						}
-					},
-					"patterns": [
-						{
-							"begin": "(,)",
-							"beginCaptures": {
-								"1": {
-									"name": "punctuation.comma.fortran"
-								}
-							},
-							"end": "(?=::|[,;!\\n])",
-							"patterns": [
-								{
-									"include": "#access-attribute"
-								},
-								{
-									"include": "#abstract-attribute"
-								},
-								{
-									"include": "#language-binding-attribute"
-								},
-								{
-									"include": "#extends-attribute"
-								},
-								{
-									"include": "#invalid-word"
-								}
-							]
-						}
-					]
-				},
-				{
-					"begin": "(?i)\\s*\\b([a-z]\\w*)\\b",
-					"beginCaptures": {
-						"1": {
-							"name": "entity.name.type.fortran"
-						}
-					},
-					"end": "(?i)(?:^|(?<=;))\\s*(end\\s*type)(?:\\s+(?:(\\1)|(\\w+)))?\\b",
-					"endCaptures": {
-						"1": {
-							"name": "keyword.control.endtype.fortran"
-						},
-						"2": {
-							"name": "entity.name.type.fortran"
-						},
-						"3": {
-							"name": "invalid.error.fortran"
-						}
-					},
-					"patterns": [
-						{
-							"include": "#dummy-variable-list"
-						},
-						{
-							"comment": "Derived type specification block.",
-							"name": "meta.block.specification.fortran",
-							"begin": "(?i)^(?!\\s*\\b(?:contains|end\\s*type)\\b)",
-							"end": "(?i)^(?=\\s*\\b(?:contains|end\\s*type)\\b)",
-							"patterns": [
-								{
-									"include": "#comments"
-								},
-								{
-									"include": "#derived-type-component-attribute-specification"
-								},
-								{
-									"include": "#derived-type-component-parameter-specification"
-								},
-								{
-									"include": "#derived-type-component-procedure-specification"
-								},
-								{
-									"include": "#derived-type-component-type-specification"
-								}
-							]
-						},
-						{
-							"comment": "Derived type contains block.",
-							"name": "meta.block.contains.fortran",
-							"begin": "(?i)\\b(contains)\\b",
-							"beginCaptures": {
-								"1": {
-									"name": "keyword.control.contains.fortran"
-								}
-							},
-							"end": "(?i)(?=\\s*end\\s*type\\b)",
-							"patterns": [
-								{
-									"include": "#comments"
-								},
-								{
-									"include": "#derived-type-contains-attribute-specification"
-								},
-								{
-									"include": "#derived-type-contains-final-procedure-specification"
-								},
-								{
-									"include": "#derived-type-contains-generic-procedure-specification"
-								},
-								{
-									"include": "#derived-type-contains-procedure-specification"
-								}
-							]
-						}
-					]
-				}
-			]
-		},
 		"derived-type-component-attribute-specification": {
 			"comment": "Introduced in the Fortran 1995 standard.",
 			"name": "meta.statement.attribute-specification.fortran",
@@ -2509,7 +2382,7 @@
 				},
 				{
 					"comment": "Introduced in the Fortran 1977 standard.",
-					"match": "(?i)\\b(?:(backspace)|(endfile)|(format)|(print)|(read)|(rewind))\\b",
+					"match": "(?i)\\b(?:(backspace)|(endfile)|(format)|(print)|(read)|(rewind)|(type))\\b",
 					"captures": {
 						"1": {
 							"name": "keyword.control.backspace.fortran"
@@ -2528,6 +2401,9 @@
 						},
 						"6": {
 							"name": "keyword.control.rewind.fortran"
+						},
+						"7": {
+							"name": "keyword.control.type.fortran"
 						}
 					}
 				},
