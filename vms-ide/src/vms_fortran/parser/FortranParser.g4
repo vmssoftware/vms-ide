@@ -25,7 +25,7 @@ mainProgram
    ;
 
 mainRange
-   : body endProgramStatement
+   : body (endProgramStatement | EOF)
    | endProgramStatement
    ;
 
