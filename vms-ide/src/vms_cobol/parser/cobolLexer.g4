@@ -554,7 +554,7 @@ LBRACK_  : '[';
 RBRACK_  : ']';
 POINTER_ : '^';
 ATP_     : '@';
-DOT_     : '.';
+DOT_     : '.' [\r\n\t ];
 LCURLY_  : '{';
 RCURLY_  : '}';
 

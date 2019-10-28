@@ -1,10 +1,10 @@
 import * as nls from "vscode-nls";
 import { cobolVisitor } from "../parser/cobolVisitor";
 import { AbstractParseTreeVisitor } from "antlr4ts/tree";
-import { Program_idContext, ProgramContext, End_programContext, Configuration_sectionContext, Memory_size_amountContext, Program_collatingContext, Segment_limitContext, Special_namesContext, Switch_numContext, User_alphaContext, Symbol_charContext, Symb_ch_def_in_alphabetContext, Currency_charContext, Cursor_isContext, Crt_isContext, Proc_nameContext, Qualified_data_itemContext, StatementContext, Input_sourceContext, Figurative_constant_witout_all_zeroContext, Figurative_constant_zeroContext, Figurative_constant_witout_zeroContext, File_nameContext, Report_nameContext, Class_condition_nameContext, Sign_condition_nameContext, Bool_condition_nameContext, Function_nameContext, Value_is_literalContext } from "../parser/cobolParser";
+import { Program_idContext, ProgramContext, End_programContext, Configuration_sectionContext, Memory_size_amountContext, Program_collatingContext, Segment_limitContext, Special_namesContext, Switch_numContext, User_alphaContext, Symbol_charContext, Symb_ch_def_in_alphabetContext, Currency_charContext, Cursor_isContext, Crt_isContext, Proc_nameContext, Qualified_data_itemContext, StatementContext, Input_sourceContext, Figurative_constant_witout_all_zeroContext, Figurative_constant_zeroContext, Figurative_constant_witout_zeroContext, File_nameContext, Report_nameContext, Class_condition_nameContext, Sign_condition_nameContext, Bool_condition_nameContext, Function_nameContext, Value_is_literalContext, Identification_division_headerContext, End_program_headerContext, Declaratives_headerContext, End_declarativesContext, ParagraphContext, Section_headerContext } from "../parser/cobolParser";
 import { CobolAnalisisHelper } from "./CobolAnalisisHelpers";
 import { firstContainingContext, findChildInA } from "../../common/parser/Helpers";
-import { ProgramSymbol, ALPHABET_Symbol, SYMBOLIC_CHARACTERS_Symbol, CURRENCY_Symbol, DataRecordSymbol, ParagraphSymbol, SectionSymbol, DeclarativesSectionSymbol, IntrincisFunctionSymbol, DeviceSymbol, FigurativeConstantSymbol, FileSymbol, SortMergeFileSymbol, ReportFileSymbol, CLASS_Symbol, SIGN_Symbol, BOOL_Symbol } from "./CobolSymbol";
+import { ProgramSymbol, ALPHABET_Symbol, SYMBOLIC_CHARACTERS_Symbol, CURRENCY_Symbol, DataRecordSymbol, ParagraphSymbol, SectionSymbol, DeclarativesSectionSymbol, IntrinsicFunctionSymbol, DeviceSymbol, FigurativeConstantSymbol, FileSymbol, SortMergeFileSymbol, ReportFileSymbol, CLASS_Symbol, SIGN_Symbol, BOOL_Symbol } from "./CobolSymbol";
 import { ParserRuleContext } from "antlr4ts";
 
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -18,6 +18,48 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
 
     protected defaultResult(): void {
         // throw new Error("Method not implemented.");
+    }
+
+    visitIdentification_division_header(ctx: Identification_division_headerContext) {
+        if (ctx.IDENTIFICATION().symbol.charPositionInLine >= 4) {
+            this.helper.mark(ctx.IDENTIFICATION(), localize("must_be_in_a", "Must start in A area"));
+        }
+        //this.visitChildren(ctx);
+    }
+
+    visitEnd_program_header(ctx: End_program_headerContext) {
+        if (ctx.END().symbol.charPositionInLine >= 4) {
+            this.helper.mark(ctx.END(), localize("must_be_in_a", "Must start in A area"));
+        }
+        //this.visitChildren(ctx);
+    }
+
+    visitDeclaratives_header(ctx: Declaratives_headerContext) {
+        if (ctx.DECLARATIVES().symbol.charPositionInLine >= 4) {
+            this.helper.mark(ctx.DECLARATIVES(), localize("must_be_in_a", "Must start in A area"));
+        }
+        //this.visitChildren(ctx);
+    }
+
+    visitEnd_declaratives(ctx: End_declarativesContext) {
+        if (ctx.END().symbol.charPositionInLine >= 4) {
+            this.helper.mark(ctx.END(), localize("must_be_in_a", "Must start in A area"));
+        }
+        //this.visitChildren(ctx);
+    }
+
+    visitParagraph(ctx: ParagraphContext) {
+        if (ctx.paragraph_name().USER_DEFINED_WORD_().symbol.charPositionInLine >= 4) {
+            this.helper.mark(ctx.paragraph_name(), localize("must_be_in_a", "Must start in A area"));
+        }
+        this.visitChildren(ctx);
+    }
+
+    visitSection_header(ctx: Section_headerContext) {
+        if (ctx.section_name().USER_DEFINED_WORD_().symbol.charPositionInLine >= 4) {
+            this.helper.mark(ctx.section_name(), localize("must_be_in_a", "Must start in A area"));
+        }
+        this.visitChildren(ctx);
     }
 
     visitProgram_id(ctx: Program_idContext) {
@@ -163,14 +205,14 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     }
 
     visitQualified_data_item(ctx: Qualified_data_itemContext) {
-        this.helper.verifyQualifiedName(ctx, false, undefined, undefined, [IntrincisFunctionSymbol]);
+        this.helper.verifyQualifiedName(ctx, false, undefined, undefined, [IntrinsicFunctionSymbol]);
         //this.visitChildren(ctx);
     }
 
     visitStatement(ctx: StatementContext) {
         let childInA = findChildInA(ctx);
         if (childInA) {
-            this.helper.mark(childInA, localize("must_be_in_B", "This token must be in B area"));
+            this.helper.mark(childInA, localize("must_be_in_B", "Must start in B area"));
         }
         this.visitChildren(ctx);
     }
@@ -224,7 +266,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     }
 
     visitFunction_name(ctx: Function_nameContext) {
-        this.helper.verifyName(ctx, false, undefined, [IntrincisFunctionSymbol]);
+        this.helper.verifyName(ctx, false, undefined, [IntrinsicFunctionSymbol]);
         //this.visitChildren(ctx);
     }
 

@@ -1,7 +1,7 @@
 "use strict";
 
 import { ANTLRErrorListener, Recognizer, RecognitionException, Token, CommonToken } from 'antlr4ts';
-import { CobolInputStream } from '../vms_cobol/stream/cobolInputStream';
+import { CobolInputStream } from '../stream/cobolInputStream';
 
 export interface IMessage {
     charPositionInLine: number,
@@ -32,14 +32,14 @@ export class CobolLexerErrorListener extends MessageHolderImpl implements ANTLRE
 
     syntaxError<T extends number>(recognizer: Recognizer<T, any>, offendingSymbol: T | undefined, line: number,
         charPositionInLine: number, msg: string, e: RecognitionException | undefined): void {
-        ({ line, charPositionInLine } = this.cobolInputStream.getRealPosition(line - 1, charPositionInLine));
-        ++line;
-        ++charPositionInLine;
+        let { sourceRow, sourceCol} = this.cobolInputStream.sourceRowColFromResultRowCol(line - 1, charPositionInLine);
+        ++sourceRow;
+        ++sourceCol;
         let message: IMessage = {
             message: msg,
             size: 1,
-            line,
-            charPositionInLine,
+            line: sourceRow,
+            charPositionInLine: sourceCol,
         };
         this.messages.push(message);
     }
@@ -53,14 +53,14 @@ export class CobolErrorListener extends MessageHolderImpl implements ANTLRErrorL
 
     syntaxError<T extends Token>(recognizer: Recognizer<T, any>, offendingSymbol: T | undefined, line: number,
         charPositionInLine: number, msg: string, e: RecognitionException | undefined): void {
-        ({ line, charPositionInLine } = this.cobolInputStream.getRealPosition(line - 1, charPositionInLine));
-        ++line;
-        ++charPositionInLine;
+        let { sourceRow, sourceCol } = this.cobolInputStream.sourceRowColFromResultRowCol(line - 1, charPositionInLine);
+        ++sourceRow;
+        ++sourceCol;
         let message: IMessage = {
             message: msg,
             size: 1,
-            line,
-            charPositionInLine,
+            line: sourceRow,
+            charPositionInLine: sourceCol,
         };
         if (offendingSymbol) {
             message.size = offendingSymbol.stopIndex - offendingSymbol.startIndex + 1;

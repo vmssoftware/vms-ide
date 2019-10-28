@@ -5,7 +5,8 @@ grammar cobol;
 options { tokenVocab = cobolLexer; }
 
 cobol_source
-   : program* EOF
+   : replace_statement*
+     program* EOF
    ;
 
 program
@@ -29,8 +30,8 @@ identification_division
    ;
 
 identification_division_header
-   : //{this.inputStream.LT(1).charPositionInLine < 4}? 
-     IDENTIFICATION DIVISION DOT_
+   : //{this.inputStream.LT(1).charPositionInLine < 4}?
+     IDENTIFICATION DIVISION DOT_ replace_statement*
    ;
 
 environment_division
@@ -40,7 +41,7 @@ environment_division
    ;
 
 environment_division_header
-   : ENVIRONMENT DIVISION DOT_
+   : ENVIRONMENT DIVISION DOT_ replace_statement*
    ;
 
 data_division
@@ -53,7 +54,7 @@ data_division
    ;
 
 data_division_header
-   : DATA DIVISION DOT_
+   : DATA DIVISION DOT_ replace_statement*
    ;
 
 procedure_division
@@ -73,6 +74,7 @@ word_in_area_B
 author
    : author_header
      word_in_area_B*
+     replace_statement*
    ;
 
 author_header
@@ -113,7 +115,7 @@ figurative_constant
 
 end_program
    : end_program_header
-     program_name DOT_
+     program_name DOT_ replace_statement*
    ;
 
 end_program_header
@@ -132,7 +134,7 @@ procedure_division_header_start
    ;
 
 procedure_division_header_end
-   : DOT_
+   : DOT_ replace_statement*
    ;
 
 section
@@ -142,18 +144,18 @@ section
 
 declaratives
    : declaratives_header
-     declaratives_section+
+     declaratives_section*
      end_declaratives
    ;
 
 declaratives_header
    : //{this.inputStream.LT(1).charPositionInLine < 4}?
-     DECLARATIVES DOT_
+     DECLARATIVES DOT_ replace_statement*
    ;
 
 end_declaratives
    : //{this.inputStream.LT(1).charPositionInLine < 4}?
-     END DECLARATIVES DOT_
+     END DECLARATIVES DOT_ replace_statement*
    ;
 
 declaratives_section
@@ -164,8 +166,8 @@ declaratives_section
 
 paragraph
    : //{this.inputStream.LT(1).charPositionInLine < 4}?
-     paragraph_name DOT_
-     (statement+ DOT_)*
+     paragraph_name DOT_ replace_statement*
+     (statement+ DOT_ replace_statement*)*
    ;
 
 paragraph_name
@@ -176,7 +178,7 @@ use_statement
    : USE GLOBAL?
       (AFTER STANDARD? (EXCEPTION|ERROR) PROCEDURE ON? use_on
       |BEFORE REPORTING group_data_name)
-      DOT_ 
+      DOT_ replace_statement* 
    ;
 
 group_data_name
@@ -193,7 +195,7 @@ use_on
 
 section_header
    : //{this.inputStream.LT(1).charPositionInLine < 4}?
-     section_name SECTION segment_number? DOT_
+     section_name SECTION segment_number? DOT_ replace_statement*
    ;
 
 section_name
@@ -251,7 +253,6 @@ statement
       | unlock_statement
       | unstring_statement
       | write_statement
-      | replace_statement
       | copy_statement
       | record_statement
      )
@@ -287,8 +288,8 @@ text_name
    ;
 
 replace_statement
-   : REPLACE OFF
-   | REPLACE (PSEUDO_TEXT_ BY PSEUDO_TEXT_)+
+   : REPLACE OFF DOT_
+   | REPLACE (PSEUDO_TEXT_ BY PSEUDO_TEXT_)+ DOT_
    ;
 
 write_statement
@@ -1264,7 +1265,7 @@ invalid_key
    ;
 
 file_section
-   : FILE SECTION DOT_
+   : FILE SECTION DOT_ replace_statement*
      (file_description|sort_merge_file_description)*
    ;
 
@@ -1277,17 +1278,17 @@ sort_merge_file_description
    ;
 
 working_storage_section
-   : WORKING_STORAGE SECTION DOT_
+   : WORKING_STORAGE SECTION DOT_ replace_statement*
      data_description_entry*
    ;
 
 linkage_section
-   : LINKAGE SECTION DOT_
+   : LINKAGE SECTION DOT_ replace_statement*
      data_description_entry*
    ;
 
 report_section
-   : REPORT SECTION DOT_
+   : REPORT SECTION DOT_ replace_statement*
      report_description*
    ;
 
@@ -1296,7 +1297,7 @@ report_description
    ;
 
 screen_section
-   : SCREEN SECTION DOT_
+   : SCREEN SECTION DOT_ replace_statement*
      screen_description_entry*
    ;
 
@@ -1304,19 +1305,19 @@ screen_section
 file_description_entry
    : FD file_name
      fd_clause*
-     DOT_
+     DOT_ replace_statement*
    ;
 
 sort_merge_file_description_entry
    : SD file_name 
      sd_clause*
-     DOT_
+     DOT_ replace_statement*
    ;
 
 report_description_entry
    : RD report_name 
      rd_clause*
-     DOT_
+     DOT_ replace_statement*
    ;
 
 
@@ -1340,7 +1341,7 @@ data_description_entry
    : level_number (data_name|FILLER)?
      (REDEFINES other_data_item)?
      data_description_clause*
-     DOT_
+     DOT_ replace_statement*
    ;
 
 level_number
@@ -1443,7 +1444,7 @@ max_times
 report_group_data_description_entry
    : level_number data_name?
      report_group_data_description_clause*
-     DOT_
+     DOT_ replace_statement*
    ;
 
 report_group_data_description_clause
@@ -1705,7 +1706,7 @@ longest_rec
 screen_description_entry
    : level_number (screen_name|FILLER)?
      screen_description_clause*
-     DOT_
+     DOT_ replace_statement*
    ;
 
 screen_name
@@ -1765,11 +1766,11 @@ color_num
 // program id
 
 program_id
-   : PROGRAM_ID DOT_
+   : PROGRAM_ID DOT_ replace_statement*
      program_name
      common_initial?
      with_ident?
-     DOT_
+     DOT_ replace_statement*
    ;
 
 program_name
@@ -1791,57 +1792,65 @@ ident_string
 // installation
 
 installation
-   : INSTALLATION DOT_ word_in_area_B*
+   : INSTALLATION DOT_ 
+     word_in_area_B*
+     replace_statement*
    ;
 
 // date written
 
 date_written
-   : DATE_WRITTEN DOT_ word_in_area_B*
+   : DATE_WRITTEN DOT_ 
+     word_in_area_B*
+     replace_statement*
    ;
 
 // date compiled
 
 date_compiled
-   : DATE_COMPILED DOT_ word_in_area_B*
+   : DATE_COMPILED DOT_
+     word_in_area_B*
+     replace_statement*
    ;
 
 // security
 
 security
-   : SECURITY DOT_ word_in_area_B*
+   : SECURITY DOT_
+     word_in_area_B*
+     replace_statement*
    ;
 
 // options (ANTLR reserved word)
 
 options_
-   : OPTIONS DOT_
+   : OPTIONS DOT_ replace_statement*
      arithmetic?
-     DOT_?
+//     DOT_?
    ;
 
 arithmetic
-   : ARITHMETIC IS? (NATIVE|STANDARD) DOT_
+   : ARITHMETIC IS? (NATIVE|STANDARD) DOT_ replace_statement*
    ;
 
 // ENVIRONMENT DIVISION
 
 configuration_section
-   : CONFIGURATION SECTION DOT_
+   : CONFIGURATION SECTION DOT_ replace_statement*
      source_computer? 
      object_computer? 
      special_names? 
    ;
 
 input_output_section
-   : INPUT_OUTPUT SECTION DOT_
+   : INPUT_OUTPUT SECTION DOT_ replace_statement*
      file_control?
      i_o_control?
    ;
 
 source_computer
-   : SOURCE_COMPUTER DOT_
-     (computer_type with_debugging? DOT_)?
+   : SOURCE_COMPUTER DOT_ replace_statement*
+     (computer_type with_debugging? DOT_ replace_statement*)?
    ;
 
 computer_type
@@ -1856,8 +1865,8 @@ with_debugging
    ;
 
 object_computer
-   : OBJECT_COMPUTER DOT_ 
-     (computer_type memory_size? program_collating? segment_limit? DOT_)?
+   : OBJECT_COMPUTER DOT_ replace_statement* 
+     (computer_type memory_size? program_collating? segment_limit? DOT_ replace_statement*)?
    ;
 
 memory_size
@@ -1891,8 +1900,8 @@ segment_number
    ;
 
 special_names
-   : SPECIAL_NAMES DOT_ 
-     (special_names_content DOT_)?
+   : SPECIAL_NAMES DOT_ replace_statement* 
+     (special_names_content DOT_ replace_statement*)?
    ;
 
 special_names_content
@@ -2061,7 +2070,7 @@ user_name
    ;
 
 file_control
-   : FILE_CONTROL DOT_ 
+   : FILE_CONTROL DOT_ replace_statement* 
      select*
    ;
 
@@ -2078,7 +2087,7 @@ select
      record_key*
      lock_mode?
      file_status?
-     DOT_
+     DOT_ replace_statement*
    ;
 
 file_status
@@ -2195,8 +2204,8 @@ file_name
    ;
 
 i_o_control
-   : I_O_CONTROL DOT_
-     (i_o_control_clause+ DOT_)?
+   : I_O_CONTROL DOT_ replace_statement*
+     (i_o_control_clause+ DOT_ replace_statement*)?
    ;
 
 i_o_control_clause

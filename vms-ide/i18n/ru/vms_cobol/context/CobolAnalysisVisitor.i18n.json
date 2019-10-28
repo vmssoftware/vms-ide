@@ -1,4 +1,5 @@
 {
+    "must_be_in_a": "Must start in A area",
     "not_in_contained_program": "Cannot be used in a contained program",
     "must_in_contained_program": "May be used only in a contained program",
     "dot_must_end_some": "Must be at the end of nonempty content",

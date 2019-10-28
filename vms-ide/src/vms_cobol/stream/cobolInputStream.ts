@@ -7,19 +7,62 @@ import { Interval } from "antlr4ts/misc";
 import { isLineEndsWithCobolSiringLiteral } from "../../common/parser/Helpers";
 
 const _rgxIsEmptyA = /^.(?: {4}| {0,3}\t)\s*(\S)/;
+const _quotas = "\"'";
 
 interface IRange {
     start: number, 
-    end: number,
+    length: number,
 };
 
-interface IPos {
-    position: number, 
-    rangeIdx: number,
-    range: IRange | undefined,
-};
+/**
+ * simply string replacing
+ */
+interface IReplace {
+    // each range is actual after all previous replacing performed
+    range: IRange,
+    preceding?: IReplace[],
+    // TODO: next lines must be a link to replacing source
+    replaceLenght: number,
+    linesToReplace: string[],
+}
 
-export interface IErrorListener {
+enum EReplaceState {
+    normal,
+    comment,
+    emptyLine,
+    conditionalCompile,
+    continuation,
+    stringQ,
+    stringQQ,
+}
+
+interface ITestReplace {
+    newState: EReplaceState,
+    newReplacing?: IReplace,
+}
+
+interface IApplyReplace {
+    newPos: number,
+    newResult: string,
+}
+
+interface IInsideReplacing {
+    replacing: IReplace,
+    position: number,
+}
+
+interface IShiftResult {
+    pos: number,
+    stop?: boolean,
+    inside: IInsideReplacing[],
+}
+
+interface IStreamError {
+    pos: number,
+    msg: string,
+}
+
+export interface IStreamErrorListener {
     /**
      * Collects errors
      * @param line zero-based line number
@@ -31,19 +74,43 @@ export interface IErrorListener {
 
 export class CobolInputStream implements CharStream {
 
-    private conditionals = "";
-    private skipRanges: IRange[] = [];
-    /**
-     * real line number = filteredLineToRealLine[ filtered line number ]
-     */
-    private filteredLineToRealLine: number[] = [];
-    /**
-     * Source position for real lines
-     */
-    private realLinePos: number[] = [];
+    //------------------------------------------------------------
+
     private input: ANTLRInputStream;
 
+    private conditionals = "";
+
+    /**
+     * Sorted by range.start
+     * Next replacing position is actual after applying all the previuos replacings
+     */
+    private replacings: IReplace[] = [];
+
+    private sourceRowPositions: number[] = [];
+
+    private result: string = "";
+    private resultRowPositions: number[] = [];
+
     public tabSize = 4;
+
+    //------------------------------------------------------------
+
+    /**
+     * 
+     * @param errorListener zero-based coordinates
+     * @param source 
+     * @param conditionals 
+     */
+    constructor(public errorListener: IStreamErrorListener, private source: string, conditionals?: string) {
+        if (conditionals) {
+            this.conditionals = conditionals.toUpperCase();
+        }
+        //this.resolveCopyStatement();
+        this.preFilterSource();
+        this.input = new ANTLRInputStream(this.getFilteredSource());
+    }
+
+    //------------------------------------------------------------
 
     public get index() {
         return this.input.index;
@@ -57,20 +124,6 @@ export class CobolInputStream implements CharStream {
         return IntStream.UNKNOWN_SOURCE_NAME;
     }
     
-    /**
-     * 
-     * @param errorListener zero-based coordinates
-     * @param source 
-     * @param conditionals 
-     */
-    constructor(public errorListener: IErrorListener, public source: string, conditionals?: string) {
-        if (conditionals) {
-            this.conditionals = conditionals.toLowerCase();
-        }
-        this.preFilterSource();
-        this.input = new ANTLRInputStream(this.getFilteredSource());
-    }
-
     public reset() {
         this.input.reset();
     }
@@ -102,238 +155,555 @@ export class CobolInputStream implements CharStream {
     //------------------------------------------------------------
 
     /**
-     * Returns zero-based position in source after filtration
-     * @param realLine zero-based line before filtration
-     * @param realCharPositionInLine zero-based column before filtration
+     * Returns zero-based position in result after applying all preceding replacings
+     * If source position points to replaced text then starting of the FIRST replacing will be returned
+     * @param sourcePos 
      */
-    public getFilteredPosition(realLine: number, realCharPositionInLine: number) {
-        let line = this.filteredLineToRealLine.length - 1;
-        let charPositionInLine = 0;
-        while(line > 0) {
-            if (this.filteredLineToRealLine[line] <= realLine) {
-                let stopPos = this.realLinePos[realLine] + realCharPositionInLine;
-                let startPos = this.realLinePos[this.filteredLineToRealLine[line]];
-                let pos: IPos = {
-                    position: startPos,
-                    rangeIdx: 0,
-                } as IPos;
-                this.updateRange(pos);
-                this.gotoTheNextUnskippedChar(pos);
-                while(pos.position < stopPos) {
-                    if (pos.position < this.source.length) {
-                        let char = this.source[pos.position];
-                        if (char === '\t') {
-                            charPositionInLine += this.tabSize - 1;
-                        }
-                    }
-                    ++pos.position;
-                    ++charPositionInLine;
-                    this.gotoTheNextUnskippedChar(pos);
+    public resultPosFromSourcePos(sourcePos: number): IShiftResult {
+        let result = this.shiftResultPos(this.replacings, sourcePos);
+        return result;
+    }
+
+    private shiftResultPos(replacings: IReplace[], pos: number): IShiftResult {
+        let result: IShiftResult = {
+            pos,
+            inside: [],
+        };
+        for (let r of replacings) {
+            if (r.preceding) {
+                let resT = this.shiftResultPos(r.preceding, result.pos);
+                result.pos = resT.pos;
+                if (resT.inside.length) {
+                    result.inside.push(...resT.inside);
                 }
-                break;
             }
-            --line;
+            if (r.range.start > result.pos) {
+                // after
+                result.stop = true;
+                break;
+            } else if (r.range.start + r.range.length < result.pos) {
+                // before
+                result.pos += r.replaceLenght - r.range.length;
+            } else {
+                // inside
+                result.inside.push({
+                    replacing: r,
+                    position: result.pos - r.range.start, 
+                });
+                result.pos = r.range.start;
+            }
         }
-        return {line, charPositionInLine};
+        return result;
     }
 
     /**
-     * Returns zero-based position in source file before filtration
-     * @param line zero-based line after filtration
-     * @param charPositionInLine zero-based column after filtration
+     * Returns zero-based position in source before replacing
+     * If dest position points to replaced text then starting of the FISRT replacing will be returned
+     * @param resultPos char position in result
      */
-    public getRealPosition(line: number, charPositionInLine: number) {
-        if (line >= 0 && line < this.filteredLineToRealLine.length) {
-            let realLine = this.filteredLineToRealLine[line];
-            let pos: IPos = {
-                position: this.realLinePos[realLine],
-                rangeIdx: 0,
-            } as IPos;
-            this.updateRange(pos);
-            this.gotoTheNextUnskippedChar(pos);
-            while(charPositionInLine > 0) {
-                if (pos.position < this.source.length) {
-                    let char = this.source[pos.position];
-                    if (char === '\t') {
-                        charPositionInLine -= this.tabSize - 1;
+    public sourcePosFromResultPos(resultPos: number) {
+        let result = this.shiftSourcePos(this.replacings, resultPos);
+        return result;
+    }
+
+    private shiftSourcePos(replacings: IReplace[], pos: number): IShiftResult {
+        let result: IShiftResult = {
+            pos,
+            inside: [],
+        };
+        let i = replacings.length - 1;
+        while(i >= 0) {
+            let r = replacings[i];
+            if (r.range.start <= result.pos) {
+                if (r.range.start + r.replaceLenght > result.pos) {
+                    result.inside!.push({
+                        replacing: r,
+                        position: result.pos - r.range.start,
+                    });
+                    result.pos = r.range.start;
+                } else {
+                    result.pos += r.range.length - r.replaceLenght;
+                }
+                if (r.preceding) {
+                    let resT = this.shiftSourcePos(r.preceding, result.pos);
+                    result.pos = resT.pos;
+                    if (resT.inside.length) {
+                        result.inside.push(...resT.inside);
                     }
                 }
-                if (charPositionInLine > 0) {
-                    ++pos.position;
-                    this.gotoTheNextUnskippedChar(pos);
-                    --charPositionInLine;
-                }
-            };
-            line = this.realLinePos.length - 1;
-            while(line >= 0) {
-                charPositionInLine = pos.position - this.realLinePos[line];
-                if (charPositionInLine >= 0) {
-                    break;
-                }
-                --line;
             }
+            --i;
         }
-        return {line, charPositionInLine};
+        return result;
+    }
+
+    /**
+     * Convert row & col -> pos
+     * @param resultRow 
+     * @param resultCol 
+     * @returns position in result content
+     */
+    public resultPosFromRowCol(resultRow: number, resultCol: number) {
+        let resultPos = this.result.length;
+        if (resultRow < this.resultRowPositions.length) {
+            // init like in source
+            resultPos = this.resultRowPositions[resultRow] + resultCol;
+        }
+        return resultPos;
+    }
+
+    /**
+     * Convert pos -> row & col
+     * @param resultPos 
+     * @returns zero-based row & col in result
+     */
+    public resultRowColFromPos(resultPos: number) {
+        let resultRow = this.resultRowPositions.length - 1;
+        while(this.resultRowPositions[resultRow] > resultPos) {
+            --resultRow;
+        }
+        let resultCol = resultPos - this.resultRowPositions[resultRow];
+        return {resultRow, resultCol};
+    }
+
+    /**
+     * Convert row & col -> pos
+     * @param sourceRow 
+     * @param sourceCol 
+     * @returns position in source content
+     */
+    public sourcePosFromRowCol(sourceRow: number, sourceCol: number) {
+        let sourcePos = this.source.length;
+        if (sourceRow < this.sourceRowPositions.length) {
+            // init like in source
+            sourcePos = this.sourceRowPositions[sourceRow] + sourceCol;
+        }
+        return sourcePos;
+    }
+
+    /**
+     * Convert pos -> row & col
+     * @param sourcePos 
+     * @returns zero-based row & col in source
+     */
+    public sourceRowColFromPos(sourcePos: number) {
+        let sourceRow = this.sourceRowPositions.length - 1;
+        while(this.sourceRowPositions[sourceRow] > sourcePos) {
+            --sourceRow;
+        }
+        let sourceCol = sourcePos - this.sourceRowPositions[sourceRow];
+        return {sourceRow, sourceCol};
+    }
+
+    /**
+     * Returns zero-based position in source before replacing
+     * If result position points to replaced text then starting of the FISRT replacing will be returned
+     * @param resultRow zero-based line in dest
+     * @param resultCol zero-based column in dest
+     */
+    public sourceRowColFromResultRowCol(resultRow: number, resultCol: number) {
+        let result = this.sourcePosFromResultPos(this.resultPosFromRowCol(resultRow, resultCol));
+        let {sourceRow, sourceCol} = this.sourceRowColFromPos(result.pos);
+        return {sourceRow, sourceCol};
+    }
+
+    /**
+     * Returns zero-based position in result after applying all preceding replacings
+     * If source position points to replaced text then starting of the FIRST replacing will be returned
+     * @param sourceRow 
+     * @param sourceCol 
+     */
+    public resultRowColFromSourceRowCol(sourceRow: number, sourceCol: number) {
+        let result = this.resultPosFromSourcePos(this.sourcePosFromRowCol(sourceRow, sourceCol));
+        let {resultRow, resultCol} = this.resultRowColFromPos(result.pos);
+        return {resultRow, resultCol};
     }
 
     //------------------------------------------------------------
-    
-    /**
-     * Find first range which ends after this position
-     * Updates given pos
-     * @param pos 
-     */
-    private updateRange(pos: IPos) {
-        pos.range = undefined;
-        while (pos.rangeIdx < this.skipRanges.length) {
-            if (this.skipRanges[pos.rangeIdx].end >= pos.position) {
-                break;
-            }
-            ++pos.rangeIdx;
-        }
-        if (pos.rangeIdx < this.skipRanges.length) {
-            pos.range = this.skipRanges[pos.rangeIdx];
-        }
-    }
 
     /**
-     * Go to the next unskipped char
-     * Updates given pos
-     * @param pos 
+     * Note: add only in right order
+     * @param replacing 
      */
-    private gotoTheNextUnskippedChar(pos: IPos) {
-        while (pos.range !== undefined) {
-            if (pos.position >= pos.range.start) {
-                pos.position = pos.range.end + 1;
-                this.updateRange(pos);
+    private addReplacing(replacing: IReplace) {
+        let i = this.replacings.length - 1;
+        while (i >= 0) {
+            if (this.replacings[i].range.start >= replacing.range.start) {
+                replacing.preceding = replacing.preceding || [];
+                replacing.preceding.push(this.replacings[i]);
+                this.replacings.pop();
             } else {
                 break;
             }
+            --i;
         }
+        this.replacings.push(replacing);
+    }
+
+    private testTab(content: string, pos: number): ITestReplace | undefined {
+        switch (content[pos]) {
+            case '\t': {
+                let replacing: IReplace = {
+                    range: {
+                        start: pos,
+                        length: 1
+                    },
+                    linesToReplace: [" ".repeat(this.tabSize)],
+                    replaceLenght: this.tabSize
+                };
+                // does not change state
+                return {
+                    newState: EReplaceState.normal,
+                    newReplacing: replacing,
+                };
+            }
+        }
+        return undefined;
+    }
+
+    private testReplacingStart(content: string, pos: number): ITestReplace | undefined {
+        // test any char
+        switch (content[pos]) {
+            case "'": {
+                return {
+                    newState: EReplaceState.stringQ,
+                };
+            }
+            case "\"": {
+                return {
+                    newState: EReplaceState.stringQQ,
+                };
+            }
+        }
+        // test start of line
+        if (this.testLineStarts(content, pos)) {
+            // start new line
+            switch (content[pos]) {
+                case '*': {
+                    // comment
+                    let newReplacing: IReplace = {
+                        range: {
+                            start: pos,
+                            length: 0
+                        },
+                        linesToReplace: [],
+                        replaceLenght: 0
+                    };
+                    return {
+                        newState: EReplaceState.comment,
+                        newReplacing
+                    };
+                }
+                case '\\': {
+                    // conditionalCompile
+                    if (pos + 1 < content.length) {
+                        if (!this.conditionals.includes(content[pos + 1].toUpperCase())) {
+                            // start new replacing for whole line
+                            let newReplacing: IReplace = {
+                                range: {
+                                    start: pos,
+                                    length: 0
+                                },
+                                linesToReplace: [],
+                                replaceLenght: 0
+                            };
+                            return {
+                                newState: EReplaceState.conditionalCompile,
+                                newReplacing
+                            };
+                        } else {
+                            // create and apply replacing for two symbols only
+                            let newReplacing: IReplace = {
+                                range: {
+                                    start: pos,
+                                    length: 2
+                                },
+                                linesToReplace: [],
+                                replaceLenght: 0
+                            };
+                            return {
+                                newState: EReplaceState.normal, // do not change state, so apply immediately
+                                newReplacing
+                            };
+                        }
+                    }
+                    break;
+                }
+                case '-': {
+                    // continuation
+                    let newReplacing: IReplace = {
+                        range: {
+                            start: pos - 1,
+                            length: 0
+                        },
+                        linesToReplace: [],
+                        replaceLenght: 0
+                    };
+                    return {
+                        newState: EReplaceState.continuation,
+                        newReplacing
+                    };
+                }
+            }
+        }
+        return undefined;
+    }
+
+    private testLineStarts(content: string, pos: number) {
+        return pos === 0 || content[pos-1] === '\n';
+    }
+
+    private testSpaceChar(content: string, pos: number) {
+        return " \t\r\n".includes(content[pos]);
+    }
+
+    private testLineEnds(content: string, pos: number) {
+        return content[pos] === '\n' || pos + 1 >= content.length;
+    }
+
+    private testCommentEnds(content: string, pos: number) {
+        return this.testLineEnds(content, pos);
+    }
+
+    private testConditionalCompileEnds(content: string, pos: number) {
+        return this.testLineEnds(content, pos);
+    }
+
+    private testContinuationEnds(content: string, pos: number) {
+        return !"\t ".includes(content[pos]);
+    }
+
+    private testStringQEnds(content: string, pos: number) {
+        return content[pos] == "'";
+    }
+
+    private testStringQQEnds(content: string, pos: number) {
+        return content[pos] == "\"";
+    }
+
+    /**
+     * 
+     * @param replacing current replacing
+     * @param source source string
+     * @returns resulting string after applying
+     */
+    private applyReplacing(replacing: IReplace, source: string): IApplyReplace {
+        this.addReplacing(replacing);
+        // apply, without preceding because they are already applied
+        return {
+            newResult:
+                source.substr(0, replacing.range.start) +
+                replacing.linesToReplace.join("\n") +
+                source.substr(replacing.range.start + replacing.range.length),
+            newPos: replacing.range.start + replacing.replaceLenght,
+        };
     }
 
     /**
      * Create ranges for skip
      */
     private preFilterSource() {
+        this.replacings = [];
+        
         let lines = this.source.split("\n");
-        this.skipRanges = [];
-        let prevLine: string | undefined;
-        let currentPosInFile = 0;
-        let lastFilteredPos = 0;
-        let lastFilteredEolLen = 0;
-        for(let i = 0; i < lines.length; ++i) {
-            let line = lines[i];
-            let eolLen = 1;
-            while (line.endsWith("\r")) {
-                ++eolLen;
-                line = line.substr(0, line.length - 1);
+        this.sourceRowPositions = [0];
+        let sourceLinePos = 0;
+        for(let line of lines) {
+            sourceLinePos += line.length + 1;
+            this.sourceRowPositions.push(sourceLinePos);
+        }
+
+        let pos = 0;
+        this.result = this.source;
+
+        let replacing: IReplace | undefined;
+        let state = EReplaceState.normal;
+
+        let errors: IStreamError[] = [];
+
+        let stringContinuationChar: string | undefined;
+        let stringOpened: boolean | undefined;
+        let stringTestLastLineChar: boolean | undefined;
+        let startEmptyLine: number | undefined;
+        
+        while(pos < this.result.length && errors.length === 0) {
+            // remove stringContinuationChar if something else presents at the end of line after string ends
+            if (stringTestLastLineChar) {
+                if (this.testLineEnds(this.result, pos)) {
+                    stringTestLastLineChar = undefined;
+                } else {
+                    stringContinuationChar = undefined;
+                }
             }
-            this.realLinePos.push(currentPosInFile);
-            this.filteredLineToRealLine.push(i);
-            let lineConsumed = false;
-            if (line.trim()) {
-                switch (line[0]) {
-                    case '\\':
-                        // conditional compilation
-                        if (this.conditionals) {
-                            let letter = line[1].toLowerCase();
-                            if (this.conditionals.includes(letter)) {
-                                // do not consume line, just skip first two letters
-                                this.skipRanges.push({
-                                    start: currentPosInFile,
-                                    end: currentPosInFile + 1,
-                                });
-                                break;
-                            }
+            // always replace tab char
+            let testResult = this.testTab(this.result, pos);
+            if (testResult && testResult.newReplacing) {
+                 ({newResult: this.result, newPos: pos} = this.applyReplacing(testResult.newReplacing, this.result));
+                 continue;
+            }
+            
+            // test empty lines
+            if (this.testLineStarts(this.result, pos)) {
+                startEmptyLine = pos;
+            }
+
+            if (this.testLineEnds(this.result, pos)) {
+                if (startEmptyLine !== undefined) {
+                    let emptyLineReplacing = {
+                        range: {
+                            start: startEmptyLine,
+                            length: pos + 1 - startEmptyLine
+                        },
+                        linesToReplace: [],
+                        replaceLenght: 0
+                    };
+                    ({newResult: this.result, newPos: pos} = this.applyReplacing(emptyLineReplacing, this.result));
+                    continue;
+                }
+            }
+
+            if (!this.testSpaceChar(this.result, pos)) {
+                startEmptyLine = undefined;
+            }
+
+            let movePosition = 1;
+
+            switch(state) {
+                case EReplaceState.normal:
+                    // test if some replacement starts
+                    let testResult = this.testReplacingStart(this.result, pos);
+                    if (testResult) {
+                        if (testResult.newState === EReplaceState.normal && testResult.newReplacing) {
+                            // apply imediately
+                            ({newResult: this.result, newPos: pos} = this.applyReplacing(testResult.newReplacing, this.result));
+                            movePosition = 0;
+                            testResult.newReplacing = undefined;
                         }
-                        // do not break - threat as comment
-                    case '*':
-                    case '/':
-                        // skip whole line, but do not skip NL on previous line
-                        lineConsumed = true;
-                        this.skipRanges.push({
-                            start: currentPosInFile,
-                            end: currentPosInFile + line.length - 1,
-                        });
-                        break;
-                    case '-':
-                        let matched = line.match(_rgxIsEmptyA);
-                        if (matched) {
-                            if (prevLine) {
-                                let {inString, lastQ} = isLineEndsWithCobolSiringLiteral(prevLine);
-                                let interval: {start: number, end: number} | undefined;
-                                if (!inString) {
-                                    let lastSymbol = prevLine[prevLine.length-1];
-                                    if (lastSymbol === '"' || lastSymbol === "'") {
-                                        inString = true;
-                                    }
-                                }
-                                if (inString) {
-                                    if (matched[1] === lastQ) {
-                                        interval = {
-                                            start: lastFilteredPos - lastFilteredEolLen,
-                                            end: currentPosInFile + matched[0].length - 1,
-                                        };
-                                        prevLine += line.substring(matched[0].length);
-                                        lineConsumed = true;
+                        replacing = testResult.newReplacing;
+                        state = testResult.newState;
+                    }
+                    break;
+                case EReplaceState.stringQ:
+                    if (this.testStringQEnds(this.result, pos) || this.testLineEnds(this.result, pos)) {
+                        if (this.testLineEnds(this.result, pos)) {
+                            stringOpened = true;
+                        } else {
+                            stringTestLastLineChar = true;
+                        }
+                        stringContinuationChar = "'";
+                        replacing = undefined;
+                        state = EReplaceState.normal;
+                    }
+                    break;
+                case EReplaceState.stringQQ:
+                    if (this.testStringQQEnds(this.result, pos) || this.testLineEnds(this.result, pos)) {
+                        if (this.testLineEnds(this.result, pos)) {
+                            stringOpened = true;
+                        } else {
+                            stringTestLastLineChar = true;
+                        }
+                        stringContinuationChar = "\"";
+                        replacing = undefined;
+                        state = EReplaceState.normal;
+                    }
+                    break;
+                case EReplaceState.continuation:
+                    if (this.testContinuationEnds(this.result, pos)) {
+                        if (replacing) {
+                            // test if string literal properly continues
+                            if ( stringContinuationChar &&
+                                (
+                                    (stringOpened && this.result[pos] !== stringContinuationChar) 
+                                        ||
+                                    (!stringOpened && _quotas.includes(this.result[pos]) && this.result[pos] !== stringContinuationChar)
+                                )) {
+                                errors.push({
+                                    pos: pos,
+                                    msg: localize("string.continuation.error", "Continuation error - string literal have to start with {0}", stringContinuationChar),
+                                });
+                                replacing = undefined;
+                            }
+                            if (replacing) {
+                                if (stringContinuationChar) {
+                                    // remove starting quota only if equal
+                                    if (this.result[pos] === stringContinuationChar) {
+                                        replacing.range.length = pos + 1 - replacing.range.start;
                                     } else {
-                                        this.errorListener.syntaxError(
-                                            i,
-                                            matched[0].length -1,
-                                            localize("string.continuation.error", "Continuation error - string literal have to start with {0}", lastQ));
+                                        replacing.range.length = pos - replacing.range.start;
                                     }
                                 } else {
-                                    // previuos line doesn't end with quote - add whole line to the end of previous
-                                    let spaceLen = prevLine.length;
-                                    prevLine = prevLine.trimRight();
-                                    spaceLen -= prevLine.length;
-                                    interval = {
-                                        start: lastFilteredPos - spaceLen - lastFilteredEolLen,
-                                        end: currentPosInFile + matched[0].length - 2,
-                                    };
-                                    prevLine += line.substring(matched[0].length - 1);
-                                    lineConsumed = true;
-                                }
-                                lastFilteredPos = currentPosInFile + line.length + eolLen;
-                                lastFilteredEolLen = eolLen;
-                                if (interval) {
-                                    // test overlapped intervals
-                                    let num = this.skipRanges.length - 1;
-                                    while (num >= 0) {
-                                        if (this.skipRanges[num].end + 1 < interval.start) {
-                                            break;
-                                        }
-                                        interval.start = Math.min(this.skipRanges[num].start, interval.start);
-                                        this.skipRanges.pop();
-                                        --num;
+                                    // remove ending spaces
+                                    while(replacing.range.start > 0 && "\t\r\n ".includes(this.result[replacing.range.start - 1])) {
+                                        --replacing.range.start;
                                     }
-                                    this.skipRanges.push(interval);
-                                    // remove skipped lines
-                                    num = this.filteredLineToRealLine.length;
-                                    while(num > 0) {
-                                        let realLine = this.filteredLineToRealLine[--num];
-                                        if (this.realLinePos[realLine] <= interval.start) {
-                                            break;
-                                        }
-                                        this.filteredLineToRealLine.pop();
-                                    }
+                                    // keep starting char
+                                    replacing.range.length = pos - replacing.range.start;
                                 }
+                                ({newResult: this.result, newPos: pos} = this.applyReplacing(replacing, this.result));
+                                movePosition = 0;
                             }
-                        } else {
-                            this.errorListener.syntaxError(
-                                i,
-                                0,
-                                localize("string.continuation.error", "Continuation error - area A must be empty"));
                         }
-                }
-                if (!lineConsumed) {
-                    prevLine = line;
-                    lastFilteredPos = currentPosInFile + line.length + eolLen;
-                    lastFilteredEolLen = eolLen;
-                }
+                        replacing = undefined;
+                        state = EReplaceState.normal;
+                        if (!stringOpened) {
+                            stringContinuationChar = undefined;
+                        } else {
+                            stringOpened = undefined;
+                            switch (stringContinuationChar) {
+                                case "'":
+                                    state = EReplaceState.stringQ;
+                                    break;
+                                case "\"":
+                                    state = EReplaceState.stringQQ;
+                                    break;
+                                default:
+                                    errors.push({
+                                        pos: pos,
+                                        msg: localize("string.continuation.error.unpredictable", "Continuation unpredictable error"),
+                                    });
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+                case EReplaceState.comment:
+                        if (this.testCommentEnds(this.result, pos)) {
+                            if (replacing) {
+                                replacing.range.length = pos + 1 - replacing.range.start;
+                                ({newResult: this.result, newPos: pos} = this.applyReplacing(replacing, this.result));
+                                movePosition = 0;
+                            }
+                            replacing = undefined;
+                            state = EReplaceState.normal;
+                        }
+                        break;
+                case EReplaceState.conditionalCompile:
+                    if (this.testConditionalCompileEnds(this.result, pos)) {
+                        if (replacing) {
+                            replacing.range.length = pos + 1 - replacing.range.start;
+                            ({newResult: this.result, newPos: pos} = this.applyReplacing(replacing, this.result));
+                            movePosition = 0;
+                        }
+                        replacing = undefined;
+                        state = EReplaceState.normal;
+                    }
+                    break;
             }
-            currentPosInFile += line.length + eolLen;
+            pos += movePosition;
+        }
+
+        let resultLines = this.result.split("\n");
+        this.resultRowPositions = [0];
+        let resultLinePos = 0;
+        for(let resultLine of resultLines) {
+            resultLinePos += resultLine.length + 1;
+            this.resultRowPositions.push(resultLinePos);
+        }
+
+        for (let err of errors) {
+            let sourcePos = this.sourcePosFromResultPos(err.pos);
+            let sorceRC = this.sourceRowColFromPos(sourcePos.pos);
+            this.errorListener.syntaxError(sorceRC.sourceRow, sorceRC.sourceCol, err.msg);
         }
     }
 
@@ -341,25 +711,6 @@ export class CobolInputStream implements CharStream {
      * returns filtered content
      */
     public getFilteredSource() {
-        let testContent = "";
-        let testPos: IPos = {
-            position: 0,
-            rangeIdx: 0,
-        } as IPos;
-        this.updateRange(testPos);
-        let tabSpaces = ' '.repeat(this.tabSize);
-        do {
-            this.gotoTheNextUnskippedChar(testPos);
-            if (testPos.position < this.source.length) {
-                let char = this.source[testPos.position];
-                if (char === '\t') {
-                    testContent += tabSpaces;
-                } else {
-                    testContent += char;
-                }
-            }
-            ++testPos.position;
-        } while(testPos.position < this.source.length);
-        return testContent;
+        return this.result;
     }
 }

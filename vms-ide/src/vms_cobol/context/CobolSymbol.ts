@@ -38,7 +38,7 @@ export enum ECobolSymbolKind {
     IndexedBy,
     SpecialRegister,
     FigurativeConstant,
-    IntrincisFunction,
+    IntrinsicFunction,
 }
 
 /**
@@ -109,8 +109,8 @@ export function symbolDescriptionFromEnum(kind: ECobolSymbolKind): string {
             return "Special register";
         case ECobolSymbolKind.FigurativeConstant:
             return "Figurative constant";
-        case ECobolSymbolKind.IntrincisFunction:
-            return "Intrincis function";
+        case ECobolSymbolKind.IntrinsicFunction:
+            return "Intrinsic function";
         case ECobolSymbolKind.Unknown:
         default:
             return "Unknown type";
@@ -154,7 +154,7 @@ export function translateSymbolKind(kind: ECobolSymbolKind): vscode.SymbolKind {
             return vscode.SymbolKind.Struct;
         case ECobolSymbolKind.Section:
         case ECobolSymbolKind.Paragraph:
-        case ECobolSymbolKind.IntrincisFunction:
+        case ECobolSymbolKind.IntrinsicFunction:
             return vscode.SymbolKind.Function;
         case ECobolSymbolKind.IndexedBy:
             return vscode.SymbolKind.Variable;
@@ -201,7 +201,7 @@ export function translateCompletionKind(kind: ECobolSymbolKind): vscode.Completi
             return vscode.CompletionItemKind.Struct;
         case ECobolSymbolKind.Section:
         case ECobolSymbolKind.Paragraph:
-        case ECobolSymbolKind.IntrincisFunction:
+        case ECobolSymbolKind.IntrinsicFunction:
             return vscode.CompletionItemKind.Function;
         case ECobolSymbolKind.IndexedBy:
                 return vscode.CompletionItemKind.Variable;
@@ -279,8 +279,8 @@ export function getSymbolFromKind(kind: ECobolSymbolKind): typeof Symbol {
             return SpecialRegisterSymbol;
         case ECobolSymbolKind.FigurativeConstant:
             return FigurativeConstantSymbol;
-        case ECobolSymbolKind.IntrincisFunction:
-            return IntrincisFunctionSymbol;
+        case ECobolSymbolKind.IntrinsicFunction:
+            return IntrinsicFunctionSymbol;
         case ECobolSymbolKind.Unknown:
         default:
             return Symbol;
@@ -292,8 +292,8 @@ export function getSymbolFromKind(kind: ECobolSymbolKind): typeof Symbol {
  * @param symbol 
  */
 export function getKindFromSymbol(symbol: Symbol): ECobolSymbolKind {
-    if (symbol instanceof IntrincisFunctionSymbol) {
-        return ECobolSymbolKind.IntrincisFunction;
+    if (symbol instanceof IntrinsicFunctionSymbol) {
+        return ECobolSymbolKind.IntrinsicFunction;
     }
     if (symbol instanceof ProgramSymbol) {
         return ECobolSymbolKind.Program;
@@ -475,7 +475,7 @@ export class ParagraphSymbol extends IdentifierSymbol { }
 export class IndexedBySymbol extends IdentifierSymbol { }
 export class SpecialRegisterSymbol extends DataRecordSymbol { }
 export class FigurativeConstantSymbol extends DataRecordSymbol { }
-export class IntrincisFunctionSymbol extends ProgramSymbol {
+export class IntrinsicFunctionSymbol extends ProgramSymbol {
     functionDefinition?: IFunction;
 }
 export class SIGN_Symbol extends Symbol { }
@@ -486,7 +486,7 @@ export class BOOL_Symbol extends Symbol { }
 //**************************************************/
 
 export function programDetails(programSymbol: ProgramSymbol): string | undefined {
-    if (programSymbol instanceof IntrincisFunctionSymbol) {
+    if (programSymbol instanceof IntrinsicFunctionSymbol) {
         if (programSymbol.functionDefinition) {
             let details = programSymbol.name;
             details += " (";
@@ -543,7 +543,7 @@ export interface IFunction extends IValue {
     arguments?: IValue[],
 };
 
-export const _IntrincisFunctions: IFunction[] = [
+export const _IntrinsicFunctions: IFunction[] = [
     {   name: "ACOS",
         type: EValueType.Numeric,
         arguments: [

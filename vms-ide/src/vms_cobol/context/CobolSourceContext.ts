@@ -77,7 +77,7 @@ import {
 
 
 import {
-    ProgramSymbol, programDetails, _IntrincisFunctions, _PredefinedData, IFunction, IPredefinedNode, IntrincisFunctionSymbol, getSymbolFromKind, IPreDefinition, DataRecordSymbol, EDataUsage, IdentifierSymbol, EGlobalType, symbolDescriptionFromEnum, ECobolSymbolKind,
+    ProgramSymbol, programDetails, _IntrinsicFunctions, _PredefinedData, IFunction, IPredefinedNode, IntrinsicFunctionSymbol, getSymbolFromKind, IPreDefinition, DataRecordSymbol, EDataUsage, IdentifierSymbol, EGlobalType, symbolDescriptionFromEnum, ECobolSymbolKind, ParagraphSymbol, SectionSymbol, getKindFromSymbol, BOOL_Symbol, SIGN_Symbol, CLASS_Symbol, SpecialNameSymbol, DeviceSymbol,
 } from './CobolSymbol';
 
 import {
@@ -146,6 +146,7 @@ export class CobolSourceContext implements ISourceContext {
                 });
             }
         }
+        
         this.streamErrors.length = 0;
         // EOL is OBLIGATORY for correct code completion
         this.input = new CobolInputStream(streamErrorListener, source + "\n", this.compilerConditions);
@@ -200,7 +201,7 @@ export class CobolSourceContext implements ISourceContext {
             try {
                 let listener: CobolDetailsListener = new CobolDetailsListener(this.symbolTable, this.imports);
                 ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree);
-                this.addPredefinitions(_IntrincisFunctions, _PredefinedData);
+                this.addPredefinitions(_IntrinsicFunctions, _PredefinedData);
                 this.runAnalysis();
             } catch(e) {
                 this.logFn(LogType.debug, () => String(e));
@@ -236,7 +237,7 @@ export class CobolSourceContext implements ISourceContext {
         }
 
         if (this.input) {
-            ({line: row, charPositionInLine: column} = this.input.getFilteredPosition(row, column));
+            ({resultRow: row, resultCol: column} = this.input.resultRowColFromSourceRowCol(row, column));
         }
         
         let core = new CodeCompletionCore(this.parser);
@@ -285,6 +286,7 @@ export class CobolSourceContext implements ISourceContext {
         core.preferredRules = new Set([
         //add preferred rules
             cobolParser.RULE_function_name,
+            cobolParser.RULE_proc_name,
         ]);
 
         // Search the token index which covers our caret position.
@@ -299,71 +301,94 @@ export class CobolSourceContext implements ISourceContext {
         //core.debugOutputWithTransitions = true;
 
         let candidates = core.collectCandidates(index);
-        let result: ICompletion[] = [];
-
-        const vocabulary = this.parser.vocabulary;
-
-        let addTokenType = new Set<number>();
-        let addStringValue = new Set<string>();
-        candidates.tokens.forEach((following: number[], type: number) => {
-            switch(type) {
-                case cobolParser.USER_DEFINED_WORD_:
-                    this.symbolTable.occurance.forEach( (value, key) => {
-                        addStringValue.add(key);
-                    })
-                    break;
-                default:
-                    addTokenType.add(type);
-                    break;
-            }
-            //following.forEach(type => addTokenType.add(type));
-        });
+        let resultMap = new Map<string, Set<string>>();
 
         candidates.rules.forEach((callStack, key) => {
             switch(key) {
                 case cobolParser.RULE_function_name:
-                    _IntrincisFunctions.forEach(x => {
+                    _IntrinsicFunctions.forEach(x => {
                         if (x.name) {
-                            let info: ICompletion = {
-                                candidate: x.name,
-                                description: symbolDescriptionFromEnum(ECobolSymbolKind.IntrincisFunction),
-                            };
-                            result.push(info);
+                            resultMap.set(x.name, new Set([symbolDescriptionFromEnum(ECobolSymbolKind.IntrinsicFunction)]));
                         }
+                    })
+                    break;
+                case cobolParser.RULE_proc_name:
+                    this.symbolTable.occurance.forEach( (value, key) => {
+                        for(let link of value) {
+                            // only paragraph or section
+                            if (link.master instanceof ParagraphSymbol ||
+                                link.master instanceof SectionSymbol) {
+                                resultMap.set(key, new Set([symbolDescriptionFromEnum(getKindFromSymbol(link.master))]));
+                                break;
+                            }
+                        };
                     })
                     break;
             }
         });
 
-        addTokenType.forEach(type => {
-            let value = vocabulary.getLiteralName(type);
-            if (!value) {
-                value = vocabulary.getDisplayName(type);
-                // only token wich doesn't end with underscore can be present as its name
-                if (!value.endsWith("_")) {
-                    value = value.replace(/_/g, "-");
-                } else {
-                    value = undefined;
+        if (resultMap.size === 0) {
+            const vocabulary = this.parser.vocabulary;
+            candidates.tokens.forEach((following: number[], type: number) => {
+                switch(type) {
+                    case cobolParser.USER_DEFINED_WORD_:
+                        this.symbolTable.occurance.forEach((value, key) => {
+                            if (value.length > 0) {
+                                let add = false;
+                                for(let link of value) {
+                                    if (link.master instanceof DataRecordSymbol ||
+                                        (link.master instanceof SpecialNameSymbol && !(link.master instanceof CLASS_Symbol)) ||
+                                        link.master instanceof DeviceSymbol ) {
+                                        add = true;
+                                        break;
+                                    }
+                                };
+                                if (add) {
+                                    let entry = resultMap.get(key);
+                                    if (!entry) {
+                                        entry = new Set();
+                                        resultMap.set(key, entry);
+                                    }
+                                    value.forEach(link => entry!.add(symbolDescriptionFromEnum(getKindFromSymbol(link.master))));
+                                }
+                            }
+                        })
+                        break;
+                    default:
+                        let key = vocabulary.getLiteralName(type);
+                        if (!key) {
+                            key = vocabulary.getDisplayName(type);
+                            // only token wich doesn't end with underscore can be present as its name
+                            if (!key.endsWith("_")) {
+                                key = key.replace(/_/g, "-");
+                            } else {
+                                key = undefined;
+                            }
+                        } else if (key.length > 2){
+                            // remove quotas
+                            if ("'\"".includes(key[0])) {
+                                key = key.substr(1, key.length - 2);
+                            }
+                        }
+                        if (key) {
+                            let entry = resultMap.get(key);
+                            if (!entry) {
+                                entry = new Set();
+                                resultMap.set(key, entry);
+                            }
+                            entry!.add("token");
+                        }
+                        break;
                 }
-            } else if (value.length > 2){
-                // remove quotas
-                if ("'\"".includes(value[0])) {
-                    value = value.substr(1, value.length - 2);
-                }
-            }
-            if (value) {
-                addStringValue.add(value);
-            }
-        });
-
-        addStringValue.forEach(value => {
-            let info: ICompletion = {
-                candidate: value,
-                // description: "token",
-            };
-            result.push(info);
-        });
-
+            });
+        }
+        let result: ICompletion[] = [];
+        for(let [key, set] of resultMap) {
+            result.push({
+                candidate: key,
+                description: [...set].join(" | "),
+            });
+        }
         return result;
     }
 
@@ -375,12 +400,12 @@ export class CobolSourceContext implements ISourceContext {
     public getSymbolOccurences(column: number, row: number): IDefinition[] {
         if (this.input) {
             let input = this.input;
-            ({line: row, charPositionInLine: column} = input.getFilteredPosition(row, column));
+            ({resultRow: row, resultCol: column} = input.resultRowColFromSourceRowCol(row, column));
             let master = this.masterSymbolAtPosition(column, row);
             if (master) {
                 return this.symbolTable.getSymbolOccurences(master).map(x => {
-                    ({line: x.range.start.row, charPositionInLine: x.range.start.column} = input.getRealPosition(x.range.start.row, x.range.start.column));
-                    ({line: x.range.end.row, charPositionInLine: x.range.end.column} = input.getRealPosition(x.range.end.row, x.range.end.column));
+                    ({sourceRow: x.range.start.row, sourceCol: x.range.start.column} = input.sourceRowColFromResultRowCol(x.range.start.row, x.range.start.column));
+                    ({sourceRow: x.range.end.row, sourceCol: x.range.end.column} = input.sourceRowColFromResultRowCol(x.range.end.row, x.range.end.column));
                     return x;
                 });
             }
@@ -396,12 +421,12 @@ export class CobolSourceContext implements ISourceContext {
     public symbolInfoAtPosition(column: number, row: number): ISymbolInfo | undefined {
         let info: ISymbolInfo | undefined;
         if (this.input) {
-            ({line: row, charPositionInLine: column} = this.input.getFilteredPosition(row, column));
+            ({resultRow: row, resultCol: column} = this.input.resultRowColFromSourceRowCol(row, column));
             let masterSymbol = this.masterSymbolAtPosition(column, row);
             info = this.symbolTable.getSymbolInfo(masterSymbol);
             if (info && info.definition) {
-                ({line: info.definition.range.start.row, charPositionInLine: info.definition.range.start.column} = this.input.getRealPosition(info.definition.range.start.row, info.definition.range.start.column));
-                ({line: info.definition.range.end.row, charPositionInLine: info.definition.range.end.column} = this.input.getRealPosition(info.definition.range.end.row, info.definition.range.end.column));
+                ({sourceRow: info.definition.range.start.row, sourceCol: info.definition.range.start.column} = this.input.sourceRowColFromResultRowCol(info.definition.range.start.row, info.definition.range.start.column));
+                ({sourceRow: info.definition.range.end.row, sourceCol: info.definition.range.end.column} = this.input.sourceRowColFromResultRowCol(info.definition.range.end.row, info.definition.range.end.column));
             }
             if (info && masterSymbol instanceof ProgramSymbol) {
                 let details = programDetails(masterSymbol);
@@ -490,8 +515,8 @@ export class CobolSourceContext implements ISourceContext {
     private updateDiagnosticRanges() {
         if (this.input) {
             for(const d of this.diagnostics) {
-                ({line: d.range.start.row, charPositionInLine: d.range.start.column} = this.input.getRealPosition(d.range.start.row - 1, d.range.start.column));
-                ({line: d.range.end.row, charPositionInLine: d.range.end.column} = this.input.getRealPosition(d.range.end.row - 1, d.range.end.column));
+                ({sourceRow: d.range.start.row, sourceCol: d.range.start.column} = this.input.sourceRowColFromResultRowCol(d.range.start.row - 1, d.range.start.column));
+                ({sourceRow: d.range.end.row, sourceCol: d.range.end.column} = this.input.sourceRowColFromResultRowCol(d.range.end.row - 1, d.range.end.column));
             }
         }
     }
@@ -509,7 +534,7 @@ export class CobolSourceContext implements ISourceContext {
 
     private addPredefinitions(intrincisFunctions: IFunction[], predefinedData: IPredefinedNode[]) {
         for (let intrincisFunction of intrincisFunctions) {
-            let symbolToAdd = this.symbolTable.addNewSymbolOfType(IntrincisFunctionSymbol, this.symbolTable, intrincisFunction.name);
+            let symbolToAdd = this.symbolTable.addNewSymbolOfType(IntrinsicFunctionSymbol, this.symbolTable, intrincisFunction.name);
             symbolToAdd.functionDefinition = intrincisFunction;
             symbolToAdd.isGlobal = true;
             this.symbolTable.createOccurance(symbolToAdd);
