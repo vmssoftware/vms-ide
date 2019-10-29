@@ -64,7 +64,7 @@ import {
 } from '../../common/parser/ErrorListeners';
 
 import {
-    CobolInputStream
+    CobolInputStream, ICopyManager
 } from '../stream/cobolInputStream';
 
 import {
@@ -114,11 +114,10 @@ export class CobolSourceContext implements ISourceContext {
     private tree?: Cobol_sourceContext;     // The root context from the last parse run.
     public logFn: LogFunction;
 
-    constructor(public fileName: string, logFn?: LogFunction) {
+    constructor(public fileName: string, logFn?: LogFunction, public copyManager?: ICopyManager) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
         this.sourceId = path.basename(fileName, path.extname(fileName));
-
         this.symbolTable =  new CobolSymbolTable(this.sourceId, { allowDuplicateSymbols: true }, this);
     }
 
@@ -149,7 +148,7 @@ export class CobolSourceContext implements ISourceContext {
         
         this.streamErrors.length = 0;
         // EOL is OBLIGATORY for correct code completion
-        this.input = new CobolInputStream(streamErrorListener, source + "\n", this.compilerConditions);
+        this.input = new CobolInputStream(streamErrorListener, source + "\n", this.compilerConditions, this.copyManager);
 
         if (this.streamErrors.length === 0) {
             let lexer = new cobolLexer(this.input);

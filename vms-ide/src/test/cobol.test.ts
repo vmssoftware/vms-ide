@@ -1,17 +1,19 @@
 import * as assert from "assert";
 import * as fs from "fs";
+import * as vscode from "vscode";
 import { CommonTokenStream, BailErrorStrategy, DefaultErrorStrategy, ANTLRInputStream } from "antlr4ts";
 import { cobolLexer } from "../vms_cobol/parser/cobolLexer";
 import { cobolParser, Cobol_sourceContext } from "../vms_cobol/parser/cobolParser";
 import { PredictionMode } from "antlr4ts/atn/PredictionMode";
 import { ParseCancellationException } from "antlr4ts/misc";
 import { getSyntaxTreeStrings } from "../common/print-syntax-tree";
-import { CobolInputStream } from "../vms_cobol/stream/cobolInputStream";
+import { CobolInputStream, ICopyManager } from "../vms_cobol/stream/cobolInputStream";
 import { CobolLexerErrorListener, CobolErrorListener } from "../vms_cobol/test/cobolErrorListener";
 import { IDiagnosticEntry, EDiagnosticType } from "../common/parser/Facade";
 import { cobolCopyLexer } from "../vms_cobol/parser/cobolCopyLexer";
 import { cobolCopyParser, CopyStatementContext } from "../vms_cobol/parser/cobolCopyParser";
 import { LexerErrorListener, ParserErrorListener } from "../common/parser/ErrorListeners";
+import { CopyManagerImpl } from "../vms_cobol/stream/copymanager";
 
 suite("COBOL tests", function(this: Mocha.Suite) {
 
@@ -149,7 +151,6 @@ suite("COBOL tests", function(this: Mocha.Suite) {
     };
 
     this.beforeAll(async () => {
-        // prepare
     });
 
     /***************************************************************************************/
@@ -211,7 +212,7 @@ some "thing" 123.`;
     });
 
     /***************************************************************************************/
-    test("copy parser 3", async() => {
+    test("copy parser 4", async() => {
         let item_def = `    01 ITEM PIC XXXX.`
         let source = `
         some "thing" 123.
@@ -235,7 +236,7 @@ replacing ==a== by ==b b b==
     /***************************************************************************************/
     /***************************************************************************************/
 
-    test("copy", async() => {
+    test("copy with mock manager", async() => {
 
         let item_def = `    01 ITEM PIC XXXX.`
         let source = `
@@ -252,13 +253,19 @@ WORKING-STOR
 PROCEDURE DIVISION.
 end PROGRAM id-1.`;
 
+        let copyManager: ICopyManager = {
+            getLines(name: string) {
+                return [item_def];
+            }
+        }
+
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "a");
+        let input = new CobolInputStream(errorListener, source + "\n", "a", copyManager);
         let result = input.getFilteredSource();
-        // parseStream(input);
-        // for(let error of errors) {
-        //     assert.fail(error.message);
-        // }
+        parseStream(input);
+        for(let error of errors) {
+            assert.fail(error.message);
+        }
 
         let target = `IDENTIFICATION DIVISION.
 PROGRAM-ID. id-1.
@@ -275,6 +282,53 @@ end PROGRAM id-1.`;
     });
 
     /***************************************************************************************/
+
+    test("copy with manager", async() => {
+
+        let item_def = `    01 ITEM PIC XXXX.`
+        let source = `
+IDENTIFICATION DIVISION.
+PROGRAM-ID. id-1.
+DATA DIVISION.
+WORKING-STOR
+
+-	AGE SECTION.
+  cop
+-	  y "[.libs]comm
+-		"ent".
+    01 RSULT comp-2.
+PROCEDURE DIVISION.
+end PROGRAM id-1.`;
+
+        let copyManager: ICopyManager | undefined;
+        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+            copyManager = new CopyManagerImpl(vscode.workspace.workspaceFolders[0].uri.fsPath);
+        }
+        errors = [];
+        let input = new CobolInputStream(errorListener, source + "\n", "a", copyManager);
+        let result = input.getFilteredSource();
+        parseStream(input);
+        for(let error of errors) {
+            assert.fail(error.message);
+        }
+
+        let target = `IDENTIFICATION DIVISION.
+PROGRAM-ID. id-1.
+DATA DIVISION.
+WORKING-STORAGE SECTION.
+    01 RSULT comp-2.
+PROCEDURE DIVISION.
+end PROGRAM id-1.`;
+
+        if (result !== target + "\n") {
+            assert.fail("invalid result");
+        }
+    });
+
+    /***************************************************************************************/
+    /***************************************************************************************/
+    /***************************************************************************************/
+
     test("complex test", async() => {
         let source = `
 IDENTIFICATION DIVISION.

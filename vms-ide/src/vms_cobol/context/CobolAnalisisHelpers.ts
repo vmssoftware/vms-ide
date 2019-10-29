@@ -45,7 +45,7 @@ export class CobolAnalisisHelper {
             text = 
                 source.text
                 ? isLiteral
-                    ? this.stringLiteralContent(source.text)
+                    ? CobolAnalisisHelper.stringLiteralContent(source.text)
                     : source.text
                 : undefined;
             if (text && (text.length < min || text.length > max)) {
@@ -191,6 +191,10 @@ export class CobolAnalisisHelper {
      * @param cursorDataDecord 
      */
     public testCursorData(cursorDataDecord: DataRecordSymbol) {
+        return CobolAnalisisHelper.testCursorData(cursorDataDecord);
+    }
+
+    public static testCursorData(cursorDataDecord: DataRecordSymbol) {
         if (cursorDataDecord.usage !== EDataUsage.DISPLAY) {
             return false;
         }
@@ -225,6 +229,10 @@ export class CobolAnalisisHelper {
      * @param crtDataDecord 
      */
     public testCRTData(crtDataDecord: DataRecordSymbol) {
+        return CobolAnalisisHelper.testCRTData(crtDataDecord);
+    }
+
+    public static testCRTData(crtDataDecord: DataRecordSymbol) {
         if (crtDataDecord.usage !== EDataUsage.DISPLAY) {
             return false;
         }
@@ -241,7 +249,7 @@ export class CobolAnalisisHelper {
      * Expand picture string
      * @param picture 
      */
-    public expandPicture(picture: string) {
+    public static expandPicture(picture: string) {
         let retStr = picture.replace(/(.)\((\d+)\)/g, (match, symbol, count) => {
             return String(symbol).repeat(+count);
         });
@@ -252,7 +260,7 @@ export class CobolAnalisisHelper {
      * Remove quotas
      * @param literal 
      */
-    public stringLiteralContent(literal: string) {
+    public static stringLiteralContent(literal: string) {
         if (literal.length > 0) {
             switch (literal[0]) {
                 case 'N':

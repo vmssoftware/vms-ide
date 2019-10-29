@@ -10,6 +10,7 @@ import { PredictionMode } from "antlr4ts/atn/PredictionMode";
 import { IDiagnosticEntry } from "../../common/parser/Facade";
 import { LexerErrorListener } from "../../common/parser/ErrorListeners";
 import { ParserErrorListener } from "../../common/parser/ErrorListeners";
+import { CobolAnalisisHelper } from "../context/CobolAnalisisHelpers";
 
 const _rgxIsEmptyA = /^.(?: {4}| {0,3}\t)\s*(\S)/;
 const _quotas = "\"'";
@@ -44,6 +45,7 @@ enum EReplaceState {
     continuation,
     stringQ,
     stringQQ,
+    pseudoText,
 }
 
 interface ITestReplace {
@@ -111,7 +113,7 @@ export class CobolInputStream implements CharStream {
      * @param source 
      * @param conditionals 
      */
-    constructor(public errorListener: IStreamErrorListener, private source: string, conditionals?: string, private copyManger?: ICopyManager) {
+    constructor(public errorListener: IStreamErrorListener, private source: string, conditionals?: string, private copyManager?: ICopyManager) {
         if (conditionals) {
             this.conditionals = conditionals.toUpperCase();
         }
@@ -394,6 +396,13 @@ export class CobolInputStream implements CharStream {
                     newState: EReplaceState.stringQQ,
                 };
             }
+            case "=": {
+                if (pos > 0 && content[pos - 1] === "=") {
+                    return {
+                        newState: EReplaceState.pseudoText,
+                    };
+                }
+            }
         }
         // test start of line
         if (this.testLineStarts(content, pos)) {
@@ -494,11 +503,15 @@ export class CobolInputStream implements CharStream {
     }
 
     private testStringQEnds(content: string, pos: number) {
-        return content[pos] == "'";
+        return content[pos] === "'";
     }
 
     private testStringQQEnds(content: string, pos: number) {
-        return content[pos] == "\"";
+        return content[pos] === "\"";
+    }
+
+    private testPseudoTextEnds(content: string, pos: number) {
+        return content[pos] === "=" && pos > 0 && content[pos - 1] === "=";
     }
 
     /**
@@ -525,10 +538,43 @@ export class CobolInputStream implements CharStream {
             // ensure dot followed space or EOF
             if (pos + 1 >= content.length || " \t\r\n".includes(content[pos + 1])) {
                 // find copy statement
-                let tmp = content.substring(this.lastNormalDotPosition, pos + 1);
-                let copyContext = this.parseCopyStatement(tmp);
+                let tmpSource = content.substring(this.lastNormalDotPosition, pos + 1); // end at '.'
+                let copyContext = this.parseCopyStatement(tmpSource);
                 if (copyContext) {
-
+                    let statement = copyContext.lastCopyStatement();
+                    let row = statement.start.line - 1;
+                    let innerPos = 0;
+                    while (row !== 0) {
+                        if (tmpSource[innerPos] === "\n") {
+                            --row;
+                        }
+                        ++innerPos;
+                    }
+                    innerPos += statement.start.charPositionInLine;
+                    let newReplacing: IReplace = {
+                        range: {
+                            start: this.lastNormalDotPosition + innerPos,
+                            length: tmpSource.length - innerPos
+                        },
+                        lines: [],
+                        length: 0
+                    };
+                    let textName = statement.text_name();
+                    if (textName && !statement.library_name()) {
+                        let fileName = CobolAnalisisHelper.stringLiteralContent(textName.text);
+                        if (this.copyManager) {
+                            newReplacing.lines = this.copyManager.getLines(fileName);
+                        } else {
+                            newReplacing.lines = ["* from: " + fileName];
+                        }
+                        newReplacing.lines.unshift(""); // add first empty string, required!!!
+                        newReplacing.length = newReplacing.lines.join("\n").length;
+                    }
+                    // do not change lastNormalDotPosition
+                    return {
+                        newState: EReplaceState.normal,
+                        newReplacing
+                    };
                 }
                 this.lastNormalDotPosition = pos + 2;   // points after the space/new line
             }
@@ -659,8 +705,16 @@ export class CobolInputStream implements CharStream {
                         if (testResult && testResult.newReplacing) {
                             // parse copy statement and fill replacing
                             ({newResult: this.result, newPos: pos} = this.applyReplacing(testResult.newReplacing, this.result));
+                            // move pos to the last dot, reparse all again
+                            pos = this.lastNormalDotPosition;
                             movePosition = 0;
                         }
+                    }
+                    break;
+                case EReplaceState.pseudoText:
+                    if (this.testPseudoTextEnds(this.result, pos)) {
+                        replacing = undefined;
+                        state = EReplaceState.normal;
                     }
                     break;
                 case EReplaceState.stringQ:

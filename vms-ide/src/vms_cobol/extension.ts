@@ -1,11 +1,12 @@
 'use strict';
 import * as nls from "vscode-nls";
+import * as path from 'path';
 
 import {
     Range, DiagnosticSeverity, env, ExtensionContext, window,
     workspace, languages, TextDocument, TextDocumentChangeEvent,
     TextEditorSelectionChangeEvent, TextEditor, Diagnostic,
-    StatusBarItem, StatusBarAlignment
+    StatusBarItem, StatusBarAlignment, Uri
 } from 'vscode';
 
 import { EDiagnosticType, FacadeImpl } from "../common/parser/Facade";
@@ -16,11 +17,15 @@ import { HoverProviderImpl } from "../common/parser/HoverProvider";
 import { DefinitionProviderImpl } from "../common/parser/DefinitionProvider";
 import { RenameProviderImpl } from "../common/parser/RenameProvider";
 import { CompletionItemProviderImpl } from "../common/parser/CompletionProvider";
+import { CopyManagerImpl } from "./stream/copymanager";
+import { ICopyManager } from "./stream/cobolInputStream";
 
 const locale = env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
 export const Cobol = { language: 'vms-cobol', scheme: 'file' };
+
+const _copyManagers = new Map<string, ICopyManager>();
 
 export async function activate(context: ExtensionContext) {
     const diagnosticCollection = languages.createDiagnosticCollection(Cobol.language);
@@ -43,7 +48,18 @@ export async function activate(context: ExtensionContext) {
 
     const logFn = configApi.createLogFunction("VMS-IDE");
 
-    const backend = new FacadeImpl((fileName: string, logFn?: LogFunction) => new CobolSourceContext(fileName, logFn), logFn);
+    const backend = new FacadeImpl((fileName: string, logFn?: LogFunction) => {
+            let copyManager: ICopyManager | undefined;
+            let wsFolder = workspace.getWorkspaceFolder(Uri.file(fileName));
+            if (wsFolder) {
+                copyManager = _copyManagers.get(wsFolder.name);
+                if (!copyManager) {
+                    copyManager = new CopyManagerImpl(wsFolder.uri.fsPath);
+                    _copyManagers.set(wsFolder.name, copyManager);
+                }
+            }
+            return new CobolSourceContext(fileName, logFn, copyManager);
+        }, logFn);
 
     // Load interpreter + cache data for each open document, if there's any.
     for (let document of workspace.textDocuments) {
@@ -79,24 +95,33 @@ export async function activate(context: ExtensionContext) {
         }
     });
 
-    const changeTimers: Map<string, any> = new Map();   // Keyed by file name.
+    const changeTimers: Map<string, NodeJS.Timer> = new Map();   // Keyed by file name.
 
     workspace.onDidChangeTextDocument((event: TextDocumentChangeEvent) => {
-        if (event.contentChanges.length > 0
-            && event.document.languageId === Cobol.language
-            && event.document.uri.scheme === Cobol.scheme) {
+        if (event.contentChanges.length > 0) {
+            // clear copy contents for this workspace
             let fileName = event.document.fileName;
-            backend.setText(fileName, event.document.getText());
-
-            if (changeTimers.has(fileName)) {
-                clearTimeout(changeTimers.get(fileName));
+            let wsFolder = workspace.getWorkspaceFolder(Uri.file(fileName));
+            if (wsFolder) {
+                let copyManager = _copyManagers.get(wsFolder.name);
+                if (copyManager instanceof CopyManagerImpl) {
+                    copyManager.clear();
+                }
             }
+            if (event.document.languageId === Cobol.language && event.document.uri.scheme === Cobol.scheme) {
+                backend.setText(fileName, event.document.getText());
 
-            changeTimers.set(fileName, setTimeout(() => {
-                changeTimers.delete(fileName);
-                backend.reparse(fileName);
-                processDiagnostic(event.document);
-            }, 300));  // wait before reparse and process diagnostics
+                let existing = changeTimers.get(fileName);
+                if (existing) {
+                    clearTimeout(existing);
+                }
+
+                changeTimers.set(fileName, setTimeout(() => {
+                    changeTimers.delete(fileName);
+                    backend.reparse(fileName);
+                    processDiagnostic(event.document);
+                }, 500));  // wait before reparse and process diagnostics
+            }
         }
     });
 
