@@ -2,9 +2,14 @@ import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
-import { CharStream, IntStream, ANTLRInputStream } from "antlr4ts";
-import { Interval } from "antlr4ts/misc";
-import { isLineEndsWithCobolSiringLiteral } from "../../common/parser/Helpers";
+import { CharStream, IntStream, ANTLRInputStream, CommonTokenStream, BailErrorStrategy, DefaultErrorStrategy } from "antlr4ts";
+import { Interval, ParseCancellationException } from "antlr4ts/misc";
+import { cobolCopyLexer } from "../parser/cobolCopyLexer";
+import { cobolCopyParser, CopyStatementContext } from "../parser/cobolCopyParser";
+import { PredictionMode } from "antlr4ts/atn/PredictionMode";
+import { IDiagnosticEntry } from "../../common/parser/Facade";
+import { LexerErrorListener } from "../../common/parser/ErrorListeners";
+import { ParserErrorListener } from "../../common/parser/ErrorListeners";
 
 const _rgxIsEmptyA = /^.(?: {4}| {0,3}\t)\s*(\S)/;
 const _quotas = "\"'";
@@ -14,6 +19,10 @@ interface IRange {
     length: number,
 };
 
+export interface ICopyManager {
+    getLines(name: string): string[];
+}
+
 /**
  * simply string replacing
  */
@@ -22,8 +31,9 @@ interface IReplace {
     range: IRange,
     preceding?: IReplace[],
     // TODO: next lines must be a link to replacing source
-    replaceLenght: number,
-    linesToReplace: string[],
+    name?: string,
+    length: number,
+    lines: string[],
 }
 
 enum EReplaceState {
@@ -101,7 +111,7 @@ export class CobolInputStream implements CharStream {
      * @param source 
      * @param conditionals 
      */
-    constructor(public errorListener: IStreamErrorListener, private source: string, conditionals?: string) {
+    constructor(public errorListener: IStreamErrorListener, private source: string, conditionals?: string, private copyManger?: ICopyManager) {
         if (conditionals) {
             this.conditionals = conditionals.toUpperCase();
         }
@@ -183,7 +193,7 @@ export class CobolInputStream implements CharStream {
                 break;
             } else if (r.range.start + r.range.length < result.pos) {
                 // before
-                result.pos += r.replaceLenght - r.range.length;
+                result.pos += r.length - r.range.length;
             } else {
                 // inside
                 result.inside.push({
@@ -215,14 +225,14 @@ export class CobolInputStream implements CharStream {
         while(i >= 0) {
             let r = replacings[i];
             if (r.range.start <= result.pos) {
-                if (r.range.start + r.replaceLenght > result.pos) {
+                if (r.range.start + r.length > result.pos) {
                     result.inside!.push({
                         replacing: r,
                         position: result.pos - r.range.start,
                     });
                     result.pos = r.range.start;
                 } else {
-                    result.pos += r.range.length - r.replaceLenght;
+                    result.pos += r.range.length - r.length;
                 }
                 if (r.preceding) {
                     let resT = this.shiftSourcePos(r.preceding, result.pos);
@@ -320,6 +330,11 @@ export class CobolInputStream implements CharStream {
     }
 
     //------------------------------------------------------------
+    //------------------------------------------------------------
+    //------------------------------------------------------------
+    //------------------------------------------------------------
+    //------------------------------------------------------------
+    //------------------------------------------------------------
 
     /**
      * Note: add only in right order
@@ -348,8 +363,8 @@ export class CobolInputStream implements CharStream {
                         start: pos,
                         length: 1
                     },
-                    linesToReplace: [" ".repeat(this.tabSize)],
-                    replaceLenght: this.tabSize
+                    lines: [" ".repeat(this.tabSize)],
+                    length: this.tabSize
                 };
                 // does not change state
                 return {
@@ -361,6 +376,11 @@ export class CobolInputStream implements CharStream {
         return undefined;
     }
 
+    /**
+     * Test only from NORMAL state
+     * @param content 
+     * @param pos 
+     */
     private testReplacingStart(content: string, pos: number): ITestReplace | undefined {
         // test any char
         switch (content[pos]) {
@@ -386,8 +406,8 @@ export class CobolInputStream implements CharStream {
                             start: pos,
                             length: 0
                         },
-                        linesToReplace: [],
-                        replaceLenght: 0
+                        lines: [],
+                        length: 0
                     };
                     return {
                         newState: EReplaceState.comment,
@@ -404,8 +424,8 @@ export class CobolInputStream implements CharStream {
                                     start: pos,
                                     length: 0
                                 },
-                                linesToReplace: [],
-                                replaceLenght: 0
+                                lines: [],
+                                length: 0
                             };
                             return {
                                 newState: EReplaceState.conditionalCompile,
@@ -418,8 +438,8 @@ export class CobolInputStream implements CharStream {
                                     start: pos,
                                     length: 2
                                 },
-                                linesToReplace: [],
-                                replaceLenght: 0
+                                lines: [],
+                                length: 0
                             };
                             return {
                                 newState: EReplaceState.normal, // do not change state, so apply immediately
@@ -436,8 +456,8 @@ export class CobolInputStream implements CharStream {
                             start: pos - 1,
                             length: 0
                         },
-                        linesToReplace: [],
-                        replaceLenght: 0
+                        lines: [],
+                        length: 0
                     };
                     return {
                         newState: EReplaceState.continuation,
@@ -493,10 +513,61 @@ export class CobolInputStream implements CharStream {
         return {
             newResult:
                 source.substr(0, replacing.range.start) +
-                replacing.linesToReplace.join("\n") +
+                replacing.lines.join("\n") +
                 source.substr(replacing.range.start + replacing.range.length),
-            newPos: replacing.range.start + replacing.replaceLenght,
+            newPos: replacing.range.start + replacing.length,
         };
+    }
+
+    private lastNormalDotPosition = 0;
+    private testCopyStatement(content: string, pos: number): ITestReplace | undefined {
+        if (content[pos] === '.') {
+            // ensure dot followed space or EOF
+            if (pos + 1 >= content.length || " \t\r\n".includes(content[pos + 1])) {
+                // find copy statement
+                let tmp = content.substring(this.lastNormalDotPosition, pos + 1);
+                let copyContext = this.parseCopyStatement(tmp);
+                if (copyContext) {
+
+                }
+                this.lastNormalDotPosition = pos + 2;   // points after the space/new line
+            }
+        }
+        return undefined;
+    }
+
+    private parseCopyStatement(source: string): CopyStatementContext | undefined {
+        let input = new ANTLRInputStream(source + "\n");
+        let lexer = new cobolCopyLexer(input);
+        let tokenStream = new CommonTokenStream(lexer);
+        tokenStream.seek(0);
+        let parser = new cobolCopyParser(tokenStream);
+        parser.errorHandler = new BailErrorStrategy();
+        parser.interpreter.setPredictionMode(PredictionMode.SLL);
+        let diagnostic: IDiagnosticEntry[] = [];
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(new LexerErrorListener(diagnostic));
+        parser.removeErrorListeners();
+        parser.addErrorListener(new ParserErrorListener(diagnostic));
+        let tree: CopyStatementContext | undefined;
+        try {
+            tree = parser.copyStatement();
+        }
+        catch (e) {
+            if (e instanceof ParseCancellationException) {
+                tokenStream.seek(0);
+                parser.reset();
+                parser.errorHandler = new DefaultErrorStrategy();
+                parser.interpreter.setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
+                tree = parser.copyStatement();
+            } else {
+                throw e;
+            }
+        }
+        if (diagnostic.length) {
+            return undefined;
+        }
+        return tree;
     }
 
     /**
@@ -525,6 +596,8 @@ export class CobolInputStream implements CharStream {
         let stringOpened: boolean | undefined;
         let stringTestLastLineChar: boolean | undefined;
         let startEmptyLine: number | undefined;
+
+        this.lastNormalDotPosition = 0;
         
         while(pos < this.result.length && errors.length === 0) {
             // remove stringContinuationChar if something else presents at the end of line after string ends
@@ -549,13 +622,13 @@ export class CobolInputStream implements CharStream {
 
             if (this.testLineEnds(this.result, pos)) {
                 if (startEmptyLine !== undefined) {
-                    let emptyLineReplacing = {
+                    let emptyLineReplacing: IReplace = {
                         range: {
                             start: startEmptyLine,
                             length: pos + 1 - startEmptyLine
                         },
-                        linesToReplace: [],
-                        replaceLenght: 0
+                        lines: [],
+                        length: 0,
                     };
                     ({newResult: this.result, newPos: pos} = this.applyReplacing(emptyLineReplacing, this.result));
                     continue;
@@ -581,6 +654,13 @@ export class CobolInputStream implements CharStream {
                         }
                         replacing = testResult.newReplacing;
                         state = testResult.newState;
+                    } else {
+                        testResult = this.testCopyStatement(this.result, pos);
+                        if (testResult && testResult.newReplacing) {
+                            // parse copy statement and fill replacing
+                            ({newResult: this.result, newPos: pos} = this.applyReplacing(testResult.newReplacing, this.result));
+                            movePosition = 0;
+                        }
                     }
                     break;
                 case EReplaceState.stringQ:
@@ -609,6 +689,21 @@ export class CobolInputStream implements CharStream {
                     break;
                 case EReplaceState.continuation:
                     if (this.testContinuationEnds(this.result, pos)) {
+                        // test B area
+                        let posT = pos - 1;
+                        while(posT >= 0) {
+                            if (this.result[posT] === '-') {
+                                break;
+                            }
+                            --posT;
+                        }
+                        if (pos - posT < 4) {
+                            errors.push({
+                                pos: pos,
+                                msg: localize("string.continuation.improperly", "Continuation must start at B"),
+                            });
+                            replacing = undefined;
+                        }
                         if (replacing) {
                             // test if string literal properly continues
                             if ( stringContinuationChar &&

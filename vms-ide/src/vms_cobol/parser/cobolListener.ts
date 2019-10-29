@@ -40,8 +40,6 @@ import { Section_nameContext } from "./cobolParser";
 import { UsingContext } from "./cobolParser";
 import { GivingContext } from "./cobolParser";
 import { StatementContext } from "./cobolParser";
-import { Copy_statementContext } from "./cobolParser";
-import { Copy_replacingContext } from "./cobolParser";
 import { Record_nameContext } from "./cobolParser";
 import { Library_nameContext } from "./cobolParser";
 import { Text_nameContext } from "./cobolParser";
@@ -858,28 +856,6 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitStatement?: (ctx: StatementContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.copy_statement`.
-	 * @param ctx the parse tree
-	 */
-	enterCopy_statement?: (ctx: Copy_statementContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.copy_statement`.
-	 * @param ctx the parse tree
-	 */
-	exitCopy_statement?: (ctx: Copy_statementContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.copy_replacing`.
-	 * @param ctx the parse tree
-	 */
-	enterCopy_replacing?: (ctx: Copy_replacingContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.copy_replacing`.
-	 * @param ctx the parse tree
-	 */
-	exitCopy_replacing?: (ctx: Copy_replacingContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.record_name`.

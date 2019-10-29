@@ -1,4 +1,5 @@
 {
+    "string.continuation.improperly": "Continuation must start at B",
     "string.continuation.error": "Continuation error - string literal have to start with {0}",
     "string.continuation.error.unpredictable": "Continuation unpredictable error"
 }

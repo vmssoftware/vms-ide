@@ -253,23 +253,8 @@ statement
       | unlock_statement
       | unstring_statement
       | write_statement
-      | copy_statement
       | record_statement
      )
-   ;
-
-copy_statement
-   : COPY
-      (text_name ((IN|OF) library_name)?
-      |record_name FROM DICTIONARY)
-      (REPLACING (copy_replacing BY copy_replacing)+)?
-   ;
-
-copy_replacing
-   : PSEUDO_TEXT_
-   | USER_DEFINED_WORD_+
-   | STRING_LITERAL_
-   | NUMERIC_LITERAL_
    ;
 
 record_name

@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as fs from "fs";
-import { CommonTokenStream, BailErrorStrategy, DefaultErrorStrategy } from "antlr4ts";
+import { CommonTokenStream, BailErrorStrategy, DefaultErrorStrategy, ANTLRInputStream } from "antlr4ts";
 import { cobolLexer } from "../vms_cobol/parser/cobolLexer";
 import { cobolParser, Cobol_sourceContext } from "../vms_cobol/parser/cobolParser";
 import { PredictionMode } from "antlr4ts/atn/PredictionMode";
@@ -9,6 +9,9 @@ import { getSyntaxTreeStrings } from "../common/print-syntax-tree";
 import { CobolInputStream } from "../vms_cobol/stream/cobolInputStream";
 import { CobolLexerErrorListener, CobolErrorListener } from "../vms_cobol/test/cobolErrorListener";
 import { IDiagnosticEntry, EDiagnosticType } from "../common/parser/Facade";
+import { cobolCopyLexer } from "../vms_cobol/parser/cobolCopyLexer";
+import { cobolCopyParser, CopyStatementContext } from "../vms_cobol/parser/cobolCopyParser";
+import { LexerErrorListener, ParserErrorListener } from "../common/parser/ErrorListeners";
 
 suite("COBOL tests", function(this: Mocha.Suite) {
 
@@ -33,6 +36,7 @@ suite("COBOL tests", function(this: Mocha.Suite) {
             });
         }
     }
+
     let parseStream = (input: CobolInputStream): Cobol_sourceContext | undefined => {
         let lexer = new cobolLexer(input);
         let tokenStream = new CommonTokenStream(lexer);
@@ -83,6 +87,53 @@ suite("COBOL tests", function(this: Mocha.Suite) {
         return tree;
     };
 
+    let parseCopyStream = (source: string): CopyStatementContext | undefined => {
+        let input = new ANTLRInputStream(source + "\n");
+        let lexer = new cobolCopyLexer(input);
+        let tokenStream = new CommonTokenStream(lexer);
+        tokenStream.seek(0);
+        let parser = new cobolCopyParser(tokenStream);
+
+        parser.errorHandler = new BailErrorStrategy();
+        parser.interpreter.setPredictionMode(PredictionMode.SLL);
+
+        let diagnostic: IDiagnosticEntry[] = [];
+
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(new LexerErrorListener(diagnostic));
+
+        parser.removeErrorListeners();
+        parser.addErrorListener(new ParserErrorListener(diagnostic));
+
+        let tree: CopyStatementContext | undefined;
+
+        try 
+        {
+            tree = parser.copyStatement();
+        }
+        catch (e) 
+        {
+            if (e instanceof ParseCancellationException) 
+            {
+                tokenStream.seek(0);
+                parser.reset();
+                parser.errorHandler = new DefaultErrorStrategy();
+                parser.interpreter.setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
+                tree = parser.copyStatement();
+            } 
+            else 
+            {
+                throw e;
+            }
+        }
+
+        for (let diag of diagnostic) {
+            errorListener.syntaxError(diag.range.start.row, diag.range.start.column, diag.message);
+        }
+
+        return tree;
+    };
+
     let testSrcToRst = (input: CobolInputStream, srcRow: number, srcCol: number, rstRow: number, rstCol: number) => {
         let resPos = input.resultRowColFromSourceRowCol(srcRow, srcCol);
         if (resPos.resultRow != rstRow || resPos.resultCol != rstCol) {
@@ -105,6 +156,125 @@ suite("COBOL tests", function(this: Mocha.Suite) {
     /***************************************************************************************/
     /***************************************************************************************/
 
+    test("copy parser 1", async() => {
+        let item_def = `    01 ITEM PIC XXXX.`
+        let source = `
+some "thing" 123.
+copy "ITEM-DEF".`;
+
+        errors = [];
+        let tree = parseCopyStream(source);
+        for(let error of errors) {
+            assert.fail(error.message);
+        }
+        if (!tree) {
+            assert.fail("tree = undefined")
+        } else {
+            if (tree.lastCopyStatement().text.trim() !== `copy"ITEM-DEF".`) {
+                assert.fail("not the same");
+            }
+        }
+    });
+
+    /***************************************************************************************/
+    test("copy parser 2", async() => {
+        let item_def = `    01 ITEM PIC XXXX.`
+        let source = `
+copy AAA in BBB.
+some "thing" 123.`;
+
+        errors = [];
+        let tree = parseCopyStream(source);
+        if (errors.length === 0) {
+            assert.fail("Must be error");
+        }
+    });
+
+    /***************************************************************************************/
+    test("copy parser 3", async() => {
+        let item_def = `    01 ITEM PIC XXXX.`
+        let source = `
+        copy AAA.
+        some "thing" 123.
+        copy ITEM-DEF in ITEM-LIB.
+        `;
+
+        errors = [];
+        let tree = parseCopyStream(source);
+        if (!tree) {
+            assert.fail("tree = undefined")
+        } else {
+            if (tree.lastCopyStatement().text.trim() !== `copyITEM-DEFinITEM-LIB.`) {
+                assert.fail("not the same");
+            }
+        }
+    });
+
+    /***************************************************************************************/
+    test("copy parser 3", async() => {
+        let item_def = `    01 ITEM PIC XXXX.`
+        let source = `
+        some "thing" 123.
+        copy AAA.
+        copy ITEM-DEF in ITEM-LIB
+replacing ==a== by ==b b b==
+    "A A" by BBB.
+`;
+
+        errors = [];
+        let tree = parseCopyStream(source);
+        if (!tree) {
+            assert.fail("tree = undefined")
+        } else {
+            if (tree.lastCopyStatement().text.trim() !== `copyITEM-DEFinITEM-LIBreplacing==a==by==b b b=="A A"byBBB.`) {
+                assert.fail("not the same");
+            }
+        }
+    });
+
+    /***************************************************************************************/
+    /***************************************************************************************/
+
+    test("copy", async() => {
+
+        let item_def = `    01 ITEM PIC XXXX.`
+        let source = `
+IDENTIFICATION DIVISION.
+PROGRAM-ID. id-1.
+DATA DIVISION.
+WORKING-STOR
+
+-	AGE SECTION.
+  cop
+-	  y "ITEM-D
+-		"EF".
+    01 RSULT comp-2.
+PROCEDURE DIVISION.
+end PROGRAM id-1.`;
+
+        errors = [];
+        let input = new CobolInputStream(errorListener, source + "\n", "a");
+        let result = input.getFilteredSource();
+        // parseStream(input);
+        // for(let error of errors) {
+        //     assert.fail(error.message);
+        // }
+
+        let target = `IDENTIFICATION DIVISION.
+PROGRAM-ID. id-1.
+DATA DIVISION.
+WORKING-STORAGE SECTION.
+    01 ITEM PIC XXXX.
+    01 RSULT comp-2.
+PROCEDURE DIVISION.
+end PROGRAM id-1.`;
+
+        if (result !== target + "\n") {
+            assert.fail("invalid result");
+        }
+    });
+
+    /***************************************************************************************/
     test("complex test", async() => {
         let source = `
 IDENTIFICATION DIVISION.

@@ -51,6 +51,11 @@
             "type": "npm",
             "script": "CobolLex.antlr4ts",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "CobolCopy.antlr4ts",
+            "problemMatcher": []
         }
     ]
 }
