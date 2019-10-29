@@ -1583,6 +1583,10 @@ export class VMSRuntime extends EventEmitter
 						{
 							this.currentFilePath = stack.frames[0].file;
 							this.currentRoutine = stack.frames[0].name.substr(0, stack.frames[0].name.indexOf("["));
+							
+							let moduleItem = this.modulesHolder.getItemByPath(this.currentFilePath);
+							this.language = this.getLanguageFromInfo(moduleItem.language);
+							this.setDelimiters(this.language);
 						}
 						this.sendEvent(DebugCmdVMS.dbgStack, stack);
 						break;
@@ -1818,6 +1822,39 @@ export class VMSRuntime extends EventEmitter
 	public getLanguage() : string
 	{
 		return this.language;
+	}
+
+	public getLanguageFromInfo(info: string) : string
+	{
+		let language = "";
+		info = info.toUpperCase();
+		
+		if(info.includes("BASIC"))
+		{
+			language = "BASIC";
+		}
+		else if(info.includes("BLISS"))
+		{
+			language = "BLISS";
+		}
+		else if(info.includes("COBOL"))
+		{
+			language = "COBOL";
+		}
+		else if(info.includes("FORTRAN"))
+		{
+			language = "FORTRAN";
+		}
+		else if(info.includes("PASCAL"))
+		{
+			language = "PASCAL";
+		}
+		else
+		{
+			language = "C";
+		}
+
+		return language;
 	}
 
 	public getVariablePeriod() : string
