@@ -10,8 +10,8 @@ export class RenameProviderImpl implements RenameProvider {
             const result = new WorkspaceEdit();
             for (let occurance of occurences) {
                 let range = new Range(
-                    occurance.range.start.row, occurance.range.start.column,
-                    occurance.range.end.row, occurance.range.end.column
+                    occurance.range.start.row, occurance.range.start.col,
+                    occurance.range.end.row, occurance.range.end.col
                 );
                 result.replace(document.uri, range, newName);
             }

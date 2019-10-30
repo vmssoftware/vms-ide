@@ -7,6 +7,7 @@ import { VmsPathConverter } from "../../synchronizer/vms/vms-path-converter";
 export class CopyManagerImpl implements ICopyManager {
 
     private copyContents: Map<string, string[]> = new Map<string, string[]>();
+    private copySource: Map<string, string> = new Map<string, string>();
 
     constructor(private root: string) {
 
@@ -14,6 +15,22 @@ export class CopyManagerImpl implements ICopyManager {
 
     public clear() {
         this.copyContents.clear();
+        this.copySource.clear();
+    }
+
+    public clearBySource(fileName: string): boolean {
+        for (let [name, file] of this.copySource) {
+            if (file === fileName) {
+                this.copyContents.delete(name);
+                this.copySource.delete(name);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    getSourcePath(name: string): string | undefined {
+        return this.copySource.get(name);
     }
 
     getLines(name: string): string[] {
@@ -29,12 +46,13 @@ export class CopyManagerImpl implements ICopyManager {
                 let content = buffer.toString("utf8");
                 lines = content.split(/\r?\n/g);
                 this.copyContents.set(name, lines);
+                this.copySource.set(name, filePath);
             } catch(e) {
                 lines = undefined;
             }
         }
         if (lines) {
-            return lines;
+            return [...lines];
         }
         return [];
     }

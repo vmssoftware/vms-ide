@@ -8,7 +8,6 @@ import { PredictionMode } from "antlr4ts/atn/PredictionMode";
 import { ParseCancellationException } from "antlr4ts/misc";
 import { getSyntaxTreeStrings } from "../common/print-syntax-tree";
 import { CobolInputStream, ICopyManager } from "../vms_cobol/stream/cobolInputStream";
-import { CobolLexerErrorListener, CobolErrorListener } from "../vms_cobol/test/cobolErrorListener";
 import { IDiagnosticEntry, EDiagnosticType } from "../common/parser/Facade";
 import { cobolCopyLexer } from "../vms_cobol/parser/cobolCopyLexer";
 import { cobolCopyParser, CopyStatementContext } from "../vms_cobol/parser/cobolCopyParser";
@@ -21,18 +20,19 @@ suite("COBOL tests", function(this: Mocha.Suite) {
 
     let errors: IDiagnosticEntry[] = [];
     let errorListener = {
-        syntaxError: (line: number, charPositionInLine: number, message: string): void => {
+        syntaxError: (file: string, line: number, charPositionInLine: number, message: string): void => {
             errors.push({
+                source: file,
                 message,
                 type: EDiagnosticType.Error,
                 range: {
                     start: {
                         row: line,
-                        column: charPositionInLine,
+                        col: charPositionInLine,
                     },
                     end: {
                         row: line,
-                        column: charPositionInLine,
+                        col: charPositionInLine,
                     }
                 }
             });
@@ -48,11 +48,11 @@ suite("COBOL tests", function(this: Mocha.Suite) {
         parser.errorHandler = new BailErrorStrategy();
         parser.interpreter.setPredictionMode(PredictionMode.SLL);
 
-        let lexerErrors = new CobolLexerErrorListener(input);
+        let lexerErrors = new LexerErrorListener(errors);
         lexer.removeErrorListeners();
         lexer.addErrorListener(lexerErrors);
 
-        let parserErrors = new CobolErrorListener(input);
+        let parserErrors = new ParserErrorListener(errors);
         parser.removeErrorListeners();
         parser.addErrorListener(parserErrors);
 
@@ -78,14 +78,6 @@ suite("COBOL tests", function(this: Mocha.Suite) {
             }
         }
 
-        for (let error of lexerErrors.messages) {
-            errorListener.syntaxError(error.line, error.charPositionInLine, error.message);
-        }
-
-        for (let error of parserErrors.messages) {
-            errorListener.syntaxError(error.line, error.charPositionInLine, error.message);
-        }
-
         return tree;
     };
 
@@ -99,13 +91,11 @@ suite("COBOL tests", function(this: Mocha.Suite) {
         parser.errorHandler = new BailErrorStrategy();
         parser.interpreter.setPredictionMode(PredictionMode.SLL);
 
-        let diagnostic: IDiagnosticEntry[] = [];
-
         lexer.removeErrorListeners();
-        lexer.addErrorListener(new LexerErrorListener(diagnostic));
+        lexer.addErrorListener(new LexerErrorListener(errors));
 
         parser.removeErrorListeners();
-        parser.addErrorListener(new ParserErrorListener(diagnostic));
+        parser.addErrorListener(new ParserErrorListener(errors));
 
         let tree: CopyStatementContext | undefined;
 
@@ -127,10 +117,6 @@ suite("COBOL tests", function(this: Mocha.Suite) {
             {
                 throw e;
             }
-        }
-
-        for (let diag of diagnostic) {
-            errorListener.syntaxError(diag.range.start.row, diag.range.start.column, diag.message);
         }
 
         return tree;
@@ -256,11 +242,14 @@ end PROGRAM id-1.`;
         let copyManager: ICopyManager = {
             getLines(name: string) {
                 return [item_def];
+            },
+            getSourcePath(name: string): string | undefined {
+                return undefined;
             }
         }
 
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "a", copyManager);
+        let input = new CobolInputStream("", errorListener, source + "\n", "a", copyManager);
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -279,13 +268,24 @@ end PROGRAM id-1.`;
         if (result !== target + "\n") {
             assert.fail("invalid result");
         }
+
+        let resPos = input.sourceRowColFromResultRowCol(4, 7);
+        if (resPos.sourceRow !== 7 || resPos.sourceCol !== 2) {
+            assert.fail("(4:7) isn't (7:2)");
+        }
+        if (resPos.inside.length !== 1) {
+            assert.fail("(4:7) isn't inside");
+        }
+        if (resPos.inside[0].row !== 0 || resPos.inside[0].col !== 7) {
+            assert.fail("(4:7) isn't (0:7) inside ITEM-DEF");
+        }
+
     });
 
     /***************************************************************************************/
 
     test("copy with manager", async() => {
 
-        let item_def = `    01 ITEM PIC XXXX.`
         let source = `
 IDENTIFICATION DIVISION.
 PROGRAM-ID. id-1.
@@ -294,8 +294,8 @@ WORKING-STOR
 
 -	AGE SECTION.
   cop
--	  y "[.libs]comm
--		"ent".
+-	  y "[.libs]item-
+-		"def".
     01 RSULT comp-2.
 PROCEDURE DIVISION.
 end PROGRAM id-1.`;
@@ -305,7 +305,7 @@ end PROGRAM id-1.`;
             copyManager = new CopyManagerImpl(vscode.workspace.workspaceFolders[0].uri.fsPath);
         }
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "a", copyManager);
+        let input = new CobolInputStream("", errorListener, source + "\n", "a", copyManager);
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -316,12 +316,24 @@ end PROGRAM id-1.`;
 PROGRAM-ID. id-1.
 DATA DIVISION.
 WORKING-STORAGE SECTION.
+    01 ITEM PIC XXXX.
     01 RSULT comp-2.
 PROCEDURE DIVISION.
 end PROGRAM id-1.`;
 
         if (result !== target + "\n") {
             assert.fail("invalid result");
+        }
+
+        let resPos = input.sourceRowColFromResultRowCol(4, 12);
+        if (resPos.sourceRow !== 7 || resPos.sourceCol !== 2) {
+            assert.fail("(4:12) isn't (7:2)");
+        }
+        if (resPos.inside.length !== 1) {
+            assert.fail("(4:7) isn't inside");
+        }
+        if (resPos.inside[0].row !== 2 || resPos.inside[0].col !== 9) {
+            assert.fail("(4:7) isn't (2:9) inside ITEM-DEF");
         }
     });
 
@@ -354,7 +366,7 @@ para-1.
 end PROGRAM id-1.`;
 
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "");
+        let input = new CobolInputStream("", errorListener, source + "\n", "");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -406,7 +418,7 @@ PROCEDURE DIVISION.
 end PROGRAM id-1.`;
 
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "a");
+        let input = new CobolInputStream("", errorListener, source + "\n", "a");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -439,7 +451,7 @@ para-1.
 end PROGRAM id-1.`;
 
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "");
+        let input = new CobolInputStream("", errorListener, source + "\n", "");
         let result = input.getFilteredSource();
         if (errors.length !== 1) {
             assert.fail("Must be ONE continuation error");
@@ -459,7 +471,7 @@ para-1.
 end PROGRAM id-1.`;
 
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "");
+        let input = new CobolInputStream("", errorListener, source + "\n", "");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -491,7 +503,7 @@ para-1.
 end PROGRAM id-1.`;
 
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "");
+        let input = new CobolInputStream("", errorListener, source + "\n", "");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -522,7 +534,7 @@ para-1.
 end PROGRAM id-1.`;
 
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "");
+        let input = new CobolInputStream("", errorListener, source + "\n", "");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -554,7 +566,7 @@ para-1.
 end PROGRAM id-1.`;
 
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "");
+        let input = new CobolInputStream("", errorListener, source + "\n", "");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -587,7 +599,7 @@ para-1.
 end PROGRAM id-1.`;
 
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "");
+        let input = new CobolInputStream("", errorListener, source + "\n", "");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -621,7 +633,7 @@ para-1.
 end PROGRAM id-1.`;
 
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "");
+        let input = new CobolInputStream("", errorListener, source + "\n", "");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -660,7 +672,7 @@ para-1.
 end PROGRAM id-1.`;
 
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "");
+        let input = new CobolInputStream("", errorListener, source + "\n", "");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -692,7 +704,7 @@ para-1.
 end PROGRAM id-1.`;
 
         errors = [];
-        let input = new CobolInputStream(errorListener, source + "\n", "");
+        let input = new CobolInputStream("", errorListener, source + "\n", "");
         let result = input.getFilteredSource();
         parseStream(input);
         if (errors.length !== 1) {
@@ -714,14 +726,14 @@ end PROGRAM id-1.`;
 
         let streamError = false;
         let streamErrorListener = {
-            syntaxError: (line: number, charPositionInLine: number, message: string): void => {
+            syntaxError: (file: string, line: number, charPositionInLine: number, message: string): void => {
                 assert.fail(`${line}:${charPositionInLine} ${message}`);
                 streamError = true;
             }
         };
         let sourceBuf = fs.readFileSync("D:/vmssoftware.work/vms-ide/src/vms_cobol/test/test.cob");
         let source = sourceBuf.toString();
-        let input = new CobolInputStream(streamErrorListener, source, "ac");
+        let input = new CobolInputStream("", streamErrorListener, source, "ac");
         let lexer = new cobolLexer(input);
         let tokenStream = new CommonTokenStream(lexer);
         tokenStream.seek(0);
@@ -730,11 +742,11 @@ end PROGRAM id-1.`;
         parser.errorHandler = new BailErrorStrategy();
         parser.interpreter.setPredictionMode(PredictionMode.SLL);
 
-        let lexerErrors = new CobolLexerErrorListener(input);
+        let lexerErrors = new LexerErrorListener(errors);
         lexer.removeErrorListeners();
         lexer.addErrorListener(lexerErrors);
 
-        let parserErrors = new CobolErrorListener(input);
+        let parserErrors = new ParserErrorListener(errors);
         parser.removeErrorListeners();
         parser.addErrorListener(parserErrors);
 
@@ -760,12 +772,8 @@ end PROGRAM id-1.`;
             }
         }
 
-        for (let error of lexerErrors.messages) {
-            assert.fail(`${error.line}:${error.charPositionInLine} ${error.message}`);
-        }
-
-        for (let error of parserErrors.messages) {
-            assert.fail(`${error.line}:${error.charPositionInLine}(${error.size}) ${error.message}`);
+        for (let error of errors) {
+            assert.fail(`${error.range.start.row}:${error.range.start.col} ${error.message}`);
         }
 
         console.log(input.getFilteredSource());

@@ -42,7 +42,9 @@ import {
     ISymbolInfo,
     ISourceContext,
     EDiagnosticType,
-    ICompletion
+    ICompletion,
+    ILexicalRange,
+    ISourceLexicalRange
 } from '../../common/parser/Facade';
 
 import {
@@ -64,7 +66,7 @@ import {
 } from '../../common/parser/ErrorListeners';
 
 import {
-    CobolInputStream, ICopyManager
+    CobolInputStream, ICopyManager, IInsideReplacing, IReplace, IRange
 } from '../stream/cobolInputStream';
 
 import {
@@ -95,6 +97,7 @@ const localize = nls.loadMessageBundle();
 
 export class CobolSourceContext implements ISourceContext {
 
+    private sourceContent?: string;
     private sourceId: string;
     private streamErrors: IDiagnosticEntry[] = [];
     private diagnostics: IDiagnosticEntry[] = [];
@@ -126,20 +129,28 @@ export class CobolSourceContext implements ISourceContext {
      * This call doesn't do any expensive processing (parse() does).
      */
     public setText(source: string) {
-        
+        this.sourceContent = source + "\n";
+    }
+
+    public parse() {
+        if (!this.sourceContent) {
+            return;
+        }
+
         let streamErrorListener = {
-            syntaxError: (line: number, charPositionInLine: number, message: string): void => {
+            syntaxError: (file: string, line: number, charPositionInLine: number, message: string): void => {
                 this.streamErrors.push({
+                    source: file,
                     message,
                     type: EDiagnosticType.Error,
                     range: {
                         start: {
                             row: line,
-                            column: charPositionInLine,
+                            col: charPositionInLine,
                         },
                         end: {
                             row: line,
-                            column: charPositionInLine,
+                            col: charPositionInLine,
                         }
                     }
                 });
@@ -148,7 +159,7 @@ export class CobolSourceContext implements ISourceContext {
         
         this.streamErrors.length = 0;
         // EOL is OBLIGATORY for correct code completion
-        this.input = new CobolInputStream(streamErrorListener, source + "\n", this.compilerConditions, this.copyManager);
+        this.input = new CobolInputStream(this.fileName, streamErrorListener, this.sourceContent, this.compilerConditions, this.copyManager);
 
         if (this.streamErrors.length === 0) {
             let lexer = new cobolLexer(this.input);
@@ -156,13 +167,14 @@ export class CobolSourceContext implements ISourceContext {
             lexer.removeErrorListeners();
             lexer.addErrorListener(this.lexerErrorListener);
             this.tokenStream = new CommonTokenStream(lexer);
+        } else {
+            this.tokenStream = undefined;
         }
-    }
 
-    public parse() {
         if (!this.tokenStream) {
             return;
         }
+
         // Rewind the input stream for a new parse run.
         // Might be unnecessary when we just created that via setText.
         this.tokenStream.seek(0);
@@ -216,7 +228,7 @@ export class CobolSourceContext implements ISourceContext {
             ret.push(...this.streamErrors);
         } else {
             try {
-                this.runAnalysis();
+                //this.runAnalysis();
                 ret.push(...this.diagnostics);
             } catch(e) {
                 this.logFn(LogType.debug, () => String(e));
@@ -236,7 +248,12 @@ export class CobolSourceContext implements ISourceContext {
         }
 
         if (this.input) {
-            ({resultRow: row, resultCol: column} = this.input.resultRowColFromSourceRowCol(row, column));
+            let inside: IInsideReplacing[] = [];
+            ({resultRow: row, resultCol: column, inside} = this.input.resultRowColFromSourceRowCol(row, column));
+            if (inside.length > 0) {
+                // no candidates inside replacing
+                return [];
+            }
         }
         
         let core = new CodeCompletionCore(this.parser);
@@ -403,8 +420,8 @@ export class CobolSourceContext implements ISourceContext {
             let master = this.masterSymbolAtPosition(column, row);
             if (master) {
                 return this.symbolTable.getSymbolOccurences(master).map(x => {
-                    ({sourceRow: x.range.start.row, sourceCol: x.range.start.column} = input.sourceRowColFromResultRowCol(x.range.start.row, x.range.start.column));
-                    ({sourceRow: x.range.end.row, sourceCol: x.range.end.column} = input.sourceRowColFromResultRowCol(x.range.end.row, x.range.end.column));
+                    ({sourceRow: x.range.start.row, sourceCol: x.range.start.col} = input.sourceRowColFromResultRowCol(x.range.start.row, x.range.start.col));
+                    ({sourceRow: x.range.end.row, sourceCol: x.range.end.col} = input.sourceRowColFromResultRowCol(x.range.end.row, x.range.end.col));
                     return x;
                 });
             }
@@ -420,12 +437,15 @@ export class CobolSourceContext implements ISourceContext {
     public symbolInfoAtPosition(column: number, row: number): ISymbolInfo | undefined {
         let info: ISymbolInfo | undefined;
         if (this.input) {
-            ({resultRow: row, resultCol: column} = this.input.resultRowColFromSourceRowCol(row, column));
-            let masterSymbol = this.masterSymbolAtPosition(column, row);
+            let inResult = this.input.resultRowColFromSourceRowCol(row, column);
+            let masterSymbol = this.masterSymbolAtPosition(inResult.resultCol, inResult.resultRow);
             info = this.symbolTable.getSymbolInfo(masterSymbol);
             if (info && info.definition) {
-                ({sourceRow: info.definition.range.start.row, sourceCol: info.definition.range.start.column} = this.input.sourceRowColFromResultRowCol(info.definition.range.start.row, info.definition.range.start.column));
-                ({sourceRow: info.definition.range.end.row, sourceCol: info.definition.range.end.column} = this.input.sourceRowColFromResultRowCol(info.definition.range.end.row, info.definition.range.end.column));
+                let sourceRange = this.sourceRangeFromResult(info.definition.range);
+                info.definition.range = sourceRange.range;
+                if (sourceRange.source) {
+                    info.source = sourceRange.source;
+                }
             }
             if (info && masterSymbol instanceof ProgramSymbol) {
                 let details = programDetails(masterSymbol);
@@ -435,6 +455,43 @@ export class CobolSourceContext implements ISourceContext {
             }
         }
         return info;
+    }
+
+    public sourceRangeFromResult(sourceRange: ILexicalRange): ISourceLexicalRange {
+        let result: ISourceLexicalRange = {
+            range: sourceRange,
+        }
+        if (this.input) {
+            let srcStartPos = this.input.sourceRowColFromResultRowCol(sourceRange.start.row, sourceRange.start.col);
+            let srcEndPos = this.input.sourceRowColFromResultRowCol(sourceRange.end.row, sourceRange.end.col);
+            result.range.start.row = srcStartPos.sourceRow;
+            result.range.start.col = srcStartPos.sourceCol;
+            result.range.end.row = srcEndPos.sourceRow;
+            result.range.end.col = srcEndPos.sourceCol;
+            if (srcStartPos.inside.length > 0) {
+                let idx = srcStartPos.inside.length - 1;
+                while (idx >= 0) {
+                    let srcStartInside = srcStartPos.inside[idx];
+                    if (srcStartInside.replacing.name) {
+                        result.source = srcStartInside.replacing.path;
+                        result.range.start.row = srcStartInside.row;
+                        result.range.start.col = srcStartInside.col;
+                        result.range.end.row = srcStartInside.row;
+                        result.range.end.col = srcStartInside.col;
+                        for(let srcEndInside of srcEndPos.inside) {
+                            if (srcEndInside.replacing.name === srcStartInside.replacing.name) {
+                                result.range.end.row = srcEndInside.row;
+                                result.range.end.col = srcEndInside.col;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    --idx;
+                }
+            }
+        }
+        return result;
     }
 
     //________________________________________________________________________________
@@ -513,9 +570,14 @@ export class CobolSourceContext implements ISourceContext {
 
     private updateDiagnosticRanges() {
         if (this.input) {
-            for(const d of this.diagnostics) {
-                ({sourceRow: d.range.start.row, sourceCol: d.range.start.column} = this.input.sourceRowColFromResultRowCol(d.range.start.row - 1, d.range.start.column));
-                ({sourceRow: d.range.end.row, sourceCol: d.range.end.column} = this.input.sourceRowColFromResultRowCol(d.range.end.row - 1, d.range.end.column));
+            for(const diag of this.diagnostics) {
+                --diag.range.start.row;
+                --diag.range.end.row;
+                let sourceRange = this.sourceRangeFromResult(diag.range);
+                diag.range = sourceRange.range;
+                if (sourceRange.source) {
+                    diag.source = sourceRange.source;
+                }
             }
         }
     }

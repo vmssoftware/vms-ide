@@ -149,8 +149,8 @@ function markTokens(diagnostics: IDiagnosticEntry[], start: Token, stop: Token |
         message,
         range:
         {
-            start: { column: start.charPositionInLine, row: start.line },
-            end: { column: stop.charPositionInLine + (stop.text?stop.text.length:0), row: stop.line },
+            start: { col: start.charPositionInLine, row: start.line },
+            end: { col: stop.charPositionInLine + (stop.text?stop.text.length:0), row: stop.line },
         },
     });
 }
@@ -231,8 +231,8 @@ export function definitionForParserRuleContext(ctx: ParserRuleContext) : IDefini
     return {
         text: ctx.text,
         range: {
-            start: { column: ctx.start.charPositionInLine, row: ctx.start.line - 1},
-            end: { column: stop.charPositionInLine + (stop.text?stop.text.length:0), row: stop.line - 1},
+            start: { col: ctx.start.charPositionInLine, row: ctx.start.line - 1},
+            end: { col: stop.charPositionInLine + (stop.text?stop.text.length:0), row: stop.line - 1},
         }
     };
 }
@@ -245,8 +245,8 @@ export function definitionForTerminalNode(ctx: TerminalNode) : IDefinition {
     return {
         text: ctx.text,
         range: {
-            start: { column: ctx.symbol.charPositionInLine, row: ctx.symbol.line - 1},
-            end: { column: ctx.symbol.charPositionInLine + ctx.text.length, row: ctx.symbol.line - 1},
+            start: { col: ctx.symbol.charPositionInLine, row: ctx.symbol.line - 1},
+            end: { col: ctx.symbol.charPositionInLine + ctx.text.length, row: ctx.symbol.line - 1},
         }
     };
 }

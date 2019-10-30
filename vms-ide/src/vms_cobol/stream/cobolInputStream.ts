@@ -15,24 +15,26 @@ import { CobolAnalisisHelper } from "../context/CobolAnalisisHelpers";
 const _rgxIsEmptyA = /^.(?: {4}| {0,3}\t)\s*(\S)/;
 const _quotas = "\"'";
 
-interface IRange {
+export interface IRange {
     start: number, 
     length: number,
 };
 
 export interface ICopyManager {
     getLines(name: string): string[];
+    getSourcePath(name: string): string | undefined;
 }
 
 /**
  * simply string replacing
  */
-interface IReplace {
+export interface IReplace {
     // each range is actual after all previous replacing performed
     range: IRange,
     preceding?: IReplace[],
     // TODO: next lines must be a link to replacing source
     name?: string,
+    path?: string;
     length: number,
     lines: string[],
 }
@@ -58,9 +60,10 @@ interface IApplyReplace {
     newResult: string,
 }
 
-interface IInsideReplacing {
+export interface IInsideReplacing {
     replacing: IReplace,
-    position: number,
+    row: number,
+    col: number,
 }
 
 interface IShiftResult {
@@ -81,7 +84,7 @@ export interface IStreamErrorListener {
      * @param charPositionInLine zero-based char position in line
      * @param msg message
      */
-    syntaxError(line: number, charPositionInLine: number, msg: string): void;
+    syntaxError(file: string, line: number, charPositionInLine: number, msg: string): void;
 }
 
 export class CobolInputStream implements CharStream {
@@ -113,7 +116,7 @@ export class CobolInputStream implements CharStream {
      * @param source 
      * @param conditionals 
      */
-    constructor(public errorListener: IStreamErrorListener, private source: string, conditionals?: string, private copyManager?: ICopyManager) {
+    constructor(public file: string, public errorListener: IStreamErrorListener, private source: string, conditionals?: string, private copyManager?: ICopyManager) {
         if (conditionals) {
             this.conditionals = conditionals.toUpperCase();
         }
@@ -176,6 +179,12 @@ export class CobolInputStream implements CharStream {
         return result;
     }
 
+    /**
+     * Do not change position until target found (if exists)
+     * @param replacings 
+     * @param pos 
+     * @param targetR 
+     */
     private shiftResultPos(replacings: IReplace[], pos: number): IShiftResult {
         let result: IShiftResult = {
             pos,
@@ -197,10 +206,11 @@ export class CobolInputStream implements CharStream {
                 // before
                 result.pos += r.length - r.range.length;
             } else {
-                // inside
+                // inside, do not find position
                 result.inside.push({
+                    row: 0,
+                    col: 0,
                     replacing: r,
-                    position: result.pos - r.range.start, 
                 });
                 result.pos = r.range.start;
             }
@@ -228,10 +238,7 @@ export class CobolInputStream implements CharStream {
             let r = replacings[i];
             if (r.range.start <= result.pos) {
                 if (r.range.start + r.length > result.pos) {
-                    result.inside!.push({
-                        replacing: r,
-                        position: result.pos - r.range.start,
-                    });
+                    result.inside.push(this.insideReplacing(r, result.pos - r.range.start));
                     result.pos = r.range.start;
                 } else {
                     result.pos += r.range.length - r.length;
@@ -316,7 +323,7 @@ export class CobolInputStream implements CharStream {
     public sourceRowColFromResultRowCol(resultRow: number, resultCol: number) {
         let result = this.sourcePosFromResultPos(this.resultPosFromRowCol(resultRow, resultCol));
         let {sourceRow, sourceCol} = this.sourceRowColFromPos(result.pos);
-        return {sourceRow, sourceCol};
+        return {sourceRow, sourceCol, inside: result.inside};
     }
 
     /**
@@ -328,7 +335,7 @@ export class CobolInputStream implements CharStream {
     public resultRowColFromSourceRowCol(sourceRow: number, sourceCol: number) {
         let result = this.resultPosFromSourcePos(this.sourcePosFromRowCol(sourceRow, sourceCol));
         let {resultRow, resultCol} = this.resultRowColFromPos(result.pos);
-        return {resultRow, resultCol};
+        return {resultRow, resultCol, inside: result.inside};
     }
 
     //------------------------------------------------------------
@@ -561,14 +568,17 @@ export class CobolInputStream implements CharStream {
                     };
                     let textName = statement.text_name();
                     if (textName && !statement.library_name()) {
-                        let fileName = CobolAnalisisHelper.stringLiteralContent(textName.text);
-                        if (this.copyManager) {
-                            newReplacing.lines = this.copyManager.getLines(fileName);
-                        } else {
-                            newReplacing.lines = ["* from: " + fileName];
+                        newReplacing.name = CobolAnalisisHelper.stringLiteralContent(textName.text);
+                        if (newReplacing.name) {
+                            if (this.copyManager) {
+                                newReplacing.lines = this.copyManager.getLines(newReplacing.name);
+                                newReplacing.path = this.copyManager.getSourcePath(newReplacing.name);
+                            } else {
+                                newReplacing.lines = ["* from: " + newReplacing.name];
+                            }
+                            newReplacing.lines.unshift(""); // add first empty string, required!!!
+                            newReplacing.length = newReplacing.lines.join("\n").length;
                         }
-                        newReplacing.lines.unshift(""); // add first empty string, required!!!
-                        newReplacing.length = newReplacing.lines.join("\n").length;
                     }
                     // do not change lastNormalDotPosition
                     return {
@@ -852,8 +862,33 @@ export class CobolInputStream implements CharStream {
         for (let err of errors) {
             let sourcePos = this.sourcePosFromResultPos(err.pos);
             let sorceRC = this.sourceRowColFromPos(sourcePos.pos);
-            this.errorListener.syntaxError(sorceRC.sourceRow, sorceRC.sourceCol, err.msg);
+            for (let inside of sourcePos.inside) {
+                if (inside.replacing.name) {
+                    this.errorListener.syntaxError(inside.replacing.name, inside.row, inside.col, err.msg);
+                }
+            }
+            this.errorListener.syntaxError(this.file, sorceRC.sourceRow, sorceRC.sourceCol, err.msg);
         }
+    }
+
+    public insideReplacing(replacing: IReplace, pos: number) : IInsideReplacing {
+        let row = 0;
+        let col = pos;
+        while (row < replacing.lines.length) {
+            if (col <= replacing.lines[row].length) {
+                break;
+            }
+            col -= replacing.lines[row].length + 1;
+            ++row;
+        }
+        if (replacing.name) {
+            --row;  // do not forget about first empty line added
+        }
+        return {
+            row,
+            col,
+            replacing,
+        };
     }
 
     /**

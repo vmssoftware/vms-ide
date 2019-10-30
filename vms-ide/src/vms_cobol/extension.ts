@@ -99,13 +99,15 @@ export async function activate(context: ExtensionContext) {
 
     workspace.onDidChangeTextDocument((event: TextDocumentChangeEvent) => {
         if (event.contentChanges.length > 0) {
-            // clear copy contents for this workspace
             let fileName = event.document.fileName;
             let wsFolder = workspace.getWorkspaceFolder(Uri.file(fileName));
             if (wsFolder) {
                 let copyManager = _copyManagers.get(wsFolder.name);
                 if (copyManager instanceof CopyManagerImpl) {
-                    copyManager.clear();
+                    if (copyManager.clearBySource(fileName)) {
+                        diagnosticCollection.set(event.document.uri, []);
+                        return;
+                    }
                 }
             }
             if (event.document.languageId === Cobol.language && event.document.uri.scheme === Cobol.scheme) {
@@ -140,7 +142,7 @@ export async function activate(context: ExtensionContext) {
     window.onDidChangeActiveTextEditor((editor?: TextEditor) => {
         if(editor) {
             if (editor.document.languageId === Cobol.language && editor.document.uri.scheme === Cobol.scheme) {
-                backend.setText(editor.document.fileName, editor.document.getText());
+                //backend.setText(editor.document.fileName, editor.document.getText());
                 backend.reparse(editor.document.fileName);
                 processDiagnostic(editor.document);
             }
@@ -152,17 +154,28 @@ export async function activate(context: ExtensionContext) {
      * @param document 
      */
     function processDiagnostic(document: TextDocument) {
-        let diagnostics = [];
-        backend.setText(document.fileName, document.getText());
+        let diagnostics = new Map<string, Diagnostic[]>();
+        diagnosticCollection.set(document.uri, []);
         let entries = backend.getDiagnostics(document.fileName);
 
         for (let entry of entries) {
-            let range = new Range(entry.range.start.row, entry.range.start.column, entry.range.end.row, entry.range.end.column);
+            let range = new Range(entry.range.start.row, entry.range.start.col, entry.range.end.row, entry.range.end.col);
             let diagnostic = new Diagnostic(range, entry.message, DiagnosticTypeMap.get(entry.type));
-            diagnostics.push(diagnostic);
+            let fileName = document.fileName;
+            if (entry.source) {
+                fileName = entry.source;
+            }
+            let fileDiagnostics = diagnostics.get(fileName);
+            if (fileDiagnostics) {
+                fileDiagnostics.push(diagnostic);
+            } else {
+                diagnostics.set(fileName, [diagnostic]);
+            }
         }
 
-        diagnosticCollection.set(document.uri, diagnostics);
+        for (let [fileName, fileDiagnostics] of diagnostics) {
+            diagnosticCollection.set(Uri.file(fileName), fileDiagnostics);
+        }
     }
 }
 

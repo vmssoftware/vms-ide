@@ -265,9 +265,16 @@ export class CobolAnalisisHelper {
             switch (literal[0]) {
                 case 'N':
                 case 'n':
-                    return literal.substr(2, literal.length - 3);
+                    literal = literal.substr(1);
             }
-            return literal.substr(1, literal.length - 2);
+            if (literal.length > 0) {
+                switch (literal[0]) {
+                    case '"':
+                    case "'":
+                        return literal.substr(1, literal.length - 2);
+                }
+                return literal;
+            }
         }
         return "";
     }

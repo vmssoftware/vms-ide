@@ -13,7 +13,7 @@ export class HoverProviderImpl implements HoverProvider {
                 defStr = ` in ${path.basename(info.source)}`;
             }
             if (info.definition) {
-                defStr += ` at ${info.definition.range.start.row + 1}:${info.definition.range.start.column + 1}`;
+                defStr += ` at ${info.definition.range.start.row + 1}:${info.definition.range.start.col + 1}`;
             }
             return new Hover([
                 `**${info.kindString}** ${defStr}`,

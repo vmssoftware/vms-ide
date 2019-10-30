@@ -7,8 +7,13 @@ import { LogFunction } from '../main';
  * Hence when start and end position are equal the range is empty.
  */
 export interface ILexicalRange {
-    start: { column: number, row: number };
-    end: { column: number, row: number };
+    start: { row: number, col: number };
+    end: { row: number, col: number };
+}
+
+export interface ISourceLexicalRange {
+    source?: string,
+    range: ILexicalRange,
 }
 
 // The definition of a single symbol (range and content it is made of).
@@ -40,6 +45,7 @@ export interface IDiagnosticEntry {
     type: EDiagnosticType;
     message: string;
     range: ILexicalRange;
+    source?: string;
 }
 
 export interface ISourceContext {

@@ -15,7 +15,7 @@ export class LexerErrorListener implements ANTLRErrorListener<number>
         let error: IDiagnosticEntry = {
             type: EDiagnosticType.Error,
             message: msg,
-            range: { start: { column: charPositionInLine, row: line }, end: { column: charPositionInLine + 1, row: line }}
+            range: { start: { col: charPositionInLine, row: line }, end: { col: charPositionInLine + 1, row: line }}
         };
 
         this.errorList.push(error);
@@ -24,8 +24,8 @@ export class LexerErrorListener implements ANTLRErrorListener<number>
 
 export class ParserErrorListener implements ANTLRErrorListener<CommonToken> 
 {
-    constructor(private errorList: IDiagnosticEntry[]) 
-    {    }
+    constructor(private errorList: IDiagnosticEntry[]) {
+    }
 
     syntaxError<T extends Token>(recognizer: Recognizer<T, any>, offendingSymbol: T | undefined, line: number,
         charPositionInLine: number, msg: string, e: RecognitionException | undefined): void 
@@ -33,12 +33,11 @@ export class ParserErrorListener implements ANTLRErrorListener<CommonToken>
         let error: IDiagnosticEntry = {
             type: EDiagnosticType.Error,
             message: msg,
-            range: { start: { column: charPositionInLine, row: line }, end: { column: charPositionInLine + 1, row: line }}
+            range: { start: { col: charPositionInLine, row: line }, end: { col: charPositionInLine + 1, row: line }}
         };
 
-        if (offendingSymbol) 
-        {
-            error.range.end.column = charPositionInLine + offendingSymbol.stopIndex - offendingSymbol.startIndex + 1;
+        if (offendingSymbol) {
+            error.range.end.col = charPositionInLine + offendingSymbol.stopIndex - offendingSymbol.startIndex + 1;
         }
         
         this.errorList.push(error);
