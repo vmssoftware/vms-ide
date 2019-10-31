@@ -229,6 +229,7 @@ export function isNodeIncludes(node: ParseTree, testNode: ParseTree) : boolean {
 export function definitionForParserRuleContext(ctx: ParserRuleContext) : IDefinition {
     let stop = ctx.stop? ctx.stop : ctx.start;
     return {
+        source: "",
         text: ctx.text,
         range: {
             start: { col: ctx.start.charPositionInLine, row: ctx.start.line - 1},
@@ -243,6 +244,7 @@ export function definitionForParserRuleContext(ctx: ParserRuleContext) : IDefini
  */
 export function definitionForTerminalNode(ctx: TerminalNode) : IDefinition {
     return {
+        source: "",
         text: ctx.text,
         range: {
             start: { col: ctx.symbol.charPositionInLine, row: ctx.symbol.line - 1},

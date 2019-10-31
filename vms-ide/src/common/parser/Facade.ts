@@ -11,22 +11,17 @@ export interface ILexicalRange {
     end: { row: number, col: number };
 }
 
-export interface ISourceLexicalRange {
-    source?: string,
-    range: ILexicalRange,
-}
-
 // The definition of a single symbol (range and content it is made of).
 export interface IDefinition {
-    text: string;
-    range: ILexicalRange;
+    source: string,
+    text?: string;
+    range?: ILexicalRange;
 }
 
 export interface ISymbolInfo {
     definition?: IDefinition;   // Place where symbol is defined, not where it is used
     kindString: string;         // Provides a small description for symbol kind
     description: string;        // Full path to the symbol (and type of arguments if it is a program or function)
-    source: string;             // Source file
 }
 
 export interface ICompletion {

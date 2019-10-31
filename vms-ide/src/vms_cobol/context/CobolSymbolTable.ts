@@ -223,11 +223,12 @@ export class CobolSymbolTable extends SymbolTable {
 
         const result: ISymbolInfo = {
             description: name,
-            source: this.owner?this.owner.fileName:"",
             definition: this.getSymbolNameDefinition(symbol),
             kindString: symbolDescriptionFromEnum(kind),
         };
-
+        if (result.definition) {
+            result.definition.source = this.owner?this.owner.fileName:"";
+        }
         return result;
     }
 
@@ -278,9 +279,16 @@ export class CobolSymbolTable extends SymbolTable {
                 if (link.master === symbol) {
                     for (let node of link.references) {
                         let def = definitionForContext(node);
-                        if (def) {
-                            result.push(def);
+                        if (!def) {
+                            // create empty definition for empty link node
+                            def = {
+                                source: "",
+                                text: link.master.name
+                            }
+                        } else if (this.owner) {
+                            def.source = this.owner.fileName;
                         }
+                        result.push(def);
                     }
                     break;
                 }

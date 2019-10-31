@@ -44,7 +44,6 @@ import {
     EDiagnosticType,
     ICompletion,
     ILexicalRange,
-    ISourceLexicalRange
 } from '../../common/parser/Facade';
 
 import {
@@ -414,19 +413,27 @@ export class CobolSourceContext implements ISourceContext {
      * @param row 
      */
     public getSymbolOccurences(column: number, row: number): IDefinition[] {
+        let retDef: IDefinition[] = [];
         if (this.input) {
             let input = this.input;
             ({resultRow: row, resultCol: column} = input.resultRowColFromSourceRowCol(row, column));
             let master = this.masterSymbolAtPosition(column, row);
             if (master) {
-                return this.symbolTable.getSymbolOccurences(master).map(x => {
-                    ({sourceRow: x.range.start.row, sourceCol: x.range.start.col} = input.sourceRowColFromResultRowCol(x.range.start.row, x.range.start.col));
-                    ({sourceRow: x.range.end.row, sourceCol: x.range.end.col} = input.sourceRowColFromResultRowCol(x.range.end.row, x.range.end.col));
-                    return x;
-                });
+                for (let occ of this.symbolTable.getSymbolOccurences(master)) {
+                    if (occ.range) {
+                        let srcPos = this.sourceRangeFromResult(occ.range);
+                        retDef.push({
+                            range: srcPos.range,
+                            source: srcPos.source,
+                            text: occ.text,
+                        });
+                    } else {
+                        retDef.push(occ);
+                    }
+                }
             }
         }
-        return [];
+        return retDef;
     }
 
     /**
@@ -438,14 +445,24 @@ export class CobolSourceContext implements ISourceContext {
         let info: ISymbolInfo | undefined;
         if (this.input) {
             let inResult = this.input.resultRowColFromSourceRowCol(row, column);
+            for (let insideResult of inResult.inside) {
+                if (insideResult.replacing.name && insideResult.replacing.path) {
+                    info = {
+                        kindString: "COPY",
+                        description: "include content",
+                        definition: {
+                            source: insideResult.replacing.path
+                        }
+                    };
+                    return info;
+                }
+            }
             let masterSymbol = this.masterSymbolAtPosition(inResult.resultCol, inResult.resultRow);
             info = this.symbolTable.getSymbolInfo(masterSymbol);
-            if (info && info.definition) {
+            if (info && info.definition && info.definition.range) {
                 let sourceRange = this.sourceRangeFromResult(info.definition.range);
                 info.definition.range = sourceRange.range;
-                if (sourceRange.source) {
-                    info.source = sourceRange.source;
-                }
+                info.definition.source = sourceRange.source;
             }
             if (info && masterSymbol instanceof ProgramSymbol) {
                 let details = programDetails(masterSymbol);
@@ -457,11 +474,12 @@ export class CobolSourceContext implements ISourceContext {
         return info;
     }
 
-    public sourceRangeFromResult(sourceRange: ILexicalRange): ISourceLexicalRange {
-        let result: ISourceLexicalRange = {
+    public sourceRangeFromResult(sourceRange: ILexicalRange): IDefinition {
+        let result: IDefinition = {
             range: sourceRange,
-        }
-        if (this.input) {
+            source: this.fileName,
+        };
+        if (this.input && result.range) {
             let srcStartPos = this.input.sourceRowColFromResultRowCol(sourceRange.start.row, sourceRange.start.col);
             let srcEndPos = this.input.sourceRowColFromResultRowCol(sourceRange.end.row, sourceRange.end.col);
             result.range.start.row = srcStartPos.sourceRow;
@@ -472,7 +490,7 @@ export class CobolSourceContext implements ISourceContext {
                 let idx = srcStartPos.inside.length - 1;
                 while (idx >= 0) {
                     let srcStartInside = srcStartPos.inside[idx];
-                    if (srcStartInside.replacing.name) {
+                    if (srcStartInside.replacing.name && srcStartInside.replacing.path) {
                         result.source = srcStartInside.replacing.path;
                         result.range.start.row = srcStartInside.row;
                         result.range.start.col = srcStartInside.col;
@@ -574,9 +592,9 @@ export class CobolSourceContext implements ISourceContext {
                 --diag.range.start.row;
                 --diag.range.end.row;
                 let sourceRange = this.sourceRangeFromResult(diag.range);
-                diag.range = sourceRange.range;
-                if (sourceRange.source) {
-                    diag.source = sourceRange.source;
+                diag.source = sourceRange.source;
+                if (sourceRange.range) {
+                    diag.range = sourceRange.range;
                 }
             }
         }
