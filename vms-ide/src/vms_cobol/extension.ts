@@ -19,6 +19,7 @@ import { RenameProviderImpl } from "../common/parser/RenameProvider";
 import { CompletionItemProviderImpl } from "../common/parser/CompletionProvider";
 import { CopyManagerImpl } from "./stream/copymanager";
 import { ICopyManager } from "./stream/cobolInputStream";
+import { ReferenceProviderImpl } from "../common/parser/ReferenceProvider";
 
 const locale = env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -77,7 +78,7 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(languages.registerRenameProvider(Cobol, new RenameProviderImpl(backend)));
     context.subscriptions.push(languages.registerCompletionItemProvider(Cobol, new CompletionItemProviderImpl(backend),
          ".", " ", "<", ">", "=", "("));
-    // context.subscriptions.push(languages.registerReferenceProvider(Cobol, new ReferenceProviderImpl(backend)));
+    context.subscriptions.push(languages.registerReferenceProvider(Cobol, new ReferenceProviderImpl(backend)));
 
     //----- Events -----
 
