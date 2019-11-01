@@ -65,7 +65,9 @@ import {
 } from '../../common/parser/ErrorListeners';
 
 import {
-    CobolInputStream, ICopyManager, IInsideReplacing, IReplace, IRange
+    CobolInputStream,
+    ICopyManager,
+    IInsideReplacing,
 } from '../stream/cobolInputStream';
 
 import {
@@ -73,12 +75,32 @@ import {
 } from '../parser/cobolLexer';
 
 import {
-    parseTreeFromPosition
+    parseTreeFromPosition, unifyCobolName
 } from '../../common/parser/Helpers';
 
 
 import {
-    ProgramSymbol, programDetails, _IntrinsicFunctions, _PredefinedData, IFunction, IPredefinedNode, IntrinsicFunctionSymbol, getSymbolFromKind, IPreDefinition, DataRecordSymbol, EDataUsage, IdentifierSymbol, EGlobalType, symbolDescriptionFromEnum, ECobolSymbolKind, ParagraphSymbol, SectionSymbol, getKindFromSymbol, BOOL_Symbol, SIGN_Symbol, CLASS_Symbol, SpecialNameSymbol, DeviceSymbol,
+    CLASS_Symbol,
+    DataRecordSymbol,
+    DeviceSymbol,
+    ECobolSymbolKind,
+    EDataUsage,
+    EGlobalType,
+    IFunction,
+    IPreDefinition,
+    IPredefinedNode,
+    IdentifierSymbol,
+    IntrinsicFunctionSymbol,
+    ParagraphSymbol,
+    ProgramSymbol,
+    SectionSymbol,
+    SpecialNameSymbol,
+    _IntrinsicFunctions,
+    _PredefinedData,
+    getKindFromSymbol,
+    getSymbolFromKind,
+    programDetails,
+    symbolDescriptionFromEnum,
 } from './CobolSymbol';
 
 import {
@@ -613,7 +635,7 @@ export class CobolSourceContext implements ISourceContext {
 
     private addPredefinitions(intrincisFunctions: IFunction[], predefinedData: IPredefinedNode[]) {
         for (let intrincisFunction of intrincisFunctions) {
-            let symbolToAdd = this.symbolTable.addNewSymbolOfType(IntrinsicFunctionSymbol, this.symbolTable, intrincisFunction.name);
+            let symbolToAdd = this.symbolTable.addNewSymbolOfType(IntrinsicFunctionSymbol, this.symbolTable, unifyCobolName(intrincisFunction.name));
             symbolToAdd.functionDefinition = intrincisFunction;
             symbolToAdd.isGlobal = true;
             this.symbolTable.createOccurance(symbolToAdd);
@@ -635,7 +657,7 @@ export class CobolSourceContext implements ISourceContext {
         }
 
         function create(parentSymbol: ScopedSymbol, predefinition: IPreDefinition, symbolTable: CobolSymbolTable, forceGlobal?: boolean) {
-            let symbolToAdd = symbolTable.addNewSymbolOfType(predefinition.type, parentSymbol, predefinition.name);
+            let symbolToAdd = symbolTable.addNewSymbolOfType(predefinition.type, parentSymbol, unifyCobolName(predefinition.name));
             if (symbolToAdd instanceof DataRecordSymbol) {
                 symbolToAdd.level = 1;
                 symbolToAdd.picture = predefinition.picture?predefinition.picture:"X";

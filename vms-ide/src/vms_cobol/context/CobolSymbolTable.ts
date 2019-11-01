@@ -1,13 +1,34 @@
 "use strict";
 import { ParserRuleContext } from 'antlr4ts';
-import { SymbolTable, Symbol, ScopedSymbol, SymbolTableOptions, NamespaceSymbol } from "antlr4-c3";
+import { 
+    SymbolTable,
+    Symbol,
+    ScopedSymbol,
+    SymbolTableOptions
+ } from "antlr4-c3";
 import { ParseTree } from 'antlr4ts/tree';
 
-import { ISymbolInfo, IDefinition } from '../../common/parser/Facade';
-import { definitionForContext, isNodeIncludes } from '../../common/parser/Helpers';
+import {
+    ISymbolInfo,
+    IDefinition
+} from '../../common/parser/Facade';
+import {
+    definitionForContext,
+    isNodeIncludes,
+    unifyCobolName
+} from '../../common/parser/Helpers';
 
 import { CobolSourceContext } from './CobolSourceContext';
-import { symbolDescriptionFromEnum, getKindFromSymbol, ProgramSymbol, IdentifierSymbol, DataRecordSymbol } from './CobolSymbol';
+
+import {
+    symbolDescriptionFromEnum,
+    getKindFromSymbol,
+    ProgramSymbol,
+    IdentifierSymbol,
+    DataRecordSymbol,
+    DeviceSymbol
+} from './CobolSymbol';
+import { CobolAnalisisHelper } from './CobolAnalisisHelpers';
 
 /**
  * First element in ParseTree[] is name definition context
@@ -55,10 +76,10 @@ export class CobolSymbolTable extends SymbolTable {
         if (namePath.length > 0) {
             let passSymbol: Symbol | undefined = origin;
             let idxName = 0;
-            let upperName = namePath[idxName].text.toUpperCase();
+            let unifiedName = unifyCobolName(CobolAnalisisHelper.stringLiteralContent(namePath[idxName].text));
             while (passSymbol) {
-                if (passSymbol.name.toUpperCase() === upperName) {
-                    let links = this.occurance.get(upperName);
+                if (passSymbol.name === unifiedName) {
+                    let links = this.occurance.get(unifiedName);
                     if (links) {
                         for (let link of links) {
                             if (link.master === passSymbol) {
@@ -68,7 +89,7 @@ export class CobolSymbolTable extends SymbolTable {
                     }
                     ++idxName;
                     if (idxName < namePath.length) {
-                        upperName = namePath[idxName].text.toUpperCase();
+                        unifiedName = unifyCobolName(CobolAnalisisHelper.stringLiteralContent(namePath[idxName].text));
                     } else {
                         retCode = true;
                         break;
@@ -104,14 +125,17 @@ export class CobolSymbolTable extends SymbolTable {
                         let current: Symbol | undefined = candidate;
                         while(current) {
                             if (current === currentScopeSymbol) {
-                                if (!requireGlobal || (!(candidate instanceof IdentifierSymbol) || candidate.isGlobal)) {
+                                if (!requireGlobal || 
+                                      (candidate instanceof IdentifierSymbol && candidate.isGlobal) ||
+                                      (candidate instanceof ProgramSymbol && candidate.isCommon)) {
                                     retSymbols.push(candidate);
                                 }
                                 break;
                             }
                             // do not pass through program while finding appropriate scope, 
                             // so upper program doesn't see symbols from lower program
-                            if (current instanceof ProgramSymbol) {
+                            // excluding case when candidate is ProgramSymbol too
+                            if (current !== candidate && current instanceof ProgramSymbol) {
                                 break;
                             }
                             current = current.parent;
@@ -144,13 +168,12 @@ export class CobolSymbolTable extends SymbolTable {
 
     /**
      * collect all matched candidates
-     * @param namePath 
+     * @param namePath unified names
      */
     private collectCandidates(namePath: string[]): Symbol[] {
         let matched: Symbol[] = [];
         if (namePath.length > 0) {
             // 1. collect all candidates
-            namePath = namePath.map(x => x.toUpperCase());
             let name = namePath[0];
             let links = this.occurance.get(name);
             if (links) {
@@ -164,7 +187,7 @@ export class CobolSymbolTable extends SymbolTable {
                         if (current instanceof ProgramSymbol) {
                             break;
                         }
-                        if (idxName < namePath.length && current.name.toUpperCase() === namePath[idxName]) {
+                        if (idxName < namePath.length && current.name === namePath[idxName]) {
                             ++idxName;
                         }
                         current = current.parent;
@@ -239,7 +262,7 @@ export class CobolSymbolTable extends SymbolTable {
         }
         let retStr = "";
         while(symbol) {
-            retStr = (retStr? retStr + "\\" : "") + (symbol.name?symbol.name:"<anonymous>");
+            retStr = (symbol.name?symbol.name:"<anonymous>") + (retStr? "\\" + retStr: "") ;
             symbol = symbol.parent;
             if (symbol === this || stopType && symbol instanceof stopType) {
                 break;
@@ -253,7 +276,7 @@ export class CobolSymbolTable extends SymbolTable {
      * @param symbol 
      */
     public getSymbolNameDefinition(symbol: Symbol): IDefinition | undefined {
-        let links = this.occurance.get(symbol.name.toUpperCase());
+        let links = this.occurance.get(symbol.name);
             if (links) {
             for(let link of links) {
                 if (link.master === symbol) {
@@ -273,7 +296,7 @@ export class CobolSymbolTable extends SymbolTable {
      */
     public getSymbolOccurences(symbol: Symbol): IDefinition[] {
         let result: IDefinition[] = [];
-        let links = this.occurance.get(symbol.name.toUpperCase());
+        let links = this.occurance.get(symbol.name);
             if (links) {
             for(let link of links) {
                 if (link.master === symbol) {
@@ -302,7 +325,7 @@ export class CobolSymbolTable extends SymbolTable {
      * @param ctx 
      */
     public getMasterSymbol(ctx: ParseTree) {
-        let links = this.occurance.get(ctx.text.toUpperCase());
+        let links = this.occurance.get(unifyCobolName(CobolAnalisisHelper.stringLiteralContent(ctx.text)));
         if (links) {
             for(let link of links) {
                 for (let node of link.references) {

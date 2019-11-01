@@ -1,10 +1,74 @@
 import * as nls from "vscode-nls";
 import { cobolVisitor } from "../parser/cobolVisitor";
 import { AbstractParseTreeVisitor } from "antlr4ts/tree";
-import { Program_idContext, ProgramContext, End_programContext, Configuration_sectionContext, Memory_size_amountContext, Program_collatingContext, Segment_limitContext, Special_namesContext, Switch_numContext, User_alphaContext, Symbol_charContext, Symb_ch_def_in_alphabetContext, Currency_charContext, Cursor_isContext, Crt_isContext, Proc_nameContext, Qualified_data_itemContext, StatementContext, Input_sourceContext, Figurative_constant_witout_all_zeroContext, Figurative_constant_zeroContext, Figurative_constant_witout_zeroContext, File_nameContext, Report_nameContext, Class_condition_nameContext, Sign_condition_nameContext, Bool_condition_nameContext, Function_nameContext, Value_is_literalContext, Identification_division_headerContext, End_program_headerContext, Declaratives_headerContext, End_declarativesContext, ParagraphContext, Section_headerContext } from "../parser/cobolParser";
+import {
+    Bool_condition_nameContext,
+    Class_condition_nameContext,
+    Configuration_sectionContext,
+    Crt_isContext,
+    Currency_charContext,
+    Cursor_isContext,
+    Declaratives_headerContext,
+    End_declarativesContext,
+    End_programContext,
+    End_program_headerContext,
+    Figurative_constant_witout_all_zeroContext,
+    Figurative_constant_witout_zeroContext,
+    Figurative_constant_zeroContext,
+    File_nameContext,
+    Function_nameContext,
+    Identification_division_headerContext,
+    Input_sourceContext,
+    Memory_size_amountContext,
+    ParagraphContext,
+    Proc_nameContext,
+    Prog_nameContext,
+    ProgramContext,
+    Program_collatingContext,
+    Program_idContext,
+    Qualified_data_itemContext,
+    Report_nameContext,
+    Section_headerContext,
+    Segment_limitContext,
+    Sign_condition_nameContext,
+    Special_namesContext,
+    StatementContext,
+    Switch_numContext,
+    Symb_ch_def_in_alphabetContext,
+    Symbol_charContext,
+    User_alphaContext,
+    UsingContext,
+    Value_is_literalContext,
+} from "../parser/cobolParser";
+
 import { CobolAnalisisHelper } from "./CobolAnalisisHelpers";
-import { firstContainingContext, findChildInA } from "../../common/parser/Helpers";
-import { ProgramSymbol, ALPHABET_Symbol, SYMBOLIC_CHARACTERS_Symbol, CURRENCY_Symbol, DataRecordSymbol, ParagraphSymbol, SectionSymbol, DeclarativesSectionSymbol, IntrinsicFunctionSymbol, DeviceSymbol, FigurativeConstantSymbol, FileSymbol, SortMergeFileSymbol, ReportFileSymbol, CLASS_Symbol, SIGN_Symbol, BOOL_Symbol } from "./CobolSymbol";
+
+import {
+    firstContainingContext,
+    findChildInA,
+    unifyCobolName
+} from "../../common/parser/Helpers";
+
+import {
+    ALPHABET_Symbol,
+    BOOL_Symbol,
+    CLASS_Symbol,
+    CURRENCY_Symbol,
+    DataRecordSymbol,
+    DeclarativesSectionSymbol,
+    DeviceSymbol,
+    FigurativeConstantSymbol,
+    FileSymbol,
+    IntrinsicFunctionSymbol,
+    ParagraphSymbol,
+    ProgramSymbol,
+    ReportFileSymbol,
+    SIGN_Symbol,
+    SYMBOLIC_CHARACTERS_Symbol,
+    SectionSymbol,
+    SortMergeFileSymbol,
+} from "./CobolSymbol";
+
 import { ParserRuleContext } from "antlr4ts";
 
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -66,7 +130,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         this.helper.verifyTextLengthRange(ctx.program_name(), 1, 31);
         let with_ident_ctx = ctx.with_ident();
         if (with_ident_ctx !== undefined) {
-            this.helper.verifyTextLengthRange(with_ident_ctx.ident_string(), 1, 31, true);
+            this.helper.verifyTextLengthRange(with_ident_ctx.ident_string(), 1, 31);
         }
         let programCtx = firstContainingContext(ctx, ProgramContext);
         if (programCtx !== undefined && programCtx.parent instanceof ProgramContext) {
@@ -127,14 +191,14 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     }
 
     visitUser_alpha(ctx: User_alphaContext) {
-        this.helper.verifyTextLengthRange(ctx.first_literal().STRING_LITERAL_(), 1, 1, true);
+        this.helper.verifyTextLengthRange(ctx.first_literal().STRING_LITERAL_(), 1, 1);
         let lastLitCtx = ctx.last_literal();
         if (lastLitCtx) {
-            this.helper.verifyTextLengthRange(lastLitCtx.STRING_LITERAL_(), 1, 1, true);
+            this.helper.verifyTextLengthRange(lastLitCtx.STRING_LITERAL_(), 1, 1);
         }
         let sameLitCtxArr = ctx.same_literal();
         for (let sameLitCtx of sameLitCtxArr) {
-            this.helper.verifyTextLengthRange(sameLitCtx.STRING_LITERAL_(), 1, 1, true);
+            this.helper.verifyTextLengthRange(sameLitCtx.STRING_LITERAL_(), 1, 1);
         }
         //this.visitChildren(ctx);
     }
@@ -156,7 +220,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
 
     visitCurrency_char(ctx: Currency_charContext) {
         let programCtx = firstContainingContext(ctx, ProgramContext);
-        let symbols = this.helper.symbolTable.resolveIdentifier([ctx.text], programCtx);
+        let symbols = this.helper.symbolTable.resolveIdentifier([unifyCobolName(ctx.text)], programCtx);
         let theSame: CURRENCY_Symbol | undefined;
         for (let symbol of symbols) {
             if (symbol instanceof CURRENCY_Symbol) {
@@ -172,7 +236,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         if (theSame && theSame.context instanceof ParserRuleContext) {
             this.helper.mark(theSame.context, localize("already_defined", "Already defined"));
         }
-        let text = this.helper.verifyTextLengthRange(ctx.STRING_LITERAL_(), 1, 1, true);
+        let text = this.helper.verifyTextLengthRange(ctx.STRING_LITERAL_(), 1, 1);
         if (text && text.match(this.helper.rgxReservedPic)) {
             this.helper.mark(ctx, localize("invalid_currency", "Invalid currency char"));
         }
@@ -276,5 +340,29 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
             this.helper.verifyName(charSymbNode, false, [SYMBOLIC_CHARACTERS_Symbol]);
         }
         this.visitChildren(ctx);
+    }
+
+    visitUsing(ctx: UsingContext) {
+        // let programCtx = firstContainingContext(ctx, ProgramContext);
+        // if (!programCtx) {
+        //     this.helper.mark(ctx, localize("must.be.in.program", "Must be inside program"));
+        //     return;
+        // }
+        // let programSymbol = this.helper.symbolTable.symbolWithContext(programCtx);
+        // if (!programSymbol) {
+        //     this.helper.mark(ctx, localize("fatal.error", "FATALITY"));
+        //     return;
+        // }
+        this.visitChildren(ctx);
+    }
+
+    visitProg_name(ctx: Prog_nameContext) {
+        let literalName = ctx.STRING_LITERAL_();
+        let identifierName = ctx.USER_DEFINED_WORD_();
+        if (literalName) {
+            this.helper.verifyNamePath(literalName, [literalName], false, undefined, undefined, [IntrinsicFunctionSymbol]);
+        } else if (identifierName) {
+            this.helper.verifyNamePath(identifierName, [identifierName], false, undefined, undefined, [IntrinsicFunctionSymbol]);
+        }
     }
 }

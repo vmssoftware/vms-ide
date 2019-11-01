@@ -74,6 +74,7 @@ import {
     IndexedBySymbol,
     IdentifierSymbol,
     EDataUsage,
+    EValueType,
 } from './CobolSymbol';
 
 import {
@@ -83,6 +84,8 @@ import {
 import {
     TerminalNode,
 } from 'antlr4ts/tree';
+import { firstContainingContext, unifyCobolName } from '../../common/parser/Helpers';
+import { CobolAnalisisHelper } from './CobolAnalisisHelpers';
 
 
 export class CobolDetailsListener implements cobolListener {
@@ -104,8 +107,12 @@ export class CobolDetailsListener implements cobolListener {
 
     enterProgram_id(ctx: Program_idContext) {
         if (this.currentSymbol instanceof ProgramSymbol) {
-            this.currentSymbol.name = ctx.program_name().text.toUpperCase();
+            this.currentSymbol.name = unifyCobolName(ctx.program_name().text);
             this.symbolTable.createOccurance(this.currentSymbol, ctx.program_name());
+            let common_initial = ctx.common_initial();
+            if (common_initial && common_initial.COMMON()) {
+                this.currentSymbol.isCommon = true;
+            }
         }
     }
 
@@ -442,10 +449,40 @@ export class CobolDetailsListener implements cobolListener {
         }
     }
 
+    // enterUsing(ctx: UsingContext) {
+    //     let programSymbol = this.firstContainigSymbol(ProgramSymbol);
+    //     if (programSymbol) {
+    //         programSymbol.definition = {
+    //             name: programSymbol.name,
+    //             type: EValueType.Any
+    //         };
+    //         let itemsCtxS = ctx.qualified_data_item();
+    //         for (let itemCtx of itemsCtxS) {
+    //             let symbols = this.symbolTable.resolveIdentifier(itemCtx.USER_DEFINED_WORD_().map(x => x.text), ctx);
+    //         }
+    //     }
+    // }
+
+    // enterGiving(ctx: GivingContext) {
+    //     let programSymbol = this.firstContainigSymbol(ProgramSymbol);
+    //     if (programSymbol) {
+    //         let type = EValueType.Any;
+    //         // TODO: infer type from giving identifier
+    //         if (!programSymbol.definition) {
+    //             programSymbol.definition = {
+    //                 name: programSymbol.name,
+    //                 type
+    //             };
+    //         } else {
+    //             programSymbol.definition.type = type;
+    //         }
+    //     }
+    // }
+
     //*****************************************************************************************************************************
 
     private promoteCurrentSymbol<T extends Symbol>(t: new (...args: any[]) => T, enclosingCtx: ParserRuleContext, nameCtx?: ParserRuleContext, ...args: any[]): T {
-        let name = nameCtx ? nameCtx.text.toUpperCase() : "";
+        let name = nameCtx ? unifyCobolName(CobolAnalisisHelper.stringLiteralContent(nameCtx.text)) : "";
         this.currentSymbol = this.createAndTryAddSymbolTo(this.currentSymbol, t, name, ...args);
         this.currentSymbol.context = enclosingCtx;
         if (nameCtx) {
@@ -468,5 +505,15 @@ export class CobolDetailsListener implements cobolListener {
         if (this.currentSymbol && this.currentSymbol.context === ctx) {
             this.currentSymbol = this.currentSymbol.parent;
         }
+    }
+
+    private firstContainigSymbol<T extends Symbol>(t: new (...args: any[]) => T) {
+        let retSymbol = this.currentSymbol;
+        while(retSymbol !== undefined) {
+            if (retSymbol instanceof t) {
+                return retSymbol;
+            }
+        }
+        return undefined;
     }
 }

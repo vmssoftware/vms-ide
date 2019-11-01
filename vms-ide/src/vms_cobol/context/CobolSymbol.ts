@@ -427,11 +427,18 @@ export enum EDataUsage {
 export class IdentifierSymbol extends ScopedSymbol {
     public isGlobal?: boolean;
 }
-export class SpecialNameSymbol extends Symbol { }
+export class SpecialNameSymbol extends IdentifierSymbol {
+    constructor(...args: any[]) {
+        super(...args);
+        this.isGlobal = true;
+    }
+ }
 export class DeviceSymbol extends SpecialNameSymbol { }
 //**************************************************/
 export class ProgramSymbol extends IdentifierSymbol { 
+    isCommon?: boolean;
     // TODO: using, giving types
+    definition?: IFunction;
 }
 export class CARD_READER_Symbol extends DeviceSymbol { }
 export class PAPER_TAPE_READER_Symbol extends DeviceSymbol { }

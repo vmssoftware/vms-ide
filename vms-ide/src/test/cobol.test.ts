@@ -316,7 +316,8 @@ end PROGRAM id-1.`;
 PROGRAM-ID. id-1.
 DATA DIVISION.
 WORKING-STORAGE SECTION.
-    01 ITEM PIC XXXX.
+    01 ITEEM PIC XXXX.
+    01 item-def usage comp-1.
     01 RSULT comp-2.
 PROCEDURE DIVISION.
 end PROGRAM id-1.`;
@@ -325,15 +326,15 @@ end PROGRAM id-1.`;
             assert.fail("invalid result");
         }
 
-        let resPos = input.sourceRowColFromResultRowCol(4, 12);
+        let resPos = input.sourceRowColFromResultRowCol(4, 13);
         if (resPos.sourceRow !== 7 || resPos.sourceCol !== 2) {
             assert.fail("(4:12) isn't (7:2)");
         }
         if (resPos.inside.length !== 1) {
             assert.fail("(4:7) isn't inside");
         }
-        if (resPos.inside[0].row !== 2 || resPos.inside[0].col !== 9) {
-            assert.fail("(4:7) isn't (2:9) inside ITEM-DEF");
+        if (resPos.inside[0].row !== 3 || resPos.inside[0].col !== 10) {
+            assert.fail("(4:7) isn't (3:10) inside ITEM-DEF");
         }
     });
 

@@ -6,7 +6,7 @@ import { ParseTree, TerminalNode } from "antlr4ts/tree";
 import { CobolSymbolTable } from "./CobolSymbolTable";
 import { Symbol } from "antlr4-c3";
 import { IDiagnosticEntry, EDiagnosticType } from "../../common/parser/Facade";
-import { mark } from "../../common/parser/Helpers";
+import { mark, unifyCobolName } from "../../common/parser/Helpers";
 import { DataRecordSymbol, EDataUsage } from "./CobolSymbol";
 
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -39,16 +39,11 @@ export class CobolAnalisisHelper {
      * @param max 
      * @param isLiteral remove quotas
      */
-    public verifyTextLengthRange(source: ParserRuleContext | TerminalNode | Token | undefined, min: number, max: number, isLiteral?: boolean): string | undefined {
+    public verifyTextLengthRange(source: ParserRuleContext | TerminalNode | Token | undefined, min: number, max: number): string | undefined {
         let text: string | undefined;
         if (source) {
-            text = 
-                source.text
-                ? isLiteral
-                    ? CobolAnalisisHelper.stringLiteralContent(source.text)
-                    : source.text
-                : undefined;
-            if (text && (text.length < min || text.length > max)) {
+            text = CobolAnalisisHelper.stringLiteralContent(source.text);
+            if ((min > 0 && !text) || (text && (text.length < min || text.length > max))) {
                 mark(this.diagnostics, source, localize("text_length_range", "Must contain {0} to {1} characters", min, max));
             }
         }
@@ -140,7 +135,7 @@ export class CobolAnalisisHelper {
             includeTypes ?: (new (...args: any[]) => Symbol)[],
             excludeTypes ?: (new (...args: any[]) => Symbol)[])
                 : Symbol | undefined {
-        let symbols = this.symbolTable.resolveIdentifier(namePath.map(x => x.text), ctx, localOnly);
+        let symbols = this.symbolTable.resolveIdentifier(namePath.map(x => unifyCobolName(CobolAnalisisHelper.stringLiteralContent(x.text))), ctx, localOnly);
         if (includeTypes && includeTypes.length > 0) {
             let filteredSymbols: Symbol[] = [];
             for (let symbol of symbols) {
@@ -260,22 +255,32 @@ export class CobolAnalisisHelper {
      * Remove quotas
      * @param literal 
      */
-    public static stringLiteralContent(literal: string) {
-        if (literal.length > 0) {
+    public static stringLiteralContent(literal?: string) {
+        if (literal && literal.length > 1) {
             switch (literal[0]) {
                 case 'N':
                 case 'n':
-                    literal = literal.substr(1);
-            }
-            if (literal.length > 0) {
-                switch (literal[0]) {
-                    case '"':
-                    case "'":
-                        return literal.substr(1, literal.length - 2);
-                }
-                return literal;
+                    if (literal.length > 1) {
+                        switch(literal[1]) {
+                            case '"':
+                            case "'":
+                                if (literal[literal.length - 1] == literal[1]) {
+                                    return literal.substring(2, literal.length - 1);
+                                } else {
+                                    return literal.substring(2, literal.length);
+                                }
+                        }
+                    }
+                    break;
+                case '"':
+                case "'":
+                    if (literal[literal.length - 1] == literal[0]) {
+                        return literal.substring(1, literal.length - 1);
+                    } else {
+                        return literal.substring(1, literal.length);
+                    }
             }
         }
-        return "";
+        return literal;
     }
 }

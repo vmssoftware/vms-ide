@@ -265,3 +265,10 @@ export function definitionForContext(ctx?: ParseTree): IDefinition | undefined {
     }
     return undefined;
 }
+
+export function unifyCobolName(name?: string): string {
+    if (!name) {
+        return "";
+    }
+    return name.trim().toUpperCase().replace(/-/g, '_');
+}
