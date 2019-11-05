@@ -161,7 +161,7 @@ function markTokens(diagnostics: IDiagnosticEntry[], start: Token, stop: Token |
  */
 export function findChildInA(tree: ParseTree): Token | undefined {
     if (tree instanceof TerminalNode) {
-        if (tree.symbol.charPositionInLine < 4) {
+        if (!testTokenInAreaB(tree.symbol)) {
             return tree.symbol;
         }
     } else {
@@ -175,6 +175,34 @@ export function findChildInA(tree: ParseTree): Token | undefined {
         }
     }
     return undefined;
+}
+
+export function testTokenInAreaB(token: Token) {
+    if (token.charPositionInLine >= 4 || token.text === undefined) {
+        return true;
+    }
+    let stream = token.inputStream;
+    if (stream && token.startIndex >= 0) {
+        let lastIndex = stream.index;
+        stream.seek(token.startIndex);
+        for (let pos = -1; pos >= -4; --pos) {
+            switch (String.fromCharCode(stream.LA(pos))) {
+                case " ":
+                    // continue searching
+                    break;
+                case "\t":
+                    // stop, OK
+                    stream.seek(lastIndex);
+                    return true;
+                default:
+                    // stop, FALSE
+                    stream.seek(lastIndex);
+                    return false;
+            }
+        }
+        stream.seek(lastIndex);
+    }
+    return true; 
 }
 
 /**

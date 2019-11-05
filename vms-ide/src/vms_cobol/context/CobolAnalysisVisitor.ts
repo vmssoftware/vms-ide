@@ -357,12 +357,6 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     }
 
     visitProg_name(ctx: Prog_nameContext) {
-        let literalName = ctx.STRING_LITERAL_();
-        let identifierName = ctx.USER_DEFINED_WORD_();
-        if (literalName) {
-            this.helper.verifyNamePath(literalName, [literalName], false, undefined, undefined, [IntrinsicFunctionSymbol]);
-        } else if (identifierName) {
-            this.helper.verifyNamePath(identifierName, [identifierName], false, undefined, undefined, [IntrinsicFunctionSymbol]);
-        }
+        this.helper.verifyNamePath(ctx, [ctx], false, undefined, undefined, [IntrinsicFunctionSymbol]);
     }
 }

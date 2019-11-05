@@ -250,6 +250,7 @@ end PROGRAM id-1.`;
 
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "a", copyManager);
+        let built = await input.buildInput();
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -306,6 +307,7 @@ end PROGRAM id-1.`;
         }
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "a", copyManager);
+        let built = await input.buildInput();
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -368,6 +370,7 @@ end PROGRAM id-1.`;
 
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
+        let built = await input.buildInput();
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -420,6 +423,7 @@ end PROGRAM id-1.`;
 
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "a");
+        let built = await input.buildInput();
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -453,6 +457,7 @@ end PROGRAM id-1.`;
 
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
+        let built = await input.buildInput();
         let result = input.getFilteredSource();
         if (errors.length !== 1) {
             assert.fail("Must be ONE continuation error");
@@ -473,6 +478,7 @@ end PROGRAM id-1.`;
 
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
+        let built = await input.buildInput();
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -505,6 +511,7 @@ end PROGRAM id-1.`;
 
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
+        let built = await input.buildInput();
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -536,6 +543,7 @@ end PROGRAM id-1.`;
 
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
+        let built = await input.buildInput();
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -568,6 +576,7 @@ end PROGRAM id-1.`;
 
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
+        let built = await input.buildInput();
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -601,6 +610,7 @@ end PROGRAM id-1.`;
 
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
+        let built = await input.buildInput();
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -635,6 +645,7 @@ end PROGRAM id-1.`;
 
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
+        let built = await input.buildInput();
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -674,6 +685,7 @@ end PROGRAM id-1.`;
 
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
+        let built = await input.buildInput();
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -706,6 +718,7 @@ end PROGRAM id-1.`;
 
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
+        let built = await input.buildInput();
         let result = input.getFilteredSource();
         parseStream(input);
         if (errors.length !== 1) {
@@ -735,6 +748,7 @@ end PROGRAM id-1.`;
         let sourceBuf = fs.readFileSync("D:/vmssoftware.work/vms-ide/src/vms_cobol/test/test.cob");
         let source = sourceBuf.toString();
         let input = new CobolInputStream("", streamErrorListener, source, "ac");
+        let built = await input.buildInput();
         let lexer = new cobolLexer(input);
         let tokenStream = new CommonTokenStream(lexer);
         tokenStream.seek(0);

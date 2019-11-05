@@ -1228,7 +1228,7 @@ public class cobolParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(1001);
-			if (!(this.inputStream.LT(1).charPositionInLine >= 4)) throw new FailedPredicateException(this, "this.inputStream.LT(1).charPositionInLine >= 4");
+			if (!( (this as any).testCurrentWordInAreaB ? (this as any).testCurrentWordInAreaB() as boolean : false )) throw new FailedPredicateException(this, " (this as any).testCurrentWordInAreaB ? (this as any).testCurrentWordInAreaB() as boolean : false ");
 			setState(1002);
 			matchWildcard();
 			}
@@ -31278,7 +31278,7 @@ public class cobolParser extends Parser {
 	private boolean word_in_area_B_sempred(Word_in_area_BContext _localctx, int predIndex) {
 		switch (predIndex) {
 		case 0:
-			return this.inputStream.LT(1).charPositionInLine >= 4;
+			return  (this as any).testCurrentWordInAreaB ? (this as any).testCurrentWordInAreaB() as boolean : false ;
 		}
 		return true;
 	}

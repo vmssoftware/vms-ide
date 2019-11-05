@@ -57,7 +57,8 @@ export interface ISourceContext {
      * @param row 
      */
     getSymbolOccurences(column: number, row: number): IDefinition[];
-    parse(): void;
+    parse(): Promise<boolean>;
+    requireReparse: boolean;
     setText(source: string): void;
     /**
      * Zero-based
@@ -82,68 +83,39 @@ export class FacadeImpl {
         this.logFn = logFn || (() => { });
     }
 
-    public attach(fileName: string, source?: string) {
-        // that will be enought
-        const context = this.getContext(fileName, source);
-        return context;
-    }
-
     public detach(fileName: string) {
         // just remove
         this.sourceContexts.delete(fileName);
     }
 
-    public getContext(fileName: string, source?: string): ISourceContext {
+    public getContext(fileName: string) {
         let contextEntry = this.sourceContexts.get(fileName);
         if (!contextEntry) {
-            return this.loadSource(fileName, source);
-        }
-        return contextEntry.context;
-    }
-
-    public loadSource(fileName: string, source?: string): ISourceContext {
-        let contextEntry = this.sourceContexts.get(fileName);
-        if (!contextEntry) {
-            if (!source) {
-                try {
-                    fs.statSync(fileName);
-                    source = fs.readFileSync(fileName, 'utf8');
-                } catch (e) {
-                    source = "";
-                }
-            }
-
             let context = this.contextFactory(fileName, this.logFn);
             contextEntry = { context: context };
             this.sourceContexts.set(fileName, contextEntry);
-
-            // Do an initial parse run and load all dependencies of this context
-            // and pass their references to this context.
-            context.setText(source);
-            this.parse(contextEntry);
         }
         return contextEntry.context;
     }
 
-    private parse(contextEntry: IContextEntry) {
-        contextEntry.context.parse();
-    }
-
     public setText(fileName: string, source: string) {
-        let contextEntry = this.sourceContexts.get(fileName);
-        if (contextEntry) {
-            contextEntry.context.setText(source);
+        let context = this.getContext(fileName);
+        context.setText(source);
+    }
+
+    public setRequireReparse(isRequire: boolean, fileName?: string) {
+        if (fileName) {
+            let context = this.getContext(fileName);
+            context.requireReparse = isRequire;
+        }
+        for (let [ , context] of this.sourceContexts) {
+            context.context.requireReparse = isRequire;
         }
     }
 
-    /**
-     * Triggers a parse run for the given file name. This grammar must have been loaded before.
-     */
-    public reparse(fileName: string) {
-        let contextEntry = this.sourceContexts.get(fileName);
-        if (contextEntry) {
-            this.parse(contextEntry);
-        }
+    public async parse(fileName: string) {
+        let context = this.getContext(fileName);
+        return context.parse();
     }
 
     public getDiagnostics(fileName: string): IDiagnosticEntry[] {

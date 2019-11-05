@@ -62,15 +62,6 @@ export async function activate(context: ExtensionContext) {
             return new CobolSourceContext(fileName, logFn, copyManager);
         }, logFn);
 
-    // Load interpreter + cache data for each open document, if there's any.
-    for (let document of workspace.textDocuments) {
-        if (document.languageId === Cobol.language) {
-            // parse file and show diagnostics
-            backend.attach(document.uri.fsPath, document.getText());
-            processDiagnostic(document);
-        }
-    }
-
     barMessage.hide();
 
     context.subscriptions.push(languages.registerHoverProvider(Cobol, new HoverProviderImpl(backend)));
@@ -81,13 +72,6 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(languages.registerReferenceProvider(Cobol, new ReferenceProviderImpl(backend)));
 
     //----- Events -----
-
-    workspace.onDidOpenTextDocument((document: TextDocument) => {
-        if (document.languageId === Cobol.language && document.uri.scheme === Cobol.scheme) {
-            backend.attach(document.uri.fsPath, document.getText());
-            processDiagnostic(document);
-        }
-    });
 
     workspace.onDidCloseTextDocument((document: TextDocument) => {
         if (document.languageId === Cobol.language && document.uri.scheme === Cobol.scheme) {
@@ -100,6 +84,7 @@ export async function activate(context: ExtensionContext) {
 
     workspace.onDidChangeTextDocument((event: TextDocumentChangeEvent) => {
         if (event.contentChanges.length > 0) {
+            // clean copy manager cache
             let fileName = event.document.fileName;
             let wsFolder = workspace.getWorkspaceFolder(Uri.file(fileName));
             if (wsFolder) {
@@ -111,73 +96,89 @@ export async function activate(context: ExtensionContext) {
                     }
                 }
             }
+            // post reparsing
             if (event.document.languageId === Cobol.language && event.document.uri.scheme === Cobol.scheme) {
-                backend.setText(fileName, event.document.getText());
-
-                let existing = changeTimers.get(fileName);
-                if (existing) {
-                    clearTimeout(existing);
-                }
-
-                changeTimers.set(fileName, setTimeout(() => {
-                    changeTimers.delete(fileName);
-                    backend.reparse(fileName);
-                    processDiagnostic(event.document);
-                }, 500));  // wait before reparse and process diagnostics
+                // with setting text
+                postParse(fileName, event.document.getText());
             }
         }
     });
 
     workspace.onDidSaveTextDocument((document: TextDocument) => {
-        if (document.languageId === Cobol.language && document.uri.scheme === Cobol.scheme) {
-            // regenerateBackgroundData(document);
-        }
+        // require reparse all on did save any document
+        backend.setRequireReparse(true);
     });
 
-    window.onDidChangeTextEditorSelection((event: TextEditorSelectionChangeEvent) => {
-        if (event.textEditor.document.languageId === Cobol.language && event.textEditor.document.uri.scheme === Cobol.scheme) {
-            // actionsProvider.update(event.textEditor);
+    if (window.activeTextEditor) {
+        if (window.activeTextEditor.document.languageId === Cobol.language && window.activeTextEditor.document.uri.scheme === Cobol.scheme) {
+            postParse(window.activeTextEditor.document.fileName, window.activeTextEditor.document.getText());
         }
-    });
+    }
 
     window.onDidChangeActiveTextEditor((editor?: TextEditor) => {
         if(editor) {
             if (editor.document.languageId === Cobol.language && editor.document.uri.scheme === Cobol.scheme) {
-                //backend.setText(editor.document.fileName, editor.document.getText());
-                backend.reparse(editor.document.fileName);
-                processDiagnostic(editor.document);
+                // set text only if require reparsing
+                if (backend.getContext(editor.document.fileName).requireReparse) {
+                    postParse(editor.document.fileName, editor.document.getText());
+                } else {
+                    postParse(editor.document.fileName);
+                }
             }
         }
     });
+
+    function postParse(fileName: string, content?: string) {
+        if (content) {
+            backend.setText(fileName, content);
+        }
+        let existingTimer = changeTimers.get(fileName);
+        if (existingTimer) {
+            clearTimeout(existingTimer);
+        }
+        changeTimers.set(fileName, setTimeout(() => {
+            changeTimers.delete(fileName);
+            backend.parse(fileName).
+                then((parsed: boolean) => {
+                    if (parsed) {
+                        processDiagnostic(fileName);
+                    }
+                }).
+                catch(() => {
+                    // nothing
+                });
+        }, 500));  // wait before reparse and process diagnostics
+    }
 
     /**
      * All coordinates in diagnostic must be zero-based
      * @param document 
      */
-    function processDiagnostic(document: TextDocument) {
+    function processDiagnostic(fileName: string) {
         let diagnostics = new Map<string, Diagnostic[]>();
-        diagnosticCollection.set(document.uri, []);
-        let entries = backend.getDiagnostics(document.fileName);
+        diagnosticCollection.set(Uri.file(fileName), []);
+        let entries = backend.getDiagnostics(fileName);
 
         for (let entry of entries) {
             let range = new Range(entry.range.start.row, entry.range.start.col, entry.range.end.row, entry.range.end.col);
             let diagnostic = new Diagnostic(range, entry.message, DiagnosticTypeMap.get(entry.type));
-            let fileName = document.fileName;
+            let entryFileName = fileName;
             if (entry.source) {
-                fileName = entry.source;
+                entryFileName = entry.source;
             }
-            let fileDiagnostics = diagnostics.get(fileName);
+            let fileDiagnostics = diagnostics.get(entryFileName);
             if (fileDiagnostics) {
                 fileDiagnostics.push(diagnostic);
             } else {
-                diagnostics.set(fileName, [diagnostic]);
+                diagnostics.set(entryFileName, [diagnostic]);
             }
         }
 
-        for (let [fileName, fileDiagnostics] of diagnostics) {
-            diagnosticCollection.set(Uri.file(fileName), fileDiagnostics);
+        for (let [diagFileName, fileDiagnostics] of diagnostics) {
+            diagnosticCollection.set(Uri.file(diagFileName), fileDiagnostics);
         }
     }
+
 }
 
 // this method is called when your extension is deactivated

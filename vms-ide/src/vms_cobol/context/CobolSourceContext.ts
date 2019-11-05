@@ -112,6 +112,8 @@ import {
 } from './CobolDetailsListener';
 import { CobolAnalisisHelper } from './CobolAnalisisHelpers';
 import { CobolAnalysisVisitor } from './CobolAnalysisVisitor';
+import { TaskDivider } from '../../common/task-divider';
+import { cobolParserImpl } from '../parser/cobolParserImpl';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -119,6 +121,7 @@ const localize = nls.loadMessageBundle();
 export class CobolSourceContext implements ISourceContext {
 
     private sourceContent?: string;
+    private isRequireReparse: boolean;
     private sourceId: string;
     private streamErrors: IDiagnosticEntry[] = [];
     private diagnostics: IDiagnosticEntry[] = [];
@@ -135,14 +138,24 @@ export class CobolSourceContext implements ISourceContext {
     private lexerErrorListener = new LexerErrorListener(this.diagnostics);
     private analysisDone: boolean = false; // Includes determining reference counts.
 
+    private cancelToken = new TaskDivider(false);
+
     private tree?: Cobol_sourceContext;     // The root context from the last parse run.
     public logFn: LogFunction;
 
     constructor(public fileName: string, logFn?: LogFunction, public copyManager?: ICopyManager) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
+        this.isRequireReparse = true;
         this.sourceId = path.basename(fileName, path.extname(fileName));
         this.symbolTable =  new CobolSymbolTable(this.sourceId, { allowDuplicateSymbols: true }, this);
+    }
+
+    get requireReparse() {
+        return this.isRequireReparse;
+    }
+    set requireReparse(value: boolean) {
+        this.isRequireReparse = value;
     }
 
     /**
@@ -150,12 +163,15 @@ export class CobolSourceContext implements ISourceContext {
      * This call doesn't do any expensive processing (parse() does).
      */
     public setText(source: string) {
+        this.cancelToken.setValue(true);
         this.sourceContent = source + "\n";
+        this.isRequireReparse = true;
     }
 
-    public parse() {
+    public async parse() {
+        this.cancelToken.setValue(false);
         if (!this.sourceContent) {
-            return;
+            return false;
         }
 
         let streamErrorListener = {
@@ -180,7 +196,8 @@ export class CobolSourceContext implements ISourceContext {
         
         this.streamErrors.length = 0;
         // EOL is OBLIGATORY for correct code completion
-        this.input = new CobolInputStream(this.fileName, streamErrorListener, this.sourceContent, this.compilerConditions, this.copyManager);
+        this.input = new CobolInputStream(this.fileName, streamErrorListener, this.sourceContent, this.compilerConditions, this.copyManager, this.cancelToken);
+        let built = await this.input.buildInput();
 
         if (this.streamErrors.length === 0) {
             let lexer = new cobolLexer(this.input);
@@ -193,13 +210,13 @@ export class CobolSourceContext implements ISourceContext {
         }
 
         if (!this.tokenStream) {
-            return;
+            return false;
         }
 
         // Rewind the input stream for a new parse run.
         // Might be unnecessary when we just created that via setText.
         this.tokenStream.seek(0);
-        this.parser = new cobolParser(this.tokenStream);
+        this.parser = new cobolParserImpl(this.tokenStream);
         this.parser.removeErrorListeners();
         this.parser.addErrorListener(this.parserErrorListener);
 
@@ -222,7 +239,7 @@ export class CobolSourceContext implements ISourceContext {
                 this.parser.interpreter.setPredictionMode(PredictionMode.LL);
                 this.tree = this.parser.cobol_source();
             } else {
-                throw e;
+                return false;
             }
         }
 
@@ -241,6 +258,9 @@ export class CobolSourceContext implements ISourceContext {
         }
 
         this.updateDiagnosticRanges();
+
+        this.isRequireReparse = false;
+        return true;
     }
 
     public getDiagnostics(): IDiagnosticEntry[] {

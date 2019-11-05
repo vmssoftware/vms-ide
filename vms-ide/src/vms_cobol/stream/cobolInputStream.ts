@@ -11,6 +11,7 @@ import { IDiagnosticEntry } from "../../common/parser/Facade";
 import { LexerErrorListener } from "../../common/parser/ErrorListeners";
 import { ParserErrorListener } from "../../common/parser/ErrorListeners";
 import { CobolAnalisisHelper } from "../context/CobolAnalisisHelpers";
+import { TaskDivider } from "../../common/task-divider";
 
 const _rgxIsEmptyA = /^.(?: {4}| {0,3}\t)\s*(\S)/;
 const _quotas = "\"'";
@@ -91,7 +92,7 @@ export class CobolInputStream implements CharStream {
 
     //------------------------------------------------------------
 
-    private input: ANTLRInputStream;
+    private input?: ANTLRInputStream;
 
     private conditionals = "";
 
@@ -108,6 +109,8 @@ export class CobolInputStream implements CharStream {
 
     public tabSize = 4;
 
+    public deltaTest = 1000;
+
     //------------------------------------------------------------
 
     /**
@@ -116,23 +119,38 @@ export class CobolInputStream implements CharStream {
      * @param source 
      * @param conditionals 
      */
-    constructor(public file: string, public errorListener: IStreamErrorListener, private source: string, conditionals?: string, private copyManager?: ICopyManager) {
+    constructor(public file: string,
+        public errorListener: IStreamErrorListener,
+        private source: string,
+        conditionals?: string,
+        private copyManager?: ICopyManager,
+        private cancelToken?: TaskDivider<boolean>) {
+
         if (conditionals) {
             this.conditionals = conditionals.toUpperCase();
         }
-        //this.resolveCopyStatement();
-        this.preFilterSource();
-        this.input = new ANTLRInputStream(this.getFilteredSource());
+    }
+
+    public async buildInput() {
+        return this.preFilterSource().then((filtered: boolean) => {
+            if (filtered) {
+                this.input = new ANTLRInputStream(this.getFilteredSource());
+                return true;
+            }
+            return false;
+        }).catch(() => {
+            return false;
+        });
     }
 
     //------------------------------------------------------------
 
     public get index() {
-        return this.input.index;
+        return this.input?this.input.index:0;
     }
 
     public get size() {
-        return this.input.size;
+        return this.input?this.input.size:0;
     }
 
     public get sourceName() {
@@ -140,19 +158,23 @@ export class CobolInputStream implements CharStream {
     }
     
     public reset() {
-        this.input.reset();
+        if (this.input) { 
+            this.input.reset();
+        }
     }
 
     public getText(interval: Interval): string {
-        return this.input.getText(interval);
+        return this.input?this.input.getText(interval):"";
     }    
     
     public consume(): void {
-        this.input.consume();
+        if (this.input) {
+            this.input.consume();
+        }
     }
     
     public LA(i: number): number {
-        return this.input.LA(i);
+        return this.input?this.input.LA(i):0;
     }
     
     public mark(): number {
@@ -164,7 +186,9 @@ export class CobolInputStream implements CharStream {
     }
     
     public seek(index: number): void {
-        this.input.seek(index);
+        if (this.input) {
+            this.input.seek(index);
+        }
     }
 
     //------------------------------------------------------------
@@ -629,7 +653,7 @@ export class CobolInputStream implements CharStream {
     /**
      * Create ranges for skip
      */
-    private preFilterSource() {
+    private async preFilterSource() {
         this.replacings = [];
         
         let lines = this.source.split("\n");
@@ -654,8 +678,19 @@ export class CobolInputStream implements CharStream {
         let startEmptyLine: number | undefined;
 
         this.lastNormalDotPosition = 0;
+
+        let delta = this.deltaTest;
         
         while(pos < this.result.length && errors.length === 0) {
+            if (this.cancelToken) {
+                if (--delta <= 0) {
+                    if (await this.cancelToken.testValue()) {
+                        this.result = "";
+                        return false;
+                    }
+                    delta = this.deltaTest;
+                }
+            }
             // remove stringContinuationChar if something else presents at the end of line after string ends
             if (stringTestLastLineChar) {
                 if (this.testLineEnds(this.result, pos)) {
@@ -665,11 +700,11 @@ export class CobolInputStream implements CharStream {
                 }
             }
             // always replace tab char
-            let testResult = this.testTab(this.result, pos);
-            if (testResult && testResult.newReplacing) {
-                 ({newResult: this.result, newPos: pos} = this.applyReplacing(testResult.newReplacing, this.result));
-                 continue;
-            }
+            // let testResult = this.testTab(this.result, pos);
+            // if (testResult && testResult.newReplacing) {
+            //      ({newResult: this.result, newPos: pos} = this.applyReplacing(testResult.newReplacing, this.result));
+            //      continue;
+            // }
             
             // test empty lines
             if (this.testLineStarts(this.result, pos)) {
@@ -869,6 +904,7 @@ export class CobolInputStream implements CharStream {
             }
             this.errorListener.syntaxError(this.file, sorceRC.sourceRow, sorceRC.sourceCol, err.msg);
         }
+        return true;
     }
 
     public insideReplacing(replacing: IReplace, pos: number) : IInsideReplacing {

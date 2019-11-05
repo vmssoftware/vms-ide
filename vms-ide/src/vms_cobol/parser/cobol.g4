@@ -68,7 +68,7 @@ procedure_division
 //    ;
 
 word_in_area_B
-   : {this.inputStream.LT(1).charPositionInLine >= 4}? .
+   : { (this as any).testCurrentWordInAreaB ? (this as any).testCurrentWordInAreaB() as boolean : false }? .
    ;
 
 author
