@@ -39,6 +39,7 @@ import {
     User_alphaContext,
     UsingContext,
     Value_is_literalContext,
+    GivingContext,
 } from "../parser/cobolParser";
 
 import { CobolAnalisisHelper } from "./CobolAnalisisHelpers";
@@ -67,6 +68,9 @@ import {
     SYMBOLIC_CHARACTERS_Symbol,
     SectionSymbol,
     SortMergeFileSymbol,
+    IValue,
+    EValueType,
+    ValueTypeFromDataUsage,
 } from "./CobolSymbol";
 
 import { ParserRuleContext } from "antlr4ts";
@@ -343,17 +347,58 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     }
 
     visitUsing(ctx: UsingContext) {
-        // let programCtx = firstContainingContext(ctx, ProgramContext);
-        // if (!programCtx) {
-        //     this.helper.mark(ctx, localize("must.be.in.program", "Must be inside program"));
-        //     return;
-        // }
-        // let programSymbol = this.helper.symbolTable.symbolWithContext(programCtx);
-        // if (!programSymbol) {
-        //     this.helper.mark(ctx, localize("fatal.error", "FATALITY"));
-        //     return;
-        // }
-        this.visitChildren(ctx);
+        let programCtx = firstContainingContext(ctx, ProgramContext);
+        if (!programCtx) {
+            this.helper.mark(ctx, localize("must.be.in.program", "Must be inside program"));
+            return;
+        }
+        let programSymbol = this.helper.symbolTable.symbolWithContext(programCtx);
+        if (!(programSymbol instanceof ProgramSymbol)) {
+            this.helper.mark(ctx, localize("no.program.symbol", "No program symbol"));
+            return;
+        }
+        if (!programSymbol.definition) {
+            this.helper.mark(ctx, localize("no.program.definition", "No definition in programSymbol"));
+            return;
+        }
+        let items = ctx.qualified_data_item();
+        for(let item of items) {
+            let itemSymbol = this.helper.verifyQualifiedName(item, false, undefined, undefined, [IntrinsicFunctionSymbol]);
+            if (itemSymbol instanceof DataRecordSymbol) {
+                // add as parameter
+                programSymbol.definition.arguments = programSymbol.definition.arguments || [];
+                let argument: IValue = {
+                    name: itemSymbol.name,
+                    type: ValueTypeFromDataUsage(itemSymbol.usage),   // TODO: get type from usage and picture
+                };
+                programSymbol.definition.arguments.push(argument);
+            }
+        }
+        //this.visitChildren(ctx);
+    }
+
+    visitGiving(ctx: GivingContext) {
+        let programCtx = firstContainingContext(ctx, ProgramContext);
+        if (!programCtx) {
+            this.helper.mark(ctx, localize("must.be.in.program", "Must be inside program"));
+            return;
+        }
+        let programSymbol = this.helper.symbolTable.symbolWithContext(programCtx);
+        if (!(programSymbol instanceof ProgramSymbol)) {
+            this.helper.mark(ctx, localize("no.program.symbol", "No program symbol"));
+            return;
+        }
+        if (!programSymbol.definition) {
+            this.helper.mark(ctx, localize("no.program.definition", "No definition in programSymbol"));
+            return;
+        }
+        let item = ctx.qualified_data_item();
+        let itemSymbol = this.helper.verifyQualifiedName(item, false, undefined, undefined, [IntrinsicFunctionSymbol]);
+        if (itemSymbol instanceof DataRecordSymbol) {
+            // add as program type
+            programSymbol.definition.type = ValueTypeFromDataUsage(itemSymbol.usage);   // TODO: get type from usage and picture
+        }
+        //this.visitChildren(ctx);
     }
 
     visitProg_name(ctx: Prog_nameContext) {

@@ -7,5 +7,8 @@
     "already_defined": "Already defined",
     "invalid_currency": "Invalid currency char",
     "invalid_data": "Invalid data description",
-    "must_be_in_B": "This token must be in B area"
+    "must_be_in_B": "This token must be in B area",
+    "must.be.in.program": "Must be inside program",
+    "no.program.symbol": "No program symbol",
+    "no.program.definition": "No definition in programSymbol"
 }

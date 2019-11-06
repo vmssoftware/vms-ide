@@ -98,7 +98,10 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterProgram(ctx: ProgramContext) {
-        this.promoteCurrentSymbol(ProgramSymbol, ctx);
+        let progSymbol = this.promoteCurrentSymbol(ProgramSymbol, ctx);
+        progSymbol.definition = {
+            type: EValueType.Integer
+        };
     }
 
     exitProgram(ctx: ProgramContext) {

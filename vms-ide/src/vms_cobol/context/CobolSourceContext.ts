@@ -220,7 +220,6 @@ export class CobolSourceContext implements ISourceContext {
         // Might be unnecessary when we just created that via setText.
         this.tokenStream.seek(0);
         let parserImpl = new cobolParserImpl(this.tokenStream);
-        parserImpl.cancelToken = this.cancelToken;
         this.parser = parserImpl;
         this.parser.removeErrorListeners();
         this.parser.addErrorListener(this.parserErrorListener);
@@ -661,7 +660,7 @@ export class CobolSourceContext implements ISourceContext {
     private addPredefinitions(intrincisFunctions: IFunction[], predefinedData: IPredefinedNode[]) {
         for (let intrincisFunction of intrincisFunctions) {
             let symbolToAdd = this.symbolTable.addNewSymbolOfType(IntrinsicFunctionSymbol, this.symbolTable, unifyCobolName(intrincisFunction.name));
-            symbolToAdd.functionDefinition = intrincisFunction;
+            symbolToAdd.definition = intrincisFunction;
             symbolToAdd.isGlobal = true;
             this.symbolTable.createOccurance(symbolToAdd);
         }

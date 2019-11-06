@@ -394,36 +394,6 @@ export function getKindFromSymbol(symbol: Symbol): ECobolSymbolKind {
     return ECobolSymbolKind.Unknown;
 }
 //**************************************************/
-export enum EDataUsage {
-    BINARY,
-    BINARY_CHAR,
-    BINARY_SHORT,
-    BINARY_LONG,
-    BINARY_DOUBLE,
-    COMPUTATIONAL,
-    COMPUTATIONAL_1,
-    COMPUTATIONAL_2,
-    COMPUTATIONAL_3,
-    COMPUTATIONAL_4,
-    COMPUTATIONAL_5,
-    COMPUTATIONAL_X,
-    COMP,
-    COMP_1,
-    COMP_2,
-    COMP_3,
-    COMP_4,
-    COMP_5,
-    COMP_X,
-    DISPLAY,
-    FLOAT_SHORT,
-    FLOAT_LONG,
-    FLOAT_EXTENDED,
-    INDEX,
-    PACKED_DECIMAL,
-    POINTER,
-    POINTER_64,
-}
-//**************************************************/
 export class IdentifierSymbol extends ScopedSymbol {
     public isGlobal?: boolean;
 }
@@ -483,7 +453,7 @@ export class IndexedBySymbol extends IdentifierSymbol { }
 export class SpecialRegisterSymbol extends DataRecordSymbol { }
 export class FigurativeConstantSymbol extends DataRecordSymbol { }
 export class IntrinsicFunctionSymbol extends ProgramSymbol {
-    functionDefinition?: IFunction;
+    //functionDefinition?: IFunction;
 }
 export class SIGN_Symbol extends Symbol { }
 export class BOOL_Symbol extends Symbol { }
@@ -493,42 +463,104 @@ export class BOOL_Symbol extends Symbol { }
 //**************************************************/
 
 export function programDetails(programSymbol: ProgramSymbol): string | undefined {
-    if (programSymbol instanceof IntrinsicFunctionSymbol) {
-        if (programSymbol.functionDefinition) {
-            let details = programSymbol.name;
-            details += " (";
-            if (programSymbol.functionDefinition.arguments) {
-                let sep = "";
-                for (let arg of programSymbol.functionDefinition.arguments) {
-                    if (arg.optional) {
-                        details += " [";
-                    }
-                    details += sep;
-                    details += arg.name? arg.name + ": " : "";
-                    if (Array.isArray(arg.type)) {
-                        details += arg.type.map(argType => EValueType[argType]).join(" | ");
-                    } else {
-                        details += EValueType[arg.type];
-                    }
-                    if (arg.optional) {
-                        details += "]";
-                    }
-                    sep = ", ";
-                    if (arg.tail) {
-                        details += " ... ";
-                    }
+    if (programSymbol.definition) {
+        let details = programSymbol.name;
+        details += " (";
+        if (programSymbol.definition.arguments) {
+            let sep = "";
+            for (let arg of programSymbol.definition.arguments) {
+                if (arg.optional) {
+                    details += " [";
+                }
+                details += sep;
+                details += arg.name? arg.name + ": " : "";
+                if (Array.isArray(arg.type)) {
+                    details += arg.type.map(argType => EValueType[argType]).join(" | ");
+                } else {
+                    details += EValueType[arg.type];
+                }
+                if (arg.optional) {
+                    details += "]";
+                }
+                sep = ", ";
+                if (arg.tail) {
+                    details += " ... ";
                 }
             }
-            details += "): ";
-            if (Array.isArray(programSymbol.functionDefinition.type)) {
-                details += programSymbol.functionDefinition.type.map(argType => EValueType[argType]).join(" | ");
-            } else {
-                details += EValueType[programSymbol.functionDefinition.type];
-            }
-            return details;
         }
+        details += "): ";
+        if (Array.isArray(programSymbol.definition.type)) {
+            details += programSymbol.definition.type.map(argType => EValueType[argType]).join(" | ");
+        } else {
+            details += EValueType[programSymbol.definition.type];
+        }
+        return details;
     }
     return undefined;
+}
+
+//**************************************************/
+export enum EDataUsage {
+    BINARY,
+    BINARY_CHAR,
+    BINARY_SHORT,
+    BINARY_LONG,
+    BINARY_DOUBLE,
+    COMPUTATIONAL,
+    COMPUTATIONAL_1,
+    COMPUTATIONAL_2,
+    COMPUTATIONAL_3,
+    COMPUTATIONAL_4,
+    COMPUTATIONAL_5,
+    COMPUTATIONAL_X,
+    COMP,
+    COMP_1,
+    COMP_2,
+    COMP_3,
+    COMP_4,
+    COMP_5,
+    COMP_X,
+    DISPLAY,
+    FLOAT_SHORT,
+    FLOAT_LONG,
+    FLOAT_EXTENDED,
+    INDEX,
+    PACKED_DECIMAL,
+    POINTER,
+    POINTER_64,
+}
+
+export function ValueTypeFromDataUsage(usage?: EDataUsage): EValueType {
+    switch(usage) {
+        case EDataUsage.COMP_1:
+        case EDataUsage.COMP_2:
+        case EDataUsage.FLOAT_SHORT:
+        case EDataUsage.FLOAT_LONG:
+        case EDataUsage.FLOAT_EXTENDED:
+        case EDataUsage.COMPUTATIONAL_1:
+        case EDataUsage.COMPUTATIONAL_2:
+            return EValueType.Numeric;
+        case EDataUsage.BINARY:
+        case EDataUsage.COMP:
+        case EDataUsage.COMPUTATIONAL:
+        case EDataUsage.COMPUTATIONAL_5:
+        case EDataUsage.COMPUTATIONAL_X:
+        case EDataUsage.COMP_5:
+        case EDataUsage.COMP_X:
+        case EDataUsage.BINARY_CHAR:
+        case EDataUsage.BINARY_SHORT:
+        case EDataUsage.BINARY_DOUBLE:
+        case EDataUsage.INDEX:
+        case EDataUsage.PACKED_DECIMAL:
+        case EDataUsage.COMPUTATIONAL_3:
+        case EDataUsage.COMP_3:
+        case EDataUsage.POINTER:
+        case EDataUsage.POINTER_64:
+            return EValueType.Integer;
+        case EDataUsage.DISPLAY:
+            return EValueType.Alphanumeric;
+    }
+    return EValueType.Any;
 }
 
 export enum EValueType {
