@@ -144,8 +144,9 @@ export async function activate(context: ExtensionContext) {
                         processDiagnostic(fileName);
                     }
                 }).
-                catch(() => {
+                catch((error) => {
                     // nothing
+                    let reason = error;
                 });
         }, 500));  // wait before reparse and process diagnostics
     }

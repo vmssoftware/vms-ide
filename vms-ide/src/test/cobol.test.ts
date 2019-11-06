@@ -13,6 +13,7 @@ import { cobolCopyLexer } from "../vms_cobol/parser/cobolCopyLexer";
 import { cobolCopyParser, CopyStatementContext } from "../vms_cobol/parser/cobolCopyParser";
 import { LexerErrorListener, ParserErrorListener } from "../common/parser/ErrorListeners";
 import { CopyManagerImpl } from "../vms_cobol/stream/copymanager";
+import { cobolParserImpl } from "../vms_cobol/parser/cobolParserImpl";
 
 suite("COBOL tests", function(this: Mocha.Suite) {
 
@@ -43,7 +44,7 @@ suite("COBOL tests", function(this: Mocha.Suite) {
         let lexer = new cobolLexer(input);
         let tokenStream = new CommonTokenStream(lexer);
         tokenStream.seek(0);
-        let parser = new cobolParser(tokenStream);
+        let parser = new cobolParserImpl(tokenStream);
 
         parser.errorHandler = new BailErrorStrategy();
         parser.interpreter.setPredictionMode(PredictionMode.SLL);
@@ -251,6 +252,7 @@ end PROGRAM id-1.`;
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "a", copyManager);
         let built = await input.buildInput();
+        assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -308,6 +310,7 @@ end PROGRAM id-1.`;
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "a", copyManager);
         let built = await input.buildInput();
+        assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -356,7 +359,7 @@ PROCEDURE DIVISION.
 para-1.
     dis    
 **************
--        play 'level_out: copy 
+-        play 'level_out: copy   
 
 * comment
 
@@ -371,6 +374,7 @@ end PROGRAM id-1.`;
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
         let built = await input.buildInput();
+        assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -385,8 +389,8 @@ WORKING-STORAGE SECTION.
     01 RSULT comp-2.
 PROCEDURE DIVISION.
 para-1.
-    display 'level_out: copy space' space ITEM-SHOW-out.
-    move .85 to RSULT.
+    display 'level_out: copy   space' space ITEM-SHOW-out.
+	move .85 to RSULT.
     COMPUTE RSULT = FUNCTION ACOS (RSULT).
 end PROGRAM id-1.`;
 
@@ -394,17 +398,17 @@ end PROGRAM id-1.`;
             assert.fail("invalid result");
         }
 
-        // 17:10 => 9:19, from comment 'asads(*)asd' in source to RSU(*)LT in result
-        testSrcToRst(input, 17, 10, 9, 19);
+        // 17:10 => 9:16, from comment 'asads(*)asd' in source to RSU(*)LT in result
+        testSrcToRst(input, 17, 10, 9, 16);
 
-        // 8:30 <= 15:4, from s(*)pace in result to s(*)pace in source (in string literal)
-        testRstToSrc(input, 8, 30, 15, 4);
+        // 8:32 <= 15:4, from s(*)pace in result to s(*)pace in source (in string literal)
+        testRstToSrc(input, 8, 32, 15, 4);
 
         // 10:29 <= 20:29, from (*)ACOS in result to (*)ACOS in source
         testRstToSrc(input, 10, 29, 20, 29);
 
-        // 8:29 <= 15:3, from (*)space in result to (*)space in source (in string literal)
-        testRstToSrc(input, 8, 29, 15, 3);
+        // 8:31 <= 15:3, from (*)space in result to (*)space in source (in string literal)
+        testRstToSrc(input, 8, 31, 15, 3);
 
     });
 
@@ -424,6 +428,7 @@ end PROGRAM id-1.`;
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "a");
         let built = await input.buildInput();
+        assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -458,6 +463,7 @@ end PROGRAM id-1.`;
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
         let built = await input.buildInput();
+        assert.strictEqual(built, false, "buildInput must be failed");
         let result = input.getFilteredSource();
         if (errors.length !== 1) {
             assert.fail("Must be ONE continuation error");
@@ -479,6 +485,7 @@ end PROGRAM id-1.`;
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
         let built = await input.buildInput();
+        assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -512,6 +519,7 @@ end PROGRAM id-1.`;
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
         let built = await input.buildInput();
+        assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -544,6 +552,7 @@ end PROGRAM id-1.`;
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
         let built = await input.buildInput();
+        assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -577,6 +586,7 @@ end PROGRAM id-1.`;
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
         let built = await input.buildInput();
+        assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -611,6 +621,7 @@ end PROGRAM id-1.`;
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
         let built = await input.buildInput();
+        assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -646,6 +657,7 @@ end PROGRAM id-1.`;
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
         let built = await input.buildInput();
+        assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -686,6 +698,7 @@ end PROGRAM id-1.`;
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
         let built = await input.buildInput();
+        assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
         parseStream(input);
         for(let error of errors) {
@@ -719,10 +732,11 @@ end PROGRAM id-1.`;
         errors = [];
         let input = new CobolInputStream("", errorListener, source + "\n", "");
         let built = await input.buildInput();
+        assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
         parseStream(input);
         if (errors.length !== 1) {
-            assert.fail("Must be ONE continuation error");
+            assert.fail("Must be ONE parser error");
         }
     });
 
@@ -749,6 +763,7 @@ end PROGRAM id-1.`;
         let source = sourceBuf.toString();
         let input = new CobolInputStream("", streamErrorListener, source, "ac");
         let built = await input.buildInput();
+        assert.strictEqual(built, true, "buildInput failed");
         let lexer = new cobolLexer(input);
         let tokenStream = new CommonTokenStream(lexer);
         tokenStream.seek(0);

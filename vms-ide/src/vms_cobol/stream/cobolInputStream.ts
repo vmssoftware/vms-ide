@@ -16,11 +16,6 @@ import { TaskDivider } from "../../common/task-divider";
 const _rgxIsEmptyA = /^.(?: {4}| {0,3}\t)\s*(\S)/;
 const _quotas = "\"'";
 
-export interface IRange {
-    start: number, 
-    length: number,
-};
-
 export interface ICopyManager {
     getLines(name: string): string[];
     getSourcePath(name: string): string | undefined;
@@ -31,12 +26,13 @@ export interface ICopyManager {
  */
 export interface IReplace {
     // each range is actual after all previous replacing performed
-    range: IRange,
+    start: number,
+    removeLength: number,
+    addLength: number,
     preceding?: IReplace[],
     // TODO: next lines must be a link to replacing source
     name?: string,
     path?: string;
-    length: number,
     lines: string[],
 }
 
@@ -222,13 +218,13 @@ export class CobolInputStream implements CharStream {
                     result.inside.push(...resT.inside);
                 }
             }
-            if (r.range.start > result.pos) {
+            if (r.start > result.pos) {
                 // after
                 result.stop = true;
                 break;
-            } else if (r.range.start + r.range.length < result.pos) {
+            } else if (r.start + r.removeLength < result.pos) {
                 // before
-                result.pos += r.length - r.range.length;
+                result.pos += r.addLength - r.removeLength;
             } else {
                 // inside, do not find position
                 result.inside.push({
@@ -236,7 +232,7 @@ export class CobolInputStream implements CharStream {
                     col: 0,
                     replacing: r,
                 });
-                result.pos = r.range.start;
+                result.pos = r.start;
             }
         }
         return result;
@@ -260,12 +256,12 @@ export class CobolInputStream implements CharStream {
         let i = replacings.length - 1;
         while(i >= 0) {
             let r = replacings[i];
-            if (r.range.start <= result.pos) {
-                if (r.range.start + r.length > result.pos) {
-                    result.inside.push(this.insideReplacing(r, result.pos - r.range.start));
-                    result.pos = r.range.start;
+            if (r.start <= result.pos) {
+                if (r.start + r.addLength > result.pos) {
+                    result.inside.push(this.insideReplacing(r, result.pos - r.start));
+                    result.pos = r.start;
                 } else {
-                    result.pos += r.range.length - r.length;
+                    result.pos += r.removeLength - r.addLength;
                 }
                 if (r.preceding) {
                     let resT = this.shiftSourcePos(r.preceding, result.pos);
@@ -376,9 +372,18 @@ export class CobolInputStream implements CharStream {
     private addReplacing(replacing: IReplace) {
         let i = this.replacings.length - 1;
         while (i >= 0) {
-            if (this.replacings[i].range.start >= replacing.range.start) {
-                replacing.preceding = replacing.preceding || [];
-                replacing.preceding.push(this.replacings[i]);
+            if (this.replacings[i].start >= replacing.start) {
+                if (this.replacings[i].start + this.replacings[i].addLength <= replacing.start + replacing.removeLength) {
+                    replacing.removeLength += this.replacings[i].removeLength - this.replacings[i].addLength;
+                    let preceding = this.replacings[i].preceding;
+                    if (preceding) {
+                        replacing.preceding = replacing.preceding || [];
+                        replacing.preceding.unshift(...preceding);
+                    }
+                } else {
+                    replacing.preceding = replacing.preceding || [];
+                    replacing.preceding.push(this.replacings[i]);
+                }
                 this.replacings.pop();
             } else {
                 break;
@@ -392,12 +397,10 @@ export class CobolInputStream implements CharStream {
         switch (content[pos]) {
             case '\t': {
                 let replacing: IReplace = {
-                    range: {
-                        start: pos,
-                        length: 1
-                    },
+                    start: pos,
+                    removeLength: 1,
                     lines: [" ".repeat(this.tabSize)],
-                    length: this.tabSize
+                    addLength: this.tabSize
                 };
                 // does not change state
                 return {
@@ -442,12 +445,10 @@ export class CobolInputStream implements CharStream {
                 case '*': {
                     // comment
                     let newReplacing: IReplace = {
-                        range: {
-                            start: pos,
-                            length: 0
-                        },
+                        start: pos,
+                        removeLength: 0,
                         lines: [],
-                        length: 0
+                        addLength: 0
                     };
                     return {
                         newState: EReplaceState.comment,
@@ -460,12 +461,10 @@ export class CobolInputStream implements CharStream {
                         if (!this.conditionals.includes(content[pos + 1].toUpperCase())) {
                             // start new replacing for whole line
                             let newReplacing: IReplace = {
-                                range: {
-                                    start: pos,
-                                    length: 0
-                                },
+                                start: pos,
+                                removeLength: 0,
                                 lines: [],
-                                length: 0
+                                addLength: 0
                             };
                             return {
                                 newState: EReplaceState.conditionalCompile,
@@ -474,12 +473,10 @@ export class CobolInputStream implements CharStream {
                         } else {
                             // create and apply replacing for two symbols only
                             let newReplacing: IReplace = {
-                                range: {
-                                    start: pos,
-                                    length: 2
-                                },
+                                start: pos,
+                                removeLength: 2,
                                 lines: [],
-                                length: 0
+                                addLength: 0
                             };
                             return {
                                 newState: EReplaceState.normal, // do not change state, so apply immediately
@@ -492,12 +489,10 @@ export class CobolInputStream implements CharStream {
                 case '-': {
                     // continuation
                     let newReplacing: IReplace = {
-                        range: {
-                            start: pos - 1,
-                            length: 0
-                        },
+                        start: pos - 1,
+                        removeLength: 0,
                         lines: [],
-                        length: 0
+                        addLength: 0
                     };
                     return {
                         newState: EReplaceState.continuation,
@@ -552,15 +547,17 @@ export class CobolInputStream implements CharStream {
      * @returns resulting string after applying
      */
     private applyReplacing(replacing: IReplace, source: string): IApplyReplace {
-        this.addReplacing(replacing);
         // apply, without preceding because they are already applied
-        return {
+        let retValue: IApplyReplace = {
             newResult:
-                source.substr(0, replacing.range.start) +
+                source.substr(0, replacing.start) +
                 replacing.lines.join("\n") +
-                source.substr(replacing.range.start + replacing.range.length),
-            newPos: replacing.range.start + replacing.length,
+                source.substr(replacing.start + replacing.removeLength),
+            newPos: replacing.start + replacing.addLength,
         };
+        // add to array, adjust if required
+        this.addReplacing(replacing);
+        return retValue;
     }
 
     private lastNormalDotPosition = 0;
@@ -583,12 +580,10 @@ export class CobolInputStream implements CharStream {
                     }
                     innerPos += statement.start.charPositionInLine;
                     let newReplacing: IReplace = {
-                        range: {
-                            start: this.lastNormalDotPosition + innerPos,
-                            length: tmpSource.length - innerPos
-                        },
+                        start: this.lastNormalDotPosition + innerPos,
+                        removeLength: tmpSource.length - innerPos,
                         lines: [],
-                        length: 0
+                        addLength: 0
                     };
                     let textName = statement.text_name();
                     if (textName && !statement.library_name()) {
@@ -601,7 +596,7 @@ export class CobolInputStream implements CharStream {
                                 newReplacing.lines = ["* from: " + newReplacing.name];
                             }
                             newReplacing.lines.unshift(""); // add first empty string, required!!!
-                            newReplacing.length = newReplacing.lines.join("\n").length;
+                            newReplacing.addLength = newReplacing.lines.join("\n").length;
                         }
                     }
                     // do not change lastNormalDotPosition
@@ -714,12 +709,10 @@ export class CobolInputStream implements CharStream {
             if (this.testLineEnds(this.result, pos)) {
                 if (startEmptyLine !== undefined) {
                     let emptyLineReplacing: IReplace = {
-                        range: {
-                            start: startEmptyLine,
-                            length: pos + 1 - startEmptyLine
-                        },
+                        start: startEmptyLine,
+                        removeLength: pos + 1 - startEmptyLine,
                         lines: [],
-                        length: 0,
+                        addLength: 0,
                     };
                     ({newResult: this.result, newPos: pos} = this.applyReplacing(emptyLineReplacing, this.result));
                     continue;
@@ -793,6 +786,9 @@ export class CobolInputStream implements CharStream {
                         while(posT >= 0) {
                             if (this.result[posT] === '-') {
                                 break;
+                            } else if (this.result[posT] === '\t') {
+                                posT -= 4;
+                                break;
                             }
                             --posT;
                         }
@@ -821,17 +817,17 @@ export class CobolInputStream implements CharStream {
                                 if (stringContinuationChar) {
                                     // remove starting quota only if equal
                                     if (this.result[pos] === stringContinuationChar) {
-                                        replacing.range.length = pos + 1 - replacing.range.start;
+                                        replacing.removeLength = pos + 1 - replacing.start;
                                     } else {
-                                        replacing.range.length = pos - replacing.range.start;
+                                        replacing.removeLength = pos - replacing.start;
                                     }
                                 } else {
                                     // remove ending spaces
-                                    while(replacing.range.start > 0 && "\t\r\n ".includes(this.result[replacing.range.start - 1])) {
-                                        --replacing.range.start;
+                                    while(replacing.start > 0 && "\t\r\n ".includes(this.result[replacing.start - 1])) {
+                                        --replacing.start;
                                     }
                                     // keep starting char
-                                    replacing.range.length = pos - replacing.range.start;
+                                    replacing.removeLength = pos - replacing.start;
                                 }
                                 ({newResult: this.result, newPos: pos} = this.applyReplacing(replacing, this.result));
                                 movePosition = 0;
@@ -863,7 +859,7 @@ export class CobolInputStream implements CharStream {
                 case EReplaceState.comment:
                         if (this.testCommentEnds(this.result, pos)) {
                             if (replacing) {
-                                replacing.range.length = pos + 1 - replacing.range.start;
+                                replacing.removeLength = pos + 1 - replacing.start;
                                 ({newResult: this.result, newPos: pos} = this.applyReplacing(replacing, this.result));
                                 movePosition = 0;
                             }
@@ -874,7 +870,7 @@ export class CobolInputStream implements CharStream {
                 case EReplaceState.conditionalCompile:
                     if (this.testConditionalCompileEnds(this.result, pos)) {
                         if (replacing) {
-                            replacing.range.length = pos + 1 - replacing.range.start;
+                            replacing.removeLength = pos + 1 - replacing.start;
                             ({newResult: this.result, newPos: pos} = this.applyReplacing(replacing, this.result));
                             movePosition = 0;
                         }
@@ -904,7 +900,7 @@ export class CobolInputStream implements CharStream {
             }
             this.errorListener.syntaxError(this.file, sorceRC.sourceRow, sorceRC.sourceCol, err.msg);
         }
-        return true;
+        return errors.length === 0;
     }
 
     public insideReplacing(replacing: IReplace, pos: number) : IInsideReplacing {

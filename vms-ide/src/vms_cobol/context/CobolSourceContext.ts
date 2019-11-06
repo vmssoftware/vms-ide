@@ -198,6 +198,9 @@ export class CobolSourceContext implements ISourceContext {
         // EOL is OBLIGATORY for correct code completion
         this.input = new CobolInputStream(this.fileName, streamErrorListener, this.sourceContent, this.compilerConditions, this.copyManager, this.cancelToken);
         let built = await this.input.buildInput();
+        if (!built) {
+            return false;
+        }
 
         if (this.streamErrors.length === 0) {
             let lexer = new cobolLexer(this.input);
@@ -216,7 +219,9 @@ export class CobolSourceContext implements ISourceContext {
         // Rewind the input stream for a new parse run.
         // Might be unnecessary when we just created that via setText.
         this.tokenStream.seek(0);
-        this.parser = new cobolParserImpl(this.tokenStream);
+        let parserImpl = new cobolParserImpl(this.tokenStream);
+        parserImpl.cancelToken = this.cancelToken;
+        this.parser = parserImpl;
         this.parser.removeErrorListeners();
         this.parser.addErrorListener(this.parserErrorListener);
 
