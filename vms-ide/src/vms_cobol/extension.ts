@@ -20,6 +20,7 @@ import { CompletionItemProviderImpl } from "../common/parser/CompletionProvider"
 import { CopyManagerImpl } from "./stream/copymanager";
 import { ICopyManager } from "./stream/cobolInputStream";
 import { ReferenceProviderImpl } from "../common/parser/ReferenceProvider";
+import { ensureSettings } from "../synchronizer/ensure-settings";
 
 const locale = env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -29,8 +30,23 @@ export const Cobol = { language: 'vms-cobol', scheme: 'file' };
 const _copyManagers = new Map<string, ICopyManager>();
 
 export async function activate(context: ExtensionContext) {
+    
     const diagnosticCollection = languages.createDiagnosticCollection(Cobol.language);
+    
+    let _involveMap = new Map<string, string[]>();
 
+    function clearDiagnostics(fileName: string) {
+        let involved = _involveMap.get(fileName);
+        if (involved) {
+            for(let involvedFile of involved) {
+                diagnosticCollection.set(Uri.file(involvedFile), []);
+            }
+        } else {
+            diagnosticCollection.set(Uri.file(fileName), []);
+        }
+    }
+    
+    
     const DiagnosticTypeMap: Map<EDiagnosticType, DiagnosticSeverity> = new Map();
     DiagnosticTypeMap.set(EDiagnosticType.Hint, DiagnosticSeverity.Hint);
     DiagnosticTypeMap.set(EDiagnosticType.Info, DiagnosticSeverity.Information);
@@ -75,8 +91,7 @@ export async function activate(context: ExtensionContext) {
 
     workspace.onDidCloseTextDocument((document: TextDocument) => {
         if (document.languageId === Cobol.language && document.uri.scheme === Cobol.scheme) {
-            backend.detach(document.uri.fsPath);
-            diagnosticCollection.set(document.uri, []);
+            clearDiagnostics(document.uri.fsPath);
         }
     });
 
@@ -91,7 +106,7 @@ export async function activate(context: ExtensionContext) {
                 let copyManager = _copyManagers.get(wsFolder.name);
                 if (copyManager instanceof CopyManagerImpl) {
                     if (copyManager.clearBySource(fileName)) {
-                        diagnosticCollection.set(event.document.uri, []);
+                        clearDiagnostics(event.document.fileName);
                         return;
                     }
                 }
@@ -109,6 +124,7 @@ export async function activate(context: ExtensionContext) {
         backend.setRequireReparse(true);
     });
 
+    // post current document to full parsing
     if (window.activeTextEditor) {
         if (window.activeTextEditor.document.languageId === Cobol.language && window.activeTextEditor.document.uri.scheme === Cobol.scheme) {
             postParse(window.activeTextEditor.document.fileName, window.activeTextEditor.document.getText());
@@ -156,8 +172,8 @@ export async function activate(context: ExtensionContext) {
      * @param document 
      */
     function processDiagnostic(fileName: string) {
-        let diagnostics = new Map<string, Diagnostic[]>();
-        diagnosticCollection.set(Uri.file(fileName), []);
+        let localDiagnostics = new Map<string, Diagnostic[]>();
+        clearDiagnostics(fileName);
         let entries = backend.getDiagnostics(fileName);
 
         for (let entry of entries) {
@@ -167,19 +183,31 @@ export async function activate(context: ExtensionContext) {
             if (entry.source) {
                 entryFileName = entry.source;
             }
-            let fileDiagnostics = diagnostics.get(entryFileName);
+            let fileDiagnostics = localDiagnostics.get(entryFileName);
             if (fileDiagnostics) {
                 fileDiagnostics.push(diagnostic);
             } else {
-                diagnostics.set(entryFileName, [diagnostic]);
+                localDiagnostics.set(entryFileName, [diagnostic]);
             }
         }
 
-        for (let [diagFileName, fileDiagnostics] of diagnostics) {
+        let involvedFiles: string[] = [];
+        for (let [diagFileName, fileDiagnostics] of localDiagnostics) {
+            involvedFiles.push(diagFileName);
             diagnosticCollection.set(Uri.file(diagFileName), fileDiagnostics);
         }
+        _involveMap.set(fileName, involvedFiles);
     }
 
+    // start background parsing for all COBOL source
+    StartBackgroundParsing();
+}
+
+async function StartBackgroundParsing() {
+    let ensured = await ensureSettings();
+    if (ensured) {
+        ensured.projectSection.headers;
+    }
 }
 
 // this method is called when your extension is deactivated

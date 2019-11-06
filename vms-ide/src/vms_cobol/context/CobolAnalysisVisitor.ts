@@ -40,6 +40,7 @@ import {
     UsingContext,
     Value_is_literalContext,
     GivingContext,
+    File_description_entryContext,
 } from "../parser/cobolParser";
 
 import { CobolAnalisisHelper } from "./CobolAnalisisHelpers";
@@ -86,6 +87,31 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
 
     protected defaultResult(): void {
         // throw new Error("Method not implemented.");
+    }
+
+    visitChildren<T extends ParserRuleContext>(node: ParserRuleContext, skipContexts?: (new (...args: any[]) => T)[]) {
+        let result = this.defaultResult();
+        let n = node.childCount;
+        for (let i = 0; i < n; i++) {
+            if (!this.shouldVisitNextChild(node, result)) {
+                break;
+            }
+            let c = node.getChild(i);
+            let doSkip = false;
+            if (skipContexts) {
+                for(let skipType of skipContexts) {
+                    if (c instanceof skipType) {
+                        doSkip = true;
+                        break;
+                    }
+                }
+            }
+            if (!doSkip) {
+                let childResult = c.accept(this);
+                result = this.aggregateResult(result, childResult);
+            }
+        }
+        return result;
     }
 
     visitIdentification_division_header(ctx: Identification_division_headerContext) {
@@ -306,6 +332,10 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         } else {
             this.visitChildren(ctx);
         }
+    }
+
+    visitFile_description_entry(ctx: File_description_entryContext) {
+        this.visitChildren(ctx, [File_nameContext]);
     }
 
     visitFile_name(ctx: File_nameContext) {

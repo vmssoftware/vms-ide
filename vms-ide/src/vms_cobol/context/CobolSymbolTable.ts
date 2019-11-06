@@ -35,7 +35,7 @@ import { CobolAnalisisHelper } from './CobolAnalisisHelpers';
  */
 export interface ILink {
     master: Symbol;
-    references: (ParseTree | undefined) [];
+    references: Set<ParseTree|undefined>;
 }
 
 export class CobolSymbolTable extends SymbolTable {
@@ -56,8 +56,9 @@ export class CobolSymbolTable extends SymbolTable {
     public createOccurance(symbol: Symbol, ctx?: ParseTree) {
         let link: ILink = {
             master: symbol,
-            references: [ctx],
+            references: new Set<ParseTree|undefined>(),
         };
+        link.references.add(ctx);
         let entry = this.occurance.get(symbol.name);
         if (entry) {
             entry.push(link);
@@ -83,7 +84,7 @@ export class CobolSymbolTable extends SymbolTable {
                     if (links) {
                         for (let link of links) {
                             if (link.master === passSymbol) {
-                                link.references.push(namePath[idxName]);
+                                link.references.add(namePath[idxName]);
                             }
                         }
                     }
@@ -280,8 +281,8 @@ export class CobolSymbolTable extends SymbolTable {
             if (links) {
             for(let link of links) {
                 if (link.master === symbol) {
-                    if (link.references.length > 0) {
-                        return definitionForContext(link.references[0]);
+                    if (link.references.size > 0) {
+                        return definitionForContext(link.references.values().next().value);
                     }
                     break;
                 }

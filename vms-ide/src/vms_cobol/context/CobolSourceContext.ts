@@ -138,7 +138,7 @@ export class CobolSourceContext implements ISourceContext {
     private lexerErrorListener = new LexerErrorListener(this.diagnostics);
     private analysisDone: boolean = false; // Includes determining reference counts.
 
-    private cancelToken = new TaskDivider(false);
+    private cancellationToken = new TaskDivider(false);
 
     private tree?: Cobol_sourceContext;     // The root context from the last parse run.
     public logFn: LogFunction;
@@ -163,13 +163,17 @@ export class CobolSourceContext implements ISourceContext {
      * This call doesn't do any expensive processing (parse() does).
      */
     public setText(source: string) {
-        this.cancelToken.setValue(true);
+        this.cancelParsing();
         this.sourceContent = source + "\n";
         this.isRequireReparse = true;
     }
 
+    public cancelParsing() {
+        this.cancellationToken.setValue(true);
+    }
+
     public async parse() {
-        this.cancelToken.setValue(false);
+        this.cancellationToken.setValue(false);
         if (!this.sourceContent) {
             return false;
         }
@@ -196,7 +200,7 @@ export class CobolSourceContext implements ISourceContext {
         
         this.streamErrors.length = 0;
         // EOL is OBLIGATORY for correct code completion
-        this.input = new CobolInputStream(this.fileName, streamErrorListener, this.sourceContent, this.compilerConditions, this.copyManager, this.cancelToken);
+        this.input = new CobolInputStream(this.fileName, streamErrorListener, this.sourceContent, this.compilerConditions, this.copyManager, this.cancellationToken);
         let built = await this.input.buildInput();
         if (!built) {
             return false;

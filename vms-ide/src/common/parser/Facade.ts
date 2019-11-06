@@ -45,11 +45,18 @@ export interface IDiagnosticEntry {
 
 export interface ISourceContext {
     /**
+     * True if this context requires reparsing
+     */
+    requireReparse: boolean;
+    /**
      * Zero-based
      * @param column 
      * @param row 
      */
     getCodeCompletionCandidates(column: number, row: number): ICompletion[];
+    /**
+     * Get diagnostics from last parsing
+     */
     getDiagnostics(): IDiagnosticEntry[];
     /**
      * Zero-based
@@ -57,8 +64,18 @@ export interface ISourceContext {
      * @param row 
      */
     getSymbolOccurences(column: number, row: number): IDefinition[];
+    /**
+     * Do background asynchronous parsing
+     */
     parse(): Promise<boolean>;
-    requireReparse: boolean;
+    /**
+     * Cancel background asynchronous parsing
+     */
+    cancelParsing(): void;
+    /**
+     * Also cancelling current parsing process
+     * @param source 
+     */
     setText(source: string): void;
     /**
      * Zero-based
