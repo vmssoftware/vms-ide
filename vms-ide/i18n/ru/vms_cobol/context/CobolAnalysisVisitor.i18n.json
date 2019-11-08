@@ -10,5 +10,6 @@
     "must_be_in_B": "This token must be in B area",
     "must.be.in.program": "Must be inside program",
     "no.program.symbol": "No program symbol",
-    "no.program.definition": "No definition in programSymbol"
+    "no.program.definition": "No definition in programSymbol",
+    "must.be.literal": "Must be enclosed in quotas"
 }

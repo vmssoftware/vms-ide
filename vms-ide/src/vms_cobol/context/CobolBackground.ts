@@ -1,4 +1,4 @@
-import vscode from 'vscode';
+import vscode, { EventEmitter, workspace, window } from 'vscode';
 import path from 'path';
 import { TaskDivider } from '../../common/task-divider';
 import { ensureSettings } from '../../synchronizer/ensure-settings';
@@ -11,6 +11,8 @@ import { ReadAllStream } from '../../common/read_all_stream';
 import { CobolGlobals } from './CobolGlobals';
 
 export class CobolBackground {
+
+    public static refreshed = new EventEmitter();
 
     public static taskDivider = new TaskDivider(true);
 
@@ -55,13 +57,25 @@ export class CobolBackground {
                             for (let localFile of localFiles) {
                                 let fullPath = path.join(wsFolder.uri.fsPath, localFile.filename);
                                 if (!CobolGlobals.getGlobals(fullPath)) {
-                                    // parse and add
-                                    let context = new CobolSourceContext(fullPath, logFn, GetCopyManager(wsFolder.name, wsFolder.uri.fsPath));
-                                    let stream = await localSource.createReadStream(localFile.filename);
-                                    if (stream) {
-                                        context.setText(await ReadAllStream(stream));
+                                    // get latest document text
+                                    let docContent: string | undefined;
+                                    for (let doc of workspace.textDocuments) {
+                                        if (doc.fileName === fullPath) {
+                                            docContent = doc.getText();
+                                            break;
+                                        }
+                                    }
+                                    if (docContent === undefined) {
+                                        let stream = await localSource.createReadStream(localFile.filename);
+                                        if (stream) {
+                                            docContent = await ReadAllStream(stream);
+                                        }
+                                    }
+                                    // parse and save
+                                    if (docContent !== undefined) {
+                                        let context = new CobolSourceContext(fullPath, logFn, GetCopyManager(wsFolder.name, wsFolder.uri.fsPath));
+                                        context.setText(docContent);
                                         await context.parse();
-                                        // add globals
                                         CobolGlobals.addGlobals(context);
                                     }
                                 }
@@ -72,5 +86,6 @@ export class CobolBackground {
                 await this.taskDivider.testValue(); // just for pass execution to another thread
             }
         }
+        this.refreshed.fire();
     }
 }

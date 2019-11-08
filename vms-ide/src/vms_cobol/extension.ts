@@ -33,10 +33,10 @@ export async function activate(context: ExtensionContext) {
     
     const diagnosticCollection = languages.createDiagnosticCollection(Cobol.language);
     
-    let _involveMap = new Map<string, string[]>();
+    let involveMap = new Map<string, Set<string>>();
 
     function clearDiagnostics(fileName: string) {
-        let involved = _involveMap.get(fileName);
+        let involved = involveMap.get(fileName);
         if (involved) {
             for(let involvedFile of involved) {
                 diagnosticCollection.set(Uri.file(involvedFile), []);
@@ -96,17 +96,13 @@ export async function activate(context: ExtensionContext) {
     workspace.onDidChangeTextDocument((event: TextDocumentChangeEvent) => {
         if (event.contentChanges.length > 0) {
             let fileName = event.document.fileName;
+            CobolGlobals.removeGlobals(fileName);
             // post reparsing
             if (event.document.languageId === Cobol.language && event.document.uri.scheme === Cobol.scheme) {
                 // with setting text
                 postParse(fileName, event.document.getText());
             }
         }
-    });
-
-    workspace.onDidSaveTextDocument((document: TextDocument) => {
-        // require reparse all on did save any document
-        backend.setRequireReparse(true);
     });
 
     // post current document to full parsing
@@ -119,15 +115,17 @@ export async function activate(context: ExtensionContext) {
     window.onDidChangeActiveTextEditor((editor?: TextEditor) => {
         if(editor) {
             if (editor.document.languageId === Cobol.language && editor.document.uri.scheme === Cobol.scheme) {
-                // set text only if require reparsing
-                if (backend.getContext(editor.document.fileName).requireReparse) {
-                    postParse(editor.document.fileName, editor.document.getText());
-                } else {
-                    postParse(editor.document.fileName);
+                let content: string | undefined;
+                let context = backend.getContext(editor.document.fileName);
+                if (context.requireReparse) {
+                    content = editor.document.getText();
                 }
+                postParse(editor.document.fileName, content);
             }
         }
     });
+
+    let documentsInParsing = 0;
 
     function postParse(fileName: string, content?: string) {
         if (content) {
@@ -139,6 +137,7 @@ export async function activate(context: ExtensionContext) {
         }
         changeTimers.set(fileName, setTimeout(() => {
             changeTimers.delete(fileName);
+            ++documentsInParsing;
             backend.parse(fileName).
                 then((parsed: boolean) => {
                     // now add to globals here
@@ -150,10 +149,16 @@ export async function activate(context: ExtensionContext) {
                     if (parsed) {
                         processDiagnostic(fileName);
                     }
-                }).
-                catch((error) => {
-                    // nothing
-                    let reason = error;
+                }).finally(() => {
+                    --documentsInParsing;
+                    if (documentsInParsing == 0 &&
+                        window.activeTextEditor &&
+                        window.activeTextEditor.document.fileName !== fileName &&
+                        window.activeTextEditor.document.languageId === Cobol.language && 
+                        window.activeTextEditor.document.uri.scheme === Cobol.scheme) {
+                            // reparse without altering text, just to resolve globals
+                            postParse(window.activeTextEditor.document.fileName);
+                    }
                 });
         }, 500));  // wait before reparse and process diagnostics
     }
@@ -182,16 +187,18 @@ export async function activate(context: ExtensionContext) {
             }
         }
 
-        let involvedFiles: string[] = [];
+        let involvedFiles = new Set<string>();
+        involvedFiles.add(fileName);
         for (let [diagFileName, fileDiagnostics] of localDiagnostics) {
-            involvedFiles.push(diagFileName);
+            involvedFiles.add(diagFileName);
             diagnosticCollection.set(Uri.file(diagFileName), fileDiagnostics);
         }
-        _involveMap.set(fileName, involvedFiles);
+        involveMap.set(fileName, involvedFiles);
     }
 
     // start background parsing for all COBOL source
-    CobolBackground.StartBackgroundParsing(logFn).then(() => {
+    CobolBackground.StartBackgroundParsing(logFn);
+    CobolBackground.refreshed.event(() => {
         // post current document to full parsing AGAIN
         if (window.activeTextEditor) {
             if (window.activeTextEditor.document.languageId === Cobol.language && window.activeTextEditor.document.uri.scheme === Cobol.scheme) {

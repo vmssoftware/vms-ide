@@ -432,6 +432,14 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     }
 
     visitProg_name(ctx: Prog_nameContext) {
-        this.helper.verifyNamePath(ctx, [ctx], false, undefined, undefined, [IntrinsicFunctionSymbol]);
+        let symbol = this.helper.verifyNamePath(ctx, [ctx], false, undefined, undefined, [IntrinsicFunctionSymbol]);
+        if (symbol) {
+            if (ctx.USER_DEFINED_WORD_()) {
+                // symbol must not be a Program
+                if (symbol instanceof ProgramSymbol) {
+                    this.helper.mark(ctx, localize("must.be.literal", "Must be enclosed in quotas"));
+                }
+            }
+        }
     }
 }
