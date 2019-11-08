@@ -1,4 +1,3 @@
-import fs from 'fs';
 
 import { LogFunction } from '../main';
 
@@ -16,6 +15,7 @@ export interface IDefinition {
     source: string,
     text?: string;
     range?: ILexicalRange;
+    quotas?: string;    // starting text in source. it will be just `"` or `N"`. last symbol in text is the same as last symbol in quotas.
 }
 
 export interface ISymbolInfo {
@@ -63,7 +63,7 @@ export interface ISourceContext {
      * @param column 
      * @param row 
      */
-    getSymbolOccurences(column: number, row: number): IDefinition[];
+    getOccurencesUnderCursor(column: number, row: number): IDefinition[];
     /**
      * Do background asynchronous parsing
      */
@@ -168,8 +168,8 @@ export class FacadeImpl {
      * @param column 
      * @param row 
      */
-    public getSymbolOccurences(fileName: string, column: number, row: number): IDefinition[] {
+    public getOccurencesUnderCursor(fileName: string, column: number, row: number): IDefinition[] {
         let context = this.getContext(fileName);
-        return context.getSymbolOccurences(column, row);
+        return context.getOccurencesUnderCursor(column, row);
     }
 }

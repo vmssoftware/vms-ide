@@ -29,6 +29,8 @@ import {
     DeviceSymbol
 } from './CobolSymbol';
 import { CobolAnalisisHelper } from './CobolAnalisisHelpers';
+import { CobolGlobals } from './CobolGlobals';
+import G = require('glob');
 
 /**
  * First element in ParseTree[] is name definition context
@@ -41,7 +43,7 @@ export interface ILink {
 export class CobolSymbolTable extends SymbolTable {
     public tree?: ParserRuleContext; // Set by the owning source context after each parse run.
 
-    public occurance = new Map<string, ILink[]>();
+    public occurence = new Map<string, ILink[]>();
 
     constructor(name: string, options: SymbolTableOptions, public owner?: CobolSourceContext) {
         super(name, options);
@@ -50,21 +52,23 @@ export class CobolSymbolTable extends SymbolTable {
     public clear() {
         // Before clearing the dependencies make sure the owners are updated.
         super.clear();
-        this.occurance.clear();
+        this.occurence.clear();
     }
 
-    public createOccurance(symbol: Symbol, ctx?: ParseTree) {
+    public createOccurence(symbol: Symbol, ctx?: ParseTree) {
         let link: ILink = {
             master: symbol,
             references: new Set<ParseTree|undefined>(),
         };
         link.references.add(ctx);
-        let entry = this.occurance.get(symbol.name);
+        let entry = this.occurence.get(symbol.name);
         if (entry) {
             entry.push(link);
         } else {
-            this.occurance.set(symbol.name, [link]);
+            entry = [link];
+            this.occurence.set(symbol.name, entry);
         }
+        return entry;
     }
 
     /**
@@ -72,7 +76,7 @@ export class CobolSymbolTable extends SymbolTable {
      * @param namePath 
      * @param origin 
      */
-    public addOccurance(namePath: ParseTree[], origin: Symbol): boolean {
+    public addOccurence(namePath: ParseTree[], origin: Symbol): boolean {
         let retCode = false;
         if (namePath.length > 0) {
             let passSymbol: Symbol | undefined = origin;
@@ -80,12 +84,14 @@ export class CobolSymbolTable extends SymbolTable {
             let unifiedName = unifyCobolName(CobolAnalisisHelper.stringLiteralContent(namePath[idxName].text));
             while (passSymbol) {
                 if (passSymbol.name === unifiedName) {
-                    let links = this.occurance.get(unifiedName);
-                    if (links) {
-                        for (let link of links) {
-                            if (link.master === passSymbol) {
-                                link.references.add(namePath[idxName]);
-                            }
+                    let links = this.occurence.get(unifiedName);
+                    if (!links) {
+                        // for symbol given from globals
+                        links = this.createOccurence(origin);
+                    }
+                    for (let link of links) {
+                        if (link.master === passSymbol) {
+                            link.references.add(namePath[idxName]);
                         }
                     }
                     ++idxName;
@@ -176,7 +182,7 @@ export class CobolSymbolTable extends SymbolTable {
         if (namePath.length > 0) {
             // 1. collect all candidates
             let name = namePath[0];
-            let links = this.occurance.get(name);
+            let links = this.occurence.get(name);
             if (links) {
                 // for each candidate
                 for (let candidate of links.map(x => x.master)) {
@@ -200,6 +206,11 @@ export class CobolSymbolTable extends SymbolTable {
                         }
                     }
                 }
+            }
+            // add from globals if no local names found
+            if (matched.length == 0 && namePath.length === 1 && this.owner) {
+                let globals = CobolGlobals.collectGlobalsForSource(this.owner.fileName);
+                matched = globals.filter(x => x.name === namePath[0]);
             }
         }
         return matched;
@@ -250,7 +261,7 @@ export class CobolSymbolTable extends SymbolTable {
             definition: this.getSymbolNameDefinition(symbol),
             kindString: symbolDescriptionFromEnum(kind),
         };
-        if (result.definition) {
+        if (result.definition && !result.definition.source) {
             result.definition.source = this.owner?this.owner.fileName:"";
         }
         return result;
@@ -277,14 +288,23 @@ export class CobolSymbolTable extends SymbolTable {
      * @param symbol 
      */
     public getSymbolNameDefinition(symbol: Symbol): IDefinition | undefined {
-        let links = this.occurance.get(symbol.name);
+        if (symbol.getParentOfType(CobolSymbolTable) !== this) {
+            // from globals
+            let globalDefs = CobolGlobals.definition(symbol);
+            if (globalDefs && globalDefs.length > 0) {
+                return globalDefs[0];
+            }
+        } else {
+            let links = this.occurence.get(symbol.name);
             if (links) {
-            for(let link of links) {
-                if (link.master === symbol) {
-                    if (link.references.size > 0) {
-                        return definitionForContext(link.references.values().next().value);
+                for(let link of links) {
+                    if (link.master === symbol) {
+                        if (link.references.size > 0) {
+                            let firstEntry = link.references.values().next().value;
+                            return definitionForContext(firstEntry);
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
@@ -297,7 +317,7 @@ export class CobolSymbolTable extends SymbolTable {
      */
     public getSymbolOccurences(symbol: Symbol): IDefinition[] {
         let result: IDefinition[] = [];
-        let links = this.occurance.get(symbol.name);
+        let links = this.occurence.get(symbol.name);
             if (links) {
             for(let link of links) {
                 if (link.master === symbol) {
@@ -325,13 +345,15 @@ export class CobolSymbolTable extends SymbolTable {
      * Get master symbol for current context (if it was added before of course)
      * @param ctx 
      */
-    public getMasterSymbol(ctx: ParseTree) {
-        let links = this.occurance.get(unifyCobolName(CobolAnalisisHelper.stringLiteralContent(ctx.text)));
-        if (links) {
-            for(let link of links) {
-                for (let node of link.references) {
-                    if (node && isNodeIncludes(node, ctx)) {
-                        return link.master;
+    public getMasterSymbol(ctx?: ParseTree) {
+        if (ctx) {
+            let links = this.occurence.get(unifyCobolName(CobolAnalisisHelper.stringLiteralContent(ctx.text)));
+            if (links) {
+                for(let link of links) {
+                    for (let node of link.references) {
+                        if (node && isNodeIncludes(node, ctx)) {
+                            return link.master;
+                        }
                     }
                 }
             }

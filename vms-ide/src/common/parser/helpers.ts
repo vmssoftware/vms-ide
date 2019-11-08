@@ -254,7 +254,7 @@ export function isNodeIncludes(node: ParseTree, testNode: ParseTree) : boolean {
  * Range is zero-based
  * @param ctx 
  */
-export function definitionForParserRuleContext(ctx: ParserRuleContext) : IDefinition {
+function definitionForParserRuleContext(ctx: ParserRuleContext) : IDefinition {
     let stop = ctx.stop? ctx.stop : ctx.start;
     return {
         source: "",
@@ -270,10 +270,37 @@ export function definitionForParserRuleContext(ctx: ParserRuleContext) : IDefini
  * Range is zero-based
  * @param ctx 
  */
-export function definitionForTerminalNode(ctx: TerminalNode) : IDefinition {
+function definitionForTerminalNode(ctx: TerminalNode) : IDefinition {
+    let symbol = ctx.symbol;
+    let quotas: string | undefined;
+    if (symbol.startIndex != -1 && symbol.stopIndex != -1 && symbol.inputStream) {
+        let stream = symbol.inputStream;
+        // test stiring literal
+        let saveIdx = stream.index;
+        stream.seek(symbol.stopIndex);
+        let lastCode = stream.LA(1);
+        let lastChar = String.fromCharCode(lastCode);
+        switch (lastChar) {
+            case '"':
+            case "'":
+                stream.seek(symbol.startIndex);
+                quotas = "";
+                let pos = 1;
+                while(pos <= symbol.stopIndex - symbol.startIndex) {
+                    let code = stream.LA(pos);
+                    quotas += String.fromCharCode(code);
+                    if (code === lastCode) {
+                        break;
+                    }
+                }
+                break;
+        }
+        stream.seek(saveIdx);
+    }
     return {
         source: "",
         text: ctx.text,
+        quotas,
         range: {
             start: { col: ctx.symbol.charPositionInLine, row: ctx.symbol.line - 1},
             end: { col: ctx.symbol.charPositionInLine + ctx.text.length, row: ctx.symbol.line - 1},
@@ -287,6 +314,12 @@ export function definitionForTerminalNode(ctx: TerminalNode) : IDefinition {
  */
 export function definitionForContext(ctx?: ParseTree): IDefinition | undefined {
     if (ctx instanceof ParserRuleContext) {
+        if (ctx.children && ctx.children.length == 1) {
+            let terminalNode =  ctx.children[0];
+            if (terminalNode instanceof TerminalNode) {
+                return definitionForTerminalNode(terminalNode);
+            }
+        }
         return definitionForParserRuleContext(ctx);
     } else if (ctx instanceof TerminalNode) {
         return definitionForTerminalNode(ctx);

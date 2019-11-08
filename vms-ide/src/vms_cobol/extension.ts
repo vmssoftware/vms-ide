@@ -5,7 +5,7 @@ import * as path from 'path';
 import {
     Range, DiagnosticSeverity, env, ExtensionContext, window,
     workspace, languages, TextDocument, TextDocumentChangeEvent,
-    TextEditorSelectionChangeEvent, TextEditor, Diagnostic,
+    TextEditor, Diagnostic,
     StatusBarItem, StatusBarAlignment, Uri
 } from 'vscode';
 
@@ -17,17 +17,17 @@ import { HoverProviderImpl } from "../common/parser/HoverProvider";
 import { DefinitionProviderImpl } from "../common/parser/DefinitionProvider";
 import { RenameProviderImpl } from "../common/parser/RenameProvider";
 import { CompletionItemProviderImpl } from "../common/parser/CompletionProvider";
-import { CopyManagerImpl } from "./stream/copymanager";
+import { CopyManagerImpl } from "./stream/CopyManagerImpl";
 import { ICopyManager } from "./stream/cobolInputStream";
 import { ReferenceProviderImpl } from "../common/parser/ReferenceProvider";
-import { ensureSettings } from "../synchronizer/ensure-settings";
+import { CobolBackground } from "./context/CobolBackground";
+import { GetCopyManager } from "./stream/CopyManagers";
+import { CobolGlobals } from "./context/CobolGlobals";
 
 const locale = env.language;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
 export const Cobol = { language: 'vms-cobol', scheme: 'file' };
-
-const _copyManagers = new Map<string, ICopyManager>();
 
 export async function activate(context: ExtensionContext) {
     
@@ -69,11 +69,7 @@ export async function activate(context: ExtensionContext) {
             let copyManager: ICopyManager | undefined;
             let wsFolder = workspace.getWorkspaceFolder(Uri.file(fileName));
             if (wsFolder) {
-                copyManager = _copyManagers.get(wsFolder.name);
-                if (!copyManager) {
-                    copyManager = new CopyManagerImpl(wsFolder.uri.fsPath);
-                    _copyManagers.set(wsFolder.name, copyManager);
-                }
+                copyManager = GetCopyManager(wsFolder.name, wsFolder.uri.fsPath);
             }
             return new CobolSourceContext(fileName, logFn, copyManager);
         }, logFn);
@@ -99,18 +95,7 @@ export async function activate(context: ExtensionContext) {
 
     workspace.onDidChangeTextDocument((event: TextDocumentChangeEvent) => {
         if (event.contentChanges.length > 0) {
-            // clean copy manager cache
             let fileName = event.document.fileName;
-            let wsFolder = workspace.getWorkspaceFolder(Uri.file(fileName));
-            if (wsFolder) {
-                let copyManager = _copyManagers.get(wsFolder.name);
-                if (copyManager instanceof CopyManagerImpl) {
-                    if (copyManager.clearBySource(fileName)) {
-                        clearDiagnostics(event.document.fileName);
-                        return;
-                    }
-                }
-            }
             // post reparsing
             if (event.document.languageId === Cobol.language && event.document.uri.scheme === Cobol.scheme) {
                 // with setting text
@@ -156,6 +141,12 @@ export async function activate(context: ExtensionContext) {
             changeTimers.delete(fileName);
             backend.parse(fileName).
                 then((parsed: boolean) => {
+                    // now add to globals here
+                    let context = backend.getContext(fileName);
+                    if (context instanceof CobolSourceContext) {
+                        CobolGlobals.addGlobals(context);
+                    }
+                    // process diagnostic
                     if (parsed) {
                         processDiagnostic(fileName);
                     }
@@ -200,14 +191,14 @@ export async function activate(context: ExtensionContext) {
     }
 
     // start background parsing for all COBOL source
-    StartBackgroundParsing();
-}
-
-async function StartBackgroundParsing() {
-    let ensured = await ensureSettings();
-    if (ensured) {
-        ensured.projectSection.headers;
-    }
+    CobolBackground.StartBackgroundParsing(logFn).then(() => {
+        // post current document to full parsing AGAIN
+        if (window.activeTextEditor) {
+            if (window.activeTextEditor.document.languageId === Cobol.language && window.activeTextEditor.document.uri.scheme === Cobol.scheme) {
+                postParse(window.activeTextEditor.document.fileName, window.activeTextEditor.document.getText());
+            }
+        }
+    });
 }
 
 // this method is called when your extension is deactivated

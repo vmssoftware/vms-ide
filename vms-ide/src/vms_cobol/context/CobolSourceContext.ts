@@ -114,6 +114,7 @@ import { CobolAnalisisHelper } from './CobolAnalisisHelpers';
 import { CobolAnalysisVisitor } from './CobolAnalysisVisitor';
 import { TaskDivider } from '../../common/task-divider';
 import { cobolParserImpl } from '../parser/cobolParserImpl';
+import { CobolGlobals } from './CobolGlobals';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -122,7 +123,7 @@ export class CobolSourceContext implements ISourceContext {
 
     private sourceContent?: string;
     private isRequireReparse: boolean;
-    private sourceId: string;
+    //private sourceId: string;
     private streamErrors: IDiagnosticEntry[] = [];
     private diagnostics: IDiagnosticEntry[] = [];
     private symbolTable: CobolSymbolTable;
@@ -147,15 +148,20 @@ export class CobolSourceContext implements ISourceContext {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
         this.isRequireReparse = true;
-        this.sourceId = path.basename(fileName, path.extname(fileName));
-        this.symbolTable =  new CobolSymbolTable(this.sourceId, { allowDuplicateSymbols: true }, this);
+        //this.sourceId = path.basename(fileName, path.extname(fileName));
+        this.symbolTable =  new CobolSymbolTable(this.fileName, { allowDuplicateSymbols: true }, this);
     }
 
     get requireReparse() {
         return this.isRequireReparse;
     }
+
     set requireReparse(value: boolean) {
         this.isRequireReparse = value;
+    }
+
+    public getSymbolTable() {
+        return this.symbolTable;
     }
 
     /**
@@ -378,7 +384,7 @@ export class CobolSourceContext implements ISourceContext {
                     })
                     break;
                 case cobolParser.RULE_proc_name:
-                    this.symbolTable.occurance.forEach( (value, key) => {
+                    this.symbolTable.occurence.forEach( (value, key) => {
                         for(let link of value) {
                             // only paragraph or section
                             if (link.master instanceof ParagraphSymbol ||
@@ -397,7 +403,7 @@ export class CobolSourceContext implements ISourceContext {
             candidates.tokens.forEach((following: number[], type: number) => {
                 switch(type) {
                     case cobolParser.USER_DEFINED_WORD_:
-                        this.symbolTable.occurance.forEach((value, key) => {
+                        this.symbolTable.occurence.forEach((value, key) => {
                             if (value.length > 0) {
                                 let add = false;
                                 for(let link of value) {
@@ -462,13 +468,31 @@ export class CobolSourceContext implements ISourceContext {
      * @param column 
      * @param row 
      */
-    public getSymbolOccurences(column: number, row: number): IDefinition[] {
+    public getOccurencesUnderCursor(column: number, row: number): IDefinition[] {
         let retDef: IDefinition[] = [];
         if (this.input) {
             let input = this.input;
             ({resultRow: row, resultCol: column} = input.resultRowColFromSourceRowCol(row, column));
             let master = this.masterSymbolAtPosition(column, row);
             if (master) {
+                
+                // add global master
+                if (master.symbolTable !== this.symbolTable) {
+                    let globalDef = CobolGlobals.definition(master);
+                    if (globalDef) {
+                        retDef.push(...globalDef);
+                    }
+                }
+
+                // add globals links
+                let globalUsing = CobolGlobals.links(master);
+                for(let globalDef of globalUsing) {
+                    if (globalDef.source !== this.fileName) {
+                        retDef.push(globalDef);
+                    }
+                }
+
+                // add local occurences
                 for (let occ of this.symbolTable.getSymbolOccurences(master)) {
                     if (occ.range) {
                         let srcPos = this.sourceRangeFromResult(occ.range);
@@ -476,6 +500,7 @@ export class CobolSourceContext implements ISourceContext {
                             range: srcPos.range,
                             source: srcPos.source,
                             text: occ.text,
+                            quotas: occ.quotas,
                         });
                     } else {
                         retDef.push(occ);
@@ -509,7 +534,7 @@ export class CobolSourceContext implements ISourceContext {
             }
             let masterSymbol = this.masterSymbolAtPosition(inResult.resultCol, inResult.resultRow);
             info = this.symbolTable.getSymbolInfo(masterSymbol);
-            if (info && info.definition && info.definition.range) {
+            if (info && info.definition && info.definition.range && info.definition.source === this.fileName) {
                 let sourceRange = this.sourceRangeFromResult(info.definition.range);
                 info.definition.range = sourceRange.range;
                 info.definition.source = sourceRange.source;
@@ -655,8 +680,6 @@ export class CobolSourceContext implements ISourceContext {
             let helper = new CobolAnalisisHelper(this.diagnostics, this.symbolTable);
             let visitor = new CobolAnalysisVisitor(helper);
             this.tree.accept(visitor);
-            //let listener = new CobolAnalysisListener(helper);
-            //ParseTreeWalker.DEFAULT.walk(listener as ParseTreeListener, this.tree!);
             this.analysisDone = true;
         }
     }
@@ -666,7 +689,7 @@ export class CobolSourceContext implements ISourceContext {
             let symbolToAdd = this.symbolTable.addNewSymbolOfType(IntrinsicFunctionSymbol, this.symbolTable, unifyCobolName(intrincisFunction.name));
             symbolToAdd.definition = intrincisFunction;
             symbolToAdd.isGlobal = true;
-            this.symbolTable.createOccurance(symbolToAdd);
+            this.symbolTable.createOccurence(symbolToAdd);
         }
         for (let predefinedNode of predefinedData) {
             // by default, add new symbols into symbolTable root
@@ -713,7 +736,7 @@ export class CobolSourceContext implements ISourceContext {
                     }
                 }
             }
-            symbolTable.createOccurance(symbolToAdd);
+            symbolTable.createOccurence(symbolToAdd);
         }
     }
 

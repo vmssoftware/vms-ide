@@ -17,7 +17,7 @@ export class ReferenceProviderImpl implements ReferenceProvider {
     }
 
     public provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): ProviderResult<Location[]> {
-        const occurences = this.backend.getSymbolOccurences(document.fileName, position.character, position.line);
+        const occurences = this.backend.getOccurencesUnderCursor(document.fileName, position.character, position.line);
         const result: Location[] = [];
         
         if (occurences.length > 0 ) {

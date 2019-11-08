@@ -19,6 +19,8 @@ const _quotas = "\"'";
 export interface ICopyManager {
     getLines(name: string): string[];
     getSourcePath(name: string): string | undefined;
+    clear(fileName?: string): boolean;
+    getRoot() : string;
 }
 
 /**

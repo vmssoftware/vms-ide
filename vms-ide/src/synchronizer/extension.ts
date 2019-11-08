@@ -2,29 +2,23 @@ import { commands, Disposable, env, ExtensionContext, extensions, RelativePatter
 import * as nls from "vscode-nls";
 import * as path from "path";
 
-import micromatch from "micromatch";
-
 import { Builder } from "./build/builder";
 import { setExtensionContext } from "./context";
 import { ProjectState } from "./dep-tree/proj-state";
 import { ProjDepProvider } from "./dep-tree/project-dep";
 import { ProjDescrProvider } from "./dep-tree/project-descr";
-import { configApi, ensureConfigHelperApi, ensureSettings } from "./ensure-settings";
+import { configApi, ensureConfigHelperApi } from "./ensure-settings";
 import { Perform } from "./performer";
 import { SyncApi } from "./sync/sync-api";
 import { Synchronizer } from "./sync/synchronizer";
 import { LogFunction, LogType, Delay } from "../common/main";
-import { collectSplittedByCommas } from "./common/find-files";
-import { GetSshHelperType } from "../ext-api/ext-api";
-import { SshHelper } from "../ssh-helper/ssh-helper";
+import { createFsWatchers, disposeFsWatchers, ProjectFilesWatchEmitter } from "./scopeWatchers";
 
 const locale = env.language ;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
 // tslint:disable-next-line:no-empty
 let logFn: LogFunction = () => {};
-
-let watchers: Map<string, Disposable[]> = new Map<string, Disposable[]>();
 
 export async function activate(context: ExtensionContext) {
 
@@ -53,9 +47,18 @@ export async function activate(context: ExtensionContext) {
     const projectDependenciesProvider = new ProjDepProvider();
     const projectDescriptionProvider = new ProjDescrProvider();
 
-    createFsWatchers();
+    ProjectFilesWatchEmitter.on('created', (scope, filePath) => {
+        ProjectState.acquire().setModified(scope, filePath);
+    });
+    ProjectFilesWatchEmitter.on('deleted', (scope, filePath) => {
+        ProjectState.acquire().setDeleted(scope, filePath);
+    });
+    ProjectFilesWatchEmitter.on('changed', (scope, filePath) => {
+        ProjectState.acquire().setModified(scope, filePath);
+    });
+    createFsWatchers(logFn);
     workspace.onDidChangeWorkspaceFolders((e) => {
-        createFsWatchers();
+        createFsWatchers(logFn);
         projectDependenciesProvider.refresh();
         projectDescriptionProvider.refresh();
         ProjectState.acquire().create();
@@ -265,100 +268,6 @@ export async function activate(context: ExtensionContext) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    for (const [scope, scopeWatchers] of  watchers) {
-        scopeWatchers.forEach(w => w.dispose());
-    }
-    watchers.clear();
+    disposeFsWatchers();
     logFn(LogType.debug, () => localize("debug.deactivated", "VMS-IDE: Sync extension is deactivated"));
-}
-
-async function createFsWatchers() {
-    for (const [scope, scopeWatchers] of  watchers) {
-        scopeWatchers.forEach(w => w.dispose());
-    }
-    watchers.clear();
-    if (workspace.workspaceFolders) {
-        const SshHelperType = GetSshHelperType();
-        if (!SshHelperType) {
-            return;
-        }
-        let sshHelper = new SshHelperType();
-        for (const folder of workspace.workspaceFolders) {
-            createScopeFsWatchers(folder, sshHelper);
-        }
-    }
-}
-
-async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelper) {
-    const scopeWatchers: Disposable[] = [];
-    const ensured = await ensureSettings(folder.name, logFn);
-    if (ensured) {
-        // 1. Setup source file watcher 
-        // prepare micromatch
-        const includes = [
-            ensured.projectSection.source,
-            ensured.projectSection.resource,
-            ensured.projectSection.headers,
-            ensured.projectSection.builders,
-        ];
-        const include = includes.join(",");
-        const options: micromatch.Options = {
-            basename: true,
-            nocase: true,
-            nodupes: true,
-            unixify: false,
-        };
-        const unbracedInclude = micromatch.braces(include).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
-        const splittedInclude = unbracedInclude.reduce(collectSplittedByCommas, []);
-        if (ensured.projectSection.exclude) {
-            const unbraceExclude = micromatch.braces(ensured.projectSection.exclude).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
-            const splitExclude = unbraceExclude.reduce(collectSplittedByCommas, []);
-            options.ignore = splitExclude;
-        }
-
-        const relativePattern = new RelativePattern(folder, "**/*.*");
-        const fsWatcher = workspace.createFileSystemWatcher(relativePattern, false, false, false);
-        const rootLength = folder.uri.fsPath.length + 1;
-        fsWatcher.onDidCreate((uri) => {
-            testModifySync(folder.name, uri.fsPath.slice(rootLength), splittedInclude, options);
-        });
-        fsWatcher.onDidDelete((uri) => {
-            testModifySync(folder.name, uri.fsPath.slice(rootLength), splittedInclude, options, true);
-        });
-        fsWatcher.onDidChange((uri) => {
-            testModifySync(folder.name, uri.fsPath.slice(rootLength), splittedInclude, options);
-        });
-        scopeWatchers.push(fsWatcher);
-
-        // 2. Setup SSH settings watcher 
-        if (sshHelper) {
-            scopeWatchers.push(sshHelper.setConfigWatcher(folder.name, () => {
-                commands.executeCommand("vmssoftware.project-dep.projectDescription.refresh");
-                ProjectState.acquire().setSynchronized(folder.name, false);
-            }));
-        }
-
-        // 3. Setup Project settings watcher 
-        scopeWatchers.push(ensured.configHelper.getConfig().onDidLoad(() => {
-            ProjectState.acquire().setSynchronized(folder.name, false);
-            // recreate watchers for this folder
-            createScopeFsWatchers(folder, sshHelper);
-        }));
-    }
-    const prevWatchers = watchers.get(folder.name);
-    if (prevWatchers) {
-        prevWatchers.forEach(w => w.dispose());
-    }
-    watchers.set(folder.name, scopeWatchers);
-}
-
-function testModifySync(scope: string, filePath: string, includes: string[], options: micromatch.Options, onDelete = false) {
-    const list = micromatch([filePath], includes, options);
-    if (list.length) {
-        if (onDelete) {
-            ProjectState.acquire().setDeleted(scope, filePath);
-        } else {
-            ProjectState.acquire().setModified(scope, filePath);
-        }
-    }
 }

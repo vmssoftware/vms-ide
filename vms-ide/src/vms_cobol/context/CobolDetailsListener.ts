@@ -111,7 +111,7 @@ export class CobolDetailsListener implements cobolListener {
     enterProgram_id(ctx: Program_idContext) {
         if (this.currentSymbol instanceof ProgramSymbol) {
             this.currentSymbol.name = unifyCobolName(ctx.program_name().text);
-            this.symbolTable.createOccurance(this.currentSymbol, ctx.program_name());
+            this.symbolTable.createOccurence(this.currentSymbol, ctx.program_name());
             let common_initial = ctx.common_initial();
             if (common_initial && common_initial.COMMON()) {
                 this.currentSymbol.isCommon = true;
@@ -249,8 +249,13 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterFd_clause(ctx: Fd_clauseContext) {
-        if (ctx.GLOBAL() && this.currentSymbol instanceof IdentifierSymbol) {
-            this.currentSymbol.isGlobal = true;
+        if (this.currentSymbol instanceof IdentifierSymbol) {
+            if (ctx.GLOBAL()) {
+                this.currentSymbol.isGlobal = true;
+            }
+            if (ctx.EXTERNAL()) {
+                this.currentSymbol.isExtern = true;
+            }
         }
     }
 
@@ -275,8 +280,10 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterRd_clause(ctx: Rd_clauseContext) {
-        if (ctx.GLOBAL() && this.currentSymbol instanceof IdentifierSymbol) {
-            this.currentSymbol.isGlobal = true;
+        if (this.currentSymbol instanceof IdentifierSymbol) {
+            if (ctx.GLOBAL()) {
+                this.currentSymbol.isGlobal = true;
+            }
         }
     }
 
@@ -314,6 +321,7 @@ export class CobolDetailsListener implements cobolListener {
         symb.level = levelNum;
         if (symb.parent instanceof IdentifierSymbol) {
             symb.isGlobal = symb.parent.isGlobal;
+            symb.isExtern = symb.parent.isExtern;
         }
         symb.usage = EDataUsage.DISPLAY;
     }
@@ -327,12 +335,14 @@ export class CobolDetailsListener implements cobolListener {
 
     enterData_description_clause(ctx: Data_description_clauseContext) {
         if (this.currentSymbol instanceof DataRecordSymbol) {
-            // GLOBAL
             if (ctx.GLOBAL()) {
                 this.currentSymbol.isGlobal = true;
                 return;
             }
-            // PICTURE
+            if (ctx.EXTERNAL()) {
+                this.currentSymbol.isExtern = true;
+                return;
+            }
             let pictureCtx = ctx.picture();
             if (pictureCtx) {
                 let pictureStr = pictureCtx.character_string().text;
@@ -489,7 +499,7 @@ export class CobolDetailsListener implements cobolListener {
         this.currentSymbol = this.createAndTryAddSymbolTo(this.currentSymbol, t, name, ...args);
         this.currentSymbol.context = enclosingCtx;
         if (nameCtx) {
-            this.symbolTable.createOccurance(this.currentSymbol, nameCtx);
+            this.symbolTable.createOccurence(this.currentSymbol, nameCtx);
         }
         return this.currentSymbol as T;
     }

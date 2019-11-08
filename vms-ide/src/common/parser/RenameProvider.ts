@@ -5,23 +5,20 @@ export class RenameProviderImpl implements RenameProvider {
     constructor(private backend: FacadeImpl) {
     }
     public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {
-        const occurences = this.backend.getSymbolOccurences(document.fileName, position.character, position.line);
+        const occurences = this.backend.getOccurencesUnderCursor(document.fileName, position.character, position.line);
         if (occurences.length) {
             const result = new WorkspaceEdit();
             for (let occurance of occurences) {
-                if (occurance.source === document.fileName &&
-                    occurance.text &&
-                    occurance.range && 
-                    occurance.range.start.row === occurance.range.end.row &&
-                    occurance.range.end.col - occurance.range.start.col === occurance.text.length) {
+                if (occurance.text && occurance.range) {
                     let range = new Range(
                         occurance.range.start.row, occurance.range.start.col,
                         occurance.range.end.row, occurance.range.end.col
                     );
-                    result.replace(document.uri, range, newName);
-                } else {
-                    // do not allow any renamings if one fails
-                    return undefined;
+                    let replaceName = newName;
+                    if (occurance.quotas) {
+                        replaceName = occurance.quotas + newName + occurance.quotas[occurance.quotas.length - 1];
+                    }
+                    result.replace(Uri.file(occurance.source), range, replaceName);
                 }
             }
             return result;

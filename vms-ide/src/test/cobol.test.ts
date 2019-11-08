@@ -12,7 +12,7 @@ import { IDiagnosticEntry, EDiagnosticType } from "../common/parser/Facade";
 import { cobolCopyLexer } from "../vms_cobol/parser/cobolCopyLexer";
 import { cobolCopyParser, CopyStatementContext } from "../vms_cobol/parser/cobolCopyParser";
 import { LexerErrorListener, ParserErrorListener } from "../common/parser/ErrorListeners";
-import { CopyManagerImpl } from "../vms_cobol/stream/copymanager";
+import { CopyManagerImpl } from "../vms_cobol/stream/CopyManagerImpl";
 import { cobolParserImpl } from "../vms_cobol/parser/cobolParserImpl";
 
 suite("COBOL tests", function(this: Mocha.Suite) {
@@ -246,6 +246,12 @@ end PROGRAM id-1.`;
             },
             getSourcePath(name: string): string | undefined {
                 return undefined;
+            },
+            clear(fileName?: string) {
+                return false;
+            },
+            getRoot() {
+                return "";
             }
         }
 

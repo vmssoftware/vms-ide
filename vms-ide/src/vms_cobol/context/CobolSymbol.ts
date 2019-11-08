@@ -396,6 +396,7 @@ export function getKindFromSymbol(symbol: Symbol): ECobolSymbolKind {
 //**************************************************/
 export class IdentifierSymbol extends ScopedSymbol {
     public isGlobal?: boolean;
+    public isExtern?: boolean;
 }
 export class SpecialNameSymbol extends IdentifierSymbol {
     constructor(...args: any[]) {

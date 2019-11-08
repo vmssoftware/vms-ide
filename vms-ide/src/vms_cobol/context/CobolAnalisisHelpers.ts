@@ -165,7 +165,7 @@ export class CobolAnalisisHelper {
             return undefined;
         }
         let symbol = symbols[0];
-        this.symbolTable.addOccurance(namePath, symbol);
+        this.symbolTable.addOccurence(namePath, symbol);
         if (allowTypes && allowTypes.length > 0) {
             let allowed = false;
             for (let t of allowTypes) {
