@@ -358,6 +358,7 @@ export class CobolSourceContext implements ISourceContext {
         //add preferred rules
             cobolParser.RULE_function_name,
             cobolParser.RULE_proc_name,
+            cobolParser.RULE_prog_name,
         ]);
 
         // Search the token index which covers our caret position.
@@ -394,6 +395,44 @@ export class CobolSourceContext implements ISourceContext {
                             }
                         };
                     })
+                    break;
+                case cobolParser.RULE_prog_name:
+                    if (callStack.length > 0) {
+                        switch (callStack[callStack.length - 1]) {
+                            case cobolParser.RULE_cancel_statement:
+                            case cobolParser.RULE_call_statement:
+                                this.symbolTable.occurence.forEach( (value, key) => {
+                                    for(let link of value) {
+                                        // only programs, add quotas
+                                        if (link.master instanceof ProgramSymbol &&
+                                            !(link.master instanceof IntrinsicFunctionSymbol)) {
+                                            resultMap.set(`"${key}"`, new Set([symbolDescriptionFromEnum(getKindFromSymbol(link.master))]));
+                                            break;
+                                        }
+                                    };
+                                })
+                                CobolGlobals.collectGlobalsForSource(this.fileName).forEach( globalSymbol => {
+                                    if (globalSymbol instanceof ProgramSymbol) {
+                                        // add globals
+                                        resultMap.set(`"${globalSymbol.name}"`, new Set([symbolDescriptionFromEnum(getKindFromSymbol(globalSymbol))]));
+                                    }
+                                });
+                                break;
+                            case cobolParser.RULE_end_program:
+                                // TODO: filter by current scope
+                                this.symbolTable.occurence.forEach( (value, key) => {
+                                    for(let link of value) {
+                                        // only programs, without quotas
+                                        if (link.master instanceof ProgramSymbol &&
+                                            !(link.master instanceof IntrinsicFunctionSymbol)) {
+                                            resultMap.set(key, new Set([symbolDescriptionFromEnum(getKindFromSymbol(link.master))]));
+                                            break;
+                                        }
+                                    };
+                                })
+                                break;
+                            }
+                    }
                     break;
             }
         });
