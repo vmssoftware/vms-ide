@@ -380,7 +380,10 @@ export class VMSRuntime extends EventEmitter
 
 					if(languageInfo.includes("COBOL"))
 					{
-						moduleName = moduleName.replace("-", "_");
+						while(moduleName.includes("-"))
+						{
+							moduleName = moduleName.replace("-", "_");
+						}
 					}
 
 					if(moduleName.includes("$BLK"))
