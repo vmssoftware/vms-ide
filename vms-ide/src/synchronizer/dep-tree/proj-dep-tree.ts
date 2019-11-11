@@ -68,6 +68,10 @@ export class ProjDepTree implements DepTree {
         config.update(ProjDepTree.configSection, dependencies, false);
     }
 
+    /**
+     * Get list of workspaces on which this depends
+     * @param nodeName 
+     */
     public getDepList(nodeName?: string) {
         const chain: string[] = [];
         let node = this.root;
@@ -93,6 +97,10 @@ export class ProjDepTree implements DepTree {
         return chain;
     }
 
+    /**
+     * Get list of workspaces dependent on this
+     * @param nodeName 
+     */
     public getMasterList(nodeName?: string) {
         const chain: string[] = [];
         if (nodeName) {

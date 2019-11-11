@@ -175,11 +175,11 @@ export class CobolSourceContext implements ISourceContext {
     }
 
     public cancelParsing() {
-        this.cancellationToken.setValue(true);
+        this.cancellationToken.asyncValue = true;
     }
 
     public async parse() {
-        this.cancellationToken.setValue(false);
+        this.cancellationToken.asyncValue = false;
         if (!this.sourceContent) {
             return false;
         }

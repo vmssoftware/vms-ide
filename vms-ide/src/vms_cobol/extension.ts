@@ -139,11 +139,11 @@ export async function activate(context: ExtensionContext) {
             changeTimers.delete(fileName);
             ++documentsInParsing;
             backend.parse(fileName).
-                then((parsed: boolean) => {
+                then(async (parsed: boolean) => {
                     // now add to globals here
                     let context = backend.getContext(fileName);
                     if (context instanceof CobolSourceContext) {
-                        CobolGlobals.addGlobals(context);
+                        await CobolGlobals.addGlobals(context);
                     }
                     // process diagnostic
                     if (parsed) {
