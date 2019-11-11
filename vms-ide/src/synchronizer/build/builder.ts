@@ -20,11 +20,11 @@ import { ISource } from "../sync/source";
 import { Synchronizer } from "../sync/synchronizer";
 import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
 import { ProjectState } from "../dep-tree/proj-state";
-import { collectSplittedByCommas } from "../../synchronizer/common/find-files";
 import { IBuildConfigSection } from "../../synchronizer/sync/sync-api";
 import { TestExecResult } from "../../synchronizer/common/TestExecResult";
 import { JvmProject, IClassInfo, IFieldInfo, isFieldAccess } from "../../vms_jvm_debug/jvm-project";
 import { maskSpacesInTemplate } from "../../common/rgx-from-str";
+import { expandMask } from "../../synchronizer/common/find-files";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -88,7 +88,7 @@ export class Builder {
     private static readonly mmsUserCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}`;
     private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}","CONFIG=${"buildName"}")`;
 
-    private static readonly cleanCmd = printLike`del/tree [.${"outdir"}.${"buildName"}...]*.*;*`;
+    private static readonly cleanCmd = printLike`delete /tree [.${"outdir"}.${"buildName"}...]*.*;*`;
 
     private static readonly cleanSuffix = " CLEAN";
 
@@ -448,7 +448,7 @@ export class Builder {
         for (const file of files) {
             const vms = new VmsPathConverter(file);
             const objDir = scopeData.ensured.projectSection.outdir + "." + buildName + ".obj";
-            const command = "del [." + objDir + vms.bareDirectory + "]" + vms.fileName + ".*;*";
+            const command = "delete [." + objDir + vms.bareDirectory + "]" + vms.fileName + ".*;*";
             const out = await scopeData.shell.execCmd(command);
             if (!out) {
                 this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute > {0}", command));
@@ -639,7 +639,7 @@ export class Builder {
                 : ``;
 
             flagLines.push(...[
-            `.IF DEBUG`,
+            `.IF DEBUG .AND $(DEBUG) .EQ 1`,
             `COMPILEFLAGS = ${cxxDebugFlags}`,
             `LINKFLAGS = /DEBUG/MAP=$(MMS$TARGET_NAME)${linkCommonFlags}`,
             `.ELSE`,
@@ -1045,14 +1045,14 @@ export class Builder {
                         + buildCfg.label
                         + ftpPathSeparator;
                     const zipFolderConverter = new VmsPathConverter(zipFolder);
-                    let cd = `set def ${zipFolderConverter.directory}`;
+                    let cd = `set default ${zipFolderConverter.directory}`;
                     answer = await scopeData.shell.execCmd(cd);
                     // create zip file 
-                    const unbracedList = 
-                        micromatch.braces(scopeData.ensured.projectSection.listing).
-                        map(mask => mask.replace(/[{}]/g, "")).
-                        reduce(collectSplittedByCommas, []).
-                        join(" ");
+                    let {expandedMask: expandedList , missed_curly_bracket} = expandMask(scopeData.ensured.projectSection.listing);
+                    if (missed_curly_bracket) {
+                        this.logFn(LogType.warning, () => localize("check.inc.mask", "Please check listing file masks for correct curly brackets"), true);
+                    }
+                    const unbracedList = expandedList.join(" ");
                     const zipCmd = Builder.zipCmd(Builder.zipName, unbracedList);
                     answer = await scopeData.shell.execCmd(zipCmd);
                     // download zip file
@@ -1069,7 +1069,7 @@ export class Builder {
                         }
                     }
                     // delete zip file on OpenVMS side
-                    answer = await scopeData.shell.execCmd(`del ${Builder.zipName + Builder.zipExt};*`);
+                    answer = await scopeData.shell.execCmd(`delete ${Builder.zipName + Builder.zipExt};*`);
                     // go back to saved current folder
                     if (currentPath) {
                         cd = `set def ${currentPath.directory}`;
@@ -1252,7 +1252,7 @@ export class Builder {
             const shellRootConverter = VmsPathConverter.fromVms(answer[0]);
             // set default directory for shell - project root
             const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
-            const cd = `set def ${converter.directory}`;
+            const cd = `set default ${converter.directory}`;
             answer = await shell.execCmd(cd);
             if (!answer) {
                 return undefined;

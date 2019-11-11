@@ -88,5 +88,7 @@
 	"vms_jvm_debug.port.description": "JVM debugging port",
 	"vms_jvm_debug.arguments.description": "Arguments",
 	"vms_jvm_debug.stopOnEntry.description": "Automatically stop after launch",
-	"vms_jvm_debug.trace.description": "Enable logging of the Debug Adapter Protocol"
+	"vms_jvm_debug.trace.description": "Enable logging of the Debug Adapter Protocol",
+	"vms_fortran.extension.vms_reparse": "Reparse Fortran project",
+	"vms_pascal.extension.vms_reparse": "Reparse Pascal project"
 }

@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import * as path from "path";
 import { SourceContext } from "./SourceContext";
 import { Symbol } from "antlr4-c3";
 
@@ -15,6 +14,8 @@ export enum SymbolKind
     Label,
     Entity,
     Block,
+    ImplicitBlockDcl,
+    IncludeDcl,
     CompoundBlock,
     Routine,
     RoutineHeader,
@@ -23,6 +24,8 @@ export enum SymbolKind
     VariableDcl,
     VariableBlockDcl,
     VariableGlobalBlockDcl,
+    VariableLocalBlockDcl,
+    VariableInnerBlockDcl,
     TypeDcl,
     TypeBlockDcl,
     LabelDcl,
@@ -58,6 +61,7 @@ export interface SymbolInfo
     source: string;
     definition?: Definition;
     description?: string;  // Used for code completion. Provides a small description for certain symbols.
+    info?: SymbolInfo;
 }
 
 export enum DiagnosticType 
@@ -109,7 +113,7 @@ export class Facade
     public attach(fileName: string, source?: string) 
     {
         this.createDependencys(fileName);
-        
+
         const context = this.getContext(fileName, source);
 
         return context;
@@ -245,6 +249,22 @@ export class Facade
         }
     }
 
+    private updateDependency(fileName: string, contextEntryIn: ContextEntry)
+    {
+        let contextEntry = this.sourceReferenceContexts.get(fileName);
+
+        if (contextEntry) 
+        {
+            this.sourceReferenceContexts.delete(fileName);
+            let contextCopy = {...contextEntryIn};//??????????
+            //let contextCopy = this.deepCopy(contextEntryIn) ;//Object.assign({}, contextEntryIn);
+            //const copied = {...contextEntryIn.context} as SourceContext;
+            // const copied = Object.assign({}, contextEntryIn.context);
+            // let contextEntry1 = { context: copied, refCount: 0, dependencies: [], grammar: fileName };
+            this.sourceReferenceContexts.set(fileName, contextCopy);
+        }
+    }
+
     private parseGrammar(contextEntry: ContextEntry) 
     {
         contextEntry.dependencies = [];
@@ -262,6 +282,7 @@ export class Facade
 
         if(this.checkRootFolder(contextEntry.context.fileName, this.rootFolderNames))//if file locate in project floder
         {
+            //this.updateDependency(contextEntry.context.fileName, contextEntry);
             this.reparseDependency(contextEntry.context.fileName);
             this.addDependencys(contextEntry);
         }
@@ -325,39 +346,6 @@ export class Facade
         let context = this.getContext(fileName);
         return context.getReferenceCount(symbol);
     }
-
-    // private loadDependency(contextEntry: ContextEntry, depName: string): SourceContext | undefined 
-    // {
-    //     // The given import dir is used to locate the dependency (either relative to the base path or via an absolute path).
-    //     // If we cannot find the grammar file that way we try the base folder.
-    //     let basePath = path.dirname(contextEntry.grammar);
-    //     let fullPath = basePath;//path.isAbsolute(this.importDir) ? this.importDir : path.join(basePath, this.importDir);
-
-    //     try 
-    //     {
-    //         let depPath = fullPath + "\\" + depName + ".pas";
-    //         fs.accessSync(depPath, fs.constants.R_OK);
-    //         // Target path can be read. Now check the target file.
-    //         contextEntry.dependencies.push(depPath);
-    //         return this.loadGrammar(depPath);
-    //     } 
-    //     catch (e) 
-    //     {}
-
-    //     // Couldn't find it in the import folder. Use the base then.
-    //     try 
-    //     {
-    //         let depPath = basePath + "\\" + depName + ".pas";
-    //         fs.statSync(depPath);
-    //         contextEntry.dependencies.push(depPath);
-    //         return this.loadGrammar(depPath);
-    //     } 
-    //     catch (e) 
-    //     {}
-
-    //     // Ignore the dependency if we cannot find the source file for it.
-    //     return undefined;
-    // }
 
     /**
      * Triggers a parse run for the given file name. This grammar must have been loaded before.

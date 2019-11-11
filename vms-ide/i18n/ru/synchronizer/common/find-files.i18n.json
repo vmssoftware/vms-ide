@@ -1,0 +1,4 @@
+{
+    "check.inc.mask": "Please check include file masks for correct curly brackets",
+    "check.exc.mask": "Please check exclude file masks for correct curly brackets"
+}

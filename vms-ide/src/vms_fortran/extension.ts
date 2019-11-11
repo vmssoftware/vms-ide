@@ -6,26 +6,26 @@ import { Range, DiagnosticSeverity, env, ExtensionContext, window,
     TextEditorSelectionChangeEvent, TextEditor, Diagnostic,
     StatusBarItem, StatusBarAlignment } from 'vscode';
 import { Facade, DiagnosticType } from "./context/Facade";
-import { PascalHoverProvider } from "./providers/HoverProvider";
-import { PascalRenameProvider } from "./providers/RenameProvider";
-import { PascalCompletionItemProvider } from "./providers/CompletionProvider";
-import { PascalDefinitionProvider } from "./providers/DefinitionProvider";
-import { PascalReferenceProvider } from "./providers/ReferenceProvider";
+import { FortranHoverProvider } from "./providers/HoverProvider";
+import { FortranRenameProvider } from "./providers/RenameProvider";
+import { FortranCompletionItemProvider } from "./providers/CompletionProvider";
+import { FortranDefinitionProvider } from "./providers/DefinitionProvider";
+import { FortranReferenceProvider } from "./providers/ReferenceProvider";
 import { ConfigManager } from "./ext_api/config_manager";
 import * as vscode from "vscode";
 
 //const locale = env.language;
 //const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
 
-export const Pascal = { language: 'vms-pascal', scheme: 'file' };
-const diagnosticCollection = languages.createDiagnosticCollection(Pascal.language);
+export const Fortran = { language: 'vms-fortran', scheme: 'file' };
+const diagnosticCollection = languages.createDiagnosticCollection(Fortran.language);
 const DiagnosticTypeMap: Map<DiagnosticType, DiagnosticSeverity> = new Map();
 let backend: Facade;
 
 
 export async function activate(context: ExtensionContext) 
-{    
-    context.subscriptions.push(vscode.commands.registerCommand('extension.vms-pascal.reparse', () =>
+{
+    context.subscriptions.push(vscode.commands.registerCommand('extension.vms-fortran.reparse', () =>
 	{
 		reparseProject();
     }));
@@ -37,18 +37,18 @@ export async function activate(context: ExtensionContext)
 
     await reparseProject();
 
-    context.subscriptions.push(languages.registerHoverProvider(Pascal, new PascalHoverProvider(backend)));
-    context.subscriptions.push(languages.registerDefinitionProvider(Pascal, new PascalDefinitionProvider(backend)));    
-    context.subscriptions.push(languages.registerCompletionItemProvider(Pascal, new PascalCompletionItemProvider(backend),
+    context.subscriptions. push(languages.registerHoverProvider(Fortran, new FortranHoverProvider(backend)));
+    context.subscriptions.push(languages.registerDefinitionProvider(Fortran, new FortranDefinitionProvider(backend)));    
+    context.subscriptions.push(languages.registerCompletionItemProvider(Fortran, new FortranCompletionItemProvider(backend),
         ".", " ", "<", ">", "=", "("));
-    context.subscriptions.push(languages.registerRenameProvider(Pascal, new PascalRenameProvider(backend)));
-    context.subscriptions.push(languages.registerReferenceProvider(Pascal, new PascalReferenceProvider(backend)));
+    context.subscriptions.push(languages.registerRenameProvider(Fortran, new FortranRenameProvider(backend)));
+    context.subscriptions.push(languages.registerReferenceProvider(Fortran, new FortranReferenceProvider(backend)));
 
     //----- Events -----
 
     workspace.onDidOpenTextDocument((document: TextDocument) => 
     {
-        if (document.languageId === Pascal.language && document.uri.scheme === Pascal.scheme) 
+        if (document.languageId === Fortran.language && document.uri.scheme === Fortran.scheme) 
         {
             backend.attach(document.uri.fsPath, document.getText());
             processDiagnostic(document);
@@ -57,7 +57,7 @@ export async function activate(context: ExtensionContext)
 
     workspace.onDidCloseTextDocument((document: TextDocument) => 
     {
-        if (document.languageId === Pascal.language && document.uri.scheme === Pascal.scheme)
+        if (document.languageId === Fortran.language && document.uri.scheme === Fortran.scheme)
         {
             backend.detach(document.uri.fsPath);
             diagnosticCollection.set(document.uri, []);
@@ -69,8 +69,8 @@ export async function activate(context: ExtensionContext)
     workspace.onDidChangeTextDocument((event: TextDocumentChangeEvent) => 
     {
         if (event.contentChanges.length > 0
-            && event.document.languageId === Pascal.language
-            && event.document.uri.scheme === Pascal.scheme) 
+            && event.document.languageId === Fortran.language
+            && event.document.uri.scheme === Fortran.scheme) 
         {
             let fileName = event.document.fileName;
             backend.setText(fileName, event.document.getText());
@@ -91,7 +91,7 @@ export async function activate(context: ExtensionContext)
 
     workspace.onDidSaveTextDocument((document: TextDocument) => 
     {
-        if (document.languageId === Pascal.language && document.uri.scheme === Pascal.scheme) 
+        if (document.languageId === Fortran.language && document.uri.scheme === Fortran.scheme) 
         {
             // regenerateBackgroundData(document);
         }
@@ -99,7 +99,7 @@ export async function activate(context: ExtensionContext)
 
     window.onDidChangeTextEditorSelection((event: TextEditorSelectionChangeEvent) => 
     {
-        if (event.textEditor.document.languageId === Pascal.language && event.textEditor.document.uri.scheme === Pascal.scheme) 
+        if (event.textEditor.document.languageId === Fortran.language && event.textEditor.document.uri.scheme === Fortran.scheme) 
         {
             // actionsProvider.update(event.textEditor);
         }
@@ -109,7 +109,7 @@ export async function activate(context: ExtensionContext)
     {
         // if(editor)
         // {
-        //     if (editor.document.languageId === Pascal.language && editor.document.uri.scheme === Pascal.scheme) 
+        //     if (editor.document.languageId === Fortran.language && editor.document.uri.scheme === Fortran.scheme) 
         //     {
         //         backend.setText(editor.document.fileName, editor.document.getText());
         //         backend.reparse(editor.document.fileName);
@@ -176,7 +176,7 @@ async function reparseProject() : Promise<void>
     // Load interpreter + cache data for each open document, if there's any.
     for (let document of workspace.textDocuments) 
     {
-        if (document.languageId === Pascal.language) 
+        if (document.languageId === Fortran.language) 
         {
             // parse file and show diagnostics
             backend.attach(document.uri.fsPath, document.getText());
@@ -227,7 +227,11 @@ function checkExtension(file: string) : boolean
     {
         let ext = file.substring(extPos).toLowerCase();
 
-        if(ext === ".pas")
+        if(ext === ".f90" ||
+            ext === ".f77" ||
+            ext === ".for" ||
+            ext === ".f" ||
+            ext === ".inc")
         {
             result = true;
         }

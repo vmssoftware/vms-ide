@@ -1,9 +1,13 @@
+import * as nls from "vscode-nls";
 import micromatch from "micromatch";
 
 import { LogFunction, LogType } from "../../common/main";
 
 import { ftpPathSeparator, IFileEntry, IReadDirectory } from "../../common/main";
 import { IProgress } from "../sync/source";
+
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
 
 export const leadingSepRg = /^[/\\]+/g;
 export const middleSepRg = /[/\\]+/g;
@@ -12,6 +16,42 @@ export const trailingSepRg = /[/\\]+$/g;
 export function collectSplittedByCommas(acc: string[], pattern: string): string[] {
     acc.push(...pattern.split(","));
     return acc;
+}
+
+export function expandMask(mask: string) {
+        // 1. split by commas which are not in curly bracket
+        let depth = 0;
+        let str_part = "";
+        let str_arr: string[] = [];
+        for(let char of mask) {
+            if (depth === 0 && char === ',') {
+                if (str_part) {
+                    str_arr.push(str_part);
+                    str_part = "";
+                }
+                continue;
+            }
+            if (char === '{') {
+                ++depth;
+            }
+            if (char === '}') {
+                --depth;
+            }
+            str_part += char;
+        }
+        if (str_part) {
+            str_arr.push(str_part);
+        }
+        // 2. unbrace each part
+        const expandedMask = str_arr.reduce((acc: string[], pattern) => {
+            let unbraced = micromatch.braces(pattern, { expand: true }).map( value => value.replace(/[{}]/g, ""));
+            acc.push(...unbraced);
+            return acc;
+        }, []);
+        return {
+            expandedMask,
+            missed_curly_bracket: depth !== 0
+        }
 }
 
 interface ISepFileDir {
@@ -45,11 +85,15 @@ export async function findFiles(canReadDir: IReadDirectory,
         nodupes: true,
         unixify: false,
     };
-    const unbraceInclude = micromatch.braces(include).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
-    const splitInclude = unbraceInclude.reduce(collectSplittedByCommas, []);
+    let {expandedMask: splitInclude , missed_curly_bracket} = expandMask(include);
+    if (debugLog && missed_curly_bracket) {
+        debugLog(LogType.warning, () => localize("check.inc.mask", "Please check include file masks for correct curly brackets"), true);
+    }
     if (exclude) {
-        const unbraceExclude = micromatch.braces(exclude).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
-        const splitExclude = unbraceExclude.reduce(collectSplittedByCommas, []);
+        let {expandedMask: splitExclude , missed_curly_bracket} = expandMask(exclude);
+        if (debugLog && missed_curly_bracket) {
+            debugLog(LogType.warning, () => localize("check.exc.mask", "Please check exclude file masks for correct curly brackets"), true);
+        }
         options.ignore = splitExclude;
     }
     rootDir = rootDir.trim().replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
