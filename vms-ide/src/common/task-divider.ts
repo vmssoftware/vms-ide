@@ -4,7 +4,7 @@
  * For example - to cancel current async task
  */
 export class TaskDivider<T> {
-    constructor(private asyncValue: T) {
+    constructor(public asyncValue: T) {
     }
 
     public setValue(newValue: T) {
@@ -12,7 +12,7 @@ export class TaskDivider<T> {
     }
 
     public async testValue() {
-        return new Promise(resolve => {
+        return new Promise<T>(resolve => {
             setImmediate(() => {
                 resolve(this.asyncValue);
             });

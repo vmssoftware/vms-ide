@@ -30,6 +30,8 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
     private projects: ProjDepTree;
     private selected?: IProjectElement;
 
+    public didChangeDependencies = this.didChangeTreeEmitter.event;
+
     constructor() {
         this.projects =  new ProjDepTree();
         this.onDidChangeTreeData = this.didChangeTreeEmitter.event;

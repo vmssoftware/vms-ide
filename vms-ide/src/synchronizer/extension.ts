@@ -1,6 +1,13 @@
-import { commands, Disposable, env, ExtensionContext, extensions, RelativePattern, window, workspace, WorkspaceFolder } from "vscode";
+import { 
+    Event,
+    ExtensionContext,
+    commands,
+    env,
+    window,
+    workspace,
+} from "vscode";
+
 import * as nls from "vscode-nls";
-import * as path from "path";
 
 import { Builder } from "./build/builder";
 import { setExtensionContext } from "./context";
@@ -13,6 +20,7 @@ import { SyncApi } from "./sync/sync-api";
 import { Synchronizer } from "./sync/synchronizer";
 import { LogFunction, LogType, Delay } from "../common/main";
 import { createFsWatchers, disposeFsWatchers, ProjectFilesWatchEmitter } from "./scopeWatchers";
+import { setProjectDependenciesChanged } from "./projectDepend";
 
 const locale = env.language ;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -45,6 +53,8 @@ export async function activate(context: ExtensionContext) {
     //     }}));
 
     const projectDependenciesProvider = new ProjDepProvider();
+    setProjectDependenciesChanged(projectDependenciesProvider.didChangeDependencies as Event<void>);
+    
     const projectDescriptionProvider = new ProjDescrProvider();
 
     ProjectFilesWatchEmitter.on('created', (scope, filePath) => {

@@ -4,6 +4,7 @@ import {
     ScopedSymbol,
     Symbol,
 } from 'antlr4-c3';
+import { ParseTree } from 'antlr4ts/tree';
 
 export enum ECobolSymbolKind {
     Unknown,
@@ -408,8 +409,8 @@ export class DeviceSymbol extends SpecialNameSymbol { }
 //**************************************************/
 export class ProgramSymbol extends IdentifierSymbol { 
     isCommon?: boolean;
-    // TODO: using, giving types
-    definition?: IFunction;
+    definition?: IFunction; 
+    endProgramCtx?: ParseTree;  // must be present only one
 }
 export class CARD_READER_Symbol extends DeviceSymbol { }
 export class PAPER_TAPE_READER_Symbol extends DeviceSymbol { }
@@ -453,9 +454,7 @@ export class ParagraphSymbol extends IdentifierSymbol { }
 export class IndexedBySymbol extends IdentifierSymbol { }
 export class SpecialRegisterSymbol extends DataRecordSymbol { }
 export class FigurativeConstantSymbol extends DataRecordSymbol { }
-export class IntrinsicFunctionSymbol extends ProgramSymbol {
-    //functionDefinition?: IFunction;
-}
+export class IntrinsicFunctionSymbol extends ProgramSymbol { }
 export class SIGN_Symbol extends Symbol { }
 export class BOOL_Symbol extends Symbol { }
 

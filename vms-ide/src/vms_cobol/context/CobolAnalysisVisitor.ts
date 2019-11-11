@@ -180,7 +180,29 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     }
 
     visitEnd_program(ctx: End_programContext) {
-        this.helper.verifyName(ctx.program_name(), true, [ProgramSymbol]);
+        let symbol = this.helper.verifyName(ctx.program_name(), true, [ProgramSymbol]);
+        if (symbol instanceof ProgramSymbol) {
+            if (!symbol.context) {
+                this.helper.mark(ctx.program_name(), localize("must.link.here", "Must link into this source"));
+            } else {
+                // test if
+                if (symbol.endProgramCtx) {
+                    this.helper.mark(ctx.program_name(), localize("program.already.ended", "Program has already ended"));
+                } else {
+                    symbol.endProgramCtx = ctx.program_name();
+                }
+                let innerPrograms = symbol.getNestedSymbolsOfType(ProgramSymbol);
+                for(let inner of innerPrograms) {
+                    if (!inner.endProgramCtx) {
+                        // end program now
+                        inner.endProgramCtx = ctx.program_name();
+                        if (inner.context instanceof ParserRuleContext) {
+                            this.helper.mark(inner.context, localize("program.not.ended", "Program hasn't properly ended"));
+                        }
+                    }
+                }
+            }
+        }
         //this.visitChildren(ctx);
     }
 

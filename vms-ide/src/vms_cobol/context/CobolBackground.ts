@@ -9,14 +9,24 @@ import { CobolSourceContext } from './CobolSourceContext';
 import { GetCopyManager } from '../stream/CopyManagers';
 import { ReadAllStream } from '../../common/read_all_stream';
 import { CobolGlobals } from './CobolGlobals';
+import { ProjDepTree } from '../../synchronizer/dep-tree/proj-dep-tree';
+import { projectDependenciesChanged } from '../../synchronizer/projectDepend';
 
 export class CobolBackground {
 
     public static refreshed = new EventEmitter();
 
-    public static taskDivider = new TaskDivider(true);
+    public static taskDivider?: TaskDivider<number>;
 
     public static async StartBackgroundParsing(logFn: LogFunction) {
+
+        let projectDependenciesChangedEvent = projectDependenciesChanged();
+        if (projectDependenciesChangedEvent) {
+            projectDependenciesChangedEvent(() => {
+                CobolGlobals.removeGlobals();
+                this.Refresh(logFn);
+            });
+        }
 
         let processFile = (scope: string, filePath: string, fileType: EFileType) => {
             if (fileType === EFileType.header) {
@@ -46,13 +56,29 @@ export class CobolBackground {
 
     private static async Refresh(logFn: LogFunction) {
         let wsFolders = vscode.workspace.workspaceFolders;
+        // if new Refresh was executed, drop current task
+        let myTask = 0;
+        if (this.taskDivider) {
+            myTask = 1 + await this.taskDivider.testValue();
+            this.taskDivider.setValue(myTask);
+        }
+        this.taskDivider = new TaskDivider(myTask);
         if (wsFolders) {
             for(let wsFolder of wsFolders) {
                 let ensured = await ensureSettings(wsFolder.name);
+                if (myTask != this.taskDivider.asyncValue) {
+                    return;
+                }
                 if (ensured) {
                     let localSource = await Synchronizer.acquire(logFn).requestSource(ensured, "local");
+                    if (myTask != this.taskDivider.asyncValue) {
+                        return;
+                    }
                     if (localSource) {
                         let localFiles = await localSource.findFiles(ensured.projectSection.source, ensured.projectSection.exclude);
+                        if (myTask != this.taskDivider.asyncValue) {
+                            return;
+                        }
                         if (localFiles) {
                             for (let localFile of localFiles) {
                                 let fullPath = path.join(wsFolder.uri.fsPath, localFile.filename);
@@ -67,8 +93,14 @@ export class CobolBackground {
                                     }
                                     if (docContent === undefined) {
                                         let stream = await localSource.createReadStream(localFile.filename);
+                                        if (myTask != this.taskDivider.asyncValue) {
+                                            return;
+                                        }
                                         if (stream) {
                                             docContent = await ReadAllStream(stream);
+                                            if (myTask != this.taskDivider.asyncValue) {
+                                                return;
+                                            }
                                         }
                                     }
                                     // parse and save
@@ -76,6 +108,9 @@ export class CobolBackground {
                                         let context = new CobolSourceContext(fullPath, logFn, GetCopyManager(wsFolder.name, wsFolder.uri.fsPath));
                                         context.setText(docContent);
                                         await context.parse();
+                                        if (myTask != this.taskDivider.asyncValue) {
+                                            return;
+                                        }
                                         CobolGlobals.addGlobals(context);
                                     }
                                 }
@@ -83,7 +118,9 @@ export class CobolBackground {
                         }
                     }
                 }
-                await this.taskDivider.testValue(); // just for pass execution to another thread
+                if (myTask != await this.taskDivider.testValue()) {
+                    return;
+                }
             }
         }
         this.refreshed.fire();

@@ -115,9 +115,12 @@ export class CobolGlobals {
         let wsFolder =  workspace.getWorkspaceFolder(Uri.file(fileName));
         if (wsFolder) {
             let deps = new ProjDepTree().getDepList(wsFolder.name);
-            // TODO: filter by deps
+            // filter by deps
             for(let [filePath, entry] of this.globalMap) {
-                retSymbols.push(...entry.symbolTable.getAllNestedSymbols());
+                let wsEntryFolder =  workspace.getWorkspaceFolder(Uri.file(filePath));
+                if (wsEntryFolder && deps.includes(wsEntryFolder.name)) {
+                    retSymbols.push(...entry.symbolTable.getAllNestedSymbols());
+                }
             }
         }
         return retSymbols;
@@ -125,8 +128,8 @@ export class CobolGlobals {
 
     /**
      * Find global symbols by name
-     * @param fileName 
-     * @param identifier 
+     * @param fileName where we are
+     * @param identifier what we want
      */
     public static findGlobalForSource(fileName: string, identifier: string): Symbol[] {
         let retSymbols: Symbol[] = [];
@@ -134,7 +137,7 @@ export class CobolGlobals {
         let wsFolder =  workspace.getWorkspaceFolder(Uri.file(fileName));
         if (wsFolder) {
             let deps = new ProjDepTree().getDepList(wsFolder.name);
-            // TODO: filter by deps
+            // filter by dependencies
             for(let [filePath, entry] of this.globalMap) {
                 retSymbols.push(...entry.symbolTable.getAllNestedSymbols(identifier));
             }
@@ -144,8 +147,8 @@ export class CobolGlobals {
 
     /**
      * Get definition by symbol
-     * @param identifier 
-     * @param fileName 
+     * @param identifier what we want to find
+     * @param fileName if we know the file where this symbol is
      */
     public static definition(identifier: Symbol, fileName?: string): IDefinition[] | undefined {
         if (fileName) {
