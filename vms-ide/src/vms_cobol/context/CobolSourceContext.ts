@@ -524,6 +524,14 @@ export class CobolSourceContext implements ISourceContext {
                     }
                 }
 
+                // add globals externals
+                let globalExterns = CobolGlobals.externals(master.name);
+                for(let externDef of globalExterns) {
+                    if (externDef.source !== this.fileName) {
+                        retDef.push(externDef);
+                    }
+                }
+
                 // add local occurences
                 for (let occ of this.symbolTable.getSymbolOccurences(master)) {
                     if (occ.range) {

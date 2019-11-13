@@ -41,6 +41,9 @@ import {
     Value_is_literalContext,
     GivingContext,
     File_description_entryContext,
+    Data_description_clauseContext,
+    Data_recContext,
+    Data_description_entryContext,
 } from "../parser/cobolParser";
 
 import { CobolAnalisisHelper } from "./CobolAnalisisHelpers";
@@ -462,5 +465,18 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                 }
             }
         }
+    }
+
+    visitData_description_clause(ctx: Data_description_clauseContext) {
+        if (ctx.EXTERNAL()) {
+            let dataRecordCtx = firstContainingContext(ctx, Data_description_entryContext);
+            if (dataRecordCtx) {
+                let dataRecordSymbol = this.helper.symbolTable.symbolWithContext(dataRecordCtx);
+                if (dataRecordSymbol instanceof DataRecordSymbol && !(dataRecordSymbol.level === 1 || dataRecordSymbol.level === 77)) {
+                    this.helper.mark(ctx, localize("external.invalid", "Only level numbers 01 and 77 can specify the EXTERNAL clause"));
+                }
+            }
+        }
+        this.visitChildren(ctx);
     }
 }

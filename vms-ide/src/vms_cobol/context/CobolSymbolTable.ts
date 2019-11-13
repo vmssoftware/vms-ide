@@ -152,8 +152,8 @@ export class CobolSymbolTable extends SymbolTable {
                         while(current) {
                             if (current === currentScopeSymbol) {
                                 if (!requireGlobal || 
-                                      (candidate instanceof IdentifierSymbol && candidate.isGlobal) ||
-                                      (candidate instanceof ProgramSymbol && candidate.isCommon)) {
+                                      (candidate instanceof IdentifierSymbol && candidate.isGlobal === true) ||
+                                      (candidate instanceof ProgramSymbol && candidate.isCommon === true)) {
                                     // add all symbols on the same level
                                     let symbols = levelSymbols.get(candidate.name);
                                     if (symbols === undefined) {

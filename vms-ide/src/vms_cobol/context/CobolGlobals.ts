@@ -2,7 +2,7 @@ import { Uri, workspace } from 'vscode';
 import { CobolSymbolTable } from "./CobolSymbolTable";
 import { ProjDepTree } from "../../synchronizer/dep-tree/proj-dep-tree";
 import { Symbol } from 'antlr4-c3';
-import { IdentifierSymbol, ProgramSymbol, getKindFromSymbol, getSymbolFromKind } from './CobolSymbol';
+import { IdentifierSymbol, ProgramSymbol, getKindFromSymbol, getSymbolFromKind, DataRecordSymbol, FileSymbol } from './CobolSymbol';
 import { CobolSourceContext } from './CobolSourceContext';
 import { IDefinition } from '../../common/parser/Facade';
 import { TaskDivider } from '../../common/task-divider';
@@ -33,14 +33,27 @@ export class CobolGlobals {
         let identifiers = symbolTable.getNestedSymbolsOfType(IdentifierSymbol);
         let globalDefinitions = new Map<Symbol, IDefinition[]>();
         for(let identifier of identifiers) {
-            if (identifier.context &&
-                identifier.parent === symbolTable &&
-                identifier instanceof ProgramSymbol ) {
-                let identifierKind = getKindFromSymbol(identifier);
-                let identifierSymbol = getSymbolFromKind(identifierKind);
-                let localCopy = localSymbolTable.addNewSymbolOfType(identifierSymbol, localSymbolTable, identifier.name);
-                if (localCopy instanceof ProgramSymbol) {
-                    localCopy.definition = identifier.definition;
+            if (identifier.context) {
+                let localCopy: Symbol | undefined;
+                // test if it is a program on the highest level
+                if (identifier.parent === symbolTable && identifier instanceof ProgramSymbol ) {
+                    let identifierKind = getKindFromSymbol(identifier);
+                    let identifierSymbol = getSymbolFromKind(identifierKind);
+                    localCopy = localSymbolTable.addNewSymbolOfType(identifierSymbol, localSymbolTable, identifier.name);
+                    if (localCopy instanceof ProgramSymbol) {
+                        localCopy.definition = identifier.definition;
+                    }
+                }
+                // test if it as a external symbol
+                if ((identifier instanceof DataRecordSymbol || identifier instanceof FileSymbol) && identifier.isExtern === true) {
+                    let identifierKind = getKindFromSymbol(identifier);
+                    let identifierSymbol = getSymbolFromKind(identifierKind);
+                    localCopy = localSymbolTable.addNewSymbolOfType(identifierSymbol, localSymbolTable, identifier.name);
+                    if (localCopy instanceof IdentifierSymbol) {
+                        localCopy.isExtern = identifier.isExtern;
+                    }
+                }
+                if (localCopy !== undefined) {
                     let localCopyDefinitions: IDefinition[] = [];
                     for(let occ of symbolTable.getSymbolOccurences(identifier)) {
                         if (occ.range) {
@@ -185,6 +198,22 @@ export class CobolGlobals {
                 if (usedSymbol.name === identifier.name &&
                     usedSymbol.symbolTable && identifier.symbolTable &&
                     usedSymbol.symbolTable.name == identifier.symbolTable.name) {
+                    usedDefinitions.push(...definitions);
+                }
+            }
+        }
+        return usedDefinitions;
+    }
+
+    /**
+     * Find all externals with the same name
+     * @param identifier 
+     */
+    public static externals(name: string) {
+        let usedDefinitions: IDefinition[] = [];
+        for(let [file, entry] of this.globalMap) {
+            for(let [externSymbol, definitions] of entry.definitions) {
+                if (externSymbol.name === name ) {
                     usedDefinitions.push(...definitions);
                 }
             }

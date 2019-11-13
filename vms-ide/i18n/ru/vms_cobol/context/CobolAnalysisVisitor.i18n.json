@@ -14,5 +14,6 @@
     "must.be.in.program": "Must be inside program",
     "no.program.symbol": "No program symbol",
     "no.program.definition": "No definition in programSymbol",
-    "must.be.literal": "Must be enclosed in quotas"
+    "must.be.literal": "Must be enclosed in quotas",
+    "external.invalid": "Only level numbers 01 and 77 can specify the EXTERNAL clause"
 }
