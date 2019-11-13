@@ -25,12 +25,12 @@ import {
     getKindFromSymbol,
     ProgramSymbol,
     IdentifierSymbol,
-    DataRecordSymbol,
-    DeviceSymbol
+    DataRecordSymbol
 } from './CobolSymbol';
+
 import { CobolAnalisisHelper } from './CobolAnalisisHelpers';
 import { CobolGlobals } from './CobolGlobals';
-import G = require('glob');
+import micromatch from 'micromatch';
 
 /**
  * First element in ParseTree[] is name definition context
@@ -38,6 +38,18 @@ import G = require('glob');
 export interface ILink {
     master: Symbol;
     references: Set<ParseTree|undefined>;
+}
+
+interface ISplitSymbols {
+    list: string[],
+    exclude?: string[],
+    matched: ISymbolChain[],
+    unmatched: ISymbolChain[],
+}
+
+interface ISymbolChain {
+    symbol: Symbol,
+    child?: ISymbolChain,
 }
 
 export class CobolSymbolTable extends SymbolTable {
@@ -118,14 +130,21 @@ export class CobolSymbolTable extends SymbolTable {
      * @param localOnly please, set to true for sections & paragraphs
      */
     public resolveIdentifier(namePath: string[], ctx?: ParseTree, localOnly?: boolean): Symbol[] {
-        let matched = this.collectCandidates(namePath);
+        let matched = this.matchCandidates(namePath).map(x => {
+            while(x.child) {
+                x = x.child;
+            }
+            return x.symbol;
+        });
         let retSymbols: Symbol[] = [];
         if (matched.length > 0) {
+            let retSymbolMap = new Map<string, Symbol[]>();
             let currentScopeSymbol = this.getEnclosingSymbolForContext(ctx);
             let requireGlobal = false;
             // in first try to add candidates from the nearest scope
             while (currentScopeSymbol) {
                 // for each matched candidate find if they are in the same scope
+                let levelSymbols = new Map<string, Symbol[]>();
                 for (let candidate of matched) {
                     // most global candidates will be added later
                     if (!(candidate.parent instanceof SymbolTable)) {
@@ -135,7 +154,13 @@ export class CobolSymbolTable extends SymbolTable {
                                 if (!requireGlobal || 
                                       (candidate instanceof IdentifierSymbol && candidate.isGlobal) ||
                                       (candidate instanceof ProgramSymbol && candidate.isCommon)) {
-                                    retSymbols.push(candidate);
+                                    // add all symbols on the same level
+                                    let symbols = levelSymbols.get(candidate.name);
+                                    if (symbols === undefined) {
+                                        symbols = [];
+                                        levelSymbols.set(candidate.name, symbols);
+                                    }
+                                    symbols.push(candidate);
                                 }
                                 break;
                             }
@@ -149,8 +174,12 @@ export class CobolSymbolTable extends SymbolTable {
                         }
                     }
                 }
-                if (retSymbols.length > 0) {
-                    break;
+                // promote level symbols to retSymbols
+                for(let [name, symbols] of levelSymbols) {
+                    if (!retSymbolMap.has(name)) {
+                        retSymbolMap.set(name, symbols);
+                    }
+                    matched = matched.filter(x => !symbols.includes(x));
                 }
                 // when passing through program, global flag will be required
                 // so lower program will see symbols from upper program only if they are global
@@ -163,7 +192,11 @@ export class CobolSymbolTable extends SymbolTable {
                 // go to enclosing scope and test again
                 currentScopeSymbol = currentScopeSymbol.parent;
             }
-            // add most global candidates at the end
+            retSymbols = Array.from(retSymbolMap.values()).reduce((acc, x) => { 
+                acc.push(...x);
+                return acc;
+             }, []);
+            // add all matched persistent candidates at the end
             for (let candidate of matched) {
                 if (candidate.parent instanceof SymbolTable) {
                     retSymbols.push(candidate);
@@ -207,15 +240,97 @@ export class CobolSymbolTable extends SymbolTable {
                     }
                 }
             }
-            // add from globals if no local names found
+            // add from globals if no local names found, only ProgramSymbol
             if (matched.length == 0 && namePath.length === 1 && this.owner) {
                 let globals = CobolGlobals.collectGlobalsForSource(this.owner.fileName);
-                matched = globals.filter(x => x.name === namePath[0]);
+                matched = globals.filter(x => x instanceof ProgramSymbol && x.name === namePath[0]);
             }
         }
         return matched;
     }
+ 
+    public static splitSymbols(acc: ISplitSymbols, x: ISymbolChain) {
+        if (acc.list.includes(x.symbol.name)) {
+            if (!acc.exclude || !acc.exclude.includes(x.symbol.name)) {
+                acc.matched.push(x);
+            }
+        } else {
+            acc.unmatched.push(x);
+        }
+        return acc;
+    }
 
+    /**
+     * Collect candidates by masks
+     * @param namePath masks
+     */
+    public matchCandidates(namePath: string[]): ISymbolChain[] {
+        let retSymbols: ISymbolChain[] = [];
+        if (namePath.length > 0) {
+            // 1. create initial chain
+            retSymbols = Array.from(this.occurence.values()).reduce((chain: ISymbolChain[], links: ILink[]) => {
+                    chain.push(...links.map(link => ({ symbol: link.master })));
+                    return chain;
+                }, []);
+            let firstName = true;
+            // 2. walk thru names and filter symbols
+            for (let name of namePath) {
+                if (!firstName) {
+                    // go to parents
+                    retSymbols = retSymbols.reduce((chain: ISymbolChain[], x: ISymbolChain) => {
+                        if (x.symbol.parent && !(x.symbol.parent instanceof ProgramSymbol)) {
+                            chain.push(({symbol: x.symbol.parent, child: x}));
+                        }
+                        return chain;
+                    }, []);
+                }
+                // test if matched current name level
+                let { matched, unmatched } = retSymbols.reduce(CobolSymbolTable.splitSymbols, {
+                    list: micromatch.match(retSymbols.map(x => x.symbol.name), name),
+                    matched: [],
+                    unmatched: [],
+                });
+                if (!firstName) {
+                    // test if one of parents is matched, until ProgramSymbol
+                    while(unmatched.length) {
+                        // go to parents for unmatched
+                        unmatched = unmatched.reduce((chain: ISymbolChain[], x: ISymbolChain) => {
+                            if (x.symbol.parent && !(x.symbol.parent instanceof ProgramSymbol)) {
+                                chain.push(({symbol: x.symbol.parent, child: x}));
+                            }
+                            return chain;
+                        }, []);
+                        if (unmatched.length) {
+                            let { matched: parentsMatched, unmatched: parentsUnmatched } = unmatched.reduce(CobolSymbolTable.splitSymbols, {
+                                list: micromatch.match(unmatched.map(x => x.symbol.name), name),
+                                matched: [],
+                                unmatched: [],
+                            });
+                            matched.push(...parentsMatched);
+                            unmatched = parentsUnmatched;
+                        }
+                    }
+                }
+                firstName = false;
+                retSymbols = matched;
+            }
+            // 3. when all name levels passed, test if it must be qualified
+            retSymbols.filter((candidate) => !(candidate instanceof DataRecordSymbol) || !candidate.requireQualification || namePath.length > 1);
+            // 4. add from globals
+            if (namePath.length === 1 && this.owner) {
+                let globals = CobolGlobals.collectGlobalsForSource(this.owner.fileName).map(x => ({symbol: x}));
+                let { matched } = globals.reduce(CobolSymbolTable.splitSymbols, {
+                    list: micromatch.match(globals.map(x => x.symbol.name), namePath[0]),
+                    exclude: retSymbols.map(x => x.symbol.name),
+                    matched: [],
+                    unmatched: [],
+                });
+                retSymbols.push(...matched);
+            }
+        }
+        return retSymbols;
+    }
+    
     /**
      * Get first enclosing symbol for given context
      * @param ctx 

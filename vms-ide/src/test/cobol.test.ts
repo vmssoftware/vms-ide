@@ -14,6 +14,8 @@ import { cobolCopyParser, CopyStatementContext } from "../vms_cobol/parser/cobol
 import { LexerErrorListener, ParserErrorListener } from "../common/parser/ErrorListeners";
 import { CopyManagerImpl } from "../vms_cobol/stream/CopyManagerImpl";
 import { cobolParserImpl } from "../vms_cobol/parser/cobolParserImpl";
+import { CobolSourceContext } from "../vms_cobol/context/CobolSourceContext";
+import { unifyCobolName } from "../common/parser/Helpers";
 
 suite("COBOL tests", function(this: Mocha.Suite) {
 
@@ -143,6 +145,30 @@ suite("COBOL tests", function(this: Mocha.Suite) {
     /***************************************************************************************/
     /***************************************************************************************/
     /***************************************************************************************/
+
+    test("match candidates", async() => {
+        let source = `
+IDENTIFICATION DIVISION.
+PROGRAM-ID. id-1.
+DATA DIVISION.
+WORKING-STORAGE SECTION.
+    01 item-1 pic x(32).
+    01 group-1.
+        03 item-1 comp-2.
+PROCEDURE DIVISION.
+para-1.
+    DISPLAY "alloha".
+end PROGRAM id-1.`;
+
+        let context = new CobolSourceContext("test.cob");
+        context.setText(source);
+        let parsed = await context.parse();
+        assert.strictEqual(parsed, true, "parsing error");
+        let all = context.getSymbolTable().matchCandidates(["*"]);
+        let item1 = context.getSymbolTable().matchCandidates([unifyCobolName("item-1")]);
+        let item1ingroup = context.getSymbolTable().matchCandidates([unifyCobolName("item-1"), unifyCobolName("group-1")]);
+        console.log("match done");
+    });
 
     test("copy parser 1", async() => {
         let item_def = `    01 ITEM PIC XXXX.`

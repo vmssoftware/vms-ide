@@ -1,10 +1,8 @@
 import { Uri, workspace } from 'vscode';
 import { CobolSymbolTable } from "./CobolSymbolTable";
 import { ProjDepTree } from "../../synchronizer/dep-tree/proj-dep-tree";
-import {
-    Symbol,
-} from 'antlr4-c3';
-import { IdentifierSymbol, DataRecordSymbol, ProgramSymbol, IntrinsicFunctionSymbol, getKindFromSymbol, getSymbolFromKind } from './CobolSymbol';
+import { Symbol } from 'antlr4-c3';
+import { IdentifierSymbol, ProgramSymbol, getKindFromSymbol, getSymbolFromKind } from './CobolSymbol';
 import { CobolSourceContext } from './CobolSourceContext';
 import { IDefinition } from '../../common/parser/Facade';
 import { TaskDivider } from '../../common/task-divider';
@@ -37,7 +35,7 @@ export class CobolGlobals {
         for(let identifier of identifiers) {
             if (identifier.context &&
                 identifier.parent === symbolTable &&
-                identifier instanceof ProgramSymbol && !(identifier instanceof IntrinsicFunctionSymbol )) {
+                identifier instanceof ProgramSymbol ) {
                 let identifierKind = getKindFromSymbol(identifier);
                 let identifierSymbol = getSymbolFromKind(identifierKind);
                 let localCopy = localSymbolTable.addNewSymbolOfType(identifierSymbol, localSymbolTable, identifier.name);

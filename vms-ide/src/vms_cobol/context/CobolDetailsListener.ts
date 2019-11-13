@@ -4,7 +4,7 @@ import {
 } from '../parser/cobolListener';
 
 import {
-    CobolSymbolTable, ILink,
+    CobolSymbolTable
 } from './CobolSymbolTable';
 
 import {
@@ -84,8 +84,14 @@ import {
 import {
     TerminalNode,
 } from 'antlr4ts/tree';
-import { firstContainingContext, unifyCobolName } from '../../common/parser/Helpers';
-import { CobolAnalisisHelper } from './CobolAnalisisHelpers';
+
+import {
+    unifyCobolName
+} from '../../common/parser/Helpers';
+
+import {
+    CobolAnalisisHelper
+} from './CobolAnalisisHelpers';
 
 
 export class CobolDetailsListener implements cobolListener {

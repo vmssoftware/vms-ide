@@ -409,9 +409,14 @@ export class DeviceSymbol extends SpecialNameSymbol { }
 //**************************************************/
 export class ProgramSymbol extends IdentifierSymbol { 
     isCommon?: boolean;
-    definition?: IFunction; 
     endProgramCtx?: ParseTree;  // must be present only one
+    definition?: IFunction; 
 }
+
+export class IntrinsicFunctionSymbol extends IdentifierSymbol {
+    definition?: IFunction; 
+}
+
 export class CARD_READER_Symbol extends DeviceSymbol { }
 export class PAPER_TAPE_READER_Symbol extends DeviceSymbol { }
 export class CONSOLE_Symbol extends DeviceSymbol { }
@@ -454,7 +459,6 @@ export class ParagraphSymbol extends IdentifierSymbol { }
 export class IndexedBySymbol extends IdentifierSymbol { }
 export class SpecialRegisterSymbol extends DataRecordSymbol { }
 export class FigurativeConstantSymbol extends DataRecordSymbol { }
-export class IntrinsicFunctionSymbol extends ProgramSymbol { }
 export class SIGN_Symbol extends Symbol { }
 export class BOOL_Symbol extends Symbol { }
 
@@ -462,41 +466,37 @@ export class BOOL_Symbol extends Symbol { }
 //**************************************************/
 //**************************************************/
 
-export function programDetails(programSymbol: ProgramSymbol): string | undefined {
-    if (programSymbol.definition) {
-        let details = programSymbol.name;
-        details += " (";
-        if (programSymbol.definition.arguments) {
-            let sep = "";
-            for (let arg of programSymbol.definition.arguments) {
-                if (arg.optional) {
-                    details += " [";
-                }
-                details += sep;
-                details += arg.name? arg.name + ": " : "";
-                if (Array.isArray(arg.type)) {
-                    details += arg.type.map(argType => EValueType[argType]).join(" | ");
-                } else {
-                    details += EValueType[arg.type];
-                }
-                if (arg.optional) {
-                    details += "]";
-                }
-                sep = ", ";
-                if (arg.tail) {
-                    details += " ... ";
-                }
+export function programDetails(definition: IFunction): string | undefined {
+    let details = " (";
+    if (definition.arguments) {
+        let sep = "";
+        for (let arg of definition.arguments) {
+            if (arg.optional) {
+                details += " [";
+            }
+            details += sep;
+            details += arg.name? arg.name + ": " : "";
+            if (Array.isArray(arg.type)) {
+                details += arg.type.map(argType => EValueType[argType]).join(" | ");
+            } else {
+                details += EValueType[arg.type];
+            }
+            if (arg.optional) {
+                details += "]";
+            }
+            sep = ", ";
+            if (arg.tail) {
+                details += " ... ";
             }
         }
-        details += "): ";
-        if (Array.isArray(programSymbol.definition.type)) {
-            details += programSymbol.definition.type.map(argType => EValueType[argType]).join(" | ");
-        } else {
-            details += EValueType[programSymbol.definition.type];
-        }
-        return details;
     }
-    return undefined;
+    details += "): ";
+    if (Array.isArray(definition.type)) {
+        details += definition.type.map(argType => EValueType[argType]).join(" | ");
+    } else {
+        details += EValueType[definition.type];
+    }
+    return details;
 }
 
 //**************************************************/

@@ -1,4 +1,3 @@
-import * as path from 'path';
 import * as nls from "vscode-nls";
 
 import {
@@ -75,7 +74,7 @@ import {
 } from '../parser/cobolLexer';
 
 import {
-    parseTreeFromPosition, unifyCobolName
+    parseTreeFromPosition, unifyCobolName, firstContainingContext
 } from '../../common/parser/Helpers';
 
 
@@ -359,11 +358,16 @@ export class CobolSourceContext implements ISourceContext {
             cobolParser.RULE_function_name,
             cobolParser.RULE_proc_name,
             cobolParser.RULE_prog_name,
+            cobolParser.RULE_program_name
         ]);
 
         // Search the token index which covers our caret position.
-        let index = this.getTokenIndexByPosition(row, column);
-        if (index === -1) {
+        let currentToken = this.getTokenByPosition(row, column);
+        if (!currentToken) {
+            return [];
+        }
+        let currentParseTree = parseTreeFromPosition(this.tree, column, row, this.tokenStream);
+        if (!currentParseTree) {
             return [];
         }
 
@@ -372,10 +376,10 @@ export class CobolSourceContext implements ISourceContext {
         //core.showRuleStack = true;
         //core.debugOutputWithTransitions = true;
 
-        let candidates = core.collectCandidates(index);
+        let candidates = core.collectCandidates(currentToken.tokenIndex);
         let resultMap = new Map<string, Set<string>>();
 
-        candidates.rules.forEach((callStack, key) => {
+        for(let [key, callStack] of candidates.rules) {
             switch(key) {
                 case cobolParser.RULE_function_name:
                     _IntrinsicFunctions.forEach(x => {
@@ -385,64 +389,53 @@ export class CobolSourceContext implements ISourceContext {
                     })
                     break;
                 case cobolParser.RULE_proc_name:
-                    this.symbolTable.occurence.forEach( (value, key) => {
+                    let currentProgramSymbol = this.enclosingProgramSymbol(currentParseTree);
+                    for(let [key, value] of this.symbolTable.occurence) {
                         for(let link of value) {
-                            // only paragraph or section
-                            if (link.master instanceof ParagraphSymbol ||
-                                link.master instanceof SectionSymbol) {
+                            // only paragraph or section in the current program
+                            if ((link.master instanceof ParagraphSymbol && 
+                                    (link.master.parent === currentProgramSymbol || (link.master.parent && link.master.parent.parent === currentProgramSymbol))) ||
+                                (link.master instanceof SectionSymbol && link.master.parent === currentProgramSymbol)) {
                                 resultMap.set(key, new Set([symbolDescriptionFromEnum(getKindFromSymbol(link.master))]));
                                 break;
                             }
                         };
-                    })
+                    }
+                    break;
+                case cobolParser.RULE_program_name:
+                    if (callStack.length > 0) {
+                        switch (callStack[callStack.length - 1]) {
+                            case cobolParser.RULE_end_program:
+                                let currentProgramSymbol = this.enclosingProgramSymbol(currentParseTree);
+                                if (currentProgramSymbol) {
+                                    resultMap.set(currentProgramSymbol.name, new Set([symbolDescriptionFromEnum(getKindFromSymbol(currentProgramSymbol))]));
+                                }
+                                break;
+                        }
+                    }
                     break;
                 case cobolParser.RULE_prog_name:
                     if (callStack.length > 0) {
                         switch (callStack[callStack.length - 1]) {
                             case cobolParser.RULE_cancel_statement:
                             case cobolParser.RULE_call_statement:
-                                this.symbolTable.occurence.forEach( (value, key) => {
-                                    for(let link of value) {
-                                        // only programs, add quotas
-                                        if (link.master instanceof ProgramSymbol &&
-                                            !(link.master instanceof IntrinsicFunctionSymbol)) {
-                                            resultMap.set(`"${key}"`, new Set([symbolDescriptionFromEnum(getKindFromSymbol(link.master))]));
-                                            break;
-                                        }
-                                    };
-                                })
-                                CobolGlobals.collectGlobalsForSource(this.fileName).forEach( globalSymbol => {
-                                    if (globalSymbol instanceof ProgramSymbol) {
-                                        // add globals
-                                        resultMap.set(`"${globalSymbol.name}"`, new Set([symbolDescriptionFromEnum(getKindFromSymbol(globalSymbol))]));
-                                    }
-                                });
-                                break;
-                            case cobolParser.RULE_end_program:
-                                // TODO: filter by current scope
-                                this.symbolTable.occurence.forEach( (value, key) => {
-                                    for(let link of value) {
-                                        // only programs, without quotas
-                                        if (link.master instanceof ProgramSymbol &&
-                                            !(link.master instanceof IntrinsicFunctionSymbol)) {
-                                            resultMap.set(key, new Set([symbolDescriptionFromEnum(getKindFromSymbol(link.master))]));
-                                            break;
-                                        }
-                                    };
+                                let symbols = this.symbolTable.resolveIdentifier(["*"], currentParseTree);
+                                symbols.filter(x => x instanceof ProgramSymbol).forEach((x) => {
+                                    resultMap.set(`"${x.name}"`, new Set([symbolDescriptionFromEnum(getKindFromSymbol(x))]));
                                 })
                                 break;
-                            }
+                        }
                     }
                     break;
             }
-        });
+        }
 
         if (resultMap.size === 0) {
             const vocabulary = this.parser.vocabulary;
-            candidates.tokens.forEach((following: number[], type: number) => {
+            for (let [type, following] of  candidates.tokens) {
                 switch(type) {
                     case cobolParser.USER_DEFINED_WORD_:
-                        this.symbolTable.occurence.forEach((value, key) => {
+                        for (let [key, value] of this.symbolTable.occurence) {
                             if (value.length > 0) {
                                 let add = false;
                                 for(let link of value) {
@@ -462,7 +455,7 @@ export class CobolSourceContext implements ISourceContext {
                                     value.forEach(link => entry!.add(symbolDescriptionFromEnum(getKindFromSymbol(link.master))));
                                 }
                             }
-                        })
+                        }
                         break;
                     default:
                         let key = vocabulary.getLiteralName(type);
@@ -490,7 +483,7 @@ export class CobolSourceContext implements ISourceContext {
                         }
                         break;
                 }
-            });
+            }
         }
         let result: ICompletion[] = [];
         for(let [key, set] of resultMap) {
@@ -578,8 +571,8 @@ export class CobolSourceContext implements ISourceContext {
                 info.definition.range = sourceRange.range;
                 info.definition.source = sourceRange.source;
             }
-            if (info && masterSymbol instanceof ProgramSymbol) {
-                let details = programDetails(masterSymbol);
+            if (info && (masterSymbol instanceof ProgramSymbol || masterSymbol instanceof IntrinsicFunctionSymbol)) {
+                let details = masterSymbol.name + (masterSymbol.definition ? programDetails(masterSymbol.definition) : "");
                 if (details) {
                     info.description = details;
                 }
@@ -663,15 +656,16 @@ export class CobolSourceContext implements ISourceContext {
      * @param row 
      * @param column 
      */
-    private getTokenIndexByPosition(row: number, column: number) {
+    private getTokenByPosition(row: number, column: number) {
+        let token: Token | undefined;
         if (!this.tokenStream) {
-            return -1;
+            return token;
         }
         // Search the token index which covers our caret position.
         let index: number;
         this.tokenStream.fill();
         for (index = 0; ; ++index) {
-            let token = this.tokenStream.get(index);
+            token = this.tokenStream.get(index);
             if (token.type === Token.EOF || token.line > row + 1) {
                 break;
             }
@@ -682,7 +676,7 @@ export class CobolSourceContext implements ISourceContext {
                 }
             }
         }
-        return index;
+        return token;
     }
 
     /**
@@ -779,4 +773,18 @@ export class CobolSourceContext implements ISourceContext {
         }
     }
 
+    /**
+     * 
+     * @param tree 
+     */
+    public enclosingProgramSymbol(tree: ParseTree): ProgramSymbol | undefined {
+        let ctx = firstContainingContext(tree, ProgramContext);
+        if (ctx) {
+            let symbol = this.symbolTable.symbolWithContext(ctx);
+            if (symbol instanceof ProgramSymbol) {
+                return symbol;
+            }
+        }
+        return undefined;
+    }
 }

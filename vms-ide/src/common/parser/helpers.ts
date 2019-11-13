@@ -1,4 +1,4 @@
-import { CharStream, Token, ParserRuleContext } from "antlr4ts";
+import { CharStream, Token, ParserRuleContext, TokenStream } from "antlr4ts";
 import { ParseTree, TerminalNode } from "antlr4ts/tree";
 
 import { EDiagnosticType, IDiagnosticEntry, IDefinition } from "./Facade";
@@ -8,8 +8,12 @@ import { EDiagnosticType, IDiagnosticEntry, IDefinition } from "./Facade";
  * @param root 
  * @param column zero-based
  * @param row zero-based
+ * @param tokenStream if we want to expand rule space up to next rule
  */
-export function parseTreeFromPosition(root: ParseTree, column: number, row: number): ParseTree | undefined {
+export function parseTreeFromPosition(root: ParseTree | undefined, column: number, row: number, tokenStream?: TokenStream): ParseTree | undefined {
+    if (!root) {
+        return undefined;
+    }
     // assumed row 1-based, column 0-based
     ++row;
     // Does the root node actually contain the position? If not we don't need to look further.
@@ -35,14 +39,26 @@ export function parseTreeFromPosition(root: ParseTree, column: number, row: numb
             return undefined;
         }
 
-        let tokenStop = context.stop.charPositionInLine + (context.stop.stopIndex - context.stop.startIndex + 1);
-        if (context.stop.line < row || (context.stop.line === row && tokenStop < column)) {
+        let stopToken = context.stop;
+        if (tokenStream) {
+            // find next non-empy token
+            let index = stopToken.tokenIndex + 1;
+            while (index < tokenStream.size) {
+                stopToken = tokenStream.get(index);
+                if (stopToken.text) {
+                    break;
+                }
+                ++index;
+            }
+        }
+        let stopTokenColumn = stopToken.charPositionInLine + (stopToken.stopIndex - stopToken.startIndex + 1);
+        if (stopToken.line < row || (stopToken.line === row && stopTokenColumn < column)) {
             return undefined;
         }
 
         if (context.children) {
             for (let child of context.children) {
-                let result = parseTreeFromPosition(child, column, row - 1);
+                let result = parseTreeFromPosition(child, column, row - 1, tokenStream);
                 if (result) {
                     return result;
                 }

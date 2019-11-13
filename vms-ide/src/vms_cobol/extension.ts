@@ -1,6 +1,5 @@
 'use strict';
 import * as nls from "vscode-nls";
-import * as path from 'path';
 
 import {
     Range, DiagnosticSeverity, env, ExtensionContext, window,
@@ -17,7 +16,6 @@ import { HoverProviderImpl } from "../common/parser/HoverProvider";
 import { DefinitionProviderImpl } from "../common/parser/DefinitionProvider";
 import { RenameProviderImpl } from "../common/parser/RenameProvider";
 import { CompletionItemProviderImpl } from "../common/parser/CompletionProvider";
-import { CopyManagerImpl } from "./stream/CopyManagerImpl";
 import { ICopyManager } from "./stream/cobolInputStream";
 import { ReferenceProviderImpl } from "../common/parser/ReferenceProvider";
 import { CobolBackground } from "./context/CobolBackground";

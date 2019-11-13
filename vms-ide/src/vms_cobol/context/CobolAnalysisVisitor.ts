@@ -70,7 +70,6 @@ import {
     SectionSymbol,
     SortMergeFileSymbol,
     IValue,
-    EValueType,
     ValueTypeFromDataUsage,
 } from "./CobolSymbol";
 
