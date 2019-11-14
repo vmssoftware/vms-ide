@@ -42,7 +42,7 @@ suite("COBOL tests", function(this: Mocha.Suite) {
         }
     }
 
-    let parseStream = (input: CobolInputStream): Cobol_sourceContext | undefined => {
+    let parseStream = async (input: CobolInputStream) => {
         let lexer = new cobolLexer(input);
         let tokenStream = new CommonTokenStream(lexer);
         tokenStream.seek(0);
@@ -63,7 +63,7 @@ suite("COBOL tests", function(this: Mocha.Suite) {
 
         try 
         {
-            tree = parser.cobol_source();
+            tree = await parser.cobol_source();
         }
         catch (e) 
         {
@@ -73,7 +73,7 @@ suite("COBOL tests", function(this: Mocha.Suite) {
                 parser.reset();
                 parser.errorHandler = new DefaultErrorStrategy();
                 parser.interpreter.setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
-                tree = parser.cobol_source();
+                tree = await parser.cobol_source();
             } 
             else 
             {
@@ -816,7 +816,7 @@ end PROGRAM id-1.`;
 
         try 
         {
-            tree = parser.cobol_source();
+            tree = await parser.cobol_source();
         }
         catch (e) 
         {
@@ -826,7 +826,7 @@ end PROGRAM id-1.`;
                 parser.reset();
                 parser.errorHandler = new DefaultErrorStrategy();
                 parser.interpreter.setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
-                tree = parser.cobol_source();
+                tree = await parser.cobol_source();
             } 
             else 
             {

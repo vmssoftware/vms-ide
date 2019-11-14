@@ -1,0 +1,11 @@
+Make the next replacings, using regexp, and comment some errorneous functions:
+
+(// @RuleVersion.*\n\tpublic)
+$1 async
+
+(public\s*async.*?\(.*?\)):.*
+$1 {
+
+(this\.[^.]*\(\d*\))
+await $1
+

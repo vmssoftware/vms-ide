@@ -1191,7 +1191,7 @@ export class cobolParser extends Parser {
 		this._interp = new ParserATNSimulator(cobolParser._ATN, this);
 	}
 	// @RuleVersion(0)
-	public cobol_source(): Cobol_sourceContext {
+	public async cobol_source() {
 		let _localctx: Cobol_sourceContext = new Cobol_sourceContext(this._ctx, this.state);
 		this.enterRule(_localctx, 0, cobolParser.RULE_cobol_source);
 		let _la: number;
@@ -1205,7 +1205,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 880;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 885;
@@ -1219,7 +1219,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 886;
-				this.program();
+				await this.program();
 				}
 				}
 				this.state = 891;
@@ -1240,12 +1240,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public program(): ProgramContext {
+	public async program() {
 		let _localctx: ProgramContext = new ProgramContext(this._ctx, this.state);
 		this.enterRule(_localctx, 2, cobolParser.RULE_program);
 		let _la: number;
@@ -1254,14 +1254,14 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 894;
-			this.identification_division();
+			await this.identification_division();
 			this.state = 896;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === cobolParser.ENVIRONMENT) {
 				{
 				this.state = 895;
-				this.environment_division();
+				await this.environment_division();
 				}
 			}
 
@@ -1271,7 +1271,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.DATA) {
 				{
 				this.state = 898;
-				this.data_division();
+				await this.data_division();
 				}
 			}
 
@@ -1281,7 +1281,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.PROCEDURE) {
 				{
 				this.state = 901;
-				this.procedure_division();
+				await this.procedure_division();
 				}
 			}
 
@@ -1293,7 +1293,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 904;
-					this.program();
+					await this.program();
 					}
 					}
 				}
@@ -1307,7 +1307,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 910;
-				this.end_program();
+				await this.end_program();
 				}
 				break;
 			}
@@ -1323,12 +1323,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public identification_division(): Identification_divisionContext {
+	public async identification_division() {
 		let _localctx: Identification_divisionContext = new Identification_divisionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 4, cobolParser.RULE_identification_division);
 		let _la: number;
@@ -1336,16 +1336,16 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 913;
-			this.identification_division_header();
+			await this.identification_division_header();
 			this.state = 914;
-			this.program_id();
+			await this.program_id();
 			this.state = 916;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === cobolParser.AUTHOR) {
 				{
 				this.state = 915;
-				this.author();
+				await this.author();
 				}
 			}
 
@@ -1355,7 +1355,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.INSTALLATION) {
 				{
 				this.state = 918;
-				this.installation();
+				await this.installation();
 				}
 			}
 
@@ -1365,7 +1365,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.DATE_WRITTEN) {
 				{
 				this.state = 921;
-				this.date_written();
+				await this.date_written();
 				}
 			}
 
@@ -1375,7 +1375,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.DATE_COMPILED) {
 				{
 				this.state = 924;
-				this.date_compiled();
+				await this.date_compiled();
 				}
 			}
 
@@ -1385,7 +1385,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.SECURITY) {
 				{
 				this.state = 927;
-				this.security();
+				await this.security();
 				}
 			}
 
@@ -1395,7 +1395,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.OPTIONS) {
 				{
 				this.state = 930;
-				this.options_();
+				await this.options_();
 				}
 			}
 
@@ -1411,12 +1411,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public identification_division_header(): Identification_division_headerContext {
+	public async identification_division_header() {
 		let _localctx: Identification_division_headerContext = new Identification_division_headerContext(this._ctx, this.state);
 		this.enterRule(_localctx, 6, cobolParser.RULE_identification_division_header);
 		let _la: number;
@@ -1436,7 +1436,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 936;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 941;
@@ -1455,12 +1455,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public environment_division(): Environment_divisionContext {
+	public async environment_division() {
 		let _localctx: Environment_divisionContext = new Environment_divisionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 8, cobolParser.RULE_environment_division);
 		let _la: number;
@@ -1468,14 +1468,14 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 942;
-			this.environment_division_header();
+			await this.environment_division_header();
 			this.state = 944;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === cobolParser.CONFIGURATION) {
 				{
 				this.state = 943;
-				this.configuration_section();
+				await this.configuration_section();
 				}
 			}
 
@@ -1485,7 +1485,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.INPUT_OUTPUT) {
 				{
 				this.state = 946;
-				this.input_output_section();
+				await this.input_output_section();
 				}
 			}
 
@@ -1501,12 +1501,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public environment_division_header(): Environment_division_headerContext {
+	public async environment_division_header() {
 		let _localctx: Environment_division_headerContext = new Environment_division_headerContext(this._ctx, this.state);
 		this.enterRule(_localctx, 10, cobolParser.RULE_environment_division_header);
 		let _la: number;
@@ -1526,7 +1526,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 952;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 957;
@@ -1545,12 +1545,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public data_division(): Data_divisionContext {
+	public async data_division() {
 		let _localctx: Data_divisionContext = new Data_divisionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 12, cobolParser.RULE_data_division);
 		let _la: number;
@@ -1558,14 +1558,14 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 958;
-			this.data_division_header();
+			await this.data_division_header();
 			this.state = 960;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === cobolParser.FILE) {
 				{
 				this.state = 959;
-				this.file_section();
+				await this.file_section();
 				}
 			}
 
@@ -1575,7 +1575,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.WORKING_STORAGE) {
 				{
 				this.state = 962;
-				this.working_storage_section();
+				await this.working_storage_section();
 				}
 			}
 
@@ -1585,7 +1585,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.LINKAGE) {
 				{
 				this.state = 965;
-				this.linkage_section();
+				await this.linkage_section();
 				}
 			}
 
@@ -1595,7 +1595,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.REPORT) {
 				{
 				this.state = 968;
-				this.report_section();
+				await this.report_section();
 				}
 			}
 
@@ -1605,7 +1605,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.SCREEN) {
 				{
 				this.state = 971;
-				this.screen_section();
+				await this.screen_section();
 				}
 			}
 
@@ -1621,12 +1621,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public data_division_header(): Data_division_headerContext {
+	public async data_division_header() {
 		let _localctx: Data_division_headerContext = new Data_division_headerContext(this._ctx, this.state);
 		this.enterRule(_localctx, 14, cobolParser.RULE_data_division_header);
 		let _la: number;
@@ -1646,7 +1646,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 977;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 982;
@@ -1665,12 +1665,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public procedure_division(): Procedure_divisionContext {
+	public async procedure_division() {
 		let _localctx: Procedure_divisionContext = new Procedure_divisionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 16, cobolParser.RULE_procedure_division);
 		let _la: number;
@@ -1678,14 +1678,14 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 983;
-			this.procedure_division_header();
+			await this.procedure_division_header();
 			this.state = 985;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === cobolParser.DECLARATIVES) {
 				{
 				this.state = 984;
-				this.declaratives();
+				await this.declaratives();
 				}
 			}
 
@@ -1701,7 +1701,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 987;
-					this.section();
+					await this.section();
 					}
 					}
 					this.state = 992;
@@ -1720,7 +1720,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 993;
-					this.paragraph();
+					await this.paragraph();
 					}
 					}
 					this.state = 998;
@@ -1742,12 +1742,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public word_in_area_B(): Word_in_area_BContext {
+	public async word_in_area_B() {
 		let _localctx: Word_in_area_BContext = new Word_in_area_BContext(this._ctx, this.state);
 		this.enterRule(_localctx, 18, cobolParser.RULE_word_in_area_B);
 		try {
@@ -1758,7 +1758,7 @@ export class cobolParser extends Parser {
 				throw new FailedPredicateException(this, " (this as any).testCurrentWordInAreaB ? (this as any).testCurrentWordInAreaB() as boolean : false ");
 			}
 			this.state = 1002;
-			this.matchWildcard();
+			await this.matchWildcard();
 			}
 		}
 		catch (re) {
@@ -1771,12 +1771,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public author(): AuthorContext {
+	public async author() {
 		let _localctx: AuthorContext = new AuthorContext(this._ctx, this.state);
 		this.enterRule(_localctx, 20, cobolParser.RULE_author);
 		let _la: number;
@@ -1785,7 +1785,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1004;
-			this.author_header();
+			await this.author_header();
 			this.state = 1008;
 			this._errHandler.sync(this);
 			_alt = this.interpreter.adaptivePredict(this._input, 27, this._ctx);
@@ -1794,7 +1794,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1005;
-					this.word_in_area_B();
+					await this.word_in_area_B();
 					}
 					}
 				}
@@ -1809,7 +1809,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1011;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 1016;
@@ -1828,12 +1828,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public author_header(): Author_headerContext {
+	public async author_header() {
 		let _localctx: Author_headerContext = new Author_headerContext(this._ctx, this.state);
 		this.enterRule(_localctx, 22, cobolParser.RULE_author_header);
 		try {
@@ -1855,12 +1855,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public figurative_constant_witout_all_zero(): Figurative_constant_witout_all_zeroContext {
+	public async figurative_constant_witout_all_zero() {
 		let _localctx: Figurative_constant_witout_all_zeroContext = new Figurative_constant_witout_all_zeroContext(this._ctx, this.state);
 		this.enterRule(_localctx, 24, cobolParser.RULE_figurative_constant_witout_all_zero);
 		let _la: number;
@@ -1877,7 +1877,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -1891,12 +1891,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public figurative_constant_zero(): Figurative_constant_zeroContext {
+	public async figurative_constant_zero() {
 		let _localctx: Figurative_constant_zeroContext = new Figurative_constant_zeroContext(this._ctx, this.state);
 		this.enterRule(_localctx, 26, cobolParser.RULE_figurative_constant_zero);
 		let _la: number;
@@ -1913,7 +1913,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -1927,12 +1927,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public figurative_constant_witout_all(): Figurative_constant_witout_allContext {
+	public async figurative_constant_witout_all() {
 		let _localctx: Figurative_constant_witout_allContext = new Figurative_constant_witout_allContext(this._ctx, this.state);
 		this.enterRule(_localctx, 28, cobolParser.RULE_figurative_constant_witout_all);
 		try {
@@ -1950,7 +1950,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1024;
-				this.figurative_constant_witout_all_zero();
+				await this.figurative_constant_witout_all_zero();
 				}
 				break;
 			case cobolParser.ZERO:
@@ -1959,7 +1959,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 1025;
-				this.figurative_constant_zero();
+				await this.figurative_constant_zero();
 				}
 				break;
 			default:
@@ -1976,12 +1976,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public figurative_constant_witout_zero(): Figurative_constant_witout_zeroContext {
+	public async figurative_constant_witout_zero() {
 		let _localctx: Figurative_constant_witout_zeroContext = new Figurative_constant_witout_zeroContext(this._ctx, this.state);
 		this.enterRule(_localctx, 30, cobolParser.RULE_figurative_constant_witout_zero);
 		try {
@@ -1999,7 +1999,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1028;
-				this.figurative_constant_witout_all_zero();
+				await this.figurative_constant_witout_all_zero();
 				}
 				break;
 			case cobolParser.ALL:
@@ -2025,12 +2025,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public figurative_constant(): Figurative_constantContext {
+	public async figurative_constant() {
 		let _localctx: Figurative_constantContext = new Figurative_constantContext(this._ctx, this.state);
 		this.enterRule(_localctx, 32, cobolParser.RULE_figurative_constant);
 		try {
@@ -2049,7 +2049,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1033;
-				this.figurative_constant_witout_zero();
+				await this.figurative_constant_witout_zero();
 				}
 				break;
 			case cobolParser.ZERO:
@@ -2058,7 +2058,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 1034;
-				this.figurative_constant_zero();
+				await this.figurative_constant_zero();
 				}
 				break;
 			default:
@@ -2075,12 +2075,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public end_program(): End_programContext {
+	public async end_program() {
 		let _localctx: End_programContext = new End_programContext(this._ctx, this.state);
 		this.enterRule(_localctx, 34, cobolParser.RULE_end_program);
 		let _la: number;
@@ -2088,9 +2088,9 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1037;
-			this.end_program_header();
+			await this.end_program_header();
 			this.state = 1038;
-			this.program_name();
+			await this.program_name();
 			this.state = 1039;
 			this.match(cobolParser.DOT_);
 			this.state = 1043;
@@ -2100,7 +2100,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1040;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 1045;
@@ -2119,12 +2119,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public end_program_header(): End_program_headerContext {
+	public async end_program_header() {
 		let _localctx: End_program_headerContext = new End_program_headerContext(this._ctx, this.state);
 		this.enterRule(_localctx, 36, cobolParser.RULE_end_program_header);
 		try {
@@ -2146,12 +2146,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public procedure_division_header(): Procedure_division_headerContext {
+	public async procedure_division_header() {
 		let _localctx: Procedure_division_headerContext = new Procedure_division_headerContext(this._ctx, this.state);
 		this.enterRule(_localctx, 38, cobolParser.RULE_procedure_division_header);
 		let _la: number;
@@ -2159,14 +2159,14 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1049;
-			this.procedure_division_header_start();
+			await this.procedure_division_header_start();
 			this.state = 1051;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === cobolParser.USING) {
 				{
 				this.state = 1050;
-				this.using();
+				await this.using();
 				}
 			}
 
@@ -2176,12 +2176,12 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.GIVING) {
 				{
 				this.state = 1053;
-				this.giving();
+				await this.giving();
 				}
 			}
 
 			this.state = 1056;
-			this.procedure_division_header_end();
+			await this.procedure_division_header_end();
 			}
 		}
 		catch (re) {
@@ -2194,12 +2194,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public procedure_division_header_start(): Procedure_division_header_startContext {
+	public async procedure_division_header_start() {
 		let _localctx: Procedure_division_header_startContext = new Procedure_division_header_startContext(this._ctx, this.state);
 		this.enterRule(_localctx, 40, cobolParser.RULE_procedure_division_header_start);
 		try {
@@ -2221,12 +2221,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public procedure_division_header_end(): Procedure_division_header_endContext {
+	public async procedure_division_header_end() {
 		let _localctx: Procedure_division_header_endContext = new Procedure_division_header_endContext(this._ctx, this.state);
 		this.enterRule(_localctx, 42, cobolParser.RULE_procedure_division_header_end);
 		let _la: number;
@@ -2242,7 +2242,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1062;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 1067;
@@ -2261,12 +2261,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public section(): SectionContext {
+	public async section() {
 		let _localctx: SectionContext = new SectionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 44, cobolParser.RULE_section);
 		try {
@@ -2274,7 +2274,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1068;
-			this.section_header();
+			await this.section_header();
 			this.state = 1072;
 			this._errHandler.sync(this);
 			_alt = this.interpreter.adaptivePredict(this._input, 36, this._ctx);
@@ -2283,7 +2283,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1069;
-					this.paragraph();
+					await this.paragraph();
 					}
 					}
 				}
@@ -2303,12 +2303,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public declaratives(): DeclarativesContext {
+	public async declaratives() {
 		let _localctx: DeclarativesContext = new DeclarativesContext(this._ctx, this.state);
 		this.enterRule(_localctx, 46, cobolParser.RULE_declaratives);
 		let _la: number;
@@ -2316,7 +2316,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1075;
-			this.declaratives_header();
+			await this.declaratives_header();
 			this.state = 1079;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -2324,7 +2324,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1076;
-				this.declaratives_section();
+				await this.declaratives_section();
 				}
 				}
 				this.state = 1081;
@@ -2332,7 +2332,7 @@ export class cobolParser extends Parser {
 				_la = this._input.LA(1);
 			}
 			this.state = 1082;
-			this.end_declaratives();
+			await this.end_declaratives();
 			}
 		}
 		catch (re) {
@@ -2345,12 +2345,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public declaratives_header(): Declaratives_headerContext {
+	public async declaratives_header() {
 		let _localctx: Declaratives_headerContext = new Declaratives_headerContext(this._ctx, this.state);
 		this.enterRule(_localctx, 48, cobolParser.RULE_declaratives_header);
 		let _la: number;
@@ -2368,7 +2368,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1086;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 1091;
@@ -2387,12 +2387,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public end_declaratives(): End_declarativesContext {
+	public async end_declaratives() {
 		let _localctx: End_declarativesContext = new End_declarativesContext(this._ctx, this.state);
 		this.enterRule(_localctx, 50, cobolParser.RULE_end_declaratives);
 		let _la: number;
@@ -2412,7 +2412,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1095;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 1100;
@@ -2431,12 +2431,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public declaratives_section(): Declaratives_sectionContext {
+	public async declaratives_section() {
 		let _localctx: Declaratives_sectionContext = new Declaratives_sectionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 52, cobolParser.RULE_declaratives_section);
 		try {
@@ -2444,9 +2444,9 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1101;
-			this.section_header();
+			await this.section_header();
 			this.state = 1102;
-			this.use_statement();
+			await this.use_statement();
 			this.state = 1106;
 			this._errHandler.sync(this);
 			_alt = this.interpreter.adaptivePredict(this._input, 40, this._ctx);
@@ -2455,7 +2455,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1103;
-					this.paragraph();
+					await this.paragraph();
 					}
 					}
 				}
@@ -2475,12 +2475,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public paragraph(): ParagraphContext {
+	public async paragraph() {
 		let _localctx: ParagraphContext = new ParagraphContext(this._ctx, this.state);
 		this.enterRule(_localctx, 54, cobolParser.RULE_paragraph);
 		let _la: number;
@@ -2488,7 +2488,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1109;
-			this.paragraph_name();
+			await this.paragraph_name();
 			this.state = 1110;
 			this.match(cobolParser.DOT_);
 			this.state = 1114;
@@ -2498,7 +2498,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1111;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 1116;
@@ -2518,7 +2518,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1117;
-					this.statement();
+					await this.statement();
 					}
 					}
 					this.state = 1120;
@@ -2534,7 +2534,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1123;
-					this.replace_statement();
+					await this.replace_statement();
 					}
 					}
 					this.state = 1128;
@@ -2559,12 +2559,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public paragraph_name(): Paragraph_nameContext {
+	public async paragraph_name() {
 		let _localctx: Paragraph_nameContext = new Paragraph_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 56, cobolParser.RULE_paragraph_name);
 		try {
@@ -2584,12 +2584,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public use_statement(): Use_statementContext {
+	public async use_statement() {
 		let _localctx: Use_statementContext = new Use_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 58, cobolParser.RULE_use_statement);
 		let _la: number;
@@ -2635,7 +2635,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 1145;
 				this.match(cobolParser.PROCEDURE);
@@ -2650,7 +2650,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 1149;
-				this.use_on();
+				await this.use_on();
 				}
 				break;
 			case cobolParser.BEFORE:
@@ -2660,7 +2660,7 @@ export class cobolParser extends Parser {
 				this.state = 1151;
 				this.match(cobolParser.REPORTING);
 				this.state = 1152;
-				this.group_data_name();
+				await this.group_data_name();
 				}
 				break;
 			default:
@@ -2675,7 +2675,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1156;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 1161;
@@ -2694,19 +2694,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public group_data_name(): Group_data_nameContext {
+	public async group_data_name() {
 		let _localctx: Group_data_nameContext = new Group_data_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 60, cobolParser.RULE_group_data_name);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1162;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -2719,12 +2719,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public use_on(): Use_onContext {
+	public async use_on() {
 		let _localctx: Use_onContext = new Use_onContext(this._ctx, this.state);
 		this.enterRule(_localctx, 62, cobolParser.RULE_use_on);
 		let _la: number;
@@ -2742,7 +2742,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1164;
-					this.file_name();
+					await this.file_name();
 					}
 					}
 					this.state = 1167;
@@ -2793,12 +2793,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public section_header(): Section_headerContext {
+	public async section_header() {
 		let _localctx: Section_headerContext = new Section_headerContext(this._ctx, this.state);
 		this.enterRule(_localctx, 64, cobolParser.RULE_section_header);
 		let _la: number;
@@ -2806,7 +2806,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1175;
-			this.section_name();
+			await this.section_name();
 			this.state = 1176;
 			this.match(cobolParser.SECTION);
 			this.state = 1178;
@@ -2815,7 +2815,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.NUMERIC_LITERAL_) {
 				{
 				this.state = 1177;
-				this.segment_number();
+				await this.segment_number();
 				}
 			}
 
@@ -2828,7 +2828,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1181;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 1186;
@@ -2847,12 +2847,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public section_name(): Section_nameContext {
+	public async section_name() {
 		let _localctx: Section_nameContext = new Section_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 66, cobolParser.RULE_section_name);
 		try {
@@ -2872,12 +2872,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public using(): UsingContext {
+	public async using() {
 		let _localctx: UsingContext = new UsingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 68, cobolParser.RULE_using);
 		let _la: number;
@@ -2893,7 +2893,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1190;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				}
 				this.state = 1193;
@@ -2912,12 +2912,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public giving(): GivingContext {
+	public async giving() {
 		let _localctx: GivingContext = new GivingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 70, cobolParser.RULE_giving);
 		try {
@@ -2926,7 +2926,7 @@ export class cobolParser extends Parser {
 			this.state = 1195;
 			this.match(cobolParser.GIVING);
 			this.state = 1196;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -2939,12 +2939,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public statement(): StatementContext {
+	public async statement() {
 		let _localctx: StatementContext = new StatementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 72, cobolParser.RULE_statement);
 		try {
@@ -2956,294 +2956,294 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 1198;
-				this.accept_statement();
+				await this.accept_statement();
 				}
 				break;
 
 			case 2:
 				{
 				this.state = 1199;
-				this.add_statement();
+				await this.add_statement();
 				}
 				break;
 
 			case 3:
 				{
 				this.state = 1200;
-				this.alter_statement();
+				await this.alter_statement();
 				}
 				break;
 
 			case 4:
 				{
 				this.state = 1201;
-				this.call_statement();
+				await this.call_statement();
 				}
 				break;
 
 			case 5:
 				{
 				this.state = 1202;
-				this.cancel_statement();
+				await this.cancel_statement();
 				}
 				break;
 
 			case 6:
 				{
 				this.state = 1203;
-				this.close_statement();
+				await this.close_statement();
 				}
 				break;
 
 			case 7:
 				{
 				this.state = 1204;
-				this.compute_statement();
+				await this.compute_statement();
 				}
 				break;
 
 			case 8:
 				{
 				this.state = 1205;
-				this.continue_statement();
+				await this.continue_statement();
 				}
 				break;
 
 			case 9:
 				{
 				this.state = 1206;
-				this.delete_statement();
+				await this.delete_statement();
 				}
 				break;
 
 			case 10:
 				{
 				this.state = 1207;
-				this.display_statement();
+				await this.display_statement();
 				}
 				break;
 
 			case 11:
 				{
 				this.state = 1208;
-				this.divide_statement();
+				await this.divide_statement();
 				}
 				break;
 
 			case 12:
 				{
 				this.state = 1209;
-				this.evaluate_statement();
+				await this.evaluate_statement();
 				}
 				break;
 
 			case 13:
 				{
 				this.state = 1210;
-				this.exit_statement();
+				await this.exit_statement();
 				}
 				break;
 
 			case 14:
 				{
 				this.state = 1211;
-				this.exit_program_statement();
+				await this.exit_program_statement();
 				}
 				break;
 
 			case 15:
 				{
 				this.state = 1212;
-				this.generate_statement();
+				await this.generate_statement();
 				}
 				break;
 
 			case 16:
 				{
 				this.state = 1213;
-				this.go_to_statement();
+				await this.go_to_statement();
 				}
 				break;
 
 			case 17:
 				{
 				this.state = 1214;
-				this.if_statement();
+				await this.if_statement();
 				}
 				break;
 
 			case 18:
 				{
 				this.state = 1215;
-				this.initialize_statement();
+				await this.initialize_statement();
 				}
 				break;
 
 			case 19:
 				{
 				this.state = 1216;
-				this.initiate_statement();
+				await this.initiate_statement();
 				}
 				break;
 
 			case 20:
 				{
 				this.state = 1217;
-				this.inspect_statement();
+				await this.inspect_statement();
 				}
 				break;
 
 			case 21:
 				{
 				this.state = 1218;
-				this.merge_statement();
+				await this.merge_statement();
 				}
 				break;
 
 			case 22:
 				{
 				this.state = 1219;
-				this.move_statement();
+				await this.move_statement();
 				}
 				break;
 
 			case 23:
 				{
 				this.state = 1220;
-				this.multiply_statement();
+				await this.multiply_statement();
 				}
 				break;
 
 			case 24:
 				{
 				this.state = 1221;
-				this.open_statement();
+				await this.open_statement();
 				}
 				break;
 
 			case 25:
 				{
 				this.state = 1222;
-				this.perform_statement();
+				await this.perform_statement();
 				}
 				break;
 
 			case 26:
 				{
 				this.state = 1223;
-				this.read_statement();
+				await this.read_statement();
 				}
 				break;
 
 			case 27:
 				{
 				this.state = 1224;
-				this.release_statement();
+				await this.release_statement();
 				}
 				break;
 
 			case 28:
 				{
 				this.state = 1225;
-				this.return_statement();
+				await this.return_statement();
 				}
 				break;
 
 			case 29:
 				{
 				this.state = 1226;
-				this.rewrite_statement();
+				await this.rewrite_statement();
 				}
 				break;
 
 			case 30:
 				{
 				this.state = 1227;
-				this.search_statement();
+				await this.search_statement();
 				}
 				break;
 
 			case 31:
 				{
 				this.state = 1228;
-				this.set_statement();
+				await this.set_statement();
 				}
 				break;
 
 			case 32:
 				{
 				this.state = 1229;
-				this.sort_statement();
+				await this.sort_statement();
 				}
 				break;
 
 			case 33:
 				{
 				this.state = 1230;
-				this.start_statement();
+				await this.start_statement();
 				}
 				break;
 
 			case 34:
 				{
 				this.state = 1231;
-				this.stop_statement();
+				await this.stop_statement();
 				}
 				break;
 
 			case 35:
 				{
 				this.state = 1232;
-				this.string_statement();
+				await this.string_statement();
 				}
 				break;
 
 			case 36:
 				{
 				this.state = 1233;
-				this.subtract_statement();
+				await this.subtract_statement();
 				}
 				break;
 
 			case 37:
 				{
 				this.state = 1234;
-				this.suppress_statement();
+				await this.suppress_statement();
 				}
 				break;
 
 			case 38:
 				{
 				this.state = 1235;
-				this.terminate_statement();
+				await this.terminate_statement();
 				}
 				break;
 
 			case 39:
 				{
 				this.state = 1236;
-				this.unlock_statement();
+				await this.unlock_statement();
 				}
 				break;
 
 			case 40:
 				{
 				this.state = 1237;
-				this.unstring_statement();
+				await this.unstring_statement();
 				}
 				break;
 
 			case 41:
 				{
 				this.state = 1238;
-				this.write_statement();
+				await this.write_statement();
 				}
 				break;
 
 			case 42:
 				{
 				this.state = 1239;
-				this.record_statement();
+				await this.record_statement();
 				}
 				break;
 			}
@@ -3259,12 +3259,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public record_name(): Record_nameContext {
+	public async record_name() {
 		let _localctx: Record_nameContext = new Record_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 74, cobolParser.RULE_record_name);
 		let _la: number;
@@ -3281,7 +3281,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -3295,12 +3295,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public library_name(): Library_nameContext {
+	public async library_name() {
 		let _localctx: Library_nameContext = new Library_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 76, cobolParser.RULE_library_name);
 		let _la: number;
@@ -3317,7 +3317,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -3331,12 +3331,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public text_name(): Text_nameContext {
+	public async text_name() {
 		let _localctx: Text_nameContext = new Text_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 78, cobolParser.RULE_text_name);
 		let _la: number;
@@ -3353,7 +3353,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -3367,12 +3367,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public replace_statement(): Replace_statementContext {
+	public async replace_statement() {
 		let _localctx: Replace_statementContext = new Replace_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 80, cobolParser.RULE_replace_statement);
 		let _la: number;
@@ -3431,12 +3431,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public write_statement(): Write_statementContext {
+	public async write_statement() {
 		let _localctx: Write_statementContext = new Write_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 82, cobolParser.RULE_write_statement);
 		let _la: number;
@@ -3446,7 +3446,7 @@ export class cobolParser extends Parser {
 			this.state = 1262;
 			this.match(cobolParser.WRITE);
 			this.state = 1263;
-			this.rec_name();
+			await this.rec_name();
 			this.state = 1266;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -3455,7 +3455,7 @@ export class cobolParser extends Parser {
 				this.state = 1264;
 				this.match(cobolParser.FROM);
 				this.state = 1265;
-				this.src_item();
+				await this.src_item();
 				}
 			}
 
@@ -3487,7 +3487,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 1275;
-				this.invalid_key_variants();
+				await this.invalid_key_variants();
 				}
 				break;
 
@@ -3508,7 +3508,7 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					this.state = 1278;
 					this._errHandler.sync(this);
@@ -3521,12 +3521,12 @@ export class cobolParser extends Parser {
 					}
 
 					this.state = 1280;
-					this.advance_value();
+					await this.advance_value();
 					}
 				}
 
 				this.state = 1283;
-				this.at_eop_variants();
+				await this.at_eop_variants();
 				}
 				break;
 
@@ -3542,7 +3542,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 1286;
 				this._errHandler.sync(this);
@@ -3555,14 +3555,14 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 1288;
-				this.advance_value();
+				await this.advance_value();
 				this.state = 1290;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 64, this._ctx) ) {
 				case 1:
 					{
 					this.state = 1289;
-					this.at_eop_variants();
+					await this.at_eop_variants();
 					}
 					break;
 				}
@@ -3591,12 +3591,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public advance_value(): Advance_valueContext {
+	public async advance_value() {
 		let _localctx: Advance_valueContext = new Advance_valueContext(this._ctx, this.state);
 		this.enterRule(_localctx, 84, cobolParser.RULE_advance_value);
 		let _la: number;
@@ -3608,7 +3608,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1297;
-				this.advance_num();
+				await this.advance_num();
 				this.state = 1299;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -3624,7 +3624,7 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					}
 				}
@@ -3636,7 +3636,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 1301;
-				this.top_of_page_name();
+				await this.top_of_page_name();
 				}
 				break;
 
@@ -3659,12 +3659,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public advance_num(): Advance_numContext {
+	public async advance_num() {
 		let _localctx: Advance_numContext = new Advance_numContext(this._ctx, this.state);
 		this.enterRule(_localctx, 86, cobolParser.RULE_advance_num);
 		try {
@@ -3676,7 +3676,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1305;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.NUMERIC_LITERAL_:
@@ -3700,12 +3700,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public unstring_statement(): Unstring_statementContext {
+	public async unstring_statement() {
 		let _localctx: Unstring_statementContext = new Unstring_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 88, cobolParser.RULE_unstring_statement);
 		let _la: number;
@@ -3715,7 +3715,7 @@ export class cobolParser extends Parser {
 			this.state = 1309;
 			this.match(cobolParser.UNSTRING);
 			this.state = 1310;
-			this.unstring_src();
+			await this.unstring_src();
 			this.state = 1323;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -3734,7 +3734,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 1315;
-				this.unstring_delim_clause();
+				await this.unstring_delim_clause();
 				this.state = 1320;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -3744,7 +3744,7 @@ export class cobolParser extends Parser {
 					this.state = 1316;
 					this.match(cobolParser.OR);
 					this.state = 1317;
-					this.unstring_delim_clause();
+					await this.unstring_delim_clause();
 					}
 					}
 					this.state = 1322;
@@ -3763,7 +3763,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1326;
-				this.unstring_dest_clause();
+				await this.unstring_dest_clause();
 				}
 				}
 				this.state = 1329;
@@ -3788,7 +3788,7 @@ export class cobolParser extends Parser {
 				this.state = 1334;
 				this.match(cobolParser.POINTER);
 				this.state = 1335;
-				this.string_pointer();
+				await this.string_pointer();
 				}
 			}
 
@@ -3810,7 +3810,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 1342;
-				this.unstring_tally_ctr();
+				await this.unstring_tally_ctr();
 				}
 			}
 
@@ -3820,7 +3820,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 1345;
-				this.on_overflow_variants();
+				await this.on_overflow_variants();
 				}
 				break;
 			}
@@ -3846,19 +3846,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public unstring_tally_ctr(): Unstring_tally_ctrContext {
+	public async unstring_tally_ctr() {
 		let _localctx: Unstring_tally_ctrContext = new Unstring_tally_ctrContext(this._ctx, this.state);
 		this.enterRule(_localctx, 90, cobolParser.RULE_unstring_tally_ctr);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1351;
-			this.identifier_result();
+			await this.identifier_result();
 			}
 		}
 		catch (re) {
@@ -3871,12 +3871,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public unstring_dest_clause(): Unstring_dest_clauseContext {
+	public async unstring_dest_clause() {
 		let _localctx: Unstring_dest_clauseContext = new Unstring_dest_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 92, cobolParser.RULE_unstring_dest_clause);
 		let _la: number;
@@ -3884,7 +3884,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1353;
-			this.dest_string();
+			await this.dest_string();
 			this.state = 1359;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -3903,7 +3903,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 1358;
-				this.delim_dest();
+				await this.delim_dest();
 				}
 			}
 
@@ -3925,7 +3925,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 1365;
-				this.countr();
+				await this.countr();
 				}
 			}
 
@@ -3941,19 +3941,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public countr(): CountrContext {
+	public async countr() {
 		let _localctx: CountrContext = new CountrContext(this._ctx, this.state);
 		this.enterRule(_localctx, 94, cobolParser.RULE_countr);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1368;
-			this.identifier_result();
+			await this.identifier_result();
 			}
 		}
 		catch (re) {
@@ -3966,19 +3966,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public dest_string(): Dest_stringContext {
+	public async dest_string() {
 		let _localctx: Dest_stringContext = new Dest_stringContext(this._ctx, this.state);
 		this.enterRule(_localctx, 96, cobolParser.RULE_dest_string);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1370;
-			this.identifier_result();
+			await this.identifier_result();
 			}
 		}
 		catch (re) {
@@ -3991,19 +3991,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public delim_dest(): Delim_destContext {
+	public async delim_dest() {
 		let _localctx: Delim_destContext = new Delim_destContext(this._ctx, this.state);
 		this.enterRule(_localctx, 98, cobolParser.RULE_delim_dest);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1372;
-			this.identifier_result();
+			await this.identifier_result();
 			}
 		}
 		catch (re) {
@@ -4016,12 +4016,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public unstring_delim_clause(): Unstring_delim_clauseContext {
+	public async unstring_delim_clause() {
 		let _localctx: Unstring_delim_clauseContext = new Unstring_delim_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 100, cobolParser.RULE_unstring_delim_clause);
 		let _la: number;
@@ -4039,7 +4039,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 1377;
-			this.unstring_delim();
+			await this.unstring_delim();
 			}
 		}
 		catch (re) {
@@ -4052,12 +4052,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public unstring_delim(): Unstring_delimContext {
+	public async unstring_delim() {
 		let _localctx: Unstring_delimContext = new Unstring_delimContext(this._ctx, this.state);
 		this.enterRule(_localctx, 102, cobolParser.RULE_unstring_delim);
 		try {
@@ -4069,7 +4069,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1379;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.STRING_LITERAL_:
@@ -4093,7 +4093,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 1381;
-				this.figurative_constant_witout_all();
+				await this.figurative_constant_witout_all();
 				}
 				break;
 			default:
@@ -4110,19 +4110,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public unstring_src(): Unstring_srcContext {
+	public async unstring_src() {
 		let _localctx: Unstring_srcContext = new Unstring_srcContext(this._ctx, this.state);
 		this.enterRule(_localctx, 104, cobolParser.RULE_unstring_src);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1384;
-			this.identifier();
+			await this.identifier();
 			}
 		}
 		catch (re) {
@@ -4135,12 +4135,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public unlock_statement(): Unlock_statementContext {
+	public async unlock_statement() {
 		let _localctx: Unlock_statementContext = new Unlock_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 106, cobolParser.RULE_unlock_statement);
 		let _la: number;
@@ -4150,7 +4150,7 @@ export class cobolParser extends Parser {
 			this.state = 1386;
 			this.match(cobolParser.UNLOCK);
 			this.state = 1387;
-			this.file_name();
+			await this.file_name();
 			this.state = 1394;
 			this._errHandler.sync(this);
 			switch ( this.interpreter.adaptivePredict(this._input, 87, this._ctx) ) {
@@ -4197,12 +4197,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public terminate_statement(): Terminate_statementContext {
+	public async terminate_statement() {
 		let _localctx: Terminate_statementContext = new Terminate_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 108, cobolParser.RULE_terminate_statement);
 		let _la: number;
@@ -4218,7 +4218,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1397;
-				this.report_name();
+				await this.report_name();
 				}
 				}
 				this.state = 1400;
@@ -4237,12 +4237,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public suppress_statement(): Suppress_statementContext {
+	public async suppress_statement() {
 		let _localctx: Suppress_statementContext = new Suppress_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 110, cobolParser.RULE_suppress_statement);
 		let _la: number;
@@ -4273,12 +4273,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public subtract_statement(): Subtract_statementContext {
+	public async subtract_statement() {
 		let _localctx: Subtract_statementContext = new Subtract_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 112, cobolParser.RULE_subtract_statement);
 		let _la: number;
@@ -4301,7 +4301,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1407;
-					this.sub_num();
+					await this.sub_num();
 					}
 					}
 					this.state = 1410;
@@ -4316,7 +4316,7 @@ export class cobolParser extends Parser {
 				case 1:
 					{
 					this.state = 1413;
-					this.sub_num();
+					await this.sub_num();
 					this.state = 1414;
 					this.match(cobolParser.GIVING);
 					}
@@ -4329,7 +4329,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1418;
-					this.identifier_result();
+					await this.identifier_result();
 					this.state = 1420;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
@@ -4361,14 +4361,14 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 1427;
-				this.sub_grp();
+				await this.sub_grp();
 				this.state = 1428;
 				this.match(cobolParser.FROM);
 				this.state = 1429;
-				this.sub_grp();
+				await this.sub_grp();
 				this.state = 1431;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -4390,7 +4390,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 1435;
-				this.on_size_variants();
+				await this.on_size_variants();
 				}
 				break;
 			}
@@ -4416,19 +4416,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public sub_grp(): Sub_grpContext {
+	public async sub_grp() {
 		let _localctx: Sub_grpContext = new Sub_grpContext(this._ctx, this.state);
 		this.enterRule(_localctx, 114, cobolParser.RULE_sub_grp);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1441;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -4441,12 +4441,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public sub_num(): Sub_numContext {
+	public async sub_num() {
 		let _localctx: Sub_numContext = new Sub_numContext(this._ctx, this.state);
 		this.enterRule(_localctx, 116, cobolParser.RULE_sub_num);
 		try {
@@ -4465,7 +4465,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 1444;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			default:
@@ -4482,12 +4482,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public string_statement(): String_statementContext {
+	public async string_statement() {
 		let _localctx: String_statementContext = new String_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 118, cobolParser.RULE_string_statement);
 		let _la: number;
@@ -4509,7 +4509,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1448;
-					this.string_src();
+					await this.string_src();
 					}
 					}
 					this.state = 1451;
@@ -4553,7 +4553,7 @@ export class cobolParser extends Parser {
 				case cobolParser.USER_DEFINED_WORD_:
 					{
 					this.state = 1458;
-					this.string_delim();
+					await this.string_delim();
 					}
 					break;
 				default:
@@ -4568,7 +4568,7 @@ export class cobolParser extends Parser {
 			this.state = 1465;
 			this.match(cobolParser.INTO);
 			this.state = 1466;
-			this.string_dest();
+			await this.string_dest();
 			this.state = 1472;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -4587,7 +4587,7 @@ export class cobolParser extends Parser {
 				this.state = 1470;
 				this.match(cobolParser.POINTER);
 				this.state = 1471;
-				this.string_pointer();
+				await this.string_pointer();
 				}
 			}
 
@@ -4597,7 +4597,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 1474;
-				this.on_overflow_variants();
+				await this.on_overflow_variants();
 				}
 				break;
 			}
@@ -4623,19 +4623,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public string_pointer(): String_pointerContext {
+	public async string_pointer() {
 		let _localctx: String_pointerContext = new String_pointerContext(this._ctx, this.state);
 		this.enterRule(_localctx, 120, cobolParser.RULE_string_pointer);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1480;
-			this.identifier_result();
+			await this.identifier_result();
 			}
 		}
 		catch (re) {
@@ -4648,19 +4648,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public string_dest(): String_destContext {
+	public async string_dest() {
 		let _localctx: String_destContext = new String_destContext(this._ctx, this.state);
 		this.enterRule(_localctx, 122, cobolParser.RULE_string_dest);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1482;
-			this.identifier_result();
+			await this.identifier_result();
 			}
 		}
 		catch (re) {
@@ -4673,19 +4673,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public string_delim(): String_delimContext {
+	public async string_delim() {
 		let _localctx: String_delimContext = new String_delimContext(this._ctx, this.state);
 		this.enterRule(_localctx, 124, cobolParser.RULE_string_delim);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1484;
-			this.string_src();
+			await this.string_src();
 			}
 		}
 		catch (re) {
@@ -4698,12 +4698,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public string_src(): String_srcContext {
+	public async string_src() {
 		let _localctx: String_srcContext = new String_srcContext(this._ctx, this.state);
 		this.enterRule(_localctx, 126, cobolParser.RULE_string_src);
 		try {
@@ -4714,7 +4714,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1486;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				break;
 			case cobolParser.STRING_LITERAL_:
@@ -4739,7 +4739,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 1488;
-				this.figurative_constant();
+				await this.figurative_constant();
 				}
 				break;
 			default:
@@ -4756,12 +4756,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public stop_statement(): Stop_statementContext {
+	public async stop_statement() {
 		let _localctx: Stop_statementContext = new Stop_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 128, cobolParser.RULE_stop_statement);
 		try {
@@ -4793,7 +4793,7 @@ export class cobolParser extends Parser {
 			case cobolParser.NUMERIC_LITERAL_:
 				{
 				this.state = 1493;
-				this.stop_disp();
+				await this.stop_disp();
 				}
 				break;
 			default:
@@ -4811,12 +4811,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public stop_disp(): Stop_dispContext {
+	public async stop_disp() {
 		let _localctx: Stop_dispContext = new Stop_dispContext(this._ctx, this.state);
 		this.enterRule(_localctx, 130, cobolParser.RULE_stop_disp);
 		try {
@@ -4851,7 +4851,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 1498;
-				this.figurative_constant_witout_all();
+				await this.figurative_constant_witout_all();
 				}
 				break;
 			default:
@@ -4868,12 +4868,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public start_statement(): Start_statementContext {
+	public async start_statement() {
 		let _localctx: Start_statementContext = new Start_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 132, cobolParser.RULE_start_statement);
 		let _la: number;
@@ -4883,7 +4883,7 @@ export class cobolParser extends Parser {
 			this.state = 1501;
 			this.match(cobolParser.START);
 			this.state = 1502;
-			this.file_name();
+			await this.file_name();
 			this.state = 1507;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -4892,9 +4892,9 @@ export class cobolParser extends Parser {
 				this.state = 1503;
 				this.match(cobolParser.KEY);
 				this.state = 1504;
-				this.condition_operator();
+				await this.condition_operator();
 				this.state = 1505;
-				this.sort_key_data();
+				await this.sort_key_data();
 				}
 			}
 
@@ -4904,7 +4904,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.ALLOWING || _la === cobolParser.REGARDLESS) {
 				{
 				this.state = 1509;
-				this.regard_allow();
+				await this.regard_allow();
 				}
 			}
 
@@ -4914,7 +4914,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 1512;
-				this.invalid_key_variants();
+				await this.invalid_key_variants();
 				}
 				break;
 			}
@@ -4940,19 +4940,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public sort_key_data(): Sort_key_dataContext {
+	public async sort_key_data() {
 		let _localctx: Sort_key_dataContext = new Sort_key_dataContext(this._ctx, this.state);
 		this.enterRule(_localctx, 134, cobolParser.RULE_sort_key_data);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1518;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -4965,12 +4965,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public sort_statement(): Sort_statementContext {
+	public async sort_statement() {
 		let _localctx: Sort_statementContext = new Sort_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 136, cobolParser.RULE_sort_statement);
 		let _la: number;
@@ -4981,7 +4981,7 @@ export class cobolParser extends Parser {
 			this.state = 1520;
 			this.match(cobolParser.SORT);
 			this.state = 1521;
-			this.sort_name();
+			await this.sort_name();
 			this.state = 1525;
 			this._errHandler.sync(this);
 			_alt = this.interpreter.adaptivePredict(this._input, 114, this._ctx);
@@ -4990,7 +4990,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1522;
-					this.on_sort_key();
+					await this.on_sort_key();
 					}
 					}
 				}
@@ -5066,7 +5066,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 1547;
-				this.alpha_name();
+				await this.alpha_name();
 				}
 			}
 
@@ -5078,7 +5078,7 @@ export class cobolParser extends Parser {
 				this.state = 1550;
 				this.match(cobolParser.INPUT);
 				this.state = 1551;
-				this.procedure_is();
+				await this.procedure_is();
 				}
 				break;
 			case cobolParser.USING:
@@ -5092,7 +5092,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1553;
-					this.file_name();
+					await this.file_name();
 					}
 					}
 					this.state = 1556;
@@ -5189,7 +5189,7 @@ export class cobolParser extends Parser {
 				this.state = 1560;
 				this.match(cobolParser.OUTPUT);
 				this.state = 1561;
-				this.procedure_is();
+				await this.procedure_is();
 				}
 				break;
 			case cobolParser.GIVING:
@@ -5203,7 +5203,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1563;
-					this.file_name();
+					await this.file_name();
 					}
 					}
 					this.state = 1566;
@@ -5302,19 +5302,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public sort_name(): Sort_nameContext {
+	public async sort_name() {
 		let _localctx: Sort_nameContext = new Sort_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 138, cobolParser.RULE_sort_name);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1570;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -5327,12 +5327,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public procedure_is(): Procedure_isContext {
+	public async procedure_is() {
 		let _localctx: Procedure_isContext = new Procedure_isContext(this._ctx, this.state);
 		this.enterRule(_localctx, 140, cobolParser.RULE_procedure_is);
 		let _la: number;
@@ -5352,7 +5352,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 1576;
-			this.proc_thru_proc();
+			await this.proc_thru_proc();
 			}
 		}
 		catch (re) {
@@ -5365,12 +5365,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public on_sort_key(): On_sort_keyContext {
+	public async on_sort_key() {
 		let _localctx: On_sort_keyContext = new On_sort_keyContext(this._ctx, this.state);
 		this.enterRule(_localctx, 142, cobolParser.RULE_on_sort_key);
 		let _la: number;
@@ -5397,7 +5397,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 1583;
 			this._errHandler.sync(this);
@@ -5410,7 +5410,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 1585;
-			this.sort_key();
+			await this.sort_key();
 			this.state = 1589;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -5418,7 +5418,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1586;
-				this.sort_key();
+				await this.sort_key();
 				}
 				}
 				this.state = 1591;
@@ -5437,19 +5437,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public sort_key(): Sort_keyContext {
+	public async sort_key() {
 		let _localctx: Sort_keyContext = new Sort_keyContext(this._ctx, this.state);
 		this.enterRule(_localctx, 144, cobolParser.RULE_sort_key);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1592;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -5462,12 +5462,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public set_statement(): Set_statementContext {
+	public async set_statement() {
 		let _localctx: Set_statementContext = new Set_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 146, cobolParser.RULE_set_statement);
 		try {
@@ -5478,7 +5478,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1594;
-				this.set_statement_form1();
+				await this.set_statement_form1();
 				}
 				break;
 
@@ -5486,7 +5486,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 1595;
-				this.set_statement_form2();
+				await this.set_statement_form2();
 				}
 				break;
 
@@ -5494,7 +5494,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 1596;
-				this.set_statement_form3();
+				await this.set_statement_form3();
 				}
 				break;
 
@@ -5502,7 +5502,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 1597;
-				this.set_statement_form4();
+				await this.set_statement_form4();
 				}
 				break;
 
@@ -5510,7 +5510,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 5);
 				{
 				this.state = 1598;
-				this.set_statement_form5();
+				await this.set_statement_form5();
 				}
 				break;
 
@@ -5518,7 +5518,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 6);
 				{
 				this.state = 1599;
-				this.set_statement_form6();
+				await this.set_statement_form6();
 				}
 				break;
 			}
@@ -5533,12 +5533,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public set_statement_form1(): Set_statement_form1Context {
+	public async set_statement_form1() {
 		let _localctx: Set_statement_form1Context = new Set_statement_form1Context(this._ctx, this.state);
 		this.enterRule(_localctx, 148, cobolParser.RULE_set_statement_form1);
 		let _la: number;
@@ -5554,7 +5554,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1603;
-				this.identifier_result();
+				await this.identifier_result();
 				}
 				}
 				this.state = 1606;
@@ -5564,7 +5564,7 @@ export class cobolParser extends Parser {
 			this.state = 1608;
 			this.match(cobolParser.TO);
 			this.state = 1609;
-			this.set_val();
+			await this.set_val();
 			}
 		}
 		catch (re) {
@@ -5577,12 +5577,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public set_statement_form2(): Set_statement_form2Context {
+	public async set_statement_form2() {
 		let _localctx: Set_statement_form2Context = new Set_statement_form2Context(this._ctx, this.state);
 		this.enterRule(_localctx, 150, cobolParser.RULE_set_statement_form2);
 		let _la: number;
@@ -5598,7 +5598,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1612;
-				this.identifier_result();
+				await this.identifier_result();
 				}
 				}
 				this.state = 1615;
@@ -5615,12 +5615,12 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 1618;
 			this.match(cobolParser.BY);
 			this.state = 1619;
-			this.set_increm();
+			await this.set_increm();
 			}
 		}
 		catch (re) {
@@ -5633,12 +5633,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public set_statement_form3(): Set_statement_form3Context {
+	public async set_statement_form3() {
 		let _localctx: Set_statement_form3Context = new Set_statement_form3Context(this._ctx, this.state);
 		this.enterRule(_localctx, 152, cobolParser.RULE_set_statement_form3);
 		let _la: number;
@@ -5654,7 +5654,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1622;
-				this.identifier_result();
+				await this.identifier_result();
 				}
 				}
 				this.state = 1625;
@@ -5677,12 +5677,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public set_statement_form4(): Set_statement_form4Context {
+	public async set_statement_form4() {
 		let _localctx: Set_statement_form4Context = new Set_statement_form4Context(this._ctx, this.state);
 		this.enterRule(_localctx, 154, cobolParser.RULE_set_statement_form4);
 		let _la: number;
@@ -5698,7 +5698,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1631;
-				this.identifier_result();
+				await this.identifier_result();
 				this.state = 1632;
 				this.match(cobolParser.TO);
 				this.state = 1633;
@@ -5711,7 +5711,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 				}
@@ -5731,12 +5731,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public set_statement_form5(): Set_statement_form5Context {
+	public async set_statement_form5() {
 		let _localctx: Set_statement_form5Context = new Set_statement_form5Context(this._ctx, this.state);
 		this.enterRule(_localctx, 156, cobolParser.RULE_set_statement_form5);
 		let _la: number;
@@ -5752,7 +5752,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 1640;
-				this.identifier_result();
+				await this.identifier_result();
 				}
 				}
 				this.state = 1643;
@@ -5774,7 +5774,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 1650;
-			this.identifier_result();
+			await this.identifier_result();
 			}
 		}
 		catch (re) {
@@ -5787,12 +5787,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public set_statement_form6(): Set_statement_form6Context {
+	public async set_statement_form6() {
 		let _localctx: Set_statement_form6Context = new Set_statement_form6Context(this._ctx, this.state);
 		this.enterRule(_localctx, 158, cobolParser.RULE_set_statement_form6);
 		let _la: number;
@@ -5802,7 +5802,7 @@ export class cobolParser extends Parser {
 			this.state = 1652;
 			this.match(cobolParser.SET);
 			this.state = 1653;
-			this.identifier_result();
+			await this.identifier_result();
 			this.state = 1654;
 			this.match(cobolParser.TO);
 			this.state = 1655;
@@ -5815,7 +5815,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -5829,12 +5829,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public set_increm(): Set_incremContext {
+	public async set_increm() {
 		let _localctx: Set_incremContext = new Set_incremContext(this._ctx, this.state);
 		this.enterRule(_localctx, 160, cobolParser.RULE_set_increm);
 		try {
@@ -5846,7 +5846,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1657;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.NUMERIC_LITERAL_:
@@ -5870,12 +5870,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public set_val(): Set_valContext {
+	public async set_val() {
 		let _localctx: Set_valContext = new Set_valContext(this._ctx, this.state);
 		this.enterRule(_localctx, 162, cobolParser.RULE_set_val);
 		try {
@@ -5887,7 +5887,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1661;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.NUMERIC_LITERAL_:
@@ -5911,12 +5911,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public search_statement(): Search_statementContext {
+	public async search_statement() {
 		let _localctx: Search_statementContext = new Search_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 164, cobolParser.RULE_search_statement);
 		let _la: number;
@@ -5931,7 +5931,7 @@ export class cobolParser extends Parser {
 				this.state = 1665;
 				this.match(cobolParser.SEARCH);
 				this.state = 1666;
-				this.src_table();
+				await this.src_table();
 				this.state = 1669;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -5940,7 +5940,7 @@ export class cobolParser extends Parser {
 					this.state = 1667;
 					this.match(cobolParser.VARYING);
 					this.state = 1668;
-					this.search_pointer();
+					await this.search_pointer();
 					}
 				}
 
@@ -5950,7 +5950,7 @@ export class cobolParser extends Parser {
 				if (_la === cobolParser.AT || _la === cobolParser.END) {
 					{
 					this.state = 1671;
-					this.at_end();
+					await this.at_end();
 					}
 				}
 
@@ -5968,7 +5968,7 @@ export class cobolParser extends Parser {
 						this.state = 1674;
 						this.match(cobolParser.WHEN);
 						this.state = 1675;
-						this.logic_expression(0);
+						await this.logic_expression(0);
 						this.state = 1677;
 						this._errHandler.sync(this);
 						_la = this._input.LA(1);
@@ -5976,7 +5976,7 @@ export class cobolParser extends Parser {
 							{
 							{
 							this.state = 1676;
-							this.statement();
+							await this.statement();
 							}
 							}
 							this.state = 1679;
@@ -6007,7 +6007,7 @@ export class cobolParser extends Parser {
 							this.state = 1687;
 							this.match(cobolParser.WHEN);
 							this.state = 1688;
-							this.logic_expression(0);
+							await this.logic_expression(0);
 							this.state = 1699;
 							this._errHandler.sync(this);
 							switch (this._input.LA(1)) {
@@ -6062,7 +6062,7 @@ export class cobolParser extends Parser {
 										{
 										{
 										this.state = 1689;
-										this.statement();
+										await this.statement();
 										}
 										}
 										break;
@@ -6120,21 +6120,21 @@ export class cobolParser extends Parser {
 				this.state = 1708;
 				this.match(cobolParser.ALL);
 				this.state = 1709;
-				this.src_table();
+				await this.src_table();
 				this.state = 1711;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === cobolParser.AT || _la === cobolParser.END) {
 					{
 					this.state = 1710;
-					this.at_end();
+					await this.at_end();
 					}
 				}
 
 				this.state = 1713;
 				this.match(cobolParser.WHEN);
 				this.state = 1714;
-				this.search_condition();
+				await this.search_condition();
 				this.state = 1719;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -6144,7 +6144,7 @@ export class cobolParser extends Parser {
 					this.state = 1715;
 					this.match(cobolParser.AND);
 					this.state = 1716;
-					this.search_condition();
+					await this.search_condition();
 					}
 					}
 					this.state = 1721;
@@ -6205,7 +6205,7 @@ export class cobolParser extends Parser {
 							{
 							{
 							this.state = 1722;
-							this.statement();
+							await this.statement();
 							}
 							}
 							break;
@@ -6253,12 +6253,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public search_condition(): Search_conditionContext {
+	public async search_condition() {
 		let _localctx: Search_conditionContext = new Search_conditionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 166, cobolParser.RULE_search_condition);
 		let _la: number;
@@ -6270,7 +6270,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1736;
-				this.search_elemnt();
+				await this.search_elemnt();
 				this.state = 1748;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 157, this._ctx) ) {
@@ -6319,7 +6319,7 @@ export class cobolParser extends Parser {
 					break;
 				}
 				this.state = 1750;
-				this.search_arg();
+				await this.search_arg();
 				}
 				break;
 
@@ -6327,7 +6327,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 1752;
-				this.condition_name();
+				await this.condition_name();
 				}
 				break;
 			}
@@ -6342,19 +6342,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public search_arg(): Search_argContext {
+	public async search_arg() {
 		let _localctx: Search_argContext = new Search_argContext(this._ctx, this.state);
 		this.enterRule(_localctx, 168, cobolParser.RULE_search_arg);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1755;
-			this.arithmetic_expression(0);
+			await this.arithmetic_expression(0);
 			}
 		}
 		catch (re) {
@@ -6367,19 +6367,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public search_elemnt(): Search_elemntContext {
+	public async search_elemnt() {
 		let _localctx: Search_elemntContext = new Search_elemntContext(this._ctx, this.state);
 		this.enterRule(_localctx, 170, cobolParser.RULE_search_elemnt);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1757;
-			this.identifier_result();
+			await this.identifier_result();
 			}
 		}
 		catch (re) {
@@ -6392,19 +6392,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public search_pointer(): Search_pointerContext {
+	public async search_pointer() {
 		let _localctx: Search_pointerContext = new Search_pointerContext(this._ctx, this.state);
 		this.enterRule(_localctx, 172, cobolParser.RULE_search_pointer);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1759;
-			this.identifier();
+			await this.identifier();
 			}
 		}
 		catch (re) {
@@ -6417,19 +6417,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public src_table(): Src_tableContext {
+	public async src_table() {
 		let _localctx: Src_tableContext = new Src_tableContext(this._ctx, this.state);
 		this.enterRule(_localctx, 174, cobolParser.RULE_src_table);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1761;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -6442,12 +6442,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public rewrite_statement(): Rewrite_statementContext {
+	public async rewrite_statement() {
 		let _localctx: Rewrite_statementContext = new Rewrite_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 176, cobolParser.RULE_rewrite_statement);
 		let _la: number;
@@ -6457,7 +6457,7 @@ export class cobolParser extends Parser {
 			this.state = 1763;
 			this.match(cobolParser.REWRITE);
 			this.state = 1764;
-			this.rewrite_rec_name();
+			await this.rewrite_rec_name();
 			this.state = 1767;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -6466,7 +6466,7 @@ export class cobolParser extends Parser {
 				this.state = 1765;
 				this.match(cobolParser.FROM);
 				this.state = 1766;
-				this.src_item();
+				await this.src_item();
 				}
 			}
 
@@ -6498,7 +6498,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 1776;
-				this.invalid_key_variants();
+				await this.invalid_key_variants();
 				}
 				break;
 			}
@@ -6524,19 +6524,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public rewrite_rec_name(): Rewrite_rec_nameContext {
+	public async rewrite_rec_name() {
 		let _localctx: Rewrite_rec_nameContext = new Rewrite_rec_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 178, cobolParser.RULE_rewrite_rec_name);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1782;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -6549,12 +6549,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public return_statement(): Return_statementContext {
+	public async return_statement() {
 		let _localctx: Return_statementContext = new Return_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 180, cobolParser.RULE_return_statement);
 		let _la: number;
@@ -6564,7 +6564,7 @@ export class cobolParser extends Parser {
 			this.state = 1784;
 			this.match(cobolParser.RETURN);
 			this.state = 1785;
-			this.smrg_file();
+			await this.smrg_file();
 			this.state = 1787;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -6583,12 +6583,12 @@ export class cobolParser extends Parser {
 				this.state = 1789;
 				this.match(cobolParser.INTO);
 				this.state = 1790;
-				this.dest_item();
+				await this.dest_item();
 				}
 			}
 
 			this.state = 1793;
-			this.at_end();
+			await this.at_end();
 			this.state = 1796;
 			this._errHandler.sync(this);
 			switch ( this.interpreter.adaptivePredict(this._input, 166, this._ctx) ) {
@@ -6597,7 +6597,7 @@ export class cobolParser extends Parser {
 				this.state = 1794;
 				this.match(cobolParser.NOT);
 				this.state = 1795;
-				this.at_end();
+				await this.at_end();
 				}
 				break;
 			}
@@ -6623,12 +6623,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public smrg_file(): Smrg_fileContext {
+	public async smrg_file() {
 		let _localctx: Smrg_fileContext = new Smrg_fileContext(this._ctx, this.state);
 		this.enterRule(_localctx, 182, cobolParser.RULE_smrg_file);
 		try {
@@ -6648,12 +6648,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public release_statement(): Release_statementContext {
+	public async release_statement() {
 		let _localctx: Release_statementContext = new Release_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 184, cobolParser.RULE_release_statement);
 		let _la: number;
@@ -6663,7 +6663,7 @@ export class cobolParser extends Parser {
 			this.state = 1803;
 			this.match(cobolParser.RELEASE);
 			this.state = 1804;
-			this.release_rec();
+			await this.release_rec();
 			this.state = 1807;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -6672,7 +6672,7 @@ export class cobolParser extends Parser {
 				this.state = 1805;
 				this.match(cobolParser.FROM);
 				this.state = 1806;
-				this.release_src_area();
+				await this.release_src_area();
 				}
 			}
 
@@ -6688,19 +6688,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public release_src_area(): Release_src_areaContext {
+	public async release_src_area() {
 		let _localctx: Release_src_areaContext = new Release_src_areaContext(this._ctx, this.state);
 		this.enterRule(_localctx, 186, cobolParser.RULE_release_src_area);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1809;
-			this.identifier();
+			await this.identifier();
 			}
 		}
 		catch (re) {
@@ -6713,19 +6713,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public release_rec(): Release_recContext {
+	public async release_rec() {
 		let _localctx: Release_recContext = new Release_recContext(this._ctx, this.state);
 		this.enterRule(_localctx, 188, cobolParser.RULE_release_rec);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1811;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -6738,12 +6738,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public record_statement(): Record_statementContext {
+	public async record_statement() {
 		let _localctx: Record_statementContext = new Record_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 190, cobolParser.RULE_record_statement);
 		let _la: number;
@@ -6755,7 +6755,7 @@ export class cobolParser extends Parser {
 			this.state = 1814;
 			this.match(cobolParser.DEPENDENCY);
 			this.state = 1815;
-			this.path_name();
+			await this.path_name();
 			this.state = 1821;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -6774,7 +6774,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 1820;
-				this.relation_type();
+				await this.relation_type();
 				}
 			}
 
@@ -6810,12 +6810,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public relation_type(): Relation_typeContext {
+	public async relation_type() {
 		let _localctx: Relation_typeContext = new Relation_typeContext(this._ctx, this.state);
 		this.enterRule(_localctx, 192, cobolParser.RULE_relation_type);
 		let _la: number;
@@ -6832,7 +6832,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -6846,12 +6846,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public path_name(): Path_nameContext {
+	public async path_name() {
 		let _localctx: Path_nameContext = new Path_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 194, cobolParser.RULE_path_name);
 		let _la: number;
@@ -6868,7 +6868,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -6882,12 +6882,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public read_statement(): Read_statementContext {
+	public async read_statement() {
 		let _localctx: Read_statementContext = new Read_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 196, cobolParser.RULE_read_statement);
 		let _la: number;
@@ -6897,7 +6897,7 @@ export class cobolParser extends Parser {
 			this.state = 1833;
 			this.match(cobolParser.READ);
 			this.state = 1834;
-			this.file_name();
+			await this.file_name();
 			this.state = 1836;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -6913,7 +6913,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 			}
@@ -6936,7 +6936,7 @@ export class cobolParser extends Parser {
 				this.state = 1841;
 				this.match(cobolParser.INTO);
 				this.state = 1842;
-				this.dest_item();
+				await this.dest_item();
 				}
 			}
 
@@ -6950,7 +6950,7 @@ export class cobolParser extends Parser {
 			case cobolParser.WITH:
 				{
 				this.state = 1845;
-				this.read_options();
+				await this.read_options();
 				this.state = 1851;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -6969,7 +6969,7 @@ export class cobolParser extends Parser {
 					}
 
 					this.state = 1850;
-					this.key_name();
+					await this.key_name();
 					}
 				}
 
@@ -6990,14 +6990,14 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 1857;
-				this.key_name();
+				await this.key_name();
 				this.state = 1859;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === cobolParser.ALLOWING || _la === cobolParser.LOCK || _la === cobolParser.NO || _la === cobolParser.REGARDLESS || _la === cobolParser.WITH) {
 					{
 					this.state = 1858;
-					this.read_options();
+					await this.read_options();
 					}
 				}
 
@@ -7087,14 +7087,14 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 1863;
-				this.at_end_variants();
+				await this.at_end_variants();
 				}
 				break;
 
 			case 2:
 				{
 				this.state = 1864;
-				this.invalid_key_variants();
+				await this.invalid_key_variants();
 				}
 				break;
 			}
@@ -7120,12 +7120,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public regard_allow(): Regard_allowContext {
+	public async regard_allow() {
 		let _localctx: Regard_allowContext = new Regard_allowContext(this._ctx, this.state);
 		this.enterRule(_localctx, 198, cobolParser.RULE_regard_allow);
 		let _la: number;
@@ -7215,12 +7215,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public read_options(): Read_optionsContext {
+	public async read_options() {
 		let _localctx: Read_optionsContext = new Read_optionsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 200, cobolParser.RULE_read_options);
 		let _la: number;
@@ -7262,7 +7262,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 1895;
-				this.regard_allow();
+				await this.regard_allow();
 				}
 				break;
 			default:
@@ -7279,12 +7279,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public perform_statement(): Perform_statementContext {
+	public async perform_statement() {
 		let _localctx: Perform_statementContext = new Perform_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 202, cobolParser.RULE_perform_statement);
 		let _la: number;
@@ -7299,7 +7299,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 1899;
-				this.proc_thru_proc();
+				await this.proc_thru_proc();
 				}
 				break;
 			}
@@ -7314,21 +7314,21 @@ export class cobolParser extends Parser {
 				case 1:
 					{
 					this.state = 1902;
-					this.perform_times();
+					await this.perform_times();
 					}
 					break;
 
 				case 2:
 					{
 					this.state = 1903;
-					this.perform_until();
+					await this.perform_until();
 					}
 					break;
 
 				case 3:
 					{
 					this.state = 1904;
-					this.perform_varying();
+					await this.perform_varying();
 					}
 					break;
 				}
@@ -7347,7 +7347,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1909;
-					this.statement();
+					await this.statement();
 					}
 					}
 					this.state = 1912;
@@ -7371,12 +7371,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public proc_thru_proc(): Proc_thru_procContext {
+	public async proc_thru_proc() {
 		let _localctx: Proc_thru_procContext = new Proc_thru_procContext(this._ctx, this.state);
 		this.enterRule(_localctx, 204, cobolParser.RULE_proc_thru_proc);
 		let _la: number;
@@ -7384,7 +7384,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1918;
-			this.proc_name();
+			await this.proc_name();
 			this.state = 1921;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -7400,10 +7400,10 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 1920;
-				this.proc_name();
+				await this.proc_name();
 				}
 			}
 
@@ -7419,12 +7419,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public perform_times(): Perform_timesContext {
+	public async perform_times() {
 		let _localctx: Perform_timesContext = new Perform_timesContext(this._ctx, this.state);
 		this.enterRule(_localctx, 206, cobolParser.RULE_perform_times);
 		try {
@@ -7437,7 +7437,7 @@ export class cobolParser extends Parser {
 			case cobolParser.USER_DEFINED_WORD_:
 				{
 				this.state = 1923;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.NUMERIC_LITERAL_:
@@ -7463,12 +7463,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public with_test(): With_testContext {
+	public async with_test() {
 		let _localctx: With_testContext = new With_testContext(this._ctx, this.state);
 		this.enterRule(_localctx, 208, cobolParser.RULE_with_test);
 		let _la: number;
@@ -7497,7 +7497,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -7511,12 +7511,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public perform_until(): Perform_untilContext {
+	public async perform_until() {
 		let _localctx: Perform_untilContext = new Perform_untilContext(this._ctx, this.state);
 		this.enterRule(_localctx, 210, cobolParser.RULE_perform_until);
 		let _la: number;
@@ -7529,14 +7529,14 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.TEST || _la === cobolParser.WITH) {
 				{
 				this.state = 1935;
-				this.with_test();
+				await this.with_test();
 				}
 			}
 
 			this.state = 1938;
 			this.match(cobolParser.UNTIL);
 			this.state = 1939;
-			this.logic_expression(0);
+			await this.logic_expression(0);
 			}
 		}
 		catch (re) {
@@ -7549,12 +7549,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public perform_varying(): Perform_varyingContext {
+	public async perform_varying() {
 		let _localctx: Perform_varyingContext = new Perform_varyingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 212, cobolParser.RULE_perform_varying);
 		let _la: number;
@@ -7567,18 +7567,18 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.TEST || _la === cobolParser.WITH) {
 				{
 				this.state = 1941;
-				this.with_test();
+				await this.with_test();
 				}
 			}
 
 			this.state = 1944;
 			this.match(cobolParser.VARYING);
 			this.state = 1945;
-			this.perform_range();
+			await this.perform_range();
 			this.state = 1946;
 			this.match(cobolParser.UNTIL);
 			this.state = 1947;
-			this.logic_expression(0);
+			await this.logic_expression(0);
 			this.state = 1955;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -7588,11 +7588,11 @@ export class cobolParser extends Parser {
 				this.state = 1948;
 				this.match(cobolParser.AFTER);
 				this.state = 1949;
-				this.perform_range();
+				await this.perform_range();
 				this.state = 1950;
 				this.match(cobolParser.UNTIL);
 				this.state = 1951;
-				this.logic_expression(0);
+				await this.logic_expression(0);
 				}
 				}
 				this.state = 1957;
@@ -7611,27 +7611,27 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public perform_range(): Perform_rangeContext {
+	public async perform_range() {
 		let _localctx: Perform_rangeContext = new Perform_rangeContext(this._ctx, this.state);
 		this.enterRule(_localctx, 214, cobolParser.RULE_perform_range);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1958;
-			this.perform_var();
+			await this.perform_var();
 			this.state = 1959;
 			this.match(cobolParser.FROM);
 			this.state = 1960;
-			this.perform_init();
+			await this.perform_init();
 			this.state = 1961;
 			this.match(cobolParser.BY);
 			this.state = 1962;
-			this.perform_increm();
+			await this.perform_increm();
 			}
 		}
 		catch (re) {
@@ -7644,12 +7644,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public perform_increm(): Perform_incremContext {
+	public async perform_increm() {
 		let _localctx: Perform_incremContext = new Perform_incremContext(this._ctx, this.state);
 		this.enterRule(_localctx, 216, cobolParser.RULE_perform_increm);
 		try {
@@ -7661,7 +7661,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1964;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.NUMERIC_LITERAL_:
@@ -7685,12 +7685,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public perform_init(): Perform_initContext {
+	public async perform_init() {
 		let _localctx: Perform_initContext = new Perform_initContext(this._ctx, this.state);
 		this.enterRule(_localctx, 218, cobolParser.RULE_perform_init);
 		try {
@@ -7702,7 +7702,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 1968;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.NUMERIC_LITERAL_:
@@ -7726,19 +7726,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public perform_var(): Perform_varContext {
+	public async perform_var() {
 		let _localctx: Perform_varContext = new Perform_varContext(this._ctx, this.state);
 		this.enterRule(_localctx, 220, cobolParser.RULE_perform_var);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 1972;
-			this.identifier_result();
+			await this.identifier_result();
 			}
 		}
 		catch (re) {
@@ -7751,12 +7751,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public open_statement(): Open_statementContext {
+	public async open_statement() {
 		let _localctx: Open_statementContext = new Open_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 222, cobolParser.RULE_open_statement);
 		let _la: number;
@@ -7776,7 +7776,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 1975;
-					this.open_definition();
+					await this.open_definition();
 					}
 					}
 					this.state = 1978;
@@ -7807,7 +7807,7 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					this.state = 1990;
 					this._errHandler.sync(this);
@@ -7816,7 +7816,7 @@ export class cobolParser extends Parser {
 						{
 						{
 						this.state = 1982;
-						this.file_name();
+						await this.file_name();
 						this.state = 1988;
 						this._errHandler.sync(this);
 						_la = this._input.LA(1);
@@ -7865,12 +7865,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public open_definition(): Open_definitionContext {
+	public async open_definition() {
 		let _localctx: Open_definitionContext = new Open_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 224, cobolParser.RULE_open_definition);
 		let _la: number;
@@ -7887,7 +7887,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 2012;
 			this._errHandler.sync(this);
@@ -7896,7 +7896,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2001;
-				this.file_name();
+				await this.file_name();
 				this.state = 2007;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 211, this._ctx) ) {
@@ -7925,7 +7925,7 @@ export class cobolParser extends Parser {
 				if (_la === cobolParser.ALLOWING || _la === cobolParser.LOCK || _la === cobolParser.WITH) {
 					{
 					this.state = 2009;
-					this.open_file_attributes();
+					await this.open_file_attributes();
 					}
 				}
 
@@ -7947,12 +7947,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public open_file_attributes(): Open_file_attributesContext {
+	public async open_file_attributes() {
 		let _localctx: Open_file_attributesContext = new Open_file_attributesContext(this._ctx, this.state);
 		this.enterRule(_localctx, 226, cobolParser.RULE_open_file_attributes);
 		let _la: number;
@@ -8150,12 +8150,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public multiply_statement(): Multiply_statementContext {
+	public async multiply_statement() {
 		let _localctx: Multiply_statementContext = new Multiply_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 228, cobolParser.RULE_multiply_statement);
 		let _la: number;
@@ -8165,7 +8165,7 @@ export class cobolParser extends Parser {
 			this.state = 2062;
 			this.match(cobolParser.MULTIPLY);
 			this.state = 2063;
-			this.mult_num();
+			await this.mult_num();
 			this.state = 2064;
 			this.match(cobolParser.BY);
 			this.state = 2068;
@@ -8174,7 +8174,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 2065;
-				this.mult_num();
+				await this.mult_num();
 				this.state = 2066;
 				this.match(cobolParser.GIVING);
 				}
@@ -8187,7 +8187,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2070;
-				this.identifier_result();
+				await this.identifier_result();
 				this.state = 2072;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -8210,7 +8210,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 2078;
-				this.on_size_variants();
+				await this.on_size_variants();
 				}
 				break;
 			}
@@ -8236,12 +8236,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public mult_num(): Mult_numContext {
+	public async mult_num() {
 		let _localctx: Mult_numContext = new Mult_numContext(this._ctx, this.state);
 		this.enterRule(_localctx, 230, cobolParser.RULE_mult_num);
 		try {
@@ -8253,7 +8253,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2084;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.NUMERIC_LITERAL_:
@@ -8277,12 +8277,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public merge_statement(): Merge_statementContext {
+	public async merge_statement() {
 		let _localctx: Merge_statementContext = new Merge_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 232, cobolParser.RULE_merge_statement);
 		let _la: number;
@@ -8292,7 +8292,7 @@ export class cobolParser extends Parser {
 			this.state = 2088;
 			this.match(cobolParser.MERGE);
 			this.state = 2089;
-			this.mergefile();
+			await this.mergefile();
 			this.state = 2091;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -8300,7 +8300,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2090;
-				this.merge_on();
+				await this.merge_on();
 				}
 				}
 				this.state = 2093;
@@ -8335,7 +8335,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 2102;
-				this.alpha_name();
+				await this.alpha_name();
 				}
 			}
 
@@ -8348,7 +8348,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2106;
-				this.infile();
+				await this.infile();
 				}
 				}
 				this.state = 2109;
@@ -8361,13 +8361,13 @@ export class cobolParser extends Parser {
 			case cobolParser.OUTPUT:
 				{
 				this.state = 2111;
-				this.output_proc();
+				await this.output_proc();
 				}
 				break;
 			case cobolParser.GIVING:
 				{
 				this.state = 2112;
-				this.giving_file();
+				await this.giving_file();
 				}
 				break;
 			default:
@@ -8385,12 +8385,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public output_proc(): Output_procContext {
+	public async output_proc() {
 		let _localctx: Output_procContext = new Output_procContext(this._ctx, this.state);
 		this.enterRule(_localctx, 234, cobolParser.RULE_output_proc);
 		let _la: number;
@@ -8412,7 +8412,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 2120;
-			this.proc_thru_proc();
+			await this.proc_thru_proc();
 			}
 		}
 		catch (re) {
@@ -8425,19 +8425,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public first_proc(): First_procContext {
+	public async first_proc() {
 		let _localctx: First_procContext = new First_procContext(this._ctx, this.state);
 		this.enterRule(_localctx, 236, cobolParser.RULE_first_proc);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2122;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -8450,19 +8450,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public end_proc(): End_procContext {
+	public async end_proc() {
 		let _localctx: End_procContext = new End_procContext(this._ctx, this.state);
 		this.enterRule(_localctx, 238, cobolParser.RULE_end_proc);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2124;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -8475,12 +8475,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public giving_file(): Giving_fileContext {
+	public async giving_file() {
 		let _localctx: Giving_fileContext = new Giving_fileContext(this._ctx, this.state);
 		this.enterRule(_localctx, 240, cobolParser.RULE_giving_file);
 		try {
@@ -8489,7 +8489,7 @@ export class cobolParser extends Parser {
 			this.state = 2126;
 			this.match(cobolParser.GIVING);
 			this.state = 2127;
-			this.file_name();
+			await this.file_name();
 			}
 		}
 		catch (re) {
@@ -8502,12 +8502,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public infile(): InfileContext {
+	public async infile() {
 		let _localctx: InfileContext = new InfileContext(this._ctx, this.state);
 		this.enterRule(_localctx, 242, cobolParser.RULE_infile);
 		try {
@@ -8527,12 +8527,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public merge_on(): Merge_onContext {
+	public async merge_on() {
 		let _localctx: Merge_onContext = new Merge_onContext(this._ctx, this.state);
 		this.enterRule(_localctx, 244, cobolParser.RULE_merge_on);
 		let _la: number;
@@ -8559,7 +8559,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 2136;
 			this._errHandler.sync(this);
@@ -8578,7 +8578,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2138;
-				this.mergekey();
+				await this.mergekey();
 				}
 				}
 				this.state = 2141;
@@ -8597,12 +8597,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public mergefile(): MergefileContext {
+	public async mergefile() {
 		let _localctx: MergefileContext = new MergefileContext(this._ctx, this.state);
 		this.enterRule(_localctx, 246, cobolParser.RULE_mergefile);
 		try {
@@ -8622,19 +8622,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public mergekey(): MergekeyContext {
+	public async mergekey() {
 		let _localctx: MergekeyContext = new MergekeyContext(this._ctx, this.state);
 		this.enterRule(_localctx, 248, cobolParser.RULE_mergekey);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2145;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -8647,12 +8647,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public inspect_statement(): Inspect_statementContext {
+	public async inspect_statement() {
 		let _localctx: Inspect_statementContext = new Inspect_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 250, cobolParser.RULE_inspect_statement);
 		let _la: number;
@@ -8662,21 +8662,21 @@ export class cobolParser extends Parser {
 			this.state = 2147;
 			this.match(cobolParser.INSPECT);
 			this.state = 2148;
-			this.src_string();
+			await this.src_string();
 			this.state = 2155;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case cobolParser.TALLYING:
 				{
 				this.state = 2149;
-				this.inspect_tallying();
+				await this.inspect_tallying();
 				this.state = 2151;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === cobolParser.REPLACING) {
 					{
 					this.state = 2150;
-					this.inspect_replacing();
+					await this.inspect_replacing();
 					}
 				}
 
@@ -8685,13 +8685,13 @@ export class cobolParser extends Parser {
 			case cobolParser.REPLACING:
 				{
 				this.state = 2153;
-				this.inspect_replacing();
+				await this.inspect_replacing();
 				}
 				break;
 			case cobolParser.CONVERTING:
 				{
 				this.state = 2154;
-				this.inspect_converting();
+				await this.inspect_converting();
 				}
 				break;
 			default:
@@ -8709,12 +8709,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public inspect_converting(): Inspect_convertingContext {
+	public async inspect_converting() {
 		let _localctx: Inspect_convertingContext = new Inspect_convertingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 252, cobolParser.RULE_inspect_converting);
 		let _la: number;
@@ -8724,11 +8724,11 @@ export class cobolParser extends Parser {
 			this.state = 2157;
 			this.match(cobolParser.CONVERTING);
 			this.state = 2158;
-			this.compare_chars();
+			await this.compare_chars();
 			this.state = 2159;
 			this.match(cobolParser.TO);
 			this.state = 2160;
-			this.convert_chars();
+			await this.convert_chars();
 			this.state = 2164;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -8736,7 +8736,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2161;
-				this.delim_definition();
+				await this.delim_definition();
 				}
 				}
 				this.state = 2166;
@@ -8755,19 +8755,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public convert_chars(): Convert_charsContext {
+	public async convert_chars() {
 		let _localctx: Convert_charsContext = new Convert_charsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 254, cobolParser.RULE_convert_chars);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2167;
-			this.compare_val();
+			await this.compare_val();
 			}
 		}
 		catch (re) {
@@ -8780,19 +8780,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public compare_chars(): Compare_charsContext {
+	public async compare_chars() {
 		let _localctx: Compare_charsContext = new Compare_charsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 256, cobolParser.RULE_compare_chars);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2169;
-			this.compare_val();
+			await this.compare_val();
 			}
 		}
 		catch (re) {
@@ -8805,12 +8805,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public inspect_replacing(): Inspect_replacingContext {
+	public async inspect_replacing() {
 		let _localctx: Inspect_replacingContext = new Inspect_replacingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 258, cobolParser.RULE_inspect_replacing);
 		let _la: number;
@@ -8830,7 +8830,7 @@ export class cobolParser extends Parser {
 				case cobolParser.CHARACTERS:
 					{
 					this.state = 2172;
-					this.replacing_characters();
+					await this.replacing_characters();
 					}
 					break;
 				case cobolParser.ALL:
@@ -8838,7 +8838,7 @@ export class cobolParser extends Parser {
 				case cobolParser.LEADING:
 					{
 					this.state = 2173;
-					this.replacing_all();
+					await this.replacing_all();
 					}
 					break;
 				default:
@@ -8861,12 +8861,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public replacing_all(): Replacing_allContext {
+	public async replacing_all() {
 		let _localctx: Replacing_allContext = new Replacing_allContext(this._ctx, this.state);
 		this.enterRule(_localctx, 260, cobolParser.RULE_replacing_all);
 		let _la: number;
@@ -8883,7 +8883,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 2188;
 			this._errHandler.sync(this);
@@ -8892,11 +8892,11 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2179;
-				this.compare_val();
+				await this.compare_val();
 				this.state = 2180;
 				this.match(cobolParser.BY);
 				this.state = 2181;
-				this.replace_val();
+				await this.replace_val();
 				this.state = 2185;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -8904,7 +8904,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 2182;
-					this.delim_definition();
+					await this.delim_definition();
 					}
 					}
 					this.state = 2187;
@@ -8929,19 +8929,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public replace_val(): Replace_valContext {
+	public async replace_val() {
 		let _localctx: Replace_valContext = new Replace_valContext(this._ctx, this.state);
 		this.enterRule(_localctx, 262, cobolParser.RULE_replace_val);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2192;
-			this.compare_val();
+			await this.compare_val();
 			}
 		}
 		catch (re) {
@@ -8954,12 +8954,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public replacing_characters(): Replacing_charactersContext {
+	public async replacing_characters() {
 		let _localctx: Replacing_charactersContext = new Replacing_charactersContext(this._ctx, this.state);
 		this.enterRule(_localctx, 264, cobolParser.RULE_replacing_characters);
 		let _la: number;
@@ -8971,7 +8971,7 @@ export class cobolParser extends Parser {
 			this.state = 2195;
 			this.match(cobolParser.BY);
 			this.state = 2196;
-			this.replace_char();
+			await this.replace_char();
 			this.state = 2200;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -8979,7 +8979,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2197;
-				this.delim_definition();
+				await this.delim_definition();
 				}
 				}
 				this.state = 2202;
@@ -8998,19 +8998,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public replace_char(): Replace_charContext {
+	public async replace_char() {
 		let _localctx: Replace_charContext = new Replace_charContext(this._ctx, this.state);
 		this.enterRule(_localctx, 266, cobolParser.RULE_replace_char);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2203;
-			this.compare_val();
+			await this.compare_val();
 			}
 		}
 		catch (re) {
@@ -9023,12 +9023,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public inspect_tallying(): Inspect_tallyingContext {
+	public async inspect_tallying() {
 		let _localctx: Inspect_tallyingContext = new Inspect_tallyingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 268, cobolParser.RULE_inspect_tallying);
 		let _la: number;
@@ -9044,7 +9044,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2206;
-				this.tallying_for();
+				await this.tallying_for();
 				}
 				}
 				this.state = 2209;
@@ -9063,12 +9063,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public tallying_for(): Tallying_forContext {
+	public async tallying_for() {
 		let _localctx: Tallying_forContext = new Tallying_forContext(this._ctx, this.state);
 		this.enterRule(_localctx, 270, cobolParser.RULE_tallying_for);
 		let _la: number;
@@ -9076,7 +9076,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2211;
-			this.tally_ctr();
+			await this.tally_ctr();
 			this.state = 2212;
 			this.match(cobolParser.FOR);
 			this.state = 2215;
@@ -9090,14 +9090,14 @@ export class cobolParser extends Parser {
 				case cobolParser.CHARACTERS:
 					{
 					this.state = 2213;
-					this.tallying_for_characters();
+					await this.tallying_for_characters();
 					}
 					break;
 				case cobolParser.ALL:
 				case cobolParser.LEADING:
 					{
 					this.state = 2214;
-					this.tallying_for_all();
+					await this.tallying_for_all();
 					}
 					break;
 				default:
@@ -9120,12 +9120,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public tallying_for_characters(): Tallying_for_charactersContext {
+	public async tallying_for_characters() {
 		let _localctx: Tallying_for_charactersContext = new Tallying_for_charactersContext(this._ctx, this.state);
 		this.enterRule(_localctx, 272, cobolParser.RULE_tallying_for_characters);
 		let _la: number;
@@ -9141,7 +9141,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2220;
-				this.delim_definition();
+				await this.delim_definition();
 				}
 				}
 				this.state = 2225;
@@ -9160,12 +9160,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public delim_definition(): Delim_definitionContext {
+	public async delim_definition() {
 		let _localctx: Delim_definitionContext = new Delim_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 274, cobolParser.RULE_delim_definition);
 		let _la: number;
@@ -9182,7 +9182,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 2228;
 			this._errHandler.sync(this);
@@ -9195,7 +9195,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 2230;
-			this.delim_val();
+			await this.delim_val();
 			}
 		}
 		catch (re) {
@@ -9208,12 +9208,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public tallying_for_all(): Tallying_for_allContext {
+	public async tallying_for_all() {
 		let _localctx: Tallying_for_allContext = new Tallying_for_allContext(this._ctx, this.state);
 		this.enterRule(_localctx, 276, cobolParser.RULE_tallying_for_all);
 		let _la: number;
@@ -9231,7 +9231,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 2240;
 			this._errHandler.sync(this);
@@ -9242,7 +9242,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 2233;
-					this.compare_val();
+					await this.compare_val();
 					this.state = 2237;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
@@ -9250,7 +9250,7 @@ export class cobolParser extends Parser {
 						{
 						{
 						this.state = 2234;
-						this.delim_definition();
+						await this.delim_definition();
 						}
 						}
 						this.state = 2239;
@@ -9279,12 +9279,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public compare_val(): Compare_valContext {
+	public async compare_val() {
 		let _localctx: Compare_valContext = new Compare_valContext(this._ctx, this.state);
 		this.enterRule(_localctx, 278, cobolParser.RULE_compare_val);
 		try {
@@ -9295,7 +9295,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2244;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				break;
 			case cobolParser.STRING_LITERAL_:
@@ -9319,7 +9319,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 2246;
-				this.figurative_constant_witout_all();
+				await this.figurative_constant_witout_all();
 				}
 				break;
 			default:
@@ -9336,19 +9336,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public delim_val(): Delim_valContext {
+	public async delim_val() {
 		let _localctx: Delim_valContext = new Delim_valContext(this._ctx, this.state);
 		this.enterRule(_localctx, 280, cobolParser.RULE_delim_val);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2249;
-			this.compare_val();
+			await this.compare_val();
 			}
 		}
 		catch (re) {
@@ -9361,19 +9361,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public tally_ctr(): Tally_ctrContext {
+	public async tally_ctr() {
 		let _localctx: Tally_ctrContext = new Tally_ctrContext(this._ctx, this.state);
 		this.enterRule(_localctx, 282, cobolParser.RULE_tally_ctr);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2251;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -9386,19 +9386,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public src_string(): Src_stringContext {
+	public async src_string() {
 		let _localctx: Src_stringContext = new Src_stringContext(this._ctx, this.state);
 		this.enterRule(_localctx, 284, cobolParser.RULE_src_string);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2253;
-			this.identifier();
+			await this.identifier();
 			}
 		}
 		catch (re) {
@@ -9411,12 +9411,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public initiate_statement(): Initiate_statementContext {
+	public async initiate_statement() {
 		let _localctx: Initiate_statementContext = new Initiate_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 286, cobolParser.RULE_initiate_statement);
 		let _la: number;
@@ -9432,7 +9432,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2256;
-				this.report_name();
+				await this.report_name();
 				}
 				}
 				this.state = 2259;
@@ -9451,12 +9451,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public initialize_statement(): Initialize_statementContext {
+	public async initialize_statement() {
 		let _localctx: Initialize_statementContext = new Initialize_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 288, cobolParser.RULE_initialize_statement);
 		let _la: number;
@@ -9472,7 +9472,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2262;
-				this.fld_name();
+				await this.fld_name();
 				}
 				}
 				this.state = 2265;
@@ -9486,7 +9486,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2267;
-				this.replacing();
+				await this.replacing();
 				}
 				}
 				this.state = 2272;
@@ -9505,12 +9505,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public replacing(): ReplacingContext {
+	public async replacing() {
 		let _localctx: ReplacingContext = new ReplacingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 290, cobolParser.RULE_replacing);
 		let _la: number;
@@ -9535,7 +9535,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 2276;
 				this._errHandler.sync(this);
@@ -9550,7 +9550,7 @@ export class cobolParser extends Parser {
 				this.state = 2278;
 				this.match(cobolParser.BY);
 				this.state = 2279;
-				this.init_value();
+				await this.init_value();
 				}
 				}
 				this.state = 2282;
@@ -9569,12 +9569,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public init_value(): Init_valueContext {
+	public async init_value() {
 		let _localctx: Init_valueContext = new Init_valueContext(this._ctx, this.state);
 		this.enterRule(_localctx, 292, cobolParser.RULE_init_value);
 		try {
@@ -9585,7 +9585,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2284;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				break;
 			case cobolParser.STRING_LITERAL_:
@@ -9605,7 +9605,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 2285;
-				this.constant();
+				await this.constant();
 				}
 				break;
 			default:
@@ -9622,19 +9622,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public fld_name(): Fld_nameContext {
+	public async fld_name() {
 		let _localctx: Fld_nameContext = new Fld_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 294, cobolParser.RULE_fld_name);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2288;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -9647,12 +9647,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public move_statement(): Move_statementContext {
+	public async move_statement() {
 		let _localctx: Move_statementContext = new Move_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 296, cobolParser.RULE_move_statement);
 		let _la: number;
@@ -9676,17 +9676,17 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 			}
 
 			this.state = 2294;
-			this.src_item();
+			await this.src_item();
 			this.state = 2295;
 			this.match(cobolParser.TO);
 			this.state = 2296;
-			this.dest_item();
+			await this.dest_item();
 			}
 		}
 		catch (re) {
@@ -9699,12 +9699,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public if_statement(): If_statementContext {
+	public async if_statement() {
 		let _localctx: If_statementContext = new If_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 298, cobolParser.RULE_if_statement);
 		let _la: number;
@@ -9715,7 +9715,7 @@ export class cobolParser extends Parser {
 			this.state = 2298;
 			this.match(cobolParser.IF);
 			this.state = 2299;
-			this.logic_expression(0);
+			await this.logic_expression(0);
 			this.state = 2301;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -9780,7 +9780,7 @@ export class cobolParser extends Parser {
 						{
 						{
 						this.state = 2303;
-						this.statement();
+						await this.statement();
 						}
 						}
 						break;
@@ -9865,7 +9865,7 @@ export class cobolParser extends Parser {
 							{
 							{
 							this.state = 2313;
-							this.statement();
+							await this.statement();
 							}
 							}
 							break;
@@ -9914,12 +9914,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public generate_statement(): Generate_statementContext {
+	public async generate_statement() {
 		let _localctx: Generate_statementContext = new Generate_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 300, cobolParser.RULE_generate_statement);
 		try {
@@ -9928,7 +9928,7 @@ export class cobolParser extends Parser {
 			this.state = 2327;
 			this.match(cobolParser.GENERATE);
 			this.state = 2328;
-			this.report_item();
+			await this.report_item();
 			}
 		}
 		catch (re) {
@@ -9941,19 +9941,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public report_item(): Report_itemContext {
+	public async report_item() {
 		let _localctx: Report_itemContext = new Report_itemContext(this._ctx, this.state);
 		this.enterRule(_localctx, 302, cobolParser.RULE_report_item);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2330;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -9966,12 +9966,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public exit_statement(): Exit_statementContext {
+	public async exit_statement() {
 		let _localctx: Exit_statementContext = new Exit_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 304, cobolParser.RULE_exit_statement);
 		try {
@@ -9991,12 +9991,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public exit_program_statement(): Exit_program_statementContext {
+	public async exit_program_statement() {
 		let _localctx: Exit_program_statementContext = new Exit_program_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 306, cobolParser.RULE_exit_program_statement);
 		try {
@@ -10018,12 +10018,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public go_to_statement(): Go_to_statementContext {
+	public async go_to_statement() {
 		let _localctx: Go_to_statementContext = new Go_to_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 308, cobolParser.RULE_go_to_statement);
 		let _la: number;
@@ -10052,7 +10052,7 @@ export class cobolParser extends Parser {
 				if (_la === cobolParser.USER_DEFINED_WORD_) {
 					{
 					this.state = 2341;
-					this.proc_name();
+					await this.proc_name();
 					}
 				}
 
@@ -10081,7 +10081,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 2348;
-					this.proc_name();
+					await this.proc_name();
 					}
 					}
 					this.state = 2351;
@@ -10101,7 +10101,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 2357;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				break;
 			}
@@ -10116,19 +10116,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public proc_name(): Proc_nameContext {
+	public async proc_name() {
 		let _localctx: Proc_nameContext = new Proc_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 310, cobolParser.RULE_proc_name);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2361;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -10141,12 +10141,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public evaluate_statement(): Evaluate_statementContext {
+	public async evaluate_statement() {
 		let _localctx: Evaluate_statementContext = new Evaluate_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 312, cobolParser.RULE_evaluate_statement);
 		let _la: number;
@@ -10157,7 +10157,7 @@ export class cobolParser extends Parser {
 			this.state = 2363;
 			this.match(cobolParser.EVALUATE);
 			this.state = 2364;
-			this.subj_item();
+			await this.subj_item();
 			this.state = 2371;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -10175,7 +10175,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 2368;
-				this.subj_item();
+				await this.subj_item();
 				}
 				}
 				this.state = 2373;
@@ -10193,7 +10193,7 @@ export class cobolParser extends Parser {
 					this.state = 2374;
 					this.match(cobolParser.WHEN);
 					this.state = 2375;
-					this.when_condition();
+					await this.when_condition();
 					this.state = 2382;
 					this._errHandler.sync(this);
 					_alt = this.interpreter.adaptivePredict(this._input, 280, this._ctx);
@@ -10212,7 +10212,7 @@ export class cobolParser extends Parser {
 							}
 
 							this.state = 2379;
-							this.when_condition();
+							await this.when_condition();
 							}
 							}
 						}
@@ -10228,7 +10228,7 @@ export class cobolParser extends Parser {
 							{
 							{
 							this.state = 2385;
-							this.statement();
+							await this.statement();
 							}
 							}
 						}
@@ -10263,7 +10263,7 @@ export class cobolParser extends Parser {
 						{
 						{
 						this.state = 2397;
-						this.statement();
+						await this.statement();
 						}
 						}
 					}
@@ -10296,12 +10296,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public when_condition(): When_conditionContext {
+	public async when_condition() {
 		let _localctx: When_conditionContext = new When_conditionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 314, cobolParser.RULE_when_condition);
 		let _la: number;
@@ -10313,7 +10313,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2408;
-				this.logic_expression(0);
+				await this.logic_expression(0);
 				}
 				break;
 
@@ -10331,7 +10331,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 2412;
-				this.arithmetic_expression(0);
+				await this.arithmetic_expression(0);
 				this.state = 2415;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -10347,10 +10347,10 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					this.state = 2414;
-					this.arithmetic_expression(0);
+					await this.arithmetic_expression(0);
 					}
 				}
 
@@ -10392,12 +10392,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public subj_item(): Subj_itemContext {
+	public async subj_item() {
 		let _localctx: Subj_itemContext = new Subj_itemContext(this._ctx, this.state);
 		this.enterRule(_localctx, 316, cobolParser.RULE_subj_item);
 		try {
@@ -10408,7 +10408,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2422;
-				this.arithmetic_expression(0);
+				await this.arithmetic_expression(0);
 				}
 				break;
 
@@ -10416,7 +10416,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 2423;
-				this.logic_expression(0);
+				await this.logic_expression(0);
 				}
 				break;
 
@@ -10447,12 +10447,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public divide_statement(): Divide_statementContext {
+	public async divide_statement() {
 		let _localctx: Divide_statementContext = new Divide_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 318, cobolParser.RULE_divide_statement);
 		try {
@@ -10463,7 +10463,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2428;
-				this.divide_statement_form1();
+				await this.divide_statement_form1();
 				}
 				break;
 
@@ -10471,7 +10471,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 2429;
-				this.divide_statement_form2();
+				await this.divide_statement_form2();
 				}
 				break;
 			}
@@ -10486,12 +10486,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public divide_statement_form1(): Divide_statement_form1Context {
+	public async divide_statement_form1() {
 		let _localctx: Divide_statement_form1Context = new Divide_statement_form1Context(this._ctx, this.state);
 		this.enterRule(_localctx, 320, cobolParser.RULE_divide_statement_form1);
 		let _la: number;
@@ -10501,7 +10501,7 @@ export class cobolParser extends Parser {
 			this.state = 2432;
 			this.match(cobolParser.DIVIDE);
 			this.state = 2433;
-			this.divide_num();
+			await this.divide_num();
 			this.state = 2434;
 			_la = this._input.LA(1);
 			if (!(_la === cobolParser.BY || _la === cobolParser.INTO)) {
@@ -10512,7 +10512,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 2438;
 			this._errHandler.sync(this);
@@ -10520,7 +10520,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 2435;
-				this.divide_num();
+				await this.divide_num();
 				this.state = 2436;
 				this.match(cobolParser.GIVING);
 				}
@@ -10533,7 +10533,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2440;
-				this.identifier_result();
+				await this.identifier_result();
 				this.state = 2442;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -10556,7 +10556,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 2448;
-				this.on_size_variants();
+				await this.on_size_variants();
 				}
 				break;
 			}
@@ -10582,12 +10582,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public divide_statement_form2(): Divide_statement_form2Context {
+	public async divide_statement_form2() {
 		let _localctx: Divide_statement_form2Context = new Divide_statement_form2Context(this._ctx, this.state);
 		this.enterRule(_localctx, 322, cobolParser.RULE_divide_statement_form2);
 		let _la: number;
@@ -10597,7 +10597,7 @@ export class cobolParser extends Parser {
 			this.state = 2454;
 			this.match(cobolParser.DIVIDE);
 			this.state = 2455;
-			this.divide_num();
+			await this.divide_num();
 			this.state = 2456;
 			_la = this._input.LA(1);
 			if (!(_la === cobolParser.BY || _la === cobolParser.INTO)) {
@@ -10608,7 +10608,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 2460;
 			this._errHandler.sync(this);
@@ -10616,14 +10616,14 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 2457;
-				this.divide_num();
+				await this.divide_num();
 				this.state = 2458;
 				this.match(cobolParser.GIVING);
 				}
 				break;
 			}
 			this.state = 2462;
-			this.identifier_result();
+			await this.identifier_result();
 			this.state = 2464;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -10637,14 +10637,14 @@ export class cobolParser extends Parser {
 			this.state = 2466;
 			this.match(cobolParser.REMAINDER);
 			this.state = 2467;
-			this.remaind();
+			await this.remaind();
 			this.state = 2469;
 			this._errHandler.sync(this);
 			switch ( this.interpreter.adaptivePredict(this._input, 298, this._ctx) ) {
 			case 1:
 				{
 				this.state = 2468;
-				this.on_size_variants();
+				await this.on_size_variants();
 				}
 				break;
 			}
@@ -10670,19 +10670,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public remaind(): RemaindContext {
+	public async remaind() {
 		let _localctx: RemaindContext = new RemaindContext(this._ctx, this.state);
 		this.enterRule(_localctx, 324, cobolParser.RULE_remaind);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2474;
-			this.identifier_result();
+			await this.identifier_result();
 			}
 		}
 		catch (re) {
@@ -10695,12 +10695,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public divide_num(): Divide_numContext {
+	public async divide_num() {
 		let _localctx: Divide_numContext = new Divide_numContext(this._ctx, this.state);
 		this.enterRule(_localctx, 326, cobolParser.RULE_divide_num);
 		try {
@@ -10712,7 +10712,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2476;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.NUMERIC_LITERAL_:
@@ -10736,12 +10736,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public display_statement(): Display_statementContext {
+	public async display_statement() {
 		let _localctx: Display_statementContext = new Display_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 328, cobolParser.RULE_display_statement);
 		try {
@@ -10752,7 +10752,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2480;
-				this.display_statement_form1();
+				await this.display_statement_form1();
 				}
 				break;
 
@@ -10760,7 +10760,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 2481;
-				this.display_statement_form2();
+				await this.display_statement_form2();
 				}
 				break;
 
@@ -10768,7 +10768,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 2482;
-				this.display_statement_form3();
+				await this.display_statement_form3();
 				}
 				break;
 
@@ -10776,7 +10776,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 2483;
-				this.display_statement_form4();
+				await this.display_statement_form4();
 				}
 				break;
 			}
@@ -10791,12 +10791,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public display_statement_form1(): Display_statement_form1Context {
+	public async display_statement_form1() {
 		let _localctx: Display_statement_form1Context = new Display_statement_form1Context(this._ctx, this.state);
 		this.enterRule(_localctx, 330, cobolParser.RULE_display_statement_form1);
 		let _la: number;
@@ -10812,7 +10812,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2487;
-				this.src_item();
+				await this.src_item();
 				this.state = 2491;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -10820,7 +10820,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 2488;
-					this.display_form1_clause();
+					await this.display_form1_clause();
 					}
 					}
 					this.state = 2493;
@@ -10855,12 +10855,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public display_statement_form2(): Display_statement_form2Context {
+	public async display_statement_form2() {
 		let _localctx: Display_statement_form2Context = new Display_statement_form2Context(this._ctx, this.state);
 		this.enterRule(_localctx, 332, cobolParser.RULE_display_statement_form2);
 		let _la: number;
@@ -10877,7 +10877,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2502;
-				this.src_item();
+				await this.src_item();
 				this.state = 2506;
 				this._errHandler.sync(this);
 				_alt = this.interpreter.adaptivePredict(this._input, 305, this._ctx);
@@ -10886,7 +10886,7 @@ export class cobolParser extends Parser {
 						{
 						{
 						this.state = 2503;
-						this.display_form2_clause();
+						await this.display_form2_clause();
 						}
 						}
 					}
@@ -10922,12 +10922,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public display_statement_form3(): Display_statement_form3Context {
+	public async display_statement_form3() {
 		let _localctx: Display_statement_form3Context = new Display_statement_form3Context(this._ctx, this.state);
 		this.enterRule(_localctx, 334, cobolParser.RULE_display_statement_form3);
 		let _la: number;
@@ -10937,7 +10937,7 @@ export class cobolParser extends Parser {
 			this.state = 2516;
 			this.match(cobolParser.DISPLAY);
 			this.state = 2517;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			this.state = 2531;
 			this._errHandler.sync(this);
 			switch ( this.interpreter.adaptivePredict(this._input, 312, this._ctx) ) {
@@ -10959,14 +10959,14 @@ export class cobolParser extends Parser {
 				case cobolParser.LINE:
 					{
 					this.state = 2521;
-					this.disp_f3_line();
+					await this.disp_f3_line();
 					this.state = 2523;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 					if (_la === cobolParser.COLUMN) {
 						{
 						this.state = 2522;
-						this.disp_f3_column();
+						await this.disp_f3_column();
 						}
 					}
 
@@ -10975,14 +10975,14 @@ export class cobolParser extends Parser {
 				case cobolParser.COLUMN:
 					{
 					this.state = 2525;
-					this.disp_f3_column();
+					await this.disp_f3_column();
 					this.state = 2527;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 					if (_la === cobolParser.LINE) {
 						{
 						this.state = 2526;
-						this.disp_f3_line();
+						await this.disp_f3_line();
 						}
 					}
 
@@ -11016,12 +11016,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public display_statement_form4(): Display_statement_form4Context {
+	public async display_statement_form4() {
 		let _localctx: Display_statement_form4Context = new Display_statement_form4Context(this._ctx, this.state);
 		this.enterRule(_localctx, 336, cobolParser.RULE_display_statement_form4);
 		try {
@@ -11030,18 +11030,18 @@ export class cobolParser extends Parser {
 			this.state = 2536;
 			this.match(cobolParser.DISPLAY);
 			this.state = 2537;
-			this.src_item();
+			await this.src_item();
 			this.state = 2538;
 			this.match(cobolParser.UPON);
 			this.state = 2539;
-			this.display_upon();
+			await this.display_upon();
 			this.state = 2541;
 			this._errHandler.sync(this);
 			switch ( this.interpreter.adaptivePredict(this._input, 314, this._ctx) ) {
 			case 1:
 				{
 				this.state = 2540;
-				this.on_exception_variants();
+				await this.on_exception_variants();
 				}
 				break;
 			}
@@ -11067,12 +11067,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public src_item(): Src_itemContext {
+	public async src_item() {
 		let _localctx: Src_itemContext = new Src_itemContext(this._ctx, this.state);
 		this.enterRule(_localctx, 338, cobolParser.RULE_src_item);
 		try {
@@ -11084,7 +11084,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2546;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.STRING_LITERAL_:
@@ -11104,7 +11104,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 2547;
-				this.constant();
+				await this.constant();
 				}
 				break;
 			default:
@@ -11121,12 +11121,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public display_upon(): Display_uponContext {
+	public async display_upon() {
 		let _localctx: Display_uponContext = new Display_uponContext(this._ctx, this.state);
 		this.enterRule(_localctx, 340, cobolParser.RULE_display_upon);
 		try {
@@ -11146,12 +11146,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public disp_f3_line(): Disp_f3_lineContext {
+	public async disp_f3_line() {
 		let _localctx: Disp_f3_lineContext = new Disp_f3_lineContext(this._ctx, this.state);
 		this.enterRule(_localctx, 342, cobolParser.RULE_disp_f3_line);
 		let _la: number;
@@ -11177,7 +11177,7 @@ export class cobolParser extends Parser {
 			case cobolParser.USER_DEFINED_WORD_:
 				{
 				this.state = 2556;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.NUMERIC_LITERAL_:
@@ -11201,12 +11201,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public disp_f3_column(): Disp_f3_columnContext {
+	public async disp_f3_column() {
 		let _localctx: Disp_f3_columnContext = new Disp_f3_columnContext(this._ctx, this.state);
 		this.enterRule(_localctx, 344, cobolParser.RULE_disp_f3_column);
 		let _la: number;
@@ -11232,7 +11232,7 @@ export class cobolParser extends Parser {
 			case cobolParser.USER_DEFINED_WORD_:
 				{
 				this.state = 2564;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.NUMERIC_LITERAL_:
@@ -11256,12 +11256,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public display_form1_clause(): Display_form1_clauseContext {
+	public async display_form1_clause() {
 		let _localctx: Display_form1_clauseContext = new Display_form1_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 346, cobolParser.RULE_display_form1_clause);
 		let _la: number;
@@ -11293,7 +11293,7 @@ export class cobolParser extends Parser {
 				this.state = 2572;
 				this.match(cobolParser.UPON);
 				this.state = 2573;
-				this.out_dest();
+				await this.out_dest();
 				}
 				break;
 
@@ -11336,12 +11336,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public display_form2_clause(): Display_form2_clauseContext {
+	public async display_form2_clause() {
 		let _localctx: Display_form2_clauseContext = new Display_form2_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 348, cobolParser.RULE_display_form2_clause);
 		let _la: number;
@@ -11353,7 +11353,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2583;
-				this.display_form1_clause();
+				await this.display_form1_clause();
 				}
 				break;
 
@@ -11361,7 +11361,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 2584;
-				this.at_line_number();
+				await this.at_line_number();
 				}
 				break;
 
@@ -11369,7 +11369,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 2585;
-				this.at_column_number();
+				await this.at_column_number();
 				}
 				break;
 
@@ -11418,7 +11418,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 				break;
@@ -11540,12 +11540,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public at_line_number(): At_line_numberContext {
+	public async at_line_number() {
 		let _localctx: At_line_numberContext = new At_line_numberContext(this._ctx, this.state);
 		this.enterRule(_localctx, 350, cobolParser.RULE_at_line_number);
 		let _la: number;
@@ -11575,7 +11575,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 2628;
-			this.number_value();
+			await this.number_value();
 			}
 		}
 		catch (re) {
@@ -11588,12 +11588,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public at_column_number(): At_column_numberContext {
+	public async at_column_number() {
 		let _localctx: At_column_numberContext = new At_column_numberContext(this._ctx, this.state);
 		this.enterRule(_localctx, 352, cobolParser.RULE_at_column_number);
 		let _la: number;
@@ -11623,7 +11623,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 2637;
-			this.number_value();
+			await this.number_value();
 			}
 		}
 		catch (re) {
@@ -11636,12 +11636,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public out_dest(): Out_destContext {
+	public async out_dest() {
 		let _localctx: Out_destContext = new Out_destContext(this._ctx, this.state);
 		this.enterRule(_localctx, 354, cobolParser.RULE_out_dest);
 		try {
@@ -11661,12 +11661,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public delete_statement(): Delete_statementContext {
+	public async delete_statement() {
 		let _localctx: Delete_statementContext = new Delete_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 356, cobolParser.RULE_delete_statement);
 		try {
@@ -11675,7 +11675,7 @@ export class cobolParser extends Parser {
 			this.state = 2641;
 			this.match(cobolParser.DELETE);
 			this.state = 2642;
-			this.file_name();
+			await this.file_name();
 			this.state = 2644;
 			this._errHandler.sync(this);
 			switch ( this.interpreter.adaptivePredict(this._input, 338, this._ctx) ) {
@@ -11692,7 +11692,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 2646;
-				this.invalid_key_variants();
+				await this.invalid_key_variants();
 				}
 				break;
 			}
@@ -11718,12 +11718,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public continue_statement(): Continue_statementContext {
+	public async continue_statement() {
 		let _localctx: Continue_statementContext = new Continue_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 358, cobolParser.RULE_continue_statement);
 		try {
@@ -11743,12 +11743,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public compute_statement(): Compute_statementContext {
+	public async compute_statement() {
 		let _localctx: Compute_statementContext = new Compute_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 360, cobolParser.RULE_compute_statement);
 		let _la: number;
@@ -11764,7 +11764,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2655;
-				this.identifier_result();
+				await this.identifier_result();
 				this.state = 2657;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -11791,17 +11791,17 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 2664;
-			this.arithmetic_expression(0);
+			await this.arithmetic_expression(0);
 			this.state = 2666;
 			this._errHandler.sync(this);
 			switch ( this.interpreter.adaptivePredict(this._input, 343, this._ctx) ) {
 			case 1:
 				{
 				this.state = 2665;
-				this.on_size_variants();
+				await this.on_size_variants();
 				}
 				break;
 			}
@@ -11827,12 +11827,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public close_statement(): Close_statementContext {
+	public async close_statement() {
 		let _localctx: Close_statementContext = new Close_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 362, cobolParser.RULE_close_statement);
 		let _la: number;
@@ -11848,14 +11848,14 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2672;
-				this.file_name();
+				await this.file_name();
 				this.state = 2674;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === cobolParser.LOCK || _la === cobolParser.NO || _la === cobolParser.REEL || _la === cobolParser.UNIT || _la === cobolParser.WITH) {
 					{
 					this.state = 2673;
-					this.close_params();
+					await this.close_params();
 					}
 				}
 
@@ -11877,12 +11877,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public close_params(): Close_paramsContext {
+	public async close_params() {
 		let _localctx: Close_paramsContext = new Close_paramsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 364, cobolParser.RULE_close_params);
 		let _la: number;
@@ -11904,7 +11904,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 2690;
 				this._errHandler.sync(this);
@@ -12077,12 +12077,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public cancel_statement(): Cancel_statementContext {
+	public async cancel_statement() {
 		let _localctx: Cancel_statementContext = new Cancel_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 366, cobolParser.RULE_cancel_statement);
 		let _la: number;
@@ -12098,7 +12098,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2703;
-				this.prog_name();
+				await this.prog_name();
 				}
 				}
 				this.state = 2706;
@@ -12117,12 +12117,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public call_statement(): Call_statementContext {
+	public async call_statement() {
 		let _localctx: Call_statementContext = new Call_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 368, cobolParser.RULE_call_statement);
 		let _la: number;
@@ -12132,14 +12132,14 @@ export class cobolParser extends Parser {
 			this.state = 2708;
 			this.match(cobolParser.CALL);
 			this.state = 2709;
-			this.prog_name();
+			await this.prog_name();
 			this.state = 2711;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === cobolParser.USING) {
 				{
 				this.state = 2710;
-				this.call_using();
+				await this.call_using();
 				}
 			}
 
@@ -12149,7 +12149,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.GIVING) {
 				{
 				this.state = 2713;
-				this.call_giving();
+				await this.call_giving();
 				}
 			}
 
@@ -12159,7 +12159,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 2716;
-				this.on_exception_variants();
+				await this.on_exception_variants();
 				}
 				break;
 			}
@@ -12185,12 +12185,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public call_giving(): Call_givingContext {
+	public async call_giving() {
 		let _localctx: Call_givingContext = new Call_givingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 370, cobolParser.RULE_call_giving);
 		try {
@@ -12199,7 +12199,7 @@ export class cobolParser extends Parser {
 			this.state = 2722;
 			this.match(cobolParser.GIVING);
 			this.state = 2723;
-			this.identifier_result();
+			await this.identifier_result();
 			}
 		}
 		catch (re) {
@@ -12212,12 +12212,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public call_using(): Call_usingContext {
+	public async call_using() {
 		let _localctx: Call_usingContext = new Call_usingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 372, cobolParser.RULE_call_using);
 		let _la: number;
@@ -12233,7 +12233,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2726;
-				this.using_arg();
+				await this.using_arg();
 				}
 				}
 				this.state = 2729;
@@ -12252,12 +12252,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public using_arg(): Using_argContext {
+	public async using_arg() {
 		let _localctx: Using_argContext = new Using_argContext(this._ctx, this.state);
 		this.enterRule(_localctx, 374, cobolParser.RULE_using_arg);
 		let _la: number;
@@ -12290,12 +12290,12 @@ export class cobolParser extends Parser {
 				if (_la === cobolParser.BY || _la === cobolParser.CONTENT || _la === cobolParser.DESCRIPTOR || _la === cobolParser.REFERENCE || _la === cobolParser.VALUE) {
 					{
 					this.state = 2732;
-					this.using_prefix();
+					await this.using_prefix();
 					}
 				}
 
 				this.state = 2735;
-				this.argument();
+				await this.argument();
 				this.state = 2739;
 				this._errHandler.sync(this);
 				_alt = this.interpreter.adaptivePredict(this._input, 360, this._ctx);
@@ -12304,7 +12304,7 @@ export class cobolParser extends Parser {
 						{
 						{
 						this.state = 2736;
-						this.argument();
+						await this.argument();
 						}
 						}
 					}
@@ -12328,12 +12328,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public using_prefix(): Using_prefixContext {
+	public async using_prefix() {
 		let _localctx: Using_prefixContext = new Using_prefixContext(this._ctx, this.state);
 		this.enterRule(_localctx, 376, cobolParser.RULE_using_prefix);
 		let _la: number;
@@ -12424,12 +12424,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public argument(): ArgumentContext {
+	public async argument() {
 		let _localctx: ArgumentContext = new ArgumentContext(this._ctx, this.state);
 		this.enterRule(_localctx, 378, cobolParser.RULE_argument);
 		try {
@@ -12441,7 +12441,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2762;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.NUMERIC_LITERAL_:
@@ -12472,12 +12472,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public prog_name(): Prog_nameContext {
+	public async prog_name() {
 		let _localctx: Prog_nameContext = new Prog_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 380, cobolParser.RULE_prog_name);
 		let _la: number;
@@ -12494,7 +12494,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -12508,12 +12508,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public alter_statement(): Alter_statementContext {
+	public async alter_statement() {
 		let _localctx: Alter_statementContext = new Alter_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 382, cobolParser.RULE_alter_statement);
 		let _la: number;
@@ -12529,7 +12529,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2770;
-				this.proc_name();
+				await this.proc_name();
 				this.state = 2771;
 				this.match(cobolParser.TO);
 				this.state = 2774;
@@ -12545,7 +12545,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 2776;
-				this.proc_name();
+				await this.proc_name();
 				}
 				}
 				this.state = 2780;
@@ -12564,12 +12564,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public add_statement(): Add_statementContext {
+	public async add_statement() {
 		let _localctx: Add_statementContext = new Add_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 384, cobolParser.RULE_add_statement);
 		let _la: number;
@@ -12591,7 +12591,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 2783;
-					this.add_num();
+					await this.add_num();
 					}
 					}
 					this.state = 2786;
@@ -12607,7 +12607,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 2789;
-					this.identifier_result();
+					await this.identifier_result();
 					this.state = 2791;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
@@ -12639,7 +12639,7 @@ export class cobolParser extends Parser {
 						{
 						{
 						this.state = 2798;
-						this.add_num();
+						await this.add_num();
 						}
 						}
 					}
@@ -12664,7 +12664,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 2807;
-					this.add_num();
+					await this.add_num();
 					}
 					}
 					this.state = 2810;
@@ -12680,7 +12680,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 2813;
-					this.identifier_result();
+					await this.identifier_result();
 					this.state = 2815;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
@@ -12714,14 +12714,14 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 2823;
-				this.add_grp();
+				await this.add_grp();
 				this.state = 2824;
 				this.match(cobolParser.TO);
 				this.state = 2825;
-				this.add_grp();
+				await this.add_grp();
 				this.state = 2827;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -12741,7 +12741,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 2831;
-				this.on_size_variants();
+				await this.on_size_variants();
 				}
 				break;
 			}
@@ -12767,19 +12767,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public add_grp(): Add_grpContext {
+	public async add_grp() {
 		let _localctx: Add_grpContext = new Add_grpContext(this._ctx, this.state);
 		this.enterRule(_localctx, 386, cobolParser.RULE_add_grp);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 2837;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -12792,12 +12792,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public add_num(): Add_numContext {
+	public async add_num() {
 		let _localctx: Add_numContext = new Add_numContext(this._ctx, this.state);
 		this.enterRule(_localctx, 388, cobolParser.RULE_add_num);
 		try {
@@ -12816,7 +12816,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 2840;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			default:
@@ -12833,12 +12833,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public accept_statement(): Accept_statementContext {
+	public async accept_statement() {
 		let _localctx: Accept_statementContext = new Accept_statementContext(this._ctx, this.state);
 		this.enterRule(_localctx, 390, cobolParser.RULE_accept_statement);
 		try {
@@ -12849,7 +12849,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2843;
-				this.accept_form1();
+				await this.accept_form1();
 				}
 				break;
 
@@ -12857,7 +12857,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 2844;
-				this.accept_form2();
+				await this.accept_form2();
 				}
 				break;
 
@@ -12865,7 +12865,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 2845;
-				this.accept_form3();
+				await this.accept_form3();
 				}
 				break;
 
@@ -12873,7 +12873,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 2846;
-				this.accept_form4();
+				await this.accept_form4();
 				}
 				break;
 
@@ -12881,7 +12881,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 5);
 				{
 				this.state = 2847;
-				this.accept_form5();
+				await this.accept_form5();
 				}
 				break;
 
@@ -12889,7 +12889,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 6);
 				{
 				this.state = 2848;
-				this.accept_form6();
+				await this.accept_form6();
 				}
 				break;
 			}
@@ -12904,12 +12904,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public on_exception_variants(): On_exception_variantsContext {
+	public async on_exception_variants() {
 		let _localctx: On_exception_variantsContext = new On_exception_variantsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 392, cobolParser.RULE_on_exception_variants);
 		try {
@@ -12921,7 +12921,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2851;
-				this.on_exception();
+				await this.on_exception();
 				this.state = 2854;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 384, this._ctx) ) {
@@ -12930,7 +12930,7 @@ export class cobolParser extends Parser {
 					this.state = 2852;
 					this.match(cobolParser.NOT);
 					this.state = 2853;
-					this.on_exception();
+					await this.on_exception();
 					}
 					break;
 				}
@@ -12942,14 +12942,14 @@ export class cobolParser extends Parser {
 				this.state = 2856;
 				this.match(cobolParser.NOT);
 				this.state = 2857;
-				this.on_exception();
+				await this.on_exception();
 				this.state = 2859;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 385, this._ctx) ) {
 				case 1:
 					{
 					this.state = 2858;
-					this.on_exception();
+					await this.on_exception();
 					}
 					break;
 				}
@@ -12969,12 +12969,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public at_end_variants(): At_end_variantsContext {
+	public async at_end_variants() {
 		let _localctx: At_end_variantsContext = new At_end_variantsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 394, cobolParser.RULE_at_end_variants);
 		try {
@@ -12986,7 +12986,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2863;
-				this.at_end();
+				await this.at_end();
 				this.state = 2866;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 387, this._ctx) ) {
@@ -12995,7 +12995,7 @@ export class cobolParser extends Parser {
 					this.state = 2864;
 					this.match(cobolParser.NOT);
 					this.state = 2865;
-					this.at_end();
+					await this.at_end();
 					}
 					break;
 				}
@@ -13007,14 +13007,14 @@ export class cobolParser extends Parser {
 				this.state = 2868;
 				this.match(cobolParser.NOT);
 				this.state = 2869;
-				this.at_end();
+				await this.at_end();
 				this.state = 2871;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 388, this._ctx) ) {
 				case 1:
 					{
 					this.state = 2870;
-					this.at_end();
+					await this.at_end();
 					}
 					break;
 				}
@@ -13034,12 +13034,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public on_size_variants(): On_size_variantsContext {
+	public async on_size_variants() {
 		let _localctx: On_size_variantsContext = new On_size_variantsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 396, cobolParser.RULE_on_size_variants);
 		try {
@@ -13051,7 +13051,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2875;
-				this.on_size();
+				await this.on_size();
 				this.state = 2878;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 390, this._ctx) ) {
@@ -13060,7 +13060,7 @@ export class cobolParser extends Parser {
 					this.state = 2876;
 					this.match(cobolParser.NOT);
 					this.state = 2877;
-					this.on_size();
+					await this.on_size();
 					}
 					break;
 				}
@@ -13072,14 +13072,14 @@ export class cobolParser extends Parser {
 				this.state = 2880;
 				this.match(cobolParser.NOT);
 				this.state = 2881;
-				this.on_size();
+				await this.on_size();
 				this.state = 2883;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 391, this._ctx) ) {
 				case 1:
 					{
 					this.state = 2882;
-					this.on_size();
+					await this.on_size();
 					}
 					break;
 				}
@@ -13099,12 +13099,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public on_overflow_variants(): On_overflow_variantsContext {
+	public async on_overflow_variants() {
 		let _localctx: On_overflow_variantsContext = new On_overflow_variantsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 398, cobolParser.RULE_on_overflow_variants);
 		try {
@@ -13116,7 +13116,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2887;
-				this.on_overflow();
+				await this.on_overflow();
 				this.state = 2890;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 393, this._ctx) ) {
@@ -13125,7 +13125,7 @@ export class cobolParser extends Parser {
 					this.state = 2888;
 					this.match(cobolParser.NOT);
 					this.state = 2889;
-					this.on_overflow();
+					await this.on_overflow();
 					}
 					break;
 				}
@@ -13137,14 +13137,14 @@ export class cobolParser extends Parser {
 				this.state = 2892;
 				this.match(cobolParser.NOT);
 				this.state = 2893;
-				this.on_overflow();
+				await this.on_overflow();
 				this.state = 2895;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 394, this._ctx) ) {
 				case 1:
 					{
 					this.state = 2894;
-					this.on_overflow();
+					await this.on_overflow();
 					}
 					break;
 				}
@@ -13164,12 +13164,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public at_eop_variants(): At_eop_variantsContext {
+	public async at_eop_variants() {
 		let _localctx: At_eop_variantsContext = new At_eop_variantsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 400, cobolParser.RULE_at_eop_variants);
 		try {
@@ -13182,7 +13182,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2899;
-				this.at_eop();
+				await this.at_eop();
 				this.state = 2902;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 396, this._ctx) ) {
@@ -13191,7 +13191,7 @@ export class cobolParser extends Parser {
 					this.state = 2900;
 					this.match(cobolParser.NOT);
 					this.state = 2901;
-					this.at_eop();
+					await this.at_eop();
 					}
 					break;
 				}
@@ -13203,14 +13203,14 @@ export class cobolParser extends Parser {
 				this.state = 2904;
 				this.match(cobolParser.NOT);
 				this.state = 2905;
-				this.at_eop();
+				await this.at_eop();
 				this.state = 2907;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 397, this._ctx) ) {
 				case 1:
 					{
 					this.state = 2906;
-					this.at_eop();
+					await this.at_eop();
 					}
 					break;
 				}
@@ -13230,12 +13230,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public invalid_key_variants(): Invalid_key_variantsContext {
+	public async invalid_key_variants() {
 		let _localctx: Invalid_key_variantsContext = new Invalid_key_variantsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 402, cobolParser.RULE_invalid_key_variants);
 		try {
@@ -13246,7 +13246,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 2911;
-				this.invalid_key();
+				await this.invalid_key();
 				this.state = 2914;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 399, this._ctx) ) {
@@ -13255,7 +13255,7 @@ export class cobolParser extends Parser {
 					this.state = 2912;
 					this.match(cobolParser.NOT);
 					this.state = 2913;
-					this.invalid_key();
+					await this.invalid_key();
 					}
 					break;
 				}
@@ -13267,14 +13267,14 @@ export class cobolParser extends Parser {
 				this.state = 2916;
 				this.match(cobolParser.NOT);
 				this.state = 2917;
-				this.invalid_key();
+				await this.invalid_key();
 				this.state = 2919;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 400, this._ctx) ) {
 				case 1:
 					{
 					this.state = 2918;
-					this.invalid_key();
+					await this.invalid_key();
 					}
 					break;
 				}
@@ -13294,12 +13294,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public accept_form6(): Accept_form6Context {
+	public async accept_form6() {
 		let _localctx: Accept_form6Context = new Accept_form6Context(this._ctx, this.state);
 		this.enterRule(_localctx, 404, cobolParser.RULE_accept_form6);
 		let _la: number;
@@ -13309,7 +13309,7 @@ export class cobolParser extends Parser {
 			this.state = 2923;
 			this.match(cobolParser.ACCEPT);
 			this.state = 2924;
-			this.dest_item();
+			await this.dest_item();
 			this.state = 2926;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -13321,14 +13321,14 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 2928;
-			this.accept6_item();
+			await this.accept6_item();
 			this.state = 2930;
 			this._errHandler.sync(this);
 			switch ( this.interpreter.adaptivePredict(this._input, 403, this._ctx) ) {
 			case 1:
 				{
 				this.state = 2929;
-				this.on_exception_variants();
+				await this.on_exception_variants();
 				}
 				break;
 			}
@@ -13354,12 +13354,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public accept6_item(): Accept6_itemContext {
+	public async accept6_item() {
 		let _localctx: Accept6_itemContext = new Accept6_itemContext(this._ctx, this.state);
 		this.enterRule(_localctx, 406, cobolParser.RULE_accept6_item);
 		try {
@@ -13379,12 +13379,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public accept_form1(): Accept_form1Context {
+	public async accept_form1() {
 		let _localctx: Accept_form1Context = new Accept_form1Context(this._ctx, this.state);
 		this.enterRule(_localctx, 408, cobolParser.RULE_accept_form1);
 		let _la: number;
@@ -13394,7 +13394,7 @@ export class cobolParser extends Parser {
 			this.state = 2937;
 			this.match(cobolParser.ACCEPT);
 			this.state = 2938;
-			this.dest_item();
+			await this.dest_item();
 			this.state = 2941;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -13403,7 +13403,7 @@ export class cobolParser extends Parser {
 				this.state = 2939;
 				this.match(cobolParser.FROM);
 				this.state = 2940;
-				this.input_source();
+				await this.input_source();
 				}
 			}
 
@@ -13425,7 +13425,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 2947;
-				this.at_end_variants();
+				await this.at_end_variants();
 				}
 				break;
 			}
@@ -13451,12 +13451,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public accept_form2(): Accept_form2Context {
+	public async accept_form2() {
 		let _localctx: Accept_form2Context = new Accept_form2Context(this._ctx, this.state);
 		this.enterRule(_localctx, 410, cobolParser.RULE_accept_form2);
 		try {
@@ -13465,11 +13465,11 @@ export class cobolParser extends Parser {
 			this.state = 2953;
 			this.match(cobolParser.ACCEPT);
 			this.state = 2954;
-			this.dest_item();
+			await this.dest_item();
 			this.state = 2955;
 			this.match(cobolParser.FROM);
 			this.state = 2956;
-			this.date_time();
+			await this.date_time();
 			}
 		}
 		catch (re) {
@@ -13482,12 +13482,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public accept_form3(): Accept_form3Context {
+	public async accept_form3() {
 		let _localctx: Accept_form3Context = new Accept_form3Context(this._ctx, this.state);
 		this.enterRule(_localctx, 412, cobolParser.RULE_accept_form3);
 		let _la: number;
@@ -13497,7 +13497,7 @@ export class cobolParser extends Parser {
 			this.state = 2958;
 			this.match(cobolParser.ACCEPT);
 			this.state = 2959;
-			this.dest_item();
+			await this.dest_item();
 			this.state = 2961;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -13505,7 +13505,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2960;
-				this.accept_form3_clause();
+				await this.accept_form3_clause();
 				}
 				}
 				this.state = 2963;
@@ -13518,14 +13518,14 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 2965;
-				this.on_exception_variants();
+				await this.on_exception_variants();
 				}
 				break;
 
 			case 2:
 				{
 				this.state = 2966;
-				this.at_end_variants();
+				await this.at_end_variants();
 				}
 				break;
 			}
@@ -13551,12 +13551,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public accept_form4(): Accept_form4Context {
+	public async accept_form4() {
 		let _localctx: Accept_form4Context = new Accept_form4Context(this._ctx, this.state);
 		this.enterRule(_localctx, 414, cobolParser.RULE_accept_form4);
 		let _la: number;
@@ -13588,7 +13588,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 2980;
-			this.key_dest_item();
+			await this.key_dest_item();
 			this.state = 2982;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -13596,7 +13596,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 2981;
-				this.accept_form4_clause();
+				await this.accept_form4_clause();
 				}
 				}
 				this.state = 2984;
@@ -13609,14 +13609,14 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 2986;
-				this.on_exception_variants();
+				await this.on_exception_variants();
 				}
 				break;
 
 			case 2:
 				{
 				this.state = 2987;
-				this.at_end_variants();
+				await this.at_end_variants();
 				}
 				break;
 			}
@@ -13642,12 +13642,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public accept_form5(): Accept_form5Context {
+	public async accept_form5() {
 		let _localctx: Accept_form5Context = new Accept_form5Context(this._ctx, this.state);
 		this.enterRule(_localctx, 416, cobolParser.RULE_accept_form5);
 		try {
@@ -13656,14 +13656,14 @@ export class cobolParser extends Parser {
 			this.state = 2993;
 			this.match(cobolParser.ACCEPT);
 			this.state = 2994;
-			this.screen_name();
+			await this.screen_name();
 			this.state = 2996;
 			this._errHandler.sync(this);
 			switch ( this.interpreter.adaptivePredict(this._input, 417, this._ctx) ) {
 			case 1:
 				{
 				this.state = 2995;
-				this.accept_at();
+				await this.accept_at();
 				}
 				break;
 			}
@@ -13673,7 +13673,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 2998;
-				this.on_exception_variants();
+				await this.on_exception_variants();
 				}
 				break;
 			}
@@ -13699,12 +13699,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public accept_at(): Accept_atContext {
+	public async accept_at() {
 		let _localctx: Accept_atContext = new Accept_atContext(this._ctx, this.state);
 		this.enterRule(_localctx, 418, cobolParser.RULE_accept_at);
 		let _la: number;
@@ -13727,14 +13727,14 @@ export class cobolParser extends Parser {
 			case cobolParser.LINE:
 				{
 				this.state = 3007;
-				this.accept_at_line();
+				await this.accept_at_line();
 				this.state = 3009;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === cobolParser.COLUMN) {
 					{
 					this.state = 3008;
-					this.accept_at_column();
+					await this.accept_at_column();
 					}
 				}
 
@@ -13743,14 +13743,14 @@ export class cobolParser extends Parser {
 			case cobolParser.COLUMN:
 				{
 				this.state = 3011;
-				this.accept_at_column();
+				await this.accept_at_column();
 				this.state = 3013;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === cobolParser.LINE) {
 					{
 					this.state = 3012;
-					this.accept_at_line();
+					await this.accept_at_line();
 					}
 				}
 
@@ -13771,12 +13771,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public accept_at_line(): Accept_at_lineContext {
+	public async accept_at_line() {
 		let _localctx: Accept_at_lineContext = new Accept_at_lineContext(this._ctx, this.state);
 		this.enterRule(_localctx, 420, cobolParser.RULE_accept_at_line);
 		let _la: number;
@@ -13808,7 +13808,7 @@ export class cobolParser extends Parser {
 			case cobolParser.USER_DEFINED_WORD_:
 				{
 				this.state = 3022;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			default:
@@ -13826,12 +13826,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public accept_at_column(): Accept_at_columnContext {
+	public async accept_at_column() {
 		let _localctx: Accept_at_columnContext = new Accept_at_columnContext(this._ctx, this.state);
 		this.enterRule(_localctx, 422, cobolParser.RULE_accept_at_column);
 		let _la: number;
@@ -13863,7 +13863,7 @@ export class cobolParser extends Parser {
 			case cobolParser.USER_DEFINED_WORD_:
 				{
 				this.state = 3030;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			default:
@@ -13881,12 +13881,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public accept_form4_clause(): Accept_form4_clauseContext {
+	public async accept_form4_clause() {
 		let _localctx: Accept_form4_clauseContext = new Accept_form4_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 424, cobolParser.RULE_accept_form4_clause);
 		let _la: number;
@@ -13920,7 +13920,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 3040;
-				this.number_value();
+				await this.number_value();
 				}
 				break;
 
@@ -13950,7 +13950,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 3048;
-				this.number_value();
+				await this.number_value();
 				}
 				break;
 
@@ -13999,7 +13999,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 				break;
@@ -14033,12 +14033,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public accept_form3_clause(): Accept_form3_clauseContext {
+	public async accept_form3_clause() {
 		let _localctx: Accept_form3_clauseContext = new Accept_form3_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 426, cobolParser.RULE_accept_form3_clause);
 		let _la: number;
@@ -14051,7 +14051,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 3066;
-				this.accept_form4_clause();
+				await this.accept_form4_clause();
 				}
 				break;
 
@@ -14102,7 +14102,7 @@ export class cobolParser extends Parser {
 						{
 						{
 						this.state = 3074;
-						this.protected_value();
+						await this.protected_value();
 						}
 						}
 					}
@@ -14175,7 +14175,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 3094;
-				this.def_value();
+				await this.def_value();
 				}
 				break;
 
@@ -14205,7 +14205,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 3102;
-				this.key_dest_item();
+				await this.key_dest_item();
 				}
 				break;
 			}
@@ -14220,19 +14220,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public key_dest_item(): Key_dest_itemContext {
+	public async key_dest_item() {
 		let _localctx: Key_dest_itemContext = new Key_dest_itemContext(this._ctx, this.state);
 		this.enterRule(_localctx, 428, cobolParser.RULE_key_dest_item);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3105;
-			this.identifier();
+			await this.identifier();
 			}
 		}
 		catch (re) {
@@ -14245,12 +14245,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public def_value(): Def_valueContext {
+	public async def_value() {
 		let _localctx: Def_valueContext = new Def_valueContext(this._ctx, this.state);
 		this.enterRule(_localctx, 430, cobolParser.RULE_def_value);
 		let _la: number;
@@ -14273,7 +14273,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 3107;
-				this.figurative_constant();
+				await this.figurative_constant();
 				}
 				break;
 			case cobolParser.STRING_LITERAL_:
@@ -14288,7 +14288,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 3109;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.CURRENT:
@@ -14322,12 +14322,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public protected_value(): Protected_valueContext {
+	public async protected_value() {
 		let _localctx: Protected_valueContext = new Protected_valueContext(this._ctx, this.state);
 		this.enterRule(_localctx, 432, cobolParser.RULE_protected_value);
 		let _la: number;
@@ -14341,7 +14341,7 @@ export class cobolParser extends Parser {
 				this.state = 3116;
 				this.match(cobolParser.SIZE);
 				this.state = 3117;
-				this.prot_size_value();
+				await this.prot_size_value();
 				}
 				break;
 
@@ -14417,7 +14417,7 @@ export class cobolParser extends Parser {
 				this.state = 3134;
 				this.match(cobolParser.FILLER);
 				this.state = 3135;
-				this.prot_fill_lit();
+				await this.prot_fill_lit();
 				}
 				break;
 			}
@@ -14432,12 +14432,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public prot_fill_lit(): Prot_fill_litContext {
+	public async prot_fill_lit() {
 		let _localctx: Prot_fill_litContext = new Prot_fill_litContext(this._ctx, this.state);
 		this.enterRule(_localctx, 434, cobolParser.RULE_prot_fill_lit);
 		try {
@@ -14457,12 +14457,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public prot_size_value(): Prot_size_valueContext {
+	public async prot_size_value() {
 		let _localctx: Prot_size_valueContext = new Prot_size_valueContext(this._ctx, this.state);
 		this.enterRule(_localctx, 436, cobolParser.RULE_prot_size_value);
 		try {
@@ -14481,7 +14481,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 3141;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			default:
@@ -14498,12 +14498,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public number_value(): Number_valueContext {
+	public async number_value() {
 		let _localctx: Number_valueContext = new Number_valueContext(this._ctx, this.state);
 		this.enterRule(_localctx, 438, cobolParser.RULE_number_value);
 		let _la: number;
@@ -14515,7 +14515,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 3144;
-				this.line_num();
+				await this.line_num();
 				}
 				break;
 			case cobolParser.FUNCTION:
@@ -14523,7 +14523,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 3145;
-				this.identifier();
+				await this.identifier();
 				this.state = 3150;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -14537,7 +14537,7 @@ export class cobolParser extends Parser {
 					case 1:
 						{
 						this.state = 3147;
-						this.line_num();
+						await this.line_num();
 						}
 						break;
 					}
@@ -14557,7 +14557,7 @@ export class cobolParser extends Parser {
 				case 1:
 					{
 					this.state = 3153;
-					this.line_num();
+					await this.line_num();
 					}
 					break;
 				}
@@ -14577,12 +14577,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public date_time(): Date_timeContext {
+	public async date_time() {
 		let _localctx: Date_timeContext = new Date_timeContext(this._ctx, this.state);
 		this.enterRule(_localctx, 440, cobolParser.RULE_date_time);
 		let _la: number;
@@ -14652,19 +14652,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public dest_item(): Dest_itemContext {
+	public async dest_item() {
 		let _localctx: Dest_itemContext = new Dest_itemContext(this._ctx, this.state);
 		this.enterRule(_localctx, 442, cobolParser.RULE_dest_item);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3170;
-			this.identifier_result();
+			await this.identifier_result();
 			}
 		}
 		catch (re) {
@@ -14677,12 +14677,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public input_source(): Input_sourceContext {
+	public async input_source() {
 		let _localctx: Input_sourceContext = new Input_sourceContext(this._ctx, this.state);
 		this.enterRule(_localctx, 444, cobolParser.RULE_input_source);
 		try {
@@ -14702,12 +14702,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public at_end(): At_endContext {
+	public async at_end() {
 		let _localctx: At_endContext = new At_endContext(this._ctx, this.state);
 		this.enterRule(_localctx, 446, cobolParser.RULE_at_end);
 		let _la: number;
@@ -14735,7 +14735,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 3178;
-					this.statement();
+					await this.statement();
 					}
 					}
 				}
@@ -14755,12 +14755,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public on_exception(): On_exceptionContext {
+	public async on_exception() {
 		let _localctx: On_exceptionContext = new On_exceptionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 448, cobolParser.RULE_on_exception);
 		let _la: number;
@@ -14788,7 +14788,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 3188;
-					this.statement();
+					await this.statement();
 					}
 					}
 				}
@@ -14808,12 +14808,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public on_size(): On_sizeContext {
+	public async on_size() {
 		let _localctx: On_sizeContext = new On_sizeContext(this._ctx, this.state);
 		this.enterRule(_localctx, 450, cobolParser.RULE_on_size);
 		let _la: number;
@@ -14843,7 +14843,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 3199;
-					this.statement();
+					await this.statement();
 					}
 					}
 				}
@@ -14863,12 +14863,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public on_overflow(): On_overflowContext {
+	public async on_overflow() {
 		let _localctx: On_overflowContext = new On_overflowContext(this._ctx, this.state);
 		this.enterRule(_localctx, 452, cobolParser.RULE_on_overflow);
 		let _la: number;
@@ -14896,7 +14896,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 3209;
-					this.statement();
+					await this.statement();
 					}
 					}
 				}
@@ -14916,12 +14916,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public at_eop(): At_eopContext {
+	public async at_eop() {
 		let _localctx: At_eopContext = new At_eopContext(this._ctx, this.state);
 		this.enterRule(_localctx, 454, cobolParser.RULE_at_eop);
 		let _la: number;
@@ -14949,7 +14949,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 3222;
 			this._errHandler.sync(this);
@@ -14959,7 +14959,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 3219;
-					this.statement();
+					await this.statement();
 					}
 					}
 				}
@@ -14979,12 +14979,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public invalid_key(): Invalid_keyContext {
+	public async invalid_key() {
 		let _localctx: Invalid_keyContext = new Invalid_keyContext(this._ctx, this.state);
 		this.enterRule(_localctx, 456, cobolParser.RULE_invalid_key);
 		let _la: number;
@@ -15012,7 +15012,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 3229;
-					this.statement();
+					await this.statement();
 					}
 					}
 				}
@@ -15032,12 +15032,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public file_section(): File_sectionContext {
+	public async file_section() {
 		let _localctx: File_sectionContext = new File_sectionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 458, cobolParser.RULE_file_section);
 		let _la: number;
@@ -15057,7 +15057,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3238;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 3243;
@@ -15075,13 +15075,13 @@ export class cobolParser extends Parser {
 				case cobolParser.FD:
 					{
 					this.state = 3244;
-					this.file_description();
+					await this.file_description();
 					}
 					break;
 				case cobolParser.SD:
 					{
 					this.state = 3245;
-					this.sort_merge_file_description();
+					await this.sort_merge_file_description();
 					}
 					break;
 				default:
@@ -15104,12 +15104,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public file_description(): File_descriptionContext {
+	public async file_description() {
 		let _localctx: File_descriptionContext = new File_descriptionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 460, cobolParser.RULE_file_description);
 		let _la: number;
@@ -15117,7 +15117,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3251;
-			this.file_description_entry();
+			await this.file_description_entry();
 			this.state = 3255;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -15125,7 +15125,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3252;
-				this.data_description_entry();
+				await this.data_description_entry();
 				}
 				}
 				this.state = 3257;
@@ -15144,12 +15144,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public sort_merge_file_description(): Sort_merge_file_descriptionContext {
+	public async sort_merge_file_description() {
 		let _localctx: Sort_merge_file_descriptionContext = new Sort_merge_file_descriptionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 462, cobolParser.RULE_sort_merge_file_description);
 		let _la: number;
@@ -15157,7 +15157,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3258;
-			this.sort_merge_file_description_entry();
+			await this.sort_merge_file_description_entry();
 			this.state = 3262;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -15165,7 +15165,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3259;
-				this.data_description_entry();
+				await this.data_description_entry();
 				}
 				}
 				this.state = 3264;
@@ -15184,12 +15184,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public working_storage_section(): Working_storage_sectionContext {
+	public async working_storage_section() {
 		let _localctx: Working_storage_sectionContext = new Working_storage_sectionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 464, cobolParser.RULE_working_storage_section);
 		let _la: number;
@@ -15209,7 +15209,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3268;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 3273;
@@ -15223,7 +15223,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3274;
-				this.data_description_entry();
+				await this.data_description_entry();
 				}
 				}
 				this.state = 3279;
@@ -15242,12 +15242,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public linkage_section(): Linkage_sectionContext {
+	public async linkage_section() {
 		let _localctx: Linkage_sectionContext = new Linkage_sectionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 466, cobolParser.RULE_linkage_section);
 		let _la: number;
@@ -15267,7 +15267,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3283;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 3288;
@@ -15281,7 +15281,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3289;
-				this.data_description_entry();
+				await this.data_description_entry();
 				}
 				}
 				this.state = 3294;
@@ -15300,12 +15300,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public report_section(): Report_sectionContext {
+	public async report_section() {
 		let _localctx: Report_sectionContext = new Report_sectionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 468, cobolParser.RULE_report_section);
 		let _la: number;
@@ -15325,7 +15325,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3298;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 3303;
@@ -15339,7 +15339,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3304;
-				this.report_description();
+				await this.report_description();
 				}
 				}
 				this.state = 3309;
@@ -15358,12 +15358,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public report_description(): Report_descriptionContext {
+	public async report_description() {
 		let _localctx: Report_descriptionContext = new Report_descriptionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 470, cobolParser.RULE_report_description);
 		let _la: number;
@@ -15371,7 +15371,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3310;
-			this.report_description_entry();
+			await this.report_description_entry();
 			this.state = 3314;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -15379,7 +15379,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3311;
-				this.report_group_data_description_entry();
+				await this.report_group_data_description_entry();
 				}
 				}
 				this.state = 3316;
@@ -15398,12 +15398,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public screen_section(): Screen_sectionContext {
+	public async screen_section() {
 		let _localctx: Screen_sectionContext = new Screen_sectionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 472, cobolParser.RULE_screen_section);
 		let _la: number;
@@ -15423,7 +15423,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3320;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 3325;
@@ -15437,7 +15437,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3326;
-				this.screen_description_entry();
+				await this.screen_description_entry();
 				}
 				}
 				this.state = 3331;
@@ -15456,12 +15456,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public file_description_entry(): File_description_entryContext {
+	public async file_description_entry() {
 		let _localctx: File_description_entryContext = new File_description_entryContext(this._ctx, this.state);
 		this.enterRule(_localctx, 474, cobolParser.RULE_file_description_entry);
 		let _la: number;
@@ -15471,7 +15471,7 @@ export class cobolParser extends Parser {
 			this.state = 3332;
 			this.match(cobolParser.FD);
 			this.state = 3333;
-			this.file_name();
+			await this.file_name();
 			this.state = 3337;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -15479,7 +15479,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3334;
-				this.fd_clause();
+				await this.fd_clause();
 				}
 				}
 				this.state = 3339;
@@ -15495,7 +15495,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3341;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 3346;
@@ -15514,12 +15514,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public sort_merge_file_description_entry(): Sort_merge_file_description_entryContext {
+	public async sort_merge_file_description_entry() {
 		let _localctx: Sort_merge_file_description_entryContext = new Sort_merge_file_description_entryContext(this._ctx, this.state);
 		this.enterRule(_localctx, 476, cobolParser.RULE_sort_merge_file_description_entry);
 		let _la: number;
@@ -15529,7 +15529,7 @@ export class cobolParser extends Parser {
 			this.state = 3347;
 			this.match(cobolParser.SD);
 			this.state = 3348;
-			this.file_name();
+			await this.file_name();
 			this.state = 3352;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -15537,7 +15537,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3349;
-				this.sd_clause();
+				await this.sd_clause();
 				}
 				}
 				this.state = 3354;
@@ -15553,7 +15553,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3356;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 3361;
@@ -15572,12 +15572,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public report_description_entry(): Report_description_entryContext {
+	public async report_description_entry() {
 		let _localctx: Report_description_entryContext = new Report_description_entryContext(this._ctx, this.state);
 		this.enterRule(_localctx, 478, cobolParser.RULE_report_description_entry);
 		let _la: number;
@@ -15587,7 +15587,7 @@ export class cobolParser extends Parser {
 			this.state = 3362;
 			this.match(cobolParser.RD);
 			this.state = 3363;
-			this.report_name();
+			await this.report_name();
 			this.state = 3367;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -15595,7 +15595,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3364;
-				this.rd_clause();
+				await this.rd_clause();
 				}
 				}
 				this.state = 3369;
@@ -15611,7 +15611,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3371;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 3376;
@@ -15630,12 +15630,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public fd_clause(): Fd_clauseContext {
+	public async fd_clause() {
 		let _localctx: Fd_clauseContext = new Fd_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 480, cobolParser.RULE_fd_clause);
 		let _la: number;
@@ -15683,7 +15683,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 3385;
-				this.block_contains();
+				await this.block_contains();
 				}
 				break;
 
@@ -15691,7 +15691,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 3386;
-				this.record();
+				await this.record();
 				}
 				break;
 
@@ -15699,7 +15699,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 5);
 				{
 				this.state = 3387;
-				this.label();
+				await this.label();
 				}
 				break;
 
@@ -15707,7 +15707,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 6);
 				{
 				this.state = 3388;
-				this.value_of_id();
+				await this.value_of_id();
 				}
 				break;
 
@@ -15715,7 +15715,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 7);
 				{
 				this.state = 3389;
-				this.data_rec();
+				await this.data_rec();
 				}
 				break;
 
@@ -15723,7 +15723,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 8);
 				{
 				this.state = 3390;
-				this.linage();
+				await this.linage();
 				}
 				break;
 
@@ -15731,7 +15731,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 9);
 				{
 				this.state = 3391;
-				this.report_is();
+				await this.report_is();
 				}
 				break;
 
@@ -15739,7 +15739,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 10);
 				{
 				this.state = 3392;
-				this.code_set();
+				await this.code_set();
 				}
 				break;
 
@@ -15747,7 +15747,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 11);
 				{
 				this.state = 3393;
-				this.access_mode();
+				await this.access_mode();
 				}
 				break;
 
@@ -15755,7 +15755,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 12);
 				{
 				this.state = 3394;
-				this.record_key();
+				await this.record_key();
 				}
 				break;
 
@@ -15763,7 +15763,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 13);
 				{
 				this.state = 3395;
-				this.file_status();
+				await this.file_status();
 				}
 				break;
 			}
@@ -15778,12 +15778,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public data_description_entry(): Data_description_entryContext {
+	public async data_description_entry() {
 		let _localctx: Data_description_entryContext = new Data_description_entryContext(this._ctx, this.state);
 		this.enterRule(_localctx, 482, cobolParser.RULE_data_description_entry);
 		let _la: number;
@@ -15791,14 +15791,14 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3398;
-			this.level_number();
+			await this.level_number();
 			this.state = 3401;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case cobolParser.USER_DEFINED_WORD_:
 				{
 				this.state = 3399;
-				this.data_name();
+				await this.data_name();
 				}
 				break;
 			case cobolParser.FILLER:
@@ -15866,7 +15866,7 @@ export class cobolParser extends Parser {
 				this.state = 3403;
 				this.match(cobolParser.REDEFINES);
 				this.state = 3404;
-				this.other_data_item();
+				await this.other_data_item();
 				}
 			}
 
@@ -15877,7 +15877,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3407;
-				this.data_description_clause();
+				await this.data_description_clause();
 				}
 				}
 				this.state = 3412;
@@ -15893,7 +15893,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3414;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 3419;
@@ -15912,12 +15912,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public level_number(): Level_numberContext {
+	public async level_number() {
 		let _localctx: Level_numberContext = new Level_numberContext(this._ctx, this.state);
 		this.enterRule(_localctx, 484, cobolParser.RULE_level_number);
 		try {
@@ -15937,12 +15937,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public data_description_clause(): Data_description_clauseContext {
+	public async data_description_clause() {
 		let _localctx: Data_description_clauseContext = new Data_description_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 486, cobolParser.RULE_data_description_clause);
 		let _la: number;
@@ -15990,7 +15990,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 3430;
-				this.picture();
+				await this.picture();
 				}
 				break;
 
@@ -15998,7 +15998,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 3431;
-				this.usage();
+				await this.usage();
 				}
 				break;
 
@@ -16006,7 +16006,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 5);
 				{
 				this.state = 3432;
-				this.sign_is();
+				await this.sign_is();
 				}
 				break;
 
@@ -16014,7 +16014,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 6);
 				{
 				this.state = 3433;
-				this.occurs();
+				await this.occurs();
 				}
 				break;
 
@@ -16031,7 +16031,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 3436;
 				this._errHandler.sync(this);
@@ -16048,7 +16048,7 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					}
 				}
@@ -16069,7 +16069,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 3440;
 				this._errHandler.sync(this);
@@ -16108,7 +16108,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 10);
 				{
 				this.state = 3447;
-				this.value_is();
+				await this.value_is();
 				}
 				break;
 
@@ -16116,7 +16116,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 11);
 				{
 				this.state = 3448;
-				this.renames();
+				await this.renames();
 				}
 				break;
 			}
@@ -16131,12 +16131,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public renames(): RenamesContext {
+	public async renames() {
 		let _localctx: RenamesContext = new RenamesContext(this._ctx, this.state);
 		this.enterRule(_localctx, 488, cobolParser.RULE_renames);
 		let _la: number;
@@ -16146,7 +16146,7 @@ export class cobolParser extends Parser {
 			this.state = 3451;
 			this.match(cobolParser.RENAMES);
 			this.state = 3452;
-			this.rename_start();
+			await this.rename_start();
 			this.state = 3455;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -16162,10 +16162,10 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 3454;
-				this.rename_end();
+				await this.rename_end();
 				}
 			}
 
@@ -16181,19 +16181,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public rename_start(): Rename_startContext {
+	public async rename_start() {
 		let _localctx: Rename_startContext = new Rename_startContext(this._ctx, this.state);
 		this.enterRule(_localctx, 490, cobolParser.RULE_rename_start);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3457;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -16206,19 +16206,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public rename_end(): Rename_endContext {
+	public async rename_end() {
 		let _localctx: Rename_endContext = new Rename_endContext(this._ctx, this.state);
 		this.enterRule(_localctx, 492, cobolParser.RULE_rename_end);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3459;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -16231,12 +16231,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public value_is(): Value_isContext {
+	public async value_is() {
 		let _localctx: Value_isContext = new Value_isContext(this._ctx, this.state);
 		this.enterRule(_localctx, 494, cobolParser.RULE_value_is);
 		let _la: number;
@@ -16291,7 +16291,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 3471;
-					this.value_is_definition();
+					await this.value_is_definition();
 					}
 					}
 					break;
@@ -16314,12 +16314,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public value_is_definition(): Value_is_definitionContext {
+	public async value_is_definition() {
 		let _localctx: Value_is_definitionContext = new Value_is_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 496, cobolParser.RULE_value_is_definition);
 		let _la: number;
@@ -16327,14 +16327,14 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3476;
-			this.value_is_definition_part();
+			await this.value_is_definition_part();
 			this.state = 3478;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === cobolParser.THROUGH || _la === cobolParser.THRU) {
 				{
 				this.state = 3477;
-				this.value_is_definition_thru();
+				await this.value_is_definition_thru();
 				}
 			}
 
@@ -16350,12 +16350,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public value_is_definition_part(): Value_is_definition_partContext {
+	public async value_is_definition_part() {
 		let _localctx: Value_is_definition_partContext = new Value_is_definition_partContext(this._ctx, this.state);
 		this.enterRule(_localctx, 498, cobolParser.RULE_value_is_definition_part);
 		try {
@@ -16380,7 +16380,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 3480;
-				this.value_is_literal();
+				await this.value_is_literal();
 				}
 				break;
 			case cobolParser.REFERENCE:
@@ -16389,7 +16389,7 @@ export class cobolParser extends Parser {
 				this.state = 3481;
 				this.match(cobolParser.REFERENCE);
 				this.state = 3482;
-				this.ref_data_name();
+				await this.ref_data_name();
 				}
 				break;
 			case cobolParser.EXTERNAL:
@@ -16398,7 +16398,7 @@ export class cobolParser extends Parser {
 				this.state = 3483;
 				this.match(cobolParser.EXTERNAL);
 				this.state = 3484;
-				this.external_name();
+				await this.external_name();
 				}
 				break;
 			default:
@@ -16415,12 +16415,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public value_is_definition_thru(): Value_is_definition_thruContext {
+	public async value_is_definition_thru() {
 		let _localctx: Value_is_definition_thruContext = new Value_is_definition_thruContext(this._ctx, this.state);
 		this.enterRule(_localctx, 500, cobolParser.RULE_value_is_definition_thru);
 		let _la: number;
@@ -16437,10 +16437,10 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 3488;
-			this.value_is_definition_part();
+			await this.value_is_definition_part();
 			}
 		}
 		catch (re) {
@@ -16453,12 +16453,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public external_name(): External_nameContext {
+	public async external_name() {
 		let _localctx: External_nameContext = new External_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 502, cobolParser.RULE_external_name);
 		try {
@@ -16478,19 +16478,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public ref_data_name(): Ref_data_nameContext {
+	public async ref_data_name() {
 		let _localctx: Ref_data_nameContext = new Ref_data_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 504, cobolParser.RULE_ref_data_name);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3492;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -16503,12 +16503,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public value_is_literal(): Value_is_literalContext {
+	public async value_is_literal() {
 		let _localctx: Value_is_literalContext = new Value_is_literalContext(this._ctx, this.state);
 		this.enterRule(_localctx, 506, cobolParser.RULE_value_is_literal);
 		try {
@@ -16544,7 +16544,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 3496;
-				this.figurative_constant();
+				await this.figurative_constant();
 				}
 				break;
 			case cobolParser.USER_DEFINED_WORD_:
@@ -16568,12 +16568,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public occurs(): OccursContext {
+	public async occurs() {
 		let _localctx: OccursContext = new OccursContext(this._ctx, this.state);
 		this.enterRule(_localctx, 508, cobolParser.RULE_occurs);
 		let _la: number;
@@ -16583,7 +16583,7 @@ export class cobolParser extends Parser {
 			this.state = 3500;
 			this.match(cobolParser.OCCURS);
 			this.state = 3501;
-			this.times_definition();
+			await this.times_definition();
 			this.state = 3505;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -16591,7 +16591,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3502;
-				this.key_is();
+				await this.key_is();
 				}
 				}
 				this.state = 3507;
@@ -16604,7 +16604,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.INDEXED) {
 				{
 				this.state = 3508;
-				this.indexed_by();
+				await this.indexed_by();
 				}
 			}
 
@@ -16620,12 +16620,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public indexed_by(): Indexed_byContext {
+	public async indexed_by() {
 		let _localctx: Indexed_byContext = new Indexed_byContext(this._ctx, this.state);
 		this.enterRule(_localctx, 510, cobolParser.RULE_indexed_by);
 		let _la: number;
@@ -16651,7 +16651,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3515;
-				this.ind_name();
+				await this.ind_name();
 				}
 				}
 				this.state = 3518;
@@ -16670,12 +16670,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public ind_name(): Ind_nameContext {
+	public async ind_name() {
 		let _localctx: Ind_nameContext = new Ind_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 512, cobolParser.RULE_ind_name);
 		try {
@@ -16695,12 +16695,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public key_is(): Key_isContext {
+	public async key_is() {
 		let _localctx: Key_isContext = new Key_isContext(this._ctx, this.state);
 		this.enterRule(_localctx, 514, cobolParser.RULE_key_is);
 		let _la: number;
@@ -16717,7 +16717,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 3524;
 			this._errHandler.sync(this);
@@ -16746,7 +16746,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3529;
-				this.key_name();
+				await this.key_name();
 				}
 				}
 				this.state = 3532;
@@ -16765,19 +16765,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public key_name(): Key_nameContext {
+	public async key_name() {
 		let _localctx: Key_nameContext = new Key_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 516, cobolParser.RULE_key_name);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3534;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -16790,12 +16790,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public times_definition(): Times_definitionContext {
+	public async times_definition() {
 		let _localctx: Times_definitionContext = new Times_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 518, cobolParser.RULE_times_definition);
 		let _la: number;
@@ -16807,7 +16807,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 3536;
-				this.table_size();
+				await this.table_size();
 				this.state = 3537;
 				this.match(cobolParser.TIMES);
 				}
@@ -16817,11 +16817,11 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 3539;
-				this.min_times();
+				await this.min_times();
 				this.state = 3540;
 				this.match(cobolParser.TO);
 				this.state = 3541;
-				this.max_times();
+				await this.max_times();
 				this.state = 3542;
 				this.match(cobolParser.TIMES);
 				this.state = 3543;
@@ -16837,7 +16837,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 3547;
-				this.depending_item();
+				await this.depending_item();
 				}
 				break;
 			}
@@ -16852,12 +16852,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public table_size(): Table_sizeContext {
+	public async table_size() {
 		let _localctx: Table_sizeContext = new Table_sizeContext(this._ctx, this.state);
 		this.enterRule(_localctx, 520, cobolParser.RULE_table_size);
 		try {
@@ -16877,12 +16877,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public min_times(): Min_timesContext {
+	public async min_times() {
 		let _localctx: Min_timesContext = new Min_timesContext(this._ctx, this.state);
 		this.enterRule(_localctx, 522, cobolParser.RULE_min_times);
 		try {
@@ -16902,12 +16902,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public max_times(): Max_timesContext {
+	public async max_times() {
 		let _localctx: Max_timesContext = new Max_timesContext(this._ctx, this.state);
 		this.enterRule(_localctx, 524, cobolParser.RULE_max_times);
 		try {
@@ -16927,12 +16927,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public report_group_data_description_entry(): Report_group_data_description_entryContext {
+	public async report_group_data_description_entry() {
 		let _localctx: Report_group_data_description_entryContext = new Report_group_data_description_entryContext(this._ctx, this.state);
 		this.enterRule(_localctx, 526, cobolParser.RULE_report_group_data_description_entry);
 		let _la: number;
@@ -16940,14 +16940,14 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3557;
-			this.level_number();
+			await this.level_number();
 			this.state = 3559;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === cobolParser.USER_DEFINED_WORD_) {
 				{
 				this.state = 3558;
-				this.data_name();
+				await this.data_name();
 				}
 			}
 
@@ -16958,7 +16958,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3561;
-				this.report_group_data_description_clause();
+				await this.report_group_data_description_clause();
 				}
 				}
 				this.state = 3566;
@@ -16974,7 +16974,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3568;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 3573;
@@ -16993,12 +16993,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public report_group_data_description_clause(): Report_group_data_description_clauseContext {
+	public async report_group_data_description_clause() {
 		let _localctx: Report_group_data_description_clauseContext = new Report_group_data_description_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 528, cobolParser.RULE_report_group_data_description_clause);
 		let _la: number;
@@ -17032,7 +17032,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 3581;
-				this.line_num_definition();
+				await this.line_num_definition();
 				}
 				break;
 			case cobolParser.NEXT:
@@ -17053,7 +17053,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 3587;
-				this.next_group_definition();
+				await this.next_group_definition();
 				}
 				break;
 			case cobolParser.TYPE:
@@ -17072,7 +17072,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 3592;
-				this.type_is_definition();
+				await this.type_is_definition();
 				}
 				break;
 			case cobolParser.DISPLAY:
@@ -17148,7 +17148,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 3612;
-				this.column_number();
+				await this.column_number();
 				}
 				break;
 			case cobolParser.GROUP:
@@ -17182,7 +17182,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 3619;
 				this._errHandler.sync(this);
@@ -17201,7 +17201,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 9);
 				{
 				this.state = 3621;
-				this.picture();
+				await this.picture();
 				}
 				break;
 			case cobolParser.LEADING:
@@ -17210,7 +17210,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 10);
 				{
 				this.state = 3622;
-				this.sign_is();
+				await this.sign_is();
 				}
 				break;
 			case cobolParser.SOURCE:
@@ -17229,7 +17229,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 3627;
-				this.source_name();
+				await this.source_name();
 				}
 				break;
 			case cobolParser.VALUE:
@@ -17248,14 +17248,14 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 3632;
-				this.value_is_literal();
+				await this.value_is_literal();
 				}
 				break;
 			case cobolParser.SUM:
 				this.enterOuterAlt(_localctx, 13);
 				{
 				this.state = 3633;
-				this.sum();
+				await this.sum();
 				}
 				break;
 			default:
@@ -17272,12 +17272,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public sign_is(): Sign_isContext {
+	public async sign_is() {
 		let _localctx: Sign_isContext = new Sign_isContext(this._ctx, this.state);
 		this.enterRule(_localctx, 530, cobolParser.RULE_sign_is);
 		let _la: number;
@@ -17314,7 +17314,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 3647;
 			this._errHandler.sync(this);
@@ -17348,12 +17348,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public sum(): SumContext {
+	public async sum() {
 		let _localctx: SumContext = new SumContext(this._ctx, this.state);
 		this.enterRule(_localctx, 532, cobolParser.RULE_sum);
 		let _la: number;
@@ -17380,7 +17380,7 @@ export class cobolParser extends Parser {
 							{
 							{
 							this.state = 3650;
-							this.sum_name();
+							await this.sum_name();
 							}
 							}
 							break;
@@ -17408,7 +17408,7 @@ export class cobolParser extends Parser {
 						{
 						{
 						this.state = 3658;
-						this.detail_report_group_name();
+						await this.detail_report_group_name();
 						}
 						}
 						this.state = 3663;
@@ -17443,7 +17443,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 3672;
-				this.control_foot_name();
+				await this.control_foot_name();
 				}
 			}
 
@@ -17459,12 +17459,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public control_foot_name(): Control_foot_nameContext {
+	public async control_foot_name() {
 		let _localctx: Control_foot_nameContext = new Control_foot_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 534, cobolParser.RULE_control_foot_name);
 		let _la: number;
@@ -17481,7 +17481,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -17495,12 +17495,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public detail_report_group_name(): Detail_report_group_nameContext {
+	public async detail_report_group_name() {
 		let _localctx: Detail_report_group_nameContext = new Detail_report_group_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 536, cobolParser.RULE_detail_report_group_name);
 		try {
@@ -17520,12 +17520,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public sum_name(): Sum_nameContext {
+	public async sum_name() {
 		let _localctx: Sum_nameContext = new Sum_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 538, cobolParser.RULE_sum_name);
 		try {
@@ -17545,19 +17545,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public source_name(): Source_nameContext {
+	public async source_name() {
 		let _localctx: Source_nameContext = new Source_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 540, cobolParser.RULE_source_name);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3681;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -17570,12 +17570,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public column_number(): Column_numberContext {
+	public async column_number() {
 		let _localctx: Column_numberContext = new Column_numberContext(this._ctx, this.state);
 		this.enterRule(_localctx, 542, cobolParser.RULE_column_number);
 		try {
@@ -17595,12 +17595,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public type_is_definition(): Type_is_definitionContext {
+	public async type_is_definition() {
 		let _localctx: Type_is_definitionContext = new Type_is_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 544, cobolParser.RULE_type_is_definition);
 		try {
@@ -17667,7 +17667,7 @@ export class cobolParser extends Parser {
 					throw new NoViableAltException(this);
 				}
 				this.state = 3696;
-				this.type_control_name();
+				await this.type_control_name();
 				}
 				break;
 
@@ -17711,7 +17711,7 @@ export class cobolParser extends Parser {
 					throw new NoViableAltException(this);
 				}
 				this.state = 3704;
-				this.type_control_name();
+				await this.type_control_name();
 				}
 				break;
 
@@ -17762,12 +17762,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public type_control_name(): Type_control_nameContext {
+	public async type_control_name() {
 		let _localctx: Type_control_nameContext = new Type_control_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 546, cobolParser.RULE_type_control_name);
 		let _la: number;
@@ -17784,7 +17784,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -17798,12 +17798,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public next_group_definition(): Next_group_definitionContext {
+	public async next_group_definition() {
 		let _localctx: Next_group_definitionContext = new Next_group_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 548, cobolParser.RULE_next_group_definition);
 		try {
@@ -17814,7 +17814,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 3715;
-				this.line_num();
+				await this.line_num();
 				}
 				break;
 			case cobolParser.PLUS:
@@ -17823,7 +17823,7 @@ export class cobolParser extends Parser {
 				this.state = 3716;
 				this.match(cobolParser.PLUS);
 				this.state = 3717;
-				this.line_num();
+				await this.line_num();
 				}
 				break;
 			case cobolParser.NEXT:
@@ -17849,12 +17849,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public line_num_definition(): Line_num_definitionContext {
+	public async line_num_definition() {
 		let _localctx: Line_num_definitionContext = new Line_num_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 550, cobolParser.RULE_line_num_definition);
 		let _la: number;
@@ -17866,7 +17866,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 3722;
-				this.line_num();
+				await this.line_num();
 				this.state = 3728;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 554, this._ctx) ) {
@@ -17897,7 +17897,7 @@ export class cobolParser extends Parser {
 				this.state = 3730;
 				this.match(cobolParser.PLUS);
 				this.state = 3731;
-				this.line_num();
+				await this.line_num();
 				}
 				break;
 			default:
@@ -17914,12 +17914,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public line_num(): Line_numContext {
+	public async line_num() {
 		let _localctx: Line_numContext = new Line_numContext(this._ctx, this.state);
 		this.enterRule(_localctx, 552, cobolParser.RULE_line_num);
 		try {
@@ -17939,12 +17939,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public rd_clause(): Rd_clauseContext {
+	public async rd_clause() {
 		let _localctx: Rd_clauseContext = new Rd_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 554, cobolParser.RULE_rd_clause);
 		let _la: number;
@@ -17976,7 +17976,7 @@ export class cobolParser extends Parser {
 				this.state = 3740;
 				this.match(cobolParser.CODE);
 				this.state = 3741;
-				this.report_code();
+				await this.report_code();
 				}
 				break;
 			case cobolParser.CONTROL:
@@ -18033,7 +18033,7 @@ export class cobolParser extends Parser {
 						{
 						{
 						this.state = 3752;
-						this.control_name();
+						await this.control_name();
 						}
 						}
 						this.state = 3755;
@@ -18053,7 +18053,7 @@ export class cobolParser extends Parser {
 						{
 						{
 						this.state = 3758;
-						this.control_name();
+						await this.control_name();
 						}
 						}
 						this.state = 3763;
@@ -18113,7 +18113,7 @@ export class cobolParser extends Parser {
 					break;
 				}
 				this.state = 3777;
-				this.page_size_rd();
+				await this.page_size_rd();
 				this.state = 3779;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -18129,7 +18129,7 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					}
 				}
@@ -18142,7 +18142,7 @@ export class cobolParser extends Parser {
 					this.state = 3781;
 					this.match(cobolParser.HEADING);
 					this.state = 3782;
-					this.heading_line();
+					await this.heading_line();
 					}
 				}
 
@@ -18156,7 +18156,7 @@ export class cobolParser extends Parser {
 					this.state = 3786;
 					this.match(cobolParser.DETAIL);
 					this.state = 3787;
-					this.first_detail_line();
+					await this.first_detail_line();
 					}
 				}
 
@@ -18170,7 +18170,7 @@ export class cobolParser extends Parser {
 					this.state = 3791;
 					this.match(cobolParser.DETAIL);
 					this.state = 3792;
-					this.last_detail_line();
+					await this.last_detail_line();
 					}
 				}
 
@@ -18182,7 +18182,7 @@ export class cobolParser extends Parser {
 					this.state = 3795;
 					this.match(cobolParser.FOOTING);
 					this.state = 3796;
-					this.footing_line_rd();
+					await this.footing_line_rd();
 					}
 				}
 
@@ -18202,12 +18202,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public footing_line_rd(): Footing_line_rdContext {
+	public async footing_line_rd() {
 		let _localctx: Footing_line_rdContext = new Footing_line_rdContext(this._ctx, this.state);
 		this.enterRule(_localctx, 556, cobolParser.RULE_footing_line_rd);
 		try {
@@ -18227,12 +18227,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public last_detail_line(): Last_detail_lineContext {
+	public async last_detail_line() {
 		let _localctx: Last_detail_lineContext = new Last_detail_lineContext(this._ctx, this.state);
 		this.enterRule(_localctx, 558, cobolParser.RULE_last_detail_line);
 		try {
@@ -18252,12 +18252,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public first_detail_line(): First_detail_lineContext {
+	public async first_detail_line() {
 		let _localctx: First_detail_lineContext = new First_detail_lineContext(this._ctx, this.state);
 		this.enterRule(_localctx, 560, cobolParser.RULE_first_detail_line);
 		try {
@@ -18277,12 +18277,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public heading_line(): Heading_lineContext {
+	public async heading_line() {
 		let _localctx: Heading_lineContext = new Heading_lineContext(this._ctx, this.state);
 		this.enterRule(_localctx, 562, cobolParser.RULE_heading_line);
 		try {
@@ -18302,12 +18302,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public page_size_rd(): Page_size_rdContext {
+	public async page_size_rd() {
 		let _localctx: Page_size_rdContext = new Page_size_rdContext(this._ctx, this.state);
 		this.enterRule(_localctx, 564, cobolParser.RULE_page_size_rd);
 		try {
@@ -18327,19 +18327,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public control_name(): Control_nameContext {
+	public async control_name() {
 		let _localctx: Control_nameContext = new Control_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 566, cobolParser.RULE_control_name);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 3811;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -18352,12 +18352,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public report_code(): Report_codeContext {
+	public async report_code() {
 		let _localctx: Report_codeContext = new Report_codeContext(this._ctx, this.state);
 		this.enterRule(_localctx, 568, cobolParser.RULE_report_code);
 		try {
@@ -18377,12 +18377,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public usage(): UsageContext {
+	public async usage() {
 		let _localctx: UsageContext = new UsageContext(this._ctx, this.state);
 		this.enterRule(_localctx, 570, cobolParser.RULE_usage);
 		let _la: number;
@@ -18410,7 +18410,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 3821;
-			this.usage_definition();
+			await this.usage_definition();
 			}
 		}
 		catch (re) {
@@ -18423,12 +18423,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public usage_definition(): Usage_definitionContext {
+	public async usage_definition() {
 		let _localctx: Usage_definitionContext = new Usage_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 572, cobolParser.RULE_usage_definition);
 		let _la: number;
@@ -18463,7 +18463,7 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					}
 				}
@@ -18490,7 +18490,7 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					}
 				}
@@ -18517,7 +18517,7 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					}
 				}
@@ -18544,7 +18544,7 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					}
 				}
@@ -18719,12 +18719,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public picture(): PictureContext {
+	public async picture() {
 		let _localctx: PictureContext = new PictureContext(this._ctx, this.state);
 		this.enterRule(_localctx, 574, cobolParser.RULE_picture);
 		let _la: number;
@@ -18741,7 +18741,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 3866;
 			this._errHandler.sync(this);
@@ -18758,13 +18758,13 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 			}
 
 			this.state = 3868;
-			this.character_string();
+			await this.character_string();
 			}
 		}
 		catch (re) {
@@ -18777,12 +18777,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public character_string(): Character_stringContext {
+	public async character_string() {
 		let _localctx: Character_stringContext = new Character_stringContext(this._ctx, this.state);
 		this.enterRule(_localctx, 576, cobolParser.RULE_character_string);
 		try {
@@ -18802,12 +18802,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public other_data_item(): Other_data_itemContext {
+	public async other_data_item() {
 		let _localctx: Other_data_itemContext = new Other_data_itemContext(this._ctx, this.state);
 		this.enterRule(_localctx, 578, cobolParser.RULE_other_data_item);
 		try {
@@ -18827,12 +18827,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public data_name(): Data_nameContext {
+	public async data_name() {
 		let _localctx: Data_nameContext = new Data_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 580, cobolParser.RULE_data_name);
 		try {
@@ -18852,12 +18852,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public sd_clause(): Sd_clauseContext {
+	public async sd_clause() {
 		let _localctx: Sd_clauseContext = new Sd_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 582, cobolParser.RULE_sd_clause);
 		try {
@@ -18868,14 +18868,14 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 3876;
-				this.record();
+				await this.record();
 				}
 				break;
 			case cobolParser.DATA:
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 3877;
-				this.data_rec();
+				await this.data_rec();
 				}
 				break;
 			default:
@@ -18892,12 +18892,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public report_is(): Report_isContext {
+	public async report_is() {
 		let _localctx: Report_isContext = new Report_isContext(this._ctx, this.state);
 		this.enterRule(_localctx, 584, cobolParser.RULE_report_is);
 		let _la: number;
@@ -18949,7 +18949,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3890;
-				this.report_name();
+				await this.report_name();
 				}
 				}
 				this.state = 3893;
@@ -18968,12 +18968,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public report_name(): Report_nameContext {
+	public async report_name() {
 		let _localctx: Report_nameContext = new Report_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 586, cobolParser.RULE_report_name);
 		try {
@@ -18993,12 +18993,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public linage(): LinageContext {
+	public async linage() {
 		let _localctx: LinageContext = new LinageContext(this._ctx, this.state);
 		this.enterRule(_localctx, 588, cobolParser.RULE_linage);
 		let _la: number;
@@ -19018,7 +19018,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 3901;
-			this.page_size();
+			await this.page_size();
 			this.state = 3903;
 			this._errHandler.sync(this);
 			switch ( this.interpreter.adaptivePredict(this._input, 586, this._ctx) ) {
@@ -19057,7 +19057,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 3912;
-				this.footing_line();
+				await this.footing_line();
 				}
 			}
 
@@ -19089,7 +19089,7 @@ export class cobolParser extends Parser {
 				this.state = 3921;
 				this.match(cobolParser.TOP);
 				this.state = 3922;
-				this.top_lines();
+				await this.top_lines();
 				}
 				break;
 			}
@@ -19121,7 +19121,7 @@ export class cobolParser extends Parser {
 				this.state = 3931;
 				this.match(cobolParser.BOTTOM);
 				this.state = 3932;
-				this.bottom_lines();
+				await this.bottom_lines();
 				}
 			}
 
@@ -19137,12 +19137,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public bottom_lines(): Bottom_linesContext {
+	public async bottom_lines() {
 		let _localctx: Bottom_linesContext = new Bottom_linesContext(this._ctx, this.state);
 		this.enterRule(_localctx, 590, cobolParser.RULE_bottom_lines);
 		try {
@@ -19160,7 +19160,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 3936;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				break;
 			default:
@@ -19177,12 +19177,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public top_lines(): Top_linesContext {
+	public async top_lines() {
 		let _localctx: Top_linesContext = new Top_linesContext(this._ctx, this.state);
 		this.enterRule(_localctx, 592, cobolParser.RULE_top_lines);
 		try {
@@ -19200,7 +19200,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 3940;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				break;
 			default:
@@ -19217,12 +19217,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public footing_line(): Footing_lineContext {
+	public async footing_line() {
 		let _localctx: Footing_lineContext = new Footing_lineContext(this._ctx, this.state);
 		this.enterRule(_localctx, 594, cobolParser.RULE_footing_line);
 		try {
@@ -19240,7 +19240,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 3944;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				break;
 			default:
@@ -19257,12 +19257,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public page_size(): Page_sizeContext {
+	public async page_size() {
 		let _localctx: Page_sizeContext = new Page_sizeContext(this._ctx, this.state);
 		this.enterRule(_localctx, 596, cobolParser.RULE_page_size);
 		try {
@@ -19280,7 +19280,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 3948;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				break;
 			default:
@@ -19297,12 +19297,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public data_rec(): Data_recContext {
+	public async data_rec() {
 		let _localctx: Data_recContext = new Data_recContext(this._ctx, this.state);
 		this.enterRule(_localctx, 598, cobolParser.RULE_data_rec);
 		let _la: number;
@@ -19356,7 +19356,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 3962;
-				this.rec_name();
+				await this.rec_name();
 				}
 				}
 				this.state = 3965;
@@ -19375,12 +19375,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public rec_name(): Rec_nameContext {
+	public async rec_name() {
 		let _localctx: Rec_nameContext = new Rec_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 600, cobolParser.RULE_rec_name);
 		try {
@@ -19400,12 +19400,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public value_of_id(): Value_of_idContext {
+	public async value_of_id() {
 		let _localctx: Value_of_idContext = new Value_of_idContext(this._ctx, this.state);
 		this.enterRule(_localctx, 602, cobolParser.RULE_value_of_id);
 		let _la: number;
@@ -19426,7 +19426,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 3973;
 			this._errHandler.sync(this);
@@ -19439,7 +19439,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 3975;
-			this.value_of_id_definition();
+			await this.value_of_id_definition();
 			}
 		}
 		catch (re) {
@@ -19452,12 +19452,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public value_of_id_definition(): Value_of_id_definitionContext {
+	public async value_of_id_definition() {
 		let _localctx: Value_of_id_definitionContext = new Value_of_id_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 604, cobolParser.RULE_value_of_id_definition);
 		try {
@@ -19475,7 +19475,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 3978;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				break;
 			default:
@@ -19492,12 +19492,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public label(): LabelContext {
+	public async label() {
 		let _localctx: LabelContext = new LabelContext(this._ctx, this.state);
 		this.enterRule(_localctx, 606, cobolParser.RULE_label);
 		let _la: number;
@@ -19554,7 +19554,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -19568,12 +19568,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public record(): RecordContext {
+	public async record() {
 		let _localctx: RecordContext = new RecordContext(this._ctx, this.state);
 		this.enterRule(_localctx, 608, cobolParser.RULE_record);
 		try {
@@ -19582,7 +19582,7 @@ export class cobolParser extends Parser {
 			this.state = 3994;
 			this.match(cobolParser.RECORD);
 			this.state = 3995;
-			this.record_definition();
+			await this.record_definition();
 			}
 		}
 		catch (re) {
@@ -19595,12 +19595,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public record_definition(): Record_definitionContext {
+	public async record_definition() {
 		let _localctx: Record_definitionContext = new Record_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 610, cobolParser.RULE_record_definition);
 		let _la: number;
@@ -19628,14 +19628,14 @@ export class cobolParser extends Parser {
 				case 1:
 					{
 					this.state = 4000;
-					this.shortest_rec();
+					await this.shortest_rec();
 					this.state = 4001;
 					this.match(cobolParser.TO);
 					}
 					break;
 				}
 				this.state = 4005;
-				this.longest_rec();
+				await this.longest_rec();
 				this.state = 4007;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -19700,7 +19700,7 @@ export class cobolParser extends Parser {
 					}
 
 					this.state = 4022;
-					this.shortest_rec();
+					await this.shortest_rec();
 					}
 				}
 
@@ -19712,7 +19712,7 @@ export class cobolParser extends Parser {
 					this.state = 4025;
 					this.match(cobolParser.TO);
 					this.state = 4026;
-					this.longest_rec();
+					await this.longest_rec();
 					}
 				}
 
@@ -19744,7 +19744,7 @@ export class cobolParser extends Parser {
 					}
 
 					this.state = 4036;
-					this.depending_item();
+					await this.depending_item();
 					}
 				}
 
@@ -19764,19 +19764,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public depending_item(): Depending_itemContext {
+	public async depending_item() {
 		let _localctx: Depending_itemContext = new Depending_itemContext(this._ctx, this.state);
 		this.enterRule(_localctx, 612, cobolParser.RULE_depending_item);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 4041;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -19789,12 +19789,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public shortest_rec(): Shortest_recContext {
+	public async shortest_rec() {
 		let _localctx: Shortest_recContext = new Shortest_recContext(this._ctx, this.state);
 		this.enterRule(_localctx, 614, cobolParser.RULE_shortest_rec);
 		try {
@@ -19814,12 +19814,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public longest_rec(): Longest_recContext {
+	public async longest_rec() {
 		let _localctx: Longest_recContext = new Longest_recContext(this._ctx, this.state);
 		this.enterRule(_localctx, 616, cobolParser.RULE_longest_rec);
 		try {
@@ -19839,12 +19839,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public screen_description_entry(): Screen_description_entryContext {
+	public async screen_description_entry() {
 		let _localctx: Screen_description_entryContext = new Screen_description_entryContext(this._ctx, this.state);
 		this.enterRule(_localctx, 618, cobolParser.RULE_screen_description_entry);
 		let _la: number;
@@ -19852,14 +19852,14 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 4047;
-			this.level_number();
+			await this.level_number();
 			this.state = 4050;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case cobolParser.USER_DEFINED_WORD_:
 				{
 				this.state = 4048;
-				this.screen_name();
+				await this.screen_name();
 				}
 				break;
 			case cobolParser.FILLER:
@@ -19906,7 +19906,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4052;
-				this.screen_description_clause();
+				await this.screen_description_clause();
 				}
 				}
 				this.state = 4057;
@@ -19922,7 +19922,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4059;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4064;
@@ -19941,12 +19941,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public screen_name(): Screen_nameContext {
+	public async screen_name() {
 		let _localctx: Screen_nameContext = new Screen_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 620, cobolParser.RULE_screen_name);
 		try {
@@ -19966,12 +19966,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public screen_description_clause(): Screen_description_clauseContext {
+	public async screen_description_clause() {
 		let _localctx: Screen_description_clauseContext = new Screen_description_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 622, cobolParser.RULE_screen_description_clause);
 		let _la: number;
@@ -19994,7 +19994,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 				break;
@@ -20015,7 +20015,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 4073;
-				this.color_num();
+				await this.color_num();
 				}
 				break;
 
@@ -20035,7 +20035,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 4078;
-				this.color_num();
+				await this.color_num();
 				}
 				break;
 
@@ -20095,7 +20095,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 8);
 				{
 				this.state = 4089;
-				this.sign_is();
+				await this.sign_is();
 				}
 				break;
 
@@ -20138,7 +20138,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 				break;
@@ -20211,7 +20211,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 4109;
-				this.src_number();
+				await this.src_number();
 				}
 				break;
 
@@ -20251,7 +20251,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 4120;
-				this.src_number();
+				await this.src_number();
 				}
 				break;
 
@@ -20271,7 +20271,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 4125;
-				this.nonnumeric_literal();
+				await this.nonnumeric_literal();
 				}
 				break;
 
@@ -20308,7 +20308,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 4133;
 				this._errHandler.sync(this);
@@ -20327,27 +20327,27 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 22);
 				{
 				this.state = 4135;
-				this.picture();
+				await this.picture();
 				this.state = 4142;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
 				case cobolParser.USING:
 					{
 					this.state = 4136;
-					this.scr_pic_using();
+					await this.scr_pic_using();
 					}
 					break;
 				case cobolParser.FROM:
 					{
 					this.state = 4137;
-					this.scr_pic_from();
+					await this.scr_pic_from();
 					this.state = 4139;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 					if (_la === cobolParser.TO) {
 						{
 						this.state = 4138;
-						this.scr_pic_to();
+						await this.scr_pic_to();
 						}
 					}
 
@@ -20356,7 +20356,7 @@ export class cobolParser extends Parser {
 				case cobolParser.TO:
 					{
 					this.state = 4141;
-					this.scr_pic_to();
+					await this.scr_pic_to();
 					}
 					break;
 				default:
@@ -20376,12 +20376,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public scr_pic_using(): Scr_pic_usingContext {
+	public async scr_pic_using() {
 		let _localctx: Scr_pic_usingContext = new Scr_pic_usingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 624, cobolParser.RULE_scr_pic_using);
 		try {
@@ -20390,7 +20390,7 @@ export class cobolParser extends Parser {
 			this.state = 4146;
 			this.match(cobolParser.USING);
 			this.state = 4147;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -20403,12 +20403,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public scr_pic_from(): Scr_pic_fromContext {
+	public async scr_pic_from() {
 		let _localctx: Scr_pic_fromContext = new Scr_pic_fromContext(this._ctx, this.state);
 		this.enterRule(_localctx, 626, cobolParser.RULE_scr_pic_from);
 		try {
@@ -20422,13 +20422,13 @@ export class cobolParser extends Parser {
 			case cobolParser.USER_DEFINED_WORD_:
 				{
 				this.state = 4150;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				break;
 			case cobolParser.STRING_LITERAL_:
 				{
 				this.state = 4151;
-				this.nonnumeric_literal();
+				await this.nonnumeric_literal();
 				}
 				break;
 			default:
@@ -20446,12 +20446,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public scr_pic_to(): Scr_pic_toContext {
+	public async scr_pic_to() {
 		let _localctx: Scr_pic_toContext = new Scr_pic_toContext(this._ctx, this.state);
 		this.enterRule(_localctx, 628, cobolParser.RULE_scr_pic_to);
 		try {
@@ -20460,7 +20460,7 @@ export class cobolParser extends Parser {
 			this.state = 4154;
 			this.match(cobolParser.TO);
 			this.state = 4155;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -20473,12 +20473,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public nonnumeric_literal(): Nonnumeric_literalContext {
+	public async nonnumeric_literal() {
 		let _localctx: Nonnumeric_literalContext = new Nonnumeric_literalContext(this._ctx, this.state);
 		this.enterRule(_localctx, 630, cobolParser.RULE_nonnumeric_literal);
 		try {
@@ -20498,12 +20498,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public src_number(): Src_numberContext {
+	public async src_number() {
 		let _localctx: Src_numberContext = new Src_numberContext(this._ctx, this.state);
 		this.enterRule(_localctx, 632, cobolParser.RULE_src_number);
 		try {
@@ -20514,7 +20514,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 4159;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				break;
 			case cobolParser.NUMERIC_LITERAL_:
@@ -20538,12 +20538,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public color_num(): Color_numContext {
+	public async color_num() {
 		let _localctx: Color_numContext = new Color_numContext(this._ctx, this.state);
 		this.enterRule(_localctx, 634, cobolParser.RULE_color_num);
 		try {
@@ -20563,12 +20563,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public program_id(): Program_idContext {
+	public async program_id() {
 		let _localctx: Program_idContext = new Program_idContext(this._ctx, this.state);
 		this.enterRule(_localctx, 636, cobolParser.RULE_program_id);
 		let _la: number;
@@ -20586,7 +20586,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4167;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4172;
@@ -20594,14 +20594,14 @@ export class cobolParser extends Parser {
 				_la = this._input.LA(1);
 			}
 			this.state = 4173;
-			this.program_name();
+			await this.program_name();
 			this.state = 4175;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === cobolParser.COMMON || _la === cobolParser.INITIAL || _la === cobolParser.IS) {
 				{
 				this.state = 4174;
-				this.common_initial();
+				await this.common_initial();
 				}
 			}
 
@@ -20611,7 +20611,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.IDENT || _la === cobolParser.WITH) {
 				{
 				this.state = 4177;
-				this.with_ident();
+				await this.with_ident();
 				}
 			}
 
@@ -20624,7 +20624,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4181;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4186;
@@ -20643,12 +20643,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public program_name(): Program_nameContext {
+	public async program_name() {
 		let _localctx: Program_nameContext = new Program_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 638, cobolParser.RULE_program_name);
 		try {
@@ -20668,12 +20668,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public common_initial(): Common_initialContext {
+	public async common_initial() {
 		let _localctx: Common_initialContext = new Common_initialContext(this._ctx, this.state);
 		this.enterRule(_localctx, 640, cobolParser.RULE_common_initial);
 		let _la: number;
@@ -20750,12 +20750,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public with_ident(): With_identContext {
+	public async with_ident() {
 		let _localctx: With_identContext = new With_identContext(this._ctx, this.state);
 		this.enterRule(_localctx, 642, cobolParser.RULE_with_ident);
 		let _la: number;
@@ -20775,7 +20775,7 @@ export class cobolParser extends Parser {
 			this.state = 4208;
 			this.match(cobolParser.IDENT);
 			this.state = 4209;
-			this.ident_string();
+			await this.ident_string();
 			}
 		}
 		catch (re) {
@@ -20788,12 +20788,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public ident_string(): Ident_stringContext {
+	public async ident_string() {
 		let _localctx: Ident_stringContext = new Ident_stringContext(this._ctx, this.state);
 		this.enterRule(_localctx, 644, cobolParser.RULE_ident_string);
 		try {
@@ -20813,12 +20813,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public installation(): InstallationContext {
+	public async installation() {
 		let _localctx: InstallationContext = new InstallationContext(this._ctx, this.state);
 		this.enterRule(_localctx, 646, cobolParser.RULE_installation);
 		let _la: number;
@@ -20838,7 +20838,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 4215;
-					this.word_in_area_B();
+					await this.word_in_area_B();
 					}
 					}
 				}
@@ -20853,7 +20853,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4221;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4226;
@@ -20872,12 +20872,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public date_written(): Date_writtenContext {
+	public async date_written() {
 		let _localctx: Date_writtenContext = new Date_writtenContext(this._ctx, this.state);
 		this.enterRule(_localctx, 648, cobolParser.RULE_date_written);
 		let _la: number;
@@ -20897,7 +20897,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 4229;
-					this.word_in_area_B();
+					await this.word_in_area_B();
 					}
 					}
 				}
@@ -20912,7 +20912,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4235;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4240;
@@ -20931,12 +20931,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public date_compiled(): Date_compiledContext {
+	public async date_compiled() {
 		let _localctx: Date_compiledContext = new Date_compiledContext(this._ctx, this.state);
 		this.enterRule(_localctx, 650, cobolParser.RULE_date_compiled);
 		let _la: number;
@@ -20956,7 +20956,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 4243;
-					this.word_in_area_B();
+					await this.word_in_area_B();
 					}
 					}
 				}
@@ -20971,7 +20971,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4249;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4254;
@@ -20990,12 +20990,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public security(): SecurityContext {
+	public async security() {
 		let _localctx: SecurityContext = new SecurityContext(this._ctx, this.state);
 		this.enterRule(_localctx, 652, cobolParser.RULE_security);
 		let _la: number;
@@ -21015,7 +21015,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 4257;
-					this.word_in_area_B();
+					await this.word_in_area_B();
 					}
 					}
 				}
@@ -21030,7 +21030,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4263;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4268;
@@ -21049,12 +21049,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public options_(): Options_Context {
+	public async options_() {
 		let _localctx: Options_Context = new Options_Context(this._ctx, this.state);
 		this.enterRule(_localctx, 654, cobolParser.RULE_options_);
 		let _la: number;
@@ -21072,7 +21072,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4271;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4276;
@@ -21085,7 +21085,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.ARITHMETIC) {
 				{
 				this.state = 4277;
-				this.arithmetic();
+				await this.arithmetic();
 				}
 			}
 
@@ -21101,12 +21101,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public arithmetic(): ArithmeticContext {
+	public async arithmetic() {
 		let _localctx: ArithmeticContext = new ArithmeticContext(this._ctx, this.state);
 		this.enterRule(_localctx, 656, cobolParser.RULE_arithmetic);
 		let _la: number;
@@ -21135,7 +21135,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 4285;
 			this.match(cobolParser.DOT_);
@@ -21146,7 +21146,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4286;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4291;
@@ -21165,12 +21165,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public configuration_section(): Configuration_sectionContext {
+	public async configuration_section() {
 		let _localctx: Configuration_sectionContext = new Configuration_sectionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 658, cobolParser.RULE_configuration_section);
 		let _la: number;
@@ -21190,7 +21190,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4295;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4300;
@@ -21203,7 +21203,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.SOURCE_COMPUTER) {
 				{
 				this.state = 4301;
-				this.source_computer();
+				await this.source_computer();
 				}
 			}
 
@@ -21213,7 +21213,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.OBJECT_COMPUTER) {
 				{
 				this.state = 4304;
-				this.object_computer();
+				await this.object_computer();
 				}
 			}
 
@@ -21223,7 +21223,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.SPECIAL_NAMES) {
 				{
 				this.state = 4307;
-				this.special_names();
+				await this.special_names();
 				}
 			}
 
@@ -21239,12 +21239,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public input_output_section(): Input_output_sectionContext {
+	public async input_output_section() {
 		let _localctx: Input_output_sectionContext = new Input_output_sectionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 660, cobolParser.RULE_input_output_section);
 		let _la: number;
@@ -21264,7 +21264,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4313;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4318;
@@ -21277,7 +21277,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.FILE_CONTROL) {
 				{
 				this.state = 4319;
-				this.file_control();
+				await this.file_control();
 				}
 			}
 
@@ -21287,7 +21287,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.I_O_CONTROL) {
 				{
 				this.state = 4322;
-				this.i_o_control();
+				await this.i_o_control();
 				}
 			}
 
@@ -21303,12 +21303,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public source_computer(): Source_computerContext {
+	public async source_computer() {
 		let _localctx: Source_computerContext = new Source_computerContext(this._ctx, this.state);
 		this.enterRule(_localctx, 662, cobolParser.RULE_source_computer);
 		let _la: number;
@@ -21326,7 +21326,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4327;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4332;
@@ -21339,14 +21339,14 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.ALPHA || _la === cobolParser.I64 || _la === cobolParser.VAX || _la === cobolParser.USER_DEFINED_WORD_) {
 				{
 				this.state = 4333;
-				this.computer_type();
+				await this.computer_type();
 				this.state = 4335;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === cobolParser.DEBUGGING || _la === cobolParser.WITH) {
 					{
 					this.state = 4334;
-					this.with_debugging();
+					await this.with_debugging();
 					}
 				}
 
@@ -21359,7 +21359,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 4338;
-					this.replace_statement();
+					await this.replace_statement();
 					}
 					}
 					this.state = 4343;
@@ -21381,12 +21381,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public computer_type(): Computer_typeContext {
+	public async computer_type() {
 		let _localctx: Computer_typeContext = new Computer_typeContext(this._ctx, this.state);
 		this.enterRule(_localctx, 664, cobolParser.RULE_computer_type);
 		let _la: number;
@@ -21403,7 +21403,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -21417,12 +21417,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public with_debugging(): With_debuggingContext {
+	public async with_debugging() {
 		let _localctx: With_debuggingContext = new With_debuggingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 666, cobolParser.RULE_with_debugging);
 		let _la: number;
@@ -21455,12 +21455,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public object_computer(): Object_computerContext {
+	public async object_computer() {
 		let _localctx: Object_computerContext = new Object_computerContext(this._ctx, this.state);
 		this.enterRule(_localctx, 668, cobolParser.RULE_object_computer);
 		let _la: number;
@@ -21478,7 +21478,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4356;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4361;
@@ -21491,14 +21491,14 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.ALPHA || _la === cobolParser.I64 || _la === cobolParser.VAX || _la === cobolParser.USER_DEFINED_WORD_) {
 				{
 				this.state = 4362;
-				this.computer_type();
+				await this.computer_type();
 				this.state = 4364;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === cobolParser.MEMORY) {
 					{
 					this.state = 4363;
-					this.memory_size();
+					await this.memory_size();
 					}
 				}
 
@@ -21508,7 +21508,7 @@ export class cobolParser extends Parser {
 				if (_la === cobolParser.COLLATING || _la === cobolParser.PROGRAM || _la === cobolParser.SEQUENCE) {
 					{
 					this.state = 4366;
-					this.program_collating();
+					await this.program_collating();
 					}
 				}
 
@@ -21518,7 +21518,7 @@ export class cobolParser extends Parser {
 				if (_la === cobolParser.SEGMENT_LIMIT) {
 					{
 					this.state = 4369;
-					this.segment_limit();
+					await this.segment_limit();
 					}
 				}
 
@@ -21531,7 +21531,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 4373;
-					this.replace_statement();
+					await this.replace_statement();
 					}
 					}
 					this.state = 4378;
@@ -21553,12 +21553,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public memory_size(): Memory_sizeContext {
+	public async memory_size() {
 		let _localctx: Memory_sizeContext = new Memory_sizeContext(this._ctx, this.state);
 		this.enterRule(_localctx, 670, cobolParser.RULE_memory_size);
 		let _la: number;
@@ -21578,9 +21578,9 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4385;
-			this.memory_size_amount();
+			await this.memory_size_amount();
 			this.state = 4386;
-			this.memory_size_unit();
+			await this.memory_size_unit();
 			}
 		}
 		catch (re) {
@@ -21593,12 +21593,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public memory_size_amount(): Memory_size_amountContext {
+	public async memory_size_amount() {
 		let _localctx: Memory_size_amountContext = new Memory_size_amountContext(this._ctx, this.state);
 		this.enterRule(_localctx, 672, cobolParser.RULE_memory_size_amount);
 		try {
@@ -21618,12 +21618,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public memory_size_unit(): Memory_size_unitContext {
+	public async memory_size_unit() {
 		let _localctx: Memory_size_unitContext = new Memory_size_unitContext(this._ctx, this.state);
 		this.enterRule(_localctx, 674, cobolParser.RULE_memory_size_unit);
 		let _la: number;
@@ -21640,7 +21640,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -21654,12 +21654,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public program_collating(): Program_collatingContext {
+	public async program_collating() {
 		let _localctx: Program_collatingContext = new Program_collatingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 676, cobolParser.RULE_program_collating);
 		let _la: number;
@@ -21699,7 +21699,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4402;
-			this.alpha_name();
+			await this.alpha_name();
 			}
 		}
 		catch (re) {
@@ -21712,12 +21712,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public alpha_name(): Alpha_nameContext {
+	public async alpha_name() {
 		let _localctx: Alpha_nameContext = new Alpha_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 678, cobolParser.RULE_alpha_name);
 		try {
@@ -21737,12 +21737,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public segment_limit(): Segment_limitContext {
+	public async segment_limit() {
 		let _localctx: Segment_limitContext = new Segment_limitContext(this._ctx, this.state);
 		this.enterRule(_localctx, 680, cobolParser.RULE_segment_limit);
 		let _la: number;
@@ -21762,7 +21762,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4410;
-			this.segment_number();
+			await this.segment_number();
 			}
 		}
 		catch (re) {
@@ -21775,12 +21775,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public segment_number(): Segment_numberContext {
+	public async segment_number() {
 		let _localctx: Segment_numberContext = new Segment_numberContext(this._ctx, this.state);
 		this.enterRule(_localctx, 682, cobolParser.RULE_segment_number);
 		try {
@@ -21800,12 +21800,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public special_names(): Special_namesContext {
+	public async special_names() {
 		let _localctx: Special_namesContext = new Special_namesContext(this._ctx, this.state);
 		this.enterRule(_localctx, 684, cobolParser.RULE_special_names);
 		let _la: number;
@@ -21823,7 +21823,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4416;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4421;
@@ -21836,7 +21836,7 @@ export class cobolParser extends Parser {
 			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << cobolParser.ALPHABET) | (1 << cobolParser.ARGUMENT_NUMBER) | (1 << cobolParser.ARGUMENT_VALUE))) !== 0) || ((((_la - 51)) & ~0x1F) === 0 && ((1 << (_la - 51)) & ((1 << (cobolParser.C01 - 51)) | (1 << (cobolParser.CARD_READER - 51)) | (1 << (cobolParser.CLASS - 51)))) !== 0) || ((((_la - 84)) & ~0x1F) === 0 && ((1 << (_la - 84)) & ((1 << (cobolParser.CONSOLE - 84)) | (1 << (cobolParser.CRT - 84)) | (1 << (cobolParser.CURRENCY - 84)) | (1 << (cobolParser.CURSOR - 84)) | (1 << (cobolParser.DECIMAL_POINT - 84)))) !== 0) || _la === cobolParser.ENVIRONMENT_NAME || _la === cobolParser.ENVIRONMENT_VALUE || _la === cobolParser.LINE_PRINTER || _la === cobolParser.PAPER_TAPE_PUNCH || _la === cobolParser.PAPER_TAPE_READER || ((((_la - 372)) & ~0x1F) === 0 && ((1 << (_la - 372)) & ((1 << (cobolParser.SWITCH - 372)) | (1 << (cobolParser.SWITCH_N_ - 372)) | (1 << (cobolParser.SYMBOLIC - 372)) | (1 << (cobolParser.SYSERR - 372)) | (1 << (cobolParser.SYSIN - 372)) | (1 << (cobolParser.SYSOUT - 372)))) !== 0) || _la === cobolParser.DOT_) {
 				{
 				this.state = 4422;
-				this.special_names_content();
+				await this.special_names_content();
 				this.state = 4423;
 				this.match(cobolParser.DOT_);
 				this.state = 4427;
@@ -21846,7 +21846,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 4424;
-					this.replace_statement();
+					await this.replace_statement();
 					}
 					}
 					this.state = 4429;
@@ -21868,12 +21868,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public special_names_content(): Special_names_contentContext {
+	public async special_names_content() {
 		let _localctx: Special_names_contentContext = new Special_names_contentContext(this._ctx, this.state);
 		this.enterRule(_localctx, 686, cobolParser.RULE_special_names_content);
 		let _la: number;
@@ -21903,14 +21903,14 @@ export class cobolParser extends Parser {
 				case cobolParser.SYSOUT:
 					{
 					this.state = 4432;
-					this.predefined_name_relation();
+					await this.predefined_name_relation();
 					}
 					break;
 				case cobolParser.SWITCH:
 				case cobolParser.SWITCH_N_:
 					{
 					this.state = 4433;
-					this.switch_definition();
+					await this.switch_definition();
 					}
 					break;
 				default:
@@ -21928,7 +21928,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4439;
-				this.alphabet();
+				await this.alphabet();
 				}
 				}
 				this.state = 4444;
@@ -21942,7 +21942,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4445;
-				this.symbolic_chars();
+				await this.symbolic_chars();
 				}
 				}
 				this.state = 4450;
@@ -21956,7 +21956,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4451;
-				this.class_();
+				await this.class_();
 				}
 				}
 				this.state = 4456;
@@ -21970,7 +21970,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4457;
-				this.currency();
+				await this.currency();
 				}
 				}
 				this.state = 4462;
@@ -22005,7 +22005,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.CURSOR) {
 				{
 				this.state = 4470;
-				this.cursor_is();
+				await this.cursor_is();
 				}
 			}
 
@@ -22015,7 +22015,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.CRT) {
 				{
 				this.state = 4473;
-				this.crt_is();
+				await this.crt_is();
 				}
 			}
 
@@ -22031,12 +22031,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public cursor_is(): Cursor_isContext {
+	public async cursor_is() {
 		let _localctx: Cursor_isContext = new Cursor_isContext(this._ctx, this.state);
 		this.enterRule(_localctx, 688, cobolParser.RULE_cursor_is);
 		let _la: number;
@@ -22056,7 +22056,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4480;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -22069,12 +22069,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public crt_is(): Crt_isContext {
+	public async crt_is() {
 		let _localctx: Crt_isContext = new Crt_isContext(this._ctx, this.state);
 		this.enterRule(_localctx, 690, cobolParser.RULE_crt_is);
 		let _la: number;
@@ -22096,7 +22096,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4487;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -22109,12 +22109,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public predefined_name_relation(): Predefined_name_relationContext {
+	public async predefined_name_relation() {
 		let _localctx: Predefined_name_relationContext = new Predefined_name_relationContext(this._ctx, this.state);
 		this.enterRule(_localctx, 692, cobolParser.RULE_predefined_name_relation);
 		let _la: number;
@@ -22122,7 +22122,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 4489;
-			this.predefined_name();
+			await this.predefined_name();
 			this.state = 4491;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -22134,7 +22134,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4493;
-			this.user_name();
+			await this.user_name();
 			}
 		}
 		catch (re) {
@@ -22147,12 +22147,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public predefined_name(): Predefined_nameContext {
+	public async predefined_name() {
 		let _localctx: Predefined_nameContext = new Predefined_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 694, cobolParser.RULE_predefined_name);
 		let _la: number;
@@ -22169,7 +22169,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -22183,12 +22183,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public switch_definition(): Switch_definitionContext {
+	public async switch_definition() {
 		let _localctx: Switch_definitionContext = new Switch_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 696, cobolParser.RULE_switch_definition);
 		let _la: number;
@@ -22203,7 +22203,7 @@ export class cobolParser extends Parser {
 				this.state = 4497;
 				this.match(cobolParser.SWITCH);
 				this.state = 4498;
-				this.switch_num();
+				await this.switch_num();
 				}
 				break;
 			case cobolParser.SWITCH_N_:
@@ -22231,7 +22231,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 4505;
-				this.switch_name();
+				await this.switch_name();
 				}
 			}
 
@@ -22241,14 +22241,14 @@ export class cobolParser extends Parser {
 			case cobolParser.ON:
 				{
 				this.state = 4508;
-				this.switch_clause_on();
+				await this.switch_clause_on();
 				this.state = 4510;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === cobolParser.OFF) {
 					{
 					this.state = 4509;
-					this.switch_clause_off();
+					await this.switch_clause_off();
 					}
 				}
 
@@ -22257,14 +22257,14 @@ export class cobolParser extends Parser {
 			case cobolParser.OFF:
 				{
 				this.state = 4512;
-				this.switch_clause_off();
+				await this.switch_clause_off();
 				this.state = 4514;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la === cobolParser.ON) {
 					{
 					this.state = 4513;
-					this.switch_clause_on();
+					await this.switch_clause_on();
 					}
 				}
 
@@ -22309,12 +22309,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public switch_clause_on(): Switch_clause_onContext {
+	public async switch_clause_on() {
 		let _localctx: Switch_clause_onContext = new Switch_clause_onContext(this._ctx, this.state);
 		this.enterRule(_localctx, 698, cobolParser.RULE_switch_clause_on);
 		let _la: number;
@@ -22344,7 +22344,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4525;
-			this.cond_name();
+			await this.cond_name();
 			}
 		}
 		catch (re) {
@@ -22357,12 +22357,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public switch_clause_off(): Switch_clause_offContext {
+	public async switch_clause_off() {
 		let _localctx: Switch_clause_offContext = new Switch_clause_offContext(this._ctx, this.state);
 		this.enterRule(_localctx, 700, cobolParser.RULE_switch_clause_off);
 		let _la: number;
@@ -22392,7 +22392,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4534;
-			this.cond_name();
+			await this.cond_name();
 			}
 		}
 		catch (re) {
@@ -22405,12 +22405,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public cond_name(): Cond_nameContext {
+	public async cond_name() {
 		let _localctx: Cond_nameContext = new Cond_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 702, cobolParser.RULE_cond_name);
 		try {
@@ -22430,12 +22430,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public switch_name(): Switch_nameContext {
+	public async switch_name() {
 		let _localctx: Switch_nameContext = new Switch_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 704, cobolParser.RULE_switch_name);
 		try {
@@ -22455,12 +22455,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public switch_num(): Switch_numContext {
+	public async switch_num() {
 		let _localctx: Switch_numContext = new Switch_numContext(this._ctx, this.state);
 		this.enterRule(_localctx, 706, cobolParser.RULE_switch_num);
 		try {
@@ -22480,12 +22480,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public qualified_data_item(): Qualified_data_itemContext {
+	public async qualified_data_item() {
 		let _localctx: Qualified_data_itemContext = new Qualified_data_itemContext(this._ctx, this.state);
 		this.enterRule(_localctx, 708, cobolParser.RULE_qualified_data_item);
 		let _la: number;
@@ -22512,7 +22512,7 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					this.state = 4544;
 					this.match(cobolParser.USER_DEFINED_WORD_);
@@ -22535,12 +22535,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public currency(): CurrencyContext {
+	public async currency() {
 		let _localctx: CurrencyContext = new CurrencyContext(this._ctx, this.state);
 		this.enterRule(_localctx, 710, cobolParser.RULE_currency);
 		let _la: number;
@@ -22570,7 +22570,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4557;
-			this.currency_definition();
+			await this.currency_definition();
 			}
 		}
 		catch (re) {
@@ -22583,12 +22583,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public currency_definition(): Currency_definitionContext {
+	public async currency_definition() {
 		let _localctx: Currency_definitionContext = new Currency_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 712, cobolParser.RULE_currency_definition);
 		let _la: number;
@@ -22601,7 +22601,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 4559;
-				this.currency_string();
+				await this.currency_string();
 				this.state = 4561;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -22624,13 +22624,13 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 				break;
 			}
 			this.state = 4568;
-			this.currency_char();
+			await this.currency_char();
 			}
 		}
 		catch (re) {
@@ -22643,12 +22643,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public currency_string(): Currency_stringContext {
+	public async currency_string() {
 		let _localctx: Currency_stringContext = new Currency_stringContext(this._ctx, this.state);
 		this.enterRule(_localctx, 714, cobolParser.RULE_currency_string);
 		try {
@@ -22668,12 +22668,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public currency_char(): Currency_charContext {
+	public async currency_char() {
 		let _localctx: Currency_charContext = new Currency_charContext(this._ctx, this.state);
 		this.enterRule(_localctx, 716, cobolParser.RULE_currency_char);
 		try {
@@ -22693,12 +22693,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public class_(): Class_Context {
+	public async class_() {
 		let _localctx: Class_Context = new Class_Context(this._ctx, this.state);
 		this.enterRule(_localctx, 718, cobolParser.RULE_class_);
 		let _la: number;
@@ -22708,7 +22708,7 @@ export class cobolParser extends Parser {
 			this.state = 4574;
 			this.match(cobolParser.CLASS);
 			this.state = 4575;
-			this.class_name();
+			await this.class_name();
 			this.state = 4577;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -22726,7 +22726,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4579;
-				this.user_class();
+				await this.user_class();
 				}
 				}
 				this.state = 4582;
@@ -22745,12 +22745,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public class_name(): Class_nameContext {
+	public async class_name() {
 		let _localctx: Class_nameContext = new Class_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 720, cobolParser.RULE_class_name);
 		try {
@@ -22770,12 +22770,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public user_class(): User_classContext {
+	public async user_class() {
 		let _localctx: User_classContext = new User_classContext(this._ctx, this.state);
 		this.enterRule(_localctx, 722, cobolParser.RULE_user_class);
 		let _la: number;
@@ -22783,7 +22783,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 4586;
-			this.first_literal();
+			await this.first_literal();
 			this.state = 4589;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -22799,10 +22799,10 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 4588;
-				this.last_literal();
+				await this.last_literal();
 				}
 			}
 
@@ -22818,12 +22818,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public symbolic_chars(): Symbolic_charsContext {
+	public async symbolic_chars() {
 		let _localctx: Symbolic_charsContext = new Symbolic_charsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 724, cobolParser.RULE_symbolic_chars);
 		let _la: number;
@@ -22849,7 +22849,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4595;
-				this.symb_ch_definition();
+				await this.symb_ch_definition();
 				}
 				}
 				this.state = 4598;
@@ -22868,12 +22868,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public symb_ch_definition(): Symb_ch_definitionContext {
+	public async symb_ch_definition() {
 		let _localctx: Symb_ch_definitionContext = new Symb_ch_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 726, cobolParser.RULE_symb_ch_definition);
 		let _la: number;
@@ -22890,7 +22890,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 4600;
-					this.symb_ch_def_clause();
+					await this.symb_ch_def_clause();
 					}
 					}
 					break;
@@ -22907,7 +22907,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.IN) {
 				{
 				this.state = 4605;
-				this.symb_ch_def_in_alphabet();
+				await this.symb_ch_def_in_alphabet();
 				}
 			}
 
@@ -22923,12 +22923,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public symb_ch_def_clause(): Symb_ch_def_clauseContext {
+	public async symb_ch_def_clause() {
 		let _localctx: Symb_ch_def_clauseContext = new Symb_ch_def_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 728, cobolParser.RULE_symb_ch_def_clause);
 		let _la: number;
@@ -22942,7 +22942,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4608;
-				this.symbol_char();
+				await this.symbol_char();
 				}
 				}
 				this.state = 4611;
@@ -22964,7 +22964,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 			}
@@ -22976,7 +22976,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4616;
-				this.char_val();
+				await this.char_val();
 				}
 				}
 				this.state = 4619;
@@ -22995,12 +22995,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public symb_ch_def_in_alphabet(): Symb_ch_def_in_alphabetContext {
+	public async symb_ch_def_in_alphabet() {
 		let _localctx: Symb_ch_def_in_alphabetContext = new Symb_ch_def_in_alphabetContext(this._ctx, this.state);
 		this.enterRule(_localctx, 730, cobolParser.RULE_symb_ch_def_in_alphabet);
 		try {
@@ -23009,7 +23009,7 @@ export class cobolParser extends Parser {
 			this.state = 4621;
 			this.match(cobolParser.IN);
 			this.state = 4622;
-			this.alpha_name();
+			await this.alpha_name();
 			}
 		}
 		catch (re) {
@@ -23022,12 +23022,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public symbol_char(): Symbol_charContext {
+	public async symbol_char() {
 		let _localctx: Symbol_charContext = new Symbol_charContext(this._ctx, this.state);
 		this.enterRule(_localctx, 732, cobolParser.RULE_symbol_char);
 		try {
@@ -23047,12 +23047,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public char_val(): Char_valContext {
+	public async char_val() {
 		let _localctx: Char_valContext = new Char_valContext(this._ctx, this.state);
 		this.enterRule(_localctx, 734, cobolParser.RULE_char_val);
 		try {
@@ -23072,12 +23072,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public alphabet(): AlphabetContext {
+	public async alphabet() {
 		let _localctx: AlphabetContext = new AlphabetContext(this._ctx, this.state);
 		this.enterRule(_localctx, 736, cobolParser.RULE_alphabet);
 		let _la: number;
@@ -23087,7 +23087,7 @@ export class cobolParser extends Parser {
 			this.state = 4628;
 			this.match(cobolParser.ALPHABET);
 			this.state = 4629;
-			this.alpha_name();
+			await this.alpha_name();
 			this.state = 4631;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -23099,7 +23099,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4633;
-			this.alpha_value();
+			await this.alpha_value();
 			}
 		}
 		catch (re) {
@@ -23112,12 +23112,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public alpha_value(): Alpha_valueContext {
+	public async alpha_value() {
 		let _localctx: Alpha_valueContext = new Alpha_valueContext(this._ctx, this.state);
 		this.enterRule(_localctx, 738, cobolParser.RULE_alpha_value);
 		let _la: number;
@@ -23171,7 +23171,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 4640;
-					this.user_alpha();
+					await this.user_alpha();
 					}
 					}
 					this.state = 4643;
@@ -23194,12 +23194,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public user_alpha(): User_alphaContext {
+	public async user_alpha() {
 		let _localctx: User_alphaContext = new User_alphaContext(this._ctx, this.state);
 		this.enterRule(_localctx, 740, cobolParser.RULE_user_alpha);
 		let _la: number;
@@ -23211,7 +23211,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 4647;
-				this.first_literal();
+				await this.first_literal();
 				this.state = 4650;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -23227,10 +23227,10 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					this.state = 4649;
-					this.last_literal();
+					await this.last_literal();
 					}
 				}
 
@@ -23241,7 +23241,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 4652;
-				this.first_literal();
+				await this.first_literal();
 				this.state = 4655;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -23251,7 +23251,7 @@ export class cobolParser extends Parser {
 					this.state = 4653;
 					this.match(cobolParser.ALSO);
 					this.state = 4654;
-					this.same_literal();
+					await this.same_literal();
 					}
 					}
 					this.state = 4657;
@@ -23272,12 +23272,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public first_literal(): First_literalContext {
+	public async first_literal() {
 		let _localctx: First_literalContext = new First_literalContext(this._ctx, this.state);
 		this.enterRule(_localctx, 742, cobolParser.RULE_first_literal);
 		let _la: number;
@@ -23294,7 +23294,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -23308,12 +23308,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public last_literal(): Last_literalContext {
+	public async last_literal() {
 		let _localctx: Last_literalContext = new Last_literalContext(this._ctx, this.state);
 		this.enterRule(_localctx, 744, cobolParser.RULE_last_literal);
 		let _la: number;
@@ -23330,7 +23330,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -23344,12 +23344,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public same_literal(): Same_literalContext {
+	public async same_literal() {
 		let _localctx: Same_literalContext = new Same_literalContext(this._ctx, this.state);
 		this.enterRule(_localctx, 746, cobolParser.RULE_same_literal);
 		let _la: number;
@@ -23366,7 +23366,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -23380,12 +23380,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public top_of_page_name(): Top_of_page_nameContext {
+	public async top_of_page_name() {
 		let _localctx: Top_of_page_nameContext = new Top_of_page_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 748, cobolParser.RULE_top_of_page_name);
 		try {
@@ -23405,12 +23405,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public user_name(): User_nameContext {
+	public async user_name() {
 		let _localctx: User_nameContext = new User_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 750, cobolParser.RULE_user_name);
 		try {
@@ -23430,12 +23430,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public file_control(): File_controlContext {
+	public async file_control() {
 		let _localctx: File_controlContext = new File_controlContext(this._ctx, this.state);
 		this.enterRule(_localctx, 752, cobolParser.RULE_file_control);
 		let _la: number;
@@ -23453,7 +23453,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4673;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4678;
@@ -23467,7 +23467,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4679;
-				this.select();
+				await this.select();
 				}
 				}
 				this.state = 4684;
@@ -23486,12 +23486,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public select(): SelectContext {
+	public async select() {
 		let _localctx: SelectContext = new SelectContext(this._ctx, this.state);
 		this.enterRule(_localctx, 754, cobolParser.RULE_select);
 		let _la: number;
@@ -23511,16 +23511,16 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4689;
-			this.file_name();
+			await this.file_name();
 			this.state = 4690;
-			this.assign_to();
+			await this.assign_to();
 			this.state = 4692;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === cobolParser.RESERVE) {
 				{
 				this.state = 4691;
-				this.reserve();
+				await this.reserve();
 				}
 			}
 
@@ -23530,7 +23530,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 4694;
-				this.organization();
+				await this.organization();
 				}
 				break;
 			}
@@ -23540,7 +23540,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.BLOCK) {
 				{
 				this.state = 4697;
-				this.block_contains();
+				await this.block_contains();
 				}
 			}
 
@@ -23550,7 +23550,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.CODE_SET) {
 				{
 				this.state = 4700;
-				this.code_set();
+				await this.code_set();
 				}
 			}
 
@@ -23560,7 +23560,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.PADDING) {
 				{
 				this.state = 4703;
-				this.padding();
+				await this.padding();
 				}
 			}
 
@@ -23570,7 +23570,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 4706;
-				this.record_delimiter();
+				await this.record_delimiter();
 				}
 				break;
 			}
@@ -23580,7 +23580,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.ACCESS || _la === cobolParser.DYNAMIC || _la === cobolParser.RANDOM || _la === cobolParser.SEQUENTIAL) {
 				{
 				this.state = 4709;
-				this.access_mode();
+				await this.access_mode();
 				}
 			}
 
@@ -23591,7 +23591,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4712;
-				this.record_key();
+				await this.record_key();
 				}
 				}
 				this.state = 4717;
@@ -23604,7 +23604,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.LOCK) {
 				{
 				this.state = 4718;
-				this.lock_mode();
+				await this.lock_mode();
 				}
 			}
 
@@ -23614,7 +23614,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.FILE || _la === cobolParser.STATUS) {
 				{
 				this.state = 4721;
-				this.file_status();
+				await this.file_status();
 				}
 			}
 
@@ -23627,7 +23627,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4725;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4730;
@@ -23646,12 +23646,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public file_status(): File_statusContext {
+	public async file_status() {
 		let _localctx: File_statusContext = new File_statusContext(this._ctx, this.state);
 		this.enterRule(_localctx, 756, cobolParser.RULE_file_status);
 		let _la: number;
@@ -23681,7 +23681,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4738;
-			this.file_stat();
+			await this.file_stat();
 			}
 		}
 		catch (re) {
@@ -23694,19 +23694,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public file_stat(): File_statContext {
+	public async file_stat() {
 		let _localctx: File_statContext = new File_statContext(this._ctx, this.state);
 		this.enterRule(_localctx, 758, cobolParser.RULE_file_stat);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 4740;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -23719,12 +23719,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public record_key(): Record_keyContext {
+	public async record_key() {
 		let _localctx: Record_keyContext = new Record_keyContext(this._ctx, this.state);
 		this.enterRule(_localctx, 760, cobolParser.RULE_record_key);
 		let _la: number;
@@ -23764,7 +23764,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4752;
-			this.record_key_definition();
+			await this.record_key_definition();
 			this.state = 4757;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -23800,7 +23800,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 			}
@@ -23817,12 +23817,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public record_key_definition(): Record_key_definitionContext {
+	public async record_key_definition() {
 		let _localctx: Record_key_definitionContext = new Record_key_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 762, cobolParser.RULE_record_key_definition);
 		let _la: number;
@@ -23834,7 +23834,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 4762;
-				this.rec_key();
+				await this.rec_key();
 				}
 				break;
 
@@ -23842,7 +23842,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 4763;
-				this.seg_key();
+				await this.seg_key();
 				this.state = 4764;
 				this.match(cobolParser.EQUAL_);
 				this.state = 4766;
@@ -23852,7 +23852,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 4765;
-					this.rec_key();
+					await this.rec_key();
 					}
 					}
 					this.state = 4768;
@@ -23873,12 +23873,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public seg_key(): Seg_keyContext {
+	public async seg_key() {
 		let _localctx: Seg_keyContext = new Seg_keyContext(this._ctx, this.state);
 		this.enterRule(_localctx, 764, cobolParser.RULE_seg_key);
 		try {
@@ -23898,19 +23898,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public rec_key(): Rec_keyContext {
+	public async rec_key() {
 		let _localctx: Rec_keyContext = new Rec_keyContext(this._ctx, this.state);
 		this.enterRule(_localctx, 766, cobolParser.RULE_rec_key);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 4774;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			}
 		}
 		catch (re) {
@@ -23923,12 +23923,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public access_mode(): Access_modeContext {
+	public async access_mode() {
 		let _localctx: Access_modeContext = new Access_modeContext(this._ctx, this.state);
 		this.enterRule(_localctx, 768, cobolParser.RULE_access_mode);
 		let _la: number;
@@ -23975,7 +23975,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			this.state = 4794;
 			this._errHandler.sync(this);
@@ -24005,7 +24005,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 4793;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 			}
 
@@ -24021,12 +24021,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public reserve(): ReserveContext {
+	public async reserve() {
 		let _localctx: ReserveContext = new ReserveContext(this._ctx, this.state);
 		this.enterRule(_localctx, 770, cobolParser.RULE_reserve);
 		let _la: number;
@@ -24036,7 +24036,7 @@ export class cobolParser extends Parser {
 			this.state = 4796;
 			this.match(cobolParser.RESERVE);
 			this.state = 4797;
-			this.reserve_num();
+			await this.reserve_num();
 			this.state = 4799;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -24052,7 +24052,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 			}
@@ -24069,12 +24069,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public reserve_num(): Reserve_numContext {
+	public async reserve_num() {
 		let _localctx: Reserve_numContext = new Reserve_numContext(this._ctx, this.state);
 		this.enterRule(_localctx, 772, cobolParser.RULE_reserve_num);
 		try {
@@ -24094,12 +24094,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public record_delimiter(): Record_delimiterContext {
+	public async record_delimiter() {
 		let _localctx: Record_delimiterContext = new Record_delimiterContext(this._ctx, this.state);
 		this.enterRule(_localctx, 774, cobolParser.RULE_record_delimiter);
 		let _la: number;
@@ -24134,12 +24134,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public padding(): PaddingContext {
+	public async padding() {
 		let _localctx: PaddingContext = new PaddingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 776, cobolParser.RULE_padding);
 		let _la: number;
@@ -24169,7 +24169,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4817;
-			this.pad_char();
+			await this.pad_char();
 			}
 		}
 		catch (re) {
@@ -24182,12 +24182,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public pad_char(): Pad_charContext {
+	public async pad_char() {
 		let _localctx: Pad_charContext = new Pad_charContext(this._ctx, this.state);
 		this.enterRule(_localctx, 778, cobolParser.RULE_pad_char);
 		try {
@@ -24207,12 +24207,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public organization(): OrganizationContext {
+	public async organization() {
 		let _localctx: OrganizationContext = new OrganizationContext(this._ctx, this.state);
 		this.enterRule(_localctx, 780, cobolParser.RULE_organization);
 		let _la: number;
@@ -24283,12 +24283,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public lock_mode(): Lock_modeContext {
+	public async lock_mode() {
 		let _localctx: Lock_modeContext = new Lock_modeContext(this._ctx, this.state);
 		this.enterRule(_localctx, 782, cobolParser.RULE_lock_mode);
 		let _la: number;
@@ -24318,7 +24318,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4841;
-			this.lock_mode_definition();
+			await this.lock_mode_definition();
 			}
 		}
 		catch (re) {
@@ -24331,12 +24331,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public lock_mode_definition(): Lock_mode_definitionContext {
+	public async lock_mode_definition() {
 		let _localctx: Lock_mode_definitionContext = new Lock_mode_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 784, cobolParser.RULE_lock_mode_definition);
 		let _la: number;
@@ -24437,12 +24437,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public code_set(): Code_setContext {
+	public async code_set() {
 		let _localctx: Code_setContext = new Code_setContext(this._ctx, this.state);
 		this.enterRule(_localctx, 786, cobolParser.RULE_code_set);
 		let _la: number;
@@ -24462,7 +24462,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4870;
-			this.alpha_name();
+			await this.alpha_name();
 			}
 		}
 		catch (re) {
@@ -24475,12 +24475,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public block_contains(): Block_containsContext {
+	public async block_contains() {
 		let _localctx: Block_containsContext = new Block_containsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 788, cobolParser.RULE_block_contains);
 		let _la: number;
@@ -24505,14 +24505,14 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 4876;
-				this.smallest_block();
+				await this.smallest_block();
 				this.state = 4877;
 				this.match(cobolParser.TO);
 				}
 				break;
 			}
 			this.state = 4881;
-			this.blocksize();
+			await this.blocksize();
 			this.state = 4882;
 			_la = this._input.LA(1);
 			if (!(_la === cobolParser.CHARACTERS || _la === cobolParser.RECORDS)) {
@@ -24523,7 +24523,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -24537,12 +24537,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public smallest_block(): Smallest_blockContext {
+	public async smallest_block() {
 		let _localctx: Smallest_blockContext = new Smallest_blockContext(this._ctx, this.state);
 		this.enterRule(_localctx, 790, cobolParser.RULE_smallest_block);
 		try {
@@ -24562,12 +24562,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public blocksize(): BlocksizeContext {
+	public async blocksize() {
 		let _localctx: BlocksizeContext = new BlocksizeContext(this._ctx, this.state);
 		this.enterRule(_localctx, 792, cobolParser.RULE_blocksize);
 		try {
@@ -24587,12 +24587,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public assign_to(): Assign_toContext {
+	public async assign_to() {
 		let _localctx: Assign_toContext = new Assign_toContext(this._ctx, this.state);
 		this.enterRule(_localctx, 794, cobolParser.RULE_assign_to);
 		let _la: number;
@@ -24612,7 +24612,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4892;
-			this.assign_to_definition();
+			await this.assign_to_definition();
 			}
 		}
 		catch (re) {
@@ -24625,12 +24625,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public assign_to_definition(): Assign_to_definitionContext {
+	public async assign_to_definition() {
 		let _localctx: Assign_to_definitionContext = new Assign_to_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 796, cobolParser.RULE_assign_to_definition);
 		let _la: number;
@@ -24661,13 +24661,13 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					}
 				}
 
 				this.state = 4897;
-				this.file_spec();
+				await this.file_spec();
 				}
 				break;
 			case cobolParser.MULTIPLE:
@@ -24695,7 +24695,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				this.state = 4903;
 				this._errHandler.sync(this);
@@ -24723,12 +24723,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public file_spec(): File_specContext {
+	public async file_spec() {
 		let _localctx: File_specContext = new File_specContext(this._ctx, this.state);
 		this.enterRule(_localctx, 798, cobolParser.RULE_file_spec);
 		try {
@@ -24746,7 +24746,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 4908;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				break;
 			case cobolParser.DISK:
@@ -24777,12 +24777,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public file_name(): File_nameContext {
+	public async file_name() {
 		let _localctx: File_nameContext = new File_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 800, cobolParser.RULE_file_name);
 		try {
@@ -24802,12 +24802,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public i_o_control(): I_o_controlContext {
+	public async i_o_control() {
 		let _localctx: I_o_controlContext = new I_o_controlContext(this._ctx, this.state);
 		this.enterRule(_localctx, 802, cobolParser.RULE_i_o_control);
 		let _la: number;
@@ -24825,7 +24825,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4917;
-				this.replace_statement();
+				await this.replace_statement();
 				}
 				}
 				this.state = 4922;
@@ -24844,7 +24844,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 4923;
-					this.i_o_control_clause();
+					await this.i_o_control_clause();
 					}
 					}
 					this.state = 4926;
@@ -24860,7 +24860,7 @@ export class cobolParser extends Parser {
 					{
 					{
 					this.state = 4929;
-					this.replace_statement();
+					await this.replace_statement();
 					}
 					}
 					this.state = 4934;
@@ -24882,12 +24882,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public i_o_control_clause(): I_o_control_clauseContext {
+	public async i_o_control_clause() {
 		let _localctx: I_o_control_clauseContext = new I_o_control_clauseContext(this._ctx, this.state);
 		this.enterRule(_localctx, 804, cobolParser.RULE_i_o_control_clause);
 		try {
@@ -24898,28 +24898,28 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 4937;
-				this.apply();
+				await this.apply();
 				}
 				break;
 			case cobolParser.SAME:
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 4938;
-				this.same();
+				await this.same();
 				}
 				break;
 			case cobolParser.RERUN:
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 4939;
-				this.rerun();
+				await this.rerun();
 				}
 				break;
 			case cobolParser.MULTIPLE:
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 4940;
-				this.multiple_file();
+				await this.multiple_file();
 				}
 				break;
 			default:
@@ -24936,12 +24936,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public multiple_file(): Multiple_fileContext {
+	public async multiple_file() {
 		let _localctx: Multiple_fileContext = new Multiple_fileContext(this._ctx, this.state);
 		this.enterRule(_localctx, 806, cobolParser.RULE_multiple_file);
 		let _la: number;
@@ -24979,7 +24979,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 4951;
-				this.multiple_file_definition();
+				await this.multiple_file_definition();
 				}
 				}
 				this.state = 4954;
@@ -24998,12 +24998,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public multiple_file_definition(): Multiple_file_definitionContext {
+	public async multiple_file_definition() {
 		let _localctx: Multiple_file_definitionContext = new Multiple_file_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 808, cobolParser.RULE_multiple_file_definition);
 		let _la: number;
@@ -25011,7 +25011,7 @@ export class cobolParser extends Parser {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 4956;
-			this.multiple_file_name();
+			await this.multiple_file_name();
 			this.state = 4959;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -25020,7 +25020,7 @@ export class cobolParser extends Parser {
 				this.state = 4957;
 				this.match(cobolParser.POSITION);
 				this.state = 4958;
-				this.pos_integer();
+				await this.pos_integer();
 				}
 			}
 
@@ -25036,12 +25036,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public multiple_file_name(): Multiple_file_nameContext {
+	public async multiple_file_name() {
 		let _localctx: Multiple_file_nameContext = new Multiple_file_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 810, cobolParser.RULE_multiple_file_name);
 		try {
@@ -25061,12 +25061,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public pos_integer(): Pos_integerContext {
+	public async pos_integer() {
 		let _localctx: Pos_integerContext = new Pos_integerContext(this._ctx, this.state);
 		this.enterRule(_localctx, 812, cobolParser.RULE_pos_integer);
 		try {
@@ -25086,12 +25086,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public rerun(): RerunContext {
+	public async rerun() {
 		let _localctx: RerunContext = new RerunContext(this._ctx, this.state);
 		this.enterRule(_localctx, 814, cobolParser.RULE_rerun);
 		let _la: number;
@@ -25108,7 +25108,7 @@ export class cobolParser extends Parser {
 				this.state = 4966;
 				this.match(cobolParser.ON);
 				this.state = 4967;
-				this.file_name();
+				await this.file_name();
 				}
 			}
 
@@ -25123,7 +25123,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 4973;
-			this.rerun_definition();
+			await this.rerun_definition();
 			}
 		}
 		catch (re) {
@@ -25136,12 +25136,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public rerun_definition(): Rerun_definitionContext {
+	public async rerun_definition() {
 		let _localctx: Rerun_definitionContext = new Rerun_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 816, cobolParser.RULE_rerun_definition);
 		let _la: number;
@@ -25153,7 +25153,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 4975;
-				this.rerun_def_file();
+				await this.rerun_def_file();
 				this.state = 4977;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -25165,7 +25165,7 @@ export class cobolParser extends Parser {
 				}
 
 				this.state = 4979;
-				this.file_name();
+				await this.file_name();
 				}
 				break;
 
@@ -25173,7 +25173,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 4981;
-				this.clock_count();
+				await this.clock_count();
 				this.state = 4982;
 				this.match(cobolParser.CLOCK_UNITS);
 				}
@@ -25183,7 +25183,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 4984;
-				this.condition_name();
+				await this.condition_name();
 				}
 				break;
 			}
@@ -25198,12 +25198,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public clock_count(): Clock_countContext {
+	public async clock_count() {
 		let _localctx: Clock_countContext = new Clock_countContext(this._ctx, this.state);
 		this.enterRule(_localctx, 818, cobolParser.RULE_clock_count);
 		try {
@@ -25223,12 +25223,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public condition_name(): Condition_nameContext {
+	public async condition_name() {
 		let _localctx: Condition_nameContext = new Condition_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 820, cobolParser.RULE_condition_name);
 		try {
@@ -25248,12 +25248,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public rerun_def_file(): Rerun_def_fileContext {
+	public async rerun_def_file() {
 		let _localctx: Rerun_def_fileContext = new Rerun_def_fileContext(this._ctx, this.state);
 		this.enterRule(_localctx, 822, cobolParser.RULE_rerun_def_file);
 		let _la: number;
@@ -25296,7 +25296,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 				break;
@@ -25304,7 +25304,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 4998;
-				this.rec_count();
+				await this.rec_count();
 				this.state = 4999;
 				this.match(cobolParser.RECORDS);
 				}
@@ -25323,12 +25323,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public rec_count(): Rec_countContext {
+	public async rec_count() {
 		let _localctx: Rec_countContext = new Rec_countContext(this._ctx, this.state);
 		this.enterRule(_localctx, 824, cobolParser.RULE_rec_count);
 		try {
@@ -25348,12 +25348,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public same(): SameContext {
+	public async same() {
 		let _localctx: SameContext = new SameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 826, cobolParser.RULE_same);
 		let _la: number;
@@ -25377,7 +25377,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 			}
@@ -25403,7 +25403,7 @@ export class cobolParser extends Parser {
 			}
 
 			this.state = 5015;
-			this.same_area_file();
+			await this.same_area_file();
 			this.state = 5017;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
@@ -25411,7 +25411,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 5016;
-				this.same_area_file();
+				await this.same_area_file();
 				}
 				}
 				this.state = 5019;
@@ -25430,12 +25430,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public same_area_file(): Same_area_fileContext {
+	public async same_area_file() {
 		let _localctx: Same_area_fileContext = new Same_area_fileContext(this._ctx, this.state);
 		this.enterRule(_localctx, 828, cobolParser.RULE_same_area_file);
 		try {
@@ -25455,12 +25455,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public apply(): ApplyContext {
+	public async apply() {
 		let _localctx: ApplyContext = new ApplyContext(this._ctx, this.state);
 		this.enterRule(_localctx, 830, cobolParser.RULE_apply);
 		let _la: number;
@@ -25476,7 +25476,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 5024;
-				this.apply_definition();
+				await this.apply_definition();
 				}
 				}
 				this.state = 5027;
@@ -25492,7 +25492,7 @@ export class cobolParser extends Parser {
 				{
 				{
 				this.state = 5030;
-				this.file_name();
+				await this.file_name();
 				}
 				}
 				this.state = 5033;
@@ -25511,12 +25511,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public apply_definition(): Apply_definitionContext {
+	public async apply_definition() {
 		let _localctx: Apply_definitionContext = new Apply_definitionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 832, cobolParser.RULE_apply_definition);
 		let _la: number;
@@ -25537,7 +25537,7 @@ export class cobolParser extends Parser {
 				this.state = 5036;
 				this.match(cobolParser.EXTENSION);
 				this.state = 5037;
-				this.extend_amt();
+				await this.extend_amt();
 				}
 				break;
 			case cobolParser.FILL_SIZE:
@@ -25581,7 +25581,7 @@ export class cobolParser extends Parser {
 						}
 
 						this._errHandler.reportMatch(this);
-						this.consume();
+						await this.consume();
 					}
 					}
 				}
@@ -25589,7 +25589,7 @@ export class cobolParser extends Parser {
 				this.state = 5044;
 				this.match(cobolParser.PREALLOCATION);
 				this.state = 5045;
-				this.preall_amt();
+				await this.preall_amt();
 				}
 				break;
 			case cobolParser.PRINT_CONTROL:
@@ -25605,7 +25605,7 @@ export class cobolParser extends Parser {
 				this.state = 5047;
 				this.match(cobolParser.WINDOW);
 				this.state = 5048;
-				this.window_ptrs();
+				await this.window_ptrs();
 				}
 				break;
 			default:
@@ -25622,12 +25622,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public window_ptrs(): Window_ptrsContext {
+	public async window_ptrs() {
 		let _localctx: Window_ptrsContext = new Window_ptrsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 834, cobolParser.RULE_window_ptrs);
 		try {
@@ -25647,12 +25647,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public preall_amt(): Preall_amtContext {
+	public async preall_amt() {
 		let _localctx: Preall_amtContext = new Preall_amtContext(this._ctx, this.state);
 		this.enterRule(_localctx, 836, cobolParser.RULE_preall_amt);
 		try {
@@ -25672,12 +25672,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public extend_amt(): Extend_amtContext {
+	public async extend_amt() {
 		let _localctx: Extend_amtContext = new Extend_amtContext(this._ctx, this.state);
 		this.enterRule(_localctx, 838, cobolParser.RULE_extend_amt);
 		try {
@@ -25697,15 +25697,15 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 
-	public arithmetic_expression(): Arithmetic_expressionContext;
-	public arithmetic_expression(_p: number): Arithmetic_expressionContext;
+	// public arithmetic_expression(): Arithmetic_expressionContext;
+	// public arithmetic_expression(_p: number): Arithmetic_expressionContext;
 	// @RuleVersion(0)
-	public arithmetic_expression(_p?: number): Arithmetic_expressionContext {
+	public async arithmetic_expression(_p?: number) {
 		if (_p === undefined) {
 			_p = 0;
 		}
@@ -25728,7 +25728,7 @@ export class cobolParser extends Parser {
 				this.state = 5058;
 				this.match(cobolParser.LPAREN_);
 				this.state = 5059;
-				this.arithmetic_expression(0);
+				await this.arithmetic_expression(0);
 				this.state = 5060;
 				this.match(cobolParser.RPAREN_);
 				}
@@ -25737,16 +25737,16 @@ export class cobolParser extends Parser {
 			case cobolParser.MINUS_:
 				{
 				this.state = 5062;
-				this.unary_arithmetic_operator();
+				await this.unary_arithmetic_operator();
 				this.state = 5063;
-				this.arithmetic_expression(3);
+				await this.arithmetic_expression(3);
 				}
 				break;
 			case cobolParser.FUNCTION:
 			case cobolParser.USER_DEFINED_WORD_:
 				{
 				this.state = 5065;
-				this.identifier();
+				await this.identifier();
 				}
 				break;
 			case cobolParser.STRING_LITERAL_:
@@ -25765,7 +25765,7 @@ export class cobolParser extends Parser {
 			case cobolParser.NUMERIC_LITERAL_:
 				{
 				this.state = 5066;
-				this.constant();
+				await this.constant();
 				}
 				break;
 			default:
@@ -25778,7 +25778,7 @@ export class cobolParser extends Parser {
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1) {
 					if (this._parseListeners != null) {
-						this.triggerExitRuleEvent();
+						await this.triggerExitRuleEvent();
 					}
 					_prevctx = _localctx;
 					{
@@ -25790,9 +25790,9 @@ export class cobolParser extends Parser {
 						throw new FailedPredicateException(this, "this.precpred(this._ctx, 4)");
 					}
 					this.state = 5070;
-					this.binary_arithmetic_operator();
+					await this.binary_arithmetic_operator();
 					this.state = 5071;
-					this.arithmetic_expression(5);
+					await this.arithmetic_expression(5);
 					}
 					}
 				}
@@ -25817,7 +25817,7 @@ export class cobolParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public constant(): ConstantContext {
+	public async constant() {
 		let _localctx: ConstantContext = new ConstantContext(this._ctx, this.state);
 		this.enterRule(_localctx, 842, cobolParser.RULE_constant);
 		try {
@@ -25853,7 +25853,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 5080;
-				this.figurative_constant();
+				await this.figurative_constant();
 				}
 				break;
 			default:
@@ -25870,12 +25870,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public binary_arithmetic_operator(): Binary_arithmetic_operatorContext {
+	public async binary_arithmetic_operator() {
 		let _localctx: Binary_arithmetic_operatorContext = new Binary_arithmetic_operatorContext(this._ctx, this.state);
 		this.enterRule(_localctx, 844, cobolParser.RULE_binary_arithmetic_operator);
 		try {
@@ -25935,12 +25935,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public unary_arithmetic_operator(): Unary_arithmetic_operatorContext {
+	public async unary_arithmetic_operator() {
 		let _localctx: Unary_arithmetic_operatorContext = new Unary_arithmetic_operatorContext(this._ctx, this.state);
 		this.enterRule(_localctx, 846, cobolParser.RULE_unary_arithmetic_operator);
 		let _la: number;
@@ -25957,7 +25957,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -25971,15 +25971,15 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 
-	public logic_expression(): Logic_expressionContext;
-	public logic_expression(_p: number): Logic_expressionContext;
+	// public logic_expression(): Logic_expressionContext;
+	// public logic_expression(_p: number): Logic_expressionContext;
 	// @RuleVersion(0)
-	public logic_expression(_p?: number): Logic_expressionContext {
+	public async logic_expression(_p?: number) {
 		if (_p === undefined) {
 			_p = 0;
 		}
@@ -26002,7 +26002,7 @@ export class cobolParser extends Parser {
 				this.state = 5094;
 				this.match(cobolParser.LPAREN_);
 				this.state = 5095;
-				this.logic_expression(0);
+				await this.logic_expression(0);
 				this.state = 5096;
 				this.match(cobolParser.RPAREN_);
 				}
@@ -26013,14 +26013,14 @@ export class cobolParser extends Parser {
 				this.state = 5098;
 				this.match(cobolParser.NOT);
 				this.state = 5099;
-				this.logic_expression(2);
+				await this.logic_expression(2);
 				}
 				break;
 
 			case 3:
 				{
 				this.state = 5100;
-				this.logic_condition();
+				await this.logic_condition();
 				}
 				break;
 			}
@@ -26031,7 +26031,7 @@ export class cobolParser extends Parser {
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1) {
 					if (this._parseListeners != null) {
-						this.triggerExitRuleEvent();
+						await this.triggerExitRuleEvent();
 					}
 					_prevctx = _localctx;
 					{
@@ -26043,9 +26043,9 @@ export class cobolParser extends Parser {
 						throw new FailedPredicateException(this, "this.precpred(this._ctx, 3)");
 					}
 					this.state = 5104;
-					this.logic_operation();
+					await this.logic_operation();
 					this.state = 5105;
-					this.logic_expression(4);
+					await this.logic_expression(4);
 					}
 					}
 				}
@@ -26070,7 +26070,7 @@ export class cobolParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public logic_condition(): Logic_conditionContext {
+	public async logic_condition() {
 		let _localctx: Logic_conditionContext = new Logic_conditionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 850, cobolParser.RULE_logic_condition);
 		let _la: number;
@@ -26083,11 +26083,11 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 5112;
-				this.arithmetic_expression(0);
+				await this.arithmetic_expression(0);
 				this.state = 5113;
-				this.condition_operator();
+				await this.condition_operator();
 				this.state = 5114;
-				this.arithmetic_expression(0);
+				await this.arithmetic_expression(0);
 				this.state = 5120;
 				this._errHandler.sync(this);
 				_alt = this.interpreter.adaptivePredict(this._input, 818, this._ctx);
@@ -26096,9 +26096,9 @@ export class cobolParser extends Parser {
 						{
 						{
 						this.state = 5115;
-						this.logic_operation();
+						await this.logic_operation();
 						this.state = 5116;
-						this.logic_condition_abbrev();
+						await this.logic_condition_abbrev();
 						}
 						}
 					}
@@ -26113,7 +26113,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 2);
 				{
 				this.state = 5123;
-				this.arithmetic_expression(0);
+				await this.arithmetic_expression(0);
 				this.state = 5125;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -26144,7 +26144,7 @@ export class cobolParser extends Parser {
 				case cobolParser.USER_DEFINED_WORD_:
 					{
 					this.state = 5130;
-					this.class_condition_name();
+					await this.class_condition_name();
 					}
 					break;
 				case cobolParser.NEGATIVE:
@@ -26152,7 +26152,7 @@ export class cobolParser extends Parser {
 				case cobolParser.ZERO:
 					{
 					this.state = 5131;
-					this.sign_condition_name();
+					await this.sign_condition_name();
 					}
 					break;
 				default:
@@ -26166,9 +26166,9 @@ export class cobolParser extends Parser {
 						{
 						{
 						this.state = 5134;
-						this.logic_operation();
+						await this.logic_operation();
 						this.state = 5135;
-						this.logic_condition_abbrev();
+						await this.logic_condition_abbrev();
 						}
 						}
 					}
@@ -26183,7 +26183,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 3);
 				{
 				this.state = 5142;
-				this.arithmetic_expression(0);
+				await this.arithmetic_expression(0);
 				this.state = 5144;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
@@ -26204,7 +26204,7 @@ export class cobolParser extends Parser {
 					}
 
 					this._errHandler.reportMatch(this);
-					this.consume();
+					await this.consume();
 				}
 				}
 				break;
@@ -26213,7 +26213,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 4);
 				{
 				this.state = 5148;
-				this.qualified_data_item();
+				await this.qualified_data_item();
 				}
 				break;
 			}
@@ -26228,12 +26228,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public logic_condition_abbrev(): Logic_condition_abbrevContext {
+	public async logic_condition_abbrev() {
 		let _localctx: Logic_condition_abbrevContext = new Logic_condition_abbrevContext(this._ctx, this.state);
 		this.enterRule(_localctx, 852, cobolParser.RULE_logic_condition_abbrev);
 		let _la: number;
@@ -26246,12 +26246,12 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.EQUAL || _la === cobolParser.GREATER || _la === cobolParser.IS || _la === cobolParser.LESS || _la === cobolParser.NOT || ((((_la - 435)) & ~0x1F) === 0 && ((1 << (_la - 435)) & ((1 << (cobolParser.EQUAL_ - 435)) | (1 << (cobolParser.LT_ - 435)) | (1 << (cobolParser.LE_ - 435)) | (1 << (cobolParser.GE_ - 435)) | (1 << (cobolParser.GT_ - 435)))) !== 0)) {
 				{
 				this.state = 5151;
-				this.condition_operator();
+				await this.condition_operator();
 				}
 			}
 
 			this.state = 5154;
-			this.arithmetic_expression(0);
+			await this.arithmetic_expression(0);
 			}
 		}
 		catch (re) {
@@ -26264,12 +26264,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public logic_operation(): Logic_operationContext {
+	public async logic_operation() {
 		let _localctx: Logic_operationContext = new Logic_operationContext(this._ctx, this.state);
 		this.enterRule(_localctx, 854, cobolParser.RULE_logic_operation);
 		let _la: number;
@@ -26286,7 +26286,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -26300,12 +26300,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public bool_condition_name(): Bool_condition_nameContext {
+	public async bool_condition_name() {
 		let _localctx: Bool_condition_nameContext = new Bool_condition_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 856, cobolParser.RULE_bool_condition_name);
 		let _la: number;
@@ -26322,7 +26322,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -26336,12 +26336,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public sign_condition_name(): Sign_condition_nameContext {
+	public async sign_condition_name() {
 		let _localctx: Sign_condition_nameContext = new Sign_condition_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 858, cobolParser.RULE_sign_condition_name);
 		let _la: number;
@@ -26358,7 +26358,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -26372,12 +26372,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public class_condition_name(): Class_condition_nameContext {
+	public async class_condition_name() {
 		let _localctx: Class_condition_nameContext = new Class_condition_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 860, cobolParser.RULE_class_condition_name);
 		let _la: number;
@@ -26394,7 +26394,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -26408,12 +26408,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public condition_operator(): Condition_operatorContext {
+	public async condition_operator() {
 		let _localctx: Condition_operatorContext = new Condition_operatorContext(this._ctx, this.state);
 		this.enterRule(_localctx, 862, cobolParser.RULE_condition_operator);
 		let _la: number;
@@ -26638,26 +26638,26 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public identifier_result(): Identifier_resultContext {
+	public async identifier_result() {
 		let _localctx: Identifier_resultContext = new Identifier_resultContext(this._ctx, this.state);
 		this.enterRule(_localctx, 864, cobolParser.RULE_identifier_result);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 5218;
-			this.qualified_data_item();
+			await this.qualified_data_item();
 			this.state = 5220;
 			this._errHandler.sync(this);
 			switch ( this.interpreter.adaptivePredict(this._input, 840, this._ctx) ) {
 			case 1:
 				{
 				this.state = 5219;
-				this.subscripting();
+				await this.subscripting();
 				}
 				break;
 			}
@@ -26667,7 +26667,7 @@ export class cobolParser extends Parser {
 			case 1:
 				{
 				this.state = 5222;
-				this.reference_modification();
+				await this.reference_modification();
 				}
 				break;
 			}
@@ -26683,12 +26683,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public identifier(): IdentifierContext {
+	public async identifier() {
 		let _localctx: IdentifierContext = new IdentifierContext(this._ctx, this.state);
 		this.enterRule(_localctx, 866, cobolParser.RULE_identifier);
 		try {
@@ -26699,7 +26699,7 @@ export class cobolParser extends Parser {
 				this.enterOuterAlt(_localctx, 1);
 				{
 				this.state = 5225;
-				this.identifier_result();
+				await this.identifier_result();
 				}
 				break;
 			case cobolParser.FUNCTION:
@@ -26708,14 +26708,14 @@ export class cobolParser extends Parser {
 				this.state = 5226;
 				this.match(cobolParser.FUNCTION);
 				this.state = 5227;
-				this.function_name();
+				await this.function_name();
 				this.state = 5229;
 				this._errHandler.sync(this);
 				switch ( this.interpreter.adaptivePredict(this._input, 842, this._ctx) ) {
 				case 1:
 					{
 					this.state = 5228;
-					this.arguments();
+					await this.arguments();
 					}
 					break;
 				}
@@ -26725,7 +26725,7 @@ export class cobolParser extends Parser {
 				case 1:
 					{
 					this.state = 5231;
-					this.reference_modification();
+					await this.reference_modification();
 					}
 					break;
 				}
@@ -26745,19 +26745,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public arguments(): ArgumentsContext {
+	public async arguments() {
 		let _localctx: ArgumentsContext = new ArgumentsContext(this._ctx, this.state);
 		this.enterRule(_localctx, 868, cobolParser.RULE_arguments);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 5236;
-			this.subscripting();
+			await this.subscripting();
 			}
 		}
 		catch (re) {
@@ -26770,12 +26770,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public subscripting(): SubscriptingContext {
+	public async subscripting() {
 		let _localctx: SubscriptingContext = new SubscriptingContext(this._ctx, this.state);
 		this.enterRule(_localctx, 870, cobolParser.RULE_subscripting);
 		let _la: number;
@@ -26795,7 +26795,7 @@ export class cobolParser extends Parser {
 				case 1:
 					{
 					this.state = 5239;
-					this.arithmetic_expression(0);
+					await this.arithmetic_expression(0);
 					}
 					break;
 
@@ -26825,12 +26825,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public reference_modification(): Reference_modificationContext {
+	public async reference_modification() {
 		let _localctx: Reference_modificationContext = new Reference_modificationContext(this._ctx, this.state);
 		this.enterRule(_localctx, 872, cobolParser.RULE_reference_modification);
 		let _la: number;
@@ -26840,7 +26840,7 @@ export class cobolParser extends Parser {
 			this.state = 5247;
 			this.match(cobolParser.LPAREN_);
 			this.state = 5248;
-			this.leftmost_character_position();
+			await this.leftmost_character_position();
 			this.state = 5249;
 			this.match(cobolParser.COLON_);
 			this.state = 5251;
@@ -26849,7 +26849,7 @@ export class cobolParser extends Parser {
 			if (_la === cobolParser.STRING_LITERAL_ || _la === cobolParser.ALL || ((((_la - 191)) & ~0x1F) === 0 && ((1 << (_la - 191)) & ((1 << (cobolParser.FUNCTION - 191)) | (1 << (cobolParser.HIGH_VALUE - 191)) | (1 << (cobolParser.HIGH_VALUES - 191)))) !== 0) || _la === cobolParser.LOW_VALUE || _la === cobolParser.LOW_VALUES || _la === cobolParser.QUOTE || _la === cobolParser.QUOTES || _la === cobolParser.SPACE || _la === cobolParser.SPACES || ((((_la - 422)) & ~0x1F) === 0 && ((1 << (_la - 422)) & ((1 << (cobolParser.ZERO - 422)) | (1 << (cobolParser.ZEROES - 422)) | (1 << (cobolParser.ZEROS - 422)) | (1 << (cobolParser.PLUS_ - 422)) | (1 << (cobolParser.MINUS_ - 422)) | (1 << (cobolParser.LPAREN_ - 422)) | (1 << (cobolParser.NUMERIC_LITERAL_ - 422)) | (1 << (cobolParser.USER_DEFINED_WORD_ - 422)))) !== 0)) {
 				{
 				this.state = 5250;
-				this.length();
+				await this.length();
 				}
 			}
 
@@ -26867,19 +26867,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public leftmost_character_position(): Leftmost_character_positionContext {
+	public async leftmost_character_position() {
 		let _localctx: Leftmost_character_positionContext = new Leftmost_character_positionContext(this._ctx, this.state);
 		this.enterRule(_localctx, 874, cobolParser.RULE_leftmost_character_position);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 5255;
-			this.arithmetic_expression(0);
+			await this.arithmetic_expression(0);
 			}
 		}
 		catch (re) {
@@ -26892,19 +26892,19 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public length(): LengthContext {
+	public async length() {
 		let _localctx: LengthContext = new LengthContext(this._ctx, this.state);
 		this.enterRule(_localctx, 876, cobolParser.RULE_length);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
 			this.state = 5257;
-			this.arithmetic_expression(0);
+			await this.arithmetic_expression(0);
 			}
 		}
 		catch (re) {
@@ -26917,12 +26917,12 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public function_name(): Function_nameContext {
+	public async function_name() {
 		let _localctx: Function_nameContext = new Function_nameContext(this._ctx, this.state);
 		this.enterRule(_localctx, 878, cobolParser.RULE_function_name);
 		let _la: number;
@@ -26939,7 +26939,7 @@ export class cobolParser extends Parser {
 				}
 
 				this._errHandler.reportMatch(this);
-				this.consume();
+				await this.consume();
 			}
 			}
 		}
@@ -26953,7 +26953,7 @@ export class cobolParser extends Parser {
 			}
 		}
 		finally {
-			this.exitRule();
+			await this.exitRule();
 		}
 		return _localctx;
 	}

@@ -170,7 +170,7 @@ export class CobolSourceContext implements ISourceContext {
     public setText(source: string) {
         this.cancelParsing();
         this.sourceContent = source + "\n";
-        this.isRequireReparse = true;
+        this.requireReparse = true;
     }
 
     public cancelParsing() {
@@ -242,7 +242,7 @@ export class CobolSourceContext implements ISourceContext {
         this.analysisDone = false;
 
         try {
-            this.tree = this.parser.cobol_source();
+            this.tree = await this.parser.cobol_source();
         } catch (e) {
             if (e instanceof ParseCancellationException) {
                 this.diagnostics.length = 0;
@@ -250,7 +250,7 @@ export class CobolSourceContext implements ISourceContext {
                 this.parser.reset();
                 this.parser.errorHandler = new DefaultErrorStrategy();
                 this.parser.interpreter.setPredictionMode(PredictionMode.LL);
-                this.tree = this.parser.cobol_source();
+                this.tree = await this.parser.cobol_source();
             } else {
                 return false;
             }
@@ -270,9 +270,10 @@ export class CobolSourceContext implements ISourceContext {
             }
         }
 
+        this.requireReparse = false;
+
         this.updateDiagnosticRanges();
 
-        this.isRequireReparse = false;
         return true;
     }
 
@@ -297,7 +298,7 @@ export class CobolSourceContext implements ISourceContext {
      * @param row 
      */
     public getCodeCompletionCandidates(column: number, row: number): ICompletion[] {
-        if (!this.parser || !this.tokenStream || this.requireReparse) {
+        if (!this.parser || !this.tokenStream) {
             return [];
         }
 
@@ -502,7 +503,7 @@ export class CobolSourceContext implements ISourceContext {
      */
     public getOccurencesUnderCursor(column: number, row: number): IDefinition[] {
         let retDef: IDefinition[] = [];
-        if (this.input && !this.requireReparse) {
+        if (this.input) {
             let input = this.input;
             ({resultRow: row, resultCol: column} = input.resultRowColFromSourceRowCol(row, column));
             let master = this.masterSymbolAtPosition(column, row);
@@ -558,7 +559,7 @@ export class CobolSourceContext implements ISourceContext {
      */
     public symbolInfoAtPosition(column: number, row: number): ISymbolInfo | undefined {
         let info: ISymbolInfo | undefined;
-        if (this.input && !this.requireReparse) {
+        if (this.input) {
             let inResult = this.input.resultRowColFromSourceRowCol(row, column);
             for (let insideResult of inResult.inside) {
                 if (insideResult.replacing.name && insideResult.replacing.path) {
@@ -594,7 +595,7 @@ export class CobolSourceContext implements ISourceContext {
             range: sourceRange,
             source: this.fileName,
         };
-        if (this.input && result.range && !this.requireReparse) {
+        if (this.input && result.range) {
             let srcStartPos = this.input.sourceRowColFromResultRowCol(sourceRange.start.row, sourceRange.start.col);
             let srcEndPos = this.input.sourceRowColFromResultRowCol(sourceRange.end.row, sourceRange.end.col);
             result.range.start.row = srcStartPos.sourceRow;
