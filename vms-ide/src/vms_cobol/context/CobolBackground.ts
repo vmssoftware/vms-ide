@@ -126,6 +126,10 @@ export class CobolBackground {
                                     }
                                 }
                             }
+                            if (myTask != await this.taskDivider.testValue()) {
+                                await Promise.resolve();
+                                return;
+                            }
                         }
                     }
                 }
