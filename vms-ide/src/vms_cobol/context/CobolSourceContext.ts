@@ -297,7 +297,7 @@ export class CobolSourceContext implements ISourceContext {
      * @param row 
      */
     public getCodeCompletionCandidates(column: number, row: number): ICompletion[] {
-        if (!this.parser || !this.tokenStream) {
+        if (!this.parser || !this.tokenStream || this.requireReparse) {
             return [];
         }
 
@@ -502,7 +502,7 @@ export class CobolSourceContext implements ISourceContext {
      */
     public getOccurencesUnderCursor(column: number, row: number): IDefinition[] {
         let retDef: IDefinition[] = [];
-        if (this.input) {
+        if (this.input && !this.requireReparse) {
             let input = this.input;
             ({resultRow: row, resultCol: column} = input.resultRowColFromSourceRowCol(row, column));
             let master = this.masterSymbolAtPosition(column, row);
@@ -558,7 +558,7 @@ export class CobolSourceContext implements ISourceContext {
      */
     public symbolInfoAtPosition(column: number, row: number): ISymbolInfo | undefined {
         let info: ISymbolInfo | undefined;
-        if (this.input) {
+        if (this.input && !this.requireReparse) {
             let inResult = this.input.resultRowColFromSourceRowCol(row, column);
             for (let insideResult of inResult.inside) {
                 if (insideResult.replacing.name && insideResult.replacing.path) {
@@ -594,7 +594,7 @@ export class CobolSourceContext implements ISourceContext {
             range: sourceRange,
             source: this.fileName,
         };
-        if (this.input && result.range) {
+        if (this.input && result.range && !this.requireReparse) {
             let srcStartPos = this.input.sourceRowColFromResultRowCol(sourceRange.start.row, sourceRange.start.col);
             let srcEndPos = this.input.sourceRowColFromResultRowCol(sourceRange.end.row, sourceRange.end.col);
             result.range.start.row = srcStartPos.sourceRow;
@@ -785,7 +785,7 @@ export class CobolSourceContext implements ISourceContext {
      * 
      * @param tree 
      */
-    public enclosingProgramSymbol(tree: ParseTree): ProgramSymbol | undefined {
+    private enclosingProgramSymbol(tree: ParseTree): ProgramSymbol | undefined {
         let ctx = firstContainingContext(tree, ProgramContext);
         if (ctx) {
             let symbol = this.symbolTable.symbolWithContext(ctx);

@@ -213,7 +213,7 @@ export class CobolGlobals {
         let usedDefinitions: IDefinition[] = [];
         for(let [file, entry] of this.globalMap) {
             for(let [externSymbol, definitions] of entry.definitions) {
-                if (externSymbol.name === name ) {
+                if (externSymbol instanceof IdentifierSymbol && externSymbol.isExtern === true && externSymbol.name === name ) {
                     usedDefinitions.push(...definitions);
                 }
             }
