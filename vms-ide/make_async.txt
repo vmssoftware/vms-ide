@@ -1,4 +1,4 @@
-Make the next replacings, using regexp, and comment some errorneous functions:
+//Make the next replacings, using regexp, and comment some errorneous functions:
 
 (// @RuleVersion.*\n\tpublic)
 $1 async

@@ -25702,8 +25702,8 @@ export class cobolParser extends Parser {
 		return _localctx;
 	}
 
-	// public arithmetic_expression(): Arithmetic_expressionContext;
-	// public arithmetic_expression(_p: number): Arithmetic_expressionContext;
+
+
 	// @RuleVersion(0)
 	public async arithmetic_expression(_p?: number) {
 		if (_p === undefined) {
@@ -25976,8 +25976,8 @@ export class cobolParser extends Parser {
 		return _localctx;
 	}
 
-	// public logic_expression(): Logic_expressionContext;
-	// public logic_expression(_p: number): Logic_expressionContext;
+
+
 	// @RuleVersion(0)
 	public async logic_expression(_p?: number) {
 		if (_p === undefined) {
