@@ -16,7 +16,7 @@ export class CobolBackground {
 
     public static refreshed = new EventEmitter();
 
-    public static taskDivider = new TaskDivider(0);
+    public static cancellationToken = new TaskDivider(0);
 
     public static async StartBackgroundParsing(logFn: LogFunction) {
 
@@ -58,7 +58,7 @@ export class CobolBackground {
         let wsFolders = vscode.workspace.workspaceFolders;
         if (wsFolders && wsFolders.length > 0) {
             // if new Refresh was executed, drop current task
-            let myTask = ++this.taskDivider.asyncValue;
+            let myTask = ++this.cancellationToken.asyncValue;
             let sortedWsFolders: WorkspaceFolder[] = [];
             for(let wsFolder of wsFolders) {
                 let dependants = new ProjDepTree().getDepList(wsFolder.name);
@@ -74,17 +74,17 @@ export class CobolBackground {
             sortedWsFolders = sortedWsFolders.reverse();
             for(let wsFolder of sortedWsFolders) {
                 let ensured = await ensureSettings(wsFolder.name);
-                if (myTask != this.taskDivider.asyncValue) {
+                if (myTask != this.cancellationToken.asyncValue) {
                     return;
                 }
                 if (ensured) {
                     let localSource = await Synchronizer.acquire(logFn).requestSource(ensured, "local");
-                    if (myTask != this.taskDivider.asyncValue) {
+                    if (myTask != this.cancellationToken.asyncValue) {
                         return;
                     }
                     if (localSource) {
                         let localFiles = await localSource.findFiles(ensured.projectSection.source, ensured.projectSection.exclude);
-                        if (myTask != this.taskDivider.asyncValue) {
+                        if (myTask != this.cancellationToken.asyncValue) {
                             return;
                         }
                         if (localFiles) {
@@ -101,33 +101,32 @@ export class CobolBackground {
                                     }
                                     if (docContent === undefined) {
                                         let stream = await localSource.createReadStream(localFile.filename);
-                                        if (myTask != this.taskDivider.asyncValue) {
+                                        if (myTask != this.cancellationToken.asyncValue) {
                                             return;
                                         }
                                         if (stream) {
                                             docContent = await ReadAllStream(stream);
-                                            if (myTask != this.taskDivider.asyncValue) {
+                                            if (myTask != this.cancellationToken.asyncValue) {
                                                 return;
                                             }
                                         }
                                     }
                                     // parse and save
                                     if (docContent !== undefined) {
-                                        let context = new CobolSourceContext(fullPath, logFn, GetCopyManager(wsFolder.name, wsFolder.uri.fsPath));
+                                        let context = new CobolSourceContext(fullPath, logFn, GetCopyManager(wsFolder.name, wsFolder.uri.fsPath), this.cancellationToken);
                                         context.setText(docContent);
                                         await context.parse();
-                                        if (myTask != this.taskDivider.asyncValue) {
+                                        if (myTask != this.cancellationToken.asyncValue) {
                                             return;
                                         }
                                         await CobolGlobals.addGlobals(context);
-                                        if (myTask != this.taskDivider.asyncValue) {
+                                        if (myTask != this.cancellationToken.asyncValue) {
                                             return;
                                         }
                                     }
                                 }
                             }
-                            if (myTask != await this.taskDivider.testValue()) {
-                                await Promise.resolve();
+                            if (myTask != await this.cancellationToken.testValue()) {
                                 return;
                             }
                         }

@@ -138,12 +138,12 @@ export class CobolSourceContext implements ISourceContext {
     private lexerErrorListener = new LexerErrorListener(this.diagnostics);
     private analysisDone: boolean = false; // Includes determining reference counts.
 
-    private cancellationToken = new TaskDivider(false);
+    private cancellationToken = new TaskDivider(0);
 
     private tree?: Cobol_sourceContext;     // The root context from the last parse run.
     public logFn: LogFunction;
 
-    constructor(public fileName: string, logFn?: LogFunction, public copyManager?: ICopyManager) {
+    constructor(public fileName: string, logFn?: LogFunction, public copyManager?: ICopyManager, public topCancellationToken?: TaskDivider<number>) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
         this.isRequireReparse = true;
@@ -174,11 +174,11 @@ export class CobolSourceContext implements ISourceContext {
     }
 
     public cancelParsing() {
-        this.cancellationToken.asyncValue = true;
+        ++this.cancellationToken.asyncValue;
     }
 
     public async parse() {
-        this.cancellationToken.asyncValue = false;
+
         if (!this.sourceContent) {
             return false;
         }
@@ -203,9 +203,18 @@ export class CobolSourceContext implements ISourceContext {
             }
         }
         
+        // increment only local token, do not touch top token, but pass it if it exists
+        ++this.cancellationToken.asyncValue;
+        
         this.streamErrors.length = 0;
         // EOL is OBLIGATORY for correct code completion
-        this.input = new CobolInputStream(this.fileName, streamErrorListener, this.sourceContent, this.compilerConditions, this.copyManager, this.cancellationToken);
+        this.input = new CobolInputStream(
+                this.fileName,
+                streamErrorListener,
+                this.sourceContent,
+                this.compilerConditions,
+                this.copyManager,
+                this.topCancellationToken ? this.topCancellationToken : this.cancellationToken);
         let built = await this.input.buildInput();
         if (!built) {
             return false;
@@ -228,7 +237,7 @@ export class CobolSourceContext implements ISourceContext {
         // Rewind the input stream for a new parse run.
         // Might be unnecessary when we just created that via setText.
         this.tokenStream.seek(0);
-        let parserImpl = new cobolParserImpl(this.tokenStream);
+        let parserImpl = new cobolParserImpl(this.tokenStream, this.topCancellationToken ? this.topCancellationToken : this.cancellationToken);
         this.parser = parserImpl;
         this.parser.removeErrorListeners();
         this.parser.addErrorListener(this.parserErrorListener);
