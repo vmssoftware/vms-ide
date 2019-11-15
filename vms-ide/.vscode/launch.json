@@ -47,7 +47,7 @@
             "request": "launch",
             "program": "${workspaceRoot}/node_modules/gulp/bin/gulp.js",
             "stopOnEntry": false,
-            "args": ["make-async"],
+            "args": ["make-async","--file", "cobolParser.ts"],
             "cwd": "${workspaceRoot}",
             "runtimeArgs": [
                 "--nolazy"

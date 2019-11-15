@@ -21,6 +21,8 @@ const inlineSource = false;
 const outDest = 'out';
 const distDest = 'dist';
 
+const argv = require('yargs').argv;
+
 // If all VS Code langaues are support you can use nls.coreLanguages
 const languages = [{id: 'ru'}];
 
@@ -75,6 +77,8 @@ gulp.task('default', gulp.series('build', function(callback) {
 	callback();
 }));
 
+//******************************************************************/
+
 let _rgxDefinitionMark = /^\s*\/\/\s*@RuleVersion\(\d*\)$/gm;
 let _rgxDefinition = /^(\s*public)\s*([^(]*\s*\([^\)]*\)).*$/gm;
 let _rgxCall = /^(\s*)(this[.][^\.\(]*\(\d*\))/gm;
@@ -112,49 +116,21 @@ function makeAsyncContent(content) {
 	return lines.join('\n');
 }
 
+//------------------------------------------------------------------
+
 function makeAsync() {
 
-// 	let tstStr = `
-// 	return _localctx;
-// }
+	if (argv.file === undefined) {
+		console.error('no file specified');
+		return;
+	}
 
-// public logic_expression(): Logic_expressionContext;
-// public logic_expression(_p: number): Logic_expressionContext;
-// // @RuleVersion(0)
-// public logic_expression(_p?: number): Logic_expressionContext {
-// 	if (_p === undefined) {
-// 		_p = 0;
-// 	}
-
-// 	let _parentctx: ParserRuleContext = this._ctx;
-// 	let _parentState: number = this.state;
-// 	let _localctx: Logic_expressionContext = new Logic_expressionContext(this._ctx, _parentState);
-// 	let _prevctx: Logic_expressionContext = _localctx;
-// 	let _startState: number = 848;
-// 	this.enterRecursionRule(_localctx, 848, cobolParser.RULE_logic_expression, _p);
-// 	try {
-// 		let _alt: number;
-// 		this.enterOuterAlt(_localctx, 1);
-// 		{
-// 		this.state = 5101;
-// 		this._errHandler.sync(this);
-// 		switch ( this.interpreter.adaptivePredict(this._input, 816, this._ctx) ) {
-// 		case 1:
-// 			{
-// 			this.state = 5094;
-// 			this.match(cobolParser.LPAREN_);
-// 			this.state = 5095;
-// 			this.logic_expression(0);
-// 			this.state = 5096;
-// 			this.match(cobolParser.RPAREN_);
-// 			}
-// `
-// 	let tstConverted = makeAsyncContent(tstStr);
+	let fileName = argv.file;
 
 	return tsProject.src().pipe(
 		es.through(
 			function pass (file) {
-				if (path.basename(file.path) == 'cobolParser.ts') {
+				if (file.basename == fileName) {
 					console.log('making async: ' + file.path);
 					let newContent = makeAsyncContent(file.contents.toString('utf8'));
 					file.contents = Buffer.from(newContent, 'utf8');
@@ -165,7 +141,4 @@ function makeAsync() {
 
 gulp.task('make-async', makeAsync);
 
-if (process.argv > 2 && process.argv[2] == 'make-async') {
-	makeAsync();
-}
-
+//******************************************************************/
