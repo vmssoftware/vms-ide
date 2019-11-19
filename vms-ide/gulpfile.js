@@ -80,7 +80,7 @@ gulp.task('default', gulp.series('build', function(callback) {
 //******************************************************************/
 
 let _rgxDefinitionMark = /^\s*\/\/\s*@RuleVersion\(\d*\)$/gm;
-let _rgxDefinition = /^(\s*public)\s*([^(]*\s*\([^\)]*\)).*$/gm;
+let _rgxDefinition = /^(\s*public)\s*([^(\s]*\s*\([^\)]*\)).*$/gm;
 let _rgxCall = /^(\s*)(this[.][^\.\(]*\(\d*\))/gm;
 
 function makeAsyncContent(content) {

@@ -41,7 +41,7 @@ export class CobolGlobals {
                     let identifierSymbol = getSymbolFromKind(identifierKind);
                     localCopy = localSymbolTable.addNewSymbolOfType(identifierSymbol, localSymbolTable, identifier.name);
                     if (localCopy instanceof ProgramSymbol) {
-                        localCopy.definition = identifier.definition;
+                        localCopy.programDefinition = identifier.programDefinition;
                     }
                 }
                 // test if it as a external symbol

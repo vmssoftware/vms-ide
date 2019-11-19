@@ -105,9 +105,6 @@ export class CobolDetailsListener implements cobolListener {
 
     enterProgram(ctx: ProgramContext) {
         let progSymbol = this.promoteCurrentSymbol(ProgramSymbol, ctx);
-        progSymbol.definition = {
-            type: EValueType.Integer
-        };
     }
 
     exitProgram(ctx: ProgramContext) {
@@ -122,6 +119,11 @@ export class CobolDetailsListener implements cobolListener {
             if (common_initial && common_initial.COMMON()) {
                 this.currentSymbol.isCommon = true;
             }
+            this.currentSymbol.programDefinition = {
+                name: this.currentSymbol.name,
+                returns: EDataUsage.COMP,
+                arguments: []
+            };
         }
     }
 
@@ -347,6 +349,10 @@ export class CobolDetailsListener implements cobolListener {
             }
             if (ctx.EXTERNAL()) {
                 this.currentSymbol.isExtern = true;
+                return;
+            }
+            if (ctx.occurs()) {
+                this.currentSymbol.isArray = true;
                 return;
             }
             let pictureCtx = ctx.picture();

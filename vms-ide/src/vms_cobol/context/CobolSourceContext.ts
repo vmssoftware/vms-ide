@@ -98,8 +98,9 @@ import {
     _PredefinedData,
     getKindFromSymbol,
     getSymbolFromKind,
-    programDetails,
+    functionDetails,
     symbolDescriptionFromEnum,
+    programDetails,
 } from './CobolSymbol';
 
 import {
@@ -584,15 +585,23 @@ export class CobolSourceContext implements ISourceContext {
             }
             let masterSymbol = this.masterSymbolAtPosition(inResult.resultCol, inResult.resultRow);
             info = this.symbolTable.getSymbolInfo(masterSymbol);
-            if (info && info.definition && info.definition.range && info.definition.source === this.fileName) {
-                let sourceRange = this.sourceRangeFromResult(info.definition.range);
-                info.definition.range = sourceRange.range;
-                info.definition.source = sourceRange.source;
-            }
-            if (info && (masterSymbol instanceof ProgramSymbol || masterSymbol instanceof IntrinsicFunctionSymbol)) {
-                let details = masterSymbol.name + (masterSymbol.definition ? programDetails(masterSymbol.definition) : "");
-                if (details) {
-                    info.description = details;
+            if (info) {
+                if (info.definition && info.definition.range && info.definition.source === this.fileName) {
+                    let sourceRange = this.sourceRangeFromResult(info.definition.range);
+                    info.definition.range = sourceRange.range;
+                    info.definition.source = sourceRange.source;
+                }
+                if (masterSymbol instanceof IntrinsicFunctionSymbol) {
+                    let details = masterSymbol.name + (masterSymbol.functionDefinition ? functionDetails(masterSymbol.functionDefinition) : "");
+                    if (details) {
+                        info.description = details;
+                    }
+                }
+                if (masterSymbol instanceof ProgramSymbol) {
+                    let details = masterSymbol.name + (masterSymbol.programDefinition ? programDetails(masterSymbol.programDefinition) : "");
+                    if (details) {
+                        info.description = details;
+                    }
                 }
             }
         }
@@ -738,7 +747,7 @@ export class CobolSourceContext implements ISourceContext {
     private addPredefinitions(intrincisFunctions: IFunction[], predefinedData: IPredefinedNode[]) {
         for (let intrincisFunction of intrincisFunctions) {
             let symbolToAdd = this.symbolTable.addNewSymbolOfType(IntrinsicFunctionSymbol, this.symbolTable, unifyCobolName(intrincisFunction.name));
-            symbolToAdd.definition = intrincisFunction;
+            symbolToAdd.functionDefinition = intrincisFunction;
             symbolToAdd.isGlobal = true;
             this.symbolTable.createOccurence(symbolToAdd);
         }

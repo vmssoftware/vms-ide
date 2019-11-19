@@ -44,6 +44,14 @@ import {
     Data_description_clauseContext,
     Data_recContext,
     Data_description_entryContext,
+    Call_usingContext,
+    ArgumentContext,
+    IdentifierContext,
+    Using_argContext,
+    Call_statementContext,
+    Identifier_resultContext,
+    Cobol_sourceContext,
+    Unknown_statementContext,
 } from "../parser/cobolParser";
 
 import { CobolAnalisisHelper } from "./CobolAnalisisHelpers";
@@ -74,14 +82,20 @@ import {
     SortMergeFileSymbol,
     IValue,
     ValueTypeFromDataUsage,
+    IdentifierSymbol,
+    EValueType,
+    EDataUsage,
 } from "./CobolSymbol";
 
 import { ParserRuleContext } from "antlr4ts";
+import { EDiagnosticType } from "../../common/parser/Facade";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> implements cobolVisitor<void> {
+
+    public callStatements: Call_statementContext[] = [];
 
     constructor(public helper: CobolAnalisisHelper) {
         super();
@@ -91,7 +105,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         // throw new Error("Method not implemented.");
     }
 
-    visitChildren<T extends ParserRuleContext>(node: ParserRuleContext, skipContexts?: (new (...args: any[]) => T)[]) {
+    visitChildren<T extends ParserRuleContext, F extends new (...args: any[]) => T>(node: ParserRuleContext, skipContexts?: F[]) {
         let result = this.defaultResult();
         let n = node.childCount;
         for (let i = 0; i < n; i++) {
@@ -114,6 +128,14 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
             }
         }
         return result;
+    }
+
+    visitCobol_source(ctx: Cobol_sourceContext) {
+        this.visitChildren(ctx);
+        // analyze CALL after all PROGRAM is defined
+        for(let callCtx of this.callStatements) {
+            this.analizeCallStatement(callCtx);
+        }
     }
 
     visitIdentification_division_header(ctx: Identification_division_headerContext) {
@@ -411,7 +433,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
             this.helper.mark(ctx, localize("no.program.symbol", "No program symbol"));
             return;
         }
-        if (!programSymbol.definition) {
+        if (!programSymbol.programDefinition) {
             this.helper.mark(ctx, localize("no.program.definition", "No definition in programSymbol"));
             return;
         }
@@ -420,12 +442,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
             let itemSymbol = this.helper.verifyQualifiedName(item, false, undefined, undefined, [IntrinsicFunctionSymbol]);
             if (itemSymbol instanceof DataRecordSymbol) {
                 // add as parameter
-                programSymbol.definition.arguments = programSymbol.definition.arguments || [];
-                let argument: IValue = {
-                    name: itemSymbol.name,
-                    type: ValueTypeFromDataUsage(itemSymbol.usage),   // TODO: get type from usage and picture
-                };
-                programSymbol.definition.arguments.push(argument);
+                programSymbol.programDefinition.arguments.push(itemSymbol.usage);
             }
         }
         //this.visitChildren(ctx);
@@ -442,7 +459,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
             this.helper.mark(ctx, localize("no.program.symbol", "No program symbol"));
             return;
         }
-        if (!programSymbol.definition) {
+        if (!programSymbol.programDefinition) {
             this.helper.mark(ctx, localize("no.program.definition", "No definition in programSymbol"));
             return;
         }
@@ -450,7 +467,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         let itemSymbol = this.helper.verifyQualifiedName(item, false, undefined, undefined, [IntrinsicFunctionSymbol]);
         if (itemSymbol instanceof DataRecordSymbol) {
             // add as program type
-            programSymbol.definition.type = ValueTypeFromDataUsage(itemSymbol.usage);   // TODO: get type from usage and picture
+            programSymbol.programDefinition.returns = itemSymbol.usage;
         }
         //this.visitChildren(ctx);
     }
@@ -479,4 +496,212 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         }
         this.visitChildren(ctx);
     }
+
+    visitCall_statement(ctx: Call_statementContext) {
+        // analize them later
+        this.callStatements.push(ctx);
+    }
+
+    public testAllowedTypes(testType: EDataUsage | undefined, allowedType: EDataUsage) {
+        if (testType === undefined || testType === allowedType) {
+            return true;
+        }
+        switch(allowedType) {
+            case EDataUsage.COMP:
+            case EDataUsage.BINARY:
+            case EDataUsage.COMPUTATIONAL:
+            case EDataUsage.COMPUTATIONAL_5:
+            case EDataUsage.COMPUTATIONAL_X:
+                return testType === EDataUsage.COMP ||
+                       testType === EDataUsage.BINARY || 
+                       testType === EDataUsage.COMPUTATIONAL || 
+                       testType === EDataUsage.COMPUTATIONAL_5 || 
+                       testType === EDataUsage.COMPUTATIONAL_X;
+            case EDataUsage.COMP_1:
+            case EDataUsage.FLOAT_SHORT:
+            case EDataUsage.COMPUTATIONAL_1:
+                return testType === EDataUsage.FLOAT_SHORT ||
+                       testType === EDataUsage.COMP_1 ||
+                       testType === EDataUsage.COMPUTATIONAL_1;
+            case EDataUsage.COMP_2:
+            case EDataUsage.FLOAT_LONG:
+            case EDataUsage.FLOAT_EXTENDED:
+            case EDataUsage.COMPUTATIONAL_2:
+                return testType === EDataUsage.COMP_2 ||
+                       testType === EDataUsage.FLOAT_LONG ||
+                       testType === EDataUsage.FLOAT_EXTENDED ||
+                       testType === EDataUsage.COMPUTATIONAL_2;
+            case EDataUsage.COMP_3:
+            case EDataUsage.COMPUTATIONAL_3:
+            case EDataUsage.PACKED_DECIMAL:
+                return testType === EDataUsage.COMP_3 ||
+                       testType === EDataUsage.PACKED_DECIMAL ||
+                       testType === EDataUsage.COMPUTATIONAL_3;
+        }
+        return false;
+    }
+
+    public analizeCallStatement(ctx: Call_statementContext) {
+        let callUsingCtx = ctx.call_using();
+        let progSymbol = this.helper.verifyName(ctx.prog_name());
+        if (progSymbol instanceof ProgramSymbol && progSymbol.programDefinition) {
+            if (callUsingCtx) {
+                let types = this.analyzeCall_using(callUsingCtx);
+                // check types is corresponding to definition
+                if (progSymbol.programDefinition.arguments && progSymbol.programDefinition.arguments.length > 0) {
+                    if (progSymbol.programDefinition.arguments.length !== types.length) {
+                        this.helper.mark(ctx, localize("invalid.arg.count", "Invalid argument count"));
+                    } else {
+                        // make array of arrays
+                        let argCtxs: ParserRuleContext[] = [];
+                        for (let args of callUsingCtx.using_arg()) {
+                            if (args.OMITTED()) {
+                                argCtxs.push(args);
+                            } else {
+                                argCtxs.push(...args.argument());
+                            }
+                        }
+                        for(let idx = 0; idx < progSymbol.programDefinition.arguments.length; ++idx) {
+                            if (!this.testAllowedTypes(types[idx], progSymbol.programDefinition.arguments[idx])) {
+                                if (argCtxs.length > idx) {
+                                    this.helper.mark(argCtxs[idx], localize("type.mismatch", "Type mismatch"));
+                                } else {
+                                    this.helper.mark(callUsingCtx, localize("type.mismatch", "Type mismatch"));
+                                }
+                            }
+                        }
+                    }
+                } else if (types.length > 0) {
+                    this.helper.mark(ctx, localize("invalid.arg.count", "Invalid argument count"));
+                }
+            } else if (progSymbol.programDefinition.arguments && progSymbol.programDefinition.arguments.length > 0) {
+                this.helper.mark(ctx, localize("invalid.arg.count", "Invalid argument count"));
+            }
+            let callGivingCtx = ctx.call_giving();
+            if (callGivingCtx) {
+                let type = this.analyzeIdentifierResult(callGivingCtx.identifier_result());
+                // make array of arrays
+                if (!this.testAllowedTypes(type, progSymbol.programDefinition.returns)) {
+                    this.helper.mark(callGivingCtx, localize("type.mismatch", "Type mismatch"));
+                }
+            }
+        }
+        this.visitChildren(ctx, [Call_usingContext, Prog_nameContext]);
+    }
+
+    visitCall_using(ctx: Call_usingContext) {
+        this.analyzeCall_using(ctx);
+    }
+
+    analyzeCall_using(ctx: Call_usingContext): (EDataUsage | undefined)[] {
+        let returnTypeArr: (EDataUsage | undefined)[] = [];
+        let usingArgCtxArr = ctx.using_arg();
+        for(let usingArgCtx of usingArgCtxArr) {
+            if (usingArgCtx.OMITTED()) {
+                returnTypeArr.push(undefined);
+            } else {
+                let argCtxArr = usingArgCtx.argument();
+                for(let argCtx of argCtxArr) {
+                    returnTypeArr.push(this.analyzeArgument(argCtx));
+                }
+            }
+        }
+        this.visitChildren(ctx, [Using_argContext]);
+        return returnTypeArr;
+    }
+
+    visitArgument(ctx: ArgumentContext) {
+        this.analyzeArgument(ctx);
+    }
+
+    analyzeArgument(ctx: ArgumentContext): (EDataUsage | undefined) {
+        let returnType: (EDataUsage | undefined) = undefined;
+        let identifierResultCtx = ctx.identifier_result();
+        if (identifierResultCtx) {
+            returnType = this.analyzeIdentifierResult(identifierResultCtx);
+        }
+        if (ctx.INTEGER_LITERAL_()) {
+            returnType = EDataUsage.COMP;
+        }
+        if (ctx.HEX_LITERAL_()) {
+            returnType = EDataUsage.COMP;
+        }
+        if (ctx.STRING_LITERAL_()) {
+            returnType = EDataUsage.DISPLAY;
+        }
+        return returnType;
+    }
+
+    visitIdentifier(ctx: IdentifierContext) {
+        this.analyzeIdentifier(ctx);
+    }
+
+    public analyzeIdentifier(ctx: IdentifierContext): (EDataUsage | undefined) {
+        let returnType: (EDataUsage | undefined) = undefined;
+        // let funcNameCtx = ctx.function_name();
+        // if (funcNameCtx) {
+        //     returnType = this.analyzeFunctionName(funcNameCtx);
+        //     let referenceCtx = ctx.reference_modification();
+        //     if (referenceCtx) {
+        //         // test if identifier might be a string
+        //         if (Array.isArray(returnType)) {
+        //             if (!(returnType.includes(EValueType.Alphanumeric) || returnType.includes(EValueType.Any))) {
+        //                 this.helper.mark(referenceCtx, localize("not.a.string", "It seems this is not a string"));
+        //             }
+        //         } else {
+        //             switch (returnType) {
+        //                 case EValueType.Integer:
+        //                 case EValueType.Numeric:
+        //                     this.helper.mark(referenceCtx, localize("not.a.string", "It seems this is not a string"));
+        //                     break;
+        //             }
+        //         }
+        //     }
+        //     this.visitChildren(ctx, [Function_nameContext]);
+        //     return returnType;
+        // }
+        let identifierCtx = ctx.identifier_result();
+        if (identifierCtx) {
+            return this.analyzeIdentifierResult(identifierCtx);
+        }
+        this.visitChildren(ctx);
+        return returnType;
+    }
+
+    // public analyzeFunctionName(functionNameCtx: Function_nameContext ): EValueType[] | EValueType {
+    //     let functionSymbol = this.helper.verifyName(functionNameCtx, false, undefined, [IntrinsicFunctionSymbol]);
+    //     if (functionSymbol instanceof IntrinsicFunctionSymbol) {
+    //         return functionSymbol.functionDefinition ? functionSymbol.functionDefinition.type : EValueType.Any;
+    //     }
+    //     return EValueType.Any;
+    // }
+
+    public analyzeIdentifierResult(identifierCtx: Identifier_resultContext): (EDataUsage | undefined) {
+        let returnType: (EDataUsage | undefined);
+        let identifierSymbol = this.helper.verifyQualifiedName(identifierCtx.qualified_data_item(), false, undefined, undefined, [IntrinsicFunctionSymbol]);
+        if (identifierSymbol instanceof DataRecordSymbol) {
+            returnType = identifierSymbol.usage;
+            let subscriptingCtx = identifierCtx.subscripting();
+            if (subscriptingCtx) {
+                // test if identifier is an array
+                if (!identifierSymbol.isArray) {
+                    this.helper.mark(subscriptingCtx, localize("not.an.array", "This is not an array"));
+                }
+                this.visitChildren(subscriptingCtx);
+            }
+            let referenceCtx = identifierCtx.reference_modification();
+            if (referenceCtx) {
+                if (returnType !== EDataUsage.DISPLAY ) {
+                    this.helper.mark(referenceCtx, localize("not.a.string", "It seems this is not a string"));
+                }
+                this.visitChildren(referenceCtx);
+            }
+        }
+        this.visitChildren(identifierCtx, [Identifier_resultContext]);
+        return returnType;
+    }
+
+    // visitUnknown_statement(ctx: Unknown_statementContext) {
+    //     this.helper.mark(ctx, localize("unknown.statement", "Unknown statement"), EDiagnosticType.Warning);
+    // }
 }

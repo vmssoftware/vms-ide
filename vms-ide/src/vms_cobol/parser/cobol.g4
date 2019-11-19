@@ -257,6 +257,10 @@ statement
      )
    ;
 
+unknown_statement
+   : word_in_area_B .*? DOT_
+   ;
+
 record_name
    : USER_DEFINED_WORD_
    | STRING_LITERAL_
@@ -297,7 +301,7 @@ advance_value
 
 advance_num
    : identifier
-   | NUMERIC_LITERAL_
+   | (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 unstring_statement
@@ -370,7 +374,7 @@ sub_grp
    ;
 
 sub_num
-   : NUMERIC_LITERAL_
+   : (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    | identifier
    ;
 
@@ -406,7 +410,7 @@ stop_statement
 
 stop_disp
    : STRING_LITERAL_
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    | figurative_constant_witout_all
    ;
 
@@ -481,12 +485,12 @@ set_statement_form6
 
 set_increm
    : identifier
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 set_val
    : identifier
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 search_statement
@@ -608,7 +612,7 @@ proc_thru_proc
    ;
 
 perform_times
-   : (identifier|NUMERIC_LITERAL_) TIMES
+   : (identifier|(INTEGER_LITERAL_|HEX_LITERAL_)) TIMES
    ;
 
 with_test
@@ -631,12 +635,12 @@ perform_range
 
 perform_increm
    : identifier
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 perform_init
    : identifier
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 perform_var
@@ -675,7 +679,7 @@ multiply_statement
 
 mult_num
    : identifier
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 merge_statement
@@ -895,7 +899,7 @@ remaind
 
 divide_num
    : identifier
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 display_statement
@@ -936,11 +940,11 @@ display_upon
    ;
 
 disp_f3_line
-   : LINE NUMBER? (identifier|NUMERIC_LITERAL_)
+   : LINE NUMBER? (identifier|(INTEGER_LITERAL_|HEX_LITERAL_))
    ;
 
 disp_f3_column
-   : COLUMN NUMBER? (identifier|NUMERIC_LITERAL_)
+   : COLUMN NUMBER? (identifier|(INTEGER_LITERAL_|HEX_LITERAL_))
    ;
 
 display_form1_clause
@@ -1022,7 +1026,7 @@ call_using
 
 using_arg
    : OMITTED
-   | using_prefix? argument argument*
+   | using_prefix? argument+
    ;
 
 using_prefix
@@ -1033,8 +1037,8 @@ using_prefix
    ;   
 
 argument
-   : identifier
-   | NUMERIC_LITERAL_
+   : identifier_result
+   | (INTEGER_LITERAL_|HEX_LITERAL_)
    | STRING_LITERAL_
    ;
 
@@ -1061,7 +1065,7 @@ add_grp
    ;
 
 add_num
-   : NUMERIC_LITERAL_
+   : (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    | identifier
    ;
 
@@ -1150,10 +1154,10 @@ accept_at
    ;
 
 accept_at_line
-   : LINE NUMBER? (NUMERIC_LITERAL_|identifier)
+   : LINE NUMBER? ((INTEGER_LITERAL_|HEX_LITERAL_)|identifier)
    ;
 accept_at_column
-   : COLUMN NUMBER? (NUMERIC_LITERAL_|identifier)
+   : COLUMN NUMBER? ((INTEGER_LITERAL_|HEX_LITERAL_)|identifier)
    ;
 
 accept_form4_clause
@@ -1200,7 +1204,7 @@ prot_fill_lit
    ;
 
 prot_size_value
-   : NUMERIC_LITERAL_ 
+   : (INTEGER_LITERAL_|HEX_LITERAL_) 
    | identifier
    ;
 
@@ -1330,7 +1334,7 @@ data_description_entry
    ;
 
 level_number
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 data_description_clause
@@ -1386,7 +1390,7 @@ ref_data_name
 
 value_is_literal
    : STRING_LITERAL_
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    | figurative_constant
    | USER_DEFINED_WORD_
    ;
@@ -1417,13 +1421,13 @@ times_definition
    ;
 
 table_size
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 min_times
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 max_times
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 report_group_data_description_entry
@@ -1475,7 +1479,7 @@ source_name
    ;
 
 column_number
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 type_is_definition
@@ -1509,7 +1513,7 @@ line_num_definition
    | PLUS line_num
    ;
 line_num
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 rd_clause
@@ -1525,23 +1529,23 @@ rd_clause
    ;
 
 footing_line_rd
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 last_detail_line
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 first_detail_line
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 heading_line
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 page_size_rd
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 control_name
@@ -1623,22 +1627,22 @@ linage
    ;
 
 bottom_lines
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    | qualified_data_item
    ;
 
 top_lines
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    | qualified_data_item
    ;
 
 footing_line
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    | qualified_data_item
    ;
 
 page_size
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    | qualified_data_item
    ;
 
@@ -1681,11 +1685,11 @@ depending_item
    ;
 
 shortest_rec
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 longest_rec
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 screen_description_entry
@@ -1741,11 +1745,11 @@ nonnumeric_literal
 
 src_number
    : qualified_data_item
-   | NUMERIC_LITERAL_
+   | (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 color_num
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 // program id
@@ -1859,7 +1863,7 @@ memory_size
    ;
 
 memory_size_amount
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 memory_size_unit
@@ -1881,7 +1885,7 @@ segment_limit
    ;
 
 segment_number
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 special_names
@@ -1953,7 +1957,7 @@ switch_name
    ;
 
 switch_num
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 qualified_data_item
@@ -2010,7 +2014,7 @@ symbol_char
    ;
 
 char_val
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 alphabet
@@ -2033,17 +2037,17 @@ user_alpha
 
 first_literal
    : STRING_LITERAL_
-   | NUMERIC_LITERAL_
+   | (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 last_literal
    : STRING_LITERAL_
-   | NUMERIC_LITERAL_
+   | (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 same_literal
    : STRING_LITERAL_
-   | NUMERIC_LITERAL_
+   | (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 top_of_page_name
@@ -2117,7 +2121,7 @@ reserve
    ;
 
 reserve_num
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 record_delimiter
@@ -2161,11 +2165,11 @@ block_contains
    ;
 
 smallest_block
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 blocksize
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 assign_to
@@ -2213,7 +2217,7 @@ multiple_file_name
    ;
 
 pos_integer
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 rerun
@@ -2227,7 +2231,7 @@ rerun_definition
    ;
 
 clock_count
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 condition_name
@@ -2240,7 +2244,7 @@ rerun_def_file
    ;
 
 rec_count
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 same
@@ -2267,15 +2271,15 @@ apply_definition
    ;
 
 window_ptrs
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 preall_amt
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 extend_amt
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 //
@@ -2289,7 +2293,7 @@ arithmetic_expression
    ;
 
 constant
-   : NUMERIC_LITERAL_
+   : (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    | STRING_LITERAL_
    | figurative_constant
    ;

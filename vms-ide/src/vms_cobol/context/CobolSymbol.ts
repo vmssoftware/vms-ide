@@ -410,11 +410,11 @@ export class DeviceSymbol extends SpecialNameSymbol { }
 export class ProgramSymbol extends IdentifierSymbol { 
     isCommon?: boolean;
     endProgramCtx?: ParseTree;  // must be present only one
-    definition?: IFunction; 
+    programDefinition?: IProgram; 
 }
 
 export class IntrinsicFunctionSymbol extends IdentifierSymbol {
-    definition?: IFunction; 
+    functionDefinition?: IFunction; 
 }
 
 export class CARD_READER_Symbol extends DeviceSymbol { }
@@ -446,8 +446,9 @@ export class ReportFileSymbol extends IdentifierSymbol { }
 export class DataRecordSymbol extends IdentifierSymbol {
     public level?: number;
     public picture?: string;
-    public usage?: EDataUsage;
+    public usage = EDataUsage.DISPLAY;
     public requireQualification?: boolean;
+    public isArray?: boolean;
 }
 export class ReportGroupSymbol extends DataRecordSymbol { }
 export class SegKeySymbol extends Symbol { }
@@ -466,7 +467,7 @@ export class BOOL_Symbol extends Symbol { }
 //**************************************************/
 //**************************************************/
 
-export function programDetails(definition: IFunction): string | undefined {
+export function functionDetails(definition: IFunction): string | undefined {
     let details = " (";
     if (definition.arguments) {
         let sep = "";
@@ -529,6 +530,27 @@ export enum EDataUsage {
     POINTER,
     POINTER_64,
 }
+
+export interface IProgram {
+    name: string,
+    returns: EDataUsage,
+    arguments: EDataUsage[]
+};
+
+export function programDetails(definition: IProgram): string | undefined {
+    let details = " (";
+    if (definition.arguments) {
+        let sep = "";
+        for (let arg of definition.arguments) {
+            details += sep + EDataUsage[arg].replace(/_/g, "-");
+            sep = ", ";
+        }
+    }
+    details += "): ";
+    details += EDataUsage[definition.returns].replace(/_/g, "-");
+    return details;
+}
+
 
 export function ValueTypeFromDataUsage(usage?: EDataUsage): EValueType {
     switch(usage) {
