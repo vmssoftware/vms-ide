@@ -1,74 +1,94 @@
+import { IListMatch, findCorrespondingLines } from "../../common/correspondLines";
+import fs from 'fs';
+import { binarySearch } from "../../common/bsearch";
+
 export interface DebugFileInfo
 {
 	filePath: string;
 	moduleName: string;
-	shitfLine: number;
-	currLine: number;
+	correspondingLines: IListMatch[];
 }
 
 export class HolderDebugFileInfo
 {
-	private fileInfo = new Array<DebugFileInfo>();
+	/**
+	 * filePath -> debug info
+	 */
+	private fileInfo = new Map<string, DebugFileInfo>();
 
 	public getSize() : number
 	{
-		return this.fileInfo.length;
+		return this.fileInfo.size;
 	}
 
-	public getShiftLine(moduleName : string) : number
-	{
-		moduleName = moduleName.toLowerCase();
-
-		for (let item of this.fileInfo)
-		{
-			if(item.moduleName === moduleName)
-			{
-				return item.shitfLine;
-			}
+	public sourceLineFromListLineByModule(moduleName : string, listLine: number): number | undefined {
+		let debugInfo = this.infoByModule(moduleName.toLowerCase());
+		if (debugInfo !== undefined) {
+			return this.sourceLineFromListLineByInfo(debugInfo, listLine);
 		}
-
-		return -1;
-	}
-
-	public getIndexItem(moduleName : string) : number
-	{
-		let index : number = -1;
-		moduleName = moduleName.toLowerCase();
-
-		for (let item of this.fileInfo)
-		{
-			index++;
-
-			if(item.moduleName === moduleName)
-			{
-				return index;
-			}
-		}
-
-		return index;
-	}
-
-	public getItem(moduleName : string) : DebugFileInfo | undefined
-	{
-		moduleName = moduleName.toLowerCase();
-
-		for (let item of this.fileInfo)
-		{
-			if(item.moduleName === moduleName)
-			{
-				return item;
-			}
-		}
-
 		return undefined;
 	}
 
-	public setItem(filePath: string, moduleName : string, shitfLine : number, currLine: number) : number
-	{
-		moduleName = moduleName.toLowerCase();
-
-		let item = <DebugFileInfo> { filePath, moduleName, shitfLine, currLine };
-
-		return this.fileInfo.push(item);
+	public sourceLineFromListLineByFile(filePath : string, listLine: number): number | undefined {
+		let debugInfo = this.fileInfo.get(filePath);
+		if (debugInfo !== undefined) {
+			return this.sourceLineFromListLineByInfo(debugInfo, listLine);
+		}
+		return undefined;
 	}
+
+	public sourceLineFromListLineByInfo(debugInfo: DebugFileInfo, listLine: number): number | undefined {
+		let corrIdx = binarySearch(debugInfo.correspondingLines, x => listLine - x.lstLine);
+		if (corrIdx < 0) {
+			corrIdx = -corrIdx;
+		}
+		if (corrIdx >= debugInfo.correspondingLines.length) {
+			corrIdx = debugInfo.correspondingLines.length - 1;
+		}
+		return debugInfo.correspondingLines[corrIdx].srcLine;
+	}
+
+	public listLineFromSourceLineByFile(filePath : string, sourceLine: number): number | undefined {
+		let debugInfo = this.fileInfo.get(filePath);
+		if (debugInfo !== undefined) {
+			return this.listLineFromSourceLineByInfo(debugInfo, sourceLine);
+		}
+		return undefined;
+	}
+
+	public listLineFromSourceLineByInfo(debugInfo: DebugFileInfo, sourceLine: number): number | undefined {
+		let corrIdx = binarySearch(debugInfo.correspondingLines, x => sourceLine - x.srcLine!);
+		if (corrIdx < 0) {
+			corrIdx = -corrIdx;
+		}
+		if (corrIdx >= debugInfo.correspondingLines.length) {
+			corrIdx = debugInfo.correspondingLines.length - 1;
+		}
+		return debugInfo.correspondingLines[corrIdx].lstLine;
+	}
+
+	public infoByModule(moduleName: string): DebugFileInfo | undefined {
+		let name = moduleName.toLowerCase();
+		for(let [filePath, debugInfo] of this.fileInfo) {
+			if (debugInfo.moduleName === name) {
+				return debugInfo;
+			}
+		}
+		return undefined;
+	}
+
+	public infoByFile(filePath: string): DebugFileInfo | undefined  {
+		return this.fileInfo.get(filePath);
+	}
+
+	public pushEntry(sourcePath: string, listingPath: string) {
+		let source = fs.readFileSync(sourcePath).toString('utf8');
+		let listing = fs.readFileSync(listingPath).toString('utf8');
+		this.fileInfo.set(sourcePath, {
+			correspondingLines: findCorrespondingLines(source, listing),
+			filePath: sourcePath,
+			moduleName: ""
+		});
+	}
+
 }

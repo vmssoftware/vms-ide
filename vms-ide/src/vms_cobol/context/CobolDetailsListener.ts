@@ -121,7 +121,7 @@ export class CobolDetailsListener implements cobolListener {
             }
             this.currentSymbol.programDefinition = {
                 name: this.currentSymbol.name,
-                returns: EDataUsage.COMP,
+                usage: EDataUsage.COMP,
                 arguments: []
             };
         }

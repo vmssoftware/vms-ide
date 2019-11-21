@@ -7,6 +7,7 @@ import { EventEmitter } from "events";
 const { Subject } = require("await-notify");
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
+import path from "path";
 import { DebugCmdVMS, DebugCommands } from "../command/debug_commands";
 import { OsCommands } from "../command/os_commands";
 import { ConfigManager } from "../ext-api/config_manager";
@@ -314,12 +315,12 @@ export class VMSRuntime extends EventEmitter
 //                  SYS$COMMON:[SYSLIB]DECC$SHR.EXE;1
 	private async getModuleInfo(sourcePaths: string[], lisPaths: string[]) : Promise<HolderModuleInfo>
 	{
-		const matcher = /^(\S+)\s*Source.*\d+:\d+:\d+\s+(.*)/;				//MODULE_NAME  Source Listing  25-APR-2019 02:09:09  VSI LANGUAGE V3.1-0007
+		const matcher = /^(\S+)?\s+Source Listing\s+\d{1,2}-[A-Z]{3}-\d{4} \d{2}:\d{2}:\d{2}\s+(.*)(?:\s+Page \d+)?$/;				//MODULE_NAME  Source Listing  25-APR-2019 02:09:09  VSI LANGUAGE V3.1-0007
 		const matcherHead = /^Module\/Image\s*File\s*Ident/;				//Module/Image     File    Ident
 		const matcherModule = /^(\S+)\s*.*\s(\d*-\S+-\d+\s*\d+:\d+)\s+(.*)/;//BASIC_MENU    Fast   8235  19-JUN-2019 05:35   I64 BASIC V1.8-004
 		const matcherFile = /^\s*\S+:\[\S+\](\S+)\.O\S+;/i;					// WORK:[KULIKOVSKIY.project.OUT.DEBUG.OBJ]ADD.OBJ;2
 
-		let moduleNames : string[] = [];
+		let moduleNames = new Map<string, string>();
 		let info : HolderModuleInfo = new HolderModuleInfo();
 
 		for(let path of lisPaths)
@@ -327,7 +328,7 @@ export class VMSRuntime extends EventEmitter
 			if (this.checkExtension(path, "MAP"))
 			{
 				let block = false;
-				let sourceLines = await this.dbgParser.loadFileContext(path);
+				let sourceLines = this.dbgParser.loadFileContext(path);
 				
 				for(let i = 0; i < sourceLines.length; i++)
 				{
@@ -340,7 +341,7 @@ export class VMSRuntime extends EventEmitter
 
 							if(matchesN && matchesM && matchesM.length === 4 && matchesN.length === 2)
 							{
-								moduleNames.push(matchesM[1]);
+								moduleNames.set(matchesM[1].toUpperCase(), matchesN[1].toUpperCase());
 								i++;
 							}
 						}
@@ -362,10 +363,10 @@ export class VMSRuntime extends EventEmitter
 			}
 		}
 
-		for(let path of sourcePaths)
+		for(let sourcePath of sourcePaths)
 		{
-			let listingPath = this.findPathFileByName(path, lisPaths, "LIS");
-			let sourceLines = await this.dbgParser.loadFileContext(listingPath);
+			let listingPath = this.findPathFileByName(sourcePath, lisPaths, "LIS");
+			let sourceLines = this.dbgParser.loadFileContext(listingPath);
 
 			for(let line of sourceLines)
 			{
@@ -374,16 +375,27 @@ export class VMSRuntime extends EventEmitter
 				if(matches && matches.length === 3)
 				{
 					let find = false;
-					let sourcePath = path;
 					let moduleName = matches[1];
 					let languageInfo = matches[2].toUpperCase();
 
+					// try to find module name in MAP file
+					if (moduleName == undefined) {
+						let ext = path.extname(sourcePath);
+						let baseName = path.basename(sourcePath, ext).toUpperCase();
+						for(let [moduleEntry, file] of moduleNames) {
+							if (file === baseName) {
+								moduleName = moduleEntry;
+								break;
+							}
+						}
+					}
+					if (!moduleName) {
+						continue;
+					}
+		
 					if(languageInfo.includes("COBOL"))
 					{
-						while(moduleName.includes("-"))
-						{
-							moduleName = moduleName.replace("-", "_");
-						}
+						moduleName = moduleName.replace(/-/g, "_");
 					}
 
 					if(moduleName.includes("$BLK"))
@@ -393,7 +405,7 @@ export class VMSRuntime extends EventEmitter
 
 					if(languageInfo.includes("BASIC"))
 					{
-						if(moduleNames.length === 0)
+						if(moduleNames.size === 0)
 						{
 							const message = localize('runtime.map_not_find', ".MAP file or module name could not be found");
 							vscode.window.showWarningMessage(message);
@@ -405,18 +417,16 @@ export class VMSRuntime extends EventEmitter
 						}
 						else
 						{
-							for(let item of moduleNames)
+							let entry = moduleNames.get(moduleName.toUpperCase());
+							if (entry !== undefined)
 							{
-								if(moduleName === item)
-								{
-									find = true;
-									break;
-								}
+								moduleName = entry;
+								find = true;
 							}
 
 							if(!find)
 							{
-								moduleName = this.getNameFromPath(path);
+								moduleName = this.getNameFromPath(sourcePath);
 							}
 						}
 					}
@@ -430,8 +440,9 @@ export class VMSRuntime extends EventEmitter
 		return info;
 	}
 
-	//Continue execution to the end/beginning.
-	public continue()
+	//Continue execution to the end/beginning. 
+	// renamed because "continue" is keyword
+	public continueExec()
 	{
 		this.buttonPressd = DebugButtonEvent.btnContinue;
 		this.shell.SendCommandToQueue(this.dbgCmd.go());
@@ -1479,12 +1490,13 @@ export class VMSRuntime extends EventEmitter
 		{
 			if(remBps.length > 0)
 			{
-				let lisLines = await this.loadSourceLis(path);
+				// let lisLines = await this.loadSourceLis(path);
 
 				remBps.forEach(bp =>
 				{
 					//finde number of line
-					let numberLine = this.dbgParser.findBreakPointNumberLine(bp.line,  lisLines);
+					let pathFileLis = this.findPathFileByName(path, this.lisPaths, "LIS");
+					let numberLine = this.dbgParser.findBreakPointNumberLine(path, pathFileLis, bp.line);
 
 					if(!Number.isNaN(numberLine))
 					{
@@ -1506,12 +1518,13 @@ export class VMSRuntime extends EventEmitter
 		{
 			if(setBps.length > 0)
 			{
-				let lisLines = await this.loadSourceLis(path);
+				//let lisLines = await this.loadSourceLis(path);
 
 				setBps.forEach(bp =>
 				{
 					//finde number of line
-					let numberLine = this.dbgParser.findBreakPointNumberLine(bp.line,  lisLines);
+					let pathFileLis = this.findPathFileByName(path, this.lisPaths, "LIS");
+					let numberLine = this.dbgParser.findBreakPointNumberLine(path, pathFileLis, bp.line);
 
 					if(!Number.isNaN(numberLine))
 					{
@@ -1710,7 +1723,7 @@ export class VMSRuntime extends EventEmitter
 					{
 						if(messageDebug.includes(MessageDebuger.msgGoMain))
 						{
-							this.continue();
+							this.continueExec();
 						}
 						else
 						{
@@ -1719,7 +1732,7 @@ export class VMSRuntime extends EventEmitter
 					}
 					else
 					{
-						this.continue();
+						this.continueExec();
 					}
 				}
 

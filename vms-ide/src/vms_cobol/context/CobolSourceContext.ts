@@ -591,18 +591,6 @@ export class CobolSourceContext implements ISourceContext {
                     info.definition.range = sourceRange.range;
                     info.definition.source = sourceRange.source;
                 }
-                if (masterSymbol instanceof IntrinsicFunctionSymbol) {
-                    let details = masterSymbol.name + (masterSymbol.functionDefinition ? functionDetails(masterSymbol.functionDefinition) : "");
-                    if (details) {
-                        info.description = details;
-                    }
-                }
-                if (masterSymbol instanceof ProgramSymbol) {
-                    let details = masterSymbol.name + (masterSymbol.programDefinition ? programDetails(masterSymbol.programDefinition) : "");
-                    if (details) {
-                        info.description = details;
-                    }
-                }
             }
         }
         return info;

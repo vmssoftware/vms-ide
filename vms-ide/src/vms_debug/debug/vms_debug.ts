@@ -498,7 +498,7 @@ export class VMSDebugSession extends LoggingDebugSession
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void
 	{
 		this.sendResponse(response);//first response
-		this.runtime.continue();//second command
+		this.runtime.continueExec();//second command
 	}
 
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void

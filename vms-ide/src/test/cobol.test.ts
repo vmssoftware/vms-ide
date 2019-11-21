@@ -286,7 +286,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -344,7 +344,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -408,7 +408,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -462,7 +462,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -519,7 +519,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -553,7 +553,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -586,7 +586,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -620,7 +620,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -655,7 +655,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -691,7 +691,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -732,7 +732,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -766,7 +766,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         if (errors.length !== 1) {
             assert.fail("Must be ONE parser error");
         }

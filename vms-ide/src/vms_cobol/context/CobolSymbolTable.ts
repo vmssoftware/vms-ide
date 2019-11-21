@@ -25,7 +25,11 @@ import {
     getKindFromSymbol,
     ProgramSymbol,
     IdentifierSymbol,
-    DataRecordSymbol
+    DataRecordSymbol,
+    EDataUsage,
+    IntrinsicFunctionSymbol,
+    functionDetails,
+    programDetails
 } from './CobolSymbol';
 
 import { CobolAnalisisHelper } from './CobolAnalisisHelpers';
@@ -369,7 +373,16 @@ export class CobolSymbolTable extends SymbolTable {
         }
 
         let kind = getKindFromSymbol(symbol);
-        let name = this.getSymbolPath(symbol);
+        let name = this.getSymbolPath(symbol, CobolSymbolTable);
+        if (symbol instanceof DataRecordSymbol && symbol.usage) {
+            name += ": " + EDataUsage[symbol.usage].replace(/_/g, "-");
+        }
+        if (symbol instanceof IntrinsicFunctionSymbol && symbol.functionDefinition) {
+            name += functionDetails(symbol.functionDefinition);
+        }
+        if (symbol instanceof ProgramSymbol && symbol.programDefinition) {
+            name += programDetails(symbol.programDefinition);
+        }
 
         const result: ISymbolInfo = {
             description: name,

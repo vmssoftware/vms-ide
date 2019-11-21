@@ -531,10 +531,15 @@ export enum EDataUsage {
     POINTER_64,
 }
 
+export interface IProgramArgument {
+    name: string,
+    usage: EDataUsage,
+};
+
 export interface IProgram {
     name: string,
-    returns: EDataUsage,
-    arguments: EDataUsage[]
+    usage: EDataUsage,
+    arguments: IProgramArgument[]
 };
 
 export function programDetails(definition: IProgram): string | undefined {
@@ -542,12 +547,13 @@ export function programDetails(definition: IProgram): string | undefined {
     if (definition.arguments) {
         let sep = "";
         for (let arg of definition.arguments) {
-            details += sep + EDataUsage[arg].replace(/_/g, "-");
+            details += sep + arg.name;
+            details += ": " + EDataUsage[arg.usage].replace(/_/g, "-");
             sep = ", ";
         }
     }
     details += "): ";
-    details += EDataUsage[definition.returns].replace(/_/g, "-");
+    details += EDataUsage[definition.usage].replace(/_/g, "-");
     return details;
 }
 

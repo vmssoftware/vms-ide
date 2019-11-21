@@ -167,14 +167,16 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     }
 
     visitParagraph(ctx: ParagraphContext) {
-        if (ctx.paragraph_name().USER_DEFINED_WORD_().symbol.charPositionInLine >= 4) {
+        let nameCtx = ctx.paragraph_name().USER_DEFINED_WORD_() || ctx.paragraph_name().INTEGER_LITERAL_();
+        if (nameCtx && nameCtx.symbol.charPositionInLine >= 4) {
             this.helper.mark(ctx.paragraph_name(), localize("must_be_in_a", "Must start in A area"));
         }
         this.visitChildren(ctx);
     }
 
     visitSection_header(ctx: Section_headerContext) {
-        if (ctx.section_name().USER_DEFINED_WORD_().symbol.charPositionInLine >= 4) {
+        let nameCtx = ctx.section_name().USER_DEFINED_WORD_() || ctx.section_name().INTEGER_LITERAL_();
+        if (nameCtx && nameCtx.symbol.charPositionInLine >= 4) {
             this.helper.mark(ctx.section_name(), localize("must_be_in_a", "Must start in A area"));
         }
         this.visitChildren(ctx);
@@ -442,7 +444,10 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
             let itemSymbol = this.helper.verifyQualifiedName(item, false, undefined, undefined, [IntrinsicFunctionSymbol]);
             if (itemSymbol instanceof DataRecordSymbol) {
                 // add as parameter
-                programSymbol.programDefinition.arguments.push(itemSymbol.usage);
+                programSymbol.programDefinition.arguments.push( {
+                    name: itemSymbol.name, 
+                    usage: itemSymbol.usage
+                });
             }
         }
         //this.visitChildren(ctx);
@@ -467,7 +472,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         let itemSymbol = this.helper.verifyQualifiedName(item, false, undefined, undefined, [IntrinsicFunctionSymbol]);
         if (itemSymbol instanceof DataRecordSymbol) {
             // add as program type
-            programSymbol.programDefinition.returns = itemSymbol.usage;
+            programSymbol.programDefinition.usage = itemSymbol.usage;
         }
         //this.visitChildren(ctx);
     }
@@ -562,7 +567,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                             }
                         }
                         for(let idx = 0; idx < progSymbol.programDefinition.arguments.length; ++idx) {
-                            if (!this.testAllowedTypes(types[idx], progSymbol.programDefinition.arguments[idx])) {
+                            if (!this.testAllowedTypes(types[idx], progSymbol.programDefinition.arguments[idx].usage)) {
                                 if (argCtxs.length > idx) {
                                     this.helper.mark(argCtxs[idx], localize("type.mismatch", "Type mismatch"));
                                 } else {
@@ -581,12 +586,14 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
             if (callGivingCtx) {
                 let type = this.analyzeIdentifierResult(callGivingCtx.identifier_result());
                 // make array of arrays
-                if (!this.testAllowedTypes(type, progSymbol.programDefinition.returns)) {
+                if (!this.testAllowedTypes(type, progSymbol.programDefinition.usage)) {
                     this.helper.mark(callGivingCtx, localize("type.mismatch", "Type mismatch"));
                 }
             }
+            this.visitChildren(ctx, [Call_usingContext, Prog_nameContext]);
+        } else {
+            this.visitChildren(ctx, [Prog_nameContext]);
         }
-        this.visitChildren(ctx, [Call_usingContext, Prog_nameContext]);
     }
 
     visitCall_using(ctx: Call_usingContext) {
@@ -638,28 +645,6 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
 
     public analyzeIdentifier(ctx: IdentifierContext): (EDataUsage | undefined) {
         let returnType: (EDataUsage | undefined) = undefined;
-        // let funcNameCtx = ctx.function_name();
-        // if (funcNameCtx) {
-        //     returnType = this.analyzeFunctionName(funcNameCtx);
-        //     let referenceCtx = ctx.reference_modification();
-        //     if (referenceCtx) {
-        //         // test if identifier might be a string
-        //         if (Array.isArray(returnType)) {
-        //             if (!(returnType.includes(EValueType.Alphanumeric) || returnType.includes(EValueType.Any))) {
-        //                 this.helper.mark(referenceCtx, localize("not.a.string", "It seems this is not a string"));
-        //             }
-        //         } else {
-        //             switch (returnType) {
-        //                 case EValueType.Integer:
-        //                 case EValueType.Numeric:
-        //                     this.helper.mark(referenceCtx, localize("not.a.string", "It seems this is not a string"));
-        //                     break;
-        //             }
-        //         }
-        //     }
-        //     this.visitChildren(ctx, [Function_nameContext]);
-        //     return returnType;
-        // }
         let identifierCtx = ctx.identifier_result();
         if (identifierCtx) {
             return this.analyzeIdentifierResult(identifierCtx);
@@ -667,14 +652,6 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         this.visitChildren(ctx);
         return returnType;
     }
-
-    // public analyzeFunctionName(functionNameCtx: Function_nameContext ): EValueType[] | EValueType {
-    //     let functionSymbol = this.helper.verifyName(functionNameCtx, false, undefined, [IntrinsicFunctionSymbol]);
-    //     if (functionSymbol instanceof IntrinsicFunctionSymbol) {
-    //         return functionSymbol.functionDefinition ? functionSymbol.functionDefinition.type : EValueType.Any;
-    //     }
-    //     return EValueType.Any;
-    // }
 
     public analyzeIdentifierResult(identifierCtx: Identifier_resultContext): (EDataUsage | undefined) {
         let returnType: (EDataUsage | undefined);
@@ -701,7 +678,4 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         return returnType;
     }
 
-    // visitUnknown_statement(ctx: Unknown_statementContext) {
-    //     this.helper.mark(ctx, localize("unknown.statement", "Unknown statement"), EDiagnosticType.Warning);
-    // }
 }

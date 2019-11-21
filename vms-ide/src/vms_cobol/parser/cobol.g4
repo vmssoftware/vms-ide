@@ -172,6 +172,7 @@ paragraph
 
 paragraph_name
    : USER_DEFINED_WORD_
+   | INTEGER_LITERAL_
    ;
 
 use_statement
@@ -200,6 +201,7 @@ section_header
 
 section_name
    : USER_DEFINED_WORD_
+   | INTEGER_LITERAL_
    ;
 
 using
