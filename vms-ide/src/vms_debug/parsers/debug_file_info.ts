@@ -38,14 +38,18 @@ export class HolderDebugFileInfo
 	}
 
 	public sourceLineFromListLineByInfo(debugInfo: DebugFileInfo, listLine: number): number | undefined {
-		let corrIdx = binarySearch(debugInfo.correspondingLines, x => listLine - x.lstLine);
-		if (corrIdx < 0) {
-			corrIdx = -corrIdx;
+		if (debugInfo.correspondingLines.length > 0) {
+			let corrIdx = binarySearch(debugInfo.correspondingLines, x => listLine - x.lstLine);
+			// if binarySearch returns negative value, it means the place where element must be, but not found
+			if (corrIdx < 0) {
+				corrIdx = -corrIdx;
+			}
+			if (corrIdx >= debugInfo.correspondingLines.length) {
+				corrIdx = debugInfo.correspondingLines.length - 1;
+			}
+			return debugInfo.correspondingLines[corrIdx].srcLine;
 		}
-		if (corrIdx >= debugInfo.correspondingLines.length) {
-			corrIdx = debugInfo.correspondingLines.length - 1;
-		}
-		return debugInfo.correspondingLines[corrIdx].srcLine;
+		return undefined;
 	}
 
 	public listLineFromSourceLineByFile(filePath : string, sourceLine: number): number | undefined {
@@ -57,14 +61,18 @@ export class HolderDebugFileInfo
 	}
 
 	public listLineFromSourceLineByInfo(debugInfo: DebugFileInfo, sourceLine: number): number | undefined {
-		let corrIdx = binarySearch(debugInfo.correspondingLines, x => sourceLine - x.srcLine!);
-		if (corrIdx < 0) {
-			corrIdx = -corrIdx;
+		if (debugInfo.correspondingLines.length > 0) {
+			let corrIdx = binarySearch(debugInfo.correspondingLines, x => sourceLine - x.srcLine!);
+			// if binarySearch returns negative value, it means the place where element must be, but not found
+			if (corrIdx < 0) {
+				corrIdx = -corrIdx;
+			}
+			if (corrIdx >= debugInfo.correspondingLines.length) {
+				corrIdx = debugInfo.correspondingLines.length - 1;
+			}
+			return debugInfo.correspondingLines[corrIdx].lstLine;
 		}
-		if (corrIdx >= debugInfo.correspondingLines.length) {
-			corrIdx = debugInfo.correspondingLines.length - 1;
-		}
-		return debugInfo.correspondingLines[corrIdx].lstLine;
+		return undefined;
 	}
 
 	public infoByModule(moduleName: string): DebugFileInfo | undefined {

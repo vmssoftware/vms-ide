@@ -8,9 +8,9 @@ export interface IListMatch {
 export function findCorrespondingLines(source: string, listing: string) {
 
     // two (8-char) zones
-    // ((spaces+depthNum?)?+\t)?(spaces+lineNum+space) for compiled lines
-    // (spaces+depthNum?+X)?(spaces+lineNum+space) for skipped lines
-    const sourceRgx = /^(?:\s*\d*)?[\tX]( {1}\d{6}| {2}\d{5}| {3}\d{4}| {4}\d{3}| {5}\d{2}| {6}\d{1}) (.*)$/;
+    // (((spaces+depthNum1)?+spaces+depthNum2?)?+\t)?(spaces+lineNum+space) for compiled lines
+    // (((spaces+depthNum1)?+spaces+depthNum2?)+X)?(spaces+lineNum+space) for skipped lines
+    const sourceRgx = /^(?:\s*\d*\s*\d*)?[\tX]( {1}\d{6}| {2}\d{5}| {3}\d{4}| {4}\d{3}| {5}\d{2}| {6}\d{1}) (.*)$/;
 
     let strTst = `       X   8678 #ifdef STD_INSPIRED`;
     let mathTst = strTst.match(sourceRgx);
