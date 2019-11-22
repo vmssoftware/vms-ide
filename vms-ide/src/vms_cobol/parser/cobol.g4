@@ -372,7 +372,7 @@ subtract_statement
    ;
 
 sub_grp
-   : qualified_data_item
+   : identifier_result
    ;
 
 sub_num
@@ -401,7 +401,7 @@ string_delim
    ;
 
 string_src
-   : qualified_data_item
+   : identifier_result
    | STRING_LITERAL_
    | figurative_constant
    ;
@@ -781,7 +781,7 @@ tallying_for_all
    ;
 
 compare_val
-   : qualified_data_item
+   : identifier_result
    | STRING_LITERAL_
    | figurative_constant_witout_all
    ;
@@ -791,7 +791,7 @@ delim_val
    ;
 
 tally_ctr
-   : qualified_data_item
+   : identifier_result
    ;
 
 src_string
@@ -821,7 +821,7 @@ fld_name
    ;
 
 move_statement
-   : MOVE (CORRESPONDING|CORR)? src_item TO dest_item
+   : MOVE (CORRESPONDING|CORR)? src_item TO dest_item+
    ;
 
 if_statement
@@ -848,7 +848,7 @@ exit_program_statement
 
 go_to_statement
    : GO TO? proc_name?
-   | GO TO? proc_name+ DEPENDING ON? qualified_data_item
+   | GO TO? proc_name+ DEPENDING ON? identifier_result
    ;
 
 proc_name
@@ -922,7 +922,7 @@ display_statement_form2
    ;
 
 display_statement_form3
-   : DISPLAY qualified_data_item (AT? (disp_f3_line disp_f3_column?|disp_f3_column disp_f3_line?))?
+   : DISPLAY identifier_result (AT? (disp_f3_line disp_f3_column?|disp_f3_column disp_f3_line?))?
      END_DISPLAY?
    ;
 
@@ -1063,7 +1063,7 @@ add_statement
    ;
 
 add_grp
-   : qualified_data_item
+   : identifier_result
    ;
 
 add_num
@@ -1387,7 +1387,7 @@ external_name
    ;
 
 ref_data_name
-   : qualified_data_item
+   : identifier_result
    ;
 
 value_is_literal
@@ -1418,8 +1418,8 @@ key_name
    ;
 
 times_definition
-   : table_size TIMES
-   | min_times TO max_times TIMES DEPENDING ON? depending_item
+   : table_size TIMES?
+   | min_times TO max_times TIMES? DEPENDING ON? depending_item
    ;
 
 table_size
@@ -1630,22 +1630,22 @@ linage
 
 bottom_lines
    : (INTEGER_LITERAL_|HEX_LITERAL_)
-   | qualified_data_item
+   | identifier_result
    ;
 
 top_lines
    : (INTEGER_LITERAL_|HEX_LITERAL_)
-   | qualified_data_item
+   | identifier_result
    ;
 
 footing_line
    : (INTEGER_LITERAL_|HEX_LITERAL_)
-   | qualified_data_item
+   | identifier_result
    ;
 
 page_size
    : (INTEGER_LITERAL_|HEX_LITERAL_)
-   | qualified_data_item
+   | identifier_result
    ;
 
 data_rec
@@ -1730,15 +1730,15 @@ screen_description_clause
    ;
 
 scr_pic_using
-   : USING  qualified_data_item
+   : USING  identifier_result
    ;
 
 scr_pic_from
-   : FROM (qualified_data_item|nonnumeric_literal)
+   : FROM (identifier_result|nonnumeric_literal)
    ;
 
 scr_pic_to
-   : TO qualified_data_item
+   : TO identifier_result
    ;
 
 nonnumeric_literal
@@ -1746,7 +1746,7 @@ nonnumeric_literal
    ;
 
 src_number
-   : qualified_data_item
+   : identifier_result
    | (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
@@ -1963,7 +1963,7 @@ switch_num
    ;
 
 qualified_data_item
-   : USER_DEFINED_WORD_ ((IN|OF) USER_DEFINED_WORD_)*
+   : USER_DEFINED_WORD_  ((IN|OF) USER_DEFINED_WORD_)*
    ;
 
 currency
@@ -2323,8 +2323,8 @@ logic_expression
 logic_condition
    : arithmetic_expression condition_operator arithmetic_expression (logic_operation logic_condition_abbrev)*
    | arithmetic_expression IS? NOT? (class_condition_name|sign_condition_name) (logic_operation logic_condition_abbrev)*
-   | arithmetic_expression IS? (SUCCESS|FAILURE)
-   | qualified_data_item
+   | arithmetic_expression IS? NOT? (SUCCESS|FAILURE)
+   | identifier_result
    ;
 
 logic_condition_abbrev

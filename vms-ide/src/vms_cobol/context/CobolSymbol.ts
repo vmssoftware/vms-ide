@@ -448,7 +448,7 @@ export class DataRecordSymbol extends IdentifierSymbol {
     public picture?: string;
     public usage = EDataUsage.DISPLAY;
     public requireQualification?: boolean;
-    public isArray?: boolean;
+    public arrayLvl?: number;
 }
 export class ReportGroupSymbol extends DataRecordSymbol { }
 export class SegKeySymbol extends Symbol { }

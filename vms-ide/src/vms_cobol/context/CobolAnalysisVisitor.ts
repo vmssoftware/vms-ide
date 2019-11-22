@@ -1,6 +1,6 @@
 import * as nls from "vscode-nls";
 import { cobolVisitor } from "../parser/cobolVisitor";
-import { AbstractParseTreeVisitor } from "antlr4ts/tree";
+import { AbstractParseTreeVisitor, TerminalNode } from "antlr4ts/tree";
 import {
     Bool_condition_nameContext,
     Class_condition_nameContext,
@@ -55,6 +55,12 @@ import {
     Call_givingContext,
     Reference_modificationContext,
     SubscriptingContext,
+    OccursContext,
+    RenamesContext,
+    Value_isContext,
+    Working_storage_sectionContext,
+    File_sectionContext,
+    PictureContext,
 } from "../parser/cobolParser";
 
 import { CobolAnalisisHelper } from "./CobolAnalisisHelpers";
@@ -491,13 +497,217 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         }
     }
 
+    visitData_description_entry(ctx: Data_description_entryContext) {
+        let dataRecordSymbol = this.helper.symbolTable.symbolWithContext(ctx);
+        if (dataRecordSymbol instanceof DataRecordSymbol) {
+            if (dataRecordSymbol.level != undefined) {
+                switch (true) {
+                    case dataRecordSymbol.level >= 1 && dataRecordSymbol.level <= 49:
+                    case dataRecordSymbol.level === 66:
+                    case dataRecordSymbol.level === 77:
+                    case dataRecordSymbol.level === 88:
+                        break;
+                    default:
+                        this.helper.mark(ctx, localize("invalid.datarecord.level", "Invalid data record level"));
+                        break;
+                }
+                if (dataRecordSymbol.level === 66) {
+                    if (dataRecordSymbol.parent instanceof DataRecordSymbol) {
+                        if (dataRecordSymbol.parent.level === 66 || dataRecordSymbol.parent.level === 88) {
+                            this.helper.mark(ctx, localize("conditional.cannot.assosiated.66.88", "A condition-name cannot be associated with a level 66 or 88 item"));
+                        }
+                        if (dataRecordSymbol.parent.usage === EDataUsage.INDEX) {
+                            this.helper.mark(ctx, localize("conditional.cannot.assosiated.index", "A condition-name cannot be associated with an index data item"));
+                        }
+                    }
+                }
+            }
+            let elemenary = true;
+            for(let inner of dataRecordSymbol.children) {
+                if (inner instanceof DataRecordSymbol) {
+                    switch(inner.level) {
+                        case 66:
+                        case 77:
+                        case 88:
+                            break;
+                        default:
+                            elemenary = false;
+                            break;
+                    }
+                }
+            }
+            if (elemenary) {
+                // check picture for elementary
+                switch(dataRecordSymbol.usage) {
+                    case EDataUsage.INDEX:
+                    case EDataUsage.COMP_1:
+                    case EDataUsage.COMP_2:
+                    case EDataUsage.FLOAT_SHORT:
+                    case EDataUsage.FLOAT_LONG:
+                    case EDataUsage.FLOAT_EXTENDED:
+                    case EDataUsage.COMPUTATIONAL_1:
+                    case EDataUsage.COMPUTATIONAL_2:
+                    case EDataUsage.POINTER:
+                    case EDataUsage.POINTER_64:
+                        // mast have no picture - checked in visitPicture to highlight appropriate text
+                        break;
+                    default:
+                        if (!dataRecordSymbol.picture) {
+                            this.helper.mark(ctx, localize("picture.must.be", "There must be a PICTURE clause"));
+                        }
+                }
+            }
+        }
+        this.visitChildren(ctx);
+    }
+
+    visitPicture(ctx: PictureContext) {
+        let dataRecordCtx = firstContainingContext(ctx, Data_description_entryContext);
+        if (dataRecordCtx) {
+            let dataRecordSymbol = this.helper.symbolTable.symbolWithContext(dataRecordCtx);
+            if (dataRecordSymbol instanceof DataRecordSymbol) {
+                // check picture
+                switch(dataRecordSymbol.usage) {
+                    case EDataUsage.INDEX:
+                    case EDataUsage.COMP_1:
+                    case EDataUsage.COMP_2:
+                    case EDataUsage.FLOAT_SHORT:
+                    case EDataUsage.FLOAT_LONG:
+                    case EDataUsage.FLOAT_EXTENDED:
+                    case EDataUsage.COMPUTATIONAL_1:
+                    case EDataUsage.COMPUTATIONAL_2:
+                    case EDataUsage.POINTER:
+                    case EDataUsage.POINTER_64:
+                        // mast have no picture
+                        this.helper.mark(ctx, localize("no.picture.must.be", "There must be no PICTURE clause"));
+                        break;
+                }
+            }
+        }
+    }
+
     visitData_description_clause(ctx: Data_description_clauseContext) {
-        if (ctx.EXTERNAL()) {
-            let dataRecordCtx = firstContainingContext(ctx, Data_description_entryContext);
-            if (dataRecordCtx) {
-                let dataRecordSymbol = this.helper.symbolTable.symbolWithContext(dataRecordCtx);
-                if (dataRecordSymbol instanceof DataRecordSymbol && !(dataRecordSymbol.level === 1 || dataRecordSymbol.level === 77)) {
-                    this.helper.mark(ctx, localize("external.invalid", "Only level numbers 01 and 77 can specify the EXTERNAL clause"));
+        let dataRecordCtx = firstContainingContext(ctx, Data_description_entryContext);
+        if (dataRecordCtx) {
+            let dataRecordSymbol = this.helper.symbolTable.symbolWithContext(dataRecordCtx);
+            if (dataRecordSymbol instanceof DataRecordSymbol) {
+                if (ctx.EXTERNAL()) {
+                    // check level number
+                    let workingStorageSection = firstContainingContext(ctx, Working_storage_sectionContext);
+                    if (workingStorageSection) {
+                        switch (dataRecordSymbol.level) {
+                            case 1:
+                            case 77:
+                                break;
+                            default:
+                                this.helper.mark(ctx, localize("external.invalid.ws", "Only level numbers 01 and 77 can specify the EXTERNAL clause"));
+                                break;
+                        }
+                    } else {
+                        this.helper.mark(ctx, localize("external.invalid", "The EXTERNAL clause may appear only in WORKING-STORAGE SECTION"));
+                    }
+                    // check redefines
+                    if (dataRecordCtx.REDEFINES()) {
+                        this.helper.mark(ctx, localize("external.redefines", "The EXTERNAL and REDEFINES clauses cannot be in the same data description entry."));
+                    }
+                    // check name exists
+                    if (!dataRecordCtx.data_name()) {
+                        this.helper.mark(ctx, localize("external.dataname", "The data-name must appear"));
+                    }
+                }
+                if (ctx.GLOBAL()) {
+                    // check level
+                    let workingStorageSection = firstContainingContext(ctx, Working_storage_sectionContext);
+                    if (workingStorageSection) {
+                        switch (dataRecordSymbol.level) {
+                            case 1:
+                            case 77:
+                                break;
+                            default:
+                                this.helper.mark(ctx, localize("global.invalid.ws", "Only level numbers 01 and 77 can specify the GLOBAL clause in WORKING-STORAGE SECTION"));
+                                break;
+                        }
+                    } else {
+                        let fileSection = firstContainingContext(ctx, File_sectionContext);
+                        if (fileSection && dataRecordSymbol.level !== 1) {
+                            this.helper.mark(ctx, localize("global.invalid.fs", "Only level numbers 01 can specify the GLOBAL clause in FILE SECTION"));
+                        } else {
+                            this.helper.mark(ctx, localize("global.invalid", "The GLOBAL clause may appear only in WORKING-STORAGE or FILE SECTIONs"));
+                        }
+                    }
+                    // check name exists
+                    if (!dataRecordCtx.data_name()) {
+                        this.helper.mark(ctx, localize("global.dataname", "The data-name must appear"));
+                    }
+                }
+                // test conditional
+                if (dataRecordSymbol.level == 66 && !ctx.value_is()) {
+                    this.helper.mark(ctx, localize("invalid.conditional", "Must not be in conditional"));
+                }
+                // test if item is elementary
+                let elemenary = true;
+                for(let inner of dataRecordSymbol.children) {
+                    if (inner instanceof DataRecordSymbol) {
+                        switch(inner.level) {
+                            case 66:
+                            case 77:
+                            case 88:
+                                break;
+                            default:
+                                elemenary = false;
+                                break;
+                        }
+                    }
+                }
+                if (!elemenary) {
+                    let bannedCtxs: (ParserRuleContext|TerminalNode|undefined)[] = [];
+                    bannedCtxs.push(ctx.SYNC());
+                    bannedCtxs.push(ctx.SYNCHRONIZED());
+                    bannedCtxs.push(ctx.BLANK());
+                    bannedCtxs.push(ctx.WHEN());
+                    bannedCtxs.push(ctx.ZERO());
+                    bannedCtxs.push(ctx.JUST());
+                    bannedCtxs.push(ctx.JUSTIFIED());
+                    bannedCtxs.push(ctx.picture());
+                    for(let bannedCtx of bannedCtxs) {
+                        if (bannedCtx) {
+                            this.helper.mark(bannedCtx, localize("for.elementary.only", "Can appear only in Data Description entries for elementary items"));
+                        }
+                    }
+                }
+            }
+        }
+        this.visitChildren(ctx);
+    }
+
+    visitRenames(ctx: RenamesContext) {
+        let dataRecordCtx = firstContainingContext(ctx, Data_description_entryContext);
+        if (dataRecordCtx) {
+            let dataRecordSymbol = this.helper.symbolTable.symbolWithContext(dataRecordCtx);
+            if (dataRecordSymbol instanceof DataRecordSymbol) {
+                if (dataRecordSymbol.level !== 66) {
+                    this.helper.mark(ctx, localize("renames.invalid", "Only level numbers 66 can specify the RENAMES clause"));
+                }
+                if (dataRecordSymbol.picture) {
+                    this.helper.mark(ctx, localize("no.picture.must.be", "There must be no PICTURE clause"));
+                }
+            }
+        }
+        this.visitChildren(ctx);
+    }
+
+    visitOccurs(ctx: OccursContext) {
+        let dataRecordCtx = firstContainingContext(ctx, Data_description_entryContext);
+        if (dataRecordCtx) {
+            let dataRecordSymbol = this.helper.symbolTable.symbolWithContext(dataRecordCtx);
+            if (dataRecordSymbol instanceof DataRecordSymbol) {
+                switch(dataRecordSymbol.level) {
+                    case 1:
+                    case 66:
+                    case 77:
+                    case 88:
+                        this.helper.mark(ctx, localize("occurs.invalid", "OCCURS clause cannot be used in a data description entry that has a level-number of 01, 66, 77 or 88"));
+                        break;
                 }
             }
         }
@@ -668,6 +878,10 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         return returnType;
     }
 
+    visitIdentifier_result(ctx: Identifier_resultContext) {
+        this.analyzeIdentifierResult(ctx);
+    }
+
     visitIdentifier(ctx: IdentifierContext) {
         this.analyzeIdentifier(ctx);
     }
@@ -690,10 +904,18 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
             let subscriptingCtx = identifierCtx.subscripting();
             if (subscriptingCtx) {
                 // test if identifier is an array
-                if (!identifierSymbol.isArray) {
+                if (identifierSymbol.arrayLvl === undefined) {
                     this.helper.mark(subscriptingCtx, localize("not.an.array", "This is not an array"));
+                } else {
+                    if (identifierSymbol.arrayLvl !== subscriptingCtx.arithmetic_expression().length) {
+                        this.helper.mark(subscriptingCtx, localize("doesnt.correspond.array", "Subscripting doesn't correspond array depth"));
+                    }
                 }
                 this.visitChildren(subscriptingCtx);
+            } else {
+                // if (identifierSymbol.arrayLvl !== undefined) {
+                //     this.helper.mark(identifierCtx, localize("must.have.subscription", "Must have subscription"));
+                // }
             }
             let referenceCtx = identifierCtx.reference_modification();
             if (referenceCtx) {

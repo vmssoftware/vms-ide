@@ -331,6 +331,9 @@ export class CobolDetailsListener implements cobolListener {
             symb.isGlobal = symb.parent.isGlobal;
             symb.isExtern = symb.parent.isExtern;
         }
+        if (symb.parent instanceof DataRecordSymbol) {
+            symb.arrayLvl = symb.parent.arrayLvl;
+        }
         symb.usage = EDataUsage.DISPLAY;
     }
 
@@ -352,7 +355,7 @@ export class CobolDetailsListener implements cobolListener {
                 return;
             }
             if (ctx.occurs()) {
-                this.currentSymbol.isArray = true;
+                this.currentSymbol.arrayLvl = this.currentSymbol.arrayLvl ? this.currentSymbol.arrayLvl + 1 : 1;
                 return;
             }
             let pictureCtx = ctx.picture();
