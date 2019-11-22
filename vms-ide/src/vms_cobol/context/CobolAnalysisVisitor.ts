@@ -52,6 +52,9 @@ import {
     Identifier_resultContext,
     Cobol_sourceContext,
     Unknown_statementContext,
+    Call_givingContext,
+    Reference_modificationContext,
+    SubscriptingContext,
 } from "../parser/cobolParser";
 
 import { CobolAnalisisHelper } from "./CobolAnalisisHelpers";
@@ -80,15 +83,14 @@ import {
     SYMBOLIC_CHARACTERS_Symbol,
     SectionSymbol,
     SortMergeFileSymbol,
-    IValue,
-    ValueTypeFromDataUsage,
-    IdentifierSymbol,
-    EValueType,
     EDataUsage,
 } from "./CobolSymbol";
 
+import {
+    Symbol,
+} from 'antlr4-c3';
+
 import { ParserRuleContext } from "antlr4ts";
-import { EDiagnosticType } from "../../common/parser/Facade";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -480,7 +482,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     visitProg_name(ctx: Prog_nameContext) {
         let symbol = this.helper.verifyNamePath(ctx, [ctx], false, undefined, undefined, [IntrinsicFunctionSymbol]);
         if (symbol) {
-            if (ctx.USER_DEFINED_WORD_()) {
+            if (ctx.identifier_result()) {
                 // symbol must not be a Program
                 if (symbol instanceof ProgramSymbol) {
                     this.helper.mark(ctx, localize("must.be.literal", "Must be enclosed in quotas"));
@@ -548,51 +550,75 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
 
     public analizeCallStatement(ctx: Call_statementContext) {
         let callUsingCtx = ctx.call_using();
-        let progSymbol = this.helper.verifyName(ctx.prog_name());
-        if (progSymbol instanceof ProgramSymbol && progSymbol.programDefinition) {
-            if (callUsingCtx) {
-                let types = this.analyzeCall_using(callUsingCtx);
-                // check types is corresponding to definition
-                if (progSymbol.programDefinition.arguments && progSymbol.programDefinition.arguments.length > 0) {
-                    if (progSymbol.programDefinition.arguments.length !== types.length) {
-                        this.helper.mark(ctx, localize("invalid.arg.count", "Invalid argument count"));
-                    } else {
-                        // make array of arrays
-                        let argCtxs: ParserRuleContext[] = [];
-                        for (let args of callUsingCtx.using_arg()) {
-                            if (args.OMITTED()) {
-                                argCtxs.push(args);
+        let nameIdentifier = ctx.prog_name().identifier_result();
+        if (nameIdentifier) {
+            // analize name 
+            let symbol = this.analyzeIdentifierResult(nameIdentifier);
+            if (symbol instanceof ProgramSymbol) {
+                this.helper.mark(nameIdentifier, localize("must.be.literal", "Must be enclosed in quotas"));
+            }
+            // and all other children
+            this.visitChildren(ctx, [Prog_nameContext]);
+        } else {
+            let nameLiteral = ctx.prog_name().STRING_LITERAL_();
+            if (nameLiteral) {
+                // verify name
+                let progSymbol = this.helper.verifyName(nameLiteral);
+                if (progSymbol instanceof ProgramSymbol && progSymbol.programDefinition) {
+                    // verify parameters
+                    if (callUsingCtx) {
+                        let types = this.analyzeCall_using(callUsingCtx);
+                        // check types is corresponding to definition
+                        if (progSymbol.programDefinition.arguments && progSymbol.programDefinition.arguments.length > 0) {
+                            if (progSymbol.programDefinition.arguments.length !== types.length) {
+                                this.helper.mark(ctx, localize("invalid.arg.count", "Invalid argument count"));
                             } else {
-                                argCtxs.push(...args.argument());
-                            }
-                        }
-                        for(let idx = 0; idx < progSymbol.programDefinition.arguments.length; ++idx) {
-                            if (!this.testAllowedTypes(types[idx], progSymbol.programDefinition.arguments[idx].usage)) {
-                                if (argCtxs.length > idx) {
-                                    this.helper.mark(argCtxs[idx], localize("type.mismatch", "Type mismatch"));
-                                } else {
-                                    this.helper.mark(callUsingCtx, localize("type.mismatch", "Type mismatch"));
+                                // make array of arrays
+                                let argCtxs: ParserRuleContext[] = [];
+                                for (let args of callUsingCtx.using_arg()) {
+                                    if (args.OMITTED()) {
+                                        argCtxs.push(args);
+                                    } else {
+                                        argCtxs.push(...args.argument());
+                                    }
+                                }
+                                for(let idx = 0; idx < progSymbol.programDefinition.arguments.length; ++idx) {
+                                    if (!this.testAllowedTypes(types[idx], progSymbol.programDefinition.arguments[idx].usage)) {
+                                        if (argCtxs.length > idx) {
+                                            this.helper.mark(argCtxs[idx], localize("type.mismatch", "Type mismatch"));
+                                        } else {
+                                            this.helper.mark(callUsingCtx, localize("type.mismatch", "Type mismatch"));
+                                        }
+                                    }
                                 }
                             }
+                        } else if (types.length > 0) {
+                            this.helper.mark(ctx, localize("invalid.arg.count", "Invalid argument count"));
+                        }
+                    } else if (progSymbol.programDefinition.arguments && progSymbol.programDefinition.arguments.length > 0) {
+                        this.helper.mark(ctx, localize("invalid.arg.count", "Invalid argument count"));
+                    }
+                    let callGivingCtx = ctx.call_giving();
+                    if (callGivingCtx) {
+                        let testType: EDataUsage | undefined;
+                        let symbol = this.analyzeIdentifierResult(callGivingCtx.identifier_result());
+                        if (symbol instanceof DataRecordSymbol) {
+                            testType = symbol.usage;
+                        }
+                        // make array of arrays
+                        if (!this.testAllowedTypes(testType, progSymbol.programDefinition.usage)) {
+                            this.helper.mark(callGivingCtx, localize("type.mismatch", "Type mismatch"));
                         }
                     }
-                } else if (types.length > 0) {
-                    this.helper.mark(ctx, localize("invalid.arg.count", "Invalid argument count"));
+                    this.visitChildren(ctx, [Call_usingContext, Prog_nameContext, Call_givingContext]);
+                } else {
+                    // not a program symbol
+                    this.visitChildren(ctx, [Prog_nameContext]);
                 }
-            } else if (progSymbol.programDefinition.arguments && progSymbol.programDefinition.arguments.length > 0) {
-                this.helper.mark(ctx, localize("invalid.arg.count", "Invalid argument count"));
+            } else {
+                // has no name at all
+                this.visitChildren(ctx);
             }
-            let callGivingCtx = ctx.call_giving();
-            if (callGivingCtx) {
-                let type = this.analyzeIdentifierResult(callGivingCtx.identifier_result());
-                // make array of arrays
-                if (!this.testAllowedTypes(type, progSymbol.programDefinition.usage)) {
-                    this.helper.mark(callGivingCtx, localize("type.mismatch", "Type mismatch"));
-                }
-            }
-            this.visitChildren(ctx, [Call_usingContext, Prog_nameContext]);
-        } else {
-            this.visitChildren(ctx, [Prog_nameContext]);
         }
     }
 
@@ -625,7 +651,10 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         let returnType: (EDataUsage | undefined) = undefined;
         let identifierResultCtx = ctx.identifier_result();
         if (identifierResultCtx) {
-            returnType = this.analyzeIdentifierResult(identifierResultCtx);
+            let symbol = this.analyzeIdentifierResult(identifierResultCtx);
+            if (symbol instanceof DataRecordSymbol) {
+                returnType = symbol.usage;
+            }
         }
         if (ctx.INTEGER_LITERAL_()) {
             returnType = EDataUsage.COMP;
@@ -643,7 +672,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         this.analyzeIdentifier(ctx);
     }
 
-    public analyzeIdentifier(ctx: IdentifierContext): (EDataUsage | undefined) {
+    public analyzeIdentifier(ctx: IdentifierContext): Symbol | undefined {
         let returnType: (EDataUsage | undefined) = undefined;
         let identifierCtx = ctx.identifier_result();
         if (identifierCtx) {
@@ -653,7 +682,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         return returnType;
     }
 
-    public analyzeIdentifierResult(identifierCtx: Identifier_resultContext): (EDataUsage | undefined) {
+    public analyzeIdentifierResult(identifierCtx: Identifier_resultContext): Symbol | undefined {
         let returnType: (EDataUsage | undefined);
         let identifierSymbol = this.helper.verifyQualifiedName(identifierCtx.qualified_data_item(), false, undefined, undefined, [IntrinsicFunctionSymbol]);
         if (identifierSymbol instanceof DataRecordSymbol) {
@@ -673,9 +702,11 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                 }
                 this.visitChildren(referenceCtx);
             }
+            this.visitChildren(identifierCtx, [Qualified_data_itemContext, SubscriptingContext, Reference_modificationContext]);
+        } else {
+            this.visitChildren(identifierCtx, [Qualified_data_itemContext]);
         }
-        this.visitChildren(identifierCtx, [Identifier_resultContext]);
-        return returnType;
+        return identifierSymbol;
     }
 
 }

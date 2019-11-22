@@ -1045,7 +1045,7 @@ argument
    ;
 
 prog_name
-   : USER_DEFINED_WORD_
+   : identifier_result
    | STRING_LITERAL_
    ;
 

@@ -515,31 +515,31 @@ export class Synchronizer {
         for (const file of files) {
             let filename: string;
             let filedate: Date;
+            const from = action === "download" ? scopeData.remoteSource : scopeData.localSource;
+            const to = action === "download" ? scopeData.localSource : scopeData.remoteSource;
             if (typeof file === "string") {
                 filename = file;
-                filedate = new Date();
+                filedate = (await from.getDate(file)) || new Date();
             } else {
                 filename = file.filename;
                 filedate = file.date;
             }
-            const from = action === "download" ? scopeData.remoteSource : scopeData.localSource;
-            const to = action === "download" ? scopeData.localSource : scopeData.remoteSource;
             waitAll.push(this.transferFile(from, to, filename, filedate)
-                                .then((ok) => {
-                                    if (progress) {
-                                        progress.addProgress(action, 1);
-                                    }
-                                    if (ok) {
-                                        this.logFn(LogType.information, () => localize("message.action_success", "{0} success: {1}", action, filename));
-                                    } else {
-                                        this.logFn(LogType.error, () => localize("message.action_failed", "{0} is failed: {1}", action, filename));
-                                    }
-                                    return ok;
-                                })
-                                .catch((err) => {
-                                    this.logFn(LogType.error, () => err.message);
-                                    return false;
-                                }));
+                .then((ok) => {
+                    if (progress) {
+                        progress.addProgress(action, 1);
+                    }
+                    if (ok) {
+                        this.logFn(LogType.information, () => localize("message.action_success", "{0} success: {1}", action, filename));
+                    } else {
+                        this.logFn(LogType.error, () => localize("message.action_failed", "{0} is failed: {1}", action, filename));
+                    }
+                    return ok;
+                })
+                .catch((err) => {
+                    this.logFn(LogType.error, () => err.message);
+                    return false;
+                }));
         }
         return Promise.all(waitAll)
             .then((arrAll) => {
@@ -571,12 +571,17 @@ export class Synchronizer {
                     // TODO: test anyhow that file is completely written before setting date
                     await Delay(500);
                     if (await to.setDate(file, date)) {
+                        // give a time to other side to set timestamp
+                        await Delay(500);
                         const actualDate = await to.getDate(file);
                         if (actualDate !== undefined) {
                             const diff = date.valueOf() - actualDate.valueOf();
                             if (Math.abs(diff) > 1000) {
-                                const newDate = new Date(date.valueOf() + diff);
+                                const diffMinutes = Math.round(diff / 60000);
+                                const newDate = new Date(date.valueOf() + diffMinutes * 60000);
                                 const retCode = await to.setDate(file, newDate);
+                                // give a time to other side to set timestamp
+                                await Delay(500);
                                 const lastDate = await to.getDate(file);
                                 if (lastDate !== undefined) {
                                     const lastDiff = date.valueOf() - lastDate.valueOf();

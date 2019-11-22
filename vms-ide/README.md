@@ -8,7 +8,7 @@
 * **Debugger** for OpenVMS and JVM projects.
 * **Highlighting** for *MMS*, *CLD*, *MSG*, *Pascal*, *Fortran* and *Cobol* files.
 * **Light-weight IntelliSense** for *CLD*, *MSG*, *Pascal*, *Fortran* and *Cobol* source.
-* Supported languagesfor **debugging**: **C**, **C++**, **Fortran**, **Cobol**, **Pascal**, **Basic**, **Bliss**, **Java**, **Kotlin**, **Scala**.
+* Supported languages: **C**, **C++**, **Fortran**, **Cobol**, **Pascal**, **Basic**, **Bliss**, **Java**, **Kotlin**, **Scala**.
 
 ## Getting started
 
