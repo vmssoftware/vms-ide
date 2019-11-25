@@ -61,6 +61,10 @@ import {
     Working_storage_sectionContext,
     File_sectionContext,
     PictureContext,
+    Fd_clauseContext,
+    Sd_clauseContext,
+    Select_clauseContext,
+    SelectContext,
 } from "../parser/cobolParser";
 
 import { CobolAnalisisHelper } from "./CobolAnalisisHelpers";
@@ -329,6 +333,8 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         //this.visitChildren(ctx);
     }
 
+    //visitFil
+
     visitCursor_is(ctx: Cursor_isContext) {
         let symbol = this.helper.verifyQualifiedName(ctx.qualified_data_item(), false, [DataRecordSymbol]);
         if (symbol instanceof DataRecordSymbol) {
@@ -391,7 +397,23 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     }
 
     visitFile_description_entry(ctx: File_description_entryContext) {
-        this.visitChildren(ctx, [File_nameContext]);
+        this.visitChildren(ctx);
+    }
+
+    visitFd_clause(ctx: Fd_clauseContext) {
+        let fileDescriptionCtx = firstContainingContext(ctx, File_description_entryContext);
+        if (fileDescriptionCtx) {
+            this.helper.testDuplicates(fileDescriptionCtx, ctx);
+        }
+        this.visitChildren(ctx);
+    }
+
+    visitSelect_clause(ctx: Select_clauseContext) {
+        let selectCtx = firstContainingContext(ctx, SelectContext);
+        if (selectCtx) {
+            this.helper.testDuplicates(selectCtx, ctx);
+        }
+        this.visitChildren(ctx);
     }
 
     visitFile_name(ctx: File_nameContext) {
@@ -589,9 +611,10 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     visitData_description_clause(ctx: Data_description_clauseContext) {
         let dataRecordCtx = firstContainingContext(ctx, Data_description_entryContext);
         if (dataRecordCtx) {
+            this.helper.testDuplicates(dataRecordCtx, ctx);
             let dataRecordSymbol = this.helper.symbolTable.symbolWithContext(dataRecordCtx);
             if (dataRecordSymbol instanceof DataRecordSymbol) {
-                if (ctx.EXTERNAL()) {
+                if (ctx.is_external()) {
                     // check level number
                     let workingStorageSection = firstContainingContext(ctx, Working_storage_sectionContext);
                     if (workingStorageSection) {
@@ -615,7 +638,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                         this.helper.mark(ctx, localize("external.dataname", "The data-name must appear"));
                     }
                 }
-                if (ctx.GLOBAL()) {
+                if (ctx.is_global()) {
                     // check level
                     let workingStorageSection = firstContainingContext(ctx, Working_storage_sectionContext);
                     if (workingStorageSection) {
@@ -661,13 +684,9 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                 }
                 if (!elemenary) {
                     let bannedCtxs: (ParserRuleContext|TerminalNode|undefined)[] = [];
-                    bannedCtxs.push(ctx.SYNC());
-                    bannedCtxs.push(ctx.SYNCHRONIZED());
-                    bannedCtxs.push(ctx.BLANK());
-                    bannedCtxs.push(ctx.WHEN());
-                    bannedCtxs.push(ctx.ZERO());
-                    bannedCtxs.push(ctx.JUST());
-                    bannedCtxs.push(ctx.JUSTIFIED());
+                    bannedCtxs.push(ctx.synchronized_lr());
+                    bannedCtxs.push(ctx.black_when_zero());
+                    bannedCtxs.push(ctx.justified());
                     bannedCtxs.push(ctx.picture());
                     for(let bannedCtx of bannedCtxs) {
                         if (bannedCtx) {

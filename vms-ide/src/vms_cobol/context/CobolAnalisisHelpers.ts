@@ -283,4 +283,30 @@ export class CobolAnalisisHelper {
         }
         return literal;
     }
+
+    /**
+     * test if ctxChild.firstChild is unique in parent
+     * @param parentCtx parent of ctxChild
+     * @param childCtxTest ctxChild
+     */
+    public testDuplicates(parentCtx: ParseTree | undefined, childCtxTest: ParseTree | TerminalNode | undefined) {
+        if (parentCtx !== undefined && childCtxTest !== undefined && !(childCtxTest instanceof TerminalNode) && childCtxTest.childCount > 0) {
+            let firstChild = childCtxTest.getChild(0) as ParserRuleContext | TerminalNode;
+            if (firstChild instanceof TerminalNode) {
+                return;
+            }
+            for (let idx = 0; idx < parentCtx.childCount; ++idx) {
+                let childCtx = parentCtx.getChild(idx);
+                if (childCtx instanceof TerminalNode) {
+                    continue;
+                }
+                if (childCtx === childCtxTest) {
+                    break;
+                }
+                if (childCtx.childCount > 0 && childCtx.getChild(0).constructor === firstChild.constructor) {
+                    this.mark(firstChild, localize("duplicated.clause", "Duplicated clause"));
+                }
+            }
+        }
+    }
 }

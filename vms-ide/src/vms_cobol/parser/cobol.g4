@@ -950,23 +950,59 @@ disp_f3_column
    ;
 
 display_form1_clause
+   : with_conversion
+   | upon_dest
+   | with_no_advancing
+   ;
+
+upon_dest
+   : UPON out_dest
+   ;
+
+with_conversion
    : WITH? CONVERSION
-   | UPON out_dest
-   | WITH? NO ADVANCING?
+   ;
+
+with_no_advancing
+   : WITH? NO ADVANCING?
    ;
 
 display_form2_clause
    : display_form1_clause
    | at_line_number
    | at_column_number
-   | ERASE (TO? END OF?)? (SCREEN|LINE)
-   | WITH? BELL
-   | UNDERLINED
-   | BOLD
-   | WITH? BLINKING
-   | REVERSED
-   | WITH? CONVERSION
-   | WITH? NO ADVANCING?
+   | erase_to
+   | with_bell
+   | underlined
+   | bold
+   | with_blinking
+   | reversed
+   | with_conversion
+   | with_no_advancing
+   ;
+
+reversed
+   : REVERSED
+   ;
+
+with_blinking
+   : WITH? BLINKING
+   ;
+
+bold
+   : BOLD
+   ;
+
+with_bell
+   : WITH? BELL
+   ;
+
+underlined
+   : UNDERLINED
+   ;
+
+erase_to
+   : ERASE (TO? END OF?)? (SCREEN|LINE)
    ;
 
 at_line_number
@@ -1163,23 +1199,47 @@ accept_at_column
    ;
 
 accept_form4_clause
+   : from_line_number
+   | from_column_number
+   | erase_to
+   | with_bell
+   ;
+
+from_column_number
+   : FROM? COLUMN NUMBER? number_value
+   ;
+
+from_line_number
    : FROM? LINE NUMBER? number_value
-   | FROM? COLUMN NUMBER? number_value
-   | ERASE ( TO? END OF?)? (SCREEN|LINE)
-   | WITH? BELL
    ;
 
 accept_form3_clause
    : accept_form4_clause
-   | UNDERLINED
-   | BOLD
-   | WITH? BLINKING
-   | PROTECTED protected_value*
-   | WITH? CONVERSION
-   | REVERSED
-   | WITH? NO ECHO
-   | DEFAULT IS? def_value
-   | CONTROL? KEY IN? key_dest_item
+   | underlined
+   | bold
+   | with_blinking
+   | protected_clause
+   | with_conversion
+   | reversed
+   | with_no_echo
+   | default_is
+   | control_key_in
+   ;
+
+protected_clause
+   : PROTECTED protected_value*
+   ;
+
+control_key_in
+   : CONTROL? KEY IN? key_dest_item
+   ;
+
+default_is
+   : DEFAULT IS? def_value
+   ;
+
+with_no_echo
+   : WITH? NO ECHO
    ;
 
 key_dest_item
@@ -1313,8 +1373,8 @@ report_description_entry
 
 
 fd_clause
-   : IS? EXTERNAL
-   | IS? GLOBAL
+   : is_external
+   | is_global
    | block_contains
    | record
    | label
@@ -1326,6 +1386,14 @@ fd_clause
    | access_mode
    | record_key
    | file_status
+   ;
+
+is_external
+   : IS? EXTERNAL
+   ;
+
+is_global
+   : IS? GLOBAL
    ;
 
 data_description_entry
@@ -1340,17 +1408,29 @@ level_number
    ;
 
 data_description_clause
-   : IS? EXTERNAL
-   | IS? GLOBAL
+   : is_external
+   | is_global
    | picture
    | usage
    | sign_is
    | occurs
-   | (SYNCHRONIZED|SYNC) (LEFT|RIGHT)?
-   | (JUSTIFIED|JUST) RIGHT?
-   | BLANK WHEN? ZERO
+   | synchronized_lr
+   | justified
+   | black_when_zero
    | value_is
    | renames
+   ;
+
+synchronized_lr
+   : (SYNCHRONIZED|SYNC) (LEFT|RIGHT)?
+   ;
+
+justified
+   : (JUSTIFIED|JUST) RIGHT?
+   ;
+
+black_when_zero
+   : BLANK WHEN? ZERO
    ;
 
 renames
@@ -1519,7 +1599,7 @@ line_num
    ;
 
 rd_clause
-   : IS? GLOBAL
+   : is_global
    | CODE report_code
    | (CONTROL IS?|CONTROLS ARE?) (control_name+|FINAL control_name*)
    | PAGE
@@ -2067,18 +2147,22 @@ file_control
 
 select
    : SELECT OPTIONAL? file_name 
-     assign_to 
-     reserve?
-     organization?
-     block_contains?
-     code_set?
-     padding?
-     record_delimiter?
-     access_mode?
-     record_key*
-     lock_mode?
-     file_status?
+     select_clause+
      DOT_ replace_statement*
+   ;
+
+select_clause
+   : assign_to 
+   | reserve
+   | organization
+   | block_contains
+   | code_set
+   | padding
+   | record_delimiter
+   | access_mode
+   | record_key
+   | lock_mode
+   | file_status
    ;
 
 file_status

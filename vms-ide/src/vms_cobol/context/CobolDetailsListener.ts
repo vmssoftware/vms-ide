@@ -258,10 +258,10 @@ export class CobolDetailsListener implements cobolListener {
 
     enterFd_clause(ctx: Fd_clauseContext) {
         if (this.currentSymbol instanceof IdentifierSymbol) {
-            if (ctx.GLOBAL()) {
+            if (ctx.is_global()) {
                 this.currentSymbol.isGlobal = true;
             }
-            if (ctx.EXTERNAL()) {
+            if (ctx.is_external()) {
                 this.currentSymbol.isExtern = true;
             }
         }
@@ -289,7 +289,7 @@ export class CobolDetailsListener implements cobolListener {
 
     enterRd_clause(ctx: Rd_clauseContext) {
         if (this.currentSymbol instanceof IdentifierSymbol) {
-            if (ctx.GLOBAL()) {
+            if (ctx.is_global()) {
                 this.currentSymbol.isGlobal = true;
             }
         }
@@ -346,11 +346,11 @@ export class CobolDetailsListener implements cobolListener {
 
     enterData_description_clause(ctx: Data_description_clauseContext) {
         if (this.currentSymbol instanceof DataRecordSymbol) {
-            if (ctx.GLOBAL()) {
+            if (ctx.is_global()) {
                 this.currentSymbol.isGlobal = true;
                 return;
             }
-            if (ctx.EXTERNAL()) {
+            if (ctx.is_external()) {
                 this.currentSymbol.isExtern = true;
                 return;
             }
