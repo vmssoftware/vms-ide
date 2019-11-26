@@ -80,19 +80,19 @@ export class CobolAnalisisHelper {
      * Verify qualified name
      * @param identifierCtx 
      * @param localOnly 
-     * @param allowTypes 
-     * @param includeTypes 
-     * @param excludeTypes 
+     * @param filterAllowed 
+     * @param filterInclude 
+     * @param filterExclude 
      */
     public verifyQualifiedName(
             identifierCtx ?: Qualified_data_itemContext,
             localOnly ?: boolean,
-            allowTypes ?: (new (...args: any[]) => Symbol)[],
-            includeTypes ?: (new (...args: any[]) => Symbol)[],
-            excludeTypes ?: (new (...args: any[]) => Symbol)[])
-                : Symbol | undefined {
+            filterAllowed ?: (new (...args: any[]) => Symbol)[],
+            filterInclude ?: (new (...args: any[]) => Symbol)[],
+            filterExclude ?: (new (...args: any[]) => Symbol)[],
+            warningUndefined?: boolean): Symbol | undefined {
         if (identifierCtx) {
-            return this.verifyNamePath(identifierCtx, identifierCtx.USER_DEFINED_WORD_(), localOnly, allowTypes, includeTypes, excludeTypes);
+            return this.verifyNamePath(identifierCtx, identifierCtx.USER_DEFINED_WORD_(), localOnly, filterAllowed, filterInclude, filterExclude, warningUndefined);
         }
         return undefined;
     }
@@ -101,19 +101,20 @@ export class CobolAnalisisHelper {
      * Verify unqualified name
      * @param identifierCtx 
      * @param localOnly 
-     * @param allowTypes 
-     * @param includeTypes 
-     * @param excludeTypes 
+     * @param filterAllowed 
+     * @param filterInclude 
+     * @param filterExclude 
      */
     public verifyName(
         identifierCtx ?: ParserRuleContext | TerminalNode,
         localOnly ?: boolean,
-        allowTypes ?: (new (...args: any[]) => Symbol)[],
-        includeTypes ?: (new (...args: any[]) => Symbol)[],
-        excludeTypes ?: (new (...args: any[]) => Symbol)[])
+        filterAllowed ?: (new (...args: any[]) => Symbol)[],
+        filterInclude ?: (new (...args: any[]) => Symbol)[],
+        filterExclude ?: (new (...args: any[]) => Symbol)[],
+        warningUndefined?: boolean)
                 : Symbol | undefined {
         if (identifierCtx) {
-            return this.verifyNamePath(identifierCtx, [identifierCtx], localOnly, allowTypes, includeTypes, excludeTypes);
+            return this.verifyNamePath(identifierCtx, [identifierCtx], localOnly, filterAllowed, filterInclude, filterExclude, warningUndefined);
         }
         return undefined;
     }
@@ -123,23 +124,24 @@ export class CobolAnalisisHelper {
      * @param ctx used in resolving and marking
      * @param namePath 
      * @param localOnly 
-     * @param allowTypes 
-     * @param includeTypes 
-     * @param excludeTypes 
+     * @param filterAllowed 
+     * @param filterInclude 
+     * @param filterExclude 
      */
     public verifyNamePath(
             ctx: ParserRuleContext | TerminalNode,
             namePath: ParseTree[],
             localOnly ?: boolean,
-            allowTypes ?: (new (...args: any[]) => Symbol)[],
-            includeTypes ?: (new (...args: any[]) => Symbol)[],
-            excludeTypes ?: (new (...args: any[]) => Symbol)[])
+            filterAllowed ?: (new (...args: any[]) => Symbol)[],
+            filterInclude ?: (new (...args: any[]) => Symbol)[],
+            filterExclude ?: (new (...args: any[]) => Symbol)[],
+            warningUndefined?: boolean)
                 : Symbol | undefined {
         let symbols = this.symbolTable.resolveIdentifier(namePath.map(x => unifyCobolName(CobolAnalisisHelper.stringLiteralContent(x.text))), ctx, localOnly);
-        if (includeTypes && includeTypes.length > 0) {
+        if (filterInclude && filterInclude.length > 0) {
             let filteredSymbols: Symbol[] = [];
             for (let symbol of symbols) {
-                for (let t of includeTypes) {
+                for (let t of filterInclude) {
                     if (symbol instanceof t) {
                         filteredSymbols.push(symbol);
                         break;
@@ -148,17 +150,17 @@ export class CobolAnalisisHelper {
             }
             symbols = filteredSymbols;
         }
-        if (excludeTypes && excludeTypes.length > 0) {
+        if (filterExclude && filterExclude.length > 0) {
             let filteredSymbols: Symbol[] = [];
             for (let symbol of symbols) {
-                if (!excludeTypes.reduce((exclude, t) => exclude || (symbol instanceof t), false)) {
+                if (!filterExclude.reduce((exclude, t) => exclude || (symbol instanceof t), false)) {
                     filteredSymbols.push(symbol);
                 }
             }
             symbols = filteredSymbols;
         }
         if (symbols.length == 0) {
-            this.mark(ctx, localize("undefined_name", "Undefined name"));
+            this.mark(ctx, localize("undefined_name", "Undefined name"), warningUndefined ? EDiagnosticType.Warning : EDiagnosticType.Error);
             return undefined;
         } else if (symbols.length > 1) {
             this.mark(ctx, localize("ambigous_name", "Ambigous name"));
@@ -166,9 +168,9 @@ export class CobolAnalisisHelper {
         }
         let symbol = symbols[0];
         this.symbolTable.addOccurence(namePath, symbol);
-        if (allowTypes && allowTypes.length > 0) {
+        if (filterAllowed && filterAllowed.length > 0) {
             let allowed = false;
-            for (let t of allowTypes) {
+            for (let t of filterAllowed) {
                 if (symbol instanceof t) {
                     allowed = true;
                     break;

@@ -174,7 +174,6 @@ import { Display_statement_form2Context } from "./cobolParser";
 import { Display_statement_form3Context } from "./cobolParser";
 import { Display_statement_form4Context } from "./cobolParser";
 import { Src_itemContext } from "./cobolParser";
-import { Display_uponContext } from "./cobolParser";
 import { Disp_f3_lineContext } from "./cobolParser";
 import { Disp_f3_columnContext } from "./cobolParser";
 import { Display_form1_clauseContext } from "./cobolParser";
@@ -216,7 +215,7 @@ import { On_overflow_variantsContext } from "./cobolParser";
 import { At_eop_variantsContext } from "./cobolParser";
 import { Invalid_key_variantsContext } from "./cobolParser";
 import { Accept_form6Context } from "./cobolParser";
-import { Accept6_itemContext } from "./cobolParser";
+import { Arg_env_acceptContext } from "./cobolParser";
 import { Accept_form1Context } from "./cobolParser";
 import { Accept_form2Context } from "./cobolParser";
 import { Accept_form3Context } from "./cobolParser";
@@ -289,8 +288,17 @@ import { Min_timesContext } from "./cobolParser";
 import { Max_timesContext } from "./cobolParser";
 import { Report_group_data_description_entryContext } from "./cobolParser";
 import { Report_group_data_description_clauseContext } from "./cobolParser";
+import { Rep_source_sum_or_valueContext } from "./cobolParser";
+import { Rep_value_isContext } from "./cobolParser";
+import { Rep_sourceContext } from "./cobolParser";
+import { Rep_group_indContext } from "./cobolParser";
+import { Rep_columnContext } from "./cobolParser";
+import { Usage_displayContext } from "./cobolParser";
+import { Rep_typeContext } from "./cobolParser";
+import { Rep_next_groupContext } from "./cobolParser";
+import { Rep_line_numContext } from "./cobolParser";
 import { Sign_isContext } from "./cobolParser";
-import { SumContext } from "./cobolParser";
+import { Rep_sumContext } from "./cobolParser";
 import { Control_foot_nameContext } from "./cobolParser";
 import { Detail_report_group_nameContext } from "./cobolParser";
 import { Sum_nameContext } from "./cobolParser";
@@ -302,13 +310,15 @@ import { Next_group_definitionContext } from "./cobolParser";
 import { Line_num_definitionContext } from "./cobolParser";
 import { Line_numContext } from "./cobolParser";
 import { Rd_clauseContext } from "./cobolParser";
+import { Report_pageContext } from "./cobolParser";
+import { Report_controlContext } from "./cobolParser";
+import { Report_codeContext } from "./cobolParser";
 import { Footing_line_rdContext } from "./cobolParser";
 import { Last_detail_lineContext } from "./cobolParser";
 import { First_detail_lineContext } from "./cobolParser";
 import { Heading_lineContext } from "./cobolParser";
 import { Page_size_rdContext } from "./cobolParser";
 import { Control_nameContext } from "./cobolParser";
-import { Report_codeContext } from "./cobolParser";
 import { UsageContext } from "./cobolParser";
 import { Usage_definitionContext } from "./cobolParser";
 import { PictureContext } from "./cobolParser";
@@ -336,6 +346,25 @@ import { Longest_recContext } from "./cobolParser";
 import { Screen_description_entryContext } from "./cobolParser";
 import { Screen_nameContext } from "./cobolParser";
 import { Screen_description_clauseContext } from "./cobolParser";
+import { Sd_lightContext } from "./cobolParser";
+import { Sd_pictureContext } from "./cobolParser";
+import { Sd_valueContext } from "./cobolParser";
+import { Sd_columnContext } from "./cobolParser";
+import { Sd_lineContext } from "./cobolParser";
+import { Sd_underlineContext } from "./cobolParser";
+import { Sd_reverseContext } from "./cobolParser";
+import { Sd_lowlightContext } from "./cobolParser";
+import { Sd_highlightContext } from "./cobolParser";
+import { Sd_eraseContext } from "./cobolParser";
+import { Sd_blinkContext } from "./cobolParser";
+import { Sd_bellContext } from "./cobolParser";
+import { Sd_fullContext } from "./cobolParser";
+import { Sd_requiredContext } from "./cobolParser";
+import { Sd_secureContext } from "./cobolParser";
+import { Sd_autoContext } from "./cobolParser";
+import { Sd_backgroundContext } from "./cobolParser";
+import { Sd_foregroundContext } from "./cobolParser";
+import { Sd_blankContext } from "./cobolParser";
 import { Scr_pic_usingContext } from "./cobolParser";
 import { Scr_pic_fromContext } from "./cobolParser";
 import { Scr_pic_toContext } from "./cobolParser";
@@ -2354,17 +2383,6 @@ export interface cobolListener extends ParseTreeListener {
 	exitSrc_item?: (ctx: Src_itemContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.display_upon`.
-	 * @param ctx the parse tree
-	 */
-	enterDisplay_upon?: (ctx: Display_uponContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.display_upon`.
-	 * @param ctx the parse tree
-	 */
-	exitDisplay_upon?: (ctx: Display_uponContext) => void;
-
-	/**
 	 * Enter a parse tree produced by `cobolParser.disp_f3_line`.
 	 * @param ctx the parse tree
 	 */
@@ -2816,15 +2834,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitAccept_form6?: (ctx: Accept_form6Context) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.accept6_item`.
+	 * Enter a parse tree produced by `cobolParser.arg_env_accept`.
 	 * @param ctx the parse tree
 	 */
-	enterAccept6_item?: (ctx: Accept6_itemContext) => void;
+	enterArg_env_accept?: (ctx: Arg_env_acceptContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.accept6_item`.
+	 * Exit a parse tree produced by `cobolParser.arg_env_accept`.
 	 * @param ctx the parse tree
 	 */
-	exitAccept6_item?: (ctx: Accept6_itemContext) => void;
+	exitArg_env_accept?: (ctx: Arg_env_acceptContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.accept_form1`.
@@ -3619,6 +3637,105 @@ export interface cobolListener extends ParseTreeListener {
 	exitReport_group_data_description_clause?: (ctx: Report_group_data_description_clauseContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `cobolParser.rep_source_sum_or_value`.
+	 * @param ctx the parse tree
+	 */
+	enterRep_source_sum_or_value?: (ctx: Rep_source_sum_or_valueContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.rep_source_sum_or_value`.
+	 * @param ctx the parse tree
+	 */
+	exitRep_source_sum_or_value?: (ctx: Rep_source_sum_or_valueContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.rep_value_is`.
+	 * @param ctx the parse tree
+	 */
+	enterRep_value_is?: (ctx: Rep_value_isContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.rep_value_is`.
+	 * @param ctx the parse tree
+	 */
+	exitRep_value_is?: (ctx: Rep_value_isContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.rep_source`.
+	 * @param ctx the parse tree
+	 */
+	enterRep_source?: (ctx: Rep_sourceContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.rep_source`.
+	 * @param ctx the parse tree
+	 */
+	exitRep_source?: (ctx: Rep_sourceContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.rep_group_ind`.
+	 * @param ctx the parse tree
+	 */
+	enterRep_group_ind?: (ctx: Rep_group_indContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.rep_group_ind`.
+	 * @param ctx the parse tree
+	 */
+	exitRep_group_ind?: (ctx: Rep_group_indContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.rep_column`.
+	 * @param ctx the parse tree
+	 */
+	enterRep_column?: (ctx: Rep_columnContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.rep_column`.
+	 * @param ctx the parse tree
+	 */
+	exitRep_column?: (ctx: Rep_columnContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.usage_display`.
+	 * @param ctx the parse tree
+	 */
+	enterUsage_display?: (ctx: Usage_displayContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.usage_display`.
+	 * @param ctx the parse tree
+	 */
+	exitUsage_display?: (ctx: Usage_displayContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.rep_type`.
+	 * @param ctx the parse tree
+	 */
+	enterRep_type?: (ctx: Rep_typeContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.rep_type`.
+	 * @param ctx the parse tree
+	 */
+	exitRep_type?: (ctx: Rep_typeContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.rep_next_group`.
+	 * @param ctx the parse tree
+	 */
+	enterRep_next_group?: (ctx: Rep_next_groupContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.rep_next_group`.
+	 * @param ctx the parse tree
+	 */
+	exitRep_next_group?: (ctx: Rep_next_groupContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.rep_line_num`.
+	 * @param ctx the parse tree
+	 */
+	enterRep_line_num?: (ctx: Rep_line_numContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.rep_line_num`.
+	 * @param ctx the parse tree
+	 */
+	exitRep_line_num?: (ctx: Rep_line_numContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `cobolParser.sign_is`.
 	 * @param ctx the parse tree
 	 */
@@ -3630,15 +3747,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitSign_is?: (ctx: Sign_isContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sum`.
+	 * Enter a parse tree produced by `cobolParser.rep_sum`.
 	 * @param ctx the parse tree
 	 */
-	enterSum?: (ctx: SumContext) => void;
+	enterRep_sum?: (ctx: Rep_sumContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sum`.
+	 * Exit a parse tree produced by `cobolParser.rep_sum`.
 	 * @param ctx the parse tree
 	 */
-	exitSum?: (ctx: SumContext) => void;
+	exitRep_sum?: (ctx: Rep_sumContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.control_foot_name`.
@@ -3762,6 +3879,39 @@ export interface cobolListener extends ParseTreeListener {
 	exitRd_clause?: (ctx: Rd_clauseContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `cobolParser.report_page`.
+	 * @param ctx the parse tree
+	 */
+	enterReport_page?: (ctx: Report_pageContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.report_page`.
+	 * @param ctx the parse tree
+	 */
+	exitReport_page?: (ctx: Report_pageContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.report_control`.
+	 * @param ctx the parse tree
+	 */
+	enterReport_control?: (ctx: Report_controlContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.report_control`.
+	 * @param ctx the parse tree
+	 */
+	exitReport_control?: (ctx: Report_controlContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.report_code`.
+	 * @param ctx the parse tree
+	 */
+	enterReport_code?: (ctx: Report_codeContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.report_code`.
+	 * @param ctx the parse tree
+	 */
+	exitReport_code?: (ctx: Report_codeContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `cobolParser.footing_line_rd`.
 	 * @param ctx the parse tree
 	 */
@@ -3826,17 +3976,6 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitControl_name?: (ctx: Control_nameContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `cobolParser.report_code`.
-	 * @param ctx the parse tree
-	 */
-	enterReport_code?: (ctx: Report_codeContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.report_code`.
-	 * @param ctx the parse tree
-	 */
-	exitReport_code?: (ctx: Report_codeContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.usage`.
@@ -4134,6 +4273,215 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitScreen_description_clause?: (ctx: Screen_description_clauseContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_light`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_light?: (ctx: Sd_lightContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_light`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_light?: (ctx: Sd_lightContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_picture`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_picture?: (ctx: Sd_pictureContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_picture`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_picture?: (ctx: Sd_pictureContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_value`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_value?: (ctx: Sd_valueContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_value`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_value?: (ctx: Sd_valueContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_column`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_column?: (ctx: Sd_columnContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_column`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_column?: (ctx: Sd_columnContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_line`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_line?: (ctx: Sd_lineContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_line`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_line?: (ctx: Sd_lineContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_underline`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_underline?: (ctx: Sd_underlineContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_underline`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_underline?: (ctx: Sd_underlineContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_reverse`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_reverse?: (ctx: Sd_reverseContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_reverse`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_reverse?: (ctx: Sd_reverseContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_lowlight`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_lowlight?: (ctx: Sd_lowlightContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_lowlight`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_lowlight?: (ctx: Sd_lowlightContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_highlight`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_highlight?: (ctx: Sd_highlightContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_highlight`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_highlight?: (ctx: Sd_highlightContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_erase`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_erase?: (ctx: Sd_eraseContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_erase`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_erase?: (ctx: Sd_eraseContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_blink`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_blink?: (ctx: Sd_blinkContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_blink`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_blink?: (ctx: Sd_blinkContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_bell`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_bell?: (ctx: Sd_bellContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_bell`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_bell?: (ctx: Sd_bellContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_full`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_full?: (ctx: Sd_fullContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_full`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_full?: (ctx: Sd_fullContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_required`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_required?: (ctx: Sd_requiredContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_required`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_required?: (ctx: Sd_requiredContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_secure`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_secure?: (ctx: Sd_secureContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_secure`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_secure?: (ctx: Sd_secureContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_auto`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_auto?: (ctx: Sd_autoContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_auto`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_auto?: (ctx: Sd_autoContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_background`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_background?: (ctx: Sd_backgroundContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_background`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_background?: (ctx: Sd_backgroundContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_foreground`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_foreground?: (ctx: Sd_foregroundContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_foreground`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_foreground?: (ctx: Sd_foregroundContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.sd_blank`.
+	 * @param ctx the parse tree
+	 */
+	enterSd_blank?: (ctx: Sd_blankContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.sd_blank`.
+	 * @param ctx the parse tree
+	 */
+	exitSd_blank?: (ctx: Sd_blankContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.scr_pic_using`.

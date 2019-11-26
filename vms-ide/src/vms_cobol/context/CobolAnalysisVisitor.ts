@@ -2,69 +2,78 @@ import * as nls from "vscode-nls";
 import { cobolVisitor } from "../parser/cobolVisitor";
 import { AbstractParseTreeVisitor, TerminalNode } from "antlr4ts/tree";
 import {
+    ArgumentContext,
     Bool_condition_nameContext,
+    Call_givingContext,
+    Call_statementContext,
+    Call_usingContext,
     Class_condition_nameContext,
+    Cobol_sourceContext,
     Configuration_sectionContext,
     Crt_isContext,
     Currency_charContext,
     Cursor_isContext,
+    Data_description_clauseContext,
+    Data_description_entryContext,
     Declaratives_headerContext,
     End_declarativesContext,
     End_programContext,
     End_program_headerContext,
+    Fd_clauseContext,
     Figurative_constant_witout_all_zeroContext,
     Figurative_constant_witout_zeroContext,
     Figurative_constant_zeroContext,
+    File_description_entryContext,
     File_nameContext,
+    File_sectionContext,
     Function_nameContext,
+    GivingContext,
     Identification_division_headerContext,
+    IdentifierContext,
+    Identifier_resultContext,
     Input_sourceContext,
     Memory_size_amountContext,
+    OccursContext,
     ParagraphContext,
+    PictureContext,
     Proc_nameContext,
     Prog_nameContext,
     ProgramContext,
     Program_collatingContext,
     Program_idContext,
     Qualified_data_itemContext,
+    Rd_clauseContext,
+    Reference_modificationContext,
+    RenamesContext,
+    Report_description_entryContext,
+    Report_group_data_description_clauseContext,
+    Report_group_data_description_entryContext,
     Report_nameContext,
+    Screen_description_clauseContext,
+    Screen_description_entryContext,
+    Sd_clauseContext,
     Section_headerContext,
     Segment_limitContext,
+    SelectContext,
+    Select_clauseContext,
     Sign_condition_nameContext,
+    Sort_merge_file_description_entryContext,
     Special_namesContext,
     StatementContext,
+    SubscriptingContext,
     Switch_numContext,
     Symb_ch_def_in_alphabetContext,
     Symbol_charContext,
     User_alphaContext,
     UsingContext,
-    Value_is_literalContext,
-    GivingContext,
-    File_description_entryContext,
-    Data_description_clauseContext,
-    Data_recContext,
-    Data_description_entryContext,
-    Call_usingContext,
-    ArgumentContext,
-    IdentifierContext,
     Using_argContext,
-    Call_statementContext,
-    Identifier_resultContext,
-    Cobol_sourceContext,
-    Unknown_statementContext,
-    Call_givingContext,
-    Reference_modificationContext,
-    SubscriptingContext,
-    OccursContext,
-    RenamesContext,
-    Value_isContext,
+    Value_is_literalContext,
     Working_storage_sectionContext,
-    File_sectionContext,
-    PictureContext,
-    Fd_clauseContext,
-    Sd_clauseContext,
-    Select_clauseContext,
-    SelectContext,
+    File_descriptionContext,
+    Record_keyContext,
+    Display_statementContext,
+    Out_destContext,
+    Arg_env_acceptContext,
 } from "../parser/cobolParser";
 
 import { CobolAnalisisHelper } from "./CobolAnalisisHelpers";
@@ -83,17 +92,21 @@ import {
     DataRecordSymbol,
     DeclarativesSectionSymbol,
     DeviceSymbol,
+    EDataUsage,
     FigurativeConstantSymbol,
     FileSymbol,
     IntrinsicFunctionSymbol,
     ParagraphSymbol,
     ProgramSymbol,
-    ReportFileSymbol,
     SIGN_Symbol,
     SYMBOLIC_CHARACTERS_Symbol,
     SectionSymbol,
-    SortMergeFileSymbol,
-    EDataUsage,
+    EFileFormat,
+    ReportSymbol,
+    ENVIRONMENT_VALUE_Symbol,
+    ARGUMENT_NUMBER_Symbol,
+    ARGUMENT_VALUE_Symbol,
+    ENVIRONMENT_NAME_Symbol,
 } from "./CobolSymbol";
 
 import {
@@ -336,7 +349,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     //visitFil
 
     visitCursor_is(ctx: Cursor_isContext) {
-        let symbol = this.helper.verifyQualifiedName(ctx.qualified_data_item(), false, [DataRecordSymbol]);
+        let symbol = this.helper.verifyQualifiedName(ctx.qualified_data_item(), false, undefined, [DataRecordSymbol]);
         if (symbol instanceof DataRecordSymbol) {
             if (!this.helper.testCursorData(symbol)) {
                 this.helper.mark(ctx, localize("invalid_data", "Invalid data description"));
@@ -346,7 +359,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     }
 
     visitCrt_is(ctx: Crt_isContext) {
-        let symbol = this.helper.verifyQualifiedName(ctx.qualified_data_item(), false, [DataRecordSymbol]);
+        let symbol = this.helper.verifyQualifiedName(ctx.qualified_data_item(), false, undefined, [DataRecordSymbol]);
         if (symbol instanceof DataRecordSymbol) {
             if (!this.helper.testCRTData(symbol)) {
                 this.helper.mark(ctx, localize("invalid_data", "Invalid data description"));
@@ -356,12 +369,12 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     }
 
     visitProc_name(ctx: Proc_nameContext) {
-        this.helper.verifyQualifiedName(ctx.qualified_data_item(), true, [ParagraphSymbol, SectionSymbol, DeclarativesSectionSymbol]);
+        this.helper.verifyQualifiedName(ctx.qualified_data_item(), true, undefined, [ParagraphSymbol, SectionSymbol, DeclarativesSectionSymbol]);
         //this.visitChildren(ctx);
     }
 
     visitQualified_data_item(ctx: Qualified_data_itemContext) {
-        this.helper.verifyQualifiedName(ctx, false, undefined, undefined, [IntrinsicFunctionSymbol]);
+        this.helper.verifyQualifiedName(ctx, false, undefined, undefined, [IntrinsicFunctionSymbol, ProgramSymbol]);
         //this.visitChildren(ctx);
     }
 
@@ -375,7 +388,18 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
 
     visitInput_source(ctx: Input_sourceContext) {
         this.helper.verifyName(ctx, false, [DeviceSymbol]);
-        //this.visitChildren(ctx);
+    }
+
+    visitArg_env_accept(ctx: Arg_env_acceptContext) {
+        this.helper.verifyName(ctx, false, [ARGUMENT_NUMBER_Symbol, ARGUMENT_VALUE_Symbol, ENVIRONMENT_NAME_Symbol, ENVIRONMENT_VALUE_Symbol]);
+    }
+
+    visitDisplay_statement(ctx: Display_statementContext) {
+        this.visitChildren(ctx);
+    }
+
+    visitOut_dest(ctx: Out_destContext) {
+        this.helper.verifyName(ctx, false, [DeviceSymbol, ARGUMENT_NUMBER_Symbol, ARGUMENT_VALUE_Symbol, ENVIRONMENT_NAME_Symbol, ENVIRONMENT_VALUE_Symbol]);
     }
 
     visitFigurative_constant_witout_all_zero(ctx: Figurative_constant_witout_all_zeroContext) {
@@ -396,14 +420,111 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         }
     }
 
+    visitFile_description(ctx: File_descriptionContext) {
+        this.visitChildren(ctx);
+    }
+
+    visitSelect(ctx: SelectContext) {
+        this.visitChildren(ctx);
+    }
+
     visitFile_description_entry(ctx: File_description_entryContext) {
+        let fileSymbol = this.helper.verifyName(ctx.file_name());
+        if (fileSymbol instanceof FileSymbol) {
+            if (fileSymbol.fileFormat === EFileFormat.Sequentional) {
+                for(let fd_clause of ctx.fd_clause()) {
+                    if (fd_clause.report_is()) {
+                        fileSymbol.fileFormat = EFileFormat.Report;
+                        break;
+                    }
+                }
+            }
+            let selectClauses: Select_clauseContext[] = [];
+            if (fileSymbol.context instanceof SelectContext) {
+                selectClauses = fileSymbol.context.select_clause();
+            }
+
+            for(let fd_clause of ctx.fd_clause()) {
+                if (fd_clause.linage() && fileSymbol.fileFormat !== EFileFormat.Sequentional) {
+                    this.helper.mark(fd_clause, localize("must.be.sequentional", "File must be sequentional"));
+                }
+                if (fd_clause.code_set() && !(fileSymbol.fileFormat === EFileFormat.Sequentional || fileSymbol.fileFormat === EFileFormat.Report)) {
+                    this.helper.mark(fd_clause, localize("must.be.seq.or.rep", "File must be sequentional or report"));
+                }
+                if (fd_clause.record_key() && fileSymbol.fileFormat !== EFileFormat.Indexed) {
+                    this.helper.mark(fd_clause, localize("must.be.indexed", "File must be indexed"));
+                }
+                if (fd_clause.block_contains()) {
+                    if (selectClauses.some(x => x.block_contains())) {
+                        this.helper.mark(fd_clause, localize("duplicated", "Duplicated in SELECT"));
+                    }
+                }
+                if (fd_clause.code_set()) {
+                    if (selectClauses.some(x => x.code_set())) {
+                        this.helper.mark(fd_clause, localize("duplicated", "Duplicated in SELECT"));
+                    }
+                }
+                if (fd_clause.access_mode()) {
+                    if (selectClauses.some(x => x.access_mode())) {
+                        this.helper.mark(fd_clause, localize("duplicated", "Duplicated in SELECT"));
+                    }
+                }
+                if (fd_clause.record_key()) {
+                    if (selectClauses.some(x => x.record_key())) {
+                        this.helper.mark(fd_clause, localize("duplicated", "Duplicated in SELECT"));
+                    }
+                }
+                if (fd_clause.file_status()) {
+                    if (selectClauses.some(x => x.file_status())) {
+                        this.helper.mark(fd_clause, localize("duplicated", "Duplicated in SELECT"));
+                    }
+                }
+            }
+        } else {
+            this.helper.mark(ctx, localize("no.select", "There is no select clause for this file"));
+        }
         this.visitChildren(ctx);
     }
 
     visitFd_clause(ctx: Fd_clauseContext) {
         let fileDescriptionCtx = firstContainingContext(ctx, File_description_entryContext);
         if (fileDescriptionCtx) {
-            this.helper.testDuplicates(fileDescriptionCtx, ctx);
+            // allow multiple keys
+            if (ctx.childCount > 0 && !(ctx.getChild(0) instanceof Record_keyContext)) {
+                this.helper.testDuplicates(fileDescriptionCtx, ctx);
+            }
+        }
+        this.visitChildren(ctx);
+    }
+
+    visitSd_clause(ctx: Sd_clauseContext) {
+        let sortDescriptionCtx = firstContainingContext(ctx, Sort_merge_file_description_entryContext);
+        if (sortDescriptionCtx) {
+            this.helper.testDuplicates(sortDescriptionCtx, ctx);
+        }
+        this.visitChildren(ctx);
+    }
+
+    visitRd_clause(ctx: Rd_clauseContext) {
+        let reportDescriptionCtx = firstContainingContext(ctx, Report_description_entryContext);
+        if (reportDescriptionCtx) {
+            this.helper.testDuplicates(reportDescriptionCtx, ctx);
+        }
+        this.visitChildren(ctx);
+    }
+
+    visitReport_group_data_description_clause(ctx: Report_group_data_description_clauseContext) {
+        let reportGroupDescriptionCtx = firstContainingContext(ctx, Report_group_data_description_entryContext);
+        if (reportGroupDescriptionCtx) {
+            this.helper.testDuplicates(reportGroupDescriptionCtx, ctx);
+        }
+        this.visitChildren(ctx);
+    }
+
+    visitScreen_description_clause(ctx: Screen_description_clauseContext) {
+        let screenDescriptionCtx = firstContainingContext(ctx, Screen_description_entryContext);
+        if (screenDescriptionCtx) {
+            this.helper.testDuplicates(screenDescriptionCtx, ctx);
         }
         this.visitChildren(ctx);
     }
@@ -411,18 +532,21 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     visitSelect_clause(ctx: Select_clauseContext) {
         let selectCtx = firstContainingContext(ctx, SelectContext);
         if (selectCtx) {
-            this.helper.testDuplicates(selectCtx, ctx);
+            // allow multiple keys
+            if (ctx.childCount > 0 && !(ctx.getChild(0) instanceof Record_keyContext)) {
+                this.helper.testDuplicates(selectCtx, ctx);
+            }
         }
         this.visitChildren(ctx);
     }
 
     visitFile_name(ctx: File_nameContext) {
-        this.helper.verifyName(ctx, false, [FileSymbol, SortMergeFileSymbol]);
+        this.helper.verifyName(ctx, false, [FileSymbol]);
         //this.visitChildren(ctx);
     }
 
     visitReport_name(ctx: Report_nameContext) {
-        this.helper.verifyName(ctx, false, [ReportFileSymbol]);
+        this.helper.verifyName(ctx, false, [ReportSymbol]);
         //this.visitChildren(ctx);
     }
 
@@ -471,7 +595,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         }
         let items = ctx.qualified_data_item();
         for(let item of items) {
-            let itemSymbol = this.helper.verifyQualifiedName(item, false, undefined, undefined, [IntrinsicFunctionSymbol]);
+            let itemSymbol = this.helper.verifyQualifiedName(item, false, undefined, undefined, [IntrinsicFunctionSymbol, ProgramSymbol]);
             if (itemSymbol instanceof DataRecordSymbol) {
                 // add as parameter
                 programSymbol.programDefinition.arguments.push( {
@@ -499,7 +623,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
             return;
         }
         let item = ctx.qualified_data_item();
-        let itemSymbol = this.helper.verifyQualifiedName(item, false, undefined, undefined, [IntrinsicFunctionSymbol]);
+        let itemSymbol = this.helper.verifyQualifiedName(item, false, undefined, undefined, [IntrinsicFunctionSymbol, ProgramSymbol]);
         if (itemSymbol instanceof DataRecordSymbol) {
             // add as program type
             programSymbol.programDefinition.usage = itemSymbol.usage;
@@ -508,7 +632,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     }
 
     visitProg_name(ctx: Prog_nameContext) {
-        let symbol = this.helper.verifyNamePath(ctx, [ctx], false, undefined, undefined, [IntrinsicFunctionSymbol]);
+        let symbol = this.helper.verifyNamePath(ctx, [ctx], false, undefined, [ProgramSymbol]);
         if (symbol) {
             if (ctx.identifier_result()) {
                 // symbol must not be a Program
@@ -558,7 +682,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                     }
                 }
             }
-            if (elemenary) {
+            if (elemenary && !(dataRecordSymbol.level === 66 || dataRecordSymbol.level === 88)) {
                 // check picture for elementary
                 switch(dataRecordSymbol.usage) {
                     case EDataUsage.INDEX:
@@ -664,7 +788,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                     }
                 }
                 // test conditional
-                if (dataRecordSymbol.level == 66 && !ctx.value_is()) {
+                if (dataRecordSymbol.level === 88 && !ctx.value_is()) {
                     this.helper.mark(ctx, localize("invalid.conditional", "Must not be in conditional"));
                 }
                 // test if item is elementary
@@ -792,7 +916,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
             let nameLiteral = ctx.prog_name().STRING_LITERAL_();
             if (nameLiteral) {
                 // verify name
-                let progSymbol = this.helper.verifyName(nameLiteral);
+                let progSymbol = this.helper.verifyName(nameLiteral, false, undefined, [ProgramSymbol], undefined, true);
                 if (progSymbol instanceof ProgramSymbol && progSymbol.programDefinition) {
                     // verify parameters
                     if (callUsingCtx) {
@@ -917,7 +1041,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
 
     public analyzeIdentifierResult(identifierCtx: Identifier_resultContext): Symbol | undefined {
         let returnType: (EDataUsage | undefined);
-        let identifierSymbol = this.helper.verifyQualifiedName(identifierCtx.qualified_data_item(), false, undefined, undefined, [IntrinsicFunctionSymbol]);
+        let identifierSymbol = this.helper.verifyQualifiedName(identifierCtx.qualified_data_item(), false, undefined, undefined, [IntrinsicFunctionSymbol, ProgramSymbol]);
         if (identifierSymbol instanceof DataRecordSymbol) {
             returnType = identifierSymbol.usage;
             let subscriptingCtx = identifierCtx.subscripting();

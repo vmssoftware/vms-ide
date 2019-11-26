@@ -29,7 +29,9 @@ import {
     EDataUsage,
     IntrinsicFunctionSymbol,
     functionDetails,
-    programDetails
+    programDetails,
+    FileSymbol,
+    EFileFormat,
 } from './CobolSymbol';
 
 import { CobolAnalisisHelper } from './CobolAnalisisHelpers';
@@ -389,6 +391,9 @@ export class CobolSymbolTable extends SymbolTable {
         }
         if (symbol instanceof ProgramSymbol && symbol.programDefinition) {
             name += programDetails(symbol.programDefinition);
+        }
+        if (symbol instanceof FileSymbol) {
+            name += ": " + EFileFormat[symbol.fileFormat];
         }
 
         const result: ISymbolInfo = {

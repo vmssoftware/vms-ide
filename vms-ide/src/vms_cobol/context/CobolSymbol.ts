@@ -31,7 +31,6 @@ export enum ECobolSymbolKind {
     BOOL_Condition,
     CURRENCY,
     File,
-    SortMergeFile,
     Report,
     DataRecord,
     Section,
@@ -94,10 +93,8 @@ export function symbolDescriptionFromEnum(kind: ECobolSymbolKind): string {
             return "Currency";
         case ECobolSymbolKind.File:
             return "File";
-        case ECobolSymbolKind.SortMergeFile:
-            return "Sort-merge file";
         case ECobolSymbolKind.Report:
-            return "Report";
+            return "report";
         case ECobolSymbolKind.DataRecord:
             return "Data record";
         case ECobolSymbolKind.Section:
@@ -264,10 +261,8 @@ export function getSymbolFromKind(kind: ECobolSymbolKind): typeof Symbol {
             return CURRENCY_Symbol;
         case ECobolSymbolKind.File:
             return FileSymbol;
-        case ECobolSymbolKind.SortMergeFile:
-            return SortMergeFileSymbol;
         case ECobolSymbolKind.Report:
-            return ReportFileSymbol;
+            return ReportSymbol;
         case ECobolSymbolKind.DataRecord:
             return DataRecordSymbol;
         case ECobolSymbolKind.Section:
@@ -365,10 +360,7 @@ export function getKindFromSymbol(symbol: Symbol): ECobolSymbolKind {
     if (symbol instanceof FileSymbol) {
         return ECobolSymbolKind.File;
     }
-    if (symbol instanceof SortMergeFileSymbol) {
-        return ECobolSymbolKind.SortMergeFile;
-    }
-    if (symbol instanceof ReportFileSymbol) {
+    if (symbol instanceof ReportSymbol) {
         return ECobolSymbolKind.Report;
     }
     if (symbol instanceof SpecialRegisterSymbol) {
@@ -440,9 +432,12 @@ export class CLASS_Symbol extends SpecialNameSymbol { }
 export class CURRENCY_Symbol extends SpecialNameSymbol {
     public currency_str?: string;
 }
-export class FileSymbol extends IdentifierSymbol { }
-export class SortMergeFileSymbol extends IdentifierSymbol { }
-export class ReportFileSymbol extends IdentifierSymbol { }
+export class FileSymbol extends IdentifierSymbol { 
+    public fileFormat = EFileFormat.Sequentional;
+}
+export class ReportSymbol extends IdentifierSymbol { 
+    public fileSymbol?: FileSymbol;
+}
 export class DataRecordSymbol extends IdentifierSymbol {
     public level?: number;
     public picture?: string;
@@ -466,6 +461,14 @@ export class BOOL_Symbol extends Symbol { }
 //**************************************************/
 //**************************************************/
 //**************************************************/
+
+export enum EFileFormat {
+    Sequentional,
+    Line,
+    Relative,
+    Indexed,
+    Report
+}
 
 export function functionDetails(definition: IFunction): string | undefined {
     let details = " (";

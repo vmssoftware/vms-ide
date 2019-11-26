@@ -927,7 +927,7 @@ display_statement_form3
    ;
 
 display_statement_form4
-   : DISPLAY src_item UPON display_upon
+   : DISPLAY src_item upon_dest
      on_exception_variants?
      END_DISPLAY?
    ;
@@ -935,10 +935,6 @@ display_statement_form4
 src_item
    : identifier
    | constant
-   ;
-
-display_upon
-   : USER_DEFINED_WORD_
    ;
 
 disp_f3_line
@@ -1147,12 +1143,12 @@ invalid_key_variants
    ;
 
 accept_form6
-   : ACCEPT dest_item  FROM? accept6_item
+   : ACCEPT dest_item FROM? arg_env_accept
      on_exception_variants?
      END_ACCEPT?
    ;
 
-accept6_item
+arg_env_accept
    : USER_DEFINED_WORD_
    ;
 
@@ -1519,26 +1515,62 @@ report_group_data_description_entry
    ;
 
 report_group_data_description_clause
-   : LINE NUMBER? IS? line_num_definition
-   | NEXT GROUP IS? next_group_definition
-   | TYPE IS? type_is_definition
-   | (USAGE IS?)? DISPLAY
-   | BLANK WHEN? ZERO
-   | COLUMN NUMBER? IS? column_number
-   | GROUP INDICATE?
-   | (JUSTIFIED|JUST) RIGHT?
+   : rep_line_num
+   | rep_next_group
+   | rep_type
+   | usage_display
+   | black_when_zero
+   | rep_column
+   | rep_group_ind
+   | justified
    | picture
    | sign_is
-   | SOURCE IS? source_name
-   | VALUE IS? value_is_literal
-   | sum
+   | rep_source_sum_or_value
+   ;
+
+rep_source_sum_or_value
+   : rep_source
+   | rep_sum
+   | rep_value_is
+   ;
+
+rep_value_is
+   : VALUE IS? value_is_literal
+   ;
+
+rep_source
+   : SOURCE IS? source_name
+   ;
+
+rep_group_ind
+   : GROUP INDICATE?
+   ;
+
+rep_column
+   : COLUMN NUMBER? IS? column_number
+   ;
+
+usage_display
+   : (USAGE IS?)? DISPLAY
+   ;
+
+rep_type
+   : TYPE IS? type_is_definition
+   ;
+
+rep_next_group
+   : NEXT GROUP IS? next_group_definition
+   ;
+
+rep_line_num
+   : LINE NUMBER? IS? line_num_definition
    ;
 
 sign_is
    : (SIGN IS?)? (LEADING|TRAILING) (SEPARATE CHARACTER?)?
    ;
 
-sum
+rep_sum
    : (SUM sum_name+ UPON? detail_report_group_name*)+
      (RESET ON? control_foot_name)?
    ;
@@ -1600,14 +1632,26 @@ line_num
 
 rd_clause
    : is_global
-   | CODE report_code
-   | (CONTROL IS?|CONTROLS ARE?) (control_name+|FINAL control_name*)
-   | PAGE
+   | report_code
+   | report_control
+   | report_page
+   ;
+
+report_page
+   : PAGE
       (LIMIT IS?|LIMITS ARE?)? page_size_rd (LINE|LINES)?
       (HEADING heading_line)?
       (FIRST DETAIL first_detail_line)?
       (LAST DETAIL last_detail_line)?
       (FOOTING footing_line_rd)?
+   ;
+
+report_control
+   : (CONTROL IS?|CONTROLS ARE?) (control_name+|FINAL control_name*)
+   ;
+
+report_code
+   : CODE STRING_LITERAL_
    ;
 
 footing_line_rd
@@ -1632,10 +1676,6 @@ page_size_rd
 
 control_name
    : qualified_data_item
-   ;
-
-report_code
-   : STRING_LITERAL_
    ;
 
 usage
@@ -1785,28 +1825,104 @@ screen_name
    ;
 
 screen_description_clause
-   : BLANK (SCREEN|LINE)
-   | FOREGROUND_COLOR IS? color_num
-   | BACKGROUND_COLOR IS? color_num
-   | AUTO
-   | SECURE
-   | REQUIRED
-   | (USAGE IS?)? DISPLAY
+   : sd_blank
+   | sd_foreground
+   | sd_background
+   | sd_auto
+   | sd_secure
+   | sd_required
+   | usage_display
    | sign_is
-   | FULL
-   | BELL
-   | BLINK
-   | ERASE (EOL|EOS)
-   | HIGHLIGHT
-   | LOWLIGHT
-   | REVERSE_VIDEO
-   | UNDERLINE
-   | LINE NUMBER? IS? PLUS? src_number
-   | COLUMN NUMBER? IS? PLUS? src_number
-   | VALUE IS? nonnumeric_literal
-   | BLANK WHEN? ZERO
-   | (JUSTIFIED|JUST) RIGHT?
-   | picture (scr_pic_using|scr_pic_from scr_pic_to?|scr_pic_to)
+   | sd_full
+   | sd_bell
+   | sd_blink
+   | sd_erase
+   | sd_light
+   | sd_reverse
+   | sd_underline
+   | sd_line
+   | sd_column
+   | sd_value
+   | black_when_zero
+   | justified
+   | sd_picture
+   ;
+
+sd_light
+   : sd_highlight
+   | sd_lowlight
+   ;
+
+sd_picture
+   : picture (scr_pic_using|scr_pic_from scr_pic_to?|scr_pic_to)
+   ;
+
+sd_value
+   : VALUE IS? nonnumeric_literal
+   ;
+
+sd_column
+   : COLUMN NUMBER? IS? PLUS? src_number
+   ;
+
+sd_line
+   : LINE NUMBER? IS? PLUS? src_number
+   ;
+
+sd_underline
+   : UNDERLINE
+   ;
+
+sd_reverse
+   : REVERSE_VIDEO
+   ;
+
+sd_lowlight
+   : LOWLIGHT
+   ;
+
+sd_highlight
+   : HIGHLIGHT
+   ;
+
+sd_erase
+   : ERASE (EOL|EOS)
+   ;
+
+sd_blink
+   : BLINK
+   ;
+
+sd_bell
+   : BELL
+   ;
+
+sd_full
+   : FULL
+   ;
+
+sd_required
+   : REQUIRED
+   ;
+
+sd_secure
+   : SECURE
+   ;
+
+sd_auto
+   : AUTO
+   ;
+
+sd_background
+   : BACKGROUND_COLOR IS? color_num
+   ;
+
+sd_foreground
+   : FOREGROUND_COLOR IS? color_num
+   ;
+
+sd_blank
+   : BLANK (SCREEN|LINE)
    ;
 
 scr_pic_using
@@ -2155,13 +2271,13 @@ select_clause
    : assign_to 
    | reserve
    | organization
-   | block_contains
-   | code_set
    | padding
    | record_delimiter
+   | lock_mode
+   | block_contains
+   | code_set
    | access_mode
    | record_key
-   | lock_mode
    | file_status
    ;
 
