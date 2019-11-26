@@ -74,6 +74,7 @@ import {
     Display_statementContext,
     Out_destContext,
     Arg_env_acceptContext,
+    Alt_record_keyContext,
 } from "../parser/cobolParser";
 
 import { CobolAnalisisHelper } from "./CobolAnalisisHelpers";
@@ -454,6 +455,9 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                 if (fd_clause.record_key() && fileSymbol.fileFormat !== EFileFormat.Indexed) {
                     this.helper.mark(fd_clause, localize("must.be.indexed", "File must be indexed"));
                 }
+                if (fd_clause.alt_record_key() && fileSymbol.fileFormat !== EFileFormat.Indexed) {
+                    this.helper.mark(fd_clause, localize("must.be.indexed", "File must be indexed"));
+                }
                 if (fd_clause.block_contains()) {
                     if (selectClauses.some(x => x.block_contains())) {
                         this.helper.mark(fd_clause, localize("duplicated", "Duplicated in SELECT"));
@@ -474,6 +478,11 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                         this.helper.mark(fd_clause, localize("duplicated", "Duplicated in SELECT"));
                     }
                 }
+                if (fd_clause.alt_record_key()) {
+                    if (selectClauses.some(x => x.alt_record_key())) {
+                        this.helper.mark(fd_clause, localize("duplicated", "Duplicated in SELECT"));
+                    }
+                }
                 if (fd_clause.file_status()) {
                     if (selectClauses.some(x => x.file_status())) {
                         this.helper.mark(fd_clause, localize("duplicated", "Duplicated in SELECT"));
@@ -489,8 +498,8 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     visitFd_clause(ctx: Fd_clauseContext) {
         let fileDescriptionCtx = firstContainingContext(ctx, File_description_entryContext);
         if (fileDescriptionCtx) {
-            // allow multiple keys
-            if (ctx.childCount > 0 && !(ctx.getChild(0) instanceof Record_keyContext)) {
+            // allow multiple alternate record keys
+            if (ctx.childCount > 0 && !(ctx.getChild(0) instanceof Alt_record_keyContext)) {
                 this.helper.testDuplicates(fileDescriptionCtx, ctx);
             }
         }
@@ -532,8 +541,8 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
     visitSelect_clause(ctx: Select_clauseContext) {
         let selectCtx = firstContainingContext(ctx, SelectContext);
         if (selectCtx) {
-            // allow multiple keys
-            if (ctx.childCount > 0 && !(ctx.getChild(0) instanceof Record_keyContext)) {
+            // allow multiple alternate record keys
+            if (ctx.childCount > 0 && !(ctx.getChild(0) instanceof Alt_record_keyContext)) {
                 this.helper.testDuplicates(selectCtx, ctx);
             }
         }

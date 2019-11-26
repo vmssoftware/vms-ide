@@ -1381,6 +1381,7 @@ fd_clause
    | code_set
    | access_mode
    | record_key
+   | alt_record_key
    | file_status
    ;
 
@@ -2278,6 +2279,7 @@ select_clause
    | code_set
    | access_mode
    | record_key
+   | alt_record_key
    | file_status
    ;
 
@@ -2290,7 +2292,13 @@ file_stat
    ;
 
 record_key
-   : ALTERNATE? RECORD KEY? IS? record_key_definition 
+   : RECORD KEY? IS? record_key_definition 
+     (WITH? DUPLICATES)?
+     (ASCENDING|DESCENDING)?
+   ;
+
+alt_record_key
+   : ALTERNATE RECORD KEY? IS? record_key_definition 
      (WITH? DUPLICATES)?
      (ASCENDING|DESCENDING)?
    ;

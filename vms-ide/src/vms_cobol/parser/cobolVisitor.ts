@@ -435,6 +435,7 @@ import { Select_clauseContext } from "./cobolParser";
 import { File_statusContext } from "./cobolParser";
 import { File_statContext } from "./cobolParser";
 import { Record_keyContext } from "./cobolParser";
+import { Alt_record_keyContext } from "./cobolParser";
 import { Record_key_definitionContext } from "./cobolParser";
 import { Seg_keyContext } from "./cobolParser";
 import { Rec_keyContext } from "./cobolParser";
@@ -3527,6 +3528,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitRecord_key?: (ctx: Record_keyContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.alt_record_key`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAlt_record_key?: (ctx: Alt_record_keyContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.record_key_definition`.

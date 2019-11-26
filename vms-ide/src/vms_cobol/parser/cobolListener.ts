@@ -435,6 +435,7 @@ import { Select_clauseContext } from "./cobolParser";
 import { File_statusContext } from "./cobolParser";
 import { File_statContext } from "./cobolParser";
 import { Record_keyContext } from "./cobolParser";
+import { Alt_record_keyContext } from "./cobolParser";
 import { Record_key_definitionContext } from "./cobolParser";
 import { Seg_keyContext } from "./cobolParser";
 import { Rec_keyContext } from "./cobolParser";
@@ -5252,6 +5253,17 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitRecord_key?: (ctx: Record_keyContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.alt_record_key`.
+	 * @param ctx the parse tree
+	 */
+	enterAlt_record_key?: (ctx: Alt_record_keyContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.alt_record_key`.
+	 * @param ctx the parse tree
+	 */
+	exitAlt_record_key?: (ctx: Alt_record_keyContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.record_key_definition`.
