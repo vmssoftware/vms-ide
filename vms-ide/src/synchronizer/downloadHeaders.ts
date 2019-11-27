@@ -8,7 +8,7 @@ import { ftpPathSeparator, LogFunction, LogType } from "../common/main";
 
 import { GetSshHelperType } from "../ext-api/ext-api";
 // import { CommandContext, setContext } from "./command-context";
-import { TestExecResult } from "./common/TestExecResult";
+import { ParseExecResult } from "./common/TestExecResult";
 import { ensureSettings } from "./ensure-settings";
 import { Synchronizer } from "./sync/synchronizer";
 import { VmsPathConverter } from "./vms/vms-path-converter";
@@ -47,7 +47,7 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
             return false;
         }
         let result = await shell.execCmd("dir sys$library:*.tlb/col=1");
-        if (!TestExecResult(result)) {
+        if (ParseExecResult(result).length > 0) {
             logFn(LogType.information, () => localize("no-result", "Cannot execute command to get TLB files"));
             shell.dispose();
             return false;
@@ -63,8 +63,14 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
         }
         const libName = VmsPathConverter.fromVms(chosen).fileName;
         result = await shell.execCmd("library/list sys$library:" + chosen);
-        if (!TestExecResult(result) || result!.length < 8) {
+        if (!result || result.length < 8) {
             logFn(LogType.information, () => "No files in list" );
+            shell.dispose();
+            return false;
+        }
+        let errors = ParseExecResult(result)
+        if (errors.length > 0) {
+            logFn(LogType.information, () => errors.join("\n") );
             shell.dispose();
             return false;
         }
@@ -86,8 +92,10 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
         const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
         let cd = `set default ${converter.directory}`;
         result = await shell.execCmd(cd);
-        if (!TestExecResult(result)) {
+        errors = ParseExecResult(result);
+        if (errors.length > 0) {
             logFn(LogType.error, () => localize("cd.failed", "Cannot set default directory."));
+            logFn(LogType.error, () => errors.join("\n"));
             shell.dispose();
             return false;
         }
@@ -95,16 +103,20 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
         // create temporary dir for extracting
         const createDir = `create/directory [.${ensured.projectSection.outdir}.${libName}]`;
         result = await shell.execCmd(createDir);
-        if (!TestExecResult(result)) {
+        errors = ParseExecResult(result);
+        if (errors.length > 0) {
             logFn(LogType.error, () => localize("create.failed", "Cannot create output directory."));
+            logFn(LogType.error, () => errors.join("\n"));
             shell.dispose();
             return false;
         }
 
         cd = `set default [.${ensured.projectSection.outdir}.${libName}]`;
         result = await shell.execCmd(cd);
-        if (!TestExecResult(result)) {
+        errors = ParseExecResult(result);
+        if (errors.length > 0) {
             logFn(LogType.error, () => localize("cd.failed", "Cannot set default directory."));
+            logFn(LogType.error, () => errors.join("\n"));
             shell.dispose();
             return false;
         }
@@ -121,8 +133,10 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
                 fileOut = file + ".";   // also BOSTON-like ftp server won't try to download .DIR instead
             }
             result = await shell.execCmd(`library/extract=${file}/output=${fileOut} sys$library:${chosen}`);
-            if (!TestExecResult(result)) {
-                logFn(LogType.error, () => localize("file.extracted", "Extract failed: {0}", file));
+            errors = ParseExecResult(result);
+            if (errors.length > 0) {
+                    logFn(LogType.error, () => localize("file.extracted", "Extract failed: {0}", file));
+                    logFn(LogType.error, () => errors.join("\n"));
             } else {
                 logFn(LogType.information, () => localize("file.extracted", "Extracted: {0}", file));
                 // push to download list only good files, and with "." at the end if it needs
@@ -160,18 +174,24 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
             }
         }
         // 4. clean
-        await shell.execCmd(`set default sys$login`);
-        if (!TestExecResult(result)) {
+        result = await shell.execCmd(`set default sys$login`);
+        errors = ParseExecResult(result);
+        if (errors.length > 0) {
             logFn(LogType.error, () => localize("cd.failed", "Cannot set default directory."));
+            logFn(LogType.error, () => errors.join("\n"));
         }
-        await shell.execCmd(`set default ${converter.directory}`);
-        if (!TestExecResult(result)) {
+        result = await shell.execCmd(`set default ${converter.directory}`);
+        errors = ParseExecResult(result);
+        if (errors.length > 0) {
             logFn(LogType.error, () => localize("cd.failed", "Cannot set default directory."));
+            logFn(LogType.error, () => errors.join("\n"));
         }
         const delTree = `delete/tree [.${ensured.projectSection.outdir}.${libName}...]*.*;*`;
         result = await shell.execCmd(delTree);
-        if (!TestExecResult(result)) {
+        errors = ParseExecResult(result);
+        if (errors.length > 0) {
             logFn(LogType.information, () => localize("del.failed", "Cannot delete intermediate files: {0}", `[${ensured.projectSection.outdir}.${libName}]`));
+            logFn(LogType.error, () => errors.join("\n"));
         }
         logFn(LogType.information, () => localize("done", "Done."));
         // setContext(CommandContext.isHeaders, false); should be done by performer

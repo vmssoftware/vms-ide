@@ -22,6 +22,7 @@ import {
     Fd_clauseContext,
     File_descriptionContext,
     Indexed_byContext,
+    OrganizationContext,
     ParagraphContext,
     Predefined_name_relationContext,
     ProgramContext,
@@ -33,17 +34,12 @@ import {
     Screen_description_entryContext,
     SectionContext,
     Section_headerContext,
-    Sort_merge_file_descriptionContext,
+    SelectContext,
     Switch_clause_offContext,
     Switch_clause_onContext,
     Switch_definitionContext,
     Symbol_charContext,
     cobolParser,
-    Report_isContext,
-    Access_modeContext,
-    Record_keyContext,
-    SelectContext,
-    OrganizationContext,
 } from '../parser/cobolParser';
 
 import {
@@ -57,15 +53,20 @@ import {
     CURRENCY_Symbol,
     DataRecordSymbol,
     DeclarativesSectionSymbol,
+    EDataUsage,
+    EFileFormat,
     ENVIRONMENT_NAME_Symbol,
     ENVIRONMENT_VALUE_Symbol,
     FileSymbol,
+    IdentifierSymbol,
+    IndexedBySymbol,
     LINE_PRINTER_Symbol,
     PAPER_TAPE_PUNCH_Symbol,
     PAPER_TAPE_READER_Symbol,
     ParagraphSymbol,
     ProgramSymbol,
     ReportGroupSymbol,
+    ReportSymbol,
     SWITCH_STATUS_Symbol,
     SWITCH_Symbol,
     SYMBOLIC_CHARACTERS_Symbol,
@@ -74,11 +75,6 @@ import {
     SYSOUT_Symbol,
     SectionSymbol,
     SegKeySymbol,
-    IndexedBySymbol,
-    IdentifierSymbol,
-    EDataUsage,
-    EFileFormat,
-    ReportSymbol,
 } from './CobolSymbol';
 
 import {
@@ -246,7 +242,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterFile_description(ctx: File_descriptionContext) {
-        let programSymbol = this.firstContainigSymbol(ProgramSymbol);
+        let programSymbol = this.firstContainingSymbol(ProgramSymbol);
         if (programSymbol) {
             let name = unifyCobolName(ctx.file_description_entry().file_name().text);
             let fileSymbols = programSymbol.getSymbolsOfType(FileSymbol).filter(x => x.name === name);
@@ -315,29 +311,33 @@ export class CobolDetailsListener implements cobolListener {
         let symb: DataRecordSymbol | undefined;
         let levelNum = Number.parseInt(ctx.level_number().text);
         let parentSymbol = this.currentSymbol;
-        if (this.currentSymbol instanceof ScopedSymbol) {
-            // go down to last DataRecordSymbol
-            let lastChild = this.currentSymbol.lastChild;
-            let dataRecord: DataRecordSymbol | undefined;
-            while (lastChild instanceof DataRecordSymbol) {
-                dataRecord = lastChild;
-                lastChild = lastChild.lastChild;
-            }
-            // go up until level > levelNum
-            while (dataRecord) {
-                if (dataRecord.level !== undefined) {
-                    if (dataRecord.level === levelNum) {
-                        parentSymbol = dataRecord.parent;
-                        break;
-                    }
-                    if (dataRecord.level < levelNum) {
-                        parentSymbol = dataRecord;
-                        break;
-                    }
-                    if (dataRecord.parent instanceof DataRecordSymbol) {
-                        dataRecord = dataRecord.parent;
-                    } else {
-                        break;
+        if (levelNum === 77) {
+            parentSymbol = this.firstContainingSymbol(ProgramSymbol);
+        } else {
+            if (this.currentSymbol instanceof ScopedSymbol) {
+                // go down to last DataRecordSymbol
+                let lastChild = this.currentSymbol.lastChild;
+                let dataRecord: DataRecordSymbol | undefined;
+                while (lastChild instanceof DataRecordSymbol) {
+                    dataRecord = lastChild;
+                    lastChild = lastChild.lastChild;
+                }
+                // go up until level > levelNum
+                while (dataRecord) {
+                    if (dataRecord.level !== undefined) {
+                        if (dataRecord.level === levelNum) {
+                            parentSymbol = dataRecord.parent;
+                            break;
+                        }
+                        if (dataRecord.level < levelNum) {
+                            parentSymbol = dataRecord;
+                            break;
+                        }
+                        if (dataRecord.parent instanceof DataRecordSymbol) {
+                            dataRecord = dataRecord.parent;
+                        } else {
+                            break;
+                        }
                     }
                 }
             }
@@ -528,7 +528,7 @@ export class CobolDetailsListener implements cobolListener {
         this.currentSymbol = this.symbolStack.pop();
     }
 
-    private firstContainigSymbol<T extends Symbol>(t: new (...args: any[]) => T) {
+    private firstContainingSymbol<T extends Symbol>(t: new (...args: any[]) => T) {
         let retSymbol = this.currentSymbol;
         while(retSymbol !== undefined) {
             if (retSymbol instanceof t) {
