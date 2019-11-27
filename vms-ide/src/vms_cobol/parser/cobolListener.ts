@@ -344,27 +344,26 @@ import { Depending_itemContext } from "./cobolParser";
 import { Shortest_recContext } from "./cobolParser";
 import { Longest_recContext } from "./cobolParser";
 import { Screen_description_entryContext } from "./cobolParser";
-import { Screen_nameContext } from "./cobolParser";
 import { Screen_description_clauseContext } from "./cobolParser";
-import { Sd_lightContext } from "./cobolParser";
-import { Sd_pictureContext } from "./cobolParser";
-import { Sd_valueContext } from "./cobolParser";
-import { Sd_columnContext } from "./cobolParser";
-import { Sd_lineContext } from "./cobolParser";
-import { Sd_underlineContext } from "./cobolParser";
-import { Sd_reverseContext } from "./cobolParser";
-import { Sd_lowlightContext } from "./cobolParser";
-import { Sd_highlightContext } from "./cobolParser";
-import { Sd_eraseContext } from "./cobolParser";
-import { Sd_blinkContext } from "./cobolParser";
-import { Sd_bellContext } from "./cobolParser";
-import { Sd_fullContext } from "./cobolParser";
-import { Sd_requiredContext } from "./cobolParser";
-import { Sd_secureContext } from "./cobolParser";
-import { Sd_autoContext } from "./cobolParser";
-import { Sd_backgroundContext } from "./cobolParser";
-import { Sd_foregroundContext } from "./cobolParser";
-import { Sd_blankContext } from "./cobolParser";
+import { Scr_lightContext } from "./cobolParser";
+import { Scr_pictureContext } from "./cobolParser";
+import { Scr_valueContext } from "./cobolParser";
+import { Scr_columnContext } from "./cobolParser";
+import { Scr_lineContext } from "./cobolParser";
+import { Scr_underlineContext } from "./cobolParser";
+import { Scr_reverseContext } from "./cobolParser";
+import { Scr_lowlightContext } from "./cobolParser";
+import { Scr_highlightContext } from "./cobolParser";
+import { Scr_eraseContext } from "./cobolParser";
+import { Scr_blinkContext } from "./cobolParser";
+import { Scr_bellContext } from "./cobolParser";
+import { Scr_fullContext } from "./cobolParser";
+import { Scr_requiredContext } from "./cobolParser";
+import { Scr_secureContext } from "./cobolParser";
+import { Scr_autoContext } from "./cobolParser";
+import { Scr_backgroundContext } from "./cobolParser";
+import { Scr_foregroundContext } from "./cobolParser";
+import { Scr_blankContext } from "./cobolParser";
 import { Scr_pic_usingContext } from "./cobolParser";
 import { Scr_pic_fromContext } from "./cobolParser";
 import { Scr_pic_toContext } from "./cobolParser";
@@ -4254,17 +4253,6 @@ export interface cobolListener extends ParseTreeListener {
 	exitScreen_description_entry?: (ctx: Screen_description_entryContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.screen_name`.
-	 * @param ctx the parse tree
-	 */
-	enterScreen_name?: (ctx: Screen_nameContext) => void;
-	/**
-	 * Exit a parse tree produced by `cobolParser.screen_name`.
-	 * @param ctx the parse tree
-	 */
-	exitScreen_name?: (ctx: Screen_nameContext) => void;
-
-	/**
 	 * Enter a parse tree produced by `cobolParser.screen_description_clause`.
 	 * @param ctx the parse tree
 	 */
@@ -4276,213 +4264,213 @@ export interface cobolListener extends ParseTreeListener {
 	exitScreen_description_clause?: (ctx: Screen_description_clauseContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_light`.
+	 * Enter a parse tree produced by `cobolParser.scr_light`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_light?: (ctx: Sd_lightContext) => void;
+	enterScr_light?: (ctx: Scr_lightContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_light`.
+	 * Exit a parse tree produced by `cobolParser.scr_light`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_light?: (ctx: Sd_lightContext) => void;
+	exitScr_light?: (ctx: Scr_lightContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_picture`.
+	 * Enter a parse tree produced by `cobolParser.scr_picture`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_picture?: (ctx: Sd_pictureContext) => void;
+	enterScr_picture?: (ctx: Scr_pictureContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_picture`.
+	 * Exit a parse tree produced by `cobolParser.scr_picture`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_picture?: (ctx: Sd_pictureContext) => void;
+	exitScr_picture?: (ctx: Scr_pictureContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_value`.
+	 * Enter a parse tree produced by `cobolParser.scr_value`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_value?: (ctx: Sd_valueContext) => void;
+	enterScr_value?: (ctx: Scr_valueContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_value`.
+	 * Exit a parse tree produced by `cobolParser.scr_value`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_value?: (ctx: Sd_valueContext) => void;
+	exitScr_value?: (ctx: Scr_valueContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_column`.
+	 * Enter a parse tree produced by `cobolParser.scr_column`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_column?: (ctx: Sd_columnContext) => void;
+	enterScr_column?: (ctx: Scr_columnContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_column`.
+	 * Exit a parse tree produced by `cobolParser.scr_column`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_column?: (ctx: Sd_columnContext) => void;
+	exitScr_column?: (ctx: Scr_columnContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_line`.
+	 * Enter a parse tree produced by `cobolParser.scr_line`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_line?: (ctx: Sd_lineContext) => void;
+	enterScr_line?: (ctx: Scr_lineContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_line`.
+	 * Exit a parse tree produced by `cobolParser.scr_line`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_line?: (ctx: Sd_lineContext) => void;
+	exitScr_line?: (ctx: Scr_lineContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_underline`.
+	 * Enter a parse tree produced by `cobolParser.scr_underline`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_underline?: (ctx: Sd_underlineContext) => void;
+	enterScr_underline?: (ctx: Scr_underlineContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_underline`.
+	 * Exit a parse tree produced by `cobolParser.scr_underline`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_underline?: (ctx: Sd_underlineContext) => void;
+	exitScr_underline?: (ctx: Scr_underlineContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_reverse`.
+	 * Enter a parse tree produced by `cobolParser.scr_reverse`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_reverse?: (ctx: Sd_reverseContext) => void;
+	enterScr_reverse?: (ctx: Scr_reverseContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_reverse`.
+	 * Exit a parse tree produced by `cobolParser.scr_reverse`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_reverse?: (ctx: Sd_reverseContext) => void;
+	exitScr_reverse?: (ctx: Scr_reverseContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_lowlight`.
+	 * Enter a parse tree produced by `cobolParser.scr_lowlight`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_lowlight?: (ctx: Sd_lowlightContext) => void;
+	enterScr_lowlight?: (ctx: Scr_lowlightContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_lowlight`.
+	 * Exit a parse tree produced by `cobolParser.scr_lowlight`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_lowlight?: (ctx: Sd_lowlightContext) => void;
+	exitScr_lowlight?: (ctx: Scr_lowlightContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_highlight`.
+	 * Enter a parse tree produced by `cobolParser.scr_highlight`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_highlight?: (ctx: Sd_highlightContext) => void;
+	enterScr_highlight?: (ctx: Scr_highlightContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_highlight`.
+	 * Exit a parse tree produced by `cobolParser.scr_highlight`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_highlight?: (ctx: Sd_highlightContext) => void;
+	exitScr_highlight?: (ctx: Scr_highlightContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_erase`.
+	 * Enter a parse tree produced by `cobolParser.scr_erase`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_erase?: (ctx: Sd_eraseContext) => void;
+	enterScr_erase?: (ctx: Scr_eraseContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_erase`.
+	 * Exit a parse tree produced by `cobolParser.scr_erase`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_erase?: (ctx: Sd_eraseContext) => void;
+	exitScr_erase?: (ctx: Scr_eraseContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_blink`.
+	 * Enter a parse tree produced by `cobolParser.scr_blink`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_blink?: (ctx: Sd_blinkContext) => void;
+	enterScr_blink?: (ctx: Scr_blinkContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_blink`.
+	 * Exit a parse tree produced by `cobolParser.scr_blink`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_blink?: (ctx: Sd_blinkContext) => void;
+	exitScr_blink?: (ctx: Scr_blinkContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_bell`.
+	 * Enter a parse tree produced by `cobolParser.scr_bell`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_bell?: (ctx: Sd_bellContext) => void;
+	enterScr_bell?: (ctx: Scr_bellContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_bell`.
+	 * Exit a parse tree produced by `cobolParser.scr_bell`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_bell?: (ctx: Sd_bellContext) => void;
+	exitScr_bell?: (ctx: Scr_bellContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_full`.
+	 * Enter a parse tree produced by `cobolParser.scr_full`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_full?: (ctx: Sd_fullContext) => void;
+	enterScr_full?: (ctx: Scr_fullContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_full`.
+	 * Exit a parse tree produced by `cobolParser.scr_full`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_full?: (ctx: Sd_fullContext) => void;
+	exitScr_full?: (ctx: Scr_fullContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_required`.
+	 * Enter a parse tree produced by `cobolParser.scr_required`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_required?: (ctx: Sd_requiredContext) => void;
+	enterScr_required?: (ctx: Scr_requiredContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_required`.
+	 * Exit a parse tree produced by `cobolParser.scr_required`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_required?: (ctx: Sd_requiredContext) => void;
+	exitScr_required?: (ctx: Scr_requiredContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_secure`.
+	 * Enter a parse tree produced by `cobolParser.scr_secure`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_secure?: (ctx: Sd_secureContext) => void;
+	enterScr_secure?: (ctx: Scr_secureContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_secure`.
+	 * Exit a parse tree produced by `cobolParser.scr_secure`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_secure?: (ctx: Sd_secureContext) => void;
+	exitScr_secure?: (ctx: Scr_secureContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_auto`.
+	 * Enter a parse tree produced by `cobolParser.scr_auto`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_auto?: (ctx: Sd_autoContext) => void;
+	enterScr_auto?: (ctx: Scr_autoContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_auto`.
+	 * Exit a parse tree produced by `cobolParser.scr_auto`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_auto?: (ctx: Sd_autoContext) => void;
+	exitScr_auto?: (ctx: Scr_autoContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_background`.
+	 * Enter a parse tree produced by `cobolParser.scr_background`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_background?: (ctx: Sd_backgroundContext) => void;
+	enterScr_background?: (ctx: Scr_backgroundContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_background`.
+	 * Exit a parse tree produced by `cobolParser.scr_background`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_background?: (ctx: Sd_backgroundContext) => void;
+	exitScr_background?: (ctx: Scr_backgroundContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_foreground`.
+	 * Enter a parse tree produced by `cobolParser.scr_foreground`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_foreground?: (ctx: Sd_foregroundContext) => void;
+	enterScr_foreground?: (ctx: Scr_foregroundContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_foreground`.
+	 * Exit a parse tree produced by `cobolParser.scr_foreground`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_foreground?: (ctx: Sd_foregroundContext) => void;
+	exitScr_foreground?: (ctx: Scr_foregroundContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.sd_blank`.
+	 * Enter a parse tree produced by `cobolParser.scr_blank`.
 	 * @param ctx the parse tree
 	 */
-	enterSd_blank?: (ctx: Sd_blankContext) => void;
+	enterScr_blank?: (ctx: Scr_blankContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.sd_blank`.
+	 * Exit a parse tree produced by `cobolParser.scr_blank`.
 	 * @param ctx the parse tree
 	 */
-	exitSd_blank?: (ctx: Sd_blankContext) => void;
+	exitScr_blank?: (ctx: Scr_blankContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.scr_pic_using`.

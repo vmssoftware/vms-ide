@@ -1177,7 +1177,7 @@ accept_form4
    ;
 
 accept_form5
-   : ACCEPT screen_name
+   : ACCEPT data_name
      accept_at?
      on_exception_variants?
      END_ACCEPT?
@@ -1816,113 +1816,109 @@ longest_rec
    ;
 
 screen_description_entry
-   : level_number (screen_name|FILLER)?
+   : level_number (data_name | FILLER)?
      screen_description_clause*
      DOT_ replace_statement*
    ;
 
-screen_name
-   : USER_DEFINED_WORD_
-   ;
-
 screen_description_clause
-   : sd_blank
-   | sd_foreground
-   | sd_background
-   | sd_auto
-   | sd_secure
-   | sd_required
+   : scr_blank
+   | scr_foreground
+   | scr_background
+   | scr_auto
+   | scr_secure
+   | scr_required
    | usage_display
    | sign_is
-   | sd_full
-   | sd_bell
-   | sd_blink
-   | sd_erase
-   | sd_light
-   | sd_reverse
-   | sd_underline
-   | sd_line
-   | sd_column
-   | sd_value
+   | scr_full
+   | scr_bell
+   | scr_blink
+   | scr_erase
+   | scr_light
+   | scr_reverse
+   | scr_underline
+   | scr_line
+   | scr_column
+   | scr_value
    | black_when_zero
    | justified
-   | sd_picture
+   | scr_picture
    ;
 
-sd_light
-   : sd_highlight
-   | sd_lowlight
+scr_light
+   : scr_highlight
+   | scr_lowlight
    ;
 
-sd_picture
+scr_picture
    : picture (scr_pic_using|scr_pic_from scr_pic_to?|scr_pic_to)
    ;
 
-sd_value
+scr_value
    : VALUE IS? nonnumeric_literal
    ;
 
-sd_column
+scr_column
    : COLUMN NUMBER? IS? PLUS? src_number
    ;
 
-sd_line
+scr_line
    : LINE NUMBER? IS? PLUS? src_number
    ;
 
-sd_underline
+scr_underline
    : UNDERLINE
    ;
 
-sd_reverse
+scr_reverse
    : REVERSE_VIDEO
    ;
 
-sd_lowlight
+scr_lowlight
    : LOWLIGHT
    ;
 
-sd_highlight
+scr_highlight
    : HIGHLIGHT
    ;
 
-sd_erase
+scr_erase
    : ERASE (EOL|EOS)
    ;
 
-sd_blink
+scr_blink
    : BLINK
    ;
 
-sd_bell
+scr_bell
    : BELL
    ;
 
-sd_full
+scr_full
    : FULL
    ;
 
-sd_required
+scr_required
    : REQUIRED
    ;
 
-sd_secure
+scr_secure
    : SECURE
    ;
 
-sd_auto
+scr_auto
    : AUTO
    ;
 
-sd_background
+scr_background
    : BACKGROUND_COLOR IS? color_num
    ;
 
-sd_foreground
+scr_foreground
    : FOREGROUND_COLOR IS? color_num
    ;
 
-sd_blank
+scr_blank
    : BLANK (SCREEN|LINE)
    ;
 

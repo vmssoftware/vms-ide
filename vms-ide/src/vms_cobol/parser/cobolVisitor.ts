@@ -344,27 +344,26 @@ import { Depending_itemContext } from "./cobolParser";
 import { Shortest_recContext } from "./cobolParser";
 import { Longest_recContext } from "./cobolParser";
 import { Screen_description_entryContext } from "./cobolParser";
-import { Screen_nameContext } from "./cobolParser";
 import { Screen_description_clauseContext } from "./cobolParser";
-import { Sd_lightContext } from "./cobolParser";
-import { Sd_pictureContext } from "./cobolParser";
-import { Sd_valueContext } from "./cobolParser";
-import { Sd_columnContext } from "./cobolParser";
-import { Sd_lineContext } from "./cobolParser";
-import { Sd_underlineContext } from "./cobolParser";
-import { Sd_reverseContext } from "./cobolParser";
-import { Sd_lowlightContext } from "./cobolParser";
-import { Sd_highlightContext } from "./cobolParser";
-import { Sd_eraseContext } from "./cobolParser";
-import { Sd_blinkContext } from "./cobolParser";
-import { Sd_bellContext } from "./cobolParser";
-import { Sd_fullContext } from "./cobolParser";
-import { Sd_requiredContext } from "./cobolParser";
-import { Sd_secureContext } from "./cobolParser";
-import { Sd_autoContext } from "./cobolParser";
-import { Sd_backgroundContext } from "./cobolParser";
-import { Sd_foregroundContext } from "./cobolParser";
-import { Sd_blankContext } from "./cobolParser";
+import { Scr_lightContext } from "./cobolParser";
+import { Scr_pictureContext } from "./cobolParser";
+import { Scr_valueContext } from "./cobolParser";
+import { Scr_columnContext } from "./cobolParser";
+import { Scr_lineContext } from "./cobolParser";
+import { Scr_underlineContext } from "./cobolParser";
+import { Scr_reverseContext } from "./cobolParser";
+import { Scr_lowlightContext } from "./cobolParser";
+import { Scr_highlightContext } from "./cobolParser";
+import { Scr_eraseContext } from "./cobolParser";
+import { Scr_blinkContext } from "./cobolParser";
+import { Scr_bellContext } from "./cobolParser";
+import { Scr_fullContext } from "./cobolParser";
+import { Scr_requiredContext } from "./cobolParser";
+import { Scr_secureContext } from "./cobolParser";
+import { Scr_autoContext } from "./cobolParser";
+import { Scr_backgroundContext } from "./cobolParser";
+import { Scr_foregroundContext } from "./cobolParser";
+import { Scr_blankContext } from "./cobolParser";
 import { Scr_pic_usingContext } from "./cobolParser";
 import { Scr_pic_fromContext } from "./cobolParser";
 import { Scr_pic_toContext } from "./cobolParser";
@@ -2893,13 +2892,6 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitScreen_description_entry?: (ctx: Screen_description_entryContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.screen_name`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitScreen_name?: (ctx: Screen_nameContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `cobolParser.screen_description_clause`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -2907,137 +2899,137 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitScreen_description_clause?: (ctx: Screen_description_clauseContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_light`.
+	 * Visit a parse tree produced by `cobolParser.scr_light`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_light?: (ctx: Sd_lightContext) => Result;
+	visitScr_light?: (ctx: Scr_lightContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_picture`.
+	 * Visit a parse tree produced by `cobolParser.scr_picture`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_picture?: (ctx: Sd_pictureContext) => Result;
+	visitScr_picture?: (ctx: Scr_pictureContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_value`.
+	 * Visit a parse tree produced by `cobolParser.scr_value`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_value?: (ctx: Sd_valueContext) => Result;
+	visitScr_value?: (ctx: Scr_valueContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_column`.
+	 * Visit a parse tree produced by `cobolParser.scr_column`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_column?: (ctx: Sd_columnContext) => Result;
+	visitScr_column?: (ctx: Scr_columnContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_line`.
+	 * Visit a parse tree produced by `cobolParser.scr_line`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_line?: (ctx: Sd_lineContext) => Result;
+	visitScr_line?: (ctx: Scr_lineContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_underline`.
+	 * Visit a parse tree produced by `cobolParser.scr_underline`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_underline?: (ctx: Sd_underlineContext) => Result;
+	visitScr_underline?: (ctx: Scr_underlineContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_reverse`.
+	 * Visit a parse tree produced by `cobolParser.scr_reverse`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_reverse?: (ctx: Sd_reverseContext) => Result;
+	visitScr_reverse?: (ctx: Scr_reverseContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_lowlight`.
+	 * Visit a parse tree produced by `cobolParser.scr_lowlight`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_lowlight?: (ctx: Sd_lowlightContext) => Result;
+	visitScr_lowlight?: (ctx: Scr_lowlightContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_highlight`.
+	 * Visit a parse tree produced by `cobolParser.scr_highlight`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_highlight?: (ctx: Sd_highlightContext) => Result;
+	visitScr_highlight?: (ctx: Scr_highlightContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_erase`.
+	 * Visit a parse tree produced by `cobolParser.scr_erase`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_erase?: (ctx: Sd_eraseContext) => Result;
+	visitScr_erase?: (ctx: Scr_eraseContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_blink`.
+	 * Visit a parse tree produced by `cobolParser.scr_blink`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_blink?: (ctx: Sd_blinkContext) => Result;
+	visitScr_blink?: (ctx: Scr_blinkContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_bell`.
+	 * Visit a parse tree produced by `cobolParser.scr_bell`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_bell?: (ctx: Sd_bellContext) => Result;
+	visitScr_bell?: (ctx: Scr_bellContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_full`.
+	 * Visit a parse tree produced by `cobolParser.scr_full`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_full?: (ctx: Sd_fullContext) => Result;
+	visitScr_full?: (ctx: Scr_fullContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_required`.
+	 * Visit a parse tree produced by `cobolParser.scr_required`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_required?: (ctx: Sd_requiredContext) => Result;
+	visitScr_required?: (ctx: Scr_requiredContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_secure`.
+	 * Visit a parse tree produced by `cobolParser.scr_secure`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_secure?: (ctx: Sd_secureContext) => Result;
+	visitScr_secure?: (ctx: Scr_secureContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_auto`.
+	 * Visit a parse tree produced by `cobolParser.scr_auto`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_auto?: (ctx: Sd_autoContext) => Result;
+	visitScr_auto?: (ctx: Scr_autoContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_background`.
+	 * Visit a parse tree produced by `cobolParser.scr_background`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_background?: (ctx: Sd_backgroundContext) => Result;
+	visitScr_background?: (ctx: Scr_backgroundContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_foreground`.
+	 * Visit a parse tree produced by `cobolParser.scr_foreground`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_foreground?: (ctx: Sd_foregroundContext) => Result;
+	visitScr_foreground?: (ctx: Scr_foregroundContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sd_blank`.
+	 * Visit a parse tree produced by `cobolParser.scr_blank`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSd_blank?: (ctx: Sd_blankContext) => Result;
+	visitScr_blank?: (ctx: Scr_blankContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.scr_pic_using`.

@@ -40,6 +40,10 @@ import {
     Switch_definitionContext,
     Symbol_charContext,
     cobolParser,
+    Report_group_data_description_clauseContext,
+    Report_description_entryContext,
+    Usage_definitionContext,
+    Screen_description_clauseContext,
 } from '../parser/cobolParser';
 
 import {
@@ -65,7 +69,7 @@ import {
     PAPER_TAPE_READER_Symbol,
     ParagraphSymbol,
     ProgramSymbol,
-    ReportGroupSymbol,
+    ReportRecordSymbol,
     ReportSymbol,
     SWITCH_STATUS_Symbol,
     SWITCH_Symbol,
@@ -75,6 +79,8 @@ import {
     SYSOUT_Symbol,
     SectionSymbol,
     SegKeySymbol,
+    firstContainingSymbol,
+    ScreenRecordSymbol,
 } from './CobolSymbol';
 
 import {
@@ -242,7 +248,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterFile_description(ctx: File_descriptionContext) {
-        let programSymbol = this.firstContainingSymbol(ProgramSymbol);
+        let programSymbol = firstContainingSymbol(this.currentSymbol, ProgramSymbol);
         if (programSymbol) {
             let name = unifyCobolName(ctx.file_description_entry().file_name().text);
             let fileSymbols = programSymbol.getSymbolsOfType(FileSymbol).filter(x => x.name === name);
@@ -308,59 +314,11 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterData_description_entry(ctx: Data_description_entryContext) {
-        let symb: DataRecordSymbol | undefined;
-        let levelNum = Number.parseInt(ctx.level_number().text);
-        let parentSymbol = this.currentSymbol;
-        if (levelNum === 77) {
-            parentSymbol = this.firstContainingSymbol(ProgramSymbol);
-        } else {
-            if (this.currentSymbol instanceof ScopedSymbol) {
-                // go down to last DataRecordSymbol
-                let lastChild = this.currentSymbol.lastChild;
-                let dataRecord: DataRecordSymbol | undefined;
-                while (lastChild instanceof DataRecordSymbol) {
-                    dataRecord = lastChild;
-                    lastChild = lastChild.lastChild;
-                }
-                // go up until level > levelNum
-                while (dataRecord) {
-                    if (dataRecord.level !== undefined) {
-                        if (dataRecord.level === levelNum) {
-                            parentSymbol = dataRecord.parent;
-                            break;
-                        }
-                        if (dataRecord.level < levelNum) {
-                            parentSymbol = dataRecord;
-                            break;
-                        }
-                        if (dataRecord.parent instanceof DataRecordSymbol) {
-                            dataRecord = dataRecord.parent;
-                        } else {
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        // note - two promotions
-        this.promote(parentSymbol);
-        symb = this.promoteNew(DataRecordSymbol, ctx, ctx.data_name());
-        symb.level = levelNum;
-        if (symb.parent instanceof IdentifierSymbol) {
-            symb.isGlobal = symb.parent.isGlobal;
-            symb.isExtern = symb.parent.isExtern;
-        }
-        if (symb.parent instanceof DataRecordSymbol) {
-            symb.arrayLvl = symb.parent.arrayLvl;
-        }
-        symb.usage = EDataUsage.DISPLAY;
+        this.promoteDataEntry(this.currentSymbol, ctx, DataRecordSymbol);
     }
 
     exitData_description_entry(ctx: Data_description_entryContext) {
-        // back to parent
-        this.back();
-        // back to initial symbol
-        this.back();
+        this.backDataEntry();
     }
 
     enterData_description_clause(ctx: Data_description_clauseContext) {
@@ -379,74 +337,52 @@ export class CobolDetailsListener implements cobolListener {
             }
             let pictureCtx = ctx.picture();
             if (pictureCtx) {
-                let pictureStr = pictureCtx.character_string().text;
-                let trimLeftPos = 0;
-                while(trimLeftPos < pictureStr.length && CobolDetailsListener._separator.includes(pictureStr[trimLeftPos])) {
-                    ++trimLeftPos;
-                }
-                let trimRightPos = pictureStr.length - 1;
-                while(trimRightPos > 0 && CobolDetailsListener._separator.includes(pictureStr[trimRightPos])) {
-                    --trimRightPos;
-                }
-                this.currentSymbol.picture = pictureStr.substring(trimLeftPos, trimRightPos + 1);
+                this.currentSymbol.picture = this.finePicture(pictureCtx.character_string().text);
                 return;
             } 
             // USAGE
             let usageCtx = ctx.usage();
             if (usageCtx) {
-                let usageTypeNode = usageCtx.usage_definition().getChild(0);
-                if (usageTypeNode instanceof TerminalNode) {
-                    switch(usageTypeNode.symbol.type) {
-                        case cobolParser.BINARY: this.currentSymbol.usage = EDataUsage.BINARY; break;
-                        case cobolParser.BINARY_CHAR: this.currentSymbol.usage = EDataUsage.BINARY_CHAR; break;
-                        case cobolParser.BINARY_SHORT: this.currentSymbol.usage = EDataUsage.BINARY_SHORT; break;
-                        case cobolParser.BINARY_LONG: this.currentSymbol.usage = EDataUsage.BINARY_LONG; break;
-                        case cobolParser.BINARY_DOUBLE: this.currentSymbol.usage = EDataUsage.BINARY_DOUBLE; break;
-                        case cobolParser.COMPUTATIONAL: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL; break;
-                        case cobolParser.COMPUTATIONAL_1: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL_1; break;
-                        case cobolParser.COMPUTATIONAL_2: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL_2; break;
-                        case cobolParser.COMPUTATIONAL_3: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL_3; break;
-                        case cobolParser.COMPUTATIONAL_4: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL_4; break;
-                        case cobolParser.COMPUTATIONAL_5: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL_5; break;
-                        case cobolParser.COMPUTATIONAL_X: this.currentSymbol.usage = EDataUsage.COMPUTATIONAL_X; break;
-                        case cobolParser.COMP: this.currentSymbol.usage = EDataUsage.COMP; break;
-                        case cobolParser.COMP_1: this.currentSymbol.usage = EDataUsage.COMP_1; break;
-                        case cobolParser.COMP_2: this.currentSymbol.usage = EDataUsage.COMP_2; break;
-                        case cobolParser.COMP_3: this.currentSymbol.usage = EDataUsage.COMP_3; break;
-                        case cobolParser.COMP_4: this.currentSymbol.usage = EDataUsage.COMP_4; break;
-                        case cobolParser.COMP_5: this.currentSymbol.usage = EDataUsage.COMP_5; break;
-                        case cobolParser.COMP_X: this.currentSymbol.usage = EDataUsage.COMP_X; break;
-                        case cobolParser.DISPLAY: this.currentSymbol.usage = EDataUsage.DISPLAY; break;
-                        case cobolParser.FLOAT_SHORT: this.currentSymbol.usage = EDataUsage.FLOAT_SHORT; break;
-                        case cobolParser.FLOAT_LONG: this.currentSymbol.usage = EDataUsage.FLOAT_LONG; break;
-                        case cobolParser.FLOAT_EXTENDED: this.currentSymbol.usage = EDataUsage.FLOAT_EXTENDED; break;
-                        case cobolParser.INDEX: this.currentSymbol.usage = EDataUsage.INDEX; break;
-                        case cobolParser.PACKED_DECIMAL: this.currentSymbol.usage = EDataUsage.PACKED_DECIMAL; break;
-                        case cobolParser.POINTER: this.currentSymbol.usage = EDataUsage.POINTER; break;
-                        case cobolParser.POINTER_64: this.currentSymbol.usage = EDataUsage.POINTER_64; break;
-                    }
-                }
+                this.currentSymbol.usage = this.usageFromCtx(usageCtx.usage_definition());
+                return;
+            }
+        }
+    }
+
+    enterReport_group_data_description_clause(ctx: Report_group_data_description_clauseContext) {
+        if (this.currentSymbol instanceof ReportRecordSymbol) {
+            let pictureCtx = ctx.picture();
+            if (pictureCtx) {
+                this.currentSymbol.picture = this.finePicture(pictureCtx.character_string().text);
                 return;
             }
         }
     }
 
     enterReport_group_data_description_entry(ctx: Report_group_data_description_entryContext) {
-        let symb = this.promoteNew(ReportGroupSymbol, ctx, ctx.data_name());
-        symb.level = Number.parseInt(ctx.level_number().text);
+        this.promoteDataEntry(this.currentSymbol, ctx, ReportRecordSymbol);
     }
 
     exitReport_group_data_description_entry(ctx: Report_group_data_description_entryContext) {
-        this.back();
+        this.backDataEntry();
     }
 
     enterScreen_description_entry(ctx: Screen_description_entryContext) {
-        let symb = this.promoteNew(ReportGroupSymbol, ctx, ctx.screen_name());
-        symb.level = Number.parseInt(ctx.level_number().text);
+        this.promoteDataEntry(this.currentSymbol, ctx, ScreenRecordSymbol);
     }
 
     exitScreen_description_entry(ctx: Screen_description_entryContext) {
-        this.back();
+        this.backDataEntry();
+    }
+
+    enterScreen_description_clause(ctx: Screen_description_clauseContext) {
+        if (this.currentSymbol instanceof ScreenRecordSymbol) {
+            let pictureCtx = ctx.scr_picture();
+            if (pictureCtx) {
+                this.currentSymbol.picture = this.finePicture(pictureCtx.picture().character_string().text);
+                return;
+            } 
+        }
     }
 
     enterRecord_key_definition(ctx: Record_key_definitionContext) {
@@ -528,13 +464,121 @@ export class CobolDetailsListener implements cobolListener {
         this.currentSymbol = this.symbolStack.pop();
     }
 
-    private firstContainingSymbol<T extends Symbol>(t: new (...args: any[]) => T) {
-        let retSymbol = this.currentSymbol;
-        while(retSymbol !== undefined) {
-            if (retSymbol instanceof t) {
-                return retSymbol;
+    private backDataEntry() {
+        this.currentSymbol = this.symbolStack.pop();
+        this.currentSymbol = this.symbolStack.pop();
+    }
+
+    private promoteDataEntry<SymbT extends DataRecordSymbol>(
+            parentSymbol: Symbol | undefined,
+            ctx: Data_description_entryContext | Report_group_data_description_entryContext | Screen_description_entryContext,
+            symbType: new (...args: any[]) => SymbT,
+            ): SymbT | undefined {
+        let symb: SymbT | undefined;
+        let levelNum = Number.parseInt(ctx.level_number().text);
+        if (levelNum === 77) {
+            parentSymbol = firstContainingSymbol(parentSymbol, ProgramSymbol);
+        } else {
+            if (parentSymbol instanceof ScopedSymbol) {
+                // go down to last data entry
+                let lastChild = parentSymbol.lastChild;
+                let dataRecord: SymbT | undefined;
+                while (lastChild instanceof symbType) {
+                    dataRecord = lastChild;
+                    lastChild = lastChild.lastChild;
+                }
+                // go up until level > levelNum
+                while (dataRecord) {
+                    if (dataRecord.level !== undefined) {
+                        if (dataRecord.level === levelNum) {
+                            parentSymbol = dataRecord.parent;
+                            break;
+                        }
+                        if (dataRecord.level < levelNum) {
+                            parentSymbol = dataRecord;
+                            break;
+                        }
+                        if (dataRecord.parent instanceof symbType) {
+                            dataRecord = dataRecord.parent;
+                        } else {
+                            break;
+                        }
+                    }
+                }
             }
         }
-        return undefined;
+        // define whether is group
+        if (parentSymbol instanceof symbType) {
+            switch(levelNum) {
+                case 66:
+                case 77:
+                case 88:
+                    break;
+                default:
+                    parentSymbol.isGroup = true;
+                    break;
+            }
+        }
+        // note - two promotions
+        this.promote(parentSymbol);
+        symb = this.promoteNew(symbType, ctx, ctx.data_name());
+        symb.level = levelNum;
+        if (symb.parent instanceof IdentifierSymbol) {
+            symb.isGlobal = symb.parent.isGlobal;
+            symb.isExtern = symb.parent.isExtern;
+        }
+        if (symb.parent instanceof symbType) {
+            symb.arrayLvl = symb.parent.arrayLvl;
+        }
+        symb.usage = EDataUsage.DISPLAY;
+        return symb;
+    }
+
+    private usageFromCtx(usageCtx: Usage_definitionContext): EDataUsage {
+        let usageTypeNode = usageCtx.childCount > 0 ? usageCtx.getChild(0) : undefined;
+        if (usageTypeNode instanceof TerminalNode) {
+            switch(usageTypeNode.symbol.type) {
+                case cobolParser.BINARY: return EDataUsage.BINARY;
+                case cobolParser.BINARY_CHAR: return EDataUsage.BINARY_CHAR;
+                case cobolParser.BINARY_SHORT: return EDataUsage.BINARY_SHORT;
+                case cobolParser.BINARY_LONG: return EDataUsage.BINARY_LONG;
+                case cobolParser.BINARY_DOUBLE: return EDataUsage.BINARY_DOUBLE;
+                case cobolParser.COMPUTATIONAL: return EDataUsage.COMPUTATIONAL;
+                case cobolParser.COMPUTATIONAL_1: return EDataUsage.COMPUTATIONAL_1;
+                case cobolParser.COMPUTATIONAL_2: return EDataUsage.COMPUTATIONAL_2;
+                case cobolParser.COMPUTATIONAL_3: return EDataUsage.COMPUTATIONAL_3;
+                case cobolParser.COMPUTATIONAL_4: return EDataUsage.COMPUTATIONAL_4;
+                case cobolParser.COMPUTATIONAL_5: return EDataUsage.COMPUTATIONAL_5;
+                case cobolParser.COMPUTATIONAL_X: return EDataUsage.COMPUTATIONAL_X;
+                case cobolParser.COMP: return EDataUsage.COMP;
+                case cobolParser.COMP_1: return EDataUsage.COMP_1;
+                case cobolParser.COMP_2: return EDataUsage.COMP_2;
+                case cobolParser.COMP_3: return EDataUsage.COMP_3;
+                case cobolParser.COMP_4: return EDataUsage.COMP_4;
+                case cobolParser.COMP_5: return EDataUsage.COMP_5;
+                case cobolParser.COMP_X: return EDataUsage.COMP_X;
+                case cobolParser.DISPLAY: return EDataUsage.DISPLAY;
+                case cobolParser.FLOAT_SHORT: return EDataUsage.FLOAT_SHORT;
+                case cobolParser.FLOAT_LONG: return EDataUsage.FLOAT_LONG;
+                case cobolParser.FLOAT_EXTENDED: return EDataUsage.FLOAT_EXTENDED;
+                case cobolParser.INDEX: return EDataUsage.INDEX;
+                case cobolParser.PACKED_DECIMAL: return EDataUsage.PACKED_DECIMAL;
+                case cobolParser.POINTER: return EDataUsage.POINTER;
+                case cobolParser.POINTER_64: return EDataUsage.POINTER_64;
+            }
+        }
+        return EDataUsage.DISPLAY;
+    }
+
+    private finePicture(pictureStr: string): string {
+        let trimLeftPos = 0;
+        while(trimLeftPos < pictureStr.length && CobolDetailsListener._separator.includes(pictureStr[trimLeftPos])) {
+            ++trimLeftPos;
+        }
+        let trimRightPos = pictureStr.length - 1;
+        while(trimRightPos > 0 && CobolDetailsListener._separator.includes(pictureStr[trimRightPos])) {
+            --trimRightPos;
+        }
+        return pictureStr.substring(trimLeftPos, trimRightPos + 1);
     }
 }

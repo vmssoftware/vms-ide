@@ -108,6 +108,8 @@ import {
     ARGUMENT_NUMBER_Symbol,
     ARGUMENT_VALUE_Symbol,
     ENVIRONMENT_NAME_Symbol,
+    firstContainingSymbol,
+    ReportRecordSymbol,
 } from "./CobolSymbol";
 
 import {
@@ -522,10 +524,58 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         this.visitChildren(ctx);
     }
 
+    visitReport_group_data_description_entry(ctx: Report_group_data_description_entryContext) {
+        let reportRecordSymbol = this.helper.symbolTable.symbolWithContext(ctx);
+        if (reportRecordSymbol instanceof ReportRecordSymbol) {
+            if (reportRecordSymbol.level === undefined) {
+                this.helper.mark(ctx, localize("invalid.datarecord.level", "Invalid data record level"));
+                return;
+            }
+            if (reportRecordSymbol.isGroup) {
+                // format 2
+                if (reportRecordSymbol.level < 1 || reportRecordSymbol.level > 48) {
+                    this.helper.mark(ctx, localize("invalid.datarecord.level", "Invalid data record level"));
+                }
+            } else {
+                // format 3
+                if (reportRecordSymbol.level < 2 || reportRecordSymbol.level > 49) {
+                    this.helper.mark(ctx, localize("invalid.datarecord.level", "Invalid data record level"));
+                }
+            }
+        }
+        this.visitChildren(ctx);
+    }
+
     visitReport_group_data_description_clause(ctx: Report_group_data_description_clauseContext) {
         let reportGroupDescriptionCtx = firstContainingContext(ctx, Report_group_data_description_entryContext);
         if (reportGroupDescriptionCtx) {
             this.helper.testDuplicates(reportGroupDescriptionCtx, ctx);
+            let reportRecordSymbol = this.helper.symbolTable.symbolWithContext(reportGroupDescriptionCtx);
+            if (reportRecordSymbol instanceof ReportRecordSymbol) {
+                if (reportRecordSymbol.level === undefined) {
+                    return;
+                }
+                if (reportRecordSymbol.level !== 1) {
+                    // not a format 1
+                    let ctx01 = ctx.rep_type() || ctx.rep_next_group();
+                    if (ctx01) {
+                        this.helper.mark(ctx01, localize("only.for.01", "Allowed only on level 01"));
+                    }
+                }
+                if (reportRecordSymbol.isGroup) {
+                    // not a format 3
+                    let bannedCtx = ctx.black_when_zero() || 
+                        ctx.rep_column() || 
+                        ctx.rep_group_ind() ||
+                        ctx.justified() ||
+                        ctx.picture() ||
+                        ctx.sign_is() ||
+                        ctx.rep_source_sum_or_value();
+                    if (bannedCtx) {
+                        this.helper.mark(bannedCtx, localize("for.elementary.only", "Can appear only in elementary items"));
+                    }
+                }
+            }
         }
         this.visitChildren(ctx);
     }
@@ -677,21 +727,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                     }
                 }
             }
-            let elemenary = true;
-            for(let inner of dataRecordSymbol.children) {
-                if (inner instanceof DataRecordSymbol) {
-                    switch(inner.level) {
-                        case 66:
-                        case 77:
-                        case 88:
-                            break;
-                        default:
-                            elemenary = false;
-                            break;
-                    }
-                }
-            }
-            if (elemenary && !(dataRecordSymbol.level === 66 || dataRecordSymbol.level === 88)) {
+            if (!dataRecordSymbol.isGroup && !(dataRecordSymbol.level === 66 || dataRecordSymbol.level === 88)) {
                 // check picture for elementary
                 switch(dataRecordSymbol.usage) {
                     case EDataUsage.INDEX:
@@ -710,6 +746,12 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                         if (!dataRecordSymbol.picture) {
                             this.helper.mark(ctx, localize("picture.must.be", "There must be a PICTURE clause"));
                         }
+                }
+            }
+            let fileSymbol = firstContainingSymbol(dataRecordSymbol, FileSymbol);
+            if (fileSymbol !== undefined) {
+                if (fileSymbol.fileFormat === EFileFormat.Report) {
+                    this.helper.mark(ctx, localize("no.records.allowed.in.report", "No record description entries may follow the file description entry for a report file."));
                 }
             }
         }
@@ -800,31 +842,13 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                 if (dataRecordSymbol.level === 88 && !ctx.value_is()) {
                     this.helper.mark(ctx, localize("invalid.conditional", "Must not be in conditional"));
                 }
-                // test if item is elementary
-                let elemenary = true;
-                for(let inner of dataRecordSymbol.children) {
-                    if (inner instanceof DataRecordSymbol) {
-                        switch(inner.level) {
-                            case 66:
-                            case 77:
-                            case 88:
-                                break;
-                            default:
-                                elemenary = false;
-                                break;
-                        }
-                    }
-                }
-                if (!elemenary) {
-                    let bannedCtxs: (ParserRuleContext|TerminalNode|undefined)[] = [];
-                    bannedCtxs.push(ctx.synchronized_lr());
-                    bannedCtxs.push(ctx.black_when_zero());
-                    bannedCtxs.push(ctx.justified());
-                    bannedCtxs.push(ctx.picture());
-                    for(let bannedCtx of bannedCtxs) {
-                        if (bannedCtx) {
-                            this.helper.mark(bannedCtx, localize("for.elementary.only", "Can appear only in Data Description entries for elementary items"));
-                        }
+                if (dataRecordSymbol.isGroup) {
+                    let bannedCtx = ctx.synchronized_lr() ||
+                        ctx.black_when_zero() ||
+                        ctx.justified() ||
+                        ctx.picture();
+                    if (bannedCtx) {
+                        this.helper.mark(bannedCtx, localize("for.elementary.only", "Can appear only in elementary items"));
                     }
                 }
             }

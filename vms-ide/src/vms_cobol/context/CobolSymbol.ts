@@ -32,6 +32,7 @@ export enum ECobolSymbolKind {
     CURRENCY,
     File,
     Report,
+    Screen,
     DataRecord,
     Section,
     Paragraph,
@@ -94,7 +95,9 @@ export function symbolDescriptionFromEnum(kind: ECobolSymbolKind): string {
         case ECobolSymbolKind.File:
             return "File";
         case ECobolSymbolKind.Report:
-            return "report";
+            return "Report";
+        case ECobolSymbolKind.Screen:
+            return "Screen";
         case ECobolSymbolKind.DataRecord:
             return "Data record";
         case ECobolSymbolKind.Section:
@@ -148,6 +151,7 @@ export function translateSymbolKind(kind: ECobolSymbolKind): vscode.SymbolKind {
             return vscode.SymbolKind.Constant;
         case ECobolSymbolKind.File:
         case ECobolSymbolKind.Report:
+        case ECobolSymbolKind.Screen:
         case ECobolSymbolKind.DataRecord:
             return vscode.SymbolKind.Struct;
         case ECobolSymbolKind.Section:
@@ -195,6 +199,7 @@ export function translateCompletionKind(kind: ECobolSymbolKind): vscode.Completi
             return vscode.CompletionItemKind.Constant;
         case ECobolSymbolKind.File:
         case ECobolSymbolKind.Report:
+        case ECobolSymbolKind.Screen:
         case ECobolSymbolKind.DataRecord:
             return vscode.CompletionItemKind.Struct;
         case ECobolSymbolKind.Section:
@@ -263,6 +268,8 @@ export function getSymbolFromKind(kind: ECobolSymbolKind): typeof Symbol {
             return FileSymbol;
         case ECobolSymbolKind.Report:
             return ReportSymbol;
+        case ECobolSymbolKind.Screen:
+            return ScreenRecordSymbol;
         case ECobolSymbolKind.DataRecord:
             return DataRecordSymbol;
         case ECobolSymbolKind.Section:
@@ -363,6 +370,9 @@ export function getKindFromSymbol(symbol: Symbol): ECobolSymbolKind {
     if (symbol instanceof ReportSymbol) {
         return ECobolSymbolKind.Report;
     }
+    if (symbol instanceof ScreenRecordSymbol) {
+        return ECobolSymbolKind.Screen;
+    }
     if (symbol instanceof SpecialRegisterSymbol) {
         return ECobolSymbolKind.SpecialRegister;
     }
@@ -444,8 +454,10 @@ export class DataRecordSymbol extends IdentifierSymbol {
     public usage = EDataUsage.DISPLAY;
     public requireQualification?: boolean;
     public arrayLvl?: number;
+    public isGroup?: boolean;
 }
-export class ReportGroupSymbol extends DataRecordSymbol { }
+export class ReportRecordSymbol extends DataRecordSymbol { }
+export class ScreenRecordSymbol extends DataRecordSymbol { }
 export class SegKeySymbol extends Symbol { }
 export class SectionSymbol extends IdentifierSymbol {
     public segment?: number;
@@ -461,6 +473,16 @@ export class BOOL_Symbol extends Symbol { }
 //**************************************************/
 //**************************************************/
 //**************************************************/
+export function firstContainingSymbol<T extends Symbol>(symbol: Symbol | undefined, t: new (...args: any[]) => T) {
+    let retSymbol = symbol;
+    while(retSymbol !== undefined) {
+        if (retSymbol instanceof t) {
+            return retSymbol;
+        }
+        retSymbol = retSymbol.parent;
+    }
+    return undefined;
+}
 
 export enum EFileFormat {
     Sequentional,
