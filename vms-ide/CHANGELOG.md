@@ -1,5 +1,9 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.3.4
+* Handle more cases in COBOL Light-weight IntelliSense.
+* Parse and skip EXEC SQL statements in COBOL.
+
 ## 1.3.3
 * Fix time of uploaded files after 'Quick uploading'.
 
