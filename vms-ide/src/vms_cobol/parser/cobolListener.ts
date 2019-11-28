@@ -251,6 +251,7 @@ import { File_sectionContext } from "./cobolParser";
 import { File_descriptionContext } from "./cobolParser";
 import { Sort_merge_file_descriptionContext } from "./cobolParser";
 import { Working_storage_sectionContext } from "./cobolParser";
+import { Working_storage_entryContext } from "./cobolParser";
 import { Linkage_sectionContext } from "./cobolParser";
 import { Report_sectionContext } from "./cobolParser";
 import { Report_descriptionContext } from "./cobolParser";
@@ -3235,6 +3236,17 @@ export interface cobolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitWorking_storage_section?: (ctx: Working_storage_sectionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `cobolParser.working_storage_entry`.
+	 * @param ctx the parse tree
+	 */
+	enterWorking_storage_entry?: (ctx: Working_storage_entryContext) => void;
+	/**
+	 * Exit a parse tree produced by `cobolParser.working_storage_entry`.
+	 * @param ctx the parse tree
+	 */
+	exitWorking_storage_entry?: (ctx: Working_storage_entryContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.linkage_section`.

@@ -75,6 +75,7 @@ import {
     Out_destContext,
     Arg_env_acceptContext,
     Alt_record_keyContext,
+    Other_data_itemContext,
 } from "../parser/cobolParser";
 
 import { CobolAnalisisHelper } from "./CobolAnalisisHelpers";
@@ -886,6 +887,11 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                 }
             }
         }
+    }
+
+    visitOther_data_item(ctx: Other_data_itemContext) {
+        this.helper.verifyName(ctx, true, undefined, [DataRecordSymbol]);
+        //this.visitChildren(ctx);
     }
 
     visitData_description_clause(ctx: Data_description_clauseContext) {

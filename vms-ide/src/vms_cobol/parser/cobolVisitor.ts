@@ -251,6 +251,7 @@ import { File_sectionContext } from "./cobolParser";
 import { File_descriptionContext } from "./cobolParser";
 import { Sort_merge_file_descriptionContext } from "./cobolParser";
 import { Working_storage_sectionContext } from "./cobolParser";
+import { Working_storage_entryContext } from "./cobolParser";
 import { Linkage_sectionContext } from "./cobolParser";
 import { Report_sectionContext } from "./cobolParser";
 import { Report_descriptionContext } from "./cobolParser";
@@ -2246,6 +2247,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitWorking_storage_section?: (ctx: Working_storage_sectionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.working_storage_entry`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitWorking_storage_entry?: (ctx: Working_storage_entryContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.linkage_section`.

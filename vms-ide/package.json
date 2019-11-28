@@ -130,7 +130,8 @@
                 "id": "vms-cobol",
                 "extensions": [
                     ".cob",
-                    ".cbl"
+                    ".cbl",
+                    ".sco"
                 ],
                 "configuration": "cobol.language-configuration.json"
             },

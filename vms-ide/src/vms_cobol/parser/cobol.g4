@@ -167,7 +167,7 @@ declaratives_section
 paragraph
    : //{this.inputStream.LT(1).charPositionInLine < 4}?
      paragraph_name DOT_ replace_statement*
-     (statement+ DOT_ replace_statement*)*
+     ((statement | exec_sql_statement)+ DOT_ replace_statement*)*
    ;
 
 paragraph_name
@@ -256,12 +256,11 @@ statement
       | unstring_statement
       | write_statement
       | record_statement
-      | exec_sql_statement
      )
    ;
 
 exec_sql_statement
-   : EXEC SQL .*? END_EXEC DOT_?
+   : EXEC SQL (~END_EXEC)* END_EXEC DOT_?
    ;
 
 record_name
@@ -499,14 +498,14 @@ set_val
 search_statement
    : SEARCH src_table (VARYING search_pointer)?
      at_end?
-     ((WHEN logic_expression statement+)+ END_SEARCH
-     |(WHEN logic_expression (statement+ END_SEARCH?|NEXT SENTENCE))+
+     ((WHEN logic_expression (statement | exec_sql_statement)+)+ END_SEARCH
+     |(WHEN logic_expression ((statement | exec_sql_statement)+ END_SEARCH?|NEXT SENTENCE))+
      )
    | SEARCH ALL src_table
      at_end?
      WHEN search_condition
      (AND search_condition)*
-     (statement+ END_SEARCH?|NEXT SENTENCE)
+     ((statement | exec_sql_statement)+ END_SEARCH?|NEXT SENTENCE)
    ;
 
 search_condition
@@ -826,8 +825,8 @@ move_statement
    ;
 
 if_statement
-   : IF logic_expression THEN? (statement+|NEXT SENTENCE)
-     (ELSE (statement+|NEXT SENTENCE))?
+   : IF logic_expression THEN? ((statement | exec_sql_statement)+|NEXT SENTENCE)
+     (ELSE ((statement | exec_sql_statement)+|NEXT SENTENCE))?
      END_IF?
    ;
 
@@ -858,8 +857,8 @@ proc_name
 
 evaluate_statement
    : EVALUATE subj_item (ALSO? subj_item)*
-     (WHEN when_condition (ALSO? when_condition)* statement*)+
-     (WHEN OTHER statement*)?
+     (WHEN when_condition (ALSO? when_condition)* (statement | exec_sql_statement)*)+
+     (WHEN OTHER (statement | exec_sql_statement)*)?
      END_EVALUATE?
    ;
 
@@ -1289,27 +1288,27 @@ input_source
    ;
 
 at_end
-   : AT? END statement*
+   : AT? END (statement | exec_sql_statement)*
    ;
 
 on_exception
-   : ON? EXCEPTION statement*
+   : ON? EXCEPTION (statement | exec_sql_statement)*
    ;
 
 on_size
-   : ON? SIZE ERROR statement*
+   : ON? SIZE ERROR (statement | exec_sql_statement)*
    ;
 
 on_overflow
-   : ON? OVERFLOW statement*
+   : ON? OVERFLOW (statement | exec_sql_statement)*
    ;
 
 at_eop
-   : AT? (END_OF_PAGE|EOP) statement*
+   : AT? (END_OF_PAGE|EOP) (statement | exec_sql_statement)*
    ;
 
 invalid_key
-   : INVALID KEY? statement*
+   : INVALID KEY? (statement | exec_sql_statement)*
    ;
 
 file_section
@@ -1327,7 +1326,12 @@ sort_merge_file_description
 
 working_storage_section
    : WORKING_STORAGE SECTION DOT_ replace_statement*
-     (data_description_entry | exec_sql_statement)*
+     working_storage_entry*
+   ;
+
+working_storage_entry
+   : data_description_entry
+   | exec_sql_statement
    ;
 
 linkage_section

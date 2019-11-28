@@ -81,7 +81,7 @@ fragment Z
    ;
 
 fragment SPACE_
-   : [ \t]
+   : [ \t\u000B\u000C]
    ;
 
 fragment NL

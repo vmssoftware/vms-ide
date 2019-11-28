@@ -45,6 +45,8 @@ import {
     Usage_definitionContext,
     Screen_description_clauseContext,
     Type_is_definitionContext,
+    Exec_sql_statementContext,
+    Working_storage_sectionContext,
 } from '../parser/cobolParser';
 
 import {
@@ -314,6 +316,22 @@ export class CobolDetailsListener implements cobolListener {
                 this.currentSymbol.isGlobal = true;
             }
         }
+    }
+
+    enterExec_sql_statement(ctx: Exec_sql_statementContext) {
+        //
+    }
+
+    exitExec_sql_statement(ctx: Exec_sql_statementContext) {
+        //
+    }
+
+    enterWorking_storage_section(ctx: Working_storage_sectionContext) {
+
+    }
+
+    exitWorking_storage_section(ctx: Working_storage_sectionContext) {
+
     }
 
     enterData_description_entry(ctx: Data_description_entryContext) {
