@@ -34,7 +34,6 @@
         },
         {
             "type": "npm",
-            "script": "Cobol.antlr4ts",
             "script": "Fortran.antlr4tsLex",
             "problemMatcher": []
         },
@@ -55,8 +54,17 @@
         },
         {
             "type": "npm",
-            "script": "CobolCopy.antlr4ts",
             "script": "Fortran.antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "Basic.antlr4tsLex",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "Basic.antlr4ts",
             "problemMatcher": []
         }
     ]
