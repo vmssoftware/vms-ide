@@ -1598,18 +1598,46 @@ column_number
    ;
 
 type_is_definition
+   : rep_type_rh
+   | rep_type_ph
+   | rep_type_ch
+   | rep_type_de
+   | rep_type_cf
+   | rep_type_pf
+   | rep_type_rf
+   ;
+
+rep_type_pf
+   : PAGE FOOTING
+   | PF
+   ;
+
+rep_type_rf
+   : REPORT FOOTING
+   | RF
+   ;
+
+rep_type_de
+   : DETAIL
+   | DE
+   ;
+
+rep_type_ch
+   : (CONTROL HEADING | CH) type_control_name
+   ;
+
+rep_type_cf
+   : (CONTROL FOOTING | CF) type_control_name
+   ;
+
+rep_type_rh
    : REPORT HEADING
    | RH
-   | PAGE HEADING
+   ;
+
+rep_type_ph
+   : PAGE HEADING
    | PH
-   | (CONTROL HEADING|CH) type_control_name
-   | DETAIL
-   | DE
-   | (CONTROL FOOTING|CF) type_control_name
-   | PAGE FOOTING
-   | PF
-   | REPORT FOOTING
-   | RF
    ;
 
 type_control_name

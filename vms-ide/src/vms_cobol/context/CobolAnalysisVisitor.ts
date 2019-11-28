@@ -82,7 +82,8 @@ import { CobolAnalisisHelper } from "./CobolAnalisisHelpers";
 import {
     firstContainingContext,
     findChildInA,
-    unifyCobolName
+    unifyCobolName,
+    mostContainingContext
 } from "../../common/parser/Helpers";
 
 import {
@@ -110,6 +111,9 @@ import {
     ENVIRONMENT_NAME_Symbol,
     firstContainingSymbol,
     ReportRecordSymbol,
+    EReportType,
+    ScreenRecordSymbol,
+    EScreenType,
 } from "./CobolSymbol";
 
 import {
@@ -575,6 +579,79 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                         this.helper.mark(bannedCtx, localize("for.elementary.only", "Can appear only in elementary items"));
                     }
                 }
+                let repLineNum = ctx.rep_line_num();
+                if (repLineNum) {
+                    reportRecordSymbol.hasLineNumber = true;
+                    let parent = reportRecordSymbol.parent;
+                    while(parent !== undefined) {
+                        if (parent instanceof ReportRecordSymbol) {
+                            if (parent.hasLineNumber) {
+                                this.helper.mark(repLineNum, localize("already.has.line.num", "Already has a LINE NUMBER clause"));
+                            }
+                        } else {
+                            break;
+                        }
+                        parent = parent.parent;
+                    }
+                }
+                let repColumn = ctx.rep_column();
+                if (repColumn && !reportRecordSymbol.hasLineNumber) {
+                    let foundLineNum = false;
+                    let parent = reportRecordSymbol.parent;
+                    while(parent !== undefined) {
+                        if (parent instanceof ReportRecordSymbol) {
+                            if (parent.hasLineNumber) {
+                                foundLineNum = true;
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                        parent = parent.parent;
+                    }
+                    if (!foundLineNum) {
+                        this.helper.mark(repColumn, localize("must.have.line.num", "Must have corresponding LINE NUMBER clause"));
+                    }
+                }
+                let sumOrValCtx = ctx.rep_source_sum_or_value();
+                if (sumOrValCtx) {
+                    let valCtx = sumOrValCtx.rep_value_is();
+                    if (valCtx && ctx.parent instanceof Report_group_data_description_entryContext) {
+                        let foundColumn = false;
+                        for (let clause of ctx.parent.report_group_data_description_clause()) {
+                            if (clause.rep_column()) {
+                                foundColumn = true;
+                                break;
+                            }
+                        }
+                        if (!foundColumn) {
+                            this.helper.mark(valCtx, localize("must.have.column", "Must also have COLUMN NUMBER clause"));
+                        }
+                    }
+                }
+                let beginGroupCtx = mostContainingContext(ctx, Report_group_data_description_clauseContext);
+                if (beginGroupCtx) {
+                    let beginGroupSymbol = this.helper.symbolTable.symbolWithContext(beginGroupCtx);
+                    if (beginGroupSymbol instanceof ReportRecordSymbol) {
+                        let groupIndicate = ctx.rep_group_ind();
+                        if (groupIndicate && beginGroupSymbol.reportType !== EReportType.DE ) {
+                            this.helper.mark(groupIndicate, localize("for.detail.only", "Can appear only in a DETAIL report group"));
+                        }
+                        if (sumOrValCtx && sumOrValCtx.rep_sum() && beginGroupSymbol.reportType !== EReportType.CF ) {
+                            this.helper.mark(sumOrValCtx, localize("for.cf.only", "Can appear only in a CONTROL FOOTING report group"));
+                        }
+                    }
+                }
+            }
+        }
+        this.visitChildren(ctx);
+    }
+
+    visitScreen_description_entry(ctx: Screen_description_entryContext) {
+        let screenSymbol = this.helper.symbolTable.symbolWithContext(ctx);
+        if (screenSymbol instanceof ScreenRecordSymbol) {
+            if (screenSymbol.level === 1 && !screenSymbol.name) {
+                this.helper.mark(ctx, localize("mast.have.screen.name", "Each level 01 item must have a screen name"));
             }
         }
         this.visitChildren(ctx);
@@ -584,6 +661,34 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         let screenDescriptionCtx = firstContainingContext(ctx, Screen_description_entryContext);
         if (screenDescriptionCtx) {
             this.helper.testDuplicates(screenDescriptionCtx, ctx);
+            let screenSymbol = this.helper.symbolTable.symbolWithContext(ctx);
+            if (screenSymbol instanceof ScreenRecordSymbol) {
+                if (screenSymbol.screenType === EScreenType.group) {
+                    let blank = ctx.scr_blank();
+                    if (blank && blank.LINE()) {
+                        this.helper.mark(ctx, localize("only.blank.screen", "Only BLANK SCREEN allowed in group"));
+                    }
+                }
+                let bannedInVal = ctx.scr_auto() ||
+                    ctx.scr_secure() ||
+                    ctx.scr_required() ||
+                    ctx.scr_full() ||
+                    ctx.usage_display();
+                if (bannedInVal && screenSymbol.screenType === EScreenType.value) {
+                    this.helper.mark(bannedInVal, localize("does.not.allowed.here", "Does not allowed here"));
+                }
+                let bannedInGroup = ctx.scr_bell() ||
+                    ctx.scr_blink() ||
+                    ctx.scr_erase() ||
+                    ctx.scr_light() ||
+                    ctx.scr_reverse() ||
+                    ctx.scr_underline() ||
+                    ctx.scr_line() ||
+                    ctx.scr_column();
+                if (bannedInGroup && screenSymbol.screenType === EScreenType.group) {
+                    this.helper.mark(bannedInGroup, localize("does.not.allowed.here", "Does not allowed here"));
+                }
+            }
         }
         this.visitChildren(ctx);
     }

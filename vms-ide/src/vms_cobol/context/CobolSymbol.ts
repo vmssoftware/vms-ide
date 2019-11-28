@@ -32,7 +32,8 @@ export enum ECobolSymbolKind {
     CURRENCY,
     File,
     Report,
-    Screen,
+    ReportRecord,
+    ScreenRecord,
     DataRecord,
     Section,
     Paragraph,
@@ -96,8 +97,10 @@ export function symbolDescriptionFromEnum(kind: ECobolSymbolKind): string {
             return "File";
         case ECobolSymbolKind.Report:
             return "Report";
-        case ECobolSymbolKind.Screen:
-            return "Screen";
+        case ECobolSymbolKind.ScreenRecord:
+            return "Screen record";
+        case ECobolSymbolKind.ReportRecord:
+            return "Report record";
         case ECobolSymbolKind.DataRecord:
             return "Data record";
         case ECobolSymbolKind.Section:
@@ -151,7 +154,8 @@ export function translateSymbolKind(kind: ECobolSymbolKind): vscode.SymbolKind {
             return vscode.SymbolKind.Constant;
         case ECobolSymbolKind.File:
         case ECobolSymbolKind.Report:
-        case ECobolSymbolKind.Screen:
+        case ECobolSymbolKind.ScreenRecord:
+        case ECobolSymbolKind.ReportRecord:
         case ECobolSymbolKind.DataRecord:
             return vscode.SymbolKind.Struct;
         case ECobolSymbolKind.Section:
@@ -199,7 +203,8 @@ export function translateCompletionKind(kind: ECobolSymbolKind): vscode.Completi
             return vscode.CompletionItemKind.Constant;
         case ECobolSymbolKind.File:
         case ECobolSymbolKind.Report:
-        case ECobolSymbolKind.Screen:
+        case ECobolSymbolKind.ScreenRecord:
+        case ECobolSymbolKind.ReportRecord:
         case ECobolSymbolKind.DataRecord:
             return vscode.CompletionItemKind.Struct;
         case ECobolSymbolKind.Section:
@@ -268,8 +273,10 @@ export function getSymbolFromKind(kind: ECobolSymbolKind): typeof Symbol {
             return FileSymbol;
         case ECobolSymbolKind.Report:
             return ReportSymbol;
-        case ECobolSymbolKind.Screen:
+        case ECobolSymbolKind.ScreenRecord:
             return ScreenRecordSymbol;
+        case ECobolSymbolKind.ReportRecord:
+            return ReportRecordSymbol;
         case ECobolSymbolKind.DataRecord:
             return DataRecordSymbol;
         case ECobolSymbolKind.Section:
@@ -371,7 +378,10 @@ export function getKindFromSymbol(symbol: Symbol): ECobolSymbolKind {
         return ECobolSymbolKind.Report;
     }
     if (symbol instanceof ScreenRecordSymbol) {
-        return ECobolSymbolKind.Screen;
+        return ECobolSymbolKind.ScreenRecord;
+    }
+    if (symbol instanceof ReportRecordSymbol) {
+        return ECobolSymbolKind.ReportRecord;
     }
     if (symbol instanceof SpecialRegisterSymbol) {
         return ECobolSymbolKind.SpecialRegister;
@@ -451,13 +461,18 @@ export class ReportSymbol extends IdentifierSymbol {
 export class DataRecordSymbol extends IdentifierSymbol {
     public level?: number;
     public picture?: string;
-    public usage = EDataUsage.DISPLAY;
+    public usage: EDataUsage = EDataUsage.DISPLAY;
     public requireQualification?: boolean;
     public arrayLvl?: number;
     public isGroup?: boolean;
 }
-export class ReportRecordSymbol extends DataRecordSymbol { }
-export class ScreenRecordSymbol extends DataRecordSymbol { }
+export class ReportRecordSymbol extends DataRecordSymbol { 
+    public reportType?: EReportType;
+    public hasLineNumber?: boolean;
+}
+export class ScreenRecordSymbol extends DataRecordSymbol {
+    public screenType?: EScreenType;
+}
 export class SegKeySymbol extends Symbol { }
 export class SectionSymbol extends IdentifierSymbol {
     public segment?: number;
@@ -490,6 +505,22 @@ export enum EFileFormat {
     Relative,
     Indexed,
     Report
+}
+
+export enum EReportType {
+    RH,
+    PH,
+    CH,
+    DE,
+    CF,
+    PF,
+    RF,
+}
+
+export enum EScreenType {
+    group,
+    value,
+    picture,
 }
 
 export function functionDetails(definition: IFunction): string | undefined {

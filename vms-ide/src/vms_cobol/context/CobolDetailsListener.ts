@@ -44,6 +44,7 @@ import {
     Report_description_entryContext,
     Usage_definitionContext,
     Screen_description_clauseContext,
+    Type_is_definitionContext,
 } from '../parser/cobolParser';
 
 import {
@@ -81,6 +82,8 @@ import {
     SegKeySymbol,
     firstContainingSymbol,
     ScreenRecordSymbol,
+    EReportType,
+    EScreenType,
 } from './CobolSymbol';
 
 import {
@@ -356,6 +359,10 @@ export class CobolDetailsListener implements cobolListener {
                 this.currentSymbol.picture = this.finePicture(pictureCtx.character_string().text);
                 return;
             }
+            let typeCtx = ctx.rep_type();
+            if (typeCtx) {
+                this.currentSymbol.reportType = this.reportTypeFromCtx(typeCtx.type_is_definition());
+            }
         }
     }
 
@@ -368,7 +375,10 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterScreen_description_entry(ctx: Screen_description_entryContext) {
-        this.promoteDataEntry(this.currentSymbol, ctx, ScreenRecordSymbol);
+        let screenSymbol = this.promoteDataEntry(this.currentSymbol, ctx, ScreenRecordSymbol);
+        if (screenSymbol) {
+            screenSymbol.screenType = EScreenType.group;
+        }
     }
 
     exitScreen_description_entry(ctx: Screen_description_entryContext) {
@@ -380,8 +390,12 @@ export class CobolDetailsListener implements cobolListener {
             let pictureCtx = ctx.scr_picture();
             if (pictureCtx) {
                 this.currentSymbol.picture = this.finePicture(pictureCtx.picture().character_string().text);
+                this.currentSymbol.screenType = EScreenType.picture;
                 return;
-            } 
+            }
+            if (ctx.scr_value()) {
+                this.currentSymbol.screenType = EScreenType.value;
+            }
         }
     }
 
@@ -568,6 +582,19 @@ export class CobolDetailsListener implements cobolListener {
             }
         }
         return EDataUsage.DISPLAY;
+    }
+
+    private reportTypeFromCtx(typeCtx: Type_is_definitionContext): EReportType {
+        switch(true) {
+            case typeCtx.rep_type_ph() !== undefined: return EReportType.PH;
+            case typeCtx.rep_type_pf() !== undefined: return EReportType.PF;
+            case typeCtx.rep_type_ch() !== undefined: return EReportType.CH;
+            case typeCtx.rep_type_cf() !== undefined: return EReportType.CF;
+            case typeCtx.rep_type_de() !== undefined: return EReportType.DE;
+            case typeCtx.rep_type_rh() !== undefined: return EReportType.RH;
+            case typeCtx.rep_type_rf() !== undefined: return EReportType.RF;
+        }
+        return EReportType.RH;
     }
 
     private finePicture(pictureStr: string): string {

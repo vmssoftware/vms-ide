@@ -376,12 +376,14 @@ export class CobolSymbolTable extends SymbolTable {
 
         let kind = getKindFromSymbol(symbol);
         let name = this.getSymbolPath(symbol, CobolSymbolTable);
-        if (symbol instanceof DataRecordSymbol && symbol.usage) {
-            name += ": " + EDataUsage[symbol.usage].replace(/_/g, "-");
+        if (symbol instanceof DataRecordSymbol) {
+            if (!symbol.isGroup) {
+                name += ": " + EDataUsage[symbol.usage].replace(/_/g, "-");
+            }
             if (symbol.arrayLvl !== undefined) {
-                name += "[ I1";
+                name += " [ i1";
                 for (let i = 2; i <= symbol.arrayLvl; ++i) {
-                    name += ", I" + i.toString();
+                    name += ", i" + i.toString();
                 }
                 name += " ]";
             }

@@ -305,6 +305,13 @@ import { Sum_nameContext } from "./cobolParser";
 import { Source_nameContext } from "./cobolParser";
 import { Column_numberContext } from "./cobolParser";
 import { Type_is_definitionContext } from "./cobolParser";
+import { Rep_type_pfContext } from "./cobolParser";
+import { Rep_type_rfContext } from "./cobolParser";
+import { Rep_type_deContext } from "./cobolParser";
+import { Rep_type_chContext } from "./cobolParser";
+import { Rep_type_cfContext } from "./cobolParser";
+import { Rep_type_rhContext } from "./cobolParser";
+import { Rep_type_phContext } from "./cobolParser";
 import { Type_control_nameContext } from "./cobolParser";
 import { Next_group_definitionContext } from "./cobolParser";
 import { Line_num_definitionContext } from "./cobolParser";
@@ -2617,6 +2624,55 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitType_is_definition?: (ctx: Type_is_definitionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_pf`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_pf?: (ctx: Rep_type_pfContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_rf`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_rf?: (ctx: Rep_type_rfContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_de`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_de?: (ctx: Rep_type_deContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_ch`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_ch?: (ctx: Rep_type_chContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_cf`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_cf?: (ctx: Rep_type_cfContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_rh`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_rh?: (ctx: Rep_type_rhContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_ph`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_ph?: (ctx: Rep_type_phContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.type_control_name`.
