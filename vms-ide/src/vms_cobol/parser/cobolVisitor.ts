@@ -40,7 +40,7 @@ import { Section_nameContext } from "./cobolParser";
 import { UsingContext } from "./cobolParser";
 import { GivingContext } from "./cobolParser";
 import { StatementContext } from "./cobolParser";
-import { Unknown_statementContext } from "./cobolParser";
+import { Exec_sql_statementContext } from "./cobolParser";
 import { Record_nameContext } from "./cobolParser";
 import { Library_nameContext } from "./cobolParser";
 import { Text_nameContext } from "./cobolParser";
@@ -771,11 +771,11 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitStatement?: (ctx: StatementContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.unknown_statement`.
+	 * Visit a parse tree produced by `cobolParser.exec_sql_statement`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitUnknown_statement?: (ctx: Unknown_statementContext) => Result;
+	visitExec_sql_statement?: (ctx: Exec_sql_statementContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.record_name`.

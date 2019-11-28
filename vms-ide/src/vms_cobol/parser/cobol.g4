@@ -256,11 +256,12 @@ statement
       | unstring_statement
       | write_statement
       | record_statement
+      | exec_sql_statement
      )
    ;
 
-unknown_statement
-   : word_in_area_B .*? DOT_
+exec_sql_statement
+   : EXEC SQL .*? END_EXEC DOT_?
    ;
 
 record_name
@@ -1326,7 +1327,7 @@ sort_merge_file_description
 
 working_storage_section
    : WORKING_STORAGE SECTION DOT_ replace_statement*
-     data_description_entry*
+     (data_description_entry | exec_sql_statement)*
    ;
 
 linkage_section

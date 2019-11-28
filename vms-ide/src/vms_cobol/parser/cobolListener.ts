@@ -40,7 +40,7 @@ import { Section_nameContext } from "./cobolParser";
 import { UsingContext } from "./cobolParser";
 import { GivingContext } from "./cobolParser";
 import { StatementContext } from "./cobolParser";
-import { Unknown_statementContext } from "./cobolParser";
+import { Exec_sql_statementContext } from "./cobolParser";
 import { Record_nameContext } from "./cobolParser";
 import { Library_nameContext } from "./cobolParser";
 import { Text_nameContext } from "./cobolParser";
@@ -916,15 +916,15 @@ export interface cobolListener extends ParseTreeListener {
 	exitStatement?: (ctx: StatementContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `cobolParser.unknown_statement`.
+	 * Enter a parse tree produced by `cobolParser.exec_sql_statement`.
 	 * @param ctx the parse tree
 	 */
-	enterUnknown_statement?: (ctx: Unknown_statementContext) => void;
+	enterExec_sql_statement?: (ctx: Exec_sql_statementContext) => void;
 	/**
-	 * Exit a parse tree produced by `cobolParser.unknown_statement`.
+	 * Exit a parse tree produced by `cobolParser.exec_sql_statement`.
 	 * @param ctx the parse tree
 	 */
-	exitUnknown_statement?: (ctx: Unknown_statementContext) => void;
+	exitExec_sql_statement?: (ctx: Exec_sql_statementContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `cobolParser.record_name`.

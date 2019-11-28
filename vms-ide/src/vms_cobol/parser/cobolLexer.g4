@@ -527,6 +527,10 @@ ZERO                    : Z E R O;
 ZEROES                  : Z E R O E S;
 ZEROS                   : Z E R O S;
 
+EXEC                    : E X E C;
+SQL                     : S Q L;
+END_EXEC                : E N D '-' E X E C;
+
 PIC                     : P I C -> pushMode(pictureMode);
 PICTURE                 : P I C T U R E -> pushMode(pictureMode);
 
