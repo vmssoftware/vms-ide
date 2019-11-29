@@ -37,7 +37,7 @@ export async function activate(context: ExtensionContext)
 
     await reparseProject();
 
-    context.subscriptions. push(languages.registerHoverProvider(Basic, new BasicHoverProvider(backend)));
+    context.subscriptions.push(languages.registerHoverProvider(Basic, new BasicHoverProvider(backend)));
     context.subscriptions.push(languages.registerDefinitionProvider(Basic, new BasicDefinitionProvider(backend)));    
     context.subscriptions.push(languages.registerCompletionItemProvider(Basic, new BasicCompletionItemProvider(backend),
         ".", " ", "<", ">", "=", "("));

@@ -38,7 +38,6 @@ import { LexExpContext } from "./BasicParser";
 import { EolContext } from "./BasicParser";
 import { EqualsExpnContext } from "./BasicParser";
 import { LabelContext } from "./BasicParser";
-import { LabelNameContext } from "./BasicParser";
 import { ProgramContext } from "./BasicParser";
 import { ProgramUnitContext } from "./BasicParser";
 import { MainProgramContext } from "./BasicParser";
@@ -623,17 +622,6 @@ export interface BasicParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitLabel?: (ctx: LabelContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `BasicParser.labelName`.
-	 * @param ctx the parse tree
-	 */
-	enterLabelName?: (ctx: LabelNameContext) => void;
-	/**
-	 * Exit a parse tree produced by `BasicParser.labelName`.
-	 * @param ctx the parse tree
-	 */
-	exitLabelName?: (ctx: LabelNameContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `BasicParser.program`.

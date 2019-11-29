@@ -38,9 +38,8 @@ import {
     ConstantDeclarationContext,
     VariableDeclarationContext,
     VariableDescriptionContext,
-    // ComponentDeclContext,
-    // StructureBlockContext,
-    // RecordBlockContext,
+    RecordDeclarationContext,
+    GroupClauseContext,
     DeclarationContext,
     SubroutineDeclarationContext,
     SubroutineHeaderContext,
@@ -251,101 +250,47 @@ export class DetailsListener implements BasicParserListener
         }
     }
 
-    // enterComponentDecl(ctx: ComponentDeclContext) 
-    // {
-    //     if(ctx.componentName())
-    //     {
-    //         let obj = ctx.componentName();
+    enterRecordDeclaration(ctx: RecordDeclarationContext) 
+    {
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeBlockDclSymbol, undefined, ctx.text);
+        this.currentSymbol.context = ctx;
 
-    //         if(obj)
-    //         {
-    //             let ident = getIdentifier(obj.identifier());
+        let blocks = ctx.recName();
 
-    //             if(ident)
-    //             {
-    //                 this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, ident.text);
-    //                 this.currentSymbol.context = ident;
-    //             }
-    //         }
-    //     }
-    //     else if(ctx.pointerAssignmentItem())
-    //     {
-    //         let objs = ctx.pointerAssignmentItem()!.name();
+        for(let item of blocks)
+        {
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, item.identifier().IDENTIFIER().text);
+            this.currentSymbol.context = item.identifier().IDENTIFIER();
+        }
+    }
+    exitRecordDeclaration(ctx: RecordDeclarationContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
 
-    //         for(let obj of objs)
-    //         {
-    //             let ident = getIdentifier(obj.identifier());
+    enterGroupClause(ctx: GroupClauseContext) 
+    {
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeBlockDclSymbol, undefined, ctx.text);
+        this.currentSymbol.context = ctx;
 
-    //             if(ident)
-    //             {
-    //                 this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, ident.text);
-    //                 this.currentSymbol.context = ident;
-    //             }
-    //         }
-    //     }
-    // }
-    // exitComponentDecl(ctx: ComponentDeclContext) 
-    // {
-    //     if (this.currentSymbol) 
-    //     {
-    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
-    //     }
-    // }
+        let blocks = ctx.groupName();
 
-    // enterRecordBlock(ctx: RecordBlockContext) 
-    // {
-    //     this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeBlockDclSymbol, undefined, ctx.text);
-    //     this.currentSymbol.context = ctx;
-
-    //     if(ctx.recordStatement().genericName())
-    //     {
-    //         let obj = ctx.recordStatement().genericName();
-
-    //         if(obj)
-    //         {
-    //             let ident = getIdentifier(obj.identifier());
-
-    //             if(ident)
-    //             {
-    //                 this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, ident.text);
-    //                 this.currentSymbol.context = ident;
-    //             }
-    //         }
-    //     }
-
-    //     let objs = ctx.recordStatement().typeStatementName();
-
-    //     for(let obj of objs)
-    //     {
-    //         if(obj.identifier())
-    //         {
-    //             let ident = getIdentifier(obj.identifier());
-
-    //             if(ident)
-    //             {
-    //                 this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, ident.text);
-    //                 this.currentSymbol.context = ident;
-    //             }
-    //         }
-    //         else if(obj.arrayDeclarator())
-    //         {
-    //             let ident = getIdentifier(obj.arrayDeclarator()!.variableName().identifier());
-
-    //             if(ident)
-    //             {
-    //                 this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, ident.text);
-    //                 this.currentSymbol.context = ident;
-    //             }
-    //         }
-    //     }
-    // }
-    // exitRecordBlock(ctx: RecordBlockContext) 
-    // {
-    //     if (this.currentSymbol) 
-    //     {
-    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
-    //     }
-    // }
+        for(let item of blocks)
+        {
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, item.identifier().IDENTIFIER().text);
+            this.currentSymbol.context = item.identifier().IDENTIFIER();
+        }
+    }
+    exitGroupClause(ctx: GroupClauseContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
 
     enterDeclaration(ctx: DeclarationContext) 
     {

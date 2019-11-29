@@ -168,6 +168,7 @@ programUnit
    : mainProgram eol
    | subprogramDeclaration eol
    | directive eol
+   | declaration eol
    | eol
    ;
 

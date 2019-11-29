@@ -1421,9 +1421,9 @@ IN
 INDEX
    : I N D E X
    ;
-LINES
-   : L I N E S
-   ;
+// LINES
+//    : L I N E S
+//    ;
 METAFILE
    : M E T A F I L E
    ;
@@ -1505,11 +1505,16 @@ NL
    ;
 
 COMMENT_2
-   : '!' ~ (["\r\n])* '!' -> skip
+   : '!' ~ ([\r\n])* '!' -> skip
    ;
 
 CONTINUATION
    : COMMENT? ([\t ])* '&' ([\t ])* '\n' ([\t ])* -> skip
+   ;
+
+COMMENT
+   : '!' (~ [!\r\n])* 
+   | REM ~ ([\r])* ([\n]NUMBER)
    ;
 
 WS
@@ -1533,11 +1538,6 @@ STRING_LITERAL
    | '"' ~ (["\r\n])* '"'
    | ['] (~ ['] | [']['])* [']
    | ['] ~ (['\r\n])* [']
-   ;
-
-COMMENT
-   : '!' (~ [!\r\n])* 
-   | REM ~ ([\r])* ([\n]NUMBER)
    ;
 
 DEC_NUMBER

@@ -38,7 +38,6 @@ import { LexExpContext } from "./BasicParser";
 import { EolContext } from "./BasicParser";
 import { EqualsExpnContext } from "./BasicParser";
 import { LabelContext } from "./BasicParser";
-import { LabelNameContext } from "./BasicParser";
 import { ProgramContext } from "./BasicParser";
 import { ProgramUnitContext } from "./BasicParser";
 import { MainProgramContext } from "./BasicParser";
@@ -486,13 +485,6 @@ export interface BasicParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitLabel?: (ctx: LabelContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `BasicParser.labelName`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitLabelName?: (ctx: LabelNameContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `BasicParser.program`.

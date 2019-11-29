@@ -220,7 +220,7 @@ export class ContextSymbolTable extends SymbolTable
         {            
             let decRoutineBlocks = this.getAllSymbols(RoutineHeaderSymbol, false);
 
-            return this.findSimbolInfoDedlaration(symbol, defRoutines, decRoutineBlocks);
+            return this.findSimbolInfoDeсlaration(symbol, defRoutines, decRoutineBlocks);
         }
         else
         {
@@ -241,7 +241,7 @@ export class ContextSymbolTable extends SymbolTable
                 let decTypes = this.getAllSymbols(TypeDclSymbol, false);
                 let decTypeBlocks = this.getAllSymbols(TypeBlockDclSymbol, false);
 
-                return this.findSimbolInfoDedlaration(symbol, decTypes, decTypeBlocks);
+                return this.findSimbolInfoDeсlaration(symbol, decTypes, decTypeBlocks);
             }
             else
             {
@@ -323,36 +323,30 @@ export class ContextSymbolTable extends SymbolTable
                         let decConsts = this.getAllSymbols(ConstantDclSymbol, false);
                         let decConstBlocks = this.getAllSymbols(ConstBlockDclSymbol, false);
             
-                        return this.findSimbolInfoDedlaration(symbol, decConsts, decConstBlocks);
+                        return this.findSimbolInfoDeсlaration(symbol, decConsts, decConstBlocks);
                     }
-
-
-
-
-
-                    let showLabel = false;
-                    let labels = this.getAllSymbols(LabelDclSymbol, true);
-            
-                    for(let item of labels)
+                    else
                     {
-                        if(item.name.toLowerCase() === symbol.name.toLowerCase())
+                        let showLabel = false;
+                        let labels = this.getAllSymbols(LabelDclSymbol, true);
+                
+                        for(let item of labels)
                         {
-                            showLabel = true;
-                            break;
+                            if(item.name.toLowerCase() === symbol.name.toLowerCase())
+                            {
+                                showLabel = true;
+                                break;
+                            }
+                        }
+                
+                        if(showLabel)
+                        {
+                            let decLabels = this.getAllSymbols(LabelDclSymbol, true);
+                            let decLabelBlocks = this.getAllSymbols(LabelDclSymbol, true);
+                
+                            return this.findSimbolInfoDeсlaration(symbol, decLabels, decLabelBlocks);
                         }
                     }
-            
-                    if(showLabel)
-                    {
-                        let decLabels = this.getAllSymbols(LabelDclSymbol, true);
-                        let decLabelBlocks = this.getAllSymbols(LabelDclSymbol, true);
-            
-                        return this.findSimbolInfoDedlaration(symbol, decLabels, decLabelBlocks);
-                    }
-
-
-
-
 
                     if(!findImplisit)
                     {
@@ -497,7 +491,7 @@ export class ContextSymbolTable extends SymbolTable
         return symbolBlock;
     }
 
-    private findSimbolInfoDedlaration(symbol: Symbol, definitionSymbols: Set<Symbol>, blocks: Set<Symbol>): SymbolInfo | undefined
+    private findSimbolInfoDeсlaration(symbol: Symbol, definitionSymbols: Set<Symbol>, blocks: Set<Symbol>): SymbolInfo | undefined
     {
         for(let item of definitionSymbols)
         {
@@ -513,9 +507,9 @@ export class ContextSymbolTable extends SymbolTable
                         {
                             if(block.context instanceof ParserRuleContext)
                             {
-                                if(block.context.start)
+                                if(block.context.start && block.context.stop)
                                 {
-                                    if(definition.range.start.row === block.context.start.line)
+                                    if(definition.range.start.row >= block.context.start.line && definition.range.start.row <= block.context.stop.line)
                                     {
                                         let result = this.getSymbolInfo(block);
 
