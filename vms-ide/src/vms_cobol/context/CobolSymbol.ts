@@ -31,8 +31,9 @@ export enum ECobolSymbolKind {
     BOOL_Condition,
     CURRENCY,
     File,
-    SortMergeFile,
     Report,
+    ReportRecord,
+    ScreenRecord,
     DataRecord,
     Section,
     Paragraph,
@@ -94,10 +95,12 @@ export function symbolDescriptionFromEnum(kind: ECobolSymbolKind): string {
             return "Currency";
         case ECobolSymbolKind.File:
             return "File";
-        case ECobolSymbolKind.SortMergeFile:
-            return "Sort-merge file";
         case ECobolSymbolKind.Report:
             return "Report";
+        case ECobolSymbolKind.ScreenRecord:
+            return "Screen record";
+        case ECobolSymbolKind.ReportRecord:
+            return "Report record";
         case ECobolSymbolKind.DataRecord:
             return "Data record";
         case ECobolSymbolKind.Section:
@@ -151,6 +154,8 @@ export function translateSymbolKind(kind: ECobolSymbolKind): vscode.SymbolKind {
             return vscode.SymbolKind.Constant;
         case ECobolSymbolKind.File:
         case ECobolSymbolKind.Report:
+        case ECobolSymbolKind.ScreenRecord:
+        case ECobolSymbolKind.ReportRecord:
         case ECobolSymbolKind.DataRecord:
             return vscode.SymbolKind.Struct;
         case ECobolSymbolKind.Section:
@@ -198,6 +203,8 @@ export function translateCompletionKind(kind: ECobolSymbolKind): vscode.Completi
             return vscode.CompletionItemKind.Constant;
         case ECobolSymbolKind.File:
         case ECobolSymbolKind.Report:
+        case ECobolSymbolKind.ScreenRecord:
+        case ECobolSymbolKind.ReportRecord:
         case ECobolSymbolKind.DataRecord:
             return vscode.CompletionItemKind.Struct;
         case ECobolSymbolKind.Section:
@@ -264,10 +271,12 @@ export function getSymbolFromKind(kind: ECobolSymbolKind): typeof Symbol {
             return CURRENCY_Symbol;
         case ECobolSymbolKind.File:
             return FileSymbol;
-        case ECobolSymbolKind.SortMergeFile:
-            return SortMergeFileSymbol;
         case ECobolSymbolKind.Report:
-            return ReportFileSymbol;
+            return ReportSymbol;
+        case ECobolSymbolKind.ScreenRecord:
+            return ScreenRecordSymbol;
+        case ECobolSymbolKind.ReportRecord:
+            return ReportRecordSymbol;
         case ECobolSymbolKind.DataRecord:
             return DataRecordSymbol;
         case ECobolSymbolKind.Section:
@@ -365,11 +374,14 @@ export function getKindFromSymbol(symbol: Symbol): ECobolSymbolKind {
     if (symbol instanceof FileSymbol) {
         return ECobolSymbolKind.File;
     }
-    if (symbol instanceof SortMergeFileSymbol) {
-        return ECobolSymbolKind.SortMergeFile;
-    }
-    if (symbol instanceof ReportFileSymbol) {
+    if (symbol instanceof ReportSymbol) {
         return ECobolSymbolKind.Report;
+    }
+    if (symbol instanceof ScreenRecordSymbol) {
+        return ECobolSymbolKind.ScreenRecord;
+    }
+    if (symbol instanceof ReportRecordSymbol) {
+        return ECobolSymbolKind.ReportRecord;
     }
     if (symbol instanceof SpecialRegisterSymbol) {
         return ECobolSymbolKind.SpecialRegister;
@@ -409,9 +421,14 @@ export class DeviceSymbol extends SpecialNameSymbol { }
 //**************************************************/
 export class ProgramSymbol extends IdentifierSymbol { 
     isCommon?: boolean;
-    definition?: IFunction; 
     endProgramCtx?: ParseTree;  // must be present only one
+    programDefinition?: IProgram; 
 }
+
+export class IntrinsicFunctionSymbol extends IdentifierSymbol {
+    functionDefinition?: IFunction; 
+}
+
 export class CARD_READER_Symbol extends DeviceSymbol { }
 export class PAPER_TAPE_READER_Symbol extends DeviceSymbol { }
 export class CONSOLE_Symbol extends DeviceSymbol { }
@@ -435,16 +452,27 @@ export class CLASS_Symbol extends SpecialNameSymbol { }
 export class CURRENCY_Symbol extends SpecialNameSymbol {
     public currency_str?: string;
 }
-export class FileSymbol extends IdentifierSymbol { }
-export class SortMergeFileSymbol extends IdentifierSymbol { }
-export class ReportFileSymbol extends IdentifierSymbol { }
+export class FileSymbol extends IdentifierSymbol { 
+    public fileFormat = EFileFormat.Sequentional;
+}
+export class ReportSymbol extends IdentifierSymbol { 
+    public fileSymbol?: FileSymbol;
+}
 export class DataRecordSymbol extends IdentifierSymbol {
     public level?: number;
     public picture?: string;
-    public usage?: EDataUsage;
+    public usage: EDataUsage = EDataUsage.DISPLAY;
     public requireQualification?: boolean;
+    public arrayLvl?: number;
+    public isGroup?: boolean;
 }
-export class ReportGroupSymbol extends DataRecordSymbol { }
+export class ReportRecordSymbol extends DataRecordSymbol { 
+    public reportType?: EReportType;
+    public hasLineNumber?: boolean;
+}
+export class ScreenRecordSymbol extends DataRecordSymbol {
+    public screenType?: EScreenType;
+}
 export class SegKeySymbol extends Symbol { }
 export class SectionSymbol extends IdentifierSymbol {
     public segment?: number;
@@ -454,49 +482,78 @@ export class ParagraphSymbol extends IdentifierSymbol { }
 export class IndexedBySymbol extends IdentifierSymbol { }
 export class SpecialRegisterSymbol extends DataRecordSymbol { }
 export class FigurativeConstantSymbol extends DataRecordSymbol { }
-export class IntrinsicFunctionSymbol extends ProgramSymbol { }
 export class SIGN_Symbol extends Symbol { }
 export class BOOL_Symbol extends Symbol { }
 
 //**************************************************/
 //**************************************************/
 //**************************************************/
-
-export function programDetails(programSymbol: ProgramSymbol): string | undefined {
-    if (programSymbol.definition) {
-        let details = programSymbol.name;
-        details += " (";
-        if (programSymbol.definition.arguments) {
-            let sep = "";
-            for (let arg of programSymbol.definition.arguments) {
-                if (arg.optional) {
-                    details += " [";
-                }
-                details += sep;
-                details += arg.name? arg.name + ": " : "";
-                if (Array.isArray(arg.type)) {
-                    details += arg.type.map(argType => EValueType[argType]).join(" | ");
-                } else {
-                    details += EValueType[arg.type];
-                }
-                if (arg.optional) {
-                    details += "]";
-                }
-                sep = ", ";
-                if (arg.tail) {
-                    details += " ... ";
-                }
-            }
+export function firstContainingSymbol<T extends Symbol>(symbol: Symbol | undefined, t: new (...args: any[]) => T) {
+    let retSymbol = symbol;
+    while(retSymbol !== undefined) {
+        if (retSymbol instanceof t) {
+            return retSymbol;
         }
-        details += "): ";
-        if (Array.isArray(programSymbol.definition.type)) {
-            details += programSymbol.definition.type.map(argType => EValueType[argType]).join(" | ");
-        } else {
-            details += EValueType[programSymbol.definition.type];
-        }
-        return details;
+        retSymbol = retSymbol.parent;
     }
     return undefined;
+}
+
+export enum EFileFormat {
+    Sequentional,
+    Line,
+    Relative,
+    Indexed,
+    Report
+}
+
+export enum EReportType {
+    RH,
+    PH,
+    CH,
+    DE,
+    CF,
+    PF,
+    RF,
+}
+
+export enum EScreenType {
+    group,
+    value,
+    picture,
+}
+
+export function functionDetails(definition: IFunction): string | undefined {
+    let details = " (";
+    if (definition.arguments) {
+        let sep = "";
+        for (let arg of definition.arguments) {
+            if (arg.optional) {
+                details += " [";
+            }
+            details += sep;
+            details += arg.name? arg.name + ": " : "";
+            if (Array.isArray(arg.type)) {
+                details += arg.type.map(argType => EValueType[argType]).join(" | ");
+            } else {
+                details += EValueType[arg.type];
+            }
+            if (arg.optional) {
+                details += "]";
+            }
+            sep = ", ";
+            if (arg.tail) {
+                details += " ... ";
+            }
+        }
+    }
+    details += "): ";
+    if (Array.isArray(definition.type)) {
+        details += definition.type.map(argType => EValueType[argType]).join(" | ");
+    } else {
+        details += EValueType[definition.type];
+    }
+    return details;
 }
 
 //**************************************************/
@@ -529,6 +586,33 @@ export enum EDataUsage {
     POINTER,
     POINTER_64,
 }
+
+export interface IProgramArgument {
+    name: string,
+    usage: EDataUsage,
+};
+
+export interface IProgram {
+    name: string,
+    usage: EDataUsage,
+    arguments: IProgramArgument[]
+};
+
+export function programDetails(definition: IProgram): string | undefined {
+    let details = " (";
+    if (definition.arguments) {
+        let sep = "";
+        for (let arg of definition.arguments) {
+            details += sep + arg.name;
+            details += ": " + EDataUsage[arg.usage].replace(/_/g, "-");
+            sep = ", ";
+        }
+    }
+    details += "): ";
+    details += EDataUsage[definition.usage].replace(/_/g, "-");
+    return details;
+}
+
 
 export function ValueTypeFromDataUsage(usage?: EDataUsage): EValueType {
     switch(usage) {

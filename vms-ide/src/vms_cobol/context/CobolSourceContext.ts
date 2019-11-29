@@ -1,4 +1,3 @@
-import * as path from 'path';
 import * as nls from "vscode-nls";
 
 import {
@@ -75,7 +74,7 @@ import {
 } from '../parser/cobolLexer';
 
 import {
-    parseTreeFromPosition, unifyCobolName
+    parseTreeFromPosition, unifyCobolName, firstContainingContext
 } from '../../common/parser/Helpers';
 
 
@@ -99,8 +98,9 @@ import {
     _PredefinedData,
     getKindFromSymbol,
     getSymbolFromKind,
-    programDetails,
+    functionDetails,
     symbolDescriptionFromEnum,
+    programDetails,
 } from './CobolSymbol';
 
 import {
@@ -139,12 +139,12 @@ export class CobolSourceContext implements ISourceContext {
     private lexerErrorListener = new LexerErrorListener(this.diagnostics);
     private analysisDone: boolean = false; // Includes determining reference counts.
 
-    private cancellationToken = new TaskDivider(false);
+    private cancellationToken = new TaskDivider(0);
 
     private tree?: Cobol_sourceContext;     // The root context from the last parse run.
     public logFn: LogFunction;
 
-    constructor(public fileName: string, logFn?: LogFunction, public copyManager?: ICopyManager) {
+    constructor(public fileName: string, logFn?: LogFunction, public copyManager?: ICopyManager, public topCancellationToken?: TaskDivider<number>) {
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
         this.isRequireReparse = true;
@@ -171,15 +171,15 @@ export class CobolSourceContext implements ISourceContext {
     public setText(source: string) {
         this.cancelParsing();
         this.sourceContent = source + "\n";
-        this.isRequireReparse = true;
+        this.requireReparse = true;
     }
 
     public cancelParsing() {
-        this.cancellationToken.setValue(true);
+        ++this.cancellationToken.asyncValue;
     }
 
     public async parse() {
-        this.cancellationToken.setValue(false);
+
         if (!this.sourceContent) {
             return false;
         }
@@ -204,9 +204,18 @@ export class CobolSourceContext implements ISourceContext {
             }
         }
         
+        // increment only local token, do not touch top token, but pass it if it exists
+        ++this.cancellationToken.asyncValue;
+        
         this.streamErrors.length = 0;
         // EOL is OBLIGATORY for correct code completion
-        this.input = new CobolInputStream(this.fileName, streamErrorListener, this.sourceContent, this.compilerConditions, this.copyManager, this.cancellationToken);
+        this.input = new CobolInputStream(
+                this.fileName,
+                streamErrorListener,
+                this.sourceContent,
+                this.compilerConditions,
+                this.copyManager,
+                this.topCancellationToken ? this.topCancellationToken : this.cancellationToken);
         let built = await this.input.buildInput();
         if (!built) {
             return false;
@@ -229,7 +238,7 @@ export class CobolSourceContext implements ISourceContext {
         // Rewind the input stream for a new parse run.
         // Might be unnecessary when we just created that via setText.
         this.tokenStream.seek(0);
-        let parserImpl = new cobolParserImpl(this.tokenStream);
+        let parserImpl = new cobolParserImpl(this.tokenStream, this.topCancellationToken ? this.topCancellationToken : this.cancellationToken);
         this.parser = parserImpl;
         this.parser.removeErrorListeners();
         this.parser.addErrorListener(this.parserErrorListener);
@@ -243,7 +252,7 @@ export class CobolSourceContext implements ISourceContext {
         this.analysisDone = false;
 
         try {
-            this.tree = this.parser.cobol_source();
+            this.tree = await this.parser.cobol_source();
         } catch (e) {
             if (e instanceof ParseCancellationException) {
                 this.diagnostics.length = 0;
@@ -251,7 +260,7 @@ export class CobolSourceContext implements ISourceContext {
                 this.parser.reset();
                 this.parser.errorHandler = new DefaultErrorStrategy();
                 this.parser.interpreter.setPredictionMode(PredictionMode.LL);
-                this.tree = this.parser.cobol_source();
+                this.tree = await this.parser.cobol_source();
             } else {
                 return false;
             }
@@ -271,9 +280,10 @@ export class CobolSourceContext implements ISourceContext {
             }
         }
 
+        this.requireReparse = false;
+
         this.updateDiagnosticRanges();
 
-        this.isRequireReparse = false;
         return true;
     }
 
@@ -358,11 +368,17 @@ export class CobolSourceContext implements ISourceContext {
         //add preferred rules
             cobolParser.RULE_function_name,
             cobolParser.RULE_proc_name,
+            cobolParser.RULE_prog_name,
+            cobolParser.RULE_program_name
         ]);
 
         // Search the token index which covers our caret position.
-        let index = this.getTokenIndexByPosition(row, column);
-        if (index === -1) {
+        let currentToken = this.getTokenByPosition(row, column);
+        if (!currentToken) {
+            return [];
+        }
+        let currentParseTree = parseTreeFromPosition(this.tree, column, row, this.tokenStream);
+        if (!currentParseTree) {
             return [];
         }
 
@@ -371,10 +387,10 @@ export class CobolSourceContext implements ISourceContext {
         //core.showRuleStack = true;
         //core.debugOutputWithTransitions = true;
 
-        let candidates = core.collectCandidates(index);
+        let candidates = core.collectCandidates(currentToken.tokenIndex);
         let resultMap = new Map<string, Set<string>>();
 
-        candidates.rules.forEach((callStack, key) => {
+        for(let [key, callStack] of candidates.rules) {
             switch(key) {
                 case cobolParser.RULE_function_name:
                     _IntrinsicFunctions.forEach(x => {
@@ -384,26 +400,53 @@ export class CobolSourceContext implements ISourceContext {
                     })
                     break;
                 case cobolParser.RULE_proc_name:
-                    this.symbolTable.occurence.forEach( (value, key) => {
+                    let currentProgramSymbol = this.enclosingProgramSymbol(currentParseTree);
+                    for(let [key, value] of this.symbolTable.occurence) {
                         for(let link of value) {
-                            // only paragraph or section
-                            if (link.master instanceof ParagraphSymbol ||
-                                link.master instanceof SectionSymbol) {
+                            // only paragraph or section in the current program
+                            if ((link.master instanceof ParagraphSymbol && 
+                                    (link.master.parent === currentProgramSymbol || (link.master.parent && link.master.parent.parent === currentProgramSymbol))) ||
+                                (link.master instanceof SectionSymbol && link.master.parent === currentProgramSymbol)) {
                                 resultMap.set(key, new Set([symbolDescriptionFromEnum(getKindFromSymbol(link.master))]));
                                 break;
                             }
                         };
-                    })
+                    }
+                    break;
+                case cobolParser.RULE_program_name:
+                    if (callStack.length > 0) {
+                        switch (callStack[callStack.length - 1]) {
+                            case cobolParser.RULE_end_program:
+                                let currentProgramSymbol = this.enclosingProgramSymbol(currentParseTree);
+                                if (currentProgramSymbol) {
+                                    resultMap.set(currentProgramSymbol.name, new Set([symbolDescriptionFromEnum(getKindFromSymbol(currentProgramSymbol))]));
+                                }
+                                break;
+                        }
+                    }
+                    break;
+                case cobolParser.RULE_prog_name:
+                    if (callStack.length > 0) {
+                        switch (callStack[callStack.length - 1]) {
+                            case cobolParser.RULE_cancel_statement:
+                            case cobolParser.RULE_call_statement:
+                                let symbols = this.symbolTable.resolveIdentifier(["*"], currentParseTree);
+                                symbols.filter(x => x instanceof ProgramSymbol).forEach((x) => {
+                                    resultMap.set(`"${x.name}"`, new Set([symbolDescriptionFromEnum(getKindFromSymbol(x))]));
+                                })
+                                break;
+                        }
+                    }
                     break;
             }
-        });
+        }
 
         if (resultMap.size === 0) {
             const vocabulary = this.parser.vocabulary;
-            candidates.tokens.forEach((following: number[], type: number) => {
+            for (let [type, following] of  candidates.tokens) {
                 switch(type) {
                     case cobolParser.USER_DEFINED_WORD_:
-                        this.symbolTable.occurence.forEach((value, key) => {
+                        for (let [key, value] of this.symbolTable.occurence) {
                             if (value.length > 0) {
                                 let add = false;
                                 for(let link of value) {
@@ -423,7 +466,7 @@ export class CobolSourceContext implements ISourceContext {
                                     value.forEach(link => entry!.add(symbolDescriptionFromEnum(getKindFromSymbol(link.master))));
                                 }
                             }
-                        })
+                        }
                         break;
                     default:
                         let key = vocabulary.getLiteralName(type);
@@ -451,7 +494,7 @@ export class CobolSourceContext implements ISourceContext {
                         }
                         break;
                 }
-            });
+            }
         }
         let result: ICompletion[] = [];
         for(let [key, set] of resultMap) {
@@ -489,6 +532,14 @@ export class CobolSourceContext implements ISourceContext {
                 for(let globalDef of globalUsing) {
                     if (globalDef.source !== this.fileName) {
                         retDef.push(globalDef);
+                    }
+                }
+
+                // add globals externals
+                let globalExterns = CobolGlobals.externals(master.name);
+                for(let externDef of globalExterns) {
+                    if (externDef.source !== this.fileName) {
+                        retDef.push(externDef);
                     }
                 }
 
@@ -534,15 +585,11 @@ export class CobolSourceContext implements ISourceContext {
             }
             let masterSymbol = this.masterSymbolAtPosition(inResult.resultCol, inResult.resultRow);
             info = this.symbolTable.getSymbolInfo(masterSymbol);
-            if (info && info.definition && info.definition.range && info.definition.source === this.fileName) {
-                let sourceRange = this.sourceRangeFromResult(info.definition.range);
-                info.definition.range = sourceRange.range;
-                info.definition.source = sourceRange.source;
-            }
-            if (info && masterSymbol instanceof ProgramSymbol) {
-                let details = programDetails(masterSymbol);
-                if (details) {
-                    info.description = details;
+            if (info) {
+                if (info.definition && info.definition.range && info.definition.source === this.fileName) {
+                    let sourceRange = this.sourceRangeFromResult(info.definition.range);
+                    info.definition.range = sourceRange.range;
+                    info.definition.source = sourceRange.source;
                 }
             }
         }
@@ -624,15 +671,16 @@ export class CobolSourceContext implements ISourceContext {
      * @param row 
      * @param column 
      */
-    private getTokenIndexByPosition(row: number, column: number) {
+    private getTokenByPosition(row: number, column: number) {
+        let token: Token | undefined;
         if (!this.tokenStream) {
-            return -1;
+            return token;
         }
         // Search the token index which covers our caret position.
         let index: number;
         this.tokenStream.fill();
         for (index = 0; ; ++index) {
-            let token = this.tokenStream.get(index);
+            token = this.tokenStream.get(index);
             if (token.type === Token.EOF || token.line > row + 1) {
                 break;
             }
@@ -643,7 +691,7 @@ export class CobolSourceContext implements ISourceContext {
                 }
             }
         }
-        return index;
+        return token;
     }
 
     /**
@@ -687,7 +735,7 @@ export class CobolSourceContext implements ISourceContext {
     private addPredefinitions(intrincisFunctions: IFunction[], predefinedData: IPredefinedNode[]) {
         for (let intrincisFunction of intrincisFunctions) {
             let symbolToAdd = this.symbolTable.addNewSymbolOfType(IntrinsicFunctionSymbol, this.symbolTable, unifyCobolName(intrincisFunction.name));
-            symbolToAdd.definition = intrincisFunction;
+            symbolToAdd.functionDefinition = intrincisFunction;
             symbolToAdd.isGlobal = true;
             this.symbolTable.createOccurence(symbolToAdd);
         }
@@ -740,4 +788,18 @@ export class CobolSourceContext implements ISourceContext {
         }
     }
 
+    /**
+     * 
+     * @param tree 
+     */
+    private enclosingProgramSymbol(tree: ParseTree): ProgramSymbol | undefined {
+        let ctx = firstContainingContext(tree, ProgramContext);
+        if (ctx) {
+            let symbol = this.symbolTable.symbolWithContext(ctx);
+            if (symbol instanceof ProgramSymbol) {
+                return symbol;
+            }
+        }
+        return undefined;
+    }
 }

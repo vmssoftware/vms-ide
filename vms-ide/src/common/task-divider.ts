@@ -7,10 +7,6 @@ export class TaskDivider<T> {
     constructor(public asyncValue: T) {
     }
 
-    public setValue(newValue: T) {
-        this.asyncValue = newValue;
-    }
-
     public async testValue() {
         return new Promise<T>(resolve => {
             setImmediate(() => {

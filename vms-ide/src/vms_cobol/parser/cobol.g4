@@ -167,11 +167,12 @@ declaratives_section
 paragraph
    : //{this.inputStream.LT(1).charPositionInLine < 4}?
      paragraph_name DOT_ replace_statement*
-     (statement+ DOT_ replace_statement*)*
+     ((statement | exec_sql_statement)+ DOT_ replace_statement*)*
    ;
 
 paragraph_name
    : USER_DEFINED_WORD_
+   | INTEGER_LITERAL_
    ;
 
 use_statement
@@ -200,6 +201,7 @@ section_header
 
 section_name
    : USER_DEFINED_WORD_
+   | INTEGER_LITERAL_
    ;
 
 using
@@ -257,6 +259,10 @@ statement
      )
    ;
 
+exec_sql_statement
+   : EXEC SQL (~END_EXEC)* END_EXEC DOT_?
+   ;
+
 record_name
    : USER_DEFINED_WORD_
    | STRING_LITERAL_
@@ -297,7 +303,7 @@ advance_value
 
 advance_num
    : identifier
-   | NUMERIC_LITERAL_
+   | (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 unstring_statement
@@ -366,11 +372,11 @@ subtract_statement
    ;
 
 sub_grp
-   : qualified_data_item
+   : identifier_result
    ;
 
 sub_num
-   : NUMERIC_LITERAL_
+   : (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    | identifier
    ;
 
@@ -395,7 +401,7 @@ string_delim
    ;
 
 string_src
-   : qualified_data_item
+   : identifier_result
    | STRING_LITERAL_
    | figurative_constant
    ;
@@ -406,7 +412,7 @@ stop_statement
 
 stop_disp
    : STRING_LITERAL_
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    | figurative_constant_witout_all
    ;
 
@@ -481,25 +487,25 @@ set_statement_form6
 
 set_increm
    : identifier
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 set_val
    : identifier
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 search_statement
    : SEARCH src_table (VARYING search_pointer)?
      at_end?
-     ((WHEN logic_expression statement+)+ END_SEARCH
-     |(WHEN logic_expression (statement+ END_SEARCH?|NEXT SENTENCE))+
+     ((WHEN logic_expression (statement | exec_sql_statement)+)+ END_SEARCH
+     |(WHEN logic_expression ((statement | exec_sql_statement)+ END_SEARCH?|NEXT SENTENCE))+
      )
    | SEARCH ALL src_table
      at_end?
      WHEN search_condition
      (AND search_condition)*
-     (statement+ END_SEARCH?|NEXT SENTENCE)
+     ((statement | exec_sql_statement)+ END_SEARCH?|NEXT SENTENCE)
    ;
 
 search_condition
@@ -608,7 +614,7 @@ proc_thru_proc
    ;
 
 perform_times
-   : (identifier|NUMERIC_LITERAL_) TIMES
+   : (identifier|(INTEGER_LITERAL_|HEX_LITERAL_)) TIMES
    ;
 
 with_test
@@ -631,12 +637,12 @@ perform_range
 
 perform_increm
    : identifier
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 perform_init
    : identifier
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 perform_var
@@ -675,7 +681,7 @@ multiply_statement
 
 mult_num
    : identifier
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 merge_statement
@@ -775,7 +781,7 @@ tallying_for_all
    ;
 
 compare_val
-   : qualified_data_item
+   : identifier_result
    | STRING_LITERAL_
    | figurative_constant_witout_all
    ;
@@ -785,7 +791,7 @@ delim_val
    ;
 
 tally_ctr
-   : qualified_data_item
+   : identifier_result
    ;
 
 src_string
@@ -815,12 +821,12 @@ fld_name
    ;
 
 move_statement
-   : MOVE (CORRESPONDING|CORR)? src_item TO dest_item
+   : MOVE (CORRESPONDING|CORR)? src_item TO dest_item+
    ;
 
 if_statement
-   : IF logic_expression THEN? (statement+|NEXT SENTENCE)
-     (ELSE (statement+|NEXT SENTENCE))?
+   : IF logic_expression THEN? ((statement | exec_sql_statement)+|NEXT SENTENCE)
+     (ELSE ((statement | exec_sql_statement)+|NEXT SENTENCE))?
      END_IF?
    ;
 
@@ -842,7 +848,7 @@ exit_program_statement
 
 go_to_statement
    : GO TO? proc_name?
-   | GO TO? proc_name+ DEPENDING ON? qualified_data_item
+   | GO TO? proc_name+ DEPENDING ON? identifier_result
    ;
 
 proc_name
@@ -851,8 +857,8 @@ proc_name
 
 evaluate_statement
    : EVALUATE subj_item (ALSO? subj_item)*
-     (WHEN when_condition (ALSO? when_condition)* statement*)+
-     (WHEN OTHER statement*)?
+     (WHEN when_condition (ALSO? when_condition)* (statement | exec_sql_statement)*)+
+     (WHEN OTHER (statement | exec_sql_statement)*)?
      END_EVALUATE?
    ;
 
@@ -895,7 +901,7 @@ remaind
 
 divide_num
    : identifier
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 display_statement
@@ -916,12 +922,12 @@ display_statement_form2
    ;
 
 display_statement_form3
-   : DISPLAY qualified_data_item (AT? (disp_f3_line disp_f3_column?|disp_f3_column disp_f3_line?))?
+   : DISPLAY identifier_result (AT? (disp_f3_line disp_f3_column?|disp_f3_column disp_f3_line?))?
      END_DISPLAY?
    ;
 
 display_statement_form4
-   : DISPLAY src_item UPON display_upon
+   : DISPLAY src_item upon_dest
      on_exception_variants?
      END_DISPLAY?
    ;
@@ -931,36 +937,68 @@ src_item
    | constant
    ;
 
-display_upon
-   : USER_DEFINED_WORD_
-   ;
-
 disp_f3_line
-   : LINE NUMBER? (identifier|NUMERIC_LITERAL_)
+   : LINE NUMBER? (identifier|(INTEGER_LITERAL_|HEX_LITERAL_))
    ;
 
 disp_f3_column
-   : COLUMN NUMBER? (identifier|NUMERIC_LITERAL_)
+   : COLUMN NUMBER? (identifier|(INTEGER_LITERAL_|HEX_LITERAL_))
    ;
 
 display_form1_clause
+   : with_conversion
+   | upon_dest
+   | with_no_advancing
+   ;
+
+upon_dest
+   : UPON out_dest
+   ;
+
+with_conversion
    : WITH? CONVERSION
-   | UPON out_dest
-   | WITH? NO ADVANCING?
+   ;
+
+with_no_advancing
+   : WITH? NO ADVANCING?
    ;
 
 display_form2_clause
    : display_form1_clause
    | at_line_number
    | at_column_number
-   | ERASE (TO? END OF?)? (SCREEN|LINE)
-   | WITH? BELL
-   | UNDERLINED
-   | BOLD
-   | WITH? BLINKING
-   | REVERSED
-   | WITH? CONVERSION
-   | WITH? NO ADVANCING?
+   | erase_to
+   | with_bell
+   | underlined
+   | bold
+   | with_blinking
+   | reversed
+   | with_conversion
+   | with_no_advancing
+   ;
+
+reversed
+   : REVERSED
+   ;
+
+with_blinking
+   : WITH? BLINKING
+   ;
+
+bold
+   : BOLD
+   ;
+
+with_bell
+   : WITH? BELL
+   ;
+
+underlined
+   : UNDERLINED
+   ;
+
+erase_to
+   : ERASE (TO? END OF?)? (SCREEN|LINE)
    ;
 
 at_line_number
@@ -1022,7 +1060,7 @@ call_using
 
 using_arg
    : OMITTED
-   | using_prefix? argument argument*
+   | using_prefix? argument+
    ;
 
 using_prefix
@@ -1033,13 +1071,13 @@ using_prefix
    ;   
 
 argument
-   : identifier
-   | NUMERIC_LITERAL_
+   : identifier_result
+   | (INTEGER_LITERAL_|HEX_LITERAL_)
    | STRING_LITERAL_
    ;
 
 prog_name
-   : USER_DEFINED_WORD_
+   : identifier_result
    | STRING_LITERAL_
    ;
 
@@ -1057,11 +1095,11 @@ add_statement
    ;
 
 add_grp
-   : qualified_data_item
+   : identifier_result
    ;
 
 add_num
-   : NUMERIC_LITERAL_
+   : (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    | identifier
    ;
 
@@ -1105,12 +1143,12 @@ invalid_key_variants
    ;
 
 accept_form6
-   : ACCEPT dest_item  FROM? accept6_item
+   : ACCEPT dest_item FROM? arg_env_accept
      on_exception_variants?
      END_ACCEPT?
    ;
 
-accept6_item
+arg_env_accept
    : USER_DEFINED_WORD_
    ;
 
@@ -1139,7 +1177,7 @@ accept_form4
    ;
 
 accept_form5
-   : ACCEPT screen_name
+   : ACCEPT data_name
      accept_at?
      on_exception_variants?
      END_ACCEPT?
@@ -1150,30 +1188,54 @@ accept_at
    ;
 
 accept_at_line
-   : LINE NUMBER? (NUMERIC_LITERAL_|identifier)
+   : LINE NUMBER? ((INTEGER_LITERAL_|HEX_LITERAL_)|identifier)
    ;
 accept_at_column
-   : COLUMN NUMBER? (NUMERIC_LITERAL_|identifier)
+   : COLUMN NUMBER? ((INTEGER_LITERAL_|HEX_LITERAL_)|identifier)
    ;
 
 accept_form4_clause
+   : from_line_number
+   | from_column_number
+   | erase_to
+   | with_bell
+   ;
+
+from_column_number
+   : FROM? COLUMN NUMBER? number_value
+   ;
+
+from_line_number
    : FROM? LINE NUMBER? number_value
-   | FROM? COLUMN NUMBER? number_value
-   | ERASE ( TO? END OF?)? (SCREEN|LINE)
-   | WITH? BELL
    ;
 
 accept_form3_clause
    : accept_form4_clause
-   | UNDERLINED
-   | BOLD
-   | WITH? BLINKING
-   | PROTECTED protected_value*
-   | WITH? CONVERSION
-   | REVERSED
-   | WITH? NO ECHO
-   | DEFAULT IS? def_value
-   | CONTROL? KEY IN? key_dest_item
+   | underlined
+   | bold
+   | with_blinking
+   | protected_clause
+   | with_conversion
+   | reversed
+   | with_no_echo
+   | default_is
+   | control_key_in
+   ;
+
+protected_clause
+   : PROTECTED protected_value*
+   ;
+
+control_key_in
+   : CONTROL? KEY IN? key_dest_item
+   ;
+
+default_is
+   : DEFAULT IS? def_value
+   ;
+
+with_no_echo
+   : WITH? NO ECHO
    ;
 
 key_dest_item
@@ -1200,7 +1262,7 @@ prot_fill_lit
    ;
 
 prot_size_value
-   : NUMERIC_LITERAL_ 
+   : (INTEGER_LITERAL_|HEX_LITERAL_) 
    | identifier
    ;
 
@@ -1226,27 +1288,27 @@ input_source
    ;
 
 at_end
-   : AT? END statement*
+   : AT? END (statement | exec_sql_statement)*
    ;
 
 on_exception
-   : ON? EXCEPTION statement*
+   : ON? EXCEPTION (statement | exec_sql_statement)*
    ;
 
 on_size
-   : ON? SIZE ERROR statement*
+   : ON? SIZE ERROR (statement | exec_sql_statement)*
    ;
 
 on_overflow
-   : ON? OVERFLOW statement*
+   : ON? OVERFLOW (statement | exec_sql_statement)*
    ;
 
 at_eop
-   : AT? (END_OF_PAGE|EOP) statement*
+   : AT? (END_OF_PAGE|EOP) (statement | exec_sql_statement)*
    ;
 
 invalid_key
-   : INVALID KEY? statement*
+   : INVALID KEY? (statement | exec_sql_statement)*
    ;
 
 file_section
@@ -1264,7 +1326,12 @@ sort_merge_file_description
 
 working_storage_section
    : WORKING_STORAGE SECTION DOT_ replace_statement*
-     data_description_entry*
+     working_storage_entry*
+   ;
+
+working_storage_entry
+   : data_description_entry
+   | exec_sql_statement
    ;
 
 linkage_section
@@ -1307,8 +1374,8 @@ report_description_entry
 
 
 fd_clause
-   : IS? EXTERNAL
-   | IS? GLOBAL
+   : is_external
+   | is_global
    | block_contains
    | record
    | label
@@ -1319,7 +1386,16 @@ fd_clause
    | code_set
    | access_mode
    | record_key
+   | alt_record_key
    | file_status
+   ;
+
+is_external
+   : IS? EXTERNAL
+   ;
+
+is_global
+   : IS? GLOBAL
    ;
 
 data_description_entry
@@ -1330,21 +1406,33 @@ data_description_entry
    ;
 
 level_number
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 data_description_clause
-   : IS? EXTERNAL
-   | IS? GLOBAL
+   : is_external
+   | is_global
    | picture
    | usage
    | sign_is
    | occurs
-   | (SYNCHRONIZED|SYNC) (LEFT|RIGHT)?
-   | (JUSTIFIED|JUST) RIGHT?
-   | BLANK WHEN? ZERO
+   | synchronized_lr
+   | justified
+   | black_when_zero
    | value_is
    | renames
+   ;
+
+synchronized_lr
+   : (SYNCHRONIZED|SYNC) (LEFT|RIGHT)?
+   ;
+
+justified
+   : (JUSTIFIED|JUST) RIGHT?
+   ;
+
+black_when_zero
+   : BLANK WHEN? ZERO
    ;
 
 renames
@@ -1381,12 +1469,12 @@ external_name
    ;
 
 ref_data_name
-   : qualified_data_item
+   : identifier_result
    ;
 
 value_is_literal
    : STRING_LITERAL_
-   | NUMERIC_LITERAL_
+   | (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    | figurative_constant
    | USER_DEFINED_WORD_
    ;
@@ -1412,18 +1500,18 @@ key_name
    ;
 
 times_definition
-   : table_size TIMES
-   | min_times TO max_times TIMES DEPENDING ON? depending_item
+   : table_size TIMES?
+   | min_times TO max_times TIMES? DEPENDING ON? depending_item
    ;
 
 table_size
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 min_times
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 max_times
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 report_group_data_description_entry
@@ -1433,26 +1521,62 @@ report_group_data_description_entry
    ;
 
 report_group_data_description_clause
-   : LINE NUMBER? IS? line_num_definition
-   | NEXT GROUP IS? next_group_definition
-   | TYPE IS? type_is_definition
-   | (USAGE IS?)? DISPLAY
-   | BLANK WHEN? ZERO
-   | COLUMN NUMBER? IS? column_number
-   | GROUP INDICATE?
-   | (JUSTIFIED|JUST) RIGHT?
+   : rep_line_num
+   | rep_next_group
+   | rep_type
+   | usage_display
+   | black_when_zero
+   | rep_column
+   | rep_group_ind
+   | justified
    | picture
    | sign_is
-   | SOURCE IS? source_name
-   | VALUE IS? value_is_literal
-   | sum
+   | rep_source_sum_or_value
+   ;
+
+rep_source_sum_or_value
+   : rep_source
+   | rep_sum
+   | rep_value_is
+   ;
+
+rep_value_is
+   : VALUE IS? value_is_literal
+   ;
+
+rep_source
+   : SOURCE IS? source_name
+   ;
+
+rep_group_ind
+   : GROUP INDICATE?
+   ;
+
+rep_column
+   : COLUMN NUMBER? IS? column_number
+   ;
+
+usage_display
+   : (USAGE IS?)? DISPLAY
+   ;
+
+rep_type
+   : TYPE IS? type_is_definition
+   ;
+
+rep_next_group
+   : NEXT GROUP IS? next_group_definition
+   ;
+
+rep_line_num
+   : LINE NUMBER? IS? line_num_definition
    ;
 
 sign_is
    : (SIGN IS?)? (LEADING|TRAILING) (SEPARATE CHARACTER?)?
    ;
 
-sum
+rep_sum
    : (SUM sum_name+ UPON? detail_report_group_name*)+
      (RESET ON? control_foot_name)?
    ;
@@ -1475,22 +1599,50 @@ source_name
    ;
 
 column_number
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 type_is_definition
+   : rep_type_rh
+   | rep_type_ph
+   | rep_type_ch
+   | rep_type_de
+   | rep_type_cf
+   | rep_type_pf
+   | rep_type_rf
+   ;
+
+rep_type_pf
+   : PAGE FOOTING
+   | PF
+   ;
+
+rep_type_rf
+   : REPORT FOOTING
+   | RF
+   ;
+
+rep_type_de
+   : DETAIL
+   | DE
+   ;
+
+rep_type_ch
+   : (CONTROL HEADING | CH) type_control_name
+   ;
+
+rep_type_cf
+   : (CONTROL FOOTING | CF) type_control_name
+   ;
+
+rep_type_rh
    : REPORT HEADING
    | RH
-   | PAGE HEADING
+   ;
+
+rep_type_ph
+   : PAGE HEADING
    | PH
-   | (CONTROL HEADING|CH) type_control_name
-   | DETAIL
-   | DE
-   | (CONTROL FOOTING|CF) type_control_name
-   | PAGE FOOTING
-   | PF
-   | REPORT FOOTING
-   | RF
    ;
 
 type_control_name
@@ -1509,14 +1661,18 @@ line_num_definition
    | PLUS line_num
    ;
 line_num
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 rd_clause
-   : IS? GLOBAL
-   | CODE report_code
-   | (CONTROL IS?|CONTROLS ARE?) (control_name+|FINAL control_name*)
-   | PAGE
+   : is_global
+   | report_code
+   | report_control
+   | report_page
+   ;
+
+report_page
+   : PAGE
       (LIMIT IS?|LIMITS ARE?)? page_size_rd (LINE|LINES)?
       (HEADING heading_line)?
       (FIRST DETAIL first_detail_line)?
@@ -1524,32 +1680,36 @@ rd_clause
       (FOOTING footing_line_rd)?
    ;
 
+report_control
+   : (CONTROL IS?|CONTROLS ARE?) (control_name+|FINAL control_name*)
+   ;
+
+report_code
+   : CODE STRING_LITERAL_
+   ;
+
 footing_line_rd
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 last_detail_line
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 first_detail_line
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 heading_line
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 page_size_rd
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 control_name
    : qualified_data_item
-   ;
-
-report_code
-   : STRING_LITERAL_
    ;
 
 usage
@@ -1623,23 +1783,23 @@ linage
    ;
 
 bottom_lines
-   : NUMERIC_LITERAL_
-   | qualified_data_item
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
+   | identifier_result
    ;
 
 top_lines
-   : NUMERIC_LITERAL_
-   | qualified_data_item
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
+   | identifier_result
    ;
 
 footing_line
-   : NUMERIC_LITERAL_
-   | qualified_data_item
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
+   | identifier_result
    ;
 
 page_size
-   : NUMERIC_LITERAL_
-   | qualified_data_item
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
+   | identifier_result
    ;
 
 data_rec
@@ -1681,58 +1841,130 @@ depending_item
    ;
 
 shortest_rec
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 longest_rec
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 screen_description_entry
-   : level_number (screen_name|FILLER)?
+   : level_number (data_name | FILLER)?
      screen_description_clause*
      DOT_ replace_statement*
    ;
 
-screen_name
-   : USER_DEFINED_WORD_
+screen_description_clause
+   : scr_blank
+   | scr_foreground
+   | scr_background
+   | scr_auto
+   | scr_secure
+   | scr_required
+   | usage_display
+   | sign_is
+   | scr_full
+   | scr_bell
+   | scr_blink
+   | scr_erase
+   | scr_light
+   | scr_reverse
+   | scr_underline
+   | scr_line
+   | scr_column
+   | scr_value
+   | black_when_zero
+   | justified
+   | scr_picture
    ;
 
-screen_description_clause
+scr_light
+   : scr_highlight
+   | scr_lowlight
+   ;
+
+scr_picture
+   : picture (scr_pic_using|scr_pic_from scr_pic_to?|scr_pic_to)
+   ;
+
+scr_value
+   : VALUE IS? nonnumeric_literal
+   ;
+
+scr_column
+   : COLUMN NUMBER? IS? PLUS? src_number
+   ;
+
+scr_line
+   : LINE NUMBER? IS? PLUS? src_number
+   ;
+
+scr_underline
+   : UNDERLINE
+   ;
+
+scr_reverse
+   : REVERSE_VIDEO
+   ;
+
+scr_lowlight
+   : LOWLIGHT
+   ;
+
+scr_highlight
+   : HIGHLIGHT
+   ;
+
+scr_erase
+   : ERASE (EOL|EOS)
+   ;
+
+scr_blink
+   : BLINK
+   ;
+
+scr_bell
+   : BELL
+   ;
+
+scr_full
+   : FULL
+   ;
+
+scr_required
+   : REQUIRED
+   ;
+
+scr_secure
+   : SECURE
+   ;
+
+scr_auto
+   : AUTO
+   ;
+
+scr_background
+   : BACKGROUND_COLOR IS? color_num
+   ;
+
+scr_foreground
+   : FOREGROUND_COLOR IS? color_num
+   ;
+
+scr_blank
    : BLANK (SCREEN|LINE)
-   | FOREGROUND_COLOR IS? color_num
-   | BACKGROUND_COLOR IS? color_num
-   | AUTO
-   | SECURE
-   | REQUIRED
-   | (USAGE IS?)? DISPLAY
-   | sign_is
-   | FULL
-   | BELL
-   | BLINK
-   | ERASE (EOL|EOS)
-   | HIGHLIGHT
-   | LOWLIGHT
-   | REVERSE_VIDEO
-   | UNDERLINE
-   | LINE NUMBER? IS? PLUS? src_number
-   | COLUMN NUMBER? IS? PLUS? src_number
-   | VALUE IS? nonnumeric_literal
-   | BLANK WHEN? ZERO
-   | (JUSTIFIED|JUST) RIGHT?
-   | picture (scr_pic_using|scr_pic_from scr_pic_to?|scr_pic_to)
    ;
 
 scr_pic_using
-   : USING  qualified_data_item
+   : USING  identifier_result
    ;
 
 scr_pic_from
-   : FROM (qualified_data_item|nonnumeric_literal)
+   : FROM (identifier_result|nonnumeric_literal)
    ;
 
 scr_pic_to
-   : TO qualified_data_item
+   : TO identifier_result
    ;
 
 nonnumeric_literal
@@ -1740,12 +1972,12 @@ nonnumeric_literal
    ;
 
 src_number
-   : qualified_data_item
-   | NUMERIC_LITERAL_
+   : identifier_result
+   | (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 color_num
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 // program id
@@ -1859,7 +2091,7 @@ memory_size
    ;
 
 memory_size_amount
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 memory_size_unit
@@ -1881,7 +2113,7 @@ segment_limit
    ;
 
 segment_number
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 special_names
@@ -1953,11 +2185,11 @@ switch_name
    ;
 
 switch_num
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 qualified_data_item
-   : USER_DEFINED_WORD_ ((IN|OF) USER_DEFINED_WORD_)*
+   : USER_DEFINED_WORD_  ((IN|OF) USER_DEFINED_WORD_)*
    ;
 
 currency
@@ -2010,7 +2242,7 @@ symbol_char
    ;
 
 char_val
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 alphabet
@@ -2033,17 +2265,17 @@ user_alpha
 
 first_literal
    : STRING_LITERAL_
-   | NUMERIC_LITERAL_
+   | (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 last_literal
    : STRING_LITERAL_
-   | NUMERIC_LITERAL_
+   | (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 same_literal
    : STRING_LITERAL_
-   | NUMERIC_LITERAL_
+   | (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 top_of_page_name
@@ -2061,18 +2293,23 @@ file_control
 
 select
    : SELECT OPTIONAL? file_name 
-     assign_to 
-     reserve?
-     organization?
-     block_contains?
-     code_set?
-     padding?
-     record_delimiter?
-     access_mode?
-     record_key*
-     lock_mode?
-     file_status?
+     select_clause+
      DOT_ replace_statement*
+   ;
+
+select_clause
+   : assign_to 
+   | reserve
+   | organization
+   | padding
+   | record_delimiter
+   | lock_mode
+   | block_contains
+   | code_set
+   | access_mode
+   | record_key
+   | alt_record_key
+   | file_status
    ;
 
 file_status
@@ -2084,7 +2321,13 @@ file_stat
    ;
 
 record_key
-   : ALTERNATE? RECORD KEY? IS? record_key_definition 
+   : RECORD KEY? IS? record_key_definition 
+     (WITH? DUPLICATES)?
+     (ASCENDING|DESCENDING)?
+   ;
+
+alt_record_key
+   : ALTERNATE RECORD KEY? IS? record_key_definition 
      (WITH? DUPLICATES)?
      (ASCENDING|DESCENDING)?
    ;
@@ -2117,7 +2360,7 @@ reserve
    ;
 
 reserve_num
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 record_delimiter
@@ -2161,11 +2404,11 @@ block_contains
    ;
 
 smallest_block
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 blocksize
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 assign_to
@@ -2213,7 +2456,7 @@ multiple_file_name
    ;
 
 pos_integer
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 rerun
@@ -2227,7 +2470,7 @@ rerun_definition
    ;
 
 clock_count
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 condition_name
@@ -2240,7 +2483,7 @@ rerun_def_file
    ;
 
 rec_count
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 same
@@ -2267,15 +2510,15 @@ apply_definition
    ;
 
 window_ptrs
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 preall_amt
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 extend_amt
-   : NUMERIC_LITERAL_
+   : (INTEGER_LITERAL_|HEX_LITERAL_)
    ;
 
 //
@@ -2289,7 +2532,7 @@ arithmetic_expression
    ;
 
 constant
-   : NUMERIC_LITERAL_
+   : (NUMERIC_LITERAL_|INTEGER_LITERAL_|HEX_LITERAL_)
    | STRING_LITERAL_
    | figurative_constant
    ;
@@ -2317,8 +2560,8 @@ logic_expression
 logic_condition
    : arithmetic_expression condition_operator arithmetic_expression (logic_operation logic_condition_abbrev)*
    | arithmetic_expression IS? NOT? (class_condition_name|sign_condition_name) (logic_operation logic_condition_abbrev)*
-   | arithmetic_expression IS? (SUCCESS|FAILURE)
-   | qualified_data_item
+   | arithmetic_expression IS? NOT? (SUCCESS|FAILURE)
+   | identifier_result
    ;
 
 logic_condition_abbrev

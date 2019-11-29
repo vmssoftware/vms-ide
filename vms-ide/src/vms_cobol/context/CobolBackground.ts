@@ -1,4 +1,4 @@
-import vscode, { EventEmitter, workspace, window } from 'vscode';
+import vscode, { EventEmitter, workspace, WorkspaceFolder} from 'vscode';
 import path from 'path';
 import { TaskDivider } from '../../common/task-divider';
 import { ensureSettings } from '../../synchronizer/ensure-settings';
@@ -16,7 +16,7 @@ export class CobolBackground {
 
     public static refreshed = new EventEmitter();
 
-    public static taskDivider?: TaskDivider<number>;
+    public static cancellationToken = new TaskDivider(0);
 
     public static async StartBackgroundParsing(logFn: LogFunction) {
 
@@ -56,27 +56,35 @@ export class CobolBackground {
 
     private static async Refresh(logFn: LogFunction) {
         let wsFolders = vscode.workspace.workspaceFolders;
-        // if new Refresh was executed, drop current task
-        let myTask = 0;
-        if (this.taskDivider) {
-            myTask = 1 + await this.taskDivider.testValue();
-            this.taskDivider.setValue(myTask);
-        }
-        this.taskDivider = new TaskDivider(myTask);
-        if (wsFolders) {
+        if (wsFolders && wsFolders.length > 0) {
+            // if new Refresh was executed, drop current task
+            let myTask = ++this.cancellationToken.asyncValue;
+            let sortedWsFolders: WorkspaceFolder[] = [];
             for(let wsFolder of wsFolders) {
+                let dependants = new ProjDepTree().getDepList(wsFolder.name);
+                let pos = sortedWsFolders.length;
+                for (let i = 0; i < sortedWsFolders.length; ++i) {
+                    if (dependants.includes(sortedWsFolders[i].name)) {
+                        pos = i;
+                        break;
+                    }
+                }
+                sortedWsFolders.splice(pos, 0, wsFolder);
+            }
+            sortedWsFolders = sortedWsFolders.reverse();
+            for(let wsFolder of sortedWsFolders) {
                 let ensured = await ensureSettings(wsFolder.name);
-                if (myTask != this.taskDivider.asyncValue) {
+                if (myTask != this.cancellationToken.asyncValue) {
                     return;
                 }
                 if (ensured) {
                     let localSource = await Synchronizer.acquire(logFn).requestSource(ensured, "local");
-                    if (myTask != this.taskDivider.asyncValue) {
+                    if (myTask != this.cancellationToken.asyncValue) {
                         return;
                     }
                     if (localSource) {
                         let localFiles = await localSource.findFiles(ensured.projectSection.source, ensured.projectSection.exclude);
-                        if (myTask != this.taskDivider.asyncValue) {
+                        if (myTask != this.cancellationToken.asyncValue) {
                             return;
                         }
                         if (localFiles) {
@@ -93,36 +101,39 @@ export class CobolBackground {
                                     }
                                     if (docContent === undefined) {
                                         let stream = await localSource.createReadStream(localFile.filename);
-                                        if (myTask != this.taskDivider.asyncValue) {
+                                        if (myTask != this.cancellationToken.asyncValue) {
                                             return;
                                         }
                                         if (stream) {
                                             docContent = await ReadAllStream(stream);
-                                            if (myTask != this.taskDivider.asyncValue) {
+                                            if (myTask != this.cancellationToken.asyncValue) {
                                                 return;
                                             }
                                         }
                                     }
                                     // parse and save
                                     if (docContent !== undefined) {
-                                        let context = new CobolSourceContext(fullPath, logFn, GetCopyManager(wsFolder.name, wsFolder.uri.fsPath));
+                                        let context = new CobolSourceContext(fullPath, logFn, GetCopyManager(wsFolder.name, wsFolder.uri.fsPath), this.cancellationToken);
                                         context.setText(docContent);
                                         await context.parse();
-                                        if (myTask != this.taskDivider.asyncValue) {
+                                        if (myTask != this.cancellationToken.asyncValue) {
                                             return;
                                         }
-                                        CobolGlobals.addGlobals(context);
+                                        await CobolGlobals.addGlobals(context);
+                                        if (myTask != this.cancellationToken.asyncValue) {
+                                            return;
+                                        }
                                     }
                                 }
+                            }
+                            if (myTask != await this.cancellationToken.testValue()) {
+                                return;
                             }
                         }
                     }
                 }
-                if (myTask != await this.taskDivider.testValue()) {
-                    return;
-                }
             }
+            this.refreshed.fire();
         }
-        this.refreshed.fire();
     }
 }

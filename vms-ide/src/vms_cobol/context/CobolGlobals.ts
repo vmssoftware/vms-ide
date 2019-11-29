@@ -1,12 +1,11 @@
 import { Uri, workspace } from 'vscode';
 import { CobolSymbolTable } from "./CobolSymbolTable";
 import { ProjDepTree } from "../../synchronizer/dep-tree/proj-dep-tree";
-import {
-    Symbol,
-} from 'antlr4-c3';
-import { IdentifierSymbol, DataRecordSymbol, ProgramSymbol, IntrinsicFunctionSymbol, getKindFromSymbol, getSymbolFromKind } from './CobolSymbol';
+import { Symbol } from 'antlr4-c3';
+import { IdentifierSymbol, ProgramSymbol, getKindFromSymbol, getSymbolFromKind, DataRecordSymbol, FileSymbol } from './CobolSymbol';
 import { CobolSourceContext } from './CobolSourceContext';
 import { IDefinition } from '../../common/parser/Facade';
+import { TaskDivider } from '../../common/task-divider';
 
 interface IGlobalEntry {
     symbolTable: CobolSymbolTable,
@@ -27,20 +26,34 @@ export class CobolGlobals {
      * @param globals 
      */
     public static async addGlobals(context: CobolSourceContext): Promise<boolean> {
+        let taskDivider = new TaskDivider(false);
         let symbolTable = context.getSymbolTable();
         let localSymbolTable = new CobolSymbolTable(context.fileName, { allowDuplicateSymbols: true } );
         // collect only first-level programs defined here (with context)
         let identifiers = symbolTable.getNestedSymbolsOfType(IdentifierSymbol);
         let globalDefinitions = new Map<Symbol, IDefinition[]>();
         for(let identifier of identifiers) {
-            if (identifier.context &&
-                identifier.parent === symbolTable &&
-                identifier instanceof ProgramSymbol && !(identifier instanceof IntrinsicFunctionSymbol )) {
-                let identifierKind = getKindFromSymbol(identifier);
-                let identifierSymbol = getSymbolFromKind(identifierKind);
-                let localCopy = localSymbolTable.addNewSymbolOfType(identifierSymbol, localSymbolTable, identifier.name);
-                if (localCopy instanceof ProgramSymbol) {
-                    localCopy.definition = identifier.definition;
+            if (identifier.context) {
+                let localCopy: Symbol | undefined;
+                // test if it is a program on the highest level
+                if (identifier.parent === symbolTable && identifier instanceof ProgramSymbol ) {
+                    let identifierKind = getKindFromSymbol(identifier);
+                    let identifierSymbol = getSymbolFromKind(identifierKind);
+                    localCopy = localSymbolTable.addNewSymbolOfType(identifierSymbol, localSymbolTable, identifier.name);
+                    if (localCopy instanceof ProgramSymbol) {
+                        localCopy.programDefinition = identifier.programDefinition;
+                    }
+                }
+                // test if it as a external symbol
+                if ((identifier instanceof DataRecordSymbol || identifier instanceof FileSymbol) && identifier.isExtern === true) {
+                    let identifierKind = getKindFromSymbol(identifier);
+                    let identifierSymbol = getSymbolFromKind(identifierKind);
+                    localCopy = localSymbolTable.addNewSymbolOfType(identifierSymbol, localSymbolTable, identifier.name);
+                    if (localCopy instanceof IdentifierSymbol) {
+                        localCopy.isExtern = identifier.isExtern;
+                    }
+                }
+                if (localCopy !== undefined) {
                     let localCopyDefinitions: IDefinition[] = [];
                     for(let occ of symbolTable.getSymbolOccurences(identifier)) {
                         if (occ.range) {
@@ -56,6 +69,8 @@ export class CobolGlobals {
                     globalDefinitions.set(localCopy, localCopyDefinitions);
                 }
             }
+            // just for passing execution to other tasks
+            await taskDivider.testValue();
         }
         // collect symbols having master in other source
         let globalUsing = new Map<Symbol, IDefinition[]>();
@@ -77,6 +92,8 @@ export class CobolGlobals {
                     globalUsing.set(link.master, masterDefinitions);
                 }
             }
+            // just for passing execution to other tasks
+            await taskDivider.testValue();
         }
         this.globalMap.set(context.fileName, {
             symbolTable: localSymbolTable,
@@ -98,7 +115,7 @@ export class CobolGlobals {
      * Just remove
      * @param fileName 
      */
-    public static async removeGlobals(fileName?: string) {
+    public static removeGlobals(fileName?: string) {
         if (fileName) {
             this.globalMap.delete(fileName);
         } else {
@@ -115,7 +132,7 @@ export class CobolGlobals {
         let wsFolder =  workspace.getWorkspaceFolder(Uri.file(fileName));
         if (wsFolder) {
             let deps = new ProjDepTree().getDepList(wsFolder.name);
-            // filter by deps
+            // filter by dependencies
             for(let [filePath, entry] of this.globalMap) {
                 let wsEntryFolder =  workspace.getWorkspaceFolder(Uri.file(filePath));
                 if (wsEntryFolder && deps.includes(wsEntryFolder.name)) {
@@ -139,7 +156,10 @@ export class CobolGlobals {
             let deps = new ProjDepTree().getDepList(wsFolder.name);
             // filter by dependencies
             for(let [filePath, entry] of this.globalMap) {
-                retSymbols.push(...entry.symbolTable.getAllNestedSymbols(identifier));
+                let wsEntryFolder =  workspace.getWorkspaceFolder(Uri.file(filePath));
+                if (wsEntryFolder && deps.includes(wsEntryFolder.name)) {
+                    retSymbols.push(...entry.symbolTable.getAllNestedSymbols(identifier));
+                }
             }
         }
         return retSymbols;
@@ -178,6 +198,22 @@ export class CobolGlobals {
                 if (usedSymbol.name === identifier.name &&
                     usedSymbol.symbolTable && identifier.symbolTable &&
                     usedSymbol.symbolTable.name == identifier.symbolTable.name) {
+                    usedDefinitions.push(...definitions);
+                }
+            }
+        }
+        return usedDefinitions;
+    }
+
+    /**
+     * Find all externals with the same name
+     * @param identifier 
+     */
+    public static externals(name: string) {
+        let usedDefinitions: IDefinition[] = [];
+        for(let [file, entry] of this.globalMap) {
+            for(let [externSymbol, definitions] of entry.definitions) {
+                if (externSymbol instanceof IdentifierSymbol && externSymbol.isExtern === true && externSymbol.name === name ) {
                     usedDefinitions.push(...definitions);
                 }
             }

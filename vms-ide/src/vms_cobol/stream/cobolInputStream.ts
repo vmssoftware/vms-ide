@@ -122,7 +122,7 @@ export class CobolInputStream implements CharStream {
         private source: string,
         conditionals?: string,
         private copyManager?: ICopyManager,
-        private cancelToken?: TaskDivider<boolean>) {
+        private cancelToken?: TaskDivider<number>) {
 
         if (conditionals) {
             this.conditionals = conditionals.toUpperCase();
@@ -677,11 +677,13 @@ export class CobolInputStream implements CharStream {
         this.lastNormalDotPosition = 0;
 
         let delta = this.deltaTest;
+
+        let tokenValue = this.cancelToken ? this.cancelToken.asyncValue : 0;
         
         while(pos < this.result.length && errors.length === 0) {
             if (this.cancelToken) {
                 if (--delta <= 0) {
-                    if (await this.cancelToken.testValue()) {
+                    if (tokenValue != await this.cancelToken.testValue()) {
                         this.result = "";
                         return false;
                     }

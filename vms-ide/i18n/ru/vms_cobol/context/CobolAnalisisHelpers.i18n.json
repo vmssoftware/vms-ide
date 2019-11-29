@@ -4,5 +4,6 @@
     "not_an_integer": "Not an integer",
     "undefined_name": "Undefined name",
     "ambigous_name": "Ambigous name",
-    "illegal_type": "Illegal type"
+    "illegal_type": "Illegal type",
+    "duplicated.clause": "Duplicated clause"
 }

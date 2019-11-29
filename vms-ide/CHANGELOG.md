@@ -1,5 +1,18 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.3.4
+* Handle more cases in COBOL Light-weight IntelliSense.
+* Parse and skip EXEC SQL statements in COBOL.
+
+## 1.3.3
+* Fix time of uploaded files after 'Quick uploading'.
+
+## 1.3.2
+* Fix breakpoints.
+
+## 1.3.1
+* Light-weight IntelliSense for Fortran and Cobol.
+
 ## 1.2.6
 * Fixed issue when extension is crashed while opening C project.
 * Fixed duplicating algorithms in SSH settings.

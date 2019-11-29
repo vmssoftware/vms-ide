@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "1.2.7",
+    "version": "1.3.4",
     "publisher": "VMSSoftwareInc",
     "license": "SEE LICENSE IN LICENSE.md",
     "repository": {
@@ -18,7 +18,7 @@
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
-    "main": "./out/extension",
+    "main": "./out/index",
     "activationEvents": [
         "*",
         "onView:vmssoftware.project-dep.projectDependencies",
@@ -130,7 +130,8 @@
                 "id": "vms-cobol",
                 "extensions": [
                     ".cob",
-                    ".cbl"
+                    ".cbl",
+                    ".sco"
                 ],
                 "configuration": "cobol.language-configuration.json"
             },
@@ -1041,6 +1042,8 @@
         "Cobol.antlr4ts": "antlr4ts -o src/vms_cobol/parser -visitor src/vms_cobol/parser/cobol.g4",
         "CobolLex.antlr4ts": "antlr4ts -o src/vms_cobol/parser src/vms_cobol/parser/cobolLexer.g4",
         "CobolCopy.antlr4ts": "antlr4ts -o src/vms_cobol/parser -visitor src/vms_cobol/parser/cobolCopy.g4",
+        "cobol-make-async": "gulp make-async --file cobolParser.ts",
+        "cobol-g4-post-modified": "run-s CobolLex.antlr4ts  Cobol.antlr4ts CobolCopy.antlr4ts cobol-make-async",
         "Fortran.antlr4ts": "antlr4ts -o src/vms_fortran/parser -visitor src/vms_fortran/parser/FortranParser.g4",
         "Fortran.antlr4tsLex": "antlr4ts -o src/vms_fortran/parser src/vms_fortran/parser/FortranLexer.g4",
         "Basic.antlr4ts": "antlr4ts -o src/vms_basic/parser -visitor src/vms_basic/parser/BasicParser.g4",
@@ -1060,6 +1063,7 @@
         "gulp": "^4.0.2",
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^5.0.0-alpha.3",
+        "npm-run-all": "^4.1.5",
         "ts-loader": "^5.4.5",
         "tslint": "^5.18.0",
         "typescript": "^3.5.3",
@@ -1067,7 +1071,8 @@
         "vscode": "^1.1.35",
         "vscode-nls-dev": "github:vorfol/vscode-nls-dev",
         "webpack": "^4.35.3",
-        "webpack-cli": "^3.3.6"
+        "webpack-cli": "^3.3.6",
+        "yargs": "^14.2.0"
     },
     "dependencies": {
         "@types/ssh2": "^0.5.38",

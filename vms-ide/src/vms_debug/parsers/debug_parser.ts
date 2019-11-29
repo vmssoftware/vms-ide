@@ -468,24 +468,21 @@ export class DebugParser
 				let moduleItem = moduleHolder.getItem(moduleName);
 				let pathFile = moduleItem.sourcePath;
 				let pathLisFile = moduleItem.listingPath;
-				let shift = this.fileInfo.getShiftLine(moduleName);
 
 				if(pathFile !== "" && pathLisFile !== "")
 				{
-					if(shift === -1)
-					{
-						let lisLines = this.loadFileContext(pathLisFile);
-						//get source line
-						numberLine = this.getNumberLineSourceCode(numberLineDebug, lisLines);
-						//save file info
-						shift = parseInt(numberLineDebug, 10) - numberLine;
-						this.fileInfo.setItem(pathFile, moduleName, shift, numberLine);
+					let debugInfo = this.fileInfo.infoByFile(pathFile);
+					if (debugInfo === undefined) {
+						this.fileInfo.pushEntry(pathFile, pathLisFile);
+						debugInfo = this.fileInfo.infoByFile(pathFile);
 					}
-					else
-					{
-						numberLine = parseInt(numberLineDebug, 10) - this.fileInfo.getShiftLine(moduleName);
+					if (debugInfo) {
+						// update module info
+						debugInfo.moduleName = moduleName.toLowerCase();
+						let foundLine = this.fileInfo.sourceLineFromListLineByInfo(debugInfo, +numberLineDebug);
+						numberLine = foundLine || numberLine;
 					}
-
+	
 					frames.push({
 						index: startFrame,
 						name: `${routineName}[${startFrame}]`,
@@ -1642,71 +1639,83 @@ export class DebugParser
 		return  name;
 	}
 
-	private getNumberLineSourceCode(debugLineNumber : string, lisLines: string[]) : number
-	{
-		let indexLine : number = 0;
-		let shiftHeader : number = 3;
-		let LineSourceCode : number = -1;
+	// private getNumberLineSourceCode(debugLineNumber : string, lisLines: string[]) : number
+	// {
+	// 	let indexLine : number = 0;
+	// 	let shiftHeader : number = 3;
+	// 	let LineSourceCode : number = -1;
 
-		for(let i = shiftHeader; i < lisLines.length; i++)
-		{
-			let line = lisLines[i];
-			const matcher = /^\s*\S*\s*\d*\s*\d*[\tX]\s*(\d+)/;// (/^\s*\d*\t\s*(\d+)/; (c/c++)) X - for preprocessor
-			const matches = line.match(matcher);
+	// 	for(let i = shiftHeader; i < lisLines.length; i++)
+	// 	{
+	// 		let line = lisLines[i];
+	// 		const matcher = /^\s*\S*\s*\d*\s*\d*[\tX]\s*(\d+)/;// (/^\s*\d*\t\s*(\d+)/; (c/c++)) X - for preprocessor
+	// 		const matches = line.match(matcher);
 
-			if(matches && matches.length === 2)
-			{
-				if(!Number.isNaN(parseInt(matches[1], 10)))
-				{
-					let lisLineNumber = matches[1];
+	// 		if(matches && matches.length === 2)
+	// 		{
+	// 			if(!Number.isNaN(parseInt(matches[1], 10)))
+	// 			{
+	// 				let lisLineNumber = matches[1];
 
-					if(debugLineNumber === lisLineNumber)
-					{
-						LineSourceCode = indexLine;
-						break;
-					}
+	// 				if(debugLineNumber === lisLineNumber)
+	// 				{
+	// 					LineSourceCode = indexLine;
+	// 					break;
+	// 				}
 
-					indexLine++;
-				}
-			}
-		}
+	// 				indexLine++;
+	// 			}
+	// 		}
+	// 	}
 
-		return LineSourceCode;
-	}
+	// 	return LineSourceCode;
+	// }
 
 	//examples a lines of lis file
 	// 		1634 int main ()
 	// 1    1635 {
 	// 1    1636   int count = 5;
 	// 1    1637   int del = 0;
-	public findBreakPointNumberLine(currentNumberLine : number, sourceLisLines: string[]) : number
+	public findBreakPointNumberLine(filePath: string, listPath: string, currentNumberLine : number) : number
 	{
-		let indexLine : number = 0;
-		let shiftHeader : number = 3;
-		let number : number = NaN;
-
-		for(let i = shiftHeader; i < sourceLisLines.length; i++)
-		{
-			let line = sourceLisLines[i];
-			const matcher = /^\s*\S*\s*\d*\s*\d*[\tX]\s*(\d+)/;// (/^\s*\d*\t\s*(\d+)/; (c/c++)) X - for preprocessor
-			const matches = line.match(matcher);
-
-			if(matches && matches.length === 2)
-			{
-				if(!Number.isNaN(parseInt(matches[1], 10)))
-				{
-					if(indexLine === currentNumberLine)
-					{
-						number = parseInt(matches[1], 10);
-						break;
-					}
-
-					indexLine++;
-				}
-			}
+		let debugInfo = this.fileInfo.infoByFile(filePath);
+		if (debugInfo === undefined) {
+			this.fileInfo.pushEntry(filePath, listPath);
+			debugInfo = this.fileInfo.infoByFile(filePath);
+		}
+		if (debugInfo) {
+			let foundLine = this.fileInfo.listLineFromSourceLineByInfo(debugInfo, currentNumberLine);
+			return foundLine || NaN;
 		}
 
-		return number;
+		return NaN;
+
+		// let indexLine : number = 0;
+		// let shiftHeader : number = 3;
+		// let number : number = NaN;
+
+		// for(let i = shiftHeader; i < sourceLisLines.length; i++)
+		// {
+		// 	let line = sourceLisLines[i];
+		// 	const matcher = /^\s*\S*\s*\d*\s*\d*[\tX]\s*(\d+)/;// (/^\s*\d*\t\s*(\d+)/; (c/c++)) X - for preprocessor
+		// 	const matches = line.match(matcher);
+
+		// 	if(matches && matches.length === 2)
+		// 	{
+		// 		if(!Number.isNaN(parseInt(matches[1], 10)))
+		// 		{
+		// 			if(indexLine === currentNumberLine)
+		// 			{
+		// 				number = parseInt(matches[1], 10);
+		// 				break;
+		// 			}
+
+		// 			indexLine++;
+		// 		}
+		// 	}
+		// }
+
+		// return number;
 	}
 
 	//module\routine\%LINE NUMBER\variable
@@ -1724,20 +1733,22 @@ export class DebugParser
 		return number;
 	}
 
-	public getNumberLineScope(fileName : string, fullVariableName : string) : number
-	{
-		let numberLine = -1;
+	// public getNumberLineScope(fileName : string, fullVariableName : string) : number
+	// {
+	// 	let numberLine = -1;
 
-		let info = this.fileInfo.getItem(fileName);
+	// 	// let info = this.fileInfo.getItem(fileName);
 
-		if(info)
-		{
-			let varNumberLine = parseInt(this.findNumberLineScope(fullVariableName), 10);
-			numberLine = varNumberLine - this.fileInfo.getShiftLine(fileName);
-		}
+	// 	// if(info)
+	// 	// {
+	// 	// 	let varNumberLine = parseInt(this.findNumberLineScope(fullVariableName), 10);
+	// 	// 	numberLine = varNumberLine - this.fileInfo.getShiftLine(fileName);
+	// 	// }
+	// 	let varNumberLine = parseInt(this.findNumberLineScope(fullVariableName), 10);
+	// 	let foundLine = this.fileInfo.sourceLineFromListLine(varNumberLine);
 
-		return numberLine;
-	}
+	// 	return numberLine;
+	// }
 
 	public loadFileContext(file: string) : string[]
 	{

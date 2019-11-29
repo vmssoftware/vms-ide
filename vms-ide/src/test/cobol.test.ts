@@ -13,6 +13,8 @@ import { cobolCopyLexer } from "../vms_cobol/parser/cobolCopyLexer";
 import { cobolCopyParser, CopyStatementContext } from "../vms_cobol/parser/cobolCopyParser";
 import { LexerErrorListener, ParserErrorListener } from "../common/parser/ErrorListeners";
 import { CopyManagerImpl } from "../vms_cobol/stream/CopyManagerImpl";
+import { CobolSourceContext } from "../vms_cobol/context/CobolSourceContext";
+import { unifyCobolName } from "../common/parser/Helpers";
 import { cobolParserImpl } from "../vms_cobol/parser/cobolParserImpl";
 
 suite("COBOL tests", function(this: Mocha.Suite) {
@@ -40,7 +42,7 @@ suite("COBOL tests", function(this: Mocha.Suite) {
         }
     }
 
-    let parseStream = (input: CobolInputStream): Cobol_sourceContext | undefined => {
+    let parseStream = async (input: CobolInputStream) => {
         let lexer = new cobolLexer(input);
         let tokenStream = new CommonTokenStream(lexer);
         tokenStream.seek(0);
@@ -61,7 +63,7 @@ suite("COBOL tests", function(this: Mocha.Suite) {
 
         try 
         {
-            tree = parser.cobol_source();
+            tree = await parser.cobol_source();
         }
         catch (e) 
         {
@@ -71,7 +73,7 @@ suite("COBOL tests", function(this: Mocha.Suite) {
                 parser.reset();
                 parser.errorHandler = new DefaultErrorStrategy();
                 parser.interpreter.setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
-                tree = parser.cobol_source();
+                tree = await parser.cobol_source();
             } 
             else 
             {
@@ -143,6 +145,30 @@ suite("COBOL tests", function(this: Mocha.Suite) {
     /***************************************************************************************/
     /***************************************************************************************/
     /***************************************************************************************/
+
+    test("match candidates", async() => {
+        let source = `
+IDENTIFICATION DIVISION.
+PROGRAM-ID. id-1.
+DATA DIVISION.
+WORKING-STORAGE SECTION.
+    01 item-1 pic x(32).
+    01 group-1.
+        03 item-1 comp-2.
+PROCEDURE DIVISION.
+para-1.
+    DISPLAY "alloha".
+end PROGRAM id-1.`;
+
+        let context = new CobolSourceContext("test.cob");
+        context.setText(source);
+        let parsed = await context.parse();
+        assert.strictEqual(parsed, true, "parsing error");
+        let all = context.getSymbolTable().matchCandidates(["*"]);
+        let item1 = context.getSymbolTable().matchCandidates([unifyCobolName("item-1")]);
+        let item1ingroup = context.getSymbolTable().matchCandidates([unifyCobolName("item-1"), unifyCobolName("group-1")]);
+        console.log("match done");
+    });
 
     test("copy parser 1", async() => {
         let item_def = `    01 ITEM PIC XXXX.`
@@ -260,7 +286,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -318,7 +344,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -382,7 +408,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -436,7 +462,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -493,7 +519,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -527,7 +553,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -560,7 +586,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -594,7 +620,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -629,7 +655,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -665,7 +691,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -706,7 +732,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         for(let error of errors) {
             assert.fail(error.message);
         }
@@ -740,7 +766,7 @@ end PROGRAM id-1.`;
         let built = await input.buildInput();
         assert.strictEqual(built, true, "buildInput failed");
         let result = input.getFilteredSource();
-        parseStream(input);
+        await parseStream(input);
         if (errors.length !== 1) {
             assert.fail("Must be ONE parser error");
         }
@@ -790,7 +816,7 @@ end PROGRAM id-1.`;
 
         try 
         {
-            tree = parser.cobol_source();
+            tree = await parser.cobol_source();
         }
         catch (e) 
         {
@@ -800,7 +826,7 @@ end PROGRAM id-1.`;
                 parser.reset();
                 parser.errorHandler = new DefaultErrorStrategy();
                 parser.interpreter.setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
-                tree = parser.cobol_source();
+                tree = await parser.cobol_source();
             } 
             else 
             {

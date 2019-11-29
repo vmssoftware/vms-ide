@@ -81,7 +81,7 @@ fragment Z
    ;
 
 fragment SPACE_
-   : [ \t]
+   : [ \t\u000B\u000C]
    ;
 
 fragment NL
@@ -527,6 +527,10 @@ ZERO                    : Z E R O;
 ZEROES                  : Z E R O E S;
 ZEROS                   : Z E R O S;
 
+EXEC                    : E X E C;
+SQL                     : S Q L;
+END_EXEC                : E N D '-' E X E C;
+
 PIC                     : P I C -> pushMode(pictureMode);
 PICTURE                 : P I C T U R E -> pushMode(pictureMode);
 
@@ -582,10 +586,13 @@ fragment EXPONENT_
    ;
 
 NUMERIC_LITERAL_
-   : DIGIT_+ '.' DIGIT_+ EXPONENT_?
-   | DIGIT_+ '.' EXPONENT_
-   | '.' DIGIT_+ EXPONENT_?
-   | DIGIT_+
+   : [-+]? DIGIT_+ '.' DIGIT_+ EXPONENT_?
+   | [-+]? DIGIT_+ '.' EXPONENT_
+   | [-+]? '.' DIGIT_+ EXPONENT_?
+   ;
+
+INTEGER_LITERAL_
+   : [-+]? DIGIT_+
    ;
 
 HEX_LITERAL_

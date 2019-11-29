@@ -21,7 +21,7 @@ import { Synchronizer } from "../sync/synchronizer";
 import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
 import { ProjectState } from "../dep-tree/proj-state";
 import { IBuildConfigSection } from "../../synchronizer/sync/sync-api";
-import { TestExecResult } from "../../synchronizer/common/TestExecResult";
+import { ParseExecResult } from "../../synchronizer/common/TestExecResult";
 import { JvmProject, IClassInfo, IFieldInfo, isFieldAccess } from "../../vms_jvm_debug/jvm-project";
 import { maskSpacesInTemplate } from "../../common/rgx-from-str";
 import { expandMask } from "../../synchronizer/common/find-files";
@@ -985,15 +985,11 @@ export class Builder {
             return false;
         }
         // run if decided
-        const output = await scopeData.shell.execCmd(command);
-        if (output && TestExecResult(output)) {
+        const errors = ParseExecResult(await scopeData.shell.execCmd(command));
+        if (errors.length === 0) {
             return true;
         } 
-        if (!output) {
-            this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute: {0}", command));
-        } else {
-            this.logFn(LogType.error, () => output.join("\n"));
-        }
+        this.logFn(LogType.error, () => errors.join("\n"));
         return false;
     }
 

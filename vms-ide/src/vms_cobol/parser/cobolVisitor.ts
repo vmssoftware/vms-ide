@@ -40,6 +40,7 @@ import { Section_nameContext } from "./cobolParser";
 import { UsingContext } from "./cobolParser";
 import { GivingContext } from "./cobolParser";
 import { StatementContext } from "./cobolParser";
+import { Exec_sql_statementContext } from "./cobolParser";
 import { Record_nameContext } from "./cobolParser";
 import { Library_nameContext } from "./cobolParser";
 import { Text_nameContext } from "./cobolParser";
@@ -173,11 +174,19 @@ import { Display_statement_form2Context } from "./cobolParser";
 import { Display_statement_form3Context } from "./cobolParser";
 import { Display_statement_form4Context } from "./cobolParser";
 import { Src_itemContext } from "./cobolParser";
-import { Display_uponContext } from "./cobolParser";
 import { Disp_f3_lineContext } from "./cobolParser";
 import { Disp_f3_columnContext } from "./cobolParser";
 import { Display_form1_clauseContext } from "./cobolParser";
+import { Upon_destContext } from "./cobolParser";
+import { With_conversionContext } from "./cobolParser";
+import { With_no_advancingContext } from "./cobolParser";
 import { Display_form2_clauseContext } from "./cobolParser";
+import { ReversedContext } from "./cobolParser";
+import { With_blinkingContext } from "./cobolParser";
+import { BoldContext } from "./cobolParser";
+import { With_bellContext } from "./cobolParser";
+import { UnderlinedContext } from "./cobolParser";
+import { Erase_toContext } from "./cobolParser";
 import { At_line_numberContext } from "./cobolParser";
 import { At_column_numberContext } from "./cobolParser";
 import { Out_destContext } from "./cobolParser";
@@ -206,7 +215,7 @@ import { On_overflow_variantsContext } from "./cobolParser";
 import { At_eop_variantsContext } from "./cobolParser";
 import { Invalid_key_variantsContext } from "./cobolParser";
 import { Accept_form6Context } from "./cobolParser";
-import { Accept6_itemContext } from "./cobolParser";
+import { Arg_env_acceptContext } from "./cobolParser";
 import { Accept_form1Context } from "./cobolParser";
 import { Accept_form2Context } from "./cobolParser";
 import { Accept_form3Context } from "./cobolParser";
@@ -216,7 +225,13 @@ import { Accept_atContext } from "./cobolParser";
 import { Accept_at_lineContext } from "./cobolParser";
 import { Accept_at_columnContext } from "./cobolParser";
 import { Accept_form4_clauseContext } from "./cobolParser";
+import { From_column_numberContext } from "./cobolParser";
+import { From_line_numberContext } from "./cobolParser";
 import { Accept_form3_clauseContext } from "./cobolParser";
+import { Protected_clauseContext } from "./cobolParser";
+import { Control_key_inContext } from "./cobolParser";
+import { Default_isContext } from "./cobolParser";
+import { With_no_echoContext } from "./cobolParser";
 import { Key_dest_itemContext } from "./cobolParser";
 import { Def_valueContext } from "./cobolParser";
 import { Protected_valueContext } from "./cobolParser";
@@ -236,6 +251,7 @@ import { File_sectionContext } from "./cobolParser";
 import { File_descriptionContext } from "./cobolParser";
 import { Sort_merge_file_descriptionContext } from "./cobolParser";
 import { Working_storage_sectionContext } from "./cobolParser";
+import { Working_storage_entryContext } from "./cobolParser";
 import { Linkage_sectionContext } from "./cobolParser";
 import { Report_sectionContext } from "./cobolParser";
 import { Report_descriptionContext } from "./cobolParser";
@@ -244,9 +260,14 @@ import { File_description_entryContext } from "./cobolParser";
 import { Sort_merge_file_description_entryContext } from "./cobolParser";
 import { Report_description_entryContext } from "./cobolParser";
 import { Fd_clauseContext } from "./cobolParser";
+import { Is_externalContext } from "./cobolParser";
+import { Is_globalContext } from "./cobolParser";
 import { Data_description_entryContext } from "./cobolParser";
 import { Level_numberContext } from "./cobolParser";
 import { Data_description_clauseContext } from "./cobolParser";
+import { Synchronized_lrContext } from "./cobolParser";
+import { JustifiedContext } from "./cobolParser";
+import { Black_when_zeroContext } from "./cobolParser";
 import { RenamesContext } from "./cobolParser";
 import { Rename_startContext } from "./cobolParser";
 import { Rename_endContext } from "./cobolParser";
@@ -268,26 +289,44 @@ import { Min_timesContext } from "./cobolParser";
 import { Max_timesContext } from "./cobolParser";
 import { Report_group_data_description_entryContext } from "./cobolParser";
 import { Report_group_data_description_clauseContext } from "./cobolParser";
+import { Rep_source_sum_or_valueContext } from "./cobolParser";
+import { Rep_value_isContext } from "./cobolParser";
+import { Rep_sourceContext } from "./cobolParser";
+import { Rep_group_indContext } from "./cobolParser";
+import { Rep_columnContext } from "./cobolParser";
+import { Usage_displayContext } from "./cobolParser";
+import { Rep_typeContext } from "./cobolParser";
+import { Rep_next_groupContext } from "./cobolParser";
+import { Rep_line_numContext } from "./cobolParser";
 import { Sign_isContext } from "./cobolParser";
-import { SumContext } from "./cobolParser";
+import { Rep_sumContext } from "./cobolParser";
 import { Control_foot_nameContext } from "./cobolParser";
 import { Detail_report_group_nameContext } from "./cobolParser";
 import { Sum_nameContext } from "./cobolParser";
 import { Source_nameContext } from "./cobolParser";
 import { Column_numberContext } from "./cobolParser";
 import { Type_is_definitionContext } from "./cobolParser";
+import { Rep_type_pfContext } from "./cobolParser";
+import { Rep_type_rfContext } from "./cobolParser";
+import { Rep_type_deContext } from "./cobolParser";
+import { Rep_type_chContext } from "./cobolParser";
+import { Rep_type_cfContext } from "./cobolParser";
+import { Rep_type_rhContext } from "./cobolParser";
+import { Rep_type_phContext } from "./cobolParser";
 import { Type_control_nameContext } from "./cobolParser";
 import { Next_group_definitionContext } from "./cobolParser";
 import { Line_num_definitionContext } from "./cobolParser";
 import { Line_numContext } from "./cobolParser";
 import { Rd_clauseContext } from "./cobolParser";
+import { Report_pageContext } from "./cobolParser";
+import { Report_controlContext } from "./cobolParser";
+import { Report_codeContext } from "./cobolParser";
 import { Footing_line_rdContext } from "./cobolParser";
 import { Last_detail_lineContext } from "./cobolParser";
 import { First_detail_lineContext } from "./cobolParser";
 import { Heading_lineContext } from "./cobolParser";
 import { Page_size_rdContext } from "./cobolParser";
 import { Control_nameContext } from "./cobolParser";
-import { Report_codeContext } from "./cobolParser";
 import { UsageContext } from "./cobolParser";
 import { Usage_definitionContext } from "./cobolParser";
 import { PictureContext } from "./cobolParser";
@@ -313,8 +352,26 @@ import { Depending_itemContext } from "./cobolParser";
 import { Shortest_recContext } from "./cobolParser";
 import { Longest_recContext } from "./cobolParser";
 import { Screen_description_entryContext } from "./cobolParser";
-import { Screen_nameContext } from "./cobolParser";
 import { Screen_description_clauseContext } from "./cobolParser";
+import { Scr_lightContext } from "./cobolParser";
+import { Scr_pictureContext } from "./cobolParser";
+import { Scr_valueContext } from "./cobolParser";
+import { Scr_columnContext } from "./cobolParser";
+import { Scr_lineContext } from "./cobolParser";
+import { Scr_underlineContext } from "./cobolParser";
+import { Scr_reverseContext } from "./cobolParser";
+import { Scr_lowlightContext } from "./cobolParser";
+import { Scr_highlightContext } from "./cobolParser";
+import { Scr_eraseContext } from "./cobolParser";
+import { Scr_blinkContext } from "./cobolParser";
+import { Scr_bellContext } from "./cobolParser";
+import { Scr_fullContext } from "./cobolParser";
+import { Scr_requiredContext } from "./cobolParser";
+import { Scr_secureContext } from "./cobolParser";
+import { Scr_autoContext } from "./cobolParser";
+import { Scr_backgroundContext } from "./cobolParser";
+import { Scr_foregroundContext } from "./cobolParser";
+import { Scr_blankContext } from "./cobolParser";
 import { Scr_pic_usingContext } from "./cobolParser";
 import { Scr_pic_fromContext } from "./cobolParser";
 import { Scr_pic_toContext } from "./cobolParser";
@@ -381,9 +438,11 @@ import { Top_of_page_nameContext } from "./cobolParser";
 import { User_nameContext } from "./cobolParser";
 import { File_controlContext } from "./cobolParser";
 import { SelectContext } from "./cobolParser";
+import { Select_clauseContext } from "./cobolParser";
 import { File_statusContext } from "./cobolParser";
 import { File_statContext } from "./cobolParser";
 import { Record_keyContext } from "./cobolParser";
+import { Alt_record_keyContext } from "./cobolParser";
 import { Record_key_definitionContext } from "./cobolParser";
 import { Seg_keyContext } from "./cobolParser";
 import { Rec_keyContext } from "./cobolParser";
@@ -711,6 +770,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitStatement?: (ctx: StatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.exec_sql_statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitExec_sql_statement?: (ctx: Exec_sql_statementContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.record_name`.
@@ -1644,13 +1710,6 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitSrc_item?: (ctx: Src_itemContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.display_upon`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitDisplay_upon?: (ctx: Display_uponContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `cobolParser.disp_f3_line`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -1672,11 +1731,74 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitDisplay_form1_clause?: (ctx: Display_form1_clauseContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cobolParser.upon_dest`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUpon_dest?: (ctx: Upon_destContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.with_conversion`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitWith_conversion?: (ctx: With_conversionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.with_no_advancing`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitWith_no_advancing?: (ctx: With_no_advancingContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cobolParser.display_form2_clause`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitDisplay_form2_clause?: (ctx: Display_form2_clauseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.reversed`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitReversed?: (ctx: ReversedContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.with_blinking`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitWith_blinking?: (ctx: With_blinkingContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.bold`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBold?: (ctx: BoldContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.with_bell`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitWith_bell?: (ctx: With_bellContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.underlined`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUnderlined?: (ctx: UnderlinedContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.erase_to`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitErase_to?: (ctx: Erase_toContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.at_line_number`.
@@ -1875,11 +1997,11 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitAccept_form6?: (ctx: Accept_form6Context) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.accept6_item`.
+	 * Visit a parse tree produced by `cobolParser.arg_env_accept`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitAccept6_item?: (ctx: Accept6_itemContext) => Result;
+	visitArg_env_accept?: (ctx: Arg_env_acceptContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.accept_form1`.
@@ -1945,11 +2067,53 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitAccept_form4_clause?: (ctx: Accept_form4_clauseContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cobolParser.from_column_number`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFrom_column_number?: (ctx: From_column_numberContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.from_line_number`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFrom_line_number?: (ctx: From_line_numberContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cobolParser.accept_form3_clause`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitAccept_form3_clause?: (ctx: Accept_form3_clauseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.protected_clause`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitProtected_clause?: (ctx: Protected_clauseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.control_key_in`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitControl_key_in?: (ctx: Control_key_inContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.default_is`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDefault_is?: (ctx: Default_isContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.with_no_echo`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitWith_no_echo?: (ctx: With_no_echoContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.key_dest_item`.
@@ -2085,6 +2249,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitWorking_storage_section?: (ctx: Working_storage_sectionContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cobolParser.working_storage_entry`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitWorking_storage_entry?: (ctx: Working_storage_entryContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cobolParser.linkage_section`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -2141,6 +2312,20 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitFd_clause?: (ctx: Fd_clauseContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cobolParser.is_external`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitIs_external?: (ctx: Is_externalContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.is_global`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitIs_global?: (ctx: Is_globalContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cobolParser.data_description_entry`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -2160,6 +2345,27 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitData_description_clause?: (ctx: Data_description_clauseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.synchronized_lr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSynchronized_lr?: (ctx: Synchronized_lrContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.justified`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitJustified?: (ctx: JustifiedContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.black_when_zero`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBlack_when_zero?: (ctx: Black_when_zeroContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.renames`.
@@ -2309,6 +2515,69 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitReport_group_data_description_clause?: (ctx: Report_group_data_description_clauseContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cobolParser.rep_source_sum_or_value`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_source_sum_or_value?: (ctx: Rep_source_sum_or_valueContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_value_is`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_value_is?: (ctx: Rep_value_isContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_source`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_source?: (ctx: Rep_sourceContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_group_ind`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_group_ind?: (ctx: Rep_group_indContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_column`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_column?: (ctx: Rep_columnContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.usage_display`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUsage_display?: (ctx: Usage_displayContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type?: (ctx: Rep_typeContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_next_group`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_next_group?: (ctx: Rep_next_groupContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_line_num`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_line_num?: (ctx: Rep_line_numContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cobolParser.sign_is`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -2316,11 +2585,11 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitSign_is?: (ctx: Sign_isContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.sum`.
+	 * Visit a parse tree produced by `cobolParser.rep_sum`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSum?: (ctx: SumContext) => Result;
+	visitRep_sum?: (ctx: Rep_sumContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.control_foot_name`.
@@ -2365,6 +2634,55 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitType_is_definition?: (ctx: Type_is_definitionContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_pf`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_pf?: (ctx: Rep_type_pfContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_rf`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_rf?: (ctx: Rep_type_rfContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_de`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_de?: (ctx: Rep_type_deContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_ch`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_ch?: (ctx: Rep_type_chContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_cf`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_cf?: (ctx: Rep_type_cfContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_rh`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_rh?: (ctx: Rep_type_rhContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.rep_type_ph`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRep_type_ph?: (ctx: Rep_type_phContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cobolParser.type_control_name`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -2398,6 +2716,27 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitRd_clause?: (ctx: Rd_clauseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.report_page`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitReport_page?: (ctx: Report_pageContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.report_control`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitReport_control?: (ctx: Report_controlContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.report_code`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitReport_code?: (ctx: Report_codeContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.footing_line_rd`.
@@ -2440,13 +2779,6 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitControl_name?: (ctx: Control_nameContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `cobolParser.report_code`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitReport_code?: (ctx: Report_codeContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.usage`.
@@ -2624,18 +2956,144 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitScreen_description_entry?: (ctx: Screen_description_entryContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `cobolParser.screen_name`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitScreen_name?: (ctx: Screen_nameContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `cobolParser.screen_description_clause`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitScreen_description_clause?: (ctx: Screen_description_clauseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_light`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_light?: (ctx: Scr_lightContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_picture`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_picture?: (ctx: Scr_pictureContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_value`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_value?: (ctx: Scr_valueContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_column`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_column?: (ctx: Scr_columnContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_line`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_line?: (ctx: Scr_lineContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_underline`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_underline?: (ctx: Scr_underlineContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_reverse`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_reverse?: (ctx: Scr_reverseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_lowlight`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_lowlight?: (ctx: Scr_lowlightContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_highlight`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_highlight?: (ctx: Scr_highlightContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_erase`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_erase?: (ctx: Scr_eraseContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_blink`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_blink?: (ctx: Scr_blinkContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_bell`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_bell?: (ctx: Scr_bellContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_full`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_full?: (ctx: Scr_fullContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_required`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_required?: (ctx: Scr_requiredContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_secure`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_secure?: (ctx: Scr_secureContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_auto`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_auto?: (ctx: Scr_autoContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_background`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_background?: (ctx: Scr_backgroundContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_foreground`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_foreground?: (ctx: Scr_foregroundContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.scr_blank`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScr_blank?: (ctx: Scr_blankContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.scr_pic_using`.
@@ -3100,6 +3558,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitSelect?: (ctx: SelectContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `cobolParser.select_clause`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSelect_clause?: (ctx: Select_clauseContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `cobolParser.file_status`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -3119,6 +3584,13 @@ export interface cobolVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitRecord_key?: (ctx: Record_keyContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `cobolParser.alt_record_key`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAlt_record_key?: (ctx: Alt_record_keyContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `cobolParser.record_key_definition`.

@@ -5,9 +5,9 @@
 * Source code **synchronization** between the local machine and OpenVMS system.
 * **SSH connection** setup to remote OpenVMS system.
 * **Projects Explorer** as a simple and convenient way to manage OpenVMS projects.
-* **Debugger** for OpenVMS projects.
-* **Syntax highlighting** for *Pascal*, *MMS*, *CLD*, and *MSG* files.
-* **Code autocompletion** for *MSG* and *CLD* files.
+* **Debugger** for OpenVMS and JVM projects.
+* **Highlighting** for *MMS*, *CLD*, *MSG*, *Pascal*, *Fortran* and *Cobol* files.
+* **Light-weight IntelliSense** for *CLD*, *MSG*, *Pascal*, *Fortran* and *Cobol* source.
 * Supported languages: **C**, **C++**, **Fortran**, **Cobol**, **Pascal**, **Basic**, **Bliss**, **Java**, **Kotlin**, **Scala**.
 
 ## Getting started
