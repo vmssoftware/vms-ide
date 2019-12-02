@@ -31,7 +31,7 @@ attributePart
    ;
 
 attributeDef
-   : attribute (LPAREN (string | identifier) (COMMA (string | identifier))* RPAREN)?
+   : attribute (LPAREN (constant) (COMMA (constant))* RPAREN)?
    ;
 
 attribute
@@ -126,6 +126,10 @@ unsignedNumber
 
 unsignedInteger
    : NUM_INT
+   | BASE_NUMBER
+   | BIN_NUMBER
+   | HEX_NUMBER
+   | OCT_NUMBER
    ;
 
 unsignedReal
@@ -169,23 +173,27 @@ type
    ;
 
 simpleType
-   : scalarType
+   : enumType
    | subrangeType
    | typeIdentifier
    | stringtype
    ;
 
-scalarType
+enumType
    : LPAREN identifierList RPAREN
    ;
 
 subrangeType
    : constant DOTDOT constant
+   | expression DOTDOT expression COLON typeIdentifier//?
    ;
 
 typeIdentifier
    : identifier
    | (CHAR | BOOLEAN | INTEGER | REAL | STRING)
+   | (INTEGER8 | INTEGER16 | INTEGER32 | INTEGER64)
+   | (UNSIGNED8 | UNSIGNED16 | CARDINAL16 | UNSIGNED32 | CARDINAL32 | UNSIGNED64)
+   | (DOUBLE | QUADRUPLE)
    ;
 
 structuredType
@@ -198,10 +206,15 @@ unpackedStructuredType
    | recordType
    | setType
    | fileType
+   | varyingType
    ;
 
 stringtype
    : STRING LPAREN (identifier | unsignedNumber) RPAREN
+   ;
+
+varyingType
+   : VARYING LBRACK (constant | identifier | expression) RBRACK OF attributePart CHAR
    ;
 
 arrayType
@@ -214,11 +227,11 @@ typeList
    ;
 
 indexType
-   : simpleType
+   : attributePart simpleType
    ;
 
 componentType
-   : type
+   : attributePart type
    ;
 
 recordType
@@ -235,7 +248,7 @@ fixedPart
    ;
 
 recordSection
-   : identifierList COLON type
+   : identifierList COLON attributePart type
    ;
 
 variantPart
@@ -260,12 +273,12 @@ baseType
    ;
 
 fileType
-   : FILE OF type
+   : FILE OF attributePart type
    | FILE
    ;
 
 pointerType
-   : POINTER typeIdentifier
+   : attributePart POINTER attributePart typeIdentifier
    ;
 
 variableDeclarationPart
@@ -277,10 +290,10 @@ variableDeclaration
    ;
 
 variablePreDeclaration
-   : VALUE identifier
-   | VALUE factor
-   | VALUE ZERO   
-   | VALUE LBRACK (initializerList COLON factor (SEMI initializerList COLON factor)*)? RBRACK
+   : (VALUE | ASSIGN) identifier
+   | (VALUE | ASSIGN) signedFactor
+   | (VALUE | ASSIGN) ZERO   
+   | (VALUE | ASSIGN) LBRACK (initializerList COLON signedFactor (SEMI initializerList COLON signedFactor)*)? RBRACK
    ;
 
 toBeginEndDoDeclarationPart
@@ -288,7 +301,7 @@ toBeginEndDoDeclarationPart
    ;
 
 procedureAndFunctionDeclarationPart
-   : attributePart procedureOrFunctionDeclaration (block | EXTERNAL) SEMI
+   : attributePart procedureOrFunctionDeclaration (block | EXTERN | EXTERNAL | FORTRAN | FORWARD) SEMI
    ;
 
 procedureOrFunctionDeclaration
@@ -307,12 +320,12 @@ formalParameterList
 formalParameterSection
    : parameterGroup
    | VAR parameterGroup
-   | attributePart FUNCTION identifier (formalParameterList)? COLON resultType
+   | attributePart FUNCTION identifier (formalParameterList)? COLON attributePart resultType
    | attributePart PROCEDURE identifier (formalParameterList)?
    ;
 
 parameterGroup
-   : identifierList COLON typeIdentifier
+   : identifierList COLON attributePart type (ASSIGN expression)?
    ;
 
 identifierList
@@ -328,7 +341,7 @@ constList
    ;
 
 functionDeclaration
-   : FUNCTION identifier (formalParameterList)? COLON resultType SEMI
+   : FUNCTION identifier (formalParameterList)? COLON attributePart resultType SEMI
    ;
 
 resultType
@@ -357,11 +370,11 @@ assignmentStatement
    ;
 
 variable
-   : (ATP identifier | identifier) (LBRACK expression (COMMA expression)* RBRACK | LBRACK2 expression (COMMA expression)* RBRACK2 | DOT identifier | POINTER)*
+   : (ATP identifier | identifier) (LBRACK expression (COMMA expression)* RBRACK | LBRACK2 expression (COMMA expression)* RBRACK2 | DOT identifier | POINTER)* (COLON COLON identifier)?
    ;
 
 expression
-   : simpleExpression (relationaloperator expression)?
+   : simpleExpression (relationaloperator expression)? (COLON COLON identifier)?
    ;
 
 relationaloperator
@@ -415,6 +428,7 @@ unsignedConstant
    | constantChr
    | string
    | NIL
+   | ZERO
    ;
 
 functionDesignator
@@ -422,7 +436,7 @@ functionDesignator
    ;
 
 parameterList
-   : actualParameter (COMMA actualParameter)*
+   : actualParameter? (COMMA actualParameter?)*
    ;
 
 set
@@ -493,7 +507,7 @@ ifStatement
    ;
 
 caseStatement
-   : CASE expression OF caseListElement (SEMI caseListElement)* (SEMI ELSE statements)? END
+   : CASE expression OF caseListElement (SEMI caseListElement)* (SEMI ELSE statements)? SEMI? END
    ;
 
 caseListElement
@@ -542,132 +556,164 @@ recordVariableList
 fragment A
    : ('a' | 'A')
    ;
-
-
 fragment B
    : ('b' | 'B')
    ;
-
-
 fragment C
    : ('c' | 'C')
    ;
-
-
 fragment D
    : ('d' | 'D')
    ;
-
-
 fragment E
    : ('e' | 'E')
    ;
-
-
 fragment F
    : ('f' | 'F')
    ;
-
-
 fragment G
    : ('g' | 'G')
    ;
-
-
 fragment H
    : ('h' | 'H')
    ;
-
-
 fragment I
    : ('i' | 'I')
    ;
-
-
 fragment J
    : ('j' | 'J')
    ;
-
-
 fragment K
    : ('k' | 'K')
    ;
-
-
 fragment L
    : ('l' | 'L')
    ;
-
-
 fragment M
    : ('m' | 'M')
    ;
-
-
 fragment N
    : ('n' | 'N')
    ;
-
-
 fragment O
    : ('o' | 'O')
    ;
-
-
 fragment P
    : ('p' | 'P')
    ;
-
-
 fragment Q
    : ('q' | 'Q')
    ;
-
-
 fragment R
    : ('r' | 'R')
    ;
-
-
 fragment S
    : ('s' | 'S')
    ;
-
-
 fragment T
    : ('t' | 'T')
    ;
-
-
 fragment U
    : ('u' | 'U')
    ;
-
-
 fragment V
    : ('v' | 'V')
    ;
-
-
 fragment W
    : ('w' | 'W')
    ;
-
-
 fragment X
    : ('x' | 'X')
    ;
-
-
 fragment Y
    : ('y' | 'Y')
    ;
-
-
 fragment Z
    : ('z' | 'Z')
    ;
 
+
+PLUS
+   : '+'
+   ;
+MINUS
+   : '-'
+   ;
+STAR
+   : '*'
+   ;
+SLASH
+   : '/'
+   ;
+ASSIGN
+   : ':='
+   ;
+COMMA
+   : ','
+   ;
+SEMI
+   : ';'
+   ;
+COLON
+   : ':'
+   ;
+EQUAL
+   : '='
+   ;
+NOT_EQUAL
+   : '<>'
+   ;
+LT
+   : '<'
+   ;
+LE
+   : '<='
+   ;
+GE
+   : '>='
+   ;
+GT
+   : '>'
+   ;
+LPAREN
+   : '('
+   ;
+RPAREN
+   : ')'
+   ;
+LBRACK
+   : '['
+   ;
+LBRACK2
+   : '(.'
+   ;
+RBRACK
+   : ']'
+   ;
+RBRACK2
+   : '.)'
+   ;
+POINTER
+   : '^'
+   ;
+ATP
+   : '@'
+   ;
+DOT
+   : '.'
+   ;
+DOTDOT
+   : '..'
+   ;
+LCURLY
+   : '{'
+   ;
+RCURLY
+   : '}'
+   ;
+DOWN_LINE
+   : '_'
+   ;
 
 ALIGN
    : A L I G N
@@ -786,6 +832,18 @@ GLOBAL
 EXTERNAL
    : E X T E R N A L
    ;
+EXTERN
+   : E X T E R N
+   ;
+FORTRAN
+   : F O R T R A N
+   ;
+FORWARD
+   : F O R W A R D
+   ;
+VARYING
+   : V A R Y I N G
+   ;
 WEAK_GLOBAL
    : W E A K DOWN_LINE G L O B A L
    ;
@@ -798,393 +856,274 @@ VOLATILE
 WRITEONLY
    : W R I T E O N L Y
    ;
-DOWN_LINE
-   : '_'
-   ;
-
 AND
    : A N D
    ;
-
-
 ARRAY
    : A R R A Y
    ;
-
-
 BEGIN
    : B E G I N
    ;
-
-
 BOOLEAN
    : B O O L E A N
    ;
-
-
 CASE
    : C A S E
    ;
-
-
 CHAR
    : C H A R
    ;
-
-
 CHR
    : C H R
    ;
-
-
 CONST
    : C O N S T
    ;
-
-
 DIV
    : D I V
    ;
-
-
 DO
    : D O
    ;
-
-
 DOWNTO
    : D O W N T O
    ;
-
-
 ELSE
    : E L S E
    ;
-
-
 END
    : E N D
    ;
-
-
 ENVIRONMENT
    : E N V I R O N M E N T
    ;
-
-
 FILE
    : F I L E
    ;
-
-
 FOR
    : F O R
    ;
-
-
 FUNCTION
    : F U N C T I O N
    ;
-
-
 GOTO
    : G O T O
    ;
-
-
 IF
    : I F
    ;
-
-
 IN
    : I N
    ;
-
 INHERIT
    : I N H E R I T
    ;
-
 INTEGER
    : I N T E G E R
    ;
-
-
+INTEGER8
+   : I N T E G E R '8'
+   ;
+INTEGER16
+   : I N T E G E R '16'
+   ;
+INTEGER32
+   : I N T E G E R '32'
+   ;
+INTEGER64
+   : I N T E G E R '64'
+   ;
+UNSIGNED8
+   : U N S I G N E D '8'
+   ;
+UNSIGNED16
+   : U N S I G N E D '16'
+   ;
+CARDINAL16
+   : C A R D I N A L '16'
+   ;
+UNSIGNED32
+   : U N S I G N E D '32'
+   ;
+CARDINAL32
+   : C A R D I N A L '32'
+   ;
+UNSIGNED64
+   : U N S I G N E D '64'
+   ;
 LABEL
    : L A B E L
    ;
-
-
 MOD
    : M O D
    ;
-
-
-NIL
-   : N I L
-   ;
-
-
-NOT
-   : N O T
-   ;
-
-
-OF
-   : O F
-   ;
-
-
-OR
-   : O R
-   ;
-
-
-PACKED
-   : P A C K E D
-   ;
-
-
-PROCEDURE
-   : P R O C E D U R E
-   ;
-
-
-PROGRAM
-   : P R O G R A M
-   ;
-
-
-REAL
-   : R E A L
-   ;
-
-
-RECORD
-   : R E C O R D
-   ;
-
-
-REPEAT
-   : R E P E A T
-   ;
-
-
-SET
-   : S E T
-   ;
-
-
-THEN
-   : T H E N
-   ;
-
-
-TO
-   : T O
-   ;
-
-
-TYPE
-   : T Y P E
-   ;
-
-
-UNTIL
-   : U N T I L
-   ;
-
-VALUE
-   : V A L U E
-   ;
-
-VAR
-   : V A R
-   ;
-
-
-WHILE
-   : W H I L E
-   ;
-
-
-WITH
-   : W I T H
-   ;
-
-ZERO
-   : Z E R O
-   ;
-
-
-PLUS
-   : '+'
-   ;
-
-
-MINUS
-   : '-'
-   ;
-
-
-STAR
-   : '*'
-   ;
-
-
-SLASH
-   : '/'
-   ;
-
-
-ASSIGN
-   : ':='
-   ;
-
-
-COMMA
-   : ','
-   ;
-
-
-SEMI
-   : ';'
-   ;
-
-
-COLON
-   : ':'
-   ;
-
-
-EQUAL
-   : '='
-   ;
-
-
-NOT_EQUAL
-   : '<>'
-   ;
-
-
-LT
-   : '<'
-   ;
-
-
-LE
-   : '<='
-   ;
-
-
-GE
-   : '>='
-   ;
-
-
-GT
-   : '>'
-   ;
-
-
-LPAREN
-   : '('
-   ;
-
-
-RPAREN
-   : ')'
-   ;
-
-
-LBRACK
-   : '['
-   ;
-
-
-LBRACK2
-   : '(.'
-   ;
-
-
 MODULE   
    : M O D U L E
    ;
-
-
-RBRACK
-   : ']'
+NIL
+   : N I L
    ;
-
-
-RBRACK2
-   : '.)'
+NOT
+   : N O T
    ;
-
-
-POINTER
-   : '^'
+OF
+   : O F
    ;
-
-
-ATP
-   : '@'
+OR
+   : O R
    ;
-
-
-DOT
-   : '.'
+PACKED
+   : P A C K E D
    ;
-
-
-DOTDOT
-   : '..'
+PROCEDURE
+   : P R O C E D U R E
    ;
-
-
-LCURLY
-   : '{'
+PROGRAM
+   : P R O G R A M
    ;
-
-
-RCURLY
-   : '}'
+REAL
+   : R E A L
    ;
-
-
+DOUBLE
+   : D O U B L E
+   ;
+QUADRUPLE
+   : Q U A D R U P L E
+   ;
+RECORD
+   : R E C O R D
+   ;
+REPEAT
+   : R E P E A T
+   ;
+SET
+   : S E T
+   ;
+THEN
+   : T H E N
+   ;
+TO
+   : T O
+   ;
+TYPE
+   : T Y P E
+   ;
+UNTIL
+   : U N T I L
+   ;
+VALUE
+   : V A L U E
+   ;
+VAR
+   : V A R
+   ;
+WHILE
+   : W H I L E
+   ;
+WITH
+   : W I T H
+   ;
+ZERO
+   : Z E R O
+   ;
 UNIT
    : U N I T
    ;
-
-
 INTERFACE
    : I N T E R F A C E
    ;
-
-
 USES
    : U S E S
    ;
-
-
 STRING
    : S T R I N G
    ;
-
-
 IMPLEMENTATION
    : I M P L E M E N T A T I O N
    ;
-
-
 TRUE
    : T R U E
    ;
-
-
 FALSE
    : F A L S E
    ;
+
+//Reserved Words
+//    %DESCR %DICTIONARY %IMMED %INCLUDE
+// %REF %STDESCR %SUBTITLE %TITLE
+// AND ARRAY BEGIN CASE
+// CONST DIV DO DOWNTO
+// ELSE END FILE FOR
+// FUNCTION GOTO IF IN
+// LABEL MOD NIL NOT
+// OF OR PACKED PROCEDURE
+// PROGRAM RECORD REPEAT SET
+// THEN TO TYPE UNTIL
+// VAR WHILE WITH
+
+// Redefinable Reserved Words
+// AND_THEN BREAK CONTINUE MODULE
+// OR_ELSE OTHERWISE REM RETURN
+// VALUE VARYING
+
+//Predeclared Identifiers
+// ABS ADD_ATOMIC ADD_INTERLOCKED ADDRESS
+// AND_ATOMIC ARCTAN ARGC ARGUMENT
+// ARGUMENT_LIST_
+// LENGTH
+// ARGV ASSERT
+// BARRIER BIN BIT_OFFSET BITNEXT
+// BITSIZE BOOLEAN BYTE_OFFSET
+// CARD CARDINAL CARDINAL16 CARDINAL32
+// CHAR CHR CLEAR_INTERLOCKED CLOCK
+// C_STR C_STR_T CLOSE COS
+// CREATE_DIRECTORY
+// D_FLOAT DATE DBLE DEC
+// DELETE DELETE_FILE DISPOSE DOUBLE
+// EOF EOLN EPSDOUBLE EPSQUADRUPLE
+// EPSREAL EQ ESTABLISH EXP
+// EXPO EXTEND
+// F_FLOAT FALSE FIND FIND_FIRST_
+// BIT_CLEAR
+// FIND_FIRST_BIT_SET FIND_MEMBER FIND_NONMEMBER FINDK
+// G_FLOAT GE GET GETTIMESTAMP
+// GT
+// H_FLOAT HALT HEX
+// IADDRESS IADDRESS64 INDEX INPUT
+// INT INTEGER INTEGER8 INTEGER16
+// INTEGER32 INTEGER64 INTEGER_ADDRESS
+// LE LENGTH LINELIMIT LN
+// LOCATE LOWER LSHIFT LT
+// MALLOC_C_STR MAX MAXCHAR MAXDOUBLE
+// MAXINT MAXQUADRUPLE MAXREAL MAXUNSIGNED
+// MIN MINDOUBLE MINQUADRUPLE MINREAL
+// NE NEW NEXT NIL
+// OCT ODD OPEN OR_ATOMIC
+// ORD OUTPUT
+// PACK PAD PAGE PAS_STR
+// PAS_STRCPY POINTER PRED PRESENT
+// PUT
+// QUAD QUADRUPLE
+// RANDOM READ READLN READV
+// REAL RENAME_FILE RESET RESETK
+// REVERT REWRITE ROUND ROUND64
+// RSHIFT
+// S_FLOAT SEED SET_INTERLOCKED SIN
+// SINGLE SIZE SNGL SQR
+// SQRT STATUS STATUSV STRING
+// SUBSTR SUCC SYSCLOCK
+// T_FLOAT TEXT TIME TIMESTAMP
+// TRUE TRUNC TRUNC64 TRUNCATE
+// UAND UDEC UFB UINT
+// UNDEFINED UNLOCK UNOT UNPACK
+// UNSIGNED UNSIGNED8 UNSIGNED16 UNSIGNED32
+// UNSIGNED64 UOR UPDATE UPPER
+// UROUND UROUND64 UTRUNC UTRUNC64
+// UXOR
+// WALLCLOCK WRITE WRITELN WRITEV
+// X_FLOAT XOR
+// ZERO
 
 
 WS
@@ -1203,7 +1142,7 @@ COMMENT_2
 
 
 IDENTIFIER
-   : ('a' .. 'z' | 'A' .. 'Z') ('a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_')*
+   : [a-zA-Z_$%] ([a-zA-Z_0-9$])*
    ;
 
 
@@ -1219,6 +1158,22 @@ NUM_INT
 
 NUM_REAL
    : ('0' .. '9') + (('.' ('0' .. '9') + (EXPONENT)?)? | EXPONENT)
+   ;
+
+BASE_NUMBER
+   : [0-9]([0-9])? '#' (['])? ([0-9A-Za-z])+ (['])?
+   ;
+
+BIN_NUMBER
+   : '%' [bB] (['])? ([0-1])+ (['])?
+   ;
+
+HEX_NUMBER
+   : '%' [xX] (['])? ([0-9A-Fa-f])+ (['])?
+   ;
+
+OCT_NUMBER
+   : '%' [oO] (['])? ([0-7])+ (['])?
    ;
 
 

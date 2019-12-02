@@ -38,6 +38,7 @@ import { TypeIdentifierContext } from "./pascalParser";
 import { StructuredTypeContext } from "./pascalParser";
 import { UnpackedStructuredTypeContext } from "./pascalParser";
 import { StringtypeContext } from "./pascalParser";
+import { VaryingTypeContext } from "./pascalParser";
 import { ArrayTypeContext } from "./pascalParser";
 import { TypeListContext } from "./pascalParser";
 import { IndexTypeContext } from "./pascalParser";
@@ -501,6 +502,17 @@ export interface pascalListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitStringtype?: (ctx: StringtypeContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.varyingType`.
+	 * @param ctx the parse tree
+	 */
+	enterVaryingType?: (ctx: VaryingTypeContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.varyingType`.
+	 * @param ctx the parse tree
+	 */
+	exitVaryingType?: (ctx: VaryingTypeContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `pascalParser.arrayType`.

@@ -38,6 +38,7 @@ import { TypeIdentifierContext } from "./pascalParser";
 import { StructuredTypeContext } from "./pascalParser";
 import { UnpackedStructuredTypeContext } from "./pascalParser";
 import { StringtypeContext } from "./pascalParser";
+import { VaryingTypeContext } from "./pascalParser";
 import { ArrayTypeContext } from "./pascalParser";
 import { TypeListContext } from "./pascalParser";
 import { IndexTypeContext } from "./pascalParser";
@@ -364,6 +365,13 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitStringtype?: (ctx: StringtypeContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.varyingType`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVaryingType?: (ctx: VaryingTypeContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.arrayType`.
