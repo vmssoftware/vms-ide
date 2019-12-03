@@ -32,7 +32,7 @@ import { FunctionTypeContext } from "./pascalParser";
 import { ProcedureTypeContext } from "./pascalParser";
 import { TypeContext } from "./pascalParser";
 import { SimpleTypeContext } from "./pascalParser";
-import { ScalarTypeContext } from "./pascalParser";
+import { EnumTypeContext } from "./pascalParser";
 import { SubrangeTypeContext } from "./pascalParser";
 import { TypeIdentifierContext } from "./pascalParser";
 import { StructuredTypeContext } from "./pascalParser";
@@ -53,7 +53,25 @@ import { VariantContext } from "./pascalParser";
 import { SetTypeContext } from "./pascalParser";
 import { BaseTypeContext } from "./pascalParser";
 import { FileTypeContext } from "./pascalParser";
+import { TextTypeContext } from "./pascalParser";
 import { PointerTypeContext } from "./pascalParser";
+import { SchemaTypeContext } from "./pascalParser";
+import { SchemaListContext } from "./pascalParser";
+import { SchemaNameContext } from "./pascalParser";
+import { PrototypeTypeContext } from "./pascalParser";
+import { PrototypeListContext } from "./pascalParser";
+import { ConstructorValueContext } from "./pascalParser";
+import { ConstructorArrayContext } from "./pascalParser";
+import { TypeNameContext } from "./pascalParser";
+import { ComponentValueContext } from "./pascalParser";
+import { ConstructorRecordContext } from "./pascalParser";
+import { InitializerListContext } from "./pascalParser";
+import { InitializerItemContext } from "./pascalParser";
+import { TagValueContext } from "./pascalParser";
+import { ConstructorSetContext } from "./pascalParser";
+import { ConstructorNonStdArrayContext } from "./pascalParser";
+import { ComponentValueNContext } from "./pascalParser";
+import { ConstructorNonStdRecordContext } from "./pascalParser";
 import { VariableDeclarationPartContext } from "./pascalParser";
 import { VariableDeclarationContext } from "./pascalParser";
 import { VariablePreDeclarationContext } from "./pascalParser";
@@ -65,7 +83,6 @@ import { FormalParameterListContext } from "./pascalParser";
 import { FormalParameterSectionContext } from "./pascalParser";
 import { ParameterGroupContext } from "./pascalParser";
 import { IdentifierListContext } from "./pascalParser";
-import { InitializerListContext } from "./pascalParser";
 import { ConstListContext } from "./pascalParser";
 import { FunctionDeclarationContext } from "./pascalParser";
 import { ResultTypeContext } from "./pascalParser";
@@ -438,15 +455,15 @@ export interface pascalListener extends ParseTreeListener {
 	exitSimpleType?: (ctx: SimpleTypeContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `pascalParser.scalarType`.
+	 * Enter a parse tree produced by `pascalParser.enumType`.
 	 * @param ctx the parse tree
 	 */
-	enterScalarType?: (ctx: ScalarTypeContext) => void;
+	enterEnumType?: (ctx: EnumTypeContext) => void;
 	/**
-	 * Exit a parse tree produced by `pascalParser.scalarType`.
+	 * Exit a parse tree produced by `pascalParser.enumType`.
 	 * @param ctx the parse tree
 	 */
-	exitScalarType?: (ctx: ScalarTypeContext) => void;
+	exitEnumType?: (ctx: EnumTypeContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `pascalParser.subrangeType`.
@@ -669,6 +686,17 @@ export interface pascalListener extends ParseTreeListener {
 	exitFileType?: (ctx: FileTypeContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `pascalParser.textType`.
+	 * @param ctx the parse tree
+	 */
+	enterTextType?: (ctx: TextTypeContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.textType`.
+	 * @param ctx the parse tree
+	 */
+	exitTextType?: (ctx: TextTypeContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `pascalParser.pointerType`.
 	 * @param ctx the parse tree
 	 */
@@ -678,6 +706,193 @@ export interface pascalListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitPointerType?: (ctx: PointerTypeContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.schemaType`.
+	 * @param ctx the parse tree
+	 */
+	enterSchemaType?: (ctx: SchemaTypeContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.schemaType`.
+	 * @param ctx the parse tree
+	 */
+	exitSchemaType?: (ctx: SchemaTypeContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.schemaList`.
+	 * @param ctx the parse tree
+	 */
+	enterSchemaList?: (ctx: SchemaListContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.schemaList`.
+	 * @param ctx the parse tree
+	 */
+	exitSchemaList?: (ctx: SchemaListContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.schemaName`.
+	 * @param ctx the parse tree
+	 */
+	enterSchemaName?: (ctx: SchemaNameContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.schemaName`.
+	 * @param ctx the parse tree
+	 */
+	exitSchemaName?: (ctx: SchemaNameContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.prototypeType`.
+	 * @param ctx the parse tree
+	 */
+	enterPrototypeType?: (ctx: PrototypeTypeContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.prototypeType`.
+	 * @param ctx the parse tree
+	 */
+	exitPrototypeType?: (ctx: PrototypeTypeContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.prototypeList`.
+	 * @param ctx the parse tree
+	 */
+	enterPrototypeList?: (ctx: PrototypeListContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.prototypeList`.
+	 * @param ctx the parse tree
+	 */
+	exitPrototypeList?: (ctx: PrototypeListContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.constructorValue`.
+	 * @param ctx the parse tree
+	 */
+	enterConstructorValue?: (ctx: ConstructorValueContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.constructorValue`.
+	 * @param ctx the parse tree
+	 */
+	exitConstructorValue?: (ctx: ConstructorValueContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.constructorArray`.
+	 * @param ctx the parse tree
+	 */
+	enterConstructorArray?: (ctx: ConstructorArrayContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.constructorArray`.
+	 * @param ctx the parse tree
+	 */
+	exitConstructorArray?: (ctx: ConstructorArrayContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.typeName`.
+	 * @param ctx the parse tree
+	 */
+	enterTypeName?: (ctx: TypeNameContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.typeName`.
+	 * @param ctx the parse tree
+	 */
+	exitTypeName?: (ctx: TypeNameContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.componentValue`.
+	 * @param ctx the parse tree
+	 */
+	enterComponentValue?: (ctx: ComponentValueContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.componentValue`.
+	 * @param ctx the parse tree
+	 */
+	exitComponentValue?: (ctx: ComponentValueContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.constructorRecord`.
+	 * @param ctx the parse tree
+	 */
+	enterConstructorRecord?: (ctx: ConstructorRecordContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.constructorRecord`.
+	 * @param ctx the parse tree
+	 */
+	exitConstructorRecord?: (ctx: ConstructorRecordContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.initializerList`.
+	 * @param ctx the parse tree
+	 */
+	enterInitializerList?: (ctx: InitializerListContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.initializerList`.
+	 * @param ctx the parse tree
+	 */
+	exitInitializerList?: (ctx: InitializerListContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.initializerItem`.
+	 * @param ctx the parse tree
+	 */
+	enterInitializerItem?: (ctx: InitializerItemContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.initializerItem`.
+	 * @param ctx the parse tree
+	 */
+	exitInitializerItem?: (ctx: InitializerItemContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.tagValue`.
+	 * @param ctx the parse tree
+	 */
+	enterTagValue?: (ctx: TagValueContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.tagValue`.
+	 * @param ctx the parse tree
+	 */
+	exitTagValue?: (ctx: TagValueContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.constructorSet`.
+	 * @param ctx the parse tree
+	 */
+	enterConstructorSet?: (ctx: ConstructorSetContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.constructorSet`.
+	 * @param ctx the parse tree
+	 */
+	exitConstructorSet?: (ctx: ConstructorSetContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.constructorNonStdArray`.
+	 * @param ctx the parse tree
+	 */
+	enterConstructorNonStdArray?: (ctx: ConstructorNonStdArrayContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.constructorNonStdArray`.
+	 * @param ctx the parse tree
+	 */
+	exitConstructorNonStdArray?: (ctx: ConstructorNonStdArrayContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.componentValueN`.
+	 * @param ctx the parse tree
+	 */
+	enterComponentValueN?: (ctx: ComponentValueNContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.componentValueN`.
+	 * @param ctx the parse tree
+	 */
+	exitComponentValueN?: (ctx: ComponentValueNContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.constructorNonStdRecord`.
+	 * @param ctx the parse tree
+	 */
+	enterConstructorNonStdRecord?: (ctx: ConstructorNonStdRecordContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.constructorNonStdRecord`.
+	 * @param ctx the parse tree
+	 */
+	exitConstructorNonStdRecord?: (ctx: ConstructorNonStdRecordContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `pascalParser.variableDeclarationPart`.
@@ -799,17 +1014,6 @@ export interface pascalListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitIdentifierList?: (ctx: IdentifierListContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `pascalParser.initializerList`.
-	 * @param ctx the parse tree
-	 */
-	enterInitializerList?: (ctx: InitializerListContext) => void;
-	/**
-	 * Exit a parse tree produced by `pascalParser.initializerList`.
-	 * @param ctx the parse tree
-	 */
-	exitInitializerList?: (ctx: InitializerListContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `pascalParser.constList`.

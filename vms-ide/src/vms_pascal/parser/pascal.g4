@@ -117,6 +117,7 @@ constant
    | sign identifier
    | string
    | constantChr
+   | bool
    ;
 
 unsignedNumber
@@ -156,6 +157,7 @@ typeDefinitionPart
 
 typeDefinition
    : identifier EQUAL attributePart (type | functionType | procedureType)
+   | schemaType
    ;
 
 functionType
@@ -177,6 +179,7 @@ simpleType
    | subrangeType
    | typeIdentifier
    | stringtype
+   | prototypeType
    ;
 
 enumType
@@ -185,7 +188,8 @@ enumType
 
 subrangeType
    : constant DOTDOT constant
-   | expression DOTDOT expression COLON typeIdentifier//?
+   | expression DOTDOT expression
+   | expression DOTDOT expression COLON typeIdentifier
    ;
 
 typeIdentifier
@@ -206,6 +210,7 @@ unpackedStructuredType
    | recordType
    | setType
    | fileType
+   | textType
    | varyingType
    ;
 
@@ -252,11 +257,11 @@ recordSection
    ;
 
 variantPart
-   : CASE tag OF variant (SEMI variant)*
+   : CASE tag OF variant (SEMI variant)* (SEMI? OTHERWISE LPAREN fieldList RPAREN)?
    ;
 
 tag
-   : identifier COLON typeIdentifier
+   : (identifier COLON)? attributePart typeIdentifier
    | typeIdentifier
    ;
 
@@ -265,7 +270,7 @@ variant
    ;
 
 setType
-   : SET OF baseType
+   : SET OF attributePart baseType
    ;
 
 baseType
@@ -274,12 +279,98 @@ baseType
 
 fileType
    : FILE OF attributePart type
-   | FILE
+   ;
+
+textType
+   : attributePart TEXT
    ;
 
 pointerType
-   : attributePart POINTER attributePart typeIdentifier
+   : attributePart POINTER attributePart type//typeIdentifier
    ;
+
+schemaType
+   : schemaName LPAREN schemaList (SEMI schemaList)* RPAREN EQUAL attributePart type
+   ;
+
+schemaList
+   : (identifier (COMMA identifier)* COLON attributePart type)
+   ;
+
+schemaName
+   : identifier
+   | STRING
+   ;
+
+prototypeType
+   : schemaName LPAREN prototypeList (SEMI prototypeList)* RPAREN
+   ;
+
+prototypeList
+   : expression (COMMA expression)*
+   ;
+
+constructorValue
+   : constructorArray
+   | constructorRecord
+   | constructorSet
+   | constructorNonStdArray
+   | constructorNonStdRecord
+   ;
+
+constructorArray
+   : typeName? LBRACK (initializerList COLON componentValue (SEMI initializerList COLON componentValue)*)? (SEMI? OTHERWISE componentValue SEMI?)? RBRACK
+   | typeName? LBRACK (initializerList COLON constructorArray (SEMI initializerList COLON constructorArray)*)? (SEMI? OTHERWISE constructorArray SEMI?)? RBRACK
+   ;
+
+typeName
+   : identifier
+   ;
+
+componentValue
+   : expression
+   ;
+
+constructorRecord
+   : typeName? LBRACK (initializerList COLON componentValue (SEMI initializerList COLON componentValue)*)?
+      (SEMI? CASE (identifier COLON)? tagValue OF LBRACK (initializerList COLON componentValue (SEMI initializerList COLON componentValue)*) RBRACK)?
+      (SEMI? OTHERWISE ZERO SEMI?)? RBRACK
+   | typeName? LBRACK (initializerList COLON constructorRecord (SEMI initializerList COLON constructorRecord)*)?
+      (SEMI? CASE (identifier COLON)? tagValue OF LBRACK (initializerList COLON constructorRecord (SEMI initializerList COLON constructorRecord)*) RBRACK)?
+      (SEMI? OTHERWISE ZERO SEMI?)? RBRACK
+   ;
+
+initializerList
+   : initializerItem (COMMA initializerItem)*
+   ;
+
+initializerItem
+   : (identifier | NUM_INT | subrangeType)
+   ;  
+
+tagValue
+   : expression
+   ;
+
+constructorSet
+   : typeName? LBRACK (componentValue (SEMI componentValue)*)? RBRACK
+   ;
+
+constructorNonStdArray
+   : typeName? LPAREN (componentValueN (COMMA componentValueN)*)? (SEMI? REPEAT componentValueN)? RPAREN
+   | typeName? LPAREN (constructorNonStdArray (COMMA constructorNonStdArray)*)? (SEMI? REPEAT constructorNonStdArray)? RPAREN
+   ;
+
+componentValueN
+   : (NUM_INT OF)? expression
+   ;
+
+constructorNonStdRecord
+   : typeName? LPAREN (componentValueN (COMMA componentValueN)*)? (SEMI? tagValue COMMA componentValueN (SEMI componentValueN)*)? RPAREN
+   | typeName? LPAREN (constructorNonStdRecord (COMMA constructorNonStdRecord)*)? (SEMI? tagValue COMMA constructorNonStdRecord (SEMI constructorNonStdRecord)*)? RPAREN
+   ;
+
+
 
 variableDeclarationPart
    : VAR variableDeclaration (SEMI variableDeclaration)* SEMI
@@ -292,8 +383,8 @@ variableDeclaration
 variablePreDeclaration
    : (VALUE | ASSIGN) identifier
    | (VALUE | ASSIGN) signedFactor
-   | (VALUE | ASSIGN) ZERO   
-   | (VALUE | ASSIGN) LBRACK (initializerList COLON signedFactor (SEMI initializerList COLON signedFactor)*)? RBRACK
+   | (VALUE | ASSIGN) ZERO
+   | (VALUE | ASSIGN) constructorValue 
    ;
 
 toBeginEndDoDeclarationPart
@@ -332,12 +423,8 @@ identifierList
    : identifier (COMMA identifier)*
    ;
 
-initializerList
-   : identifier (COMMA identifier)*
-   ;
-
 constList
-   : constant (COMMA constant)*
+   : constant ((DOTDOT | COMMA) constant)*
    ;
 
 functionDeclaration
@@ -429,6 +516,7 @@ unsignedConstant
    | string
    | NIL
    | ZERO
+   | string (LPAREN identifier RPAREN string?)*//WRITELN( ’’(LF)’Output this’ );
    ;
 
 functionDesignator
@@ -442,6 +530,7 @@ parameterList
 set
    : LBRACK elementList RBRACK
    | LBRACK2 elementList RBRACK2
+   | constructorValue
    ;
 
 elementList
@@ -459,6 +548,7 @@ procedureStatement
 
 actualParameter
    : expression parameterwidth*
+   | identifier ASSIGN identifier//ERROR := CONTINUE
    ;
 
 parameterwidth
@@ -973,6 +1063,9 @@ OF
 OR
    : O R
    ;
+OTHERWISE
+   : O T H E R W I S E
+   ;   
 PACKED
    : P A C K E D
    ;
@@ -999,6 +1092,9 @@ REPEAT
    ;
 SET
    : S E T
+   ;
+TEXT
+   : T E X T
    ;
 THEN
    : T H E N

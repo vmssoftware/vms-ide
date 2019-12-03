@@ -314,8 +314,16 @@ export class DetailsListener implements pascalListener
 
     enterTypeDefinition(ctx: TypeDefinitionContext) 
     {
-        this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, ctx.identifier().text);
-        this.currentSymbol.context = ctx.identifier();
+        if(ctx.identifier())
+        {
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, ctx.identifier()!.text);
+            this.currentSymbol.context = ctx.identifier();
+        }
+        else if(ctx.schemaType())
+        {
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, ctx.schemaType()!.schemaName().text);
+            this.currentSymbol.context = ctx.schemaType()!.schemaName();
+        }
     }
 
     exitTypeDefinition(ctx: TypeDefinitionContext) 

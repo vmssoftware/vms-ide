@@ -32,7 +32,7 @@ import { FunctionTypeContext } from "./pascalParser";
 import { ProcedureTypeContext } from "./pascalParser";
 import { TypeContext } from "./pascalParser";
 import { SimpleTypeContext } from "./pascalParser";
-import { ScalarTypeContext } from "./pascalParser";
+import { EnumTypeContext } from "./pascalParser";
 import { SubrangeTypeContext } from "./pascalParser";
 import { TypeIdentifierContext } from "./pascalParser";
 import { StructuredTypeContext } from "./pascalParser";
@@ -53,7 +53,25 @@ import { VariantContext } from "./pascalParser";
 import { SetTypeContext } from "./pascalParser";
 import { BaseTypeContext } from "./pascalParser";
 import { FileTypeContext } from "./pascalParser";
+import { TextTypeContext } from "./pascalParser";
 import { PointerTypeContext } from "./pascalParser";
+import { SchemaTypeContext } from "./pascalParser";
+import { SchemaListContext } from "./pascalParser";
+import { SchemaNameContext } from "./pascalParser";
+import { PrototypeTypeContext } from "./pascalParser";
+import { PrototypeListContext } from "./pascalParser";
+import { ConstructorValueContext } from "./pascalParser";
+import { ConstructorArrayContext } from "./pascalParser";
+import { TypeNameContext } from "./pascalParser";
+import { ComponentValueContext } from "./pascalParser";
+import { ConstructorRecordContext } from "./pascalParser";
+import { InitializerListContext } from "./pascalParser";
+import { InitializerItemContext } from "./pascalParser";
+import { TagValueContext } from "./pascalParser";
+import { ConstructorSetContext } from "./pascalParser";
+import { ConstructorNonStdArrayContext } from "./pascalParser";
+import { ComponentValueNContext } from "./pascalParser";
+import { ConstructorNonStdRecordContext } from "./pascalParser";
 import { VariableDeclarationPartContext } from "./pascalParser";
 import { VariableDeclarationContext } from "./pascalParser";
 import { VariablePreDeclarationContext } from "./pascalParser";
@@ -65,7 +83,6 @@ import { FormalParameterListContext } from "./pascalParser";
 import { FormalParameterSectionContext } from "./pascalParser";
 import { ParameterGroupContext } from "./pascalParser";
 import { IdentifierListContext } from "./pascalParser";
-import { InitializerListContext } from "./pascalParser";
 import { ConstListContext } from "./pascalParser";
 import { FunctionDeclarationContext } from "./pascalParser";
 import { ResultTypeContext } from "./pascalParser";
@@ -325,11 +342,11 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitSimpleType?: (ctx: SimpleTypeContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `pascalParser.scalarType`.
+	 * Visit a parse tree produced by `pascalParser.enumType`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitScalarType?: (ctx: ScalarTypeContext) => Result;
+	visitEnumType?: (ctx: EnumTypeContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.subrangeType`.
@@ -472,11 +489,137 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitFileType?: (ctx: FileTypeContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `pascalParser.textType`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTextType?: (ctx: TextTypeContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `pascalParser.pointerType`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitPointerType?: (ctx: PointerTypeContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.schemaType`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSchemaType?: (ctx: SchemaTypeContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.schemaList`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSchemaList?: (ctx: SchemaListContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.schemaName`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSchemaName?: (ctx: SchemaNameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.prototypeType`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitPrototypeType?: (ctx: PrototypeTypeContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.prototypeList`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitPrototypeList?: (ctx: PrototypeListContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.constructorValue`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitConstructorValue?: (ctx: ConstructorValueContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.constructorArray`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitConstructorArray?: (ctx: ConstructorArrayContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.typeName`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTypeName?: (ctx: TypeNameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.componentValue`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitComponentValue?: (ctx: ComponentValueContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.constructorRecord`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitConstructorRecord?: (ctx: ConstructorRecordContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.initializerList`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitInitializerList?: (ctx: InitializerListContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.initializerItem`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitInitializerItem?: (ctx: InitializerItemContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.tagValue`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTagValue?: (ctx: TagValueContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.constructorSet`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitConstructorSet?: (ctx: ConstructorSetContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.constructorNonStdArray`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitConstructorNonStdArray?: (ctx: ConstructorNonStdArrayContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.componentValueN`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitComponentValueN?: (ctx: ComponentValueNContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.constructorNonStdRecord`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitConstructorNonStdRecord?: (ctx: ConstructorNonStdRecordContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.variableDeclarationPart`.
@@ -554,13 +697,6 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitIdentifierList?: (ctx: IdentifierListContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `pascalParser.initializerList`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitInitializerList?: (ctx: InitializerListContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.constList`.
