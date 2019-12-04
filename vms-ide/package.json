@@ -364,6 +364,11 @@
         },
         "commands": [
             {
+                "command": "extension.vms-basic.reparse",
+                "title": "%vms_basic.extension.vms_reparse%",
+                "category": "%command.category%"
+            },
+            {
                 "command": "extension.vms-fortran.reparse",
                 "title": "%vms_fortran.extension.vms_reparse%",
                 "category": "%command.category%"
@@ -1041,6 +1046,8 @@
         "cobol-g4-post-modified": "run-s CobolLex.antlr4ts  Cobol.antlr4ts CobolCopy.antlr4ts cobol-make-async",
         "Fortran.antlr4ts": "antlr4ts -o src/vms_fortran/parser -visitor src/vms_fortran/parser/FortranParser.g4",
         "Fortran.antlr4tsLex": "antlr4ts -o src/vms_fortran/parser src/vms_fortran/parser/FortranLexer.g4",
+        "Basic.antlr4ts": "antlr4ts -o src/vms_basic/parser -visitor src/vms_basic/parser/BasicParser.g4",
+        "Basic.antlr4tsLex": "antlr4ts -o src/vms_basic/parser src/vms_basic/parser/BasicLexer.g4",
         "vscode:prepublish": "webpack --mode production",
         "vscode:prepublish_dev": "webpack --mode development",
         "VSCE": "vsce package"
