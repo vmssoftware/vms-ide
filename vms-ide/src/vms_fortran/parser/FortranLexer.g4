@@ -929,6 +929,13 @@ fragment CHAR
    ;
 
 
+fragment SPACE_
+   : [ \t\u000B\u000C]
+   ;
+
+WHITESPACE_
+   : SPACE_ -> channel(HIDDEN)
+   ;
 
 S_CONST
    : SconSingle | SconDouble
