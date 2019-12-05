@@ -7,6 +7,7 @@ import micromatch from "micromatch";
 import { collectSplittedByCommas } from "./common/find-files";
 import { ProjectState } from "./dep-tree/proj-state";
 import { EventEmitter } from "events";
+import path from 'path';
 
 let watchers: Map<string, Disposable[]> = new Map<string, Disposable[]>();
 
@@ -89,13 +90,16 @@ async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelp
             options.ignore = splitExclude;
         }
         const getFileType = (relativeFilePath: string) => {
+            if (!path.extname(relativeFilePath)) {
+                relativeFilePath += ".";
+            }
             if (micromatch([relativeFilePath], splittedSource, options).length > 0) return EFileType.source;
             if (micromatch([relativeFilePath], splittedHeaders, options).length > 0) return EFileType.header;
             if (micromatch([relativeFilePath], splittedBuilders, options).length > 0) return EFileType.builder;
             if (micromatch([relativeFilePath], splittedResource, options).length > 0) return EFileType.resource;
             return EFileType.unknown;
         }
-        const relativePattern = new RelativePattern(folder, "**/*.*");
+        const relativePattern = new RelativePattern(folder, "**/*");
         const fsWatcher = workspace.createFileSystemWatcher(relativePattern, false, false, false);
         const rootLength = folder.uri.fsPath.length + 1;
         fsWatcher.onDidCreate((uri) => {

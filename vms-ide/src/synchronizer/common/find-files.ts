@@ -1,4 +1,5 @@
 import * as nls from "vscode-nls";
+import path from "path";
 import micromatch from "micromatch";
 
 import { LogFunction, LogType } from "../../common/main";
@@ -106,7 +107,8 @@ export async function findFiles(canReadDir: IReadDirectory,
                 acc.dirs.push(fileEntry);
             }
         } else if (fileEntry.isFile) {
-            const list = micromatch([fileEntry.filename], splitInclude, options);
+            let ext = path.extname(fileEntry.filename);
+            const list = micromatch([ ext? fileEntry.filename : fileEntry.filename + "."], splitInclude, options);
             if (list.length) {
                 acc.files.push(fileEntry);
             }

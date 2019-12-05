@@ -1,6 +1,5 @@
 
 import * as nls from "vscode-nls";
-import micromatch from "micromatch";
 import fs from "fs-extra";
 import path from "path";
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, languages, Range, Uri, workspace } from "vscode";
