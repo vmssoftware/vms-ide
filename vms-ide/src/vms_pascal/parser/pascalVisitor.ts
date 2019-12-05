@@ -10,14 +10,20 @@ import { InheritContext } from "./pascalParser";
 import { InvironmentAttrContext } from "./pascalParser";
 import { IdentifierContext } from "./pascalParser";
 import { AttributePartContext } from "./pascalParser";
+import { AttributeTypeContext } from "./pascalParser";
+import { AttributeVarContext } from "./pascalParser";
 import { AttributeDefContext } from "./pascalParser";
+import { PreReservedWordsContext } from "./pascalParser";
 import { AttributeContext } from "./pascalParser";
+import { DirectivesContext } from "./pascalParser";
+import { BlockDeclarationsContext } from "./pascalParser";
 import { BlockContext } from "./pascalParser";
-import { UsesUnitsPartContext } from "./pascalParser";
+import { BlockInContext } from "./pascalParser";
 import { LabelDeclarationPartContext } from "./pascalParser";
 import { LabelContext } from "./pascalParser";
 import { ConstantDefinitionPartContext } from "./pascalParser";
 import { ConstantDefinitionContext } from "./pascalParser";
+import { ConstantNameContext } from "./pascalParser";
 import { ConstantChrContext } from "./pascalParser";
 import { ConstantContext } from "./pascalParser";
 import { UnsignedNumberContext } from "./pascalParser";
@@ -26,6 +32,8 @@ import { UnsignedRealContext } from "./pascalParser";
 import { SignContext } from "./pascalParser";
 import { BoolContext } from "./pascalParser";
 import { StringContext } from "./pascalParser";
+import { ValueDefinitionPartContext } from "./pascalParser";
+import { VariableNameContext } from "./pascalParser";
 import { TypeDefinitionPartContext } from "./pascalParser";
 import { TypeDefinitionContext } from "./pascalParser";
 import { FunctionTypeContext } from "./pascalParser";
@@ -75,6 +83,8 @@ import { ConstructorNonStdRecordContext } from "./pascalParser";
 import { VariableDeclarationPartContext } from "./pascalParser";
 import { VariableDeclarationContext } from "./pascalParser";
 import { VariablePreDeclarationContext } from "./pascalParser";
+import { VariablePreDeclarationValueContext } from "./pascalParser";
+import { VariablePreDeclarationAssignContext } from "./pascalParser";
 import { ToBeginEndDoDeclarationPartContext } from "./pascalParser";
 import { ProcedureAndFunctionDeclarationPartContext } from "./pascalParser";
 import { ProcedureOrFunctionDeclarationContext } from "./pascalParser";
@@ -82,6 +92,7 @@ import { ProcedureDeclarationContext } from "./pascalParser";
 import { FormalParameterListContext } from "./pascalParser";
 import { FormalParameterSectionContext } from "./pascalParser";
 import { ParameterGroupContext } from "./pascalParser";
+import { AssignExpressionContext } from "./pascalParser";
 import { IdentifierListContext } from "./pascalParser";
 import { ConstListContext } from "./pascalParser";
 import { FunctionDeclarationContext } from "./pascalParser";
@@ -102,6 +113,7 @@ import { FactorContext } from "./pascalParser";
 import { UnsignedConstantContext } from "./pascalParser";
 import { FunctionDesignatorContext } from "./pascalParser";
 import { ParameterListContext } from "./pascalParser";
+import { AttibuteFuncParamContext } from "./pascalParser";
 import { SetContext } from "./pascalParser";
 import { ElementListContext } from "./pascalParser";
 import { ElementContext } from "./pascalParser";
@@ -109,8 +121,11 @@ import { ProcedureStatementContext } from "./pascalParser";
 import { ActualParameterContext } from "./pascalParser";
 import { ParameterwidthContext } from "./pascalParser";
 import { GotoStatementContext } from "./pascalParser";
+import { BreakStatementContext } from "./pascalParser";
+import { ContinueStatementContext } from "./pascalParser";
+import { ReturnStatementContext } from "./pascalParser";
+import { StringExpressionContext } from "./pascalParser";
 import { EmptyStatementContext } from "./pascalParser";
-import { EmptyContext } from "./pascalParser";
 import { StructuredStatementContext } from "./pascalParser";
 import { CompoundStatementContext } from "./pascalParser";
 import { OpenCompoundStatementContext } from "./pascalParser";
@@ -128,6 +143,14 @@ import { InitialValueContext } from "./pascalParser";
 import { FinalValueContext } from "./pascalParser";
 import { WithStatementContext } from "./pascalParser";
 import { RecordVariableListContext } from "./pascalParser";
+import { IncludeDirectiveContext } from "./pascalParser";
+import { DictionaryDirectiveContext } from "./pascalParser";
+import { TitleDirectiveContext } from "./pascalParser";
+import { PDefinedDirectiveContext } from "./pascalParser";
+import { MessageDirectiveContext } from "./pascalParser";
+import { InfoFuncDirectiveContext } from "./pascalParser";
+import { PIfDirectiveContext } from "./pascalParser";
+import { PIfTokenContext } from "./pascalParser";
 
 
 /**
@@ -188,11 +211,32 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitAttributePart?: (ctx: AttributePartContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `pascalParser.attributeType`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAttributeType?: (ctx: AttributeTypeContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.attributeVar`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAttributeVar?: (ctx: AttributeVarContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `pascalParser.attributeDef`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitAttributeDef?: (ctx: AttributeDefContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.preReservedWords`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitPreReservedWords?: (ctx: PreReservedWordsContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.attribute`.
@@ -202,6 +246,20 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitAttribute?: (ctx: AttributeContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `pascalParser.directives`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDirectives?: (ctx: DirectivesContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.blockDeclarations`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBlockDeclarations?: (ctx: BlockDeclarationsContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `pascalParser.block`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -209,11 +267,11 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitBlock?: (ctx: BlockContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `pascalParser.usesUnitsPart`.
+	 * Visit a parse tree produced by `pascalParser.blockIn`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitUsesUnitsPart?: (ctx: UsesUnitsPartContext) => Result;
+	visitBlockIn?: (ctx: BlockInContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.labelDeclarationPart`.
@@ -242,6 +300,13 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitConstantDefinition?: (ctx: ConstantDefinitionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.constantName`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitConstantName?: (ctx: ConstantNameContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.constantChr`.
@@ -298,6 +363,20 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitString?: (ctx: StringContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.valueDefinitionPart`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitValueDefinitionPart?: (ctx: ValueDefinitionPartContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.variableName`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVariableName?: (ctx: VariableNameContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.typeDefinitionPart`.
@@ -643,6 +722,20 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitVariablePreDeclaration?: (ctx: VariablePreDeclarationContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `pascalParser.variablePreDeclarationValue`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVariablePreDeclarationValue?: (ctx: VariablePreDeclarationValueContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.variablePreDeclarationAssign`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVariablePreDeclarationAssign?: (ctx: VariablePreDeclarationAssignContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `pascalParser.toBeginEndDoDeclarationPart`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -690,6 +783,13 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitParameterGroup?: (ctx: ParameterGroupContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.assignExpression`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAssignExpression?: (ctx: AssignExpressionContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.identifierList`.
@@ -832,6 +932,13 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitParameterList?: (ctx: ParameterListContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `pascalParser.attibuteFuncParam`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAttibuteFuncParam?: (ctx: AttibuteFuncParamContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `pascalParser.set`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -881,18 +988,39 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitGotoStatement?: (ctx: GotoStatementContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `pascalParser.breakStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBreakStatement?: (ctx: BreakStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.continueStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitContinueStatement?: (ctx: ContinueStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.returnStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitReturnStatement?: (ctx: ReturnStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.stringExpression`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitStringExpression?: (ctx: StringExpressionContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `pascalParser.emptyStatement`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitEmptyStatement?: (ctx: EmptyStatementContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `pascalParser.empty`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitEmpty?: (ctx: EmptyContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.structuredStatement`.
@@ -1012,5 +1140,61 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitRecordVariableList?: (ctx: RecordVariableListContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.includeDirective`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitIncludeDirective?: (ctx: IncludeDirectiveContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.dictionaryDirective`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDictionaryDirective?: (ctx: DictionaryDirectiveContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.titleDirective`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTitleDirective?: (ctx: TitleDirectiveContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.pDefinedDirective`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitPDefinedDirective?: (ctx: PDefinedDirectiveContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.messageDirective`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMessageDirective?: (ctx: MessageDirectiveContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.infoFuncDirective`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitInfoFuncDirective?: (ctx: InfoFuncDirectiveContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.pIfDirective`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitPIfDirective?: (ctx: PIfDirectiveContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.pIfToken`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitPIfToken?: (ctx: PIfTokenContext) => Result;
 }
 

@@ -1,4 +1,5 @@
 import { pascalListener } from '../parser/pascalListener';
+import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 
 import {
     ContextSymbolTable,
@@ -32,12 +33,14 @@ import {
     AttributeDefContext,
     IdentifierListContext,
     BlockContext,
+    BlockDeclarationsContext,
     ProcedureAndFunctionDeclarationPartContext,
     ProcedureDeclarationContext,
     FunctionDeclarationContext,
     FunctionDesignatorContext,
     ProcedureStatementContext,
     TypeDefinitionContext,
+    RecordSectionContext,
     ConstantDefinitionPartContext,
     ConstantDefinitionContext,
     TypeDefinitionPartContext,
@@ -54,7 +57,7 @@ export class DetailsListener implements pascalListener
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(SyntaxSymbol, undefined, ctx.programHeading().text);
         this.currentSymbol.context = ctx.programHeading();
 
-        let block = ctx.block();
+        let block = ctx.block().blockDeclarations();
         let listVariable = block.variableDeclarationPart();
 
         for(let item of listVariable)
@@ -110,8 +113,13 @@ export class DetailsListener implements pascalListener
 
     enterIdentifier(ctx: IdentifierContext) 
     {
-        this.currentSymbol = this.symbolTable.addNewSymbolOfType(LabelSymbol, undefined, ctx.IDENTIFIER().text);
-        this.currentSymbol.context = ctx.IDENTIFIER();
+        let ident = getIdentifier(ctx);
+
+        if(ident)
+        {
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(LabelSymbol, undefined, ident.text);
+            this.currentSymbol.context = ident;
+        }
     }
 
     exitIdentifier(ctx: IdentifierContext) 
@@ -155,7 +163,7 @@ export class DetailsListener implements pascalListener
         }
     }
 
-    enterBlock(ctx: BlockContext) 
+    enterBlockDeclarations(ctx: BlockDeclarationsContext) 
     {
         // this.currentSymbol = this.symbolTable.addNewSymbolOfType(CompoundSymbol, undefined, ctx.compoundStatement().text);
         // this.currentSymbol.context = ctx.compoundStatement();
@@ -184,14 +192,6 @@ export class DetailsListener implements pascalListener
             this.currentSymbol.context = item;
         }
 
-        let listUnits = ctx.usesUnitsPart();
-
-        for(let item of listUnits)
-        {
-            this.currentSymbol = this.symbolTable.addNewSymbolOfType(UnitBlockDclSymbol, undefined, item.text);
-            this.currentSymbol.context = item;
-        }
-
         let listVariable = ctx.variableDeclarationPart();
 
         for(let item of listVariable)
@@ -209,7 +209,7 @@ export class DetailsListener implements pascalListener
         }
     }
 
-    exitBlock(ctx: BlockContext) 
+    exitBlockDeclarations(ctx: BlockDeclarationsContext) 
     {
         if (this.currentSymbol) 
         {
@@ -314,10 +314,10 @@ export class DetailsListener implements pascalListener
 
     enterTypeDefinition(ctx: TypeDefinitionContext) 
     {
-        if(ctx.identifier())
+        if(ctx.typeName())
         {
-            this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, ctx.identifier()!.text);
-            this.currentSymbol.context = ctx.identifier();
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, ctx.typeName()!.identifier().text);
+            this.currentSymbol.context = ctx.typeName()!.identifier();
         }
         else if(ctx.schemaType())
         {
@@ -333,6 +333,28 @@ export class DetailsListener implements pascalListener
             this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
         }
     }
+
+    // enterRecordSection(ctx: RecordSectionContext) 
+    // {
+    //     let list = ctx.identifierList().identifier(); 
+
+    //     for(let item of list)
+    //     {
+    //         if(item.IDENTIFIER())
+    //         {
+    //             this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.IDENTIFIER()!.text);
+    //             this.currentSymbol.context = item.IDENTIFIER();
+    //         }
+    //     }
+    // }
+
+    // exitRecordSection(ctx: RecordSectionContext) 
+    // {
+    //     if (this.currentSymbol) 
+    //     {
+    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+    //     }
+    // }
 
     enterConstantDefinitionPart(ctx: ConstantDefinitionPartContext) 
     {
@@ -355,8 +377,8 @@ export class DetailsListener implements pascalListener
 
     enterConstantDefinition(ctx: ConstantDefinitionContext) 
     {
-        this.currentSymbol = this.symbolTable.addNewSymbolOfType(ConstantDclSymbol, undefined, ctx.identifier().text);
-        this.currentSymbol.context = ctx.identifier();
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(ConstantDclSymbol, undefined, ctx.constantName().identifier().text);
+        this.currentSymbol.context = ctx.constantName().identifier();
     }
 
     exitConstantDefinition(ctx: ConstantDefinitionContext) 
@@ -380,4 +402,233 @@ function unquote(input: string, quoteChar?: string)
     }
 
     return input;
+}
+
+function getIdentifier(ident: IdentifierContext | undefined): TerminalNode | undefined
+{
+    let item : TerminalNode | undefined;
+
+    if(ident)
+    {
+        if(ident.IDENTIFIER())
+        {
+            item = ident.IDENTIFIER();
+        }
+        else if(ident.attribute())
+        {
+            if(ident.attribute()!.ALIGN())
+            {
+                item = ident.attribute()!.ALIGN();
+            }
+            else if(ident.attribute()!.ALIGNED())
+            {
+                item = ident.attribute()!.ALIGNED();
+            }
+            else if(ident.attribute()!.UNALIGNED())
+            {
+                item = ident.attribute()!.UNALIGNED();
+            }
+            else if(ident.attribute()!.AT())
+            {
+                item = ident.attribute()!.AT();
+            }
+            else if(ident.attribute()!.AUTOMATIC())
+            {
+                item = ident.attribute()!.AUTOMATIC();
+            }
+            else if(ident.attribute()!.COMMON())
+            {
+                item = ident.attribute()!.COMMON();
+            }
+            else if(ident.attribute()!.STATIC())
+            {
+                item = ident.attribute()!.STATIC();
+            }
+            else if(ident.attribute()!.PSECT())
+            {
+                item = ident.attribute()!.PSECT();
+            }
+            else if(ident.attribute()!.ASYNCHRONOUS())
+            {
+                item = ident.attribute()!.ASYNCHRONOUS();
+            }
+            else if(ident.attribute()!.CHECK())
+            {
+                item = ident.attribute()!.CHECK();
+            }
+            else if(ident.attribute()!.FLOAT())
+            {
+                item = ident.attribute()!.FLOAT();
+            }
+            else if(ident.attribute()!.ENUMERATION_SIZE())
+            {
+                item = ident.attribute()!.ENUMERATION_SIZE();
+            }
+            else if(ident.attribute()!.PEN_CHECKING_STYLE())
+            {
+                item = ident.attribute()!.PEN_CHECKING_STYLE();
+            }
+            else if(ident.attribute()!.HiDDEN())
+            {
+                item = ident.attribute()!.HiDDEN();
+            }
+            else if(ident.attribute()!.IDENT())
+            {
+                item = ident.attribute()!.IDENT();
+            }
+            else if(ident.attribute()!.INITIALIZE())
+            {
+                item = ident.attribute()!.INITIALIZE();
+            }
+            else if(ident.attribute()!.KEY())
+            {
+                item = ident.attribute()!.KEY();
+            }
+            else if(ident.attribute()!.LIST())
+            {
+                item = ident.attribute()!.LIST();
+            }
+            else if(ident.attribute()!.OPTIMIZE())
+            {
+                item = ident.attribute()!.OPTIMIZE();
+            }
+            else if(ident.attribute()!.NOOPTIMIZE())
+            {
+                item = ident.attribute()!.NOOPTIMIZE();
+            }
+            else if(ident.attribute()!.CLASS_A())
+            {
+                item = ident.attribute()!.CLASS_A();
+            }
+            else if(ident.attribute()!.CLASS_NCA())
+            {
+                item = ident.attribute()!.CLASS_NCA();
+            }
+            else if(ident.attribute()!.CLASS_S())
+            {
+                item = ident.attribute()!.CLASS_S();
+            }
+            else if(ident.attribute()!.IMMEDIATE())
+            {
+                item = ident.attribute()!.IMMEDIATE();
+            }
+            else if(ident.attribute()!.REFERENCE())
+            {
+                item = ident.attribute()!.REFERENCE();
+            }
+            else if(ident.attribute()!.POS())
+            {
+                item = ident.attribute()!.POS();
+            }
+            else if(ident.attribute()!.READONLY())
+            {
+                item = ident.attribute()!.READONLY();
+            }
+            else if(ident.attribute()!.BIT())
+            {
+                item = ident.attribute()!.BIT();
+            }
+            else if(ident.attribute()!.BYTE())
+            {
+                item = ident.attribute()!.BYTE();
+            }
+            else if(ident.attribute()!.WORD())
+            {
+                item = ident.attribute()!.WORD();
+            }
+            else if(ident.attribute()!.LONG())
+            {
+                item = ident.attribute()!.LONG();
+            }
+            else if(ident.attribute()!.QUAD())
+            {
+                item = ident.attribute()!.QUAD();
+            }
+            else if(ident.attribute()!.OCTA())
+            {
+                item = ident.attribute()!.OCTA();
+            }
+            else if(ident.attribute()!.TRUNCATE())
+            {
+                item = ident.attribute()!.TRUNCATE();
+            }
+            else if(ident.attribute()!.UNBOUND())
+            {
+                item = ident.attribute()!.UNBOUND();
+            }
+            else if(ident.attribute()!.UNSAFE())
+            {
+                item = ident.attribute()!.UNSAFE();
+            }
+            else if(ident.attribute()!.VALUE())
+            {
+                item = ident.attribute()!.VALUE();
+            }
+            else if(ident.attribute()!.LOCAL())
+            {
+                item = ident.attribute()!.LOCAL();
+            }
+            else if(ident.attribute()!.GLOBAL())
+            {
+                item = ident.attribute()!.GLOBAL();
+            }
+            else if(ident.attribute()!.EXTERNAL())
+            {
+                item = ident.attribute()!.EXTERNAL();
+            }
+            else if(ident.attribute()!.WEAK_GLOBAL())
+            {
+                item = ident.attribute()!.WEAK_GLOBAL();
+            }
+            else if(ident.attribute()!.WEAK_EXTERNAL())
+            {
+                item = ident.attribute()!.WEAK_EXTERNAL();
+            }
+            else if(ident.attribute()!.VOLATILE())
+            {
+                item = ident.attribute()!.VOLATILE();
+            }
+            else if(ident.attribute()!.WRITEONLY())
+            {
+                item = ident.attribute()!.WRITEONLY();
+            }
+        }
+        else if(ident.preReservedWords())
+        {
+            if(ident.preReservedWords()!.TEXT())
+            {
+                item = ident.preReservedWords()!.TEXT();
+            }
+            else if(ident.preReservedWords()!.STRING())
+            {
+                item = ident.preReservedWords()!.STRING();
+            }
+            else if(ident.preReservedWords()!.CHR())
+            {
+                item = ident.preReservedWords()!.CHR();
+            }
+            else if(ident.preReservedWords()!.CHAR())
+            {
+                item = ident.preReservedWords()!.CHAR();
+            }
+            else if(ident.preReservedWords()!.TRUE())
+            {
+                item = ident.preReservedWords()!.TRUE();
+            }
+            else if(ident.preReservedWords()!.FALSE())
+            {
+                item = ident.preReservedWords()!.FALSE();
+            }
+            else if(ident.preReservedWords()!.CONTINUE())
+            {
+                item = ident.preReservedWords()!.CONTINUE();
+            }
+            else if(ident.preReservedWords()!.ZERO())
+            {
+                item = ident.preReservedWords()!.ZERO();
+            }
+        }
+    }
+
+    return item;
 }
