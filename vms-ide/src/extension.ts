@@ -41,7 +41,7 @@ export async function activate(context: ExtensionContext) {
     await DebuggerExtension(context);
     await CldExtension(context);
     await MsgExtension(context);
-    await BasicExtension(context);
+    //await BasicExtension(context);
     await PascalExtension(context);
     await FortranExtension(context);
     await Task2CmdExtension(context);
@@ -57,7 +57,7 @@ export async function deactivate() {
     await deTask2CmdExtension();
     await deMsgExtension();
     await deCldExtension();
-    await deBasicExtension();
+    //await deBasicExtension();
     await dePascalExtension();
     await deFortranExtension();
     await deDebuggerExtension();
