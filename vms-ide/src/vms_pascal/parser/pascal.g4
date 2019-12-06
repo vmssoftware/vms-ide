@@ -5,22 +5,22 @@ program
    ;
 
 programHeading
-   : (inheritAttr)? PROGRAM identifier (LPAREN identifierList RPAREN)? SEMI
-   | (invironmentAttr)? MODULE identifier (LPAREN identifierList RPAREN)? SEMI
+   : attributeProgram PROGRAM identifier (LPAREN identifierList RPAREN)? SEMI
+   | attributeModule MODULE identifier (LPAREN identifierList RPAREN)? SEMI
    ;
 
-inheritAttr
-   : LBRACK inherit RBRACK
-   ;
+// inheritAttr
+//    : LBRACK inherit RBRACK
+//    ;
 
-inherit
-   : INHERIT LPAREN string (COMMA string)* RPAREN
-   ;
+// inherit
+//    : INHERIT LPAREN string (COMMA string)* RPAREN
+//    ;
    
-invironmentAttr
-   : LBRACK ENVIRONMENT (LPAREN string RPAREN)? (COMMA inherit)? RBRACK
-   | LBRACK inherit (COMMA ENVIRONMENT (LPAREN string RPAREN)?)? RBRACK
-   ;
+// invironmentAttr
+//    : LBRACK ENVIRONMENT (LPAREN string RPAREN)? (COMMA inherit)? RBRACK
+//    | LBRACK inherit (COMMA ENVIRONMENT (LPAREN string RPAREN)?)? RBRACK
+//    ;
 
 identifier
    : IDENTIFIER
@@ -29,6 +29,14 @@ identifier
    ;
 
 attributePart
+   : (LBRACK attributeDef (COMMA attributeDef)* RBRACK)?
+   ;
+
+attributeProgram
+   : (LBRACK attributeDef (COMMA attributeDef)* RBRACK)?
+   ;
+
+attributeModule
    : (LBRACK attributeDef (COMMA attributeDef)* RBRACK)?
    ;
 
@@ -45,7 +53,17 @@ attributeDef
    ;
 
 preReservedWords
-   : TEXT
+   : AND_THEN
+   | BREAK
+   | CONTINUE
+   | MODULE
+   | OR_ELSE
+   | OTHERWISE 
+   | REM 
+   | RETURN
+   | VALUE
+   | VARYING
+   | TEXT
    | STRING
    | CHR
    | CHAR
@@ -100,6 +118,8 @@ attribute
    | WEAK_EXTERNAL  
    | VOLATILE
    | WRITEONLY
+   | INHERIT
+   | ENVIRONMENT
    ;
 
 
@@ -135,7 +155,7 @@ label
    ;
 
 constantDefinitionPart
-   : CONST (constantDefinition SEMI) +
+   : CONST ((constantDefinition SEMI) | includeDirective) +
    ;
 
 constantDefinition
@@ -200,7 +220,7 @@ variableName
    ;
 
 typeDefinitionPart
-   : attributeType TYPE (typeDefinition SEMI) +
+   : attributeType TYPE ((typeDefinition SEMI) | includeDirective) +
    ;
 
 typeDefinition
@@ -301,7 +321,7 @@ fixedPart
    ;
 
 recordSection
-   : identifierList COLON attributePart type
+   : identifierList COLON attributePart type (variablePreDeclaration)?
    ;
 
 variantPart
@@ -314,7 +334,7 @@ tag
    ;
 
 variant
-   : constList COLON LPAREN fieldList RPAREN
+   : constList COLON LPAREN fieldList? RPAREN
    ;
 
 setType
@@ -421,7 +441,7 @@ constructorNonStdRecord
 
 
 variableDeclarationPart
-   : attributeVar VAR variableDeclaration (SEMI variableDeclaration)* SEMI
+   : attributeVar VAR ((variableDeclaration SEMI) | includeDirective) +
    ;
 
 variableDeclaration
@@ -438,6 +458,7 @@ variablePreDeclarationValue
    | VALUE signedFactor
    | VALUE ZERO
    | VALUE constructorValue 
+   | VALUE expression
    ;
 
 variablePreDeclarationAssign
@@ -445,6 +466,7 @@ variablePreDeclarationAssign
    | ASSIGN signedFactor
    | ASSIGN ZERO
    | ASSIGN constructorValue 
+   | ASSIGN expression 
    ;
 
 toBeginEndDoDeclarationPart
@@ -583,6 +605,7 @@ factor
    | functionDesignator
    | unsignedConstant
    | set
+   | identifier set
    | NOT factor
    | bool
    | directives
@@ -594,7 +617,6 @@ unsignedConstant
    | string
    | NIL
    | ZERO
-   | string
    ;
 
 functionDesignator
@@ -633,7 +655,7 @@ procedureStatement
 
 actualParameter
    : expression parameterwidth*
-   | identifier ASSIGN (identifier | expression)
+   | identifier ASSIGN attibuteFuncParam? (identifier | expression)
    | identifier ASSIGN (attibuteFuncParam LPAREN expression RPAREN)
    ;
 
@@ -2093,7 +2115,7 @@ ZERO
 
 
 fragment SPACE_
-   : [ \t\u000B\u000C]
+   : [ \t\u000B\u000C\u0000]
    ;
 
 WHITESPACE_
@@ -2116,12 +2138,13 @@ COMMENT_2
 
 
 IDENTIFIER
-   : [a-zA-Z_$%] ([a-zA-Z_0-9$])*
+   : [a-zA-Z_$%] ([a-zA-Z_0-9$%])*
    ;
 
 
 STRING_LITERAL
    : '\'' ('\'\'' | ~ ('\''))* '\''
+   | '"' ('""' | ~ ('"'))* '"'
    ;
 
 
@@ -2152,5 +2175,5 @@ OCT_NUMBER
 
 
 fragment EXPONENT
-   : ('e') ('+' | '-')? ('0' .. '9') +
+   : ([eEdDqQ]) ('+' | '-')? ('0' .. '9') +
    ;

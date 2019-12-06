@@ -5,11 +5,10 @@ import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
 
 import { ProgramContext } from "./pascalParser";
 import { ProgramHeadingContext } from "./pascalParser";
-import { InheritAttrContext } from "./pascalParser";
-import { InheritContext } from "./pascalParser";
-import { InvironmentAttrContext } from "./pascalParser";
 import { IdentifierContext } from "./pascalParser";
 import { AttributePartContext } from "./pascalParser";
+import { AttributeProgramContext } from "./pascalParser";
+import { AttributeModuleContext } from "./pascalParser";
 import { AttributeTypeContext } from "./pascalParser";
 import { AttributeVarContext } from "./pascalParser";
 import { AttributeDefContext } from "./pascalParser";
@@ -176,27 +175,6 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitProgramHeading?: (ctx: ProgramHeadingContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `pascalParser.inheritAttr`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitInheritAttr?: (ctx: InheritAttrContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `pascalParser.inherit`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitInherit?: (ctx: InheritContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `pascalParser.invironmentAttr`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitInvironmentAttr?: (ctx: InvironmentAttrContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `pascalParser.identifier`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -209,6 +187,20 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitAttributePart?: (ctx: AttributePartContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.attributeProgram`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAttributeProgram?: (ctx: AttributeProgramContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.attributeModule`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAttributeModule?: (ctx: AttributeModuleContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.attributeType`.

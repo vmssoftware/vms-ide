@@ -28,7 +28,7 @@ import {
 import { 
     ProgramContext,
     ProgramHeadingContext,
-    InheritContext,
+    //InheritContext,
     IdentifierContext,
     AttributeDefContext,
     IdentifierListContext,
@@ -89,27 +89,27 @@ export class DetailsListener implements pascalListener
         }
     }
 
-    enterInherit(ctx: InheritContext) 
-    {
-        let list = ctx.string(); 
+    // enterInherit(ctx: InheritContext) 
+    // {
+    //     let list = ctx.string(); 
 
-        for(let item of list)
-        {
-            this.currentSymbol = this.symbolTable.addNewSymbolOfType(SyntaxSymbol, undefined, item.text);
-            this.currentSymbol.context = item;
+    //     for(let item of list)
+    //     {
+    //         this.currentSymbol = this.symbolTable.addNewSymbolOfType(SyntaxSymbol, undefined, item.text);
+    //         this.currentSymbol.context = item;
 
-            let refName = unquote(item.STRING_LITERAL().text, "'");
-            this.imports.push(refName);
-        }
-    }
+    //         let refName = unquote(item.STRING_LITERAL().text, "'");
+    //         this.imports.push(refName);
+    //     }
+    // }
 
-    exitInherit(ctx: InheritContext) 
-    {
-        if (this.currentSymbol) 
-        {
-            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
-        }
-    }
+    // exitInherit(ctx: InheritContext) 
+    // {
+    //     if (this.currentSymbol) 
+    //     {
+    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+    //     }
+    // }
 
     enterIdentifier(ctx: IdentifierContext) 
     {
@@ -595,6 +595,46 @@ function getIdentifier(ident: IdentifierContext | undefined): TerminalNode | und
         }
         else if(ident.preReservedWords())
         {
+            if(ident.preReservedWords()!.AND_THEN())
+            {
+                item = ident.preReservedWords()!.AND_THEN();
+            }
+            else if(ident.preReservedWords()!.BREAK())
+            {
+                item = ident.preReservedWords()!.BREAK();
+            }
+            else if(ident.preReservedWords()!.CONTINUE())
+            {
+                item = ident.preReservedWords()!.CONTINUE();
+            }
+            else if(ident.preReservedWords()!.MODULE())
+            {
+                item = ident.preReservedWords()!.MODULE();
+            }
+            else if(ident.preReservedWords()!.OR_ELSE())
+            {
+                item = ident.preReservedWords()!.OR_ELSE();
+            }
+            else if(ident.preReservedWords()!.OTHERWISE())
+            {
+                item = ident.preReservedWords()!.OTHERWISE();
+            }
+            else if(ident.preReservedWords()!.REM())
+            {
+                item = ident.preReservedWords()!.REM();
+            }
+            else if(ident.preReservedWords()!.RETURN())
+            {
+                item = ident.preReservedWords()!.RETURN();
+            }
+            else if(ident.preReservedWords()!.VALUE())
+            {
+                item = ident.preReservedWords()!.VALUE();
+            }
+            else if(ident.preReservedWords()!.VARYING())
+            {
+                item = ident.preReservedWords()!.VARYING();
+            }
             if(ident.preReservedWords()!.TEXT())
             {
                 item = ident.preReservedWords()!.TEXT();

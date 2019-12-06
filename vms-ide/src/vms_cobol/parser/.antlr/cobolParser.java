@@ -1,4 +1,4 @@
-// Generated from c:\work\vms_ide\vms-ide\src\vms_cobol\parser\cobol.g4 by ANTLR 4.7.1
+// Generated from c:\Users\akulikovskiy\ts_projects\vms_ide\vms-ide\src\vms_cobol\parser\cobol.g4 by ANTLR 4.7.1
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;

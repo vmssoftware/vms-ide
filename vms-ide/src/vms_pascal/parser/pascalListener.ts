@@ -5,11 +5,10 @@ import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 
 import { ProgramContext } from "./pascalParser";
 import { ProgramHeadingContext } from "./pascalParser";
-import { InheritAttrContext } from "./pascalParser";
-import { InheritContext } from "./pascalParser";
-import { InvironmentAttrContext } from "./pascalParser";
 import { IdentifierContext } from "./pascalParser";
 import { AttributePartContext } from "./pascalParser";
+import { AttributeProgramContext } from "./pascalParser";
+import { AttributeModuleContext } from "./pascalParser";
 import { AttributeTypeContext } from "./pascalParser";
 import { AttributeVarContext } from "./pascalParser";
 import { AttributeDefContext } from "./pascalParser";
@@ -181,39 +180,6 @@ export interface pascalListener extends ParseTreeListener {
 	exitProgramHeading?: (ctx: ProgramHeadingContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `pascalParser.inheritAttr`.
-	 * @param ctx the parse tree
-	 */
-	enterInheritAttr?: (ctx: InheritAttrContext) => void;
-	/**
-	 * Exit a parse tree produced by `pascalParser.inheritAttr`.
-	 * @param ctx the parse tree
-	 */
-	exitInheritAttr?: (ctx: InheritAttrContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `pascalParser.inherit`.
-	 * @param ctx the parse tree
-	 */
-	enterInherit?: (ctx: InheritContext) => void;
-	/**
-	 * Exit a parse tree produced by `pascalParser.inherit`.
-	 * @param ctx the parse tree
-	 */
-	exitInherit?: (ctx: InheritContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `pascalParser.invironmentAttr`.
-	 * @param ctx the parse tree
-	 */
-	enterInvironmentAttr?: (ctx: InvironmentAttrContext) => void;
-	/**
-	 * Exit a parse tree produced by `pascalParser.invironmentAttr`.
-	 * @param ctx the parse tree
-	 */
-	exitInvironmentAttr?: (ctx: InvironmentAttrContext) => void;
-
-	/**
 	 * Enter a parse tree produced by `pascalParser.identifier`.
 	 * @param ctx the parse tree
 	 */
@@ -234,6 +200,28 @@ export interface pascalListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitAttributePart?: (ctx: AttributePartContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.attributeProgram`.
+	 * @param ctx the parse tree
+	 */
+	enterAttributeProgram?: (ctx: AttributeProgramContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.attributeProgram`.
+	 * @param ctx the parse tree
+	 */
+	exitAttributeProgram?: (ctx: AttributeProgramContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.attributeModule`.
+	 * @param ctx the parse tree
+	 */
+	enterAttributeModule?: (ctx: AttributeModuleContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.attributeModule`.
+	 * @param ctx the parse tree
+	 */
+	exitAttributeModule?: (ctx: AttributeModuleContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `pascalParser.attributeType`.
