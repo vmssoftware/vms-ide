@@ -13,28 +13,37 @@ DEBUG = 'DEBUG'
 class Tracer:
     def __init__(self, port):
         self._port = port
+        self._fileName = __file__
         self._socket = None
         self._sendBuffer = b""
         self._recvBuffer = b""
-        self._lockTrace = threading.Lock()
         self._oldSysTrace = None
         self._paused = False
         self._waitingForAFile = None
         self._startTracing = False
+        self._originalSigint = None
+        self._originalSigbreak = None
         self._threads = {}
+        self._lockTrace = threading.Lock()
+        # save imported functions
         self._currentThread = threading.current_thread
         self._sleep = time.sleep
         self._setTrace = sys.settrace
         self._setThreadTrace = threading.settrace
         self._versionInfo = sys.version_info
+        # self._setSignal = signal.signal
+        # just strings
         self._PAUSED = 'PAUSED'
         self._EXITED = 'EXITED'
         self._CONTUNUED = 'CONTUNUED'
         self._STEPPED = 'STEPPED'
         self._INFO = 'INFO'
-        self._fileName = __file__
+        self._EXCEPTION = 'EXCEPTION'
+        self._SIGNAL = 'SIGNAL'
 
     def _setupTrace(self):
+        # self._setSignal(signal.SIGINT, self._signalHandler)
+        # self._setSignal(signal.SIGBREAK, self._signalHandler)
         self._connect()
         self._oldSysTrace = sys.gettrace()
         self._setTrace(self._traceFunc)
@@ -72,8 +81,7 @@ class Tracer:
         self._disconnect()
 
     # def _signalHandler(self, signum, frame):
-    #     self._sendDbgMessage('Caught signal %d' % signum)
-    #     self._paused = False
+    #     self._sendDbgMessage(self._SIGNAL + ": " + str(signum))
     
     def _isConnected(self):
         return bool(self._socket)
@@ -122,18 +130,29 @@ class Tracer:
         return None
 
     def _traceFunc(self, frame, event, arg):
+        ident = self._currentThread().ident
+        entry = {'ident': ident, 'frame': frame, 'event': event, 'arg': arg, 'paused': True}
+        self._threads[ident] = entry
+
+        # self._sendDbgMessage(self._INFO)
+        # self._sendDbgMessage(event)
+        # self._sendDbgMessage("Threads: %i" % len(self._threads))
+        # for threadEntry in self._threads.values():
+        #     self._sendDbgMessage("  thread %i%s:" % (threadEntry['ident'], " paused" if threadEntry['paused'] else ""))
+        #     self._sendDbgMessage("      file: %s" % threadEntry['frame'].f_code.co_filename)
+        #     self._sendDbgMessage("      line: %i" % threadEntry['frame'].f_lineno)
+
         if not self._startTracing:
+            entry['paused'] = False
             return self._traceFunc
         if frame.f_code.co_filename == self._fileName:
+            entry['paused'] = False
             return self._traceFunc
         if self._waitingForAFile:
             if self._waitingForAFile == frame.f_code.co_filename:
                 self._waitingForAFile = None
                 self._paused = True
         if not self._waitingForAFile:
-            ident = self._currentThread().ident
-            entry = {'ident': ident, 'frame': frame, 'event': event, 'arg': arg, 'paused': True}
-            self._threads[ident] = entry
             with self._lockTrace:
                 if self._paused:
                     self._sendDbgMessage(self._PAUSED)
@@ -159,7 +178,7 @@ class Tracer:
                             self._sendDbgMessage("      line: %i" % threadEntry['frame'].f_lineno)
                     self._sleep(0.3)
                     cmd = self._readDbgMessage()
-            entry['paused'] = False
+        entry['paused'] = False
         return self._traceFunc
 
     def _runscript(self, filename):
@@ -183,7 +202,10 @@ class Tracer:
                 self._startTracing = True
                 exec(statement, globalsT, globalsT)
         except Exception as ex:
-            print(ex)
+            if self._isConnected():
+                self._sendDbgMessage(self._EXCEPTION + ": " +repr(ex))
+            else:
+                print(repr(ex))
     
     def run(self, filename):
         self._setupTrace()
