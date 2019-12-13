@@ -1,13 +1,18 @@
+import * as nls from "vscode-nls";
+import micromatch from "micromatch";
+import path from 'path';
 import { Disposable, workspace, WorkspaceFolder, RelativePattern, commands } from "vscode";
+import { EventEmitter } from "events";
+
 import { GetSshHelperType } from "../ext-api/ext-api";
 import { SshHelper } from "../ssh-helper/ssh-helper";
 import { ensureSettings } from "./ensure-settings";
-import { LogFunction } from "../common/main";
-import micromatch from "micromatch";
-import { collectSplittedByCommas } from "./common/find-files";
+import { LogFunction, LogType } from "../common/main";
+import { expandMask } from "./common/find-files";
 import { ProjectState } from "./dep-tree/proj-state";
-import { EventEmitter } from "events";
-import path from 'path';
+
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
 
 let watchers: Map<string, Disposable[]> = new Map<string, Disposable[]>();
 
@@ -71,32 +76,34 @@ async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelp
         // 1. Setup source file watcher 
         // prepare micromatch
         const options: micromatch.Options = {
-            basename: true,
+            basename: false,
+            dot: true,
             nocase: true,
             nodupes: true,
             unixify: false,
         };
-        const source = micromatch.braces(ensured.projectSection.source).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
-        const headers = micromatch.braces(ensured.projectSection.headers).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
-        const builders = micromatch.braces(ensured.projectSection.builders).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
-        const resource = micromatch.braces(ensured.projectSection.resource).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
-        const splittedSource = source.reduce(collectSplittedByCommas, []);
-        const splittedHeaders = headers.reduce(collectSplittedByCommas, []);
-        const splittedBuilders = builders.reduce(collectSplittedByCommas, []);
-        const splittedResource = resource.reduce(collectSplittedByCommas, []);
+        let {expandedMask: source , missed_curly_bracket: errSrc} = expandMask(ensured.projectSection.source);
+        let {expandedMask: headers , missed_curly_bracket: errHdr} = expandMask(ensured.projectSection.headers);
+        let {expandedMask: builders , missed_curly_bracket: errBld} = expandMask(ensured.projectSection.builders);
+        let {expandedMask: resource , missed_curly_bracket: errRsc} = expandMask(ensured.projectSection.resource);
+        if (errBld || errHdr || errRsc || errSrc) {
+            logFn(LogType.warning, () => localize("check.inc.mask", "Please check include file masks for correct curly brackets"), true);
+        }
         if (ensured.projectSection.exclude) {
-            const unbraceExclude = micromatch.braces(ensured.projectSection.exclude).map(mask => mask.replace(/[{}]/g, ""));   // after unbracing no breace allowed
-            const splitExclude = unbraceExclude.reduce(collectSplittedByCommas, []);
-            options.ignore = splitExclude;
+            let {expandedMask: exclude , missed_curly_bracket: errExc} = expandMask(ensured.projectSection.exclude);
+            if (errExc) {
+                logFn(LogType.warning, () => localize("check.exc.mask", "Please check exclude file masks for correct curly brackets"), true);
+            }
+            options.ignore = exclude;
         }
         const getFileType = (relativeFilePath: string) => {
             if (!path.extname(relativeFilePath)) {
                 relativeFilePath += ".";
             }
-            if (micromatch([relativeFilePath], splittedSource, options).length > 0) return EFileType.source;
-            if (micromatch([relativeFilePath], splittedHeaders, options).length > 0) return EFileType.header;
-            if (micromatch([relativeFilePath], splittedBuilders, options).length > 0) return EFileType.builder;
-            if (micromatch([relativeFilePath], splittedResource, options).length > 0) return EFileType.resource;
+            if (micromatch([relativeFilePath], source, options).length > 0) return EFileType.source;
+            if (micromatch([relativeFilePath], headers, options).length > 0) return EFileType.header;
+            if (micromatch([relativeFilePath], builders, options).length > 0) return EFileType.builder;
+            if (micromatch([relativeFilePath], resource, options).length > 0) return EFileType.resource;
             return EFileType.unknown;
         }
         const relativePattern = new RelativePattern(folder, "**/*");
