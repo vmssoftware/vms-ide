@@ -325,7 +325,7 @@ recordSection
    ;
 
 variantPart
-   : CASE tag OF variant (SEMI variant)* (SEMI? OTHERWISE LPAREN fieldList RPAREN)?
+   : CASE tag OF variant (SEMI variant)* (SEMI? OTHERWISE LPAREN fieldList? RPAREN)?
    ;
 
 tag
