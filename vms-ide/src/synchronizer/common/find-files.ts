@@ -14,11 +14,6 @@ export const leadingSepRg = /^[/\\]+/g;
 export const middleSepRg = /[/\\]+/g;
 export const trailingSepRg = /[/\\]+$/g;
 
-export function collectSplittedByCommas(acc: string[], pattern: string): string[] {
-    acc.push(...pattern.split(","));
-    return acc;
-}
-
 export function expandMask(mask: string) {
         // 1. split by commas which are not in curly bracket
         let depth = 0;
@@ -45,7 +40,7 @@ export function expandMask(mask: string) {
         }
         // 2. unbrace each part
         const expandedMask = str_arr.reduce((acc: string[], pattern) => {
-            let unbraced = micromatch.braces(pattern, { expand: true }).map( value => value.replace(/[{}]/g, ""));
+            let unbraced = micromatch.braces(pattern, { expand: true }).map( value => "**/" + value.replace(/[{}]/g, ""));
             acc.push(...unbraced);
             return acc;
         }, []);
