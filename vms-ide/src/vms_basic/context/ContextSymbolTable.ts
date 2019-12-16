@@ -12,7 +12,8 @@ export class ContextSymbolTable extends SymbolTable
 {
     public tree?: ParserRuleContext; // Set by the owning source context after each parse run.
 
-    public references: Map<Symbol, Set<Symbol>> = new Map<Symbol, Set<Symbol>>();
+    public referencesVar: Map<Symbol, Set<Symbol>> = new Map<Symbol, Set<Symbol>>();
+    public referencesType: Map<String, Symbol[]> = new Map<String, Symbol[]>();
 
     constructor(name: string, options: SymbolTableOptions, public owner?: SourceContext) 
     {
@@ -33,7 +34,8 @@ export class ContextSymbolTable extends SymbolTable
             }
         }
 
-        this.references.clear();
+        this.referencesVar.clear();
+        this.referencesType.clear();
         super.clear();
     }
 
@@ -83,6 +85,95 @@ export class ContextSymbolTable extends SymbolTable
         let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, true);
         let innerBlocks = this.getAllSymbols(VariableInnerBlockDclSymbol, true);
         let definition = this.definitionFromSymbol(symbol);
+
+        let slaves = this.referencesVar.get(symbol);
+        let slavesT = this.referencesType.get(symbol.name);
+        let array: Symbol[] = [];
+        let result = false;
+
+        if(!slaves)
+        {
+            for(let items of this.referencesVar)
+            {
+                for(let item of items[1])
+                {
+                    array.push(item);
+
+                    if(item === symbol)
+                    {
+                        result = true;
+                        break;
+                    }
+                }
+
+                if(result)
+                {
+                    break;
+                }
+                else
+                {
+                    array = [];
+                }
+            }
+        }
+
+        if(result)
+        {
+            let decTypes = this.getAllSymbols(TypeDclSymbol, false);
+            let decTypeBlocks = this.getAllSymbols(TypeBlockDclSymbol, false);
+
+            // for(let block of decTypeBlocks)
+            // {
+            //     if(blo)
+            // }
+            for (let block of blocks)//search block witch contain symbol
+            {
+                let item = this.findSimbolDedlarationInBlock(array[0], block, true);
+
+
+                
+
+                if(item)
+                {
+                    if (item instanceof WithTypeScopedSymbol)
+                    {
+                        if(item.symbolType)
+                        {
+                            let nameVar = item.symbolType;
+
+                            for(let i = 1; i < array.length; i++)
+                            {
+                                nameVar += "." + array[i].name;
+                            }
+
+
+                            let slavesT = this.referencesType.get(nameVar.toUpperCase());
+
+                            if(slavesT)
+                            {
+                                let result = this.getSymbolInfo(slavesT[0]);
+
+                                if(result)
+                                {
+                                    // let symbolBlock = this.findSimbolBlockDedlaration(item);
+                                    // result.info = this.getSymbolInfo(symbolBlock);
+
+                                    return result;
+                                }
+                            }
+                        }
+                    }
+                    
+                    break;
+                }
+            }
+
+            // let first = this.findSimbolStrInfoDeсlaration(array[0], decTypes, decTypeBlocks);
+            // let second = this.findSimbolInfoDeсlaration(array[1], decTypes, decTypeBlocks);
+           // second = undefined;
+        }
+
+
 
         if(definition)
         {
@@ -532,6 +623,47 @@ export class ContextSymbolTable extends SymbolTable
         return undefined;
     }
 
+    private findSimbolStrInfoDeсlaration(symbol: String, definitionSymbols: Set<Symbol>, blocks: Set<Symbol>): SymbolInfo | undefined
+    {
+        for(let item of definitionSymbols)
+        {
+            if(item.name.toLowerCase() === symbol.toLowerCase())
+            {
+                let definition = this.definitionFromSymbol(item);
+
+                if(definition)
+                {
+                    for (let block of blocks)//search block witch contain symbol
+                    {
+                        if(block.name.includes(item.name))
+                        {
+                            if(block.context instanceof ParserRuleContext)
+                            {
+                                if(block.context.start && block.context.stop)
+                                {
+                                    if(definition.range.start.row >= block.context.start.line && definition.range.start.row <= block.context.stop.line)
+                                    {
+                                        let result = this.getSymbolInfo(block);
+
+                                        if(result)
+                                        {
+                                            return result;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                break;
+            }
+        }
+
+        return undefined;
+    }
+
     public getSymbolInfo(symbol: string | Symbol | undefined): SymbolInfo | undefined 
     {
         if (!symbol) 
@@ -637,31 +769,30 @@ export class ContextSymbolTable extends SymbolTable
         return undefined;
     }
 
-    public linkSymbols(master: Symbol, slave: Symbol) 
+    public linkSymbolsVar(master: Symbol, slave: Symbol) 
     {
-        let slaves = this.references.get(master);
+        let slaves = this.referencesVar.get(master);
 
         if (!slaves) 
         {
             slaves = new Set<Symbol>();
-            this.references.set(master, slaves);
+            this.referencesVar.set(master, slaves);
         }
+
+        slaves.add(slave);
     }
 
-    /**
-     * Only for master definition
-     * @param master 
-     */
-    public getReferenceCount(master: Symbol): number 
+    public linkSymbolsType(master: String, slave: Symbol) 
     {
-        let slaves = this.references.get(master);
+        let slaves = this.referencesType.get(master);
 
-        if (slaves) 
+        if (!slaves) 
         {
-            return slaves.size;
+            slaves = [];
+            this.referencesType.set(master, slaves);
         }
 
-        return 0;
+        slaves.push(slave);
     }
 
     public getSymbolOccurences(symbol: Symbol, column: number, row: number, localOnly: boolean): SymbolInfo[] 
@@ -837,18 +968,10 @@ export class ContextSymbolTable extends SymbolTable
         {
             case SymbolKind.Syntax:
                 return SyntaxSymbol;
-            case SymbolKind.Type:
-                return TypeSymbol;
             case SymbolKind.BuiltInType:
                 return BuiltInTypeSymbol;
             case SymbolKind.TypeRef:
                 return TypeRefSymbol;
-            case SymbolKind.Parameter:
-                return ParameterSymbol;
-            case SymbolKind.Qualifier:
-                return QualifierSymbol;
-            case SymbolKind.Keyword:
-                return KeywordSymbol;
             case SymbolKind.Label:
                 return LabelSymbol;
             case SymbolKind.LabelDcl:
@@ -880,10 +1003,6 @@ export class ContextSymbolTable extends SymbolTable
         {
             return SymbolKind.Syntax;
         }
-        if (symbol instanceof TypeSymbol) 
-        {
-            return SymbolKind.Type;
-        }
         // test TypeRef before Entity
         if (symbol instanceof TypeRefSymbol) 
         {
@@ -892,18 +1011,6 @@ export class ContextSymbolTable extends SymbolTable
         if (symbol instanceof BuiltInTypeSymbol) 
         {
             return SymbolKind.BuiltInType;
-        }
-        if (symbol instanceof ParameterSymbol) 
-        {
-            return SymbolKind.Parameter;
-        }
-        if (symbol instanceof QualifierSymbol) 
-        {
-            return SymbolKind.Qualifier;
-        }
-        if (symbol instanceof KeywordSymbol) 
-        {
-            return SymbolKind.Keyword;
         }
         if (symbol instanceof LabelSymbol) 
         {
@@ -1002,50 +1109,37 @@ export class ContextSymbolTable extends SymbolTable
 
 }
 
-export interface INestedEntity 
+export class WithTypeScopedSymbol extends ScopedSymbol 
 { 
-    entity: Symbol; 
-    nestedLevel: number; 
-}
-export class EntityCollection extends NamespaceSymbol 
-{ 
-    public unambigousEntities?: Map<string, INestedEntity | undefined>;  // strings in upper case
-}
-export class WithTypeReference extends ScopedSymbol 
-{ 
-    public typeReference?: EntityCollection;
+    public symbolType?: String;
 }
 
-export class SyntaxSymbol extends EntityCollection { }
-export class TypeSymbol extends EntityCollection { }
+export class SyntaxSymbol extends ScopedSymbol { }
 export class BuiltInTypeSymbol extends Symbol { }
 export class TypeRefSymbol extends Symbol { }
 export class EntitySymbol extends Symbol { }
-export class ParameterSymbol extends WithTypeReference { }
-export class QualifierSymbol extends WithTypeReference { }
-export class KeywordSymbol extends WithTypeReference { }
 export class LabelSymbol extends Symbol { }
 export class AnySymbol extends Symbol { }
 
-export class CompoundSymbol extends EntityCollection { }
-export class BlockSymbol extends EntityCollection { }
-export class RoutineSymbol extends EntityCollection { }
-export class RoutineHeaderSymbol extends EntityCollection { }
-export class RoutineDclSymbol extends EntityCollection { }
-export class RoutineBlockDclSymbol extends EntityCollection { }
-export class VariableDclSymbol extends EntityCollection { }
-export class VariableBlockDclSymbol extends EntityCollection { }
-export class ImplicitBlockDclSymbol extends EntityCollection { }
-export class IncludeDclSymbol extends EntityCollection { }
-export class VariableGlobalBlockDclSymbol extends EntityCollection { }
-export class VariableLocalBlockDclSymbol extends EntityCollection { }
-export class VariableInnerBlockDclSymbol extends EntityCollection { }
-export class TypeDclSymbol extends EntityCollection { }
-export class ConstantDclSymbol extends EntityCollection { }
-export class TypeBlockDclSymbol extends EntityCollection { }
-export class LabelDclSymbol extends EntityCollection { }
-export class LabelBlockDclSymbol extends EntityCollection { }
-export class ConstDclSymbol extends EntityCollection { }
-export class ConstBlockDclSymbol extends EntityCollection { }
-export class UnitDclSymbol extends EntityCollection { }
-export class UnitBlockDclSymbol extends EntityCollection { }
+export class CompoundSymbol extends ScopedSymbol { }
+export class BlockSymbol extends ScopedSymbol { }
+export class RoutineSymbol extends ScopedSymbol { }
+export class RoutineHeaderSymbol extends ScopedSymbol { }
+export class RoutineDclSymbol extends ScopedSymbol { }
+export class RoutineBlockDclSymbol extends ScopedSymbol { }
+export class VariableDclSymbol extends WithTypeScopedSymbol { }
+export class VariableBlockDclSymbol extends ScopedSymbol { }
+export class ImplicitBlockDclSymbol extends ScopedSymbol { }
+export class IncludeDclSymbol extends ScopedSymbol { }
+export class VariableGlobalBlockDclSymbol extends ScopedSymbol { }
+export class VariableLocalBlockDclSymbol extends ScopedSymbol { }
+export class VariableInnerBlockDclSymbol extends ScopedSymbol { }
+export class TypeDclSymbol extends WithTypeScopedSymbol { }
+export class ConstantDclSymbol extends ScopedSymbol { }
+export class TypeBlockDclSymbol extends ScopedSymbol { }
+export class LabelDclSymbol extends ScopedSymbol { }
+export class LabelBlockDclSymbol extends ScopedSymbol { }
+export class ConstDclSymbol extends ScopedSymbol { }
+export class ConstBlockDclSymbol extends ScopedSymbol { }
+export class UnitDclSymbol extends ScopedSymbol { }
+export class UnitBlockDclSymbol extends ScopedSymbol { }

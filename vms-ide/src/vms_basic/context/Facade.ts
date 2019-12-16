@@ -340,15 +340,6 @@ export class Facade
     }
 
     /**
-    * Count how many times a symbol has been referenced. The given file must contain the definition of this symbol.
-    */
-    public countReferences(fileName: string, symbol: Symbol): number 
-    {
-        let context = this.getContext(fileName);
-        return context.getReferenceCount(symbol);
-    }
-
-    /**
      * Triggers a parse run for the given file name. This grammar must have been loaded before.
      */
     public reparse(fileName: string) 

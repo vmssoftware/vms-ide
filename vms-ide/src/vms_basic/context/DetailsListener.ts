@@ -21,6 +21,7 @@ import {
     ConstBlockDclSymbol,
     LabelSymbol,
     LabelDclSymbol,
+    WithTypeScopedSymbol,
 } from './ContextSymbolTable';
 
 import { 
@@ -36,8 +37,10 @@ import {
     LabelContext,
     TargetNameContext,
     ConstantDeclarationContext,
+    VariableContext,
     VariableDeclarationContext,
-    VariableDescriptionContext,
+    VariableDescriptionSecondPartContext,
+    DimensionDeclarationContext,
     RecordDeclarationContext,
     GroupClauseContext,
     DeclarationContext,
@@ -49,11 +52,16 @@ import {
     DefFunctionSingleDeclarationContext,
     DefFunctionHeaderContext,
     DefFunctionMultyDeclarationContext,
+    RecComponentContext,
 } from '../parser/BasicParser';
 
 
 export class DetailsListener implements BasicParserListener 
 {
+    private typeSymbol: String = "";    
+    private currentSymbol: Symbol | undefined;
+    private symbolStack: (Symbol | undefined)[] = [];
+
     constructor(private symbolTable: ContextSymbolTable, private imports: string[]) 
     {    }
 
@@ -186,33 +194,42 @@ export class DetailsListener implements BasicParserListener
         }
     }
 
+    enterVariable(ctx: VariableContext)
+    {
+        let blocks = ctx.variableChildName();
+
+        if(blocks.length > 0)
+        {
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, ctx.variableName().identifier().IDENTIFIER().text);
+            this.currentSymbol.context = ctx.variableName().identifier().IDENTIFIER();
+            //this.symbolStack.push(this.currentSymbol);
+
+            let currentSymbol = this.currentSymbol;
+            this.symbolTable.linkSymbolsVar(currentSymbol, this.currentSymbol);
+
+            for(let item of blocks)
+            {
+                this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.identifier().IDENTIFIER().text);
+                this.currentSymbol.context = item.identifier().IDENTIFIER();
+                //this.symbolStack.push(this.currentSymbol);
+                let entitySymbol = this.currentSymbol;
+
+                this.symbolTable.linkSymbolsVar(currentSymbol, entitySymbol);
+            }
+        }
+    }
+    exitVariable(ctx: VariableContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
     enterVariableDeclaration(ctx: VariableDeclarationContext) 
     {
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableBlockDclSymbol, undefined, ctx.text);
         this.currentSymbol.context = ctx;
-
-        let blocks = ctx.variableDescription();
-
-        for(let item of blocks)
-        {
-            let obj = item.singleVarDescription();
-
-            if(obj)
-            {
-                this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, obj.variableName().identifier().IDENTIFIER().text);
-                this.currentSymbol.context = obj.variableName().identifier().IDENTIFIER();
-            }
-            else
-            {
-                let obj = item.arrayDescription();
-
-                if(obj)
-                {
-                    this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, obj.arrayVariableName().identifier().IDENTIFIER().text);
-                    this.currentSymbol.context = obj.arrayVariableName().identifier().IDENTIFIER();
-                }
-            }
-        }
     }
     exitvariableDescription(ctx: VariableDeclarationContext) 
     {
@@ -222,27 +239,77 @@ export class DetailsListener implements BasicParserListener
         }
     }
 
-    enterVariableDescription(ctx: VariableDescriptionContext) 
+    enterVariableDescriptionSecondPart(ctx: VariableDescriptionSecondPartContext) 
     {
-        let obj = ctx.singleVarDescription();
+        let type = ctx.dataType();
+
+        if(type)
+        {
+            this.typeSymbol = type.text;
+        }
+
+        let obj = ctx.variableDescription().singleVarDescription();
 
         if(obj)
         {
             this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, obj.variableName().identifier().IDENTIFIER().text);
             this.currentSymbol.context = obj.variableName().identifier().IDENTIFIER();
-        }        
+
+            if (this.currentSymbol instanceof WithTypeScopedSymbol) 
+            {
+                this.currentSymbol.symbolType = this.typeSymbol.toUpperCase();
+            }
+            
+        }
         else
         {
-            let obj = ctx.arrayDescription();
+            let obj = ctx.variableDescription().arrayDescription();
 
             if(obj)
             {
                 this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, obj.arrayVariableName().identifier().IDENTIFIER().text);
                 this.currentSymbol.context = obj.arrayVariableName().identifier().IDENTIFIER();
+
+                if (this.currentSymbol instanceof WithTypeScopedSymbol) 
+                {
+                    this.currentSymbol.symbolType = this.typeSymbol.toUpperCase();
+                }
             }
         }
     }
-    exitVariableDescription(ctx: VariableDescriptionContext) 
+    exitVariableDescriptionSecondPart(ctx: VariableDescriptionSecondPartContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
+    enterDimensionDeclaration(ctx: DimensionDeclarationContext) 
+    {
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableBlockDclSymbol, undefined, ctx.text);
+        this.currentSymbol.context = ctx;
+
+        let dimItemType: String = "";
+        let blocks = ctx.dimensionItem();
+
+        for(let item of blocks)
+        {
+            if(item.dataType())
+            {
+                dimItemType = item.dataType()!.text;
+            }
+
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.arrayVariableName().identifier().IDENTIFIER().text);
+            this.currentSymbol.context = item.arrayVariableName().identifier().IDENTIFIER();
+
+            if (this.currentSymbol instanceof WithTypeScopedSymbol) 
+            {
+                this.currentSymbol.symbolType = dimItemType.toUpperCase();
+            }
+        }
+    }
+    exitDimensionDeclaration(ctx: DimensionDeclarationContext) 
     {
         if (this.currentSymbol) 
         {
@@ -254,14 +321,14 @@ export class DetailsListener implements BasicParserListener
     {
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeBlockDclSymbol, undefined, ctx.text);
         this.currentSymbol.context = ctx;
+        
+        let typeBlock = this.currentSymbol;
+        let recName = ctx.recName();
 
-        let blocks = ctx.recName();
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, recName.identifier().IDENTIFIER().text);
+        this.currentSymbol.context = recName.identifier().IDENTIFIER();
 
-        for(let item of blocks)
-        {
-            this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, item.identifier().IDENTIFIER().text);
-            this.currentSymbol.context = item.identifier().IDENTIFIER();
-        }
+        this.recordComponentIterate(this.currentSymbol.name, typeBlock, ctx.recComponent());
     }
     exitRecordDeclaration(ctx: RecordDeclarationContext) 
     {
@@ -271,18 +338,106 @@ export class DetailsListener implements BasicParserListener
         }
     }
 
+    recordComponentIterate(key: String, masterSymbol: Symbol, recComponent: RecComponentContext[])
+    {
+        let blocks = recComponent;
+
+        //this.symbolTable.linkSymbols(key, masterSymbol);
+
+        for(let item of blocks)
+        {
+            let recItemType: String = "";
+
+            if(item.dataType())
+            {
+                recItemType = item.dataType()!.text;
+            }
+
+            let recItemBlocks = item.recItem();
+
+            for(let recItem of recItemBlocks)
+            {
+                let varDescr = recItem.variableDescription();
+
+                if(varDescr)
+                {
+                    let obj = varDescr.singleVarDescription();
+
+                    if(obj)
+                    {
+                        this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, obj.variableName().identifier().IDENTIFIER().text);
+                        this.currentSymbol.context = obj.variableName().identifier().IDENTIFIER();
+
+                        if (this.currentSymbol instanceof WithTypeScopedSymbol) 
+                        {
+                            this.currentSymbol.symbolType = recItemType.toUpperCase();
+                        }
+
+                        this.symbolTable.linkSymbolsType((key + "." + this.currentSymbol.name).toUpperCase(),  this.currentSymbol);
+                    }
+                    else
+                    {
+                        let obj = varDescr.arrayDescription();
+
+                        if(obj)
+                        {
+                            this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, obj.arrayVariableName().identifier().IDENTIFIER().text);
+                            this.currentSymbol.context = obj.arrayVariableName().identifier().IDENTIFIER();
+
+                            if (this.currentSymbol instanceof WithTypeScopedSymbol) 
+                            {
+                                this.currentSymbol.symbolType = recItemType.toUpperCase();
+                            }
+
+                            this.symbolTable.linkSymbolsType((key + "." + this.currentSymbol.name).toUpperCase(),  this.currentSymbol);
+                        }
+                    }
+                }
+            }
+
+            let groupBlock = item.groupClause();
+
+            if(groupBlock)
+            {
+                let recName = groupBlock.groupName();
+
+                this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, recName.identifier().IDENTIFIER().text);
+                this.currentSymbol.context = recName.identifier().IDENTIFIER();
+
+                let newKey = (key + "." + this.currentSymbol.name).toUpperCase();
+
+                this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeBlockDclSymbol, undefined, groupBlock.text);
+                this.currentSymbol.context = groupBlock;
+                
+                let typeBlock = this.currentSymbol;
+                this.symbolTable.linkSymbolsType(newKey,  typeBlock);
+
+                this.recordComponentIterate(newKey, typeBlock, groupBlock.recComponent());
+            }
+            else
+            {
+                let variantBlock = item.variantClause();
+
+                if(variantBlock)
+                {
+                    let caseBlocks = variantBlock.caseClause();
+
+                    for(let item of caseBlocks)
+                    {
+                        this.recordComponentIterate(key.toUpperCase(), masterSymbol, item.recComponent());
+                    }
+                }
+            }
+        }
+    }
+
     enterGroupClause(ctx: GroupClauseContext) 
     {
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeBlockDclSymbol, undefined, ctx.text);
         this.currentSymbol.context = ctx;
 
-        let blocks = ctx.groupName();
-
-        for(let item of blocks)
-        {
-            this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, item.identifier().IDENTIFIER().text);
-            this.currentSymbol.context = item.identifier().IDENTIFIER();
-        }
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, ctx.groupName().identifier().IDENTIFIER().text);
+        this.currentSymbol.context = ctx.groupName().identifier().IDENTIFIER();
     }
     exitGroupClause(ctx: GroupClauseContext) 
     {
@@ -426,8 +581,6 @@ export class DetailsListener implements BasicParserListener
     //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
     //     }
     // }
-
-    private currentSymbol: Symbol | undefined;
 }
 
 function unquote(input: string, quoteChar?: string) 

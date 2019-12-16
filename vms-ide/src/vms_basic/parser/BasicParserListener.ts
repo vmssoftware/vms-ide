@@ -10,12 +10,15 @@ import { ComNameContext } from "./BasicParser";
 import { FileSpecContext } from "./BasicParser";
 import { TargetNameContext } from "./BasicParser";
 import { VariableNameContext } from "./BasicParser";
+import { VariableChildNameContext } from "./BasicParser";
 import { HandlerNameContext } from "./BasicParser";
 import { MapNameContext } from "./BasicParser";
 import { RoutineNameContext } from "./BasicParser";
 import { PictureNameContext } from "./BasicParser";
 import { RecNameContext } from "./BasicParser";
+import { RecNameEndContext } from "./BasicParser";
 import { GroupNameContext } from "./BasicParser";
+import { GroupNameEndContext } from "./BasicParser";
 import { StringVariableNameContext } from "./BasicParser";
 import { UnqStrContext } from "./BasicParser";
 import { NumericVariableNameContext } from "./BasicParser";
@@ -59,6 +62,7 @@ import { VariantClauseContext } from "./BasicParser";
 import { CaseClauseContext } from "./BasicParser";
 import { DataTypeContext } from "./BasicParser";
 import { VariableDeclarationContext } from "./BasicParser";
+import { VariableDescriptionSecondPartContext } from "./BasicParser";
 import { VariableDescriptionContext } from "./BasicParser";
 import { SingleVarDescriptionContext } from "./BasicParser";
 import { InitialValueContext } from "./BasicParser";
@@ -316,6 +320,17 @@ export interface BasicParserListener extends ParseTreeListener {
 	exitVariableName?: (ctx: VariableNameContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `BasicParser.variableChildName`.
+	 * @param ctx the parse tree
+	 */
+	enterVariableChildName?: (ctx: VariableChildNameContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.variableChildName`.
+	 * @param ctx the parse tree
+	 */
+	exitVariableChildName?: (ctx: VariableChildNameContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `BasicParser.handlerName`.
 	 * @param ctx the parse tree
 	 */
@@ -371,6 +386,17 @@ export interface BasicParserListener extends ParseTreeListener {
 	exitRecName?: (ctx: RecNameContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `BasicParser.recNameEnd`.
+	 * @param ctx the parse tree
+	 */
+	enterRecNameEnd?: (ctx: RecNameEndContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.recNameEnd`.
+	 * @param ctx the parse tree
+	 */
+	exitRecNameEnd?: (ctx: RecNameEndContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `BasicParser.groupName`.
 	 * @param ctx the parse tree
 	 */
@@ -380,6 +406,17 @@ export interface BasicParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitGroupName?: (ctx: GroupNameContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.groupNameEnd`.
+	 * @param ctx the parse tree
+	 */
+	enterGroupNameEnd?: (ctx: GroupNameEndContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.groupNameEnd`.
+	 * @param ctx the parse tree
+	 */
+	exitGroupNameEnd?: (ctx: GroupNameEndContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `BasicParser.stringVariableName`.
@@ -853,6 +890,17 @@ export interface BasicParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitVariableDeclaration?: (ctx: VariableDeclarationContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.variableDescriptionSecondPart`.
+	 * @param ctx the parse tree
+	 */
+	enterVariableDescriptionSecondPart?: (ctx: VariableDescriptionSecondPartContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.variableDescriptionSecondPart`.
+	 * @param ctx the parse tree
+	 */
+	exitVariableDescriptionSecondPart?: (ctx: VariableDescriptionSecondPartContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `BasicParser.variableDescription`.

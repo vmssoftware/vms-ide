@@ -35,6 +35,10 @@ variableName
    : identifier
    ;
 
+variableChildName
+   : identifier
+   ;
+
 handlerName
    : identifier
    ;
@@ -55,7 +59,15 @@ recName
    : identifier
    ;
 
+recNameEnd
+   : identifier
+   ;
+
 groupName
+   : identifier
+   ;
+
+groupNameEnd
    : identifier
    ;
 
@@ -256,7 +268,7 @@ declaration
 recordDeclaration
    : RECORD recName eol
      recComponent+
-     END RECORD recName?
+     END RECORD recNameEnd?
    ;
 
 recComponent
@@ -274,7 +286,7 @@ recItem
 groupClause
    : GROUP groupName (LPAREN (groupExpn (COMMA groupExpn)*)? RPAREN)? eol
      recComponent+
-     END GROUP groupName?
+     END GROUP groupNameEnd?
    ;
 
 groupExpn
@@ -314,7 +326,15 @@ dataType
    ;
 
 variableDeclaration
-   : DECLARE dataType (variableDescription (COMMA dataType? variableDescription)*)
+   : DECLARE variableDescriptionSecondPart (COMMA variableDescriptionSecondPart)*
+   ;
+
+// variableDescriptionFirstPart
+//    : dataType variableDescription
+//    ;
+
+variableDescriptionSecondPart
+   : dataType? variableDescription
    ;
 
 variableDescription
@@ -397,7 +417,7 @@ subprogramArgumentDescription
    ;
 
 subprogramArgument
-   : OPTIONAL? dataType? variableDescription equalsExpn? byrefOrByval?
+   : OPTIONAL? variableDescriptionSecondPart equalsExpn? byrefOrByval?
    ;
 
 byrefOrByval
@@ -445,34 +465,34 @@ defFunctionHeader
    ;
 
 mapDeclaration
-   : MAP LPAREN mapName RPAREN dataType? mapItem (COMMA dataType? mapItem)*
+   : MAP LPAREN mapName RPAREN mapItem (COMMA mapItem)*
    ;
 
 mapItem
-   : variableDescription (ASSIGN intConst)?
-   | FILL (LPAREN repCnt RPAREN)? (ASSIGN intConst)?
-   | FILL_P (LPAREN repCnt RPAREN)?
-   | FILL_D (LPAREN repCnt RPAREN)? (ASSIGN intConst)?
+   : variableDescriptionSecondPart (ASSIGN intConst)?
+   | dataType? FILL (LPAREN repCnt RPAREN)? (ASSIGN intConst)?
+   | dataType? FILL_P (LPAREN repCnt RPAREN)?
+   | dataType? FILL_D (LPAREN repCnt RPAREN)? (ASSIGN intConst)?
    ;
 
 mapDynDeclaration
-   : MAP DYNAMIC LPAREN mapName RPAREN dataType? mapDynItem (COMMA dataType? mapDynItem)*
+   : MAP DYNAMIC LPAREN mapName RPAREN mapDynItem (COMMA mapDynItem)*
    ;
 
 mapDynItem
-   : variableDescription (ASSIGN NUMBER)?
+   : variableDescriptionSecondPart (ASSIGN NUMBER)?
    ;
 
 commonDeclaration
-   : (COMMON | COM) (LPAREN comName RPAREN)? dataType? mapItem (COMMA dataType? mapItem)*
+   : (COMMON | COM) (LPAREN comName RPAREN)? mapItem (COMMA mapItem)*
    ;
 
 dimensionDeclaration
-   : (DIM | DIMENSION) (SHARP chnlExp COMMA)? dataType? dimensionItem (COMMA dataType? dimensionItem)*
+   : (DIM | DIMENSION) (SHARP chnlExp COMMA)? dimensionItem (COMMA dimensionItem)*
    ;
 
 dimensionItem
-   : arrayVariableName LPAREN (dimensionExpn (COMMA dimensionExpn)*)? RPAREN (ASSIGN intConst)?
+   : dataType? arrayVariableName LPAREN (dimensionExpn (COMMA dimensionExpn)*)? RPAREN (ASSIGN intConst)?
    ;
 
 dimensionExpn
@@ -507,7 +527,7 @@ matOp
 
 
 variable
-   : variableName (LPAREN expression (COMMA expression)* RPAREN | COLON COLON variableName)*
+   : variableName (LPAREN expression (COMMA expression)* RPAREN | COLON COLON variableChildName)*
    ;
 
 expression

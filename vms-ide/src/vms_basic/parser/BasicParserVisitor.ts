@@ -10,12 +10,15 @@ import { ComNameContext } from "./BasicParser";
 import { FileSpecContext } from "./BasicParser";
 import { TargetNameContext } from "./BasicParser";
 import { VariableNameContext } from "./BasicParser";
+import { VariableChildNameContext } from "./BasicParser";
 import { HandlerNameContext } from "./BasicParser";
 import { MapNameContext } from "./BasicParser";
 import { RoutineNameContext } from "./BasicParser";
 import { PictureNameContext } from "./BasicParser";
 import { RecNameContext } from "./BasicParser";
+import { RecNameEndContext } from "./BasicParser";
 import { GroupNameContext } from "./BasicParser";
+import { GroupNameEndContext } from "./BasicParser";
 import { StringVariableNameContext } from "./BasicParser";
 import { UnqStrContext } from "./BasicParser";
 import { NumericVariableNameContext } from "./BasicParser";
@@ -59,6 +62,7 @@ import { VariantClauseContext } from "./BasicParser";
 import { CaseClauseContext } from "./BasicParser";
 import { DataTypeContext } from "./BasicParser";
 import { VariableDeclarationContext } from "./BasicParser";
+import { VariableDescriptionSecondPartContext } from "./BasicParser";
 import { VariableDescriptionContext } from "./BasicParser";
 import { SingleVarDescriptionContext } from "./BasicParser";
 import { InitialValueContext } from "./BasicParser";
@@ -291,6 +295,13 @@ export interface BasicParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitVariableName?: (ctx: VariableNameContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `BasicParser.variableChildName`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVariableChildName?: (ctx: VariableChildNameContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `BasicParser.handlerName`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -326,11 +337,25 @@ export interface BasicParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitRecName?: (ctx: RecNameContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `BasicParser.recNameEnd`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRecNameEnd?: (ctx: RecNameEndContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `BasicParser.groupName`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitGroupName?: (ctx: GroupNameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.groupNameEnd`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitGroupNameEnd?: (ctx: GroupNameEndContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `BasicParser.stringVariableName`.
@@ -632,6 +657,13 @@ export interface BasicParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitVariableDeclaration?: (ctx: VariableDeclarationContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.variableDescriptionSecondPart`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVariableDescriptionSecondPart?: (ctx: VariableDescriptionSecondPartContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `BasicParser.variableDescription`.
