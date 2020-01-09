@@ -24,6 +24,7 @@ class Tracer:
         self._originalSigint = None
         self._originalSigbreak = None
         self._threads = {}
+        self._breakpoints = {}
         self._lockTrace = threading.Lock()
         # save imported functions
         self._currentThread = threading.current_thread
@@ -31,12 +32,16 @@ class Tracer:
         self._setTrace = sys.settrace
         self._setThreadTrace = threading.settrace
         self._versionInfo = sys.version_info
+        self._changeLocals = ctypes.pythonapi.PyFrame_LocalsToFast
+        self._Obj = ctypes.py_object
+        self._Int = ctypes.c_int
         # self._setSignal = signal.signal
         # just strings
         self._PAUSED = 'PAUSED'
         self._EXITED = 'EXITED'
         self._CONTUNUED = 'CONTUNUED'
         self._STEPPED = 'STEPPED'
+        self._RETRYED = 'RETRYED'
         self._INFO = 'INFO'
         self._EXCEPTION = 'EXCEPTION'
         self._SIGNAL = 'SIGNAL'
@@ -156,11 +161,18 @@ class Tracer:
             with self._lockTrace:
                 if self._paused:
                     self._sendDbgMessage(self._PAUSED)
-                cmd = self._readDbgMessage()
-                if cmd == 'p':
-                    if not self._paused:
-                        self._sendDbgMessage(self._PAUSED)
+                if event == 'exception':
+                    self._sendDbgMessage(self._EXCEPTION)
+                    excType, excValue, excTraceback = arg
+                    self._sendDbgMessage ('Tracing exception: %s "%s" on line %s of %s' % (excType.__name__, excValue, frame.f_lineno, frame.f_code.co_name))
                     self._paused = True
+                cmd = self._readDbgMessage()
+                if cmd:
+                    if cmd == 'p':
+                        if not self._paused:
+                            self._sendDbgMessage(self._PAUSED)
+                        self._paused = True
+                    # elif cmd
                 while self._paused and self._isConnected():
                     if "c" == cmd:
                         if self._paused:
@@ -168,6 +180,16 @@ class Tracer:
                         self._paused = False
                     elif "s" == cmd:
                         self._sendDbgMessage(self._STEPPED)
+                        break
+                    elif "test" == cmd:
+                        self._sendDbgMessage(self._RETRYED)
+                        self._sendDbgMessage("x was %i" % frame.f_locals['x'])
+                        frame.f_lineno = frame.f_lineno - 1
+                        frame.f_locals.update({
+                            'x': 10,
+                        })
+                        self._changeLocals(self._Obj(frame), self._Int(0))
+                        self._sendDbgMessage("x is %i" % frame.f_locals['x'])
                         break
                     elif "i" == cmd:
                         self._sendDbgMessage(self._INFO)
