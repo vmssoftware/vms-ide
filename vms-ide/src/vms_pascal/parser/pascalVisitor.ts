@@ -11,6 +11,7 @@ import { AttributeProgramContext } from "./pascalParser";
 import { AttributeModuleContext } from "./pascalParser";
 import { AttributeTypeContext } from "./pascalParser";
 import { AttributeVarContext } from "./pascalParser";
+import { AttributeConstContext } from "./pascalParser";
 import { AttributeDefContext } from "./pascalParser";
 import { PreReservedWordsContext } from "./pascalParser";
 import { AttributeContext } from "./pascalParser";
@@ -215,6 +216,13 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitAttributeVar?: (ctx: AttributeVarContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.attributeConst`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAttributeConst?: (ctx: AttributeConstContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.attributeDef`.

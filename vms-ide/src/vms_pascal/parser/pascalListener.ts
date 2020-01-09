@@ -11,6 +11,7 @@ import { AttributeProgramContext } from "./pascalParser";
 import { AttributeModuleContext } from "./pascalParser";
 import { AttributeTypeContext } from "./pascalParser";
 import { AttributeVarContext } from "./pascalParser";
+import { AttributeConstContext } from "./pascalParser";
 import { AttributeDefContext } from "./pascalParser";
 import { PreReservedWordsContext } from "./pascalParser";
 import { AttributeContext } from "./pascalParser";
@@ -244,6 +245,17 @@ export interface pascalListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitAttributeVar?: (ctx: AttributeVarContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.attributeConst`.
+	 * @param ctx the parse tree
+	 */
+	enterAttributeConst?: (ctx: AttributeConstContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.attributeConst`.
+	 * @param ctx the parse tree
+	 */
+	exitAttributeConst?: (ctx: AttributeConstContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `pascalParser.attributeDef`.

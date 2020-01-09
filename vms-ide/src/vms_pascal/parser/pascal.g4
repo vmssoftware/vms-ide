@@ -48,6 +48,10 @@ attributeVar
    : (LBRACK attributeDef (COMMA attributeDef)* RBRACK)?
    ;
 
+attributeConst
+   : (LBRACK attributeDef (COMMA attributeDef)* RBRACK)?
+   ;
+
 attributeDef
    : attribute (LPAREN (constant | identifier) (COMMA (constant | identifier))* RPAREN)?
    ;
@@ -155,7 +159,7 @@ label
    ;
 
 constantDefinitionPart
-   : CONST ((constantDefinition SEMI) | includeDirective) +
+   : attributeConst CONST ((constantDefinition SEMI) | includeDirective) +
    ;
 
 constantDefinition
@@ -550,11 +554,11 @@ assignmentStatement
    ;
 
 variable
-   : (ATP identifier | identifier) (LBRACK expression (COMMA expression)* RBRACK | LBRACK2 expression (COMMA expression)* RBRACK2 | DOT identifier | POINTER_)* (COLON COLON identifier)?
+   : (ATP identifier | identifier) (LBRACK expression (COMMA expression)* RBRACK | LBRACK2 expression (COMMA expression)* RBRACK2 | DOT identifier | POINTER_)* (COLON COLON identifier (DOT identifier | POINTER_)*)?
    ;
 
 expression
-   : simpleExpression (relationaloperator expression)? (COLON COLON identifier)?
+   : simpleExpression (relationaloperator expression)? (COLON COLON identifier (DOT identifier | POINTER_)*)?
    ;
 
 relationaloperator
