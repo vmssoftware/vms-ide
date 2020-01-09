@@ -55,13 +55,16 @@ class Tracer:
         self._Int = ctypes.c_int
         self._os_path_basename = os.path.basename
         self._os_path_abspath = os.path.abspath
-        # self._setSignal = signal.signal
+        self._setSignal = signal.signal
         self._messages = MESSAGE
         self._commands = COMMAND
+        self._sig_int = signal.SIGINT
+        self._sig_break = signal.SIGBREAK
+        self._sig_def = signal.SIG_DFL
 
     def _setupTrace(self):
-        # self._setSignal(signal.SIGINT, self._signalHandler)
-        # self._setSignal(signal.SIGBREAK, self._signalHandler)
+        self._setSignal(self._sig_int, self._signalHandler)
+        self._setSignal(self._sig_break, self._signalHandler)
         self._connect()
         self._oldSysTrace = sys.gettrace()
         self._setTrace(self._traceFunc)
@@ -96,10 +99,13 @@ class Tracer:
     def _cleanupTrace(self):
         self._setTrace(self._oldSysTrace)
         self._setThreadTrace(self._oldSysTrace)
+        self._setSignal(self._sig_break, self._sig_def)
+        self._setSignal(self._sig_int, self._sig_def)
         self._disconnect()
 
-    # def _signalHandler(self, signum, frame):
-    #     self._sendDbgMessage(SIGNAL + ": " + str(signum))
+    def _signalHandler(self, signum, frame):
+        self._sendDbgMessage(self._messages.SIGNAL + ": " + str(signum))
+        self._paused = True
     
     def _isConnected(self):
         return bool(self._socket)
