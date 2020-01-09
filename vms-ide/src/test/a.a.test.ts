@@ -17,6 +17,7 @@ suite("MM tests", function(this: Mocha.Suite) {
     test("MM 1", async() => {
         let options: micromatch.Options = {
             basename: false,
+            dot: true,
             nocase: true,
             nodupes: true,
             unixify: false,
