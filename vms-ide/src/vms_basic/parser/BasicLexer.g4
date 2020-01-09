@@ -1499,6 +1499,13 @@ RADIANS
    ;
 
 
+fragment SPACE_
+   : [ \t\u000B\u000C\u0000]
+   ;
+
+WHITESPACE_
+   : SPACE_ -> channel(HIDDEN)
+   ;
 
 NL
    : [\n]

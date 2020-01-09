@@ -200,7 +200,7 @@ export class DetailsListener implements BasicParserListener
 
         if(blocks.length > 0)
         {
-            this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, ctx.variableName().identifier().IDENTIFIER().text);
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(AnySymbol, undefined, ctx.variableName().identifier().IDENTIFIER().text);
             this.currentSymbol.context = ctx.variableName().identifier().IDENTIFIER();
             //this.symbolStack.push(this.currentSymbol);
 
@@ -209,7 +209,7 @@ export class DetailsListener implements BasicParserListener
 
             for(let item of blocks)
             {
-                this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.identifier().IDENTIFIER().text);
+                this.currentSymbol = this.symbolTable.addNewSymbolOfType(AnySymbol, undefined, item.identifier().IDENTIFIER().text);
                 this.currentSymbol.context = item.identifier().IDENTIFIER();
                 //this.symbolStack.push(this.currentSymbol);
                 let entitySymbol = this.currentSymbol;
@@ -321,12 +321,31 @@ export class DetailsListener implements BasicParserListener
     {
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeBlockDclSymbol, undefined, ctx.text);
         this.currentSymbol.context = ctx;
+        let block = this.currentSymbol;
         
         let typeBlock = this.currentSymbol;
         let recName = ctx.recName();
 
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, recName.identifier().IDENTIFIER().text);
         this.currentSymbol.context = recName.identifier().IDENTIFIER();
+
+        if (this.currentSymbol instanceof WithTypeScopedSymbol)
+        {
+            this.currentSymbol.symbolBlock = block;
+        }
+
+        if(ctx.recNameEnd())
+        {
+            let recNameEnd = ctx.recNameEnd();
+
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, recNameEnd!.identifier().IDENTIFIER().text);
+            this.currentSymbol.context = recNameEnd!.identifier().IDENTIFIER();
+
+            if (this.currentSymbol instanceof WithTypeScopedSymbol)
+            {
+                this.currentSymbol.symbolBlock = block;
+            }
+        }
 
         this.recordComponentIterate(this.currentSymbol.name, typeBlock, ctx.recComponent());
     }
@@ -403,6 +422,7 @@ export class DetailsListener implements BasicParserListener
 
                 this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, recName.identifier().IDENTIFIER().text);
                 this.currentSymbol.context = recName.identifier().IDENTIFIER();
+                let nameTypeSymbol = this.currentSymbol;
 
                 let newKey = (key + "." + this.currentSymbol.name).toUpperCase();
 
@@ -410,7 +430,25 @@ export class DetailsListener implements BasicParserListener
                 this.currentSymbol.context = groupBlock;
                 
                 let typeBlock = this.currentSymbol;
-                this.symbolTable.linkSymbolsType(newKey,  typeBlock);
+                this.symbolTable.linkSymbolsType(newKey, typeBlock);
+
+                if (nameTypeSymbol instanceof WithTypeScopedSymbol)
+                {
+                    nameTypeSymbol.symbolBlock = typeBlock;
+                }
+
+                if(groupBlock.groupNameEnd())
+                {
+                    let groupNameEnd = groupBlock.groupNameEnd();
+        
+                    this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, groupNameEnd!.identifier().IDENTIFIER().text);
+                    this.currentSymbol.context = groupNameEnd!.identifier().IDENTIFIER();
+        
+                    if (this.currentSymbol instanceof WithTypeScopedSymbol)
+                    {
+                        this.currentSymbol.symbolBlock = typeBlock;
+                    }
+                }
 
                 this.recordComponentIterate(newKey, typeBlock, groupBlock.recComponent());
             }

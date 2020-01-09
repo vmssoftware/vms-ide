@@ -62,6 +62,7 @@ export interface SymbolInfo
     source: string;
     definition?: Definition;
     description?: string;  // Used for code completion. Provides a small description for certain symbols.
+    type?: string;
     info?: SymbolInfo;
 }
 
