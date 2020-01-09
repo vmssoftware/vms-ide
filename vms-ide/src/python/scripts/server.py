@@ -4,10 +4,22 @@ import select
 import threading
 import time
 
-HOST = '127.0.0.1'
-PORT = 54326
-CONSOLE = 'CONSOLE'
-DEBUG = 'DEBUG'
+# settings
+class SETTINGS:
+    HOST = '127.0.0.1'
+    PORT = 54326
+
+class TYPE:
+    CONSOLE = 'CONSOLE'
+    DEBUG = 'DEBUG'
+
+# command to receive
+class COMMAND:
+    PAUSE = 'p'
+    CONTINUE = 'c'
+    STEP = 's'
+    INFO = 'i'
+    QUIT = 'q'
 
 class Connection:
     def __init__(self, socket):
@@ -39,9 +51,9 @@ class Connection:
             # first message is the type
             if not self._type:
                 self._type = line
-                if self._type == DEBUG:
-                    # send PASUE
-                    self.post('p')
+                if self._type == TYPE.DEBUG:
+                    # send PAUSE (TODO: make command line option)
+                    self.post(COMMAND.PAUSE)
             elif line:
                 lines.append(line)
             start = idx + 1
@@ -109,7 +121,7 @@ class DebugServer:
     def _run(self):
         self._listenSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._listenSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self._listenSocket.bind((HOST, self._port))
+        self._listenSocket.bind((SETTINGS.HOST, self._port))
         self._listenSocket.listen(2)
         self._listenSocket.setblocking(False)
         self._connections = {}
@@ -132,14 +144,17 @@ class DebugServer:
                         connection = self._connections[s]
                         lines = connection.read()
                         if len(lines) > 0:
-                            if connection.getType() == DEBUG:
+                            if connection.getType() == TYPE.DEBUG:
                                 # print lines
                                 for line in lines:
                                     print(line)
-                            elif connection.getType() == CONSOLE:
+                            elif connection.getType() == TYPE.CONSOLE:
+                                # test if "pause"
+                                if line == COMMAND.PAUSE:
+                                    pass
                                 # pass lines to debuggers
                                 for conn in self._connections.values():
-                                    if conn.getType() == DEBUG:
+                                    if conn.getType() == TYPE.DEBUG:
                                         for line in lines:
                                             conn.post(line)
                 for s in writable:
@@ -173,20 +188,20 @@ class DebugServer:
         self._connections[conn] = connection
 
 if __name__ == "__main__":
-    server = DebugServer(PORT)
+    server = DebugServer(SETTINGS.PORT)
     server.start()
     time.sleep(0.5)
     try:
         consoleSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        consoleSocket.connect_ex((HOST, PORT))
-        consoleSocket.send((CONSOLE + "\n").encode())
+        consoleSocket.connect_ex((SETTINGS.HOST, SETTINGS.PORT))
+        consoleSocket.send((TYPE.CONSOLE + "\n").encode())
         while server.isAlive():
             if sys.version_info[0] < 3:
                 cmd = raw_input('>')
             else:
                 cmd = input('>')
             consoleSocket.send((cmd + "\n").encode())
-            if cmd == "q":
+            if cmd == COMMAND.QUIT:
                 break
     except:
         pass

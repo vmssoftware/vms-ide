@@ -5,10 +5,27 @@ import sys
 import threading
 import time
 
-HOST = '127.0.0.1'
-PORT = 54326
-CONSOLE = 'CONSOLE'
-DEBUG = 'DEBUG'
+# settings
+class SETTINGS:
+    HOST = '127.0.0.1'
+    PORT = 54326
+# messages to send
+class MESSAGE:
+    DEBUG = 'DEBUG'
+    PAUSED = 'PAUSED'
+    EXITED = 'EXITED'
+    CONTINUED = 'CONTINUED'
+    STEPPED = 'STEPPED'
+    # MESSAGE.RETRIED = 'RETRIED'
+    INFORMATION = 'INFO'
+    EXCEPTION = 'EXCEPTION'
+    SIGNAL = 'SIGNAL'
+# command to receive
+class COMMAND:
+    PAUSE = 'p'
+    CONTINUE = 'c'
+    STEP = 's'
+    INFO = 'i'
 
 class Tracer:
     def __init__(self, port):
@@ -25,8 +42,8 @@ class Tracer:
         self._originalSigbreak = None
         self._threads = {}
         self._breakpoints = {}
+        # incapsulate functions from other classes
         self._lockTrace = threading.Lock()
-        # save imported functions
         self._currentThread = threading.current_thread
         self._sleep = time.sleep
         self._setTrace = sys.settrace
@@ -36,15 +53,8 @@ class Tracer:
         self._Obj = ctypes.py_object
         self._Int = ctypes.c_int
         # self._setSignal = signal.signal
-        # just strings
-        self._PAUSED = 'PAUSED'
-        self._EXITED = 'EXITED'
-        self._CONTUNUED = 'CONTUNUED'
-        self._STEPPED = 'STEPPED'
-        self._RETRYED = 'RETRYED'
-        self._INFO = 'INFO'
-        self._EXCEPTION = 'EXCEPTION'
-        self._SIGNAL = 'SIGNAL'
+        self._messages = MESSAGE
+        self._commands = COMMAND
 
     def _setupTrace(self):
         # self._setSignal(signal.SIGINT, self._signalHandler)
@@ -56,17 +66,17 @@ class Tracer:
 
     def _connect(self):
         self._open()
-        self._sendDbgMessage(DEBUG)
+        self._sendDbgMessage(self._messages.DEBUG)
 
     def _disconnect(self):
-        self._sendDbgMessage(self._EXITED)
+        self._sendDbgMessage(self._messages.EXITED)
         self._close()
 
     def _open(self):
         self._socket = None
         try:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._socket.connect((HOST, self._port))
+            self._socket.connect((SETTINGS.HOST, self._port))
             self._socket.setblocking(False)
         except:
             # print('Connect failed')
@@ -86,7 +96,7 @@ class Tracer:
         self._disconnect()
 
     # def _signalHandler(self, signum, frame):
-    #     self._sendDbgMessage(self._SIGNAL + ": " + str(signum))
+    #     self._sendDbgMessage(SIGNAL + ": " + str(signum))
     
     def _isConnected(self):
         return bool(self._socket)
@@ -139,7 +149,7 @@ class Tracer:
         entry = {'ident': ident, 'frame': frame, 'event': event, 'arg': arg, 'paused': True}
         self._threads[ident] = entry
 
-        # self._sendDbgMessage(self._INFO)
+        # self._sendDbgMessage(MESSAGE.INFORMATION)
         # self._sendDbgMessage(event)
         # self._sendDbgMessage("Threads: %i" % len(self._threads))
         # for threadEntry in self._threads.values():
@@ -160,44 +170,44 @@ class Tracer:
         if not self._waitingForAFile:
             with self._lockTrace:
                 if self._paused:
-                    self._sendDbgMessage(self._PAUSED)
+                    self._sendDbgMessage(self._messages.PAUSED)
                 if event == 'exception':
-                    self._sendDbgMessage(self._EXCEPTION)
+                    self._sendDbgMessage(self._messages.EXCEPTION)
                     excType, excValue, excTraceback = arg
                     self._sendDbgMessage ('Tracing exception: %s "%s" on line %s of %s' % (excType.__name__, excValue, frame.f_lineno, frame.f_code.co_name))
                     self._paused = True
                 cmd = self._readDbgMessage()
                 if cmd:
-                    if cmd == 'p':
+                    if cmd == self._commands.PAUSE:
                         if not self._paused:
-                            self._sendDbgMessage(self._PAUSED)
+                            self._sendDbgMessage(self._messages.PAUSED)
                         self._paused = True
                     # elif cmd
                 while self._paused and self._isConnected():
-                    if "c" == cmd:
+                    if cmd == self._commands.CONTINUE:
                         if self._paused:
-                            self._sendDbgMessage(self._CONTUNUED)
+                            self._sendDbgMessage(self._messages.CONTINUED)
                         self._paused = False
-                    elif "s" == cmd:
-                        self._sendDbgMessage(self._STEPPED)
+                    elif cmd == self._commands.STEP:
+                        self._sendDbgMessage(self._messages.STEPPED)
                         break
-                    elif "test" == cmd:
-                        self._sendDbgMessage(self._RETRYED)
-                        self._sendDbgMessage("x was %i" % frame.f_locals['x'])
-                        frame.f_lineno = frame.f_lineno - 1
-                        frame.f_locals.update({
-                            'x': 10,
-                        })
-                        self._changeLocals(self._Obj(frame), self._Int(0))
-                        self._sendDbgMessage("x is %i" % frame.f_locals['x'])
-                        break
-                    elif "i" == cmd:
-                        self._sendDbgMessage(self._INFO)
+                    elif cmd == self._commands.INFO:
+                        self._sendDbgMessage(self._messages.INFORMATION)
                         self._sendDbgMessage("Threads: %i" % len(self._threads))
                         for threadEntry in self._threads.values():
                             self._sendDbgMessage("  thread %i%s:" % (threadEntry['ident'], " paused" if threadEntry['paused'] else ""))
                             self._sendDbgMessage("      file: %s" % threadEntry['frame'].f_code.co_filename)
                             self._sendDbgMessage("      line: %i" % threadEntry['frame'].f_lineno)
+                    # elif "test" == cmd:
+                    #     self._sendDbgMessage(RETRIED)
+                    #     self._sendDbgMessage("x was %i" % frame.f_locals['x'])
+                    #     frame.f_lineno = frame.f_lineno - 1
+                    #     frame.f_locals.update({
+                    #         'x': 10,
+                    #     })
+                    #     self._changeLocals(self._Obj(frame), self._Int(0))
+                    #     self._sendDbgMessage("x is %i" % frame.f_locals['x'])
+                    #     break
                     self._sleep(0.3)
                     cmd = self._readDbgMessage()
         entry['paused'] = False
@@ -225,7 +235,7 @@ class Tracer:
                 exec(statement, globalsT, globalsT)
         except Exception as ex:
             if self._isConnected():
-                self._sendDbgMessage(self._EXCEPTION + ": " +repr(ex))
+                self._sendDbgMessage(self._messages.EXCEPTION + ": " +repr(ex))
             else:
                 print(repr(ex))
     
@@ -239,7 +249,7 @@ class Tracer:
 if __name__ == "__main__":
 
     _usage = """\
-usage: deb.py [-c command] ... [-m module | pyfile] [arg] ...
+usage: tracer.py pyfile [arg] ...
 
 Debug the Python program given by pyfile."""
 
@@ -258,5 +268,5 @@ Debug the Python program given by pyfile."""
         else:
             print("Unlnown option %s" % opt)
 
-    tracer = Tracer(PORT)
+    tracer = Tracer(SETTINGS.PORT)
     tracer.run(args[0])
