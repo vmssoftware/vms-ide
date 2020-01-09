@@ -4,6 +4,7 @@ import socket
 import sys
 import threading
 import time
+import os.path
 
 # settings
 class SETTINGS:
@@ -52,6 +53,8 @@ class Tracer:
         self._changeLocals = ctypes.pythonapi.PyFrame_LocalsToFast
         self._Obj = ctypes.py_object
         self._Int = ctypes.c_int
+        self._os_path_basename = os.path.basename
+        self._os_path_abspath = os.path.abspath
         # self._setSignal = signal.signal
         self._messages = MESSAGE
         self._commands = COMMAND
@@ -145,71 +148,89 @@ class Tracer:
         return None
 
     def _traceFunc(self, frame, event, arg):
-        ident = self._currentThread().ident
-        entry = {'ident': ident, 'frame': frame, 'event': event, 'arg': arg, 'paused': True}
-        self._threads[ident] = entry
-
-        # self._sendDbgMessage(MESSAGE.INFORMATION)
-        # self._sendDbgMessage(event)
-        # self._sendDbgMessage("Threads: %i" % len(self._threads))
-        # for threadEntry in self._threads.values():
-        #     self._sendDbgMessage("  thread %i%s:" % (threadEntry['ident'], " paused" if threadEntry['paused'] else ""))
-        #     self._sendDbgMessage("      file: %s" % threadEntry['frame'].f_code.co_filename)
-        #     self._sendDbgMessage("      line: %i" % threadEntry['frame'].f_lineno)
-
+        # wait until tracing enabled
         if not self._startTracing:
-            entry['paused'] = False
             return self._traceFunc
+        # skip this file
         if frame.f_code.co_filename == self._fileName:
-            entry['paused'] = False
             return self._traceFunc
+        # skip system files
+        if self._os_path_abspath(frame.f_code.co_filename) == frame.f_code.co_filename:
+            return self._traceFunc
+        # skip no files
+        if frame.f_code.co_filename == "<string>":
+            return self._traceFunc
+        # wait untin tracing file entered
         if self._waitingForAFile:
-            if self._waitingForAFile == frame.f_code.co_filename:
-                self._waitingForAFile = None
+            if self._waitingForAFile != frame.f_code.co_filename:
+                return self._traceFunc
+            # now we are ready to trace
+            self._waitingForAFile = None
+            # autopause
+            self._paused = True
+        ident = self._currentThread().ident
+        entry = {'ident': ident, 'frame': frame, 'event': event, 'arg': arg, 'paused': True, 'level': 0}
+        if ident in self._threads:
+            # get level from dictionary
+            entry['level'] = self._threads[ident]['level']
+        else:
+            self._sendDbgMessage(" thread: %s started" % ident)
+        # save entry to dictionary
+        self._threads[ident] = entry
+        # keep level tracking
+        if event == 'call':
+            entry['level'] = entry['level'] + 1
+        if event == 'return':
+            entry['level'] = entry['level'] - 1
+            if entry['level'] == 0:
+                # remove thread info and go out
+                del self._threads[ident]
+                self._sendDbgMessage(" thread: %s ended" % ident)
+                return self._traceFunc
+        with self._lockTrace:
+            # point of tracing 
+            self._sendDbgMessage(" thread: %s file: %s line: %i event: %s level: %i" % (ident, self._os_path_basename(frame.f_code.co_filename), frame.f_lineno, event, entry['level']))
+            if self._paused:
+                self._sendDbgMessage(self._messages.PAUSED)
+            if event == 'exception':
+                self._sendDbgMessage(self._messages.EXCEPTION)
+                excType, excValue, excTraceback = arg
+                self._sendDbgMessage ('Tracing exception: %s "%s" on line %s of %s' % (excType.__name__, excValue, frame.f_lineno, frame.f_code.co_name))
                 self._paused = True
-        if not self._waitingForAFile:
-            with self._lockTrace:
-                if self._paused:
-                    self._sendDbgMessage(self._messages.PAUSED)
-                if event == 'exception':
-                    self._sendDbgMessage(self._messages.EXCEPTION)
-                    excType, excValue, excTraceback = arg
-                    self._sendDbgMessage ('Tracing exception: %s "%s" on line %s of %s' % (excType.__name__, excValue, frame.f_lineno, frame.f_code.co_name))
+            cmd = self._readDbgMessage()
+            if cmd:
+                if cmd == self._commands.PAUSE:
+                    if not self._paused:
+                        self._sendDbgMessage(self._messages.PAUSED)
                     self._paused = True
+                # elif cmd
+            while self._paused and self._isConnected():
+                if cmd == self._commands.CONTINUE:
+                    if self._paused:
+                        self._sendDbgMessage(self._messages.CONTINUED)
+                    self._paused = False
+                elif cmd == self._commands.STEP:
+                    self._sendDbgMessage(self._messages.STEPPED)
+                    break
+                elif cmd == self._commands.INFO:
+                    self._sendDbgMessage(self._messages.INFORMATION)
+                    self._sendDbgMessage("Threads: %i" % len(self._threads))
+                    for threadEntry in self._threads.values():
+                        self._sendDbgMessage("  thread %i%s:" % (threadEntry['ident'], " paused" if threadEntry['paused'] else ""))
+                        self._sendDbgMessage("      file: %s" % threadEntry['frame'].f_code.co_filename)
+                        self._sendDbgMessage("      line: %i" % threadEntry['frame'].f_lineno)
+                # elif "test" == cmd:
+                #     self._sendDbgMessage(RETRIED)
+                #     self._sendDbgMessage("x was %i" % frame.f_locals['x'])
+                #     frame.f_lineno = frame.f_lineno - 1
+                #     frame.f_locals.update({
+                #         'x': 10,
+                #     })
+                #     self._changeLocals(self._Obj(frame), self._Int(0))
+                #     self._sendDbgMessage("x is %i" % frame.f_locals['x'])
+                #     break
+                self._sleep(0.3)
                 cmd = self._readDbgMessage()
-                if cmd:
-                    if cmd == self._commands.PAUSE:
-                        if not self._paused:
-                            self._sendDbgMessage(self._messages.PAUSED)
-                        self._paused = True
-                    # elif cmd
-                while self._paused and self._isConnected():
-                    if cmd == self._commands.CONTINUE:
-                        if self._paused:
-                            self._sendDbgMessage(self._messages.CONTINUED)
-                        self._paused = False
-                    elif cmd == self._commands.STEP:
-                        self._sendDbgMessage(self._messages.STEPPED)
-                        break
-                    elif cmd == self._commands.INFO:
-                        self._sendDbgMessage(self._messages.INFORMATION)
-                        self._sendDbgMessage("Threads: %i" % len(self._threads))
-                        for threadEntry in self._threads.values():
-                            self._sendDbgMessage("  thread %i%s:" % (threadEntry['ident'], " paused" if threadEntry['paused'] else ""))
-                            self._sendDbgMessage("      file: %s" % threadEntry['frame'].f_code.co_filename)
-                            self._sendDbgMessage("      line: %i" % threadEntry['frame'].f_lineno)
-                    # elif "test" == cmd:
-                    #     self._sendDbgMessage(RETRIED)
-                    #     self._sendDbgMessage("x was %i" % frame.f_locals['x'])
-                    #     frame.f_lineno = frame.f_lineno - 1
-                    #     frame.f_locals.update({
-                    #         'x': 10,
-                    #     })
-                    #     self._changeLocals(self._Obj(frame), self._Int(0))
-                    #     self._sendDbgMessage("x is %i" % frame.f_locals['x'])
-                    #     break
-                    self._sleep(0.3)
-                    cmd = self._readDbgMessage()
         entry['paused'] = False
         return self._traceFunc
 

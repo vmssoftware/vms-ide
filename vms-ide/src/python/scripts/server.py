@@ -53,6 +53,7 @@ class Connection:
                 self._type = line
                 if self._type == TYPE.DEBUG:
                     # send PAUSE (TODO: make command line option)
+                    # autopause
                     self.post(COMMAND.PAUSE)
             elif line:
                 lines.append(line)
