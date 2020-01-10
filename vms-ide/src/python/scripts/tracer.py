@@ -5,6 +5,7 @@ import sys
 import threading
 import time
 import os.path
+import collections
 
 # settings
 class SETTINGS:
@@ -14,6 +15,7 @@ class SETTINGS:
 class MESSAGE:
     DEBUG = 'DEBUG'
     PAUSED = 'PAUSED'
+    BREAK = 'BREAK'
     EXITED = 'EXITED'
     CONTINUED = 'CONTINUED'
     STEPPED = 'STEPPED'
@@ -27,6 +29,11 @@ class COMMAND:
     CONTINUE = 'c'
     STEP = 's'
     INFO = 'i'
+    WHERE = 'w'
+    # file line
+    BP_SET = 'bps'
+    # [file [line]]
+    BP_RESET = 'bpr'
 
 class Tracer:
     def __init__(self, port):
@@ -41,8 +48,8 @@ class Tracer:
         self._startTracing = False
         self._originalSigint = None
         self._originalSigbreak = None
-        self._threads = {}
-        self._breakpoints = {}
+        self._threads = {}                                  # thread enrties by thread id
+        self._breakpoints = collections.defaultdict(set)    # line list by file name
         # incapsulate functions from other classes
         self._lockTrace = threading.Lock()
         self._currentThread = threading.current_thread
@@ -59,12 +66,12 @@ class Tracer:
         self._messages = MESSAGE
         self._commands = COMMAND
         self._sig_int = signal.SIGINT
-        self._sig_break = signal.SIGBREAK
+        # self._sig_break = signal.SIGBREAK
         self._sig_def = signal.SIG_DFL
 
     def _setupTrace(self):
         self._setSignal(self._sig_int, self._signalHandler)
-        self._setSignal(self._sig_break, self._signalHandler)
+        # self._setSignal(self._sig_break, self._signalHandler)
         self._connect()
         self._oldSysTrace = sys.gettrace()
         self._setTrace(self._traceFunc)
@@ -99,7 +106,7 @@ class Tracer:
     def _cleanupTrace(self):
         self._setTrace(self._oldSysTrace)
         self._setThreadTrace(self._oldSysTrace)
-        self._setSignal(self._sig_break, self._sig_def)
+        # self._setSignal(self._sig_break, self._sig_def)
         self._setSignal(self._sig_int, self._sig_def)
         self._disconnect()
 
@@ -122,11 +129,11 @@ class Tracer:
                 if isinstance(ex, IOError):
                     errno = ex.errno % 1000
                     if errno != 35:
-                        self._socket = None
+                        self._close()
                 else:
-                    self._socket = None
+                    self._close()
             except:
-                self._socket = None
+                self._close()
 
     def _readDbgMessage(self):
         if self._isConnected():
@@ -140,11 +147,11 @@ class Tracer:
                 if isinstance(ex, IOError):
                     errno = ex.errno % 1000
                     if errno != 35:
-                        self._socket = None
+                        self._close()
                 else:
-                    self._socket = None
+                    self._close()
             except:
-                self._socket = None
+                self._close()
             if self._recvBuffer:
                 idx = self._recvBuffer.find(b"\n")
                 if idx >= 0:
@@ -180,6 +187,7 @@ class Tracer:
             # get level from dictionary
             entry['level'] = self._threads[ident]['level']
         else:
+            # first entry
             self._sendDbgMessage(" thread: %s started" % ident)
         # save entry to dictionary
         self._threads[ident] = entry
@@ -194,51 +202,106 @@ class Tracer:
                 self._sendDbgMessage(" thread: %s ended" % ident)
                 return self._traceFunc
         with self._lockTrace:
-            # point of tracing 
+            # point of tracing (comment next line in release)
             self._sendDbgMessage(" thread: %s file: %s line: %i event: %s level: %i" % (ident, self._os_path_basename(frame.f_code.co_filename), frame.f_lineno, event, entry['level']))
+            # show message when pause
             if self._paused:
                 self._sendDbgMessage(self._messages.PAUSED)
+            # examine breakpoint
+            if frame.f_lineno in self._breakpoints[frame.f_code.co_filename]:
+                self._sendDbgMessage(self._messages.BREAK)
+                self._sendDbgMessage('%i: file %s line %i function %s' % (ident, frame.f_code.co_filename, frame.f_lineno, frame.f_code.co_name))
+                self._paused = True
+            # examine exception
             if event == 'exception':
                 self._sendDbgMessage(self._messages.EXCEPTION)
-                excType, excValue, excTraceback = arg
-                self._sendDbgMessage ('Tracing exception: %s "%s" on line %s of %s' % (excType.__name__, excValue, frame.f_lineno, frame.f_code.co_name))
+                self._sendDbgMessage('%i: file %s line %i function %s' % (ident, frame.f_code.co_filename, frame.f_lineno, frame.f_code.co_name))
+                excType, excValue = arg
+                self._sendDbgMessage('%s: %s' % (excType.__name__, excValue))
                 self._paused = True
+            # tests runtime commands
             cmd = self._readDbgMessage()
-            if cmd:
+            while cmd:
                 if cmd == self._commands.PAUSE:
                     if not self._paused:
                         self._sendDbgMessage(self._messages.PAUSED)
                     self._paused = True
-                # elif cmd
+                else:
+                    self._parseBp(cmd)
+                cmd = self._readDbgMessage()
+            # test commands on pause
             while self._paused and self._isConnected():
-                if cmd == self._commands.CONTINUE:
-                    if self._paused:
-                        self._sendDbgMessage(self._messages.CONTINUED)
-                    self._paused = False
-                elif cmd == self._commands.STEP:
-                    self._sendDbgMessage(self._messages.STEPPED)
-                    break
-                elif cmd == self._commands.INFO:
-                    self._sendDbgMessage(self._messages.INFORMATION)
-                    self._sendDbgMessage("Threads: %i" % len(self._threads))
-                    for threadEntry in self._threads.values():
-                        self._sendDbgMessage("  thread %i%s:" % (threadEntry['ident'], " paused" if threadEntry['paused'] else ""))
-                        self._sendDbgMessage("      file: %s" % threadEntry['frame'].f_code.co_filename)
-                        self._sendDbgMessage("      line: %i" % threadEntry['frame'].f_lineno)
-                # elif "test" == cmd:
-                #     self._sendDbgMessage(RETRIED)
-                #     self._sendDbgMessage("x was %i" % frame.f_locals['x'])
-                #     frame.f_lineno = frame.f_lineno - 1
-                #     frame.f_locals.update({
-                #         'x': 10,
-                #     })
-                #     self._changeLocals(self._Obj(frame), self._Int(0))
-                #     self._sendDbgMessage("x is %i" % frame.f_locals['x'])
-                #     break
+                if cmd:
+                    if cmd == self._commands.CONTINUE:
+                        if self._paused:
+                            self._sendDbgMessage(self._messages.CONTINUED)
+                        self._paused = False
+                    elif cmd == self._commands.STEP:
+                        self._sendDbgMessage(self._messages.STEPPED)
+                        break
+                    elif cmd == self._commands.INFO:
+                        self._sendDbgMessage(self._messages.INFORMATION)
+                        self._sendDbgMessage("Threads: %i" % len(self._threads))
+                        for threadEntry in self._threads.values():
+                            self._sendDbgMessage("  thread %i%s:" % (threadEntry['ident'], " paused" if threadEntry['paused'] else ""))
+                            self._sendDbgMessage("    file: %s" % threadEntry['frame'].f_code.co_filename)
+                            self._sendDbgMessage("    line: %i" % threadEntry['frame'].f_lineno)
+                            self._sendDbgMessage("    func: %s" % threadEntry['frame'].f_code.co_name)
+                    elif cmd == self._commands.WHERE:
+                        self._sendDbgMessage("%i: file %s line %i function %s" % (ident, frame.f_code.co_filename, frame.f_lineno, frame.f_code.co_name))
+                    else:
+                        self._parseBp(cmd)
                 self._sleep(0.3)
                 cmd = self._readDbgMessage()
+            # ---------------------------------------------
         entry['paused'] = False
         return self._traceFunc
+    
+    def _parseBp(self, cmd):
+        if cmd.startswith(self._commands.BP_SET):
+            try:
+                cmd, bp_file, bp_line = cmd.split()
+                self._setBp(bp_file, bp_line)
+            except:
+                pass
+        elif cmd.startswith(self._commands.BP_RESET):
+            try:
+                bp_args = cmd.split()
+                if len(bp_args) == 1:
+                    self._resetBp(None, None)
+                elif len(bp_args) == 2:
+                    cmd, bp_file = bp_args
+                    self._resetBp(bp_file, None)
+                else:
+                    cmd, bp_file, bp_line = bp_args
+                    self._resetBp(bp_file, bp_line)
+            except:
+                pass
+
+    def _setBp(self, file, line):
+        iline = int(line)
+        self._breakpoints[file].add(iline)
+        self._sendDbgMessage("BPSET %s %i" % (file, iline))
+
+    def _resetBp(self, file, line):
+        if file:
+            if file in self._breakpoints:
+                if line != None:
+                    iline = int(line)
+                    self._breakpoints[file].discard(iline)
+                    self._sendDbgMessage("BPRESET %s %i" % (file, iline))
+                else:
+                    self._breakpoints[file].clear()
+                    self._sendDbgMessage("BPRESET %s" % file)
+        else:
+            self._breakpoints.clear()
+            self._sendDbgMessage("BPRESET ALL")
+
+    def _changeLocalVar(self, frame, varName, newValue):
+        frame.f_locals.update({
+            varName: newValue,
+        })
+        self._changeLocals(self._Obj(frame), self._Int(0))
 
     def _runscript(self, filename):
         # === Given from PDB.PY ===
