@@ -48,8 +48,9 @@ class Tracer:
         self._startTracing = False
         self._originalSigint = None
         self._originalSigbreak = None
-        self._threads = {}                                  # thread enrties by thread id
-        self._breakpoints = collections.defaultdict(set)    # line list by file name
+        self._threads = {}                                  # thread enrties by [thread id]
+        self._breakpoints = collections.defaultdict(set)    # break line list by [file name]
+        self._lines = collections.defaultdict(dict)         # all usable line list by [file name [ function name ]]
         # incapsulate functions from other classes
         self._lockTrace = threading.Lock()
         self._currentThread = threading.current_thread
@@ -188,22 +189,49 @@ class Tracer:
             entry['level'] = self._threads[ident]['level']
         else:
             # first entry
-            self._sendDbgMessage(" thread: %s started" % ident)
+            # self._sendDbgMessage(" thread: %s started" % ident)
         # save entry to dictionary
         self._threads[ident] = entry
         # keep level tracking
         if event == 'call':
             entry['level'] = entry['level'] + 1
         if event == 'return':
+            # if frame.f_back == None:
+            #     self._sendDbgMessage(" thread: %s ended by None of back" % ident)
             entry['level'] = entry['level'] - 1
             if entry['level'] == 0:
                 # remove thread info and go out
                 del self._threads[ident]
-                self._sendDbgMessage(" thread: %s ended" % ident)
+                # self._sendDbgMessage(" thread: %s ended" % ident)
                 return self._traceFunc
         with self._lockTrace:
             # point of tracing (comment next line in release)
-            self._sendDbgMessage(" thread: %s file: %s line: %i event: %s level: %i" % (ident, self._os_path_basename(frame.f_code.co_filename), frame.f_lineno, event, entry['level']))
+            # self._sendDbgMessage(" thread: %s file: %s line: %i event: %s level: %i" % (ident, self._os_path_basename(frame.f_code.co_filename), frame.f_lineno, event, entry['level']))
+            if frame.f_code.co_name not in self._lines[frame.f_code.co_filename]:
+                # collect usable code lines
+                # self._sendDbgMessage("collect lines for function %s in  file: %s" % (frame.f_code.co_name, frame.f_code.co_filename))
+                lines = []
+                lineno = frame.f_lineno
+                values = iter(frame.f_code.co_lnotab)
+                while True:
+                    try:
+                        addr_incr = next(values)
+                        line_incr = next(values)
+                        if addr_incr == '0':
+                            lineno += int(line_incr)
+                            # self._sendDbgMessage("      skip %i" % lineno)
+                            continue
+                        if line_incr == '0':
+                            # addr += int(addr_incr)
+                            # self._sendDbgMessage("      same %i" % lineno)
+                            continue
+                        # addr += int(addr_incr)
+                        lineno += int(line_incr)
+                        lines.append(lineno)
+                        # self._sendDbgMessage("  %i" % lineno)
+                    except:
+                        break
+                self._lines[frame.f_code.co_filename][frame.f_code.co_name] = lines
             # show message when pause
             if self._paused:
                 self._sendDbgMessage(self._messages.PAUSED)
