@@ -133,6 +133,7 @@ class DebugServer:
         # self._listenSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             self._listenSocket.bind((SETTINGS.HOST, self._port))
+            print('listening port %i' % self._port)
         except:
             print('port %i is busy' % self._port)
             sys.exit()
