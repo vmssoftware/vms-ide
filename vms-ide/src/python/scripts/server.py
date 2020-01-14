@@ -20,6 +20,15 @@ class COMMAND:
     STEP = 's'
     INFO = 'i'
     QUIT = 'q'
+    HELP = 'h'
+
+_helpInfo = """\
+p Pause
+c Continue
+s Step
+i Info
+q Quit
+h Help"""
 
 class Connection:
     def __init__(self, socket):
@@ -121,8 +130,13 @@ class DebugServer:
     
     def _run(self):
         self._listenSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._listenSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self._listenSocket.bind((SETTINGS.HOST, self._port))
+        # self._listenSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            self._listenSocket.bind((SETTINGS.HOST, self._port))
+        except:
+            print('port %i is busy' % self._port)
+            sys.exit()
+
         self._listenSocket.listen(2)
         self._listenSocket.setblocking(False)
         self._connections = {}
@@ -220,9 +234,12 @@ Start debug server."""
                 cmd = raw_input()
             else:
                 cmd = input()
-            consoleSocket.send((cmd + "\n").encode())
-            if cmd == COMMAND.QUIT:
-                break
+            if cmd == COMMAND.HELP:
+                print(_helpInfo)
+            else:
+                consoleSocket.send((cmd + "\n").encode())
+                if cmd == COMMAND.QUIT:
+                    break
     except:
         pass
     server.stop()
