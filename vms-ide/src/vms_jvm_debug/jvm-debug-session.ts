@@ -254,6 +254,7 @@ export class JvmDebugSession extends LoggingDebugSession {
                 Delay(1000).then(() => true),
                 this._configurationDone.acquire().then(() => { 
                     // reallyDone = true;
+                    this._configurationDone.release();
                     return true;
                  }),
             ]);
@@ -266,13 +267,13 @@ export class JvmDebugSession extends LoggingDebugSession {
             await JvmProjectHelper.chooseScope(this._scope);
             let listeningPort = 5005;
             let listeningPortMax = 5105;
-            const diapason = args.port ? args.port : "5005-5105";
-            const matchedMinMax = diapason.match(/^\s*(\d+)\s*-\s*(\d+)\s*$/);
+            const portRange = args.port ? args.port : "5005-5105";
+            const matchedMinMax = portRange.match(/^\s*(\d+)\s*-\s*(\d+)\s*$/);
             if (matchedMinMax) {
                 listeningPort = +matchedMinMax[1];
                 listeningPortMax = +matchedMinMax[2];
             } else {
-                const matchedPort = diapason.match(/^\s*(\d+)\s*$/);
+                const matchedPort = portRange.match(/^\s*(\d+)\s*$/);
                 if (matchedPort) {
                     listeningPort = +matchedPort[1];
                     listeningPortMax = listeningPort;

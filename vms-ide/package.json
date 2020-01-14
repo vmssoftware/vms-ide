@@ -872,6 +872,9 @@
             },
             {
                 "language": "java"
+            },
+            {
+                "language": "python"
             }
         ],
         "debuggers": [
@@ -1030,6 +1033,51 @@
                     "FillClassName": "vms_jvm_debugger.fillClassName",
                     "FillClassPath": "vms_jvm_debugger.fillClassPath"
                 }
+            },
+            {
+                "type": "vms python debugger",
+                "label": "%vms_python_debug.label.description%",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "script"
+                        ],
+                        "properties": {
+                            "script": {
+                                "type": "string",
+                                "description": "%vms_pyhton_debug.script.description%",
+                                "default": "${file}"
+                            },
+                            "arguments": {
+                                "type": "string",
+                                "description": "%vms_python_debug.arguments.description%",
+                                "default": ""
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "vms python debugger",
+                        "request": "launch",
+                        "name": "Launch Python Script",
+                        "script": "${file}",
+                        "arguments": ""
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "VMS IDE: Launch Python Script",
+                        "description": "A new configuration for 'debugging' Python",
+                        "body": {
+                            "type": "vms python debugger",
+                            "request": "launch",
+                            "name": "Launch Python Script",
+                            "script": "^\"\\${file}\"",
+                            "arguments": ""
+                        }
+                    }
+                ]
             }
         ]
     },

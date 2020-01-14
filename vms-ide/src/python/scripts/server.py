@@ -183,12 +183,31 @@ class DebugServer:
     
     def _acceptWrapper(self):
         conn, addr = self._listenSocket.accept()
-        print("Connected %s" % repr(addr))
+        # print("Connected %s" % repr(addr))
         conn.setblocking(False)
         connection = Connection(conn)
         self._connections[conn] = connection
 
 if __name__ == "__main__":
+
+    _usage = """\
+usage: server.py -p port
+
+Start debug server."""
+
+    import getopt
+
+    opts, args = getopt.getopt(sys.argv[1:], 'hp:', ['help','port='])
+
+    for opt, optarg in opts:
+        if opt in ['-h', '--help']:
+            print(_usage)
+            sys.exit()
+        elif opt in ['-p', '--port']:
+            SETTINGS.PORT = int(optarg)
+        else:
+            print("Unknown option %s" % opt)
+
     server = DebugServer(SETTINGS.PORT)
     server.start()
     time.sleep(0.5)
@@ -198,9 +217,9 @@ if __name__ == "__main__":
         consoleSocket.send((TYPE.CONSOLE + "\n").encode())
         while server.isAlive():
             if sys.version_info[0] < 3:
-                cmd = raw_input('>')
+                cmd = raw_input()
             else:
-                cmd = input('>')
+                cmd = input()
             consoleSocket.send((cmd + "\n").encode())
             if cmd == COMMAND.QUIT:
                 break

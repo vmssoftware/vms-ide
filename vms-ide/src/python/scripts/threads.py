@@ -1,5 +1,6 @@
 import threading
 import time
+import sys
 
 lockThreadConsole = threading.Lock()
 
@@ -34,4 +35,5 @@ def main():
         # print("Main    : thread %d done." % index)
 
 if __name__ == "__main__":
+    print(sys.argv)
     main()

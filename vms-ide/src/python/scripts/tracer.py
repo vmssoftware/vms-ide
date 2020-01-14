@@ -329,7 +329,7 @@ class Tracer:
             while stackFrame:
                 numFrames = numFrames + 1
                 stackFrame = stackFrame.f_back
-            self._sendDbgMessage("  thread %i frames %i %s:" % (threadEntry['ident'], numFrames, " paused" if threadEntry['paused'] else 'running'))
+            self._sendDbgMessage("  thread %i frames %i %s:" % (threadEntry['ident'], numFrames, 'paused' if threadEntry['paused'] else 'running'))
             self._sendDbgMessage("    file: %s" % threadEntry['frame'].f_code.co_filename)
             self._sendDbgMessage("    line: %i" % threadEntry['frame'].f_lineno)
             self._sendDbgMessage("    function: %s" % threadEntry['frame'].f_code.co_name)
@@ -451,13 +451,13 @@ class Tracer:
 if __name__ == "__main__":
 
     _usage = """\
-usage: tracer.py pyfile [arg] ...
+usage: tracer.py -p port pyfile [arg] ...
 
 Debug the Python program given by pyfile."""
 
     import getopt
 
-    opts, args = getopt.getopt(sys.argv[1:], 'h:', ['help'])
+    opts, args = getopt.getopt(sys.argv[1:], 'hp:', ['help','port='])
 
     if not args:
         print(_usage)
@@ -467,8 +467,12 @@ Debug the Python program given by pyfile."""
         if opt in ['-h', '--help']:
             print(_usage)
             sys.exit()
+        elif opt in ['-p', '--port']:
+            SETTINGS.PORT = int(optarg)
         else:
-            print("Unlnown option %s" % opt)
+            print("Unknown option %s" % opt)
+
+    sys.argv = args
 
     tracer = Tracer(SETTINGS.PORT)
     tracer.run(args[0])
