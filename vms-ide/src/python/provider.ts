@@ -1,5 +1,4 @@
 import * as Net from 'net';
-import * as nls from "vscode-nls";
 import {
     WorkspaceFolder,
     DebugConfiguration,
@@ -13,6 +12,8 @@ import {
     DebugSession,
     DebugAdapterServer
 } from "vscode";
+import * as nls from "vscode-nls";
+
 import { LogFunction } from '../common/main';
 import { PythonDebugSession } from './debugSession';
 

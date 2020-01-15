@@ -18,49 +18,53 @@ import {activate as FortranExtension} from "./vms_fortran/extension";
 import {activate as Task2CmdExtension} from "./task2cmd/extension";
 import {activate as ZipExtension} from "./zip/extension";
 import {activate as JvmDebugExtension} from "./vms_jvm_debug/extension";
-import {activate as CobolDebugExtension} from "./vms_cobol/extension";
+import {activate as CobolExtension} from "./vms_cobol/extension";
+import {activate as PythonDebugExtension} from "./python/extension";
 
 import {deactivate as deSshHelperExtension} from "./ssh-helper/extension";
 import {deactivate as deSynchronizerExtension} from "./synchronizer/extension";
 import {deactivate as deDebuggerExtension} from "./vms_debug/extension";
 import {deactivate as deCldExtension} from "./cld/extension";
 import {deactivate as deMsgExtension} from "./msg/extension";
-import {deactivate as deBasicExtension} from "./vms_basic/extension";
+// import {deactivate as deBasicExtension} from "./vms_basic/extension";
 import {deactivate as dePascalExtension} from "./vms_pascal/extension";
 import {deactivate as deFortranExtension} from "./vms_fortran/extension";
 import {deactivate as deTask2CmdExtension} from "./task2cmd/extension";
 import {deactivate as deZipExtension} from "./zip/extension";
 import {deactivate as deJvmDebugExtension} from "./vms_jvm_debug/extension";
-import {deactivate as deCobolDebugExtension} from "./vms_cobol/extension";
+import {deactivate as deCobolExtension} from "./vms_cobol/extension";
+import {deactivate as dePythonDebugExtension} from "./python/extension";
 
 export async function activate(context: ExtensionContext) {
 
-    SetConfigHelperApi(await ConfigHelperExtension(context));
+    SetConfigHelperApi(ConfigHelperExtension(context));
     SetSshHelper(await SshHelperExtension(context));
     SetSyncApi(await SynchronizerExtension(context));
-    await DebuggerExtension(context);
+    DebuggerExtension(context);
     await CldExtension(context);
     await MsgExtension(context);
     //await BasicExtension(context);
     await PascalExtension(context);
     await FortranExtension(context);
     await Task2CmdExtension(context);
-    await JvmDebugExtension(context);
-    await CobolDebugExtension(context);
+    JvmDebugExtension(context);
+    await CobolExtension(context);
     SetZipApi(await ZipExtension(context));
+    PythonDebugExtension(context);
 }
 
 export async function deactivate() {
-    await deCobolDebugExtension();
-    await deJvmDebugExtension();
-    await deZipExtension();
-    await deTask2CmdExtension();
-    await deMsgExtension();
-    await deCldExtension();
+    dePythonDebugExtension();
+    deCobolExtension();
+    deJvmDebugExtension();
+    deZipExtension();
+    deTask2CmdExtension();
+    deMsgExtension();
+    deCldExtension();
     //await deBasicExtension();
-    await dePascalExtension();
-    await deFortranExtension();
-    await deDebuggerExtension();
-    await deSynchronizerExtension();
-    await deSshHelperExtension();
+    dePascalExtension();
+    deFortranExtension();
+    deDebuggerExtension();
+    deSynchronizerExtension();
+    deSshHelperExtension();
 }

@@ -3,23 +3,47 @@ import {
     StoppedEvent,
     InitializedEvent,
     OutputEvent,
-    TerminatedEvent
+    TerminatedEvent,
+    Logger,
+    logger
 } from "vscode-debugadapter";
 import { DebugProtocol } from 'vscode-debugprotocol';
+import * as nls from "vscode-nls";
 
-import { LogFunction, Lock } from "../common/main";
+import { LogFunction, Lock, Delay, ftpPathSeparator, LogType } from "../common/main";
 import { SshShellServer } from "../vms_jvm_debug/ssh-shell-server";
 import { CmdQueue } from "../vms_jvm_debug/cmd-queue";
+import { IPythonLaunchRequestArguments } from "./debugConfig";
+import { ListenerResponse } from "../vms_jvm_debug/communication";
+import { commands } from "vscode";
+import { ensureSettings } from "../synchronizer/ensure-settings";
+import { VmsPathConverter } from "../synchronizer/vms/vms-path-converter";
+import { PythonShellRuntime, PythonRuntimeEvents } from "./runtime";
+
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
+
+export enum EStartResult {
+    unknown,
+    started,
+    portIsBusy,
+    error,
+};
 
 export class PythonDebugSession extends LoggingDebugSession {
 
     private _logFn: LogFunction;
 
+    private _scope?: string;
+
     private _serverShellServer: SshShellServer;
+    private _serverQueue: CmdQueue;
     private _tracerShellServer: SshShellServer;
     private _tracerQueue: CmdQueue;
 
     private _configurationDone = new Lock(true, "configurationDone");
+
+    private _runtime: PythonShellRuntime;
     
     constructor(logFn?: LogFunction) {
         super("vms-python-debugger.txt");
@@ -28,10 +52,27 @@ export class PythonDebugSession extends LoggingDebugSession {
         this.setDebuggerColumnsStartAt1(true);
 
         this._serverShellServer = new SshShellServer(this._logFn);
+        this._serverQueue = new CmdQueue(this._serverShellServer);
+        
         this._tracerShellServer = new SshShellServer(this._logFn);
-        this._tracerQueue = new CmdQueue(this._serverShellServer);
+        this._tracerQueue = new CmdQueue(this._tracerShellServer);
+        this._tracerQueue.onUnexpectedLine(this.userOutput)
 
-        // TODO: create and setup runtime
+        this._runtime = new PythonShellRuntime(this._serverQueue, this._logFn);
+        this._runtime.on(PythonRuntimeEvents.output, async (text, filePath?, line?, column?) => {
+            const e: DebugProtocol.OutputEvent = new OutputEvent(`${text}\n`);
+            if (filePath) {
+                e.body.line = this.convertDebuggerLineToClient(line);
+                e.body.column = this.convertDebuggerColumnToClient(column);
+            }
+            this.sendEvent(e);
+        });
+        this._runtime.on(PythonRuntimeEvents.end, () => {
+            // give last messages from program a chance to be displayed
+            setTimeout(() => {
+                this.sendEvent(new TerminatedEvent());
+            }, 1000);
+        });
     }
 
     private sendStoppedEvent(reason: string, threadId?: number) {
@@ -130,14 +171,18 @@ export class PythonDebugSession extends LoggingDebugSession {
         this._configurationDone.release();
     }
 
-    private userOutput(line: string) {
-        const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stdout');
-        this.sendEvent(e);
+    private userOutput(line?: string) {
+        if (line) {
+            const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stdout');
+            this.sendEvent(e);
+        }
     }
 
-    private userErrorOutput(line: string) {
-        const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stderr');
-        this.sendEvent(e);
+    private userErrorOutput(line?: string) {
+        if (line) {
+            const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stderr');
+            this.sendEvent(e);
+        }
     }
 
     protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void {
@@ -156,4 +201,142 @@ export class PythonDebugSession extends LoggingDebugSession {
         this.sendEvent(new TerminatedEvent());
     }
 
+    protected async launchRequest(response: DebugProtocol.LaunchResponse, args: IPythonLaunchRequestArguments) {
+
+        // make sure to 'Stop' the buffered logging if 'trace' is not set
+        logger.setup(Logger.LogLevel.Stop, false);
+
+        response.success = true;
+        this.sendResponse(response);
+
+        this._scope = args.scope;
+
+        // wait until configuration has finished (and configurationDoneRequest has been called)
+        // let reallyDone = false;
+        let result = await Promise.race([
+                Delay(1000).then(() => true),
+                this._configurationDone.acquire().then(() => { 
+                    // reallyDone = true;
+                    this._configurationDone.release();
+                    return true;
+                 }),
+            ]);
+        result = result && await this._serverShellServer.create(this._scope);
+        result = result && await this._tracerShellServer.create(this._scope);
+
+        if (!result) {
+            this.sendEvent(new TerminatedEvent());
+        } else {
+            let listeningPort = 5005;
+            let listeningPortMax = 5105;
+            const portRange = args.port ? args.port : "5005-5105";
+            const matchedMinMax = portRange.match(/^\s*(\d+)\s*-\s*(\d+)\s*$/);
+            if (matchedMinMax) {
+                listeningPort = +matchedMinMax[1];
+                listeningPortMax = +matchedMinMax[2];
+            } else {
+                const matchedPort = portRange.match(/^\s*(\d+)\s*$/);
+                if (matchedPort) {
+                    listeningPort = +matchedPort[1];
+                    listeningPortMax = listeningPort;
+                }
+            }
+            let cdCommand = await this.cdRemoteRoot(this._scope);
+            this._serverQueue.postCommand(cdCommand, (cmd, line) => {
+                if (line === undefined || line.includes("\0")) {
+                    return ListenerResponse.stop;
+                }
+                return ListenerResponse.needMoreLines;
+            }).then(async () => {
+                while (listeningPort <= listeningPortMax) {
+                    let result = await this.tryRunServer(listeningPort);
+                    if (result === EStartResult.started) {
+                        this._tracerQueue.postCommand(cdCommand, (cmd, line) => {
+                            if (line === undefined || line.includes("\0")) {
+                                return ListenerResponse.stop;
+                            }
+                            return ListenerResponse.needMoreLines;
+                        }).then(async () => {
+                            this.runTracer(listeningPort, args.script, args.arguments);
+                        });
+                        return this._runtime.start();
+                    } else if (result === EStartResult.portIsBusy) {
+                        this._logFn(LogType.information, () => localize("port.busy", "Port {0} is busy.", String(listeningPort)));
+                        ++listeningPort;
+                    } else {
+                        break;
+                    }
+                }
+                this.sendEvent(new TerminatedEvent());
+                return false;
+            });
+        }
+    }
+
+    private async tryRunServer(port: number) {
+
+        const rgxListening = /listening port (\d+)/;
+        const rgxPortError = /port (\d+) is busy/;
+
+        let result = EStartResult.unknown;
+        let runCommand = `python server.py -p ${port}`;
+        return this._tracerQueue.postCommand(runCommand, (cmd, line) => {
+            if (!line) {
+                result = EStartResult.error;
+                return ListenerResponse.stop;   // go out, general error
+            }
+            if (result === EStartResult.unknown) {
+                if (line.match(rgxListening)) {
+                    result = EStartResult.started;
+                    return ListenerResponse.stop;   // go out, no prompt required
+                }
+                if (line.match(rgxPortError)) {
+                    result = EStartResult.portIsBusy;
+                    return ListenerResponse.needMoreLines;    // wait a prompt
+                }
+                return ListenerResponse.needMoreLines;        // need more lines
+            } else {
+                // wait for vms prompt
+                if (line.includes("\0")) {
+                    return ListenerResponse.stop;
+                }
+                return ListenerResponse.needMoreLines;
+            }
+        }).then(() => {
+            return result;
+        }).catch(() => {
+            return EStartResult.error;
+        });
+    }
+
+    private async runTracer(port: number, script: string, args?: string) {
+        let result = EStartResult.unknown;
+        let runCommand = `python tracer.py -p ${port} ${script}${args?' ' + args : ''}`;
+        return this._tracerQueue.postCommand(runCommand, (cmd, line) => {
+            if (!line) {
+                result = EStartResult.error;
+                return ListenerResponse.stop;   // go out, general error
+            }
+            result = EStartResult.started;
+            return ListenerResponse.stop;       // go out, no prompt required
+        }).then(() => {
+            return result;
+        }).catch(() => {
+            return EStartResult.error;
+        });
+    }
+
+    public async cdRemoteRoot(scope?: string) {
+        if (!scope) {
+            scope = await commands.executeCommand("vmssoftware.synchronizer.getCurrentScope");
+        }
+        if (scope && typeof scope === "string") {
+            const ensured = await ensureSettings(scope);
+            if (ensured) {
+                const vmsPath = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
+                return `set def ${vmsPath.directory}`;
+            }
+        }
+        return "";
+    }
 }
