@@ -216,7 +216,8 @@ titleDirective
    ;
 
 includeDirective
-   : P_INCLUDE STRING_LITERAL (P_FROM P_LIBRARY (STRING_LITERAL)?)?
+   : P_INCLUDE STRING_LITERAL
+   | P_INCLUDE STRING_LITERAL P_FROM P_LIBRARY (STRING_LITERAL)?
    | P_INCLUDE P_FROM P_CDD STRING_LITERAL
    ;
 
@@ -326,14 +327,10 @@ dataType
    ;
 
 variableDeclaration
-   : DECLARE variableDescriptionSecondPart (COMMA variableDescriptionSecondPart)*
+   : DECLARE variableDescriptionPart (COMMA variableDescriptionPart)*
    ;
 
-// variableDescriptionFirstPart
-//    : dataType variableDescription
-//    ;
-
-variableDescriptionSecondPart
+variableDescriptionPart
    : dataType? variableDescription
    ;
 
@@ -417,7 +414,7 @@ subprogramArgumentDescription
    ;
 
 subprogramArgument
-   : OPTIONAL? variableDescriptionSecondPart equalsExpn? byrefOrByval?
+   : OPTIONAL? variableDescriptionPart equalsExpn? byrefOrByval?
    ;
 
 byrefOrByval
@@ -469,18 +466,22 @@ mapDeclaration
    ;
 
 mapItem
-   : variableDescriptionSecondPart (ASSIGN intConst)?
+   : mapDescriptionPart
    | dataType? FILL (LPAREN repCnt RPAREN)? (ASSIGN intConst)?
    | dataType? FILL_P (LPAREN repCnt RPAREN)?
    | dataType? FILL_D (LPAREN repCnt RPAREN)? (ASSIGN intConst)?
    ;
 
 mapDynDeclaration
-   : MAP DYNAMIC LPAREN mapName RPAREN mapDynItem (COMMA mapDynItem)*
+   : MAP DYNAMIC LPAREN mapName RPAREN mapDescriptionPart (COMMA mapDescriptionPart)*
    ;
 
-mapDynItem
-   : variableDescriptionSecondPart (ASSIGN NUMBER)?
+mapDescriptionPart
+   : dataType? mapVariableItem
+   ;
+
+mapVariableItem
+   : variableDescription (ASSIGN intConst)?
    ;
 
 commonDeclaration
@@ -492,7 +493,11 @@ dimensionDeclaration
    ;
 
 dimensionItem
-   : dataType? arrayVariableName LPAREN (dimensionExpn (COMMA dimensionExpn)*)? RPAREN (ASSIGN intConst)?
+   : dataType? dimensionArray (ASSIGN intConst)?
+   ;
+
+dimensionArray
+   : arrayVariableName LPAREN (dimensionExpn (COMMA dimensionExpn)*)? RPAREN
    ;
 
 dimensionExpn

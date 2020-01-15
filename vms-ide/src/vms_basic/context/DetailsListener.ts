@@ -16,7 +16,7 @@ import {
     VariableLocalBlockDclSymbol,
     VariableInnerBlockDclSymbol,
     TypeDclSymbol,
-    ConstantDclSymbol,
+    ConstDclSymbol,
     TypeBlockDclSymbol,
     ConstBlockDclSymbol,
     LabelSymbol,
@@ -31,15 +31,17 @@ import {
 
 import { 
     ProgramContext,
-    // MainRangeContext,
-    // IncludeStatementContext,
+    IncludeDirectiveContext,
     IdentifierContext,
+    DataTypeContext,
     LabelContext,
     TargetNameContext,
     ConstantDeclarationContext,
     VariableContext,
     VariableDeclarationContext,
-    VariableDescriptionSecondPartContext,
+    VariableDescriptionPartContext,
+    ExternVarConstDeclarationContext,
+    MapDescriptionPartContext,
     DimensionDeclarationContext,
     RecordDeclarationContext,
     GroupClauseContext,
@@ -53,6 +55,8 @@ import {
     DefFunctionHeaderContext,
     DefFunctionMultyDeclarationContext,
     RecComponentContext,
+    ExternSubprogramDeclarationContext,
+    RepCntContext,
 } from '../parser/BasicParser';
 
 
@@ -86,31 +90,21 @@ export class DetailsListener implements BasicParserListener
         }
     }
 
-    // enterMainRange(ctx: MainRangeContext) 
-    // {
-    //     this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableGlobalBlockDclSymbol, undefined, ctx.text);
-    //     this.currentSymbol.context = ctx;
-    // }
-    // exitMainRange(ctx: MainRangeContext) 
-    // {
-    //     if (this.currentSymbol) 
-    //     {
-    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
-    //     }
-    // }
-
-    // enterIncludeStatement(ctx: IncludeStatementContext) 
-    // {
-    //     this.currentSymbol = this.symbolTable.addNewSymbolOfType(IncludeDclSymbol, undefined, ctx.S_CONST().text);
-    //     this.currentSymbol.context = ctx.S_CONST();
-    // }
-    // exitIncludeStatement(ctx: IncludeStatementContext) 
-    // {
-    //     if (this.currentSymbol) 
-    //     {
-    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
-    //     }
-    // }
+    enterIncludeDirective(ctx: IncludeDirectiveContext) 
+    {
+        if(ctx.P_FROM() === undefined)
+        {
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(IncludeDclSymbol, undefined, ctx.STRING_LITERAL(0).text);
+            this.currentSymbol.context = ctx.STRING_LITERAL(0);
+        }
+    }
+    exitIncludeDirective(ctx: IncludeDirectiveContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
 
     enterIdentifier(ctx: IdentifierContext) 
     {
@@ -124,6 +118,22 @@ export class DetailsListener implements BasicParserListener
             this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
         }
     }
+
+    // enterDataType(ctx: DataTypeContext) 
+    // {
+    //     if(ctx.identifier())
+    //     {
+    //         this.currentSymbol = this.symbolTable.addNewSymbolOfType(AnySymbol, undefined, ctx.identifier()!.IDENTIFIER().text);
+    //         this.currentSymbol.context = ctx.identifier()!.IDENTIFIER();
+    //     }
+    // }
+    // exitDataType(ctx: DataTypeContext) 
+    // {
+    //     if (this.currentSymbol) 
+    //     {
+    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+    //     }
+    // }
 
     enterLabel(ctx: LabelContext) 
     {
@@ -177,13 +187,21 @@ export class DetailsListener implements BasicParserListener
     {
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(ConstBlockDclSymbol, undefined, ctx.text);
         this.currentSymbol.context = ctx;
-
+        
+        let itemType = ctx.dataType().text + " " + ctx.CONSTANT().text;
         let blocks = ctx.constantDescription();
 
         for(let item of blocks)
         {
-            this.currentSymbol = this.symbolTable.addNewSymbolOfType(ConstantDclSymbol, undefined, item.constName().identifier().IDENTIFIER().text);
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(ConstDclSymbol, undefined, item.constName().identifier().IDENTIFIER().text);
             this.currentSymbol.context = item.constName().identifier().IDENTIFIER();
+
+            if (this.currentSymbol instanceof WithTypeScopedSymbol) 
+            {
+                this.currentSymbol.symbolType = itemType.toUpperCase();
+                this.currentSymbol.symbolFull = this.symbolTable.addNewSymbolOfType(ConstDclSymbol, undefined, item.text);
+                this.currentSymbol.symbolFull.context = item;
+            }
         }
     }
     exitConstantDeclaration(ctx: ConstantDeclarationContext) 
@@ -239,7 +257,7 @@ export class DetailsListener implements BasicParserListener
         }
     }
 
-    enterVariableDescriptionSecondPart(ctx: VariableDescriptionSecondPartContext) 
+    enterVariableDescriptionPart(ctx: VariableDescriptionPartContext) 
     {
         let type = ctx.dataType();
 
@@ -258,6 +276,8 @@ export class DetailsListener implements BasicParserListener
             if (this.currentSymbol instanceof WithTypeScopedSymbol) 
             {
                 this.currentSymbol.symbolType = this.typeSymbol.toUpperCase();
+                this.currentSymbol.symbolFull = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, ctx.variableDescription().text);
+                this.currentSymbol.symbolFull.context = ctx.variableDescription();
             }
             
         }
@@ -273,11 +293,112 @@ export class DetailsListener implements BasicParserListener
                 if (this.currentSymbol instanceof WithTypeScopedSymbol) 
                 {
                     this.currentSymbol.symbolType = this.typeSymbol.toUpperCase();
+                    this.currentSymbol.symbolFull = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, ctx.variableDescription().text);
+                    this.currentSymbol.symbolFull.context = ctx.variableDescription();
                 }
             }
         }
     }
-    exitVariableDescriptionSecondPart(ctx: VariableDescriptionSecondPartContext) 
+    exitVariableDescriptionPart(ctx: VariableDescriptionPartContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
+    enterExternVarConstDeclaration(ctx: ExternVarConstDeclarationContext) 
+    {
+        let type = ctx.EXTERNAL().text + " " + ctx.dataType().text;
+
+        if(ctx.CONSTANT())
+        {
+            type += " " + ctx.CONSTANT()!;
+
+            let consts = ctx.constName();
+
+            for(let item of consts)
+            {
+                this.currentSymbol = this.symbolTable.addNewSymbolOfType(ConstDclSymbol, undefined, item.identifier().IDENTIFIER().text);
+                this.currentSymbol.context = item.identifier().IDENTIFIER();
+
+                if (this.currentSymbol instanceof WithTypeScopedSymbol) 
+                {
+                    this.currentSymbol.symbolType = type.toUpperCase();
+                    this.currentSymbol.symbolFull = this.symbolTable.addNewSymbolOfType(ConstDclSymbol, undefined, item.text);
+                    this.currentSymbol.symbolFull.context = item;
+                }
+            }
+        }
+        else
+        {
+            let vars = ctx.variableName();
+
+            for(let item of vars)
+            {
+                this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.identifier().IDENTIFIER().text);
+                this.currentSymbol.context = item.identifier().IDENTIFIER();
+
+                if (this.currentSymbol instanceof WithTypeScopedSymbol) 
+                {
+                    this.currentSymbol.symbolType = type.toUpperCase();
+                    this.currentSymbol.symbolFull = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.text);
+                    this.currentSymbol.symbolFull.context = item;
+                }
+            }
+        }
+    }
+    exitExternVarConstDeclaration(ctx: ExternVarConstDeclarationContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
+    enterMapDescriptionPart(ctx: MapDescriptionPartContext) 
+    {
+        let type = ctx.dataType();
+
+        if(type)
+        {
+            this.typeSymbol = type.text;
+        }
+
+        let obj = ctx.mapVariableItem().variableDescription().singleVarDescription();
+
+        if(obj)
+        {
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, obj.variableName().identifier().IDENTIFIER().text);
+            this.currentSymbol.context = obj.variableName().identifier().IDENTIFIER();
+
+            if (this.currentSymbol instanceof WithTypeScopedSymbol) 
+            {
+                this.currentSymbol.symbolType = this.typeSymbol.toUpperCase();
+                this.currentSymbol.symbolFull = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, ctx.mapVariableItem().text);
+                this.currentSymbol.symbolFull.context = ctx.mapVariableItem();
+            }
+            
+        }
+        else
+        {
+            let obj = ctx.mapVariableItem().variableDescription().arrayDescription();
+
+            if(obj)
+            {
+                this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, obj.arrayVariableName().identifier().IDENTIFIER().text);
+                this.currentSymbol.context = obj.arrayVariableName().identifier().IDENTIFIER();
+
+                if (this.currentSymbol instanceof WithTypeScopedSymbol) 
+                {
+                    this.currentSymbol.symbolType = this.typeSymbol.toUpperCase();
+                    this.currentSymbol.symbolFull = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, ctx.mapVariableItem().text);
+                    this.currentSymbol.symbolFull.context = ctx.mapVariableItem();
+                }
+            }
+        }
+    }
+    exitMapDescriptionPart(ctx: MapDescriptionPartContext)
     {
         if (this.currentSymbol) 
         {
@@ -300,12 +421,14 @@ export class DetailsListener implements BasicParserListener
                 dimItemType = item.dataType()!.text;
             }
 
-            this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.arrayVariableName().identifier().IDENTIFIER().text);
-            this.currentSymbol.context = item.arrayVariableName().identifier().IDENTIFIER();
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.dimensionArray().arrayVariableName().identifier().IDENTIFIER().text);
+            this.currentSymbol.context = item.dimensionArray().arrayVariableName().identifier().IDENTIFIER();
 
             if (this.currentSymbol instanceof WithTypeScopedSymbol) 
             {
                 this.currentSymbol.symbolType = dimItemType.toUpperCase();
+                this.currentSymbol.symbolFull = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.dimensionArray().text);
+                this.currentSymbol.symbolFull.context = item.dimensionArray();
             }
         }
     }
@@ -390,6 +513,8 @@ export class DetailsListener implements BasicParserListener
                         if (this.currentSymbol instanceof WithTypeScopedSymbol) 
                         {
                             this.currentSymbol.symbolType = recItemType.toUpperCase();
+                            this.currentSymbol.symbolFull = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, varDescr.text);
+                            this.currentSymbol.symbolFull.context = varDescr;
                         }
 
                         this.symbolTable.linkSymbolsType((key + "." + this.currentSymbol.name).toUpperCase(),  this.currentSymbol);
@@ -406,6 +531,8 @@ export class DetailsListener implements BasicParserListener
                             if (this.currentSymbol instanceof WithTypeScopedSymbol) 
                             {
                                 this.currentSymbol.symbolType = recItemType.toUpperCase();
+                                this.currentSymbol.symbolFull = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, varDescr.text);
+                                this.currentSymbol.symbolFull.context = varDescr;
                             }
 
                             this.symbolTable.linkSymbolsType((key + "." + this.currentSymbol.name).toUpperCase(),  this.currentSymbol);
@@ -469,21 +596,21 @@ export class DetailsListener implements BasicParserListener
         }
     }
 
-    enterGroupClause(ctx: GroupClauseContext) 
-    {
-        this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeBlockDclSymbol, undefined, ctx.text);
-        this.currentSymbol.context = ctx;
+    // enterGroupClause(ctx: GroupClauseContext) 
+    // {
+    //     this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeBlockDclSymbol, undefined, ctx.text);
+    //     this.currentSymbol.context = ctx;
 
-        this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, ctx.groupName().identifier().IDENTIFIER().text);
-        this.currentSymbol.context = ctx.groupName().identifier().IDENTIFIER();
-    }
-    exitGroupClause(ctx: GroupClauseContext) 
-    {
-        if (this.currentSymbol) 
-        {
-            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
-        }
-    }
+    //     this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, ctx.groupName().identifier().IDENTIFIER().text);
+    //     this.currentSymbol.context = ctx.groupName().identifier().IDENTIFIER();
+    // }
+    // exitGroupClause(ctx: GroupClauseContext) 
+    // {
+    //     if (this.currentSymbol) 
+    //     {
+    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+    //     }
+    // }
 
     enterDeclaration(ctx: DeclarationContext) 
     {
@@ -600,6 +727,30 @@ export class DetailsListener implements BasicParserListener
         this.currentSymbol.context = ctx.routineName();
     }
     exitDefFunctionHeader(ctx: DefFunctionHeaderContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
+    enterExternSubprogramDeclaration(ctx: ExternSubprogramDeclarationContext) 
+    {
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(RoutineHeaderSymbol, undefined, ctx.text);
+        this.currentSymbol.context = ctx;
+
+        this.currentSymbol = this.symbolTable.addNewSymbolOfType(RoutineBlockDclSymbol, undefined, ctx.text);
+        this.currentSymbol.context = ctx;
+
+        let routines = ctx.externSubprogramDescript();
+
+        for(let item of routines)
+        {
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(RoutineDclSymbol, undefined, item.routineName().text);
+            this.currentSymbol.context = item.routineName();
+        }
+    }
+    exitExternSubprogramDeclaration(ctx: ExternSubprogramDeclarationContext) 
     {
         if (this.currentSymbol) 
         {

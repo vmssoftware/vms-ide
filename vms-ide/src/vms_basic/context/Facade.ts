@@ -61,9 +61,9 @@ export interface SymbolInfo
     name: string;
     source: string;
     definition?: Definition;
+    definitionBlock?: Definition;
     description?: string;  // Used for code completion. Provides a small description for certain symbols.
     type?: string;
-    info?: SymbolInfo;
 }
 
 export enum DiagnosticType 

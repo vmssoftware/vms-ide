@@ -43,6 +43,8 @@ export function symbolDescriptionFromEnum(kind: SymbolKind): string
             return "Type";
         case SymbolKind.TypeBlockDcl:
             return "Type";
+        case SymbolKind.ConstDcl:
+            return "Constant";
         case SymbolKind.ConstBlockDcl:
             return "Constant";
         case SymbolKind.LabelDcl:

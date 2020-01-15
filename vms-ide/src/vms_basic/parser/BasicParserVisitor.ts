@@ -62,7 +62,7 @@ import { VariantClauseContext } from "./BasicParser";
 import { CaseClauseContext } from "./BasicParser";
 import { DataTypeContext } from "./BasicParser";
 import { VariableDeclarationContext } from "./BasicParser";
-import { VariableDescriptionSecondPartContext } from "./BasicParser";
+import { VariableDescriptionPartContext } from "./BasicParser";
 import { VariableDescriptionContext } from "./BasicParser";
 import { SingleVarDescriptionContext } from "./BasicParser";
 import { InitialValueContext } from "./BasicParser";
@@ -95,10 +95,12 @@ import { DefFunctionHeaderContext } from "./BasicParser";
 import { MapDeclarationContext } from "./BasicParser";
 import { MapItemContext } from "./BasicParser";
 import { MapDynDeclarationContext } from "./BasicParser";
-import { MapDynItemContext } from "./BasicParser";
+import { MapDescriptionPartContext } from "./BasicParser";
+import { MapVariableItemContext } from "./BasicParser";
 import { CommonDeclarationContext } from "./BasicParser";
 import { DimensionDeclarationContext } from "./BasicParser";
 import { DimensionItemContext } from "./BasicParser";
+import { DimensionArrayContext } from "./BasicParser";
 import { DimensionExpnContext } from "./BasicParser";
 import { MatDeclarationContext } from "./BasicParser";
 import { MatClauseContext } from "./BasicParser";
@@ -659,11 +661,11 @@ export interface BasicParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitVariableDeclaration?: (ctx: VariableDeclarationContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `BasicParser.variableDescriptionSecondPart`.
+	 * Visit a parse tree produced by `BasicParser.variableDescriptionPart`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitVariableDescriptionSecondPart?: (ctx: VariableDescriptionSecondPartContext) => Result;
+	visitVariableDescriptionPart?: (ctx: VariableDescriptionPartContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `BasicParser.variableDescription`.
@@ -890,11 +892,18 @@ export interface BasicParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitMapDynDeclaration?: (ctx: MapDynDeclarationContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `BasicParser.mapDynItem`.
+	 * Visit a parse tree produced by `BasicParser.mapDescriptionPart`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitMapDynItem?: (ctx: MapDynItemContext) => Result;
+	visitMapDescriptionPart?: (ctx: MapDescriptionPartContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.mapVariableItem`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMapVariableItem?: (ctx: MapVariableItemContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `BasicParser.commonDeclaration`.
@@ -916,6 +925,13 @@ export interface BasicParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitDimensionItem?: (ctx: DimensionItemContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.dimensionArray`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDimensionArray?: (ctx: DimensionArrayContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `BasicParser.dimensionExpn`.

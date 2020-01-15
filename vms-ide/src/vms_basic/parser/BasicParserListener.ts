@@ -62,7 +62,7 @@ import { VariantClauseContext } from "./BasicParser";
 import { CaseClauseContext } from "./BasicParser";
 import { DataTypeContext } from "./BasicParser";
 import { VariableDeclarationContext } from "./BasicParser";
-import { VariableDescriptionSecondPartContext } from "./BasicParser";
+import { VariableDescriptionPartContext } from "./BasicParser";
 import { VariableDescriptionContext } from "./BasicParser";
 import { SingleVarDescriptionContext } from "./BasicParser";
 import { InitialValueContext } from "./BasicParser";
@@ -95,10 +95,12 @@ import { DefFunctionHeaderContext } from "./BasicParser";
 import { MapDeclarationContext } from "./BasicParser";
 import { MapItemContext } from "./BasicParser";
 import { MapDynDeclarationContext } from "./BasicParser";
-import { MapDynItemContext } from "./BasicParser";
+import { MapDescriptionPartContext } from "./BasicParser";
+import { MapVariableItemContext } from "./BasicParser";
 import { CommonDeclarationContext } from "./BasicParser";
 import { DimensionDeclarationContext } from "./BasicParser";
 import { DimensionItemContext } from "./BasicParser";
+import { DimensionArrayContext } from "./BasicParser";
 import { DimensionExpnContext } from "./BasicParser";
 import { MatDeclarationContext } from "./BasicParser";
 import { MatClauseContext } from "./BasicParser";
@@ -892,15 +894,15 @@ export interface BasicParserListener extends ParseTreeListener {
 	exitVariableDeclaration?: (ctx: VariableDeclarationContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `BasicParser.variableDescriptionSecondPart`.
+	 * Enter a parse tree produced by `BasicParser.variableDescriptionPart`.
 	 * @param ctx the parse tree
 	 */
-	enterVariableDescriptionSecondPart?: (ctx: VariableDescriptionSecondPartContext) => void;
+	enterVariableDescriptionPart?: (ctx: VariableDescriptionPartContext) => void;
 	/**
-	 * Exit a parse tree produced by `BasicParser.variableDescriptionSecondPart`.
+	 * Exit a parse tree produced by `BasicParser.variableDescriptionPart`.
 	 * @param ctx the parse tree
 	 */
-	exitVariableDescriptionSecondPart?: (ctx: VariableDescriptionSecondPartContext) => void;
+	exitVariableDescriptionPart?: (ctx: VariableDescriptionPartContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `BasicParser.variableDescription`.
@@ -1255,15 +1257,26 @@ export interface BasicParserListener extends ParseTreeListener {
 	exitMapDynDeclaration?: (ctx: MapDynDeclarationContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `BasicParser.mapDynItem`.
+	 * Enter a parse tree produced by `BasicParser.mapDescriptionPart`.
 	 * @param ctx the parse tree
 	 */
-	enterMapDynItem?: (ctx: MapDynItemContext) => void;
+	enterMapDescriptionPart?: (ctx: MapDescriptionPartContext) => void;
 	/**
-	 * Exit a parse tree produced by `BasicParser.mapDynItem`.
+	 * Exit a parse tree produced by `BasicParser.mapDescriptionPart`.
 	 * @param ctx the parse tree
 	 */
-	exitMapDynItem?: (ctx: MapDynItemContext) => void;
+	exitMapDescriptionPart?: (ctx: MapDescriptionPartContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.mapVariableItem`.
+	 * @param ctx the parse tree
+	 */
+	enterMapVariableItem?: (ctx: MapVariableItemContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.mapVariableItem`.
+	 * @param ctx the parse tree
+	 */
+	exitMapVariableItem?: (ctx: MapVariableItemContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `BasicParser.commonDeclaration`.
@@ -1297,6 +1310,17 @@ export interface BasicParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitDimensionItem?: (ctx: DimensionItemContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.dimensionArray`.
+	 * @param ctx the parse tree
+	 */
+	enterDimensionArray?: (ctx: DimensionArrayContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.dimensionArray`.
+	 * @param ctx the parse tree
+	 */
+	exitDimensionArray?: (ctx: DimensionArrayContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `BasicParser.dimensionExpn`.
