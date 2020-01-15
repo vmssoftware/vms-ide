@@ -30,7 +30,7 @@ interface IScopeSyncData {
     sshWatcher: IDispose;
 }
 
-const purgeCmd = printLike`purge [${"directory"}...]`;
+const purgeCmd = printLike`purge ${"disk"}[${"directory"}...]`;
 
 export class Synchronizer {
 
@@ -247,7 +247,7 @@ export class Synchronizer {
                 const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
                 const shell = await this.sshHelper.getDefaultVmsShell(ensured.scope);
                 if (shell) {
-                    await shell.execCmd(purgeCmd(converter.bareDirectory));
+                    await shell.execCmd(purgeCmd(converter.disk, converter.bareDirectory));
                     shell.dispose();
                 }
             }

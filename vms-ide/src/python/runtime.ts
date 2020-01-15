@@ -21,6 +21,32 @@ export enum PythonRuntimeEvents {
     end = 'end',
 };
 
+enum PythonServerMessage {
+    DEBUG = 'DEBUG',
+    PAUSED = 'PAUSED',
+    BREAK = 'BREAK',
+    BP_CONFIRM = 'BP_CONFIRM',
+    BP_WAIT = 'BP_WAIT',
+    BP_RESET = 'BP_RESET',
+    EXITED = 'EXITED',
+    CONTINUED = 'CONTINUED',
+    STEPPED = 'STEPPED',
+    INFORMATION = 'INFO',
+    EXCEPTION = 'EXCEPTION',
+    SIGNAL = 'SIGNAL',
+    SYNTAX_ERROR = 'SYNTAX_ERROR',
+    LOCALS = 'LOCALS',
+};
+
+enum PythonServerCommand {
+    PAUSE = 'p',
+    CONTINUE = 'c',
+    STEP = 's',
+    INFO = 'i',
+    QUIT = 'q',
+    HELP = 'h',
+};
+
 export class PythonShellRuntime extends EventEmitter {
     
     private _logFn: LogFunction;
@@ -37,7 +63,25 @@ export class PythonShellRuntime extends EventEmitter {
 
     private onUnexpectedLine(line: string | undefined): void {
         if (line) {
-            this.sendEvent(PythonRuntimeEvents.output, line);
+            const trimmed = line.trim();
+            if (trimmed) {
+                switch(trimmed) {
+                    case  PythonServerMessage.PAUSED:
+                        this._queue.postCommand(PythonServerCommand.CONTINUE);
+                        break;
+                    case PythonServerMessage.BREAK:
+                        this._queue.postCommand(PythonServerCommand.CONTINUE);
+                        break;
+                    case PythonServerMessage.EXCEPTION:
+                        this._queue.postCommand(PythonServerCommand.CONTINUE);
+                        break;
+                    case PythonServerMessage.EXITED:
+                        this._queue.postCommand(PythonServerCommand.QUIT);
+                        this.sendEvent(PythonRuntimeEvents.end);
+                        break;
+                }
+                this.sendEvent(PythonRuntimeEvents.output, trimmed);
+            }
         }
     }
 

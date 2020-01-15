@@ -9,7 +9,7 @@
         "projectName": "python_test",
         "projectType": "executable",
         "resource": "*.py",
-        "root": "python/one",
+        "root": "/work/vorfolomeev/python/four",
         "source": "",
         "addLibraries": "",
         "addIncludes": ""

@@ -56,8 +56,8 @@ interface ISetVariableParser {
 };
 
 export interface JvmBreakpoint {
-	/** unique id */
-	breakId: number;
+    /** unique id */
+    breakId: number;
     className: string;
     place: string | number;
     verified?: boolean;
@@ -65,10 +65,10 @@ export interface JvmBreakpoint {
 };
 
 export interface IJvmStack {
-	frameId: number;
-	level: number;
-	place: string;
-	file: string;
+    frameId: number;
+    level: number;
+    place: string;
+    file: string;
     line: number;
     thread: IJvmThread;
     scopes: IJvmVariable[];
@@ -186,25 +186,25 @@ export function isJvmVarNeedReference(jvmVar: IJvmVariable): boolean {
 }
 
 export interface IJvmThread {
-	/** thread unique id */
-	id: number;
-	/** description inside brackets */
-	place: string;
-	/** tail after thread id */
-	description: string;
-	/** name of the thread, first part of the description, prompt */
-	name?: string;
-	/** current stack level, inside square brackets */
-	stackLevel?: number;
-	/** thread state, last part of the description */
-	state?: string;
-	/** stack */
-	stack: IJvmStack[];
+    /** thread unique id */
+    id: number;
+    /** description inside brackets */
+    place: string;
+    /** tail after thread id */
+    description: string;
+    /** name of the thread, first part of the description, prompt */
+    name?: string;
+    /** current stack level, inside square brackets */
+    stackLevel?: number;
+    /** thread state, last part of the description */
+    state?: string;
+    /** stack */
+    stack: IJvmStack[];
 };
 
 export interface JvmStoppedThread {
-	name: string;
-	reason: string;
+    name: string;
+    reason: string;
 };
 
 export interface IJvmLaunch {
@@ -218,7 +218,7 @@ export interface IJvmLaunch {
     arguments?: string;
     /** automatically stop target after launch. If not specified, target does not stop. */
     stopOnEntry?: boolean;
-	/** scope */
+    /** scope */
     scope?: string;
 };
 
@@ -227,8 +227,8 @@ export interface IJvmLaunch {
  */
 
 interface IStopLine {
-	rgx: RegExp;
-	reason: string;
+    rgx: RegExp;
+    reason: string;
 };
 
 const _stopOnDataChange: IStopLine = {
@@ -356,11 +356,11 @@ const _rgxFix = {
  * Only when we are waiting for result lines
  */
 export enum JvmRuntimeOperation {
-	none,
-	askAttach,
-	waitPrompt,
-	askThreads,
-	askStack,
+    none,
+    askAttach,
+    waitPrompt,
+    askThreads,
+    askStack,
 };
 
 export enum JvmPrompt {
@@ -499,16 +499,16 @@ export function makeStringReadyToSet(str: string) {
  */
 export class JvmShellRuntime extends EventEmitter {
 
-	private _logFn: LogFunction;
+    private _logFn: LogFunction;
 
-	private _breakpointLastId = 0;
-	private _breakpoints: Map<string, JvmBreakpoint> = new Map<string, JvmBreakpoint>();
+    private _breakpointLastId = 0;
+    private _breakpoints: Map<string, JvmBreakpoint> = new Map<string, JvmBreakpoint>();
 
-	private _args: IJvmLaunch | undefined;
+    private _args: IJvmLaunch | undefined;
 
-	private _threadMap: Map<string, IJvmThread[]> | undefined;
-	
-	private _attached = false;
+    private _threadMap: Map<string, IJvmThread[]> | undefined;
+    
+    private _attached = false;
     private _running = false;
     private _requestRun = 0;
     
@@ -529,8 +529,8 @@ export class JvmShellRuntime extends EventEmitter {
 
     private cmdLock = new LockQueue(false);
 
-	constructor(private _queue: ICmdQueue, logFn?: LogFunction) {
-		super();
+    constructor(private _queue: ICmdQueue, logFn?: LogFunction) {
+        super();
         // tslint:disable-next-line:no-empty
         this._logFn = logFn || (() => {});
         
@@ -543,11 +543,11 @@ export class JvmShellRuntime extends EventEmitter {
     // public
     /******************************************************************************************/
 
-	/**
-	 * Start executing the given program.
-	 */
-	public async start(args: IJvmLaunch) {
-		this._args = args;
+    /**
+     * Start executing the given program.
+     */
+    public async start(args: IJvmLaunch) {
+        this._args = args;
         return this.attachJDB().
             then((attached) => {
                 if (attached) {
@@ -565,10 +565,10 @@ export class JvmShellRuntime extends EventEmitter {
             });
     }
     
-	/**
-	 * Pause execution
-	 */
-	public async pause() {
+    /**
+     * Pause execution
+     */
+    public async pause() {
         const command = 'suspend';
         this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
         const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
@@ -587,12 +587,12 @@ export class JvmShellRuntime extends EventEmitter {
             this._logFn(LogType.debug, () => `CMD released "${command}"`);
         }
         return false;
-	}
+    }
 
     /**
-	 * Continue execution
-	 */
-	public async cont(threadID?: number) {
+     * Continue execution
+     */
+    public async cont(threadID?: number) {
         const command = 'cont';
         ++this._requestRun;
         this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
@@ -608,12 +608,12 @@ export class JvmShellRuntime extends EventEmitter {
                 });
         }
         return false;
-	}
+    }
 
-	/**
-	 * Step into
-	 */
-	public async step(threadID?: number) {
+    /**
+     * Step into
+     */
+    public async step(threadID?: number) {
         const command = 'step';
         ++this._requestRun;
         this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
@@ -629,12 +629,12 @@ export class JvmShellRuntime extends EventEmitter {
                 });
         }
         return false;
-	}
+    }
 
-	/**
-	 * Step over
-	 */
-	public async next(threadID?: number) {
+    /**
+     * Step over
+     */
+    public async next(threadID?: number) {
         let command = 'next';
         if (threadID && this._stoppedThreadId !== threadID) {
             command = 'step';   //if thread changes we cannot post 'next' because it runs whole program
@@ -653,12 +653,12 @@ export class JvmShellRuntime extends EventEmitter {
                 });
         }
         return false;
-	}
+    }
     
-	/**
-	 * Step out
-	 */
-	public async stepOut(threadID?: number) {
+    /**
+     * Step out
+     */
+    public async stepOut(threadID?: number) {
         const command = 'step up';
         ++this._requestRun;
         this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
@@ -679,7 +679,7 @@ export class JvmShellRuntime extends EventEmitter {
     /**
      * Request threads
      */
-	public async requestThreads() {
+    public async requestThreads() {
         const command = 'requestThreads';
         this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
         const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
@@ -691,13 +691,13 @@ export class JvmShellRuntime extends EventEmitter {
             this.cmdLock.release();
             this._logFn(LogType.debug, () => `CMD released "${command}"`);
         }
-		return this.mainThreads();
-	}
+        return this.mainThreads();
+    }
 
     /**
-	 * Request stack
-	 */
-	public requestStack(threadId: number, startFrame: number, endFrame: number) {
+     * Request stack
+     */
+    public requestStack(threadId: number, startFrame: number, endFrame: number) {
         let     frames: IJvmStack[] = [];
         let     totalFrames = 0;
         const   mainGroup = this.mainThreads();
@@ -723,10 +723,10 @@ export class JvmShellRuntime extends EventEmitter {
                 }
             }
         }
-		return {
-			frames,
-			totalFrames,
-		};
+        return {
+            frames,
+            totalFrames,
+        };
     }
 
     /**
@@ -860,10 +860,10 @@ export class JvmShellRuntime extends EventEmitter {
         return retScopes;
     }
 
-	/*
-	 * Set breakpoint in file with given line.
-	 */
-	public async setBreakPoint(className: string, place: string | number) {
+    /*
+     * Set breakpoint in file with given line.
+     */
+    public async setBreakPoint(className: string, place: string | number) {
         const command = 'setBreakPoint';
         this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
         const acquired = await this.cmdLock.acquire(LockQueueAction.normal);
@@ -887,9 +887,9 @@ export class JvmShellRuntime extends EventEmitter {
             return bp;
         }
         return undefined;
-	}
+    }
 
-	public async enableBreakPoint(id: number) {
+    public async enableBreakPoint(id: number) {
         let retBp: JvmBreakpoint | undefined;
         const command = 'enableBreakPoint';
         this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
@@ -909,13 +909,13 @@ export class JvmShellRuntime extends EventEmitter {
             this._logFn(LogType.debug, () => `CMD released "${command}"`);
         }
         return retBp;
-	}
+    }
 
     /**
      * Clear BP
      * @param id 
      */
-	public async disableBreakPoint(id: number) {
+    public async disableBreakPoint(id: number) {
         let retCode = false;
         const command = 'disableBreakPoint';
         this._logFn(LogType.debug, () => `CMD acquire "${command}"`);
@@ -933,7 +933,7 @@ export class JvmShellRuntime extends EventEmitter {
             this._logFn(LogType.debug, () => `CMD released "${command}"`);
         }
         return retCode;
-	}
+    }
 
     public isRunning() {
         return this._attached && this._running;
@@ -1136,40 +1136,40 @@ export class JvmShellRuntime extends EventEmitter {
         }
     }
 
-	/**
-	 * Post command to attach, wait results
-	 */
-	private async attachJDB() {
-		if (this._attached) {
-			return false;
-		}
-		if (this._args === undefined) {
-			return false;
-		}
-		const command = `jdb -attach ${this._args.port?this._args.port:5005}`;
-		return this._queue.postCommand(command, (cmd, line) => {
-			if (cmd === command) {
-				if (line === undefined) {
+    /**
+     * Post command to attach, wait results
+     */
+    private async attachJDB() {
+        if (this._attached) {
+            return false;
+        }
+        if (this._args === undefined) {
+            return false;
+        }
+        const command = `jdb -attach ${this._args.port?this._args.port:5005}`;
+        return this._queue.postCommand(command, (cmd, line) => {
+            if (cmd === command) {
+                if (line === undefined) {
                     this._logFn(LogType.debug, () => `attaching: aborted`);
-					return ListenerResponse.stop;
+                    return ListenerResponse.stop;
                 }
                 this._logFn(LogType.debug, () => `attaching: ${line.trimRight()}`);
                 const matchedPrompt = line.match(_rgxThreadPrompt.rgx);
-				if (matchedPrompt) {
+                if (matchedPrompt) {
                     this._attached = true;
                     this.setRunning(false); // stopped because 'suspend=y'
                     this._logFn(LogType.debug, () => `attaching: completed`);
-					return ListenerResponse.stop;
-				} else if (line.match(_rgxAttachFailed.rgx)) {
+                    return ListenerResponse.stop;
+                } else if (line.match(_rgxAttachFailed.rgx)) {
                     this.clearSession();
                     this._logFn(LogType.debug, () => `attaching: failed`);
-					return ListenerResponse.stop;
-				}
-				return ListenerResponse.needMoreLines;
+                    return ListenerResponse.stop;
+                }
+                return ListenerResponse.needMoreLines;
             }
             this._logFn(LogType.debug, () => `attaching: not attaching?`);
-			return ListenerResponse.stop;
-		});
+            return ListenerResponse.stop;
+        });
     }
 
     /**
@@ -1201,30 +1201,30 @@ export class JvmShellRuntime extends EventEmitter {
     /**
      * 
      */
-	private async populateThreadsInfo() {
+    private async populateThreadsInfo() {
         if (!this.isDataCommandAllowed()) {
             return false;
         }
-		const command = 'threads';
-		let   threadGroupName = "";
+        const command = 'threads';
+        let   threadGroupName = "";
         const threadMap = new Map<string, IJvmThread[]>();
         this._logFn(LogType.debug, () => `POSTING ${command}`);
-		return this._queue.postCommand(command, (cmd, line) => {
-			if (cmd === command) {
-				if (line === undefined) {
+        return this._queue.postCommand(command, (cmd, line) => {
+            if (cmd === command) {
+                if (line === undefined) {
                     this._logFn(LogType.debug, () => `threads: aborted`);
-					return ListenerResponse.stop;
+                    return ListenerResponse.stop;
                 } 
                 this._logFn(LogType.debug, () => `${cmd}: ${line.trimRight()}`);
-				const rgxGroup = _rgxGroup.rgx;
-				const matchedGroup = rgxGroup.exec(line);
-				if (matchedGroup) {
-					threadGroupName = matchedGroup[_rgxGroup.groupName];
-					return ListenerResponse.needMoreLines;    // need more lines
-				}
-				const rgxThread = _rgxThread.rgx;
-				let matchedThread = rgxThread.exec(line);
-				if (matchedThread) {
+                const rgxGroup = _rgxGroup.rgx;
+                const matchedGroup = rgxGroup.exec(line);
+                if (matchedGroup) {
+                    threadGroupName = matchedGroup[_rgxGroup.groupName];
+                    return ListenerResponse.needMoreLines;    // need more lines
+                }
+                const rgxThread = _rgxThread.rgx;
+                let matchedThread = rgxThread.exec(line);
+                if (matchedThread) {
                     let threadGroup = threadMap.get(threadGroupName);
                     if (threadGroup === undefined) {
                         threadGroup = [];
@@ -1236,19 +1236,19 @@ export class JvmShellRuntime extends EventEmitter {
                         description: matchedThread[_rgxThread.description],
                         stack: [],
                     });
-					return ListenerResponse.needMoreLines;    // need more lines
-				}
-				// try to match thread prompt
-				if (this.testIfThreadPrompt(line, threadMap) !== JvmPrompt.promptIsNotAPrompt) {
+                    return ListenerResponse.needMoreLines;    // need more lines
+                }
+                // try to match thread prompt
+                if (this.testIfThreadPrompt(line, threadMap) !== JvmPrompt.promptIsNotAPrompt) {
                     // request completed, no more lines required
                     this._threadMap = threadMap;
                     this._logFn(LogType.debug, () => `---threads: completed`);
                     return ListenerResponse.stop;   // command 'threads' completed
-				}
-				return ListenerResponse.needMoreLines;	// need more lines
-			}
-			return ListenerResponse.stop;
-		}).then(async (isSent) => {
+                }
+                return ListenerResponse.needMoreLines;	// need more lines
+            }
+            return ListenerResponse.stop;
+        }).then(async (isSent) => {
             if (!isSent || !this.isDataCommandAllowed()) {
                 return false;
             }
@@ -1367,13 +1367,13 @@ export class JvmShellRuntime extends EventEmitter {
     }
 
     /**
-	 * Test if line is thread prompt or just default prompt
-	 * @param line 
-	 * @returns 0 if line isn't prompt, -1 if it is default prompt, -2 if it is stopped thread prompt, > 0 if it is thread prompt
-	 */
-	private testIfThreadPrompt(line: string, threadMap?: Map<string, IJvmThread[]>) {
+     * Test if line is thread prompt or just default prompt
+     * @param line 
+     * @returns 0 if line isn't prompt, -1 if it is default prompt, -2 if it is stopped thread prompt, > 0 if it is thread prompt
+     */
+    private testIfThreadPrompt(line: string, threadMap?: Map<string, IJvmThread[]>) {
         if (line.match(_rgxDefPrompt.rgx)) {
-			return JvmPrompt.promptIsDefault;
+            return JvmPrompt.promptIsDefault;
         }
         const matchPrompt = line.match(_rgxThreadPrompt.rgx);
         if (matchPrompt) {
@@ -1393,14 +1393,14 @@ export class JvmShellRuntime extends EventEmitter {
             return JvmPrompt.promptIsUnknownThread;
         }
         // this._logFn(LogType.debug, () => `not a prompt ${[...Buffer.from(line)]}`);
-		return JvmPrompt.promptIsNotAPrompt;
-	}
+        return JvmPrompt.promptIsNotAPrompt;
+    }
 
-	private clearSession() {
+    private clearSession() {
         this._attached = false;
         this._running = false;
-		this.sendEvent(JvmRuntimeEvents.end);
-	}
+        this.sendEvent(JvmRuntimeEvents.end);
+    }
 
     private async runByCommand(command: string, threadID?: number) {
         if (threadID && this._lastThreadId !== threadID) {
@@ -1419,12 +1419,12 @@ export class JvmShellRuntime extends EventEmitter {
         return false;
     }
     
-	private mainThreads() {
-		if (this._threadMap) {
-			return this._threadMap.get("main");
-		}
-		return undefined;
-	}
+    private mainThreads() {
+        if (this._threadMap) {
+            return this._threadMap.get("main");
+        }
+        return undefined;
+    }
 
     private correctVariables(initVars: IJvmVariable[]) {
         const allVars: IJvmVariable[] = [...initVars];
@@ -2260,9 +2260,9 @@ export class JvmShellRuntime extends EventEmitter {
         }
     }
     
-	private sendEvent(event: string, ... args: any[]) {
-		setImmediate(_ => {
-			this.emit(event, ...args);
-		});
-	}
+    private sendEvent(event: string, ... args: any[]) {
+        setImmediate(_ => {
+            this.emit(event, ...args);
+        });
+    }
 }

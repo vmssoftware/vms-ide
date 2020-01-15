@@ -76,11 +76,12 @@ export async function findFiles(canReadDir: IReadDirectory,
                                 progress?: IProgress) {
     include = include || "";
     const options: micromatch.Options = {
-        basename: true,
+        basename: false,
+        dot: true,
         nocase: true,
         nodupes: true,
         unixify: false,
-    };
+};
     let {expandedMask: splitInclude , missed_curly_bracket} = expandMask(include);
     if (debugLog && missed_curly_bracket) {
         debugLog(LogType.warning, () => localize("check.inc.mask", "Please check include file masks for correct curly brackets"), true);

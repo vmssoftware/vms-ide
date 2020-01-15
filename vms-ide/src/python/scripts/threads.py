@@ -6,7 +6,7 @@ lockThreadConsole = threading.Lock()
 
 def thread_function(name):
     global lockThreadConsole
-    tVar = "0"
+    tVar = name
     with lockThreadConsole: 
         print("Thread %s: starting, %s" % (name, tVar))
     for i in range(5):
@@ -14,8 +14,9 @@ def thread_function(name):
         with lockThreadConsole: 
             print("Thread %s -> %i" % (name, i))
         if i == 3:
-            with lockThreadConsole: 
-                tVar = input("Input some for thread %s: " % name)
+            with lockThreadConsole:
+                # tVar = input("Input new name for thread %s: " % name)
+                print("Now name is %s" % tVar)
     with lockThreadConsole: 
         print("Thread %s: finishing, %s" % (name, tVar))
 

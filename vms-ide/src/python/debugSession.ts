@@ -15,7 +15,7 @@ import { SshShellServer } from "../vms_jvm_debug/ssh-shell-server";
 import { CmdQueue } from "../vms_jvm_debug/cmd-queue";
 import { IPythonLaunchRequestArguments } from "./debugConfig";
 import { ListenerResponse } from "../vms_jvm_debug/communication";
-import { commands } from "vscode";
+import { commands, workspace } from "vscode";
 import { ensureSettings } from "../synchronizer/ensure-settings";
 import { VmsPathConverter } from "../synchronizer/vms/vms-path-converter";
 import { PythonShellRuntime, PythonRuntimeEvents } from "./runtime";
@@ -53,10 +53,10 @@ export class PythonDebugSession extends LoggingDebugSession {
 
         this._serverShellServer = new SshShellServer(this._logFn);
         this._serverQueue = new CmdQueue(this._serverShellServer);
-        
+
         this._tracerShellServer = new SshShellServer(this._logFn);
         this._tracerQueue = new CmdQueue(this._tracerShellServer);
-        this._tracerQueue.onUnexpectedLine(this.userOutput)
+        this._tracerQueue.onUnexpectedLine((line) => this.userOutput(line));
 
         this._runtime = new PythonShellRuntime(this._serverQueue, this._logFn);
         this._runtime.on(PythonRuntimeEvents.output, async (text, filePath?, line?, column?) => {
@@ -257,7 +257,8 @@ export class PythonDebugSession extends LoggingDebugSession {
                             }
                             return ListenerResponse.needMoreLines;
                         }).then(async () => {
-                            this.runTracer(listeningPort, args.script, args.arguments);
+                            let relPath = workspace.asRelativePath(args.script);
+                            this.runTracer(listeningPort, relPath, args.arguments);
                         });
                         return this._runtime.start();
                     } else if (result === EStartResult.portIsBusy) {
@@ -277,14 +278,17 @@ export class PythonDebugSession extends LoggingDebugSession {
 
         const rgxListening = /listening port (\d+)/;
         const rgxPortError = /port (\d+) is busy/;
+        const rgxMsg = /^((%|-)(\S+)-(\S)-(\S*)),\s(.*)/;
 
         let result = EStartResult.unknown;
         let runCommand = `python server.py -p ${port}`;
-        return this._tracerQueue.postCommand(runCommand, (cmd, line) => {
+        const lines: string[] = [];
+        return this._serverQueue.postCommand(runCommand, (cmd, line) => {
             if (!line) {
                 result = EStartResult.error;
                 return ListenerResponse.stop;   // go out, general error
             }
+            lines.push(line);
             if (result === EStartResult.unknown) {
                 if (line.match(rgxListening)) {
                     result = EStartResult.started;
@@ -292,6 +296,11 @@ export class PythonDebugSession extends LoggingDebugSession {
                 }
                 if (line.match(rgxPortError)) {
                     result = EStartResult.portIsBusy;
+                    return ListenerResponse.needMoreLines;    // wait a prompt
+                }
+                if (line.match(rgxMsg)) {
+                    result = EStartResult.error;
+                    this._logFn(LogType.information, () => lines.join(''));
                     return ListenerResponse.needMoreLines;    // wait a prompt
                 }
                 return ListenerResponse.needMoreLines;        // need more lines

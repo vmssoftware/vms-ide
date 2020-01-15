@@ -13,6 +13,23 @@ class TYPE:
     CONSOLE = 'CONSOLE'
     DEBUG = 'DEBUG'
 
+class MESSAGE:
+    DEBUG = 'DEBUG'
+    PAUSED = 'PAUSED'
+    BREAK = 'BREAK'
+    BP_CONFIRM = 'BP_CONFIRM'
+    BP_WAIT = 'BP_WAIT'
+    BP_RESET = 'BP_RESET'
+    EXITED = 'EXITED'
+    CONTINUED = 'CONTINUED'
+    STEPPED = 'STEPPED'
+    # MESSAGE.RETRIED = 'RETRIED'
+    INFORMATION = 'INFO'
+    EXCEPTION = 'EXCEPTION'
+    SIGNAL = 'SIGNAL'
+    SYNTAX_ERROR = 'SYNTAX_ERROR'
+    LOCALS = 'LOCALS'
+
 # command to receive
 class COMMAND:
     PAUSE = 'p'
@@ -164,6 +181,9 @@ class DebugServer:
                                 # print lines
                                 for line in lines:
                                     print(line)
+                                    # if line == MESSAGE.EXITED:
+                                    #     # exit loop
+                                    #     self._stopped = True
                             elif connection.getType() == TYPE.CONSOLE:
                                 # test if "pause"
                                 if line == COMMAND.PAUSE:
