@@ -9,6 +9,7 @@
             "request": "launch",
             "name": "Launch Python Script",
             "script": "${file}",
+            "port": "55005-55025",
             "arguments": ""
         }
     ]

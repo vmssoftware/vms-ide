@@ -1048,6 +1048,11 @@
                                 "description": "%vms_pyhton_debug.script.description%",
                                 "default": "${file}"
                             },
+                            "port": {
+                                "type": "string",
+                                "description": "%vms_python_debug.port.description%",
+                                "default": "55005-55105"
+                            },
                             "arguments": {
                                 "type": "string",
                                 "description": "%vms_python_debug.arguments.description%",
@@ -1062,6 +1067,7 @@
                         "request": "launch",
                         "name": "Launch Python Script",
                         "script": "${file}",
+                        "port": "55005-55105",
                         "arguments": ""
                     }
                 ],
@@ -1074,6 +1080,7 @@
                             "request": "launch",
                             "name": "Launch Python Script",
                             "script": "^\"\\${file}\"",
+                            "port": "55005-55105",
                             "arguments": ""
                         }
                     }
