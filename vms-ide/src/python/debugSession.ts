@@ -5,7 +5,9 @@ import {
     OutputEvent,
     TerminatedEvent,
     Logger,
-    logger
+    logger,
+    BreakpointEvent,
+    Thread
 } from "vscode-debugadapter";
 import { DebugProtocol } from 'vscode-debugprotocol';
 import * as nls from "vscode-nls";
@@ -59,6 +61,53 @@ export class PythonDebugSession extends LoggingDebugSession {
         this._tracerQueue.onUnexpectedLine((line) => this.userOutput(line));
 
         this._runtime = new PythonShellRuntime(this._serverQueue, this._logFn);
+        
+        // setup event handlers
+        
+        this._runtime.on(PythonRuntimeEvents.stopOnEntry, (threadId) => {
+            this.sendStoppedEvent('entry', threadId);
+        });
+        
+        this._runtime.on(PythonRuntimeEvents.stopOnStep, (threadId) => {
+            this.sendStoppedEvent('step', threadId);
+        });
+        
+        this._runtime.on(PythonRuntimeEvents.stopOnBreakpoint, (threadId) => {
+            this.sendStoppedEvent('breakpont', threadId);
+        });
+        
+        this._runtime.on(PythonRuntimeEvents.stopOnException, (threadId) => {
+            this.sendStoppedEvent('exception', threadId);
+        });
+        
+        this._runtime.on(PythonRuntimeEvents.stopOnBreakpointError, (threadId) => {
+            this.sendStoppedEvent('breakpoint error', threadId);
+        });
+        
+        this._runtime.on(PythonRuntimeEvents.stopOnPause, (threadId) => {
+            this.sendStoppedEvent('pause', threadId);
+        });
+        
+        this._runtime.on(PythonRuntimeEvents.stopOnDataChange, (threadId) => {
+            this.sendStoppedEvent('data change', threadId);
+        });
+        
+        this._runtime.on(PythonRuntimeEvents.stopOnDataAccess, (threadId) => {
+            this.sendStoppedEvent('data access', threadId);
+        });
+        
+        this._runtime.on(PythonRuntimeEvents.breakpointValidated, (file: string, line: number) => {
+            // for (const [file, ids] of this._breakPoints) {
+            //     const line = ids.get(id);
+            //     if (line) {
+            //         this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ id, verified, line }));
+            //         return;
+            //     }
+            // }
+            // // for function breakpoint
+            // this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ id, verified }));
+        });
+
         this._runtime.on(PythonRuntimeEvents.output, async (text, filePath?, line?, column?) => {
             const e: DebugProtocol.OutputEvent = new OutputEvent(`${text}\n`);
             if (filePath) {
@@ -67,6 +116,7 @@ export class PythonDebugSession extends LoggingDebugSession {
             }
             this.sendEvent(e);
         });
+        
         this._runtime.on(PythonRuntimeEvents.end, () => {
             // give last messages from program a chance to be displayed
             setTimeout(() => {
@@ -273,6 +323,34 @@ export class PythonDebugSession extends LoggingDebugSession {
             });
         }
     }
+    
+    protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
+        this._runtime.requestThreads().then(async (threads) => {
+            const respThreads: DebugProtocol.Thread[] = [];
+            if (threads) {
+                for (const thread of threads) {
+                    let name = thread.name;
+                    if (!name) {
+                        const words = thread.description.split(" ");
+                        if (words.length) {
+                            name = words[0];
+                        }
+                    }
+                    respThreads.push(new Thread(thread.id, name ? name : String(thread.id)));
+                };
+            }
+            response.body = {
+                threads: respThreads
+            };
+            this._variableHandles.reset();
+            response.success = true;
+            this.sendResponse(response);
+        });
+    }
+
+    ///
+    ///     private
+    ///
 
     private async tryRunServer(port: number) {
 

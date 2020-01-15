@@ -1,8 +1,8 @@
 import { EventEmitter } from "events";
 import * as nls from "vscode-nls";
 
-import { LogFunction } from "../common/main";
-import { ICmdQueue } from "../vms_jvm_debug/communication";
+import { LogFunction, LogType } from "../common/main";
+import { ICmdQueue, ListenerResponse } from "../vms_jvm_debug/communication";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -21,7 +21,7 @@ export enum PythonRuntimeEvents {
     end = 'end',
 };
 
-enum PythonServerMessage {
+export enum PythonServerMessage {
     DEBUG = 'DEBUG',
     PAUSED = 'PAUSED',
     BREAK = 'BREAK',
@@ -38,7 +38,7 @@ enum PythonServerMessage {
     LOCALS = 'LOCALS',
 };
 
-enum PythonServerCommand {
+export enum PythonServerCommand {
     PAUSE = 'p',
     CONTINUE = 'c',
     STEP = 's',
@@ -47,9 +47,24 @@ enum PythonServerCommand {
     HELP = 'h',
 };
 
+export interface PythonThread {
+    id: number;
+    paused: boolean;
+    framesNum: number;
+    frames: PythonFrame[];
+};
+
+export interface PythonFrame {
+    file: string;
+    line: number;
+    function?: string;
+};
+
 export class PythonShellRuntime extends EventEmitter {
     
     private _logFn: LogFunction;
+
+    private _threads?: PythonThread[];
 
     constructor(private _queue: ICmdQueue, logFn?: LogFunction) {
         super();
@@ -90,6 +105,44 @@ export class PythonShellRuntime extends EventEmitter {
     /******************************************************************************************/
 
     public async start() {
+    }
+
+    // given as is from <tracer.py>
+    private readonly _rgxThreadNum = /Threads: (\d+)/;
+    private readonly _rgxThread =   /thread (\d+) frames (\d+) (\S+):/;
+
+    public async requestThreads() {
+        this._threads = [];
+        let threadNum = 0;
+        let pythonThread: PythonThread | undefined = undefined;
+        this._queue.postCommand(PythonServerCommand.INFO, (cmd, line) => {
+            if (line === undefined) {
+                this._logFn(LogType.debug, () => `threads: aborted`);
+                return ListenerResponse.stop;
+            }
+            if (threadNum == 0) {
+                const matchThreadNum = line.match(this._rgxThreadNum);
+                if (matchThreadNum) {
+                    threadNum = +matchThreadNum[1];
+                }
+            } else {
+                const matchThread = line.match(this._rgxThread);
+                if (matchThread) {
+                    const threadFrames = +matchThread[2];
+                    pythonThread = {
+                        id: +matchThread[1],
+                        framesNum: +matchThread[2],
+                        paused: matchThread[3] == 'paused',
+                        frames: [],
+                    } as PythonThread;
+                    this._threads?.push(pythonThread);
+                }
+                if (this._threads?.length == threadNum) {
+                    return ListenerResponse.stop;
+                }
+            }
+            return ListenerResponse.needMoreLines;
+        });
     }
 
     /******************************************************************************************/

@@ -34,10 +34,10 @@ class COMMAND:
     CONTINUE = 'c'
     STEP = 's'
     INFO = 'i'
-    WHERE = 'w'
+    WHERE = 'w'             # w [frameNum [ident]]
     BP_SET = 'bps'          # bps file line
     BP_RESET = 'bpr'        # bpr [file [line]]
-    LOCALS = 'l'            # l [frame [ident]] current farme is zero
+    LOCALS = 'l'            # l [frame [ident]]     // current farme is zero
 
 class Tracer:
     def __init__(self, port):
@@ -283,8 +283,18 @@ class Tracer:
                         break
                     elif cmd == self._commands.INFO:
                         self._showInfo()
-                    elif cmd == self._commands.WHERE:
-                        self._sendDbgMessage("%i: file %s line %i function %s" % (ident, frame.f_code.co_filename, frame.f_lineno, frame.f_code.co_name))
+                    elif cmd.startswith(self._commands.WHERE):
+                        locals_args = cmd.split()
+                        if len(locals_args) == 1:
+                            self._sendDbgMessage("%i: file %s line %i function %s" % (ident, frame.f_code.co_filename, frame.f_lineno, frame.f_code.co_name))
+                        elif len(locals_args) == 2:
+                            currentFrame = self._getFrame(ident, int(locals_args[1]))
+                            if currentFrame != None:
+                                self._sendDbgMessage("%i: file %s line %i function %s" % (ident, currentFrame.f_code.co_filename, currentFrame.f_lineno, currentFrame.f_code.co_name))
+                        elif len(locals_args) == 3:
+                            currentFrame = self._getFrame(int(locals_args[2]), int(locals_args[1]))
+                            if currentFrame != None:
+                                self._sendDbgMessage("%i: file %s line %i function %s" % (int(locals_args[2]), currentFrame.f_code.co_filename, currentFrame.f_lineno, currentFrame.f_code.co_name))
                     elif cmd.startswith(self._commands.LOCALS):
                         locals_args = cmd.split()
                         if len(locals_args) == 1:
@@ -300,8 +310,8 @@ class Tracer:
             # ---------------------------------------------
         entry['paused'] = False
         return self._traceFunc
-    
-    def _showLocals(self, ident, frameNum):
+
+    def _getFrame(self, ident, frameNum):
         for threadEntry in self._threads.values():
             if threadEntry['ident'] != ident:
                 continue
@@ -313,12 +323,18 @@ class Tracer:
             if currentFrame == None:
                 self._sendDbgMessage('%s: %s has no frame %s' % (self._messages.SYNTAX_ERROR, ident, frameNum))
             else:
-                self._sendDbgMessage(self._messages.LOCALS)
-                # TODO: do own display
-                self._sendDbgMessage(repr(currentFrame.f_locals))
+                return currentFrame
             break
         else:
             self._sendDbgMessage('%s: invalid ident %s' % (self._messages.SYNTAX_ERROR, ident))
+        return None
+
+    def _showLocals(self, ident, frameNum):
+        frame = self._getFrame(ident, frameNum)
+        if frame != None:
+            self._sendDbgMessage(self._messages.LOCALS)
+            # TODO: do own display
+            self._sendDbgMessage(repr(frame.f_locals))
     
     def _showInfo(self):
         self._sendDbgMessage(self._messages.INFORMATION)
