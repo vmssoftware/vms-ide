@@ -1,6 +1,6 @@
 
 import { DebugProtocol } from "vscode-debugprotocol";
-import { DebugConfiguration } from "vscode";
+import { DebugConfiguration, WorkspaceFolder } from "vscode";
 
 /**
  * This interface describes the vms_jvm_debugger specific launch attributes
@@ -15,8 +15,8 @@ export interface IPythonLaunchRequestArguments extends DebugProtocol.LaunchReque
     port?: string;
     /** command line arguments */
     arguments?: string;
-    /** current scope */
-    scope?: string;
+    /** current workspace folder */
+    workspace: WorkspaceFolder;
 }
 
 export interface IPythonDebugConfiguration extends DebugConfiguration {
@@ -26,6 +26,8 @@ export interface IPythonDebugConfiguration extends DebugConfiguration {
     port?: string;
     /** command line arguments */
     arguments?: string;
+    /** current workspace folder */
+    workspace: WorkspaceFolder;
 }
 
 export function isPythonDebugConfiguration(candidate: any): candidate is IPythonDebugConfiguration {

@@ -1,3 +1,4 @@
+import * as path from 'path';
 import {
     LoggingDebugSession,
     StoppedEvent,
@@ -21,10 +22,10 @@ import { SshShellServer } from "../vms_jvm_debug/ssh-shell-server";
 import { CmdQueue } from "../vms_jvm_debug/cmd-queue";
 import { IPythonLaunchRequestArguments } from "./debugConfig";
 import { ListenerResponse } from "../vms_jvm_debug/communication";
-import { commands, workspace } from "vscode";
+import { commands, workspace, WorkspaceFolder } from "vscode";
 import { ensureSettings } from "../synchronizer/ensure-settings";
 import { VmsPathConverter } from "../synchronizer/vms/vms-path-converter";
-import { PythonShellRuntime, PythonRuntimeEvents, IPythonVariable } from "./runtime";
+import { PythonShellRuntime, PythonRuntimeEvents, IPythonVariable, IPythonFrame } from "./runtime";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -40,7 +41,7 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     private _logFn: LogFunction;
 
-    private _scope?: string;
+    private _workspace?: WorkspaceFolder;
 
     private _serverShellServer: SshShellServer;
     private _serverQueue: CmdQueue;
@@ -265,7 +266,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         response.success = true;
         this.sendResponse(response);
 
-        this._scope = args.scope;
+        this._workspace = args.workspace;
 
         // wait until configuration has finished (and configurationDoneRequest has been called)
         // let reallyDone = false;
@@ -277,8 +278,8 @@ export class PythonDebugSession extends LoggingDebugSession {
                     return true;
                  }),
             ]);
-        result = result && await this._serverShellServer.create(this._scope);
-        result = result && await this._tracerShellServer.create(this._scope);
+        result = result && await this._serverShellServer.create(this._workspace.name);
+        result = result && await this._tracerShellServer.create(this._workspace.name);
 
         if (!result) {
             this.sendEvent(new TerminatedEvent());
@@ -297,7 +298,7 @@ export class PythonDebugSession extends LoggingDebugSession {
                     listeningPortMax = listeningPort;
                 }
             }
-            let cdCommand = await this.cdRemoteRoot(this._scope);
+            let cdCommand = await this.cdRemoteRoot(this._workspace.name);
             this._serverQueue.postCommand(cdCommand, (cmd, line) => {
                 if (line === undefined || line.includes("\0")) {
                     return ListenerResponse.stop;
@@ -342,9 +343,21 @@ export class PythonDebugSession extends LoggingDebugSession {
             response.body = {
                 threads: respThreads
             };
-            // this._variableHandles.reset();
+            this._variableHandles.reset();
             this.sendResponse(response);
         });
+    }
+
+    protected frameSource(frame: IPythonFrame) {
+        let framePath = frame.file;
+        if (framePath.startsWith('/')) {
+            framePath = '';
+        } else {
+            if (this._workspace) {
+                framePath = path.join(this._workspace.uri.fsPath, framePath);
+            }
+        }
+        return new Source(frame.file, framePath);
     }
 
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
@@ -353,10 +366,9 @@ export class PythonDebugSession extends LoggingDebugSession {
         const endFrame = startFrame + maxLevels;
 
         this._runtime.framesRequest(args.threadId, startFrame, endFrame).then((frames) => {
-            
             response.body = {
                 stackFrames: frames.map((frame, index) =>
-                    new StackFrame(startFrame + index, String(startFrame + index), new Source(frame.file), this.convertDebuggerLineToClient(frame.line))),
+                    new StackFrame(startFrame + index, frame.function, this.frameSource(frame), this.convertDebuggerLineToClient(frame.line))),
                 totalFrames: this._runtime.threadsCollected().find(x => x.id == args.threadId)?.framesNum
             };
             response.success = true;

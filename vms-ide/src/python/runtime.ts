@@ -59,13 +59,12 @@ export interface IPythonThread {
     id: number;
     paused: boolean;
     framesNum: number;
-    frames: IPythonFrame[];
 };
 
 export interface IPythonFrame {
     file: string;
     line: number;
-    function?: string;
+    function: string;
 };
 
 export interface IPythonVariable {
@@ -83,6 +82,7 @@ export interface IPythonVariable {
 const _rgxBpConfirm = /BP_CONFIRM "(.*?)" (\d+)/;
 const _rgxThreads   = /THREADS (\d+) current (\d+)/;
 const _rgxFrames    = /thread (\d+) frames (\d+) is (\S+)/;
+const _rgxFrame     = /file: "(.*?)" line: (\d+) function: "(.*?)"/;
 
 export class PythonShellRuntime extends EventEmitter {
     
@@ -206,7 +206,6 @@ export class PythonShellRuntime extends EventEmitter {
                         id: +match[1],
                         framesNum: +match[2],
                         paused: match[3] == 'paused',
-                        frames: [],
                     } as IPythonThread;
                     this.threads.push(pythonThread);
                 }
@@ -220,13 +219,45 @@ export class PythonShellRuntime extends EventEmitter {
     }
 
     public async framesRequest(ident: number, startFrame: number, endFrame: number): Promise<IPythonFrame[]> {
+        const frames: IPythonFrame[] = [];
         if (!this.started) {
-            return [];
+            return frames;
         }
         if (this.running) {
-            return [];
+            return frames;
         }
-        return [];
+        const maxFrame = this.threadsCollected().find(x => x.id == ident)?.framesNum;
+        if (maxFrame !== undefined) {
+            startFrame = Math.min(startFrame, maxFrame);
+            startFrame = Math.max(startFrame, 0);
+            endFrame = Math.min(endFrame, maxFrame);
+            endFrame = Math.max(endFrame, startFrame);
+            let numFrames = endFrame - startFrame;
+            if (numFrames > 0) {
+                let command = `${PythonServerCommand.FRAME} ${ident} ${startFrame} ${numFrames}`;
+                await this.queue.postCommand(command, (cmd, line) => {
+                    if (line === undefined) {
+                        this.logFn(LogType.debug, () => `threads: aborted`);
+                        return ListenerResponse.stop;
+                    }
+                    const match = line.match(_rgxFrame);
+                    if (match) {
+                        const frame: IPythonFrame = {
+                            file: match[1],
+                            line: +match[2],
+                            function: match[3],
+                        };
+                        frames.push(frame);
+                        --numFrames;
+                        if (numFrames == 0) {
+                            return ListenerResponse.stop;
+                        }
+                    }
+                    return ListenerResponse.needMoreLines;
+                });
+            }
+        }
+        return frames;
     }
 
     public async continueRequest() {

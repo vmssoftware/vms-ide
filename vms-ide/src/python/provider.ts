@@ -16,6 +16,7 @@ import * as nls from "vscode-nls";
 
 import { LogFunction } from '../common/main';
 import { PythonDebugSession } from './debugSession';
+import { IPythonDebugConfiguration } from './debugConfig';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -36,10 +37,12 @@ export class PythonConfigurationProvider implements DebugConfigurationProvider {
                 request: "launch",
                 name: "Launch Pyhton Script",
                 script: "${file}",
-                arguments: ""
-            };
+                arguments: "",
+                workspace: folder,
+            } as IPythonDebugConfiguration;
         }
         if (config.type == PythonConfigurationProvider.debuggerType) {
+            config.workspace = folder;
             return config;
         }
         return window.showInformationMessage(localize("msg.config.invalid", "Configuration is invalid")).then(_ => {
