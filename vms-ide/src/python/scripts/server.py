@@ -13,6 +13,7 @@ class TYPE:
     CONSOLE = 'CONSOLE'
     DEBUG = 'DEBUG'
 
+# messages
 class MESSAGE:
     DEBUG = 'DEBUG'
     PAUSED = 'PAUSED'
@@ -23,19 +24,24 @@ class MESSAGE:
     EXITED = 'EXITED'
     CONTINUED = 'CONTINUED'
     STEPPED = 'STEPPED'
-    # MESSAGE.RETRIED = 'RETRIED'
-    INFORMATION = 'INFO'
+    THREADS = 'THREADS'
+    INFO = 'INFO'
     EXCEPTION = 'EXCEPTION'
     SIGNAL = 'SIGNAL'
     SYNTAX_ERROR = 'SYNTAX_ERROR'
     LOCALS = 'LOCALS'
 
-# command to receive
+# commands
 class COMMAND:
     PAUSE = 'p'
     CONTINUE = 'c'
     STEP = 's'
     INFO = 'i'
+    THREADS = 't'
+    FRAME  = 'f'            # f [frameNum [ident]]
+    BP_SET = 'bps'          # bps file line
+    BP_RESET = 'bpr'        # bpr [file [line]]
+    LOCALS = 'l'            # l [frameNum [ident]]     // current farme is zero
     QUIT = 'q'
     HELP = 'h'
 

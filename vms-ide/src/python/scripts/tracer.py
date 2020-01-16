@@ -14,6 +14,7 @@ class SETTINGS:
 # messages to send
 class MESSAGE:
     DEBUG = 'DEBUG'
+    ENTRY = 'ENTRY'
     PAUSED = 'PAUSED'
     BREAK = 'BREAK'
     BP_CONFIRM = 'BP_CONFIRM'
@@ -45,8 +46,8 @@ class Tracer:
         self._port = port
         self._fileName = __file__
         self._socket = None
-        self._sendBuffer = b""
-        self._recvBuffer = b""
+        self._sendBuffer = b''
+        self._recvBuffer = b''
         self._oldSysTrace = None
         self._paused = False
         self._waitingForAFile = None
@@ -120,7 +121,7 @@ class Tracer:
         self._disconnect()
 
     def _signalHandler(self, signum, frame):
-        self._sendDbgMessage(self._messages.SIGNAL + ": " + str(signum))
+        self._sendDbgMessage(self._messages.SIGNAL + ':' + str(signum))
         self._paused = True
     
     def _isConnected(self):
@@ -162,7 +163,7 @@ class Tracer:
             except:
                 self._close()
             if self._recvBuffer:
-                idx = self._recvBuffer.find(b"\n")
+                idx = self._recvBuffer.find(b'\n')
                 if idx >= 0:
                     line = self._recvBuffer[:idx].decode()
                     self._recvBuffer = self._recvBuffer[idx+1:]
@@ -180,7 +181,7 @@ class Tracer:
         if self._os_path_abspath(frame.f_code.co_filename) == frame.f_code.co_filename:
             return self._traceFunc
         # skip no files
-        if frame.f_code.co_filename == "<string>":
+        if frame.f_code.co_filename == '<string>':
             return self._traceFunc
         # wait untin tracing file entered
         if self._waitingForAFile:
@@ -189,6 +190,7 @@ class Tracer:
             # now we are ready to trace
             self._waitingForAFile = None
             # autopause
+            self._sendDbgMessage(self._messages.ENTRY)
             self._paused = True
         ident = self._currentThread().ident
         if self._mainThread == None: 
@@ -198,29 +200,23 @@ class Tracer:
             # get level from dictionary
             entry['level'] = self._threads[ident]['level']
         else:
+            # first thread entry
             pass
-            # first entry
-            # self._sendDbgMessage(" thread: %s started" % ident)
         # save entry to dictionary
         self._threads[ident] = entry
         # frame level tracking
         if event == 'call':
             entry['level'] = entry['level'] + 1
         if event == 'return':
-            # if frame.f_back == None:
-            #     self._sendDbgMessage(" thread: %s ended by None of back" % ident)
             entry['level'] = entry['level'] - 1
             if entry['level'] == 0:
                 # remove thread info and go out
                 del self._threads[ident]
-                # self._sendDbgMessage(" thread: %s ended" % ident)
                 return self._traceFunc
         with self._lockTrace:
             # point of tracing (comment next line in release)
-            # self._sendDbgMessage(" thread: %s file: %s line: %i event: %s level: %i" % (ident, self._os_path_basename(frame.f_code.co_filename), frame.f_lineno, event, entry['level']))
             if frame.f_code.co_name not in self._lines[frame.f_code.co_filename]:
                 # collect usable code lines
-                # self._sendDbgMessage("collect lines for function %s in  file: %s" % (frame.f_code.co_name, frame.f_code.co_filename))
                 lines = []
                 lineno = frame.f_lineno
                 values = iter(frame.f_code.co_lnotab)
@@ -232,7 +228,6 @@ class Tracer:
                             addr_incr = ord(addr_incr)
                         if isinstance(line_incr, str):
                             line_incr = ord(line_incr)
-                        # self._sendDbgMessage("%s" % type(line_incr))
                         if addr_incr == 0:
                             lineno += line_incr
                             continue
@@ -240,25 +235,21 @@ class Tracer:
                             continue
                         lineno += line_incr
                         lines.append(lineno)
-                        # self._sendDbgMessage("  %i" % lineno)
                     except: # Exception as ex:
-                        # self._sendDbgMessage(repr(ex))
                         break
                 self._lines[frame.f_code.co_filename][frame.f_code.co_name] = lines
                 self._checkFileBreakpoints(frame.f_code.co_filename, lines)
             # show message when pause
-            if self._paused:
-                self._sendDbgMessage(self._messages.PAUSED)
+            # if self._paused:
+            #     self._sendDbgMessage(self._messages.PAUSED)
             # examine breakpoint
             if frame.f_lineno in self._breakpointsConfirmed[frame.f_code.co_filename]:
                 self._sendDbgMessage(self._messages.BREAK)
-                # self._sendDbgMessage('%i: file %s line %i function %s' % (ident, frame.f_code.co_filename, frame.f_lineno, frame.f_code.co_name))
                 self._paused = True
             # examine exception
             if event == 'exception':
                 self._sendDbgMessage(self._messages.EXCEPTION)
-                # self._sendDbgMessage('%i: file %s line %i' % (ident, frame.f_code.co_filename, frame.f_lineno))
-                self._sendDbgMessage('%s: %s' % (arg[0].__name__, arg[1]))
+                self._sendDbgMessage(repr(arg[1]))
                 self._paused = True
             # tests runtime commands
             cmd = self._readDbgMessage()
@@ -319,19 +310,19 @@ class Tracer:
     
     def _showInfo(self, ident):
         self._sendDbgMessage(self._messages.INFO)
-        self._sendDbgMessage("Main: %i" % self._mainThread)
-        self._sendDbgMessage("Where: %i" % ident)
-        self._sendDbgMessage("Threads: %i" % len(self._threads))
+        self._sendDbgMessage('Main: %i' % self._mainThread)
+        self._sendDbgMessage('Where: %i' % ident)
+        self._sendDbgMessage('Threads: %i' % len(self._threads))
         for threadEntry in self._threads.values():
             numFrames = 0
             stackFrame = threadEntry['frame']
             while stackFrame:
                 numFrames = numFrames + 1
                 stackFrame = stackFrame.f_back
-            self._sendDbgMessage("  thread %i frames %i %s:" % (threadEntry['ident'], numFrames, 'paused' if threadEntry['paused'] else 'running'))
-            self._sendDbgMessage("    file: %s" % threadEntry['frame'].f_code.co_filename)
-            self._sendDbgMessage("    line: %i" % threadEntry['frame'].f_lineno)
-            self._sendDbgMessage("    function: %s" % threadEntry['frame'].f_code.co_name)
+            self._sendDbgMessage('  thread %i frames %i %s:' % (threadEntry['ident'], numFrames, 'paused' if threadEntry['paused'] else 'running'))
+            self._sendDbgMessage('    file: "%s"' % threadEntry['frame'].f_code.co_filename)
+            self._sendDbgMessage('    line: %i' % threadEntry['frame'].f_lineno)
+            self._sendDbgMessage('    function: %s' % threadEntry['frame'].f_code.co_name)
 
     def _getFrame(self, ident, frameNum):
         for threadEntry in self._threads.values():
@@ -358,14 +349,14 @@ class Tracer:
             self._sendDbgMessage(repr(frame.f_locals))
 
     def _showThreads(self, ident):
-        self._sendDbgMessage("%s %i current %i" % (self._messages.THREADS, len(self._threads), ident))
+        self._sendDbgMessage(self._messages.THREADS + (' %i current %i' % (len(self._threads), ident)))
         for threadEntry in self._threads.values():
             numFrames = 0
             stackFrame = threadEntry['frame']
             while stackFrame:
                 numFrames = numFrames + 1
                 stackFrame = stackFrame.f_back
-            self._sendDbgMessage("thread %i frames %i is %s" % (threadEntry['ident'], numFrames, 'paused' if threadEntry['paused'] else 'running'))
+            self._sendDbgMessage('thread %i frames %i is %s' % (threadEntry['ident'], numFrames, 'paused' if threadEntry['paused'] else 'running'))
     
     def _showFrame(self, ident, frameNum):
         frame = self._getFrame(ident, frameNum)
@@ -391,12 +382,12 @@ class Tracer:
     
     def _confirmBreakpoint(self, bp_file, bp_line):
         """ add to confirmed """
-        self._sendDbgMessage("%s %s %i " % (self._messages.BP_CONFIRM, bp_file, bp_line))
+        self._sendDbgMessage(self._messages.BP_CONFIRM + (' "%s" %i' % (bp_file, bp_line)))
         self._breakpointsConfirmed[bp_file].add(bp_line)
 
     def _waitBreakpoint(self, bp_file, bp_line):
         """ add for waiting """
-        self._sendDbgMessage("%s %s %i " % (self._messages.BP_WAIT, bp_file, bp_line))
+        self._sendDbgMessage(self._messages.BP_WAIT + (' "%s" %i' % (bp_file, bp_line)))
         self._breakpointsWait[bp_file].add(bp_line)
 
     def _parseBp(self, cmd):
@@ -405,6 +396,7 @@ class Tracer:
                 cmd, bp_file, bp_line = cmd.split()
                 self._setBp(bp_file, int(bp_line))
             except Exception as ex:
+                self._sendDbgMessage(self._messages.EXCEPTION)
                 self._sendDbgMessage(repr(ex))
         elif cmd.startswith(self._commands.BP_RESET):
             try:
@@ -418,6 +410,7 @@ class Tracer:
                     cmd, bp_file, bp_line = bp_args
                     self._resetBp(bp_file, int(bp_line))
             except Exception as ex:
+                self._sendDbgMessage(self._messages.EXCEPTION)
                 self._sendDbgMessage(repr(ex))
 
     def _setBp(self, bp_file, bp_line):
@@ -431,17 +424,17 @@ class Tracer:
             if bp_file in self._breakpointsWait:
                 if bp_line != None:
                     self._breakpointsWait[bp_file].discard(bp_line)
-                    self._sendDbgMessage("%s %s %i" % (self._messages.BP_RESET, bp_file, bp_line))
+                    self._sendDbgMessage(self._messages.BP_RESET + (' "%s" %i' % (bp_file, bp_line)))
                 else:
                     self._breakpointsWait[bp_file].clear()
-                    self._sendDbgMessage("%s %s" % (self._messages.BP_RESET, bp_file))
+                    self._sendDbgMessage(self._messages.BP_RESET + (' "%s"' % bp_file))
             if bp_file in self._breakpointsConfirmed:
                 if bp_line != None:
                     self._breakpointsConfirmed[bp_file].discard(bp_line)
-                    self._sendDbgMessage("%s %s %i" % (self._messages.BP_RESET, bp_file, bp_line))
+                    self._sendDbgMessage(self._messages.BP_RESET + (' "%s" %i' % (bp_file, bp_line)))
                 else:
                     self._breakpointsConfirmed[bp_file].clear()
-                    self._sendDbgMessage("%s %s" % (self._messages.BP_RESET, bp_file))
+                    self._sendDbgMessage(self._messages.BP_RESET + (' "%s"' % bp_file))
         else:
             self._breakpointsWait.clear()
             self._breakpointsConfirmed.clear()
@@ -458,9 +451,9 @@ class Tracer:
         import __main__
         builtinsT = __builtins__
         __main__.__dict__.clear()
-        __main__.__dict__.update({"__name__"    : "__main__",
-                                  "__file__"    : filename,
-                                  "__builtins__": builtinsT,
+        __main__.__dict__.update({'__name__'    : '__main__',
+                                  '__file__'    : filename,
+                                  '__builtins__': builtinsT,
                                  })
         self._waitingForAFile = filename
         globalsT = __main__.__dict__
@@ -469,13 +462,14 @@ class Tracer:
                 self._startTracing = True
                 execfile(filename, globalsT, globalsT)
             else:
-                with open(filename, "rb") as fp:
+                with open(filename, 'rb') as fp:
                     statement = "exec(compile(%r, %r, 'exec'))" % (fp.read(), filename)
                 self._startTracing = True
                 exec(statement, globalsT, globalsT)
         except Exception as ex:
             if self._isConnected():
-                self._sendDbgMessage(self._messages.EXCEPTION + ": " +repr(ex))
+                self._sendDbgMessage(self._messages.EXCEPTION)
+                self._sendDbgMessage(repr(ex))
             else:
                 print(repr(ex))
     
@@ -486,7 +480,7 @@ class Tracer:
 
 #===================================================================
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     _usage = """\
 usage: tracer.py -p port pyfile [arg] ...
@@ -508,7 +502,7 @@ Debug the Python program given by pyfile."""
         elif opt in ['-p', '--port']:
             SETTINGS.PORT = int(optarg)
         else:
-            print("Unknown option %s" % opt)
+            print('Unknown option %s' % opt)
 
     sys.argv = args
 

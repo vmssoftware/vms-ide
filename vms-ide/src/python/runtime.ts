@@ -23,6 +23,7 @@ export enum PythonRuntimeEvents {
 
 export enum PythonServerMessage {
     DEBUG = 'DEBUG',
+    ENTRY = 'ENTRY',
     PAUSED = 'PAUSED',
     BREAK = 'BREAK',
     BP_CONFIRM = 'BP_CONFIRM',
@@ -31,13 +32,15 @@ export enum PythonServerMessage {
     EXITED = 'EXITED',
     CONTINUED = 'CONTINUED',
     STEPPED = 'STEPPED',
-    INFORMATION = 'INFO',
+    THREADS = 'THREADS',
+    INFO = 'INFO',
     EXCEPTION = 'EXCEPTION',
     SIGNAL = 'SIGNAL',
     SYNTAX_ERROR = 'SYNTAX_ERROR',
     LOCALS = 'LOCALS',
 };
 
+// see tracer.py
 export enum PythonServerCommand {
     PAUSE = 'p',
     CONTINUE = 'c',
@@ -45,33 +48,64 @@ export enum PythonServerCommand {
     INFO = 'i',
     QUIT = 'q',
     HELP = 'h',
+    THREADS = 't',
+    FRAME  = 'f',
+    BP_SET = 'bps',
+    BP_RESET = 'bpr',
+    LOCALS = 'l'
 };
 
-export interface PythonThread {
+export interface IPythonThread {
     id: number;
     paused: boolean;
     framesNum: number;
-    frames: PythonFrame[];
+    frames: IPythonFrame[];
 };
 
-export interface PythonFrame {
+export interface IPythonFrame {
     file: string;
     line: number;
     function?: string;
 };
 
+export interface IPythonVariable {
+    varId: number;
+    name: string;
+    value?: string;
+    type?: string,
+    typeName?: string,
+    arraySize?: number,
+    parentId?: number;
+    vars?: IPythonVariable[];
+};
+
+// see tracer.py
+const _rgxBpConfirm = /BP_CONFIRM "(.*?)" (\d+)/;
+const _rgxThreads   = /THREADS (\d+) current (\d+)/;
+const _rgxFrames    = /thread (\d+) frames (\d+) is (\S+)/;
+
 export class PythonShellRuntime extends EventEmitter {
     
-    private _logFn: LogFunction;
+    private logFn: LogFunction;
 
-    private _threads?: PythonThread[];
+    private threads: IPythonThread[];
 
-    constructor(private _queue: ICmdQueue, logFn?: LogFunction) {
+    private started: boolean;
+    private running: boolean;
+
+    private ident: number | undefined;
+
+    constructor(private queue: ICmdQueue, _logFn?: LogFunction) {
         super();
+
         // tslint:disable-next-line:no-empty
-        this._logFn = logFn || (() => {});
+        this.logFn = _logFn || (() => {});
+
+        this.started = false;
+        this.running = false;
+        this.threads = [];
         
-        this._queue.onUnexpectedLine((line) => {
+        this.queue.onUnexpectedLine((line) => {
             this.onUnexpectedLine(line);
         });
     }
@@ -80,22 +114,51 @@ export class PythonShellRuntime extends EventEmitter {
         if (line) {
             const trimmed = line.trim();
             if (trimmed) {
+                this.sendEvent(PythonRuntimeEvents.output, trimmed);
+                let stopReason: PythonRuntimeEvents | undefined;
                 switch(trimmed) {
                     case  PythonServerMessage.PAUSED:
-                        this._queue.postCommand(PythonServerCommand.CONTINUE);
+                        stopReason = PythonRuntimeEvents.stopOnPause;
+                        break;
+                    case  PythonServerMessage.ENTRY:
+                        stopReason = PythonRuntimeEvents.stopOnEntry;
                         break;
                     case PythonServerMessage.BREAK:
-                        this._queue.postCommand(PythonServerCommand.CONTINUE);
+                        stopReason = PythonRuntimeEvents.stopOnBreakpoint;
+                        break;
+                    case PythonServerMessage.STEPPED:
+                        stopReason = PythonRuntimeEvents.stopOnStep;
                         break;
                     case PythonServerMessage.EXCEPTION:
-                        this._queue.postCommand(PythonServerCommand.CONTINUE);
-                        break;
-                    case PythonServerMessage.EXITED:
-                        this._queue.postCommand(PythonServerCommand.QUIT);
-                        this.sendEvent(PythonRuntimeEvents.end);
+                        stopReason = PythonRuntimeEvents.stopOnException;
                         break;
                 }
-                this.sendEvent(PythonRuntimeEvents.output, trimmed);
+                if (stopReason !== undefined) {
+                    this.running = false;
+                    let reason = stopReason;
+                    this.threadsRequest().then(() => {
+                        this.sendEvent(reason, this.ident);
+                    });
+                    return;
+                }
+                if (trimmed == PythonServerMessage.EXITED) {
+                    this.running = false;
+                    this.queue.postCommand(PythonServerCommand.QUIT);
+                    this.sendEvent(PythonRuntimeEvents.end);
+                    return;
+                }
+                if (trimmed == PythonServerMessage.CONTINUED) {
+                    this.running = true;
+                    //this.sendEvent(PythonRuntimeEvents.);
+                    return;
+                }
+                if (trimmed.startsWith(PythonServerMessage.BP_CONFIRM)) {
+                    const match = trimmed.match(_rgxBpConfirm);
+                    if (match) {
+                        this.sendEvent(PythonRuntimeEvents.breakpointValidated, match[1], +match[2]);
+                    }
+                    return;
+                }
             }
         }
     }
@@ -105,44 +168,115 @@ export class PythonShellRuntime extends EventEmitter {
     /******************************************************************************************/
 
     public async start() {
+        this.started = true;
+        this.running = true;
     }
 
-    // given as is from <tracer.py>
-    private readonly _rgxThreadNum = /Threads: (\d+)/;
-    private readonly _rgxThread =   /thread (\d+) frames (\d+) (\S+):/;
-
-    public async requestThreads() {
-        this._threads = [];
-        let threadNum = 0;
-        let pythonThread: PythonThread | undefined = undefined;
-        this._queue.postCommand(PythonServerCommand.INFO, (cmd, line) => {
+    public threadsCollected() {
+        return this.threads;
+    }
+    
+    public async threadsRequest() {
+        if (!this.started) {
+            return [];
+        }
+        if (this.running) {
+            return [];
+        }
+        this.threads = [];
+        this.ident = undefined;
+        let threadNum: number | undefined;
+        let pythonThread: IPythonThread | undefined = undefined;
+        await this.queue.postCommand(PythonServerCommand.THREADS, (cmd, line) => {
             if (line === undefined) {
-                this._logFn(LogType.debug, () => `threads: aborted`);
+                this.logFn(LogType.debug, () => `threads: aborted`);
                 return ListenerResponse.stop;
             }
-            if (threadNum == 0) {
-                const matchThreadNum = line.match(this._rgxThreadNum);
-                if (matchThreadNum) {
-                    threadNum = +matchThreadNum[1];
+            if (threadNum == undefined) {
+                const match = line.match(_rgxThreads);
+                if (match) {
+                    threadNum = +match[1];
+                    this.ident = +match[2];
+                    return ListenerResponse.needMoreLines;
                 }
             } else {
-                const matchThread = line.match(this._rgxThread);
-                if (matchThread) {
-                    const threadFrames = +matchThread[2];
+                const match = line.match(_rgxFrames);
+                if (match) {
                     pythonThread = {
-                        id: +matchThread[1],
-                        framesNum: +matchThread[2],
-                        paused: matchThread[3] == 'paused',
+                        id: +match[1],
+                        framesNum: +match[2],
+                        paused: match[3] == 'paused',
                         frames: [],
-                    } as PythonThread;
-                    this._threads?.push(pythonThread);
+                    } as IPythonThread;
+                    this.threads.push(pythonThread);
                 }
-                if (this._threads?.length == threadNum) {
+                if (this.threads.length == threadNum) {
                     return ListenerResponse.stop;
                 }
             }
             return ListenerResponse.needMoreLines;
         });
+        return this.threads;
+    }
+
+    public async framesRequest(ident: number, startFrame: number, endFrame: number): Promise<IPythonFrame[]> {
+        if (!this.started) {
+            return [];
+        }
+        if (this.running) {
+            return [];
+        }
+        return [];
+    }
+
+    public async continueRequest() {
+        if (!this.started) {
+            return false;
+        }
+        if (this.running) {
+            return false;
+        }
+        return this.queue.postCommand(PythonServerCommand.CONTINUE, undefined);
+    }
+
+    public async nextRequest() {
+        if (!this.started) {
+            return false;
+        }
+        if (this.running) {
+            return false;
+        }
+        return this.queue.postCommand(PythonServerCommand.STEP, undefined);
+    }
+
+    public async stepInRequest() {
+        if (!this.started) {
+            return false;
+        }
+        if (this.running) {
+            return false;
+        }
+        return this.queue.postCommand(PythonServerCommand.STEP, undefined);
+    }
+
+    public async stepOutRequest() {
+        if (!this.started) {
+            return false;
+        }
+        if (this.running) {
+            return false;
+        }
+        return this.queue.postCommand(PythonServerCommand.STEP, undefined);
+    }
+
+    public async pauseRequest() {
+        if (!this.started) {
+            return false;
+        }
+        if (!this.running) {
+            return true;
+        }
+        return this.queue.postCommand(PythonServerCommand.PAUSE, undefined);
     }
 
     /******************************************************************************************/

@@ -7,7 +7,11 @@ import {
     Logger,
     logger,
     BreakpointEvent,
-    Thread
+    Thread,
+    StackFrame,
+    Source,
+    Handles,
+    Scope
 } from "vscode-debugadapter";
 import { DebugProtocol } from 'vscode-debugprotocol';
 import * as nls from "vscode-nls";
@@ -20,7 +24,7 @@ import { ListenerResponse } from "../vms_jvm_debug/communication";
 import { commands, workspace } from "vscode";
 import { ensureSettings } from "../synchronizer/ensure-settings";
 import { VmsPathConverter } from "../synchronizer/vms/vms-path-converter";
-import { PythonShellRuntime, PythonRuntimeEvents } from "./runtime";
+import { PythonShellRuntime, PythonRuntimeEvents, IPythonVariable } from "./runtime";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -46,6 +50,8 @@ export class PythonDebugSession extends LoggingDebugSession {
     private _configurationDone = new Lock(true, "configurationDone");
 
     private _runtime: PythonShellRuntime;
+
+    private _variableHandles = new Handles<IPythonVariable>();
     
     constructor(logFn?: LogFunction) {
         super("vms-python-debugger.txt");
@@ -325,27 +331,99 @@ export class PythonDebugSession extends LoggingDebugSession {
     }
     
     protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
-        this._runtime.requestThreads().then(async (threads) => {
+        this._runtime.threadsRequest().then(async (threads) => {
             const respThreads: DebugProtocol.Thread[] = [];
-            if (threads) {
+            if (threads && threads.length > 0) {
                 for (const thread of threads) {
-                    let name = thread.name;
-                    if (!name) {
-                        const words = thread.description.split(" ");
-                        if (words.length) {
-                            name = words[0];
-                        }
-                    }
-                    respThreads.push(new Thread(thread.id, name ? name : String(thread.id)));
+                    respThreads.push(new Thread(thread.id, String(thread.id)));
                 };
+                response.success = true;
             }
             response.body = {
                 threads: respThreads
             };
-            this._variableHandles.reset();
+            // this._variableHandles.reset();
+            this.sendResponse(response);
+        });
+    }
+
+    protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
+        const startFrame = typeof args.startFrame === 'number' ? args.startFrame : 0;
+        const maxLevels = typeof args.levels === 'number' ? args.levels : 1000;
+        const endFrame = startFrame + maxLevels;
+
+        this._runtime.framesRequest(args.threadId, startFrame, endFrame).then((frames) => {
+            
+            response.body = {
+                stackFrames: frames.map((frame, index) =>
+                    new StackFrame(startFrame + index, String(startFrame + index), new Source(frame.file), this.convertDebuggerLineToClient(frame.line))),
+                totalFrames: this._runtime.threadsCollected().find(x => x.id == args.threadId)?.framesNum
+            };
             response.success = true;
             this.sendResponse(response);
         });
+    }
+
+    protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
+        response.body = {
+            scopes: []
+        };
+        const localScope: IPythonVariable = {
+            name: 'locals',
+            varId: 1,
+        }
+        response.body.scopes.push({
+            name: localScope.name,
+            variablesReference: this._variableHandles.create(localScope),
+            expensive: localScope.vars !== undefined && localScope.vars.length > 8
+        });
+        response.success = true;
+        this.sendResponse(response);
+    }
+
+    protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments) {
+
+        // const variables = new Array<DebugProtocol.Variable>();
+        // const parentVar = this._variableHandles.get(args.variablesReference);
+
+        const innerVar: DebugProtocol.Variable = {
+            name: 'test',
+            value: '1',
+            variablesReference: 0,
+        };
+        response.body = {
+            variables: [innerVar]
+        };
+        response.success = true;
+        this.sendResponse(response);
+    }
+
+    protected async continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments) {
+        response.body = {
+            allThreadsContinued: true,
+        };
+        response.success = await this._runtime.continueRequest();
+        this.sendResponse(response);
+    }
+
+    protected async nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments) {
+        response.success = await this._runtime.nextRequest();
+        this.sendResponse(response);
+    }
+
+    protected async stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments) {
+        response.success = await this._runtime.stepInRequest();
+        this.sendResponse(response);
+    }
+
+    protected async stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments) {
+        response.success = await this._runtime.stepOutRequest();
+        this.sendResponse(response);
+    }
+
+    protected async pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments) {
+        response.success = await this._runtime.pauseRequest();
+        this.sendResponse(response);
     }
 
     ///

@@ -1045,7 +1045,7 @@
                         "properties": {
                             "script": {
                                 "type": "string",
-                                "description": "%vms_pyhton_debug.script.description%",
+                                "description": "%vms_python_debug.script.description%",
                                 "default": "${file}"
                             },
                             "port": {
@@ -1121,7 +1121,7 @@
         "npm-run-all": "^4.1.5",
         "ts-loader": "^5.4.5",
         "tslint": "^5.18.0",
-        "typescript": "^3.5.3",
+        "typescript": "^3.7.4",
         "vsce": "^1.65.0",
         "vscode": "^1.1.35",
         "vscode-nls-dev": "github:vorfol/vscode-nls-dev",
