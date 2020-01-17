@@ -116,7 +116,23 @@ import { MultiplicativeoperatorContext } from "./BasicParser";
 import { SignedFactorContext } from "./BasicParser";
 import { FactorContext } from "./BasicParser";
 import { UnsignedConstantContext } from "./BasicParser";
-import { FunctionDesignatorContext } from "./BasicParser";
+import { VariableIntContext } from "./BasicParser";
+import { ExpressionIntContext } from "./BasicParser";
+import { SimpleExpressionIntContext } from "./BasicParser";
+import { TermIntContext } from "./BasicParser";
+import { SignedFactorIntContext } from "./BasicParser";
+import { FactorIntContext } from "./BasicParser";
+import { UnsignedConstantIntContext } from "./BasicParser";
+import { VariableStrContext } from "./BasicParser";
+import { ExpressionStrContext } from "./BasicParser";
+import { SimpleExpressionStrContext } from "./BasicParser";
+import { TermStrContext } from "./BasicParser";
+import { SignedFactorStrContext } from "./BasicParser";
+import { FactorStrContext } from "./BasicParser";
+import { UnsignedConstantStrContext } from "./BasicParser";
+import { FunctionDesignatorRealContext } from "./BasicParser";
+import { FunctionDesignatorIntContext } from "./BasicParser";
+import { FunctionDesignatorSrtContext } from "./BasicParser";
 import { ParameterListContext } from "./BasicParser";
 import { SetContext } from "./BasicParser";
 import { ElementListContext } from "./BasicParser";
@@ -1488,15 +1504,191 @@ export interface BasicParserListener extends ParseTreeListener {
 	exitUnsignedConstant?: (ctx: UnsignedConstantContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `BasicParser.functionDesignator`.
+	 * Enter a parse tree produced by `BasicParser.variableInt`.
 	 * @param ctx the parse tree
 	 */
-	enterFunctionDesignator?: (ctx: FunctionDesignatorContext) => void;
+	enterVariableInt?: (ctx: VariableIntContext) => void;
 	/**
-	 * Exit a parse tree produced by `BasicParser.functionDesignator`.
+	 * Exit a parse tree produced by `BasicParser.variableInt`.
 	 * @param ctx the parse tree
 	 */
-	exitFunctionDesignator?: (ctx: FunctionDesignatorContext) => void;
+	exitVariableInt?: (ctx: VariableIntContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.expressionInt`.
+	 * @param ctx the parse tree
+	 */
+	enterExpressionInt?: (ctx: ExpressionIntContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.expressionInt`.
+	 * @param ctx the parse tree
+	 */
+	exitExpressionInt?: (ctx: ExpressionIntContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.simpleExpressionInt`.
+	 * @param ctx the parse tree
+	 */
+	enterSimpleExpressionInt?: (ctx: SimpleExpressionIntContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.simpleExpressionInt`.
+	 * @param ctx the parse tree
+	 */
+	exitSimpleExpressionInt?: (ctx: SimpleExpressionIntContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.termInt`.
+	 * @param ctx the parse tree
+	 */
+	enterTermInt?: (ctx: TermIntContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.termInt`.
+	 * @param ctx the parse tree
+	 */
+	exitTermInt?: (ctx: TermIntContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.signedFactorInt`.
+	 * @param ctx the parse tree
+	 */
+	enterSignedFactorInt?: (ctx: SignedFactorIntContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.signedFactorInt`.
+	 * @param ctx the parse tree
+	 */
+	exitSignedFactorInt?: (ctx: SignedFactorIntContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.factorInt`.
+	 * @param ctx the parse tree
+	 */
+	enterFactorInt?: (ctx: FactorIntContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.factorInt`.
+	 * @param ctx the parse tree
+	 */
+	exitFactorInt?: (ctx: FactorIntContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.unsignedConstantInt`.
+	 * @param ctx the parse tree
+	 */
+	enterUnsignedConstantInt?: (ctx: UnsignedConstantIntContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.unsignedConstantInt`.
+	 * @param ctx the parse tree
+	 */
+	exitUnsignedConstantInt?: (ctx: UnsignedConstantIntContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.variableStr`.
+	 * @param ctx the parse tree
+	 */
+	enterVariableStr?: (ctx: VariableStrContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.variableStr`.
+	 * @param ctx the parse tree
+	 */
+	exitVariableStr?: (ctx: VariableStrContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.expressionStr`.
+	 * @param ctx the parse tree
+	 */
+	enterExpressionStr?: (ctx: ExpressionStrContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.expressionStr`.
+	 * @param ctx the parse tree
+	 */
+	exitExpressionStr?: (ctx: ExpressionStrContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.simpleExpressionStr`.
+	 * @param ctx the parse tree
+	 */
+	enterSimpleExpressionStr?: (ctx: SimpleExpressionStrContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.simpleExpressionStr`.
+	 * @param ctx the parse tree
+	 */
+	exitSimpleExpressionStr?: (ctx: SimpleExpressionStrContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.termStr`.
+	 * @param ctx the parse tree
+	 */
+	enterTermStr?: (ctx: TermStrContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.termStr`.
+	 * @param ctx the parse tree
+	 */
+	exitTermStr?: (ctx: TermStrContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.signedFactorStr`.
+	 * @param ctx the parse tree
+	 */
+	enterSignedFactorStr?: (ctx: SignedFactorStrContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.signedFactorStr`.
+	 * @param ctx the parse tree
+	 */
+	exitSignedFactorStr?: (ctx: SignedFactorStrContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.factorStr`.
+	 * @param ctx the parse tree
+	 */
+	enterFactorStr?: (ctx: FactorStrContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.factorStr`.
+	 * @param ctx the parse tree
+	 */
+	exitFactorStr?: (ctx: FactorStrContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.unsignedConstantStr`.
+	 * @param ctx the parse tree
+	 */
+	enterUnsignedConstantStr?: (ctx: UnsignedConstantStrContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.unsignedConstantStr`.
+	 * @param ctx the parse tree
+	 */
+	exitUnsignedConstantStr?: (ctx: UnsignedConstantStrContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.functionDesignatorReal`.
+	 * @param ctx the parse tree
+	 */
+	enterFunctionDesignatorReal?: (ctx: FunctionDesignatorRealContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.functionDesignatorReal`.
+	 * @param ctx the parse tree
+	 */
+	exitFunctionDesignatorReal?: (ctx: FunctionDesignatorRealContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.functionDesignatorInt`.
+	 * @param ctx the parse tree
+	 */
+	enterFunctionDesignatorInt?: (ctx: FunctionDesignatorIntContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.functionDesignatorInt`.
+	 * @param ctx the parse tree
+	 */
+	exitFunctionDesignatorInt?: (ctx: FunctionDesignatorIntContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `BasicParser.functionDesignatorSrt`.
+	 * @param ctx the parse tree
+	 */
+	enterFunctionDesignatorSrt?: (ctx: FunctionDesignatorSrtContext) => void;
+	/**
+	 * Exit a parse tree produced by `BasicParser.functionDesignatorSrt`.
+	 * @param ctx the parse tree
+	 */
+	exitFunctionDesignatorSrt?: (ctx: FunctionDesignatorSrtContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `BasicParser.parameterList`.

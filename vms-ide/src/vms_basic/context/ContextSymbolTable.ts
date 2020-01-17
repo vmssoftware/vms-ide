@@ -5,7 +5,7 @@ import { SymbolKind, SymbolInfo, Definition } from './Facade';
 import { SourceContext } from './SourceContext';
 import { Interval } from 'antlr4ts/misc';
 import { ParseTree, TerminalNode } from 'antlr4ts/tree';
-import { symbolDescriptionFromEnum } from './Symbol';
+import { symbolDescriptionFromEnum, IBuildInFunc } from './Symbol';
 
 
 export class ContextSymbolTable extends SymbolTable 
@@ -523,16 +523,45 @@ export class ContextSymbolTable extends SymbolTable
             result.description = symbolDescriptionFromEnum(ContextSymbolTable.getKindFromSymbol(definitionSymbol));
         }
 
+        result.dataInfo = "";
+
         if (symbol instanceof WithTypeScopedSymbol)
         {
-            if(symbol.symbolType)
-            {
-                result.type = symbol.symbolType;
-            }
-
             if(symbol.symbolFull)
             {
                 result.definitionBlock = this.definitionFromSymbol(symbol.symbolFull);
+
+                if(result.definitionBlock)
+                {
+                    result.dataInfo = result.definitionBlock.text;
+                }
+
+                if(symbol.symbolType)
+                {
+                    result.dataInfo = symbol.symbolType + " " + result.dataInfo;
+                }
+            }
+            else
+            {
+                if(result.definition)
+                {
+                    result.dataInfo = result.definition.text;
+                }
+            }
+        }
+        else
+        {
+            if(result.definition)
+            {
+                result.dataInfo = result.definition.text;
+            }
+        }
+
+        if (symbol instanceof InFunctionSymbol)
+        {
+            if(symbol.functionDefinition)
+            {
+                result.dataInfo = symbol.functionDefinition.prototype;
             }
         }
 
@@ -804,6 +833,8 @@ export class ContextSymbolTable extends SymbolTable
                 return SyntaxSymbol;
             case SymbolKind.BuiltInType:
                 return BuiltInTypeSymbol;
+            case SymbolKind.BuiltInFunc:
+                return BuiltInFuncSymbol;
             case SymbolKind.TypeRef:
                 return TypeRefSymbol;
             case SymbolKind.Label:
@@ -845,6 +876,14 @@ export class ContextSymbolTable extends SymbolTable
         if (symbol instanceof BuiltInTypeSymbol) 
         {
             return SymbolKind.BuiltInType;
+        }
+        if (symbol instanceof BuiltInFuncSymbol) 
+        {
+            return SymbolKind.BuiltInFunc;
+        }
+        if (symbol instanceof InFunctionSymbol) 
+        {
+            return SymbolKind.BuiltInFunc;
         }
         if (symbol instanceof LabelSymbol) 
         {
@@ -950,8 +989,14 @@ export class WithTypeScopedSymbol extends ScopedSymbol
     public symbolBlock?: Symbol;
 }
 
+export class InFunctionSymbol extends Symbol 
+{ 
+    public functionDefinition?: IBuildInFunc;
+}
+
 export class SyntaxSymbol extends ScopedSymbol { }
-export class BuiltInTypeSymbol extends Symbol { }
+export class BuiltInTypeSymbol extends Symbol{ }
+export class BuiltInFuncSymbol extends InFunctionSymbol{ }
 export class TypeRefSymbol extends Symbol { }
 export class EntitySymbol extends Symbol { }
 export class LabelSymbol extends Symbol { }

@@ -1,5 +1,5 @@
-import { HoverProvider, TextDocument, Position, CancellationToken, Hover, Range, Uri, workspace } from "vscode";
-import { SymbolKind, Facade, SymbolInfo } from "../context/Facade";
+import { HoverProvider, TextDocument, Position, CancellationToken, Hover } from "vscode";
+import { Facade } from "../context/Facade";
 import { symbolDescriptionFromEnum } from '../context/Symbol';
 import { Basic } from '../extension';
 import * as path from 'path';
@@ -11,26 +11,12 @@ export class BasicHoverProvider implements HoverProvider
 
     public async provideHover(document: TextDocument, position: Position, token: CancellationToken)//: ProviderResult<Hover>
     {
-        let showParseData = false;
         let positionInfo = "";
-        let data : string = "";
         let info = this.backend.symbolInfoAtPosition(document.fileName, position.character + 1, position.line + 1);
         
         if (!info) 
         {
             return undefined;
-        }
-
-        if(info.definitionBlock)
-        {
-            data = info.definitionBlock.text;
-
-            if(info.type)
-            {
-                data = info.type + " " + data;
-            }
-            
-            showParseData = true;
         }
         
         if(info.definition)
@@ -44,7 +30,7 @@ export class BasicHoverProvider implements HoverProvider
         const description = symbolDescriptionFromEnum(info.kind);
         return new Hover([
             "**" + description + "**\ndefined in: " + path.basename(info.source) + positionInfo,
-            { language: Basic.language, value: (showParseData ? data : info.definition? info.definition.text : data) }
+            { language: Basic.language, value: (info.dataInfo? info.dataInfo : "") }
         ]);
     }
 }

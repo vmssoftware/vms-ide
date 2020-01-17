@@ -116,7 +116,23 @@ import { MultiplicativeoperatorContext } from "./BasicParser";
 import { SignedFactorContext } from "./BasicParser";
 import { FactorContext } from "./BasicParser";
 import { UnsignedConstantContext } from "./BasicParser";
-import { FunctionDesignatorContext } from "./BasicParser";
+import { VariableIntContext } from "./BasicParser";
+import { ExpressionIntContext } from "./BasicParser";
+import { SimpleExpressionIntContext } from "./BasicParser";
+import { TermIntContext } from "./BasicParser";
+import { SignedFactorIntContext } from "./BasicParser";
+import { FactorIntContext } from "./BasicParser";
+import { UnsignedConstantIntContext } from "./BasicParser";
+import { VariableStrContext } from "./BasicParser";
+import { ExpressionStrContext } from "./BasicParser";
+import { SimpleExpressionStrContext } from "./BasicParser";
+import { TermStrContext } from "./BasicParser";
+import { SignedFactorStrContext } from "./BasicParser";
+import { FactorStrContext } from "./BasicParser";
+import { UnsignedConstantStrContext } from "./BasicParser";
+import { FunctionDesignatorRealContext } from "./BasicParser";
+import { FunctionDesignatorIntContext } from "./BasicParser";
+import { FunctionDesignatorSrtContext } from "./BasicParser";
 import { ParameterListContext } from "./BasicParser";
 import { SetContext } from "./BasicParser";
 import { ElementListContext } from "./BasicParser";
@@ -1039,11 +1055,123 @@ export interface BasicParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitUnsignedConstant?: (ctx: UnsignedConstantContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `BasicParser.functionDesignator`.
+	 * Visit a parse tree produced by `BasicParser.variableInt`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitFunctionDesignator?: (ctx: FunctionDesignatorContext) => Result;
+	visitVariableInt?: (ctx: VariableIntContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.expressionInt`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitExpressionInt?: (ctx: ExpressionIntContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.simpleExpressionInt`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSimpleExpressionInt?: (ctx: SimpleExpressionIntContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.termInt`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTermInt?: (ctx: TermIntContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.signedFactorInt`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSignedFactorInt?: (ctx: SignedFactorIntContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.factorInt`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFactorInt?: (ctx: FactorIntContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.unsignedConstantInt`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUnsignedConstantInt?: (ctx: UnsignedConstantIntContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.variableStr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVariableStr?: (ctx: VariableStrContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.expressionStr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitExpressionStr?: (ctx: ExpressionStrContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.simpleExpressionStr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSimpleExpressionStr?: (ctx: SimpleExpressionStrContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.termStr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTermStr?: (ctx: TermStrContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.signedFactorStr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSignedFactorStr?: (ctx: SignedFactorStrContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.factorStr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFactorStr?: (ctx: FactorStrContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.unsignedConstantStr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUnsignedConstantStr?: (ctx: UnsignedConstantStrContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.functionDesignatorReal`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFunctionDesignatorReal?: (ctx: FunctionDesignatorRealContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.functionDesignatorInt`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFunctionDesignatorInt?: (ctx: FunctionDesignatorIntContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `BasicParser.functionDesignatorSrt`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFunctionDesignatorSrt?: (ctx: FunctionDesignatorSrtContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `BasicParser.parameterList`.

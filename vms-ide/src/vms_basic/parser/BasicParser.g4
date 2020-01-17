@@ -120,7 +120,7 @@ repCnt
 intExp
    : NUMBER
    | variableName
-   | expression
+   | expressionInt
    ;
 
 realExp
@@ -138,11 +138,11 @@ numExp
 strExp
    : STRING_LITERAL
    | variableName
-   | expression
+   | expressionStr
    ;
 
 chnlExp
-   : factor
+   : factorInt
    | NUMBER
    ;
 
@@ -573,7 +573,9 @@ signedFactor
 factor
    : variable
    | LPAREN expression RPAREN
-   | functionDesignator
+   | functionDesignatorReal
+   | functionDesignatorInt
+   | functionDesignatorSrt
    | unsignedConstant
    | set
    | NOT factor
@@ -591,30 +593,116 @@ unsignedConstant
    | NUL | BEL | BS | HT | LF | VT | FF | CR | SO | SI ESC | SP | DEL | PI
    ;
 
-functionDesignator
+variableInt
+   : variableName (LPAREN expressionInt (COMMA expressionInt)* RPAREN | COLON COLON variableChildName)*
+   ;
+
+expressionInt
+   : simpleExpressionInt (relationaloperator expressionInt)?
+   ;
+
+simpleExpressionInt
+   : termInt (additiveoperator simpleExpressionInt)?
+   ;
+termInt
+   : signedFactorInt (multiplicativeoperator termInt)?
+   ;
+
+signedFactorInt
+   : (PLUS | MINUS)? factorInt
+   ;
+
+factorInt
+   : variableInt
+   | LPAREN expressionInt RPAREN
+   | functionDesignatorInt
+   | unsignedConstantInt
+   | set//???
+   | NOT factorInt
+   ;
+
+unsignedConstantInt
+   : number
+   | DEC_NUMBER
+   | BIN_NUMBER
+   | HEX_NUMBER
+   | OCT_NUMBER
+   ;
+
+variableStr
+   : variableName (LPAREN expressionStr (COMMA expressionStr)* RPAREN | COLON COLON variableChildName)*
+   ;
+
+expressionStr
+   : simpleExpressionStr (relationaloperator expressionStr)?
+   ;
+
+simpleExpressionStr
+   : termStr (additiveoperator simpleExpressionStr)?
+   ;
+
+termStr
+   : signedFactorStr (multiplicativeoperator termStr)?
+   ;
+
+signedFactorStr
+   : (PLUS | MINUS)? factorStr
+   ;
+
+factorStr
+   : variableStr
+   | LPAREN expressionStr RPAREN
+   | functionDesignatorSrt
+   | unsignedConstantStr
+   | set//???
+   | NOT factorStr
+   ;
+
+unsignedConstantStr
+   : STRING_LITERAL
+   | CH_NUMBER
+   | NUL | BEL | BS | HT | LF | VT | FF | CR | SO | SI ESC | SP | DEL | PI
+   ;
+
+functionDesignatorReal
    : (ABS | ATN | COS | CVTF_D | EXP | FIX | INT | LOG | LOG10 | SGN | SIN | SQR | SQRT | TAN) LPAREN realExp RPAREN
-   | (ABS_P | CHR_D | CVT_P_D | DATE_D | DATE4_D | ERT_D | RAD_D | SPACE_D | SWAP_P | TAB | TIME | TIME_D) LPAREN intExp RPAREN
-   | (ASC | ASCII | CVT_D_P | CVT_DF | LEN | TRM_D | VAL | VAL_P) LPAREN strExp RPAREN
-   | (BUFSIZ | CCPOS | ECHO | FSP_D | GETRFA | MAR | MAR_P | NOECHO | RCTRLO) LPAREN chnlExp RPAREN
-   | (COMP_P | DIF_D | SUM_D | XLATE | XLATE_D) LPAREN strExp COMMA strExp RPAREN
-   | (CVT_D_D | EDIT_D | LEFT | LEFT_D | PLACE_D | RIGHT | RIGHT_D) LPAREN strExp COMMA intExp RPAREN
-   | (CTRLC | ERL | ERN_D | ERR | NUM | NUM2 | RCTRLC | RECOUNT | RND | STATUS | VMSSTATUS)
+   | (CVT_DF | VAL) LPAREN strExp RPAREN
+   | (RND)
    | DECIMAL LPAREN expression (COMMA intConst COMMA intConst)? RPAREN
-   | (FORMAT_D) LPAREN expression COMMA strExp RPAREN
-   | INKEY_D LPAREN chnlExp (COMMA WAIT intExp?)? RPAREN
+   | MAG LPAREN expression RPAREN
+   | (MAX | MIN) LPAREN numExp COMMA numExp (COMMA numExp)* RPAREN
+   | (MOD) LPAREN numExp COMMA numExp RPAREN
+   | REAL LPAREN expression (COMMA (SINGLE | DOUBLE | GFLOAT | HFLOAT | SFLOAT | TFLOAT | XFLOAT))? RPAREN
+   | routineName (LPAREN parameterList RPAREN)?
+   ;
+
+functionDesignatorInt
+   : (ABS_P | CHR_D | CVT_P_D | DATE_D | DATE4_D | ERT_D | RAD_D | SPACE_D | SWAP_P | TAB | TIME | TIME_D) LPAREN intExp RPAREN
+   | (ASC | ASCII | CVT_D_P | LEN | VAL_P) LPAREN strExp RPAREN   
+   | (BUFSIZ | CCPOS | ECHO | MAR | MAR_P | NOECHO | RCTRLO) LPAREN chnlExp RPAREN
+   | (COMP_P) LPAREN strExp COMMA strExp RPAREN
+   | (CTRLC | ERL | ERR | NUM | NUM2 | RCTRLC | RECOUNT | STATUS | VMSSTATUS)
    | (INSTR) LPAREN intExp COMMA strExp COMMA strExp RPAREN
    | INTEGER LPAREN expression (COMMA (BYTE | WORD | LONG | QUAD))? RPAREN
    | (LBOUND | UBOUND) LPAREN arrayVariableName (COMMA intExp)? RPAREN
    | LOC LPAREN (variableName | routineName) RPAREN
-   | MAG LPAREN expression RPAREN
    | MAGTAPE LPAREN expression COMMA variableName COMMA chnlExp RPAREN
-   | (MAX | MIN) LPAREN numExp COMMA numExp (COMMA numExp)* RPAREN
-   | (MID | MID_D | SEG_D) LPAREN strExp COMMA intExp COMMA intExp RPAREN
-   | (MOD) LPAREN numExp COMMA numExp RPAREN
-   | (NUM_D | NUM1_D | STR_D) LPAREN numExp RPAREN
-   | (POS | PROD_D | QUO_D) LPAREN strExp COMMA strExp COMMA intExp RPAREN
-   | REAL LPAREN expression (COMMA (SINGLE | DOUBLE | GFLOAT | HFLOAT | SFLOAT | TFLOAT | XFLOAT))? RPAREN
+   | (POS) LPAREN strExp COMMA strExp COMMA intExp RPAREN
    | RMSSTATUS LPAREN chnlExp COMMA (STATUS | VALUE) RPAREN
+   | routineName (LPAREN parameterList RPAREN)?
+   ;
+
+functionDesignatorSrt
+   : (TRM_D) LPAREN strExp RPAREN
+   | (FSP_D | GETRFA) LPAREN chnlExp RPAREN
+   | (DIF_D | SUM_D | XLATE | XLATE_D) LPAREN strExp COMMA strExp RPAREN
+   | (CVT_D_D | EDIT_D | LEFT | LEFT_D | PLACE_D | RIGHT | RIGHT_D) LPAREN strExp COMMA intExp RPAREN
+   | (ERN_D)
+   | (FORMAT_D) LPAREN expression COMMA strExp RPAREN
+   | INKEY_D LPAREN chnlExp (COMMA WAIT intExp?)? RPAREN
+   | (MID | MID_D | SEG_D) LPAREN strExp COMMA intExp COMMA intExp RPAREN
+   | (NUM_D | NUM1_D | STR_D) LPAREN numExp RPAREN
+   | (PROD_D | QUO_D) LPAREN strExp COMMA strExp COMMA intExp RPAREN
    | STRING_D LPAREN intExp COMMA intExp RPAREN
    | routineName (LPAREN parameterList RPAREN)?
    ;

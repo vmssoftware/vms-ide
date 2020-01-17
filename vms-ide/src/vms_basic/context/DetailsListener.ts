@@ -38,6 +38,8 @@ import {
     TargetNameContext,
     ConstantDeclarationContext,
     VariableContext,
+    VariableIntContext,
+    VariableStrContext,
     VariableDeclarationContext,
     VariableDescriptionPartContext,
     ExternVarConstDeclarationContext,
@@ -64,7 +66,6 @@ export class DetailsListener implements BasicParserListener
 {
     private typeSymbol: String = "";    
     private currentSymbol: Symbol | undefined;
-    private symbolStack: (Symbol | undefined)[] = [];
 
     constructor(private symbolTable: ContextSymbolTable, private imports: string[]) 
     {    }
@@ -118,22 +119,6 @@ export class DetailsListener implements BasicParserListener
             this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
         }
     }
-
-    // enterDataType(ctx: DataTypeContext) 
-    // {
-    //     if(ctx.identifier())
-    //     {
-    //         this.currentSymbol = this.symbolTable.addNewSymbolOfType(AnySymbol, undefined, ctx.identifier()!.IDENTIFIER().text);
-    //         this.currentSymbol.context = ctx.identifier()!.IDENTIFIER();
-    //     }
-    // }
-    // exitDataType(ctx: DataTypeContext) 
-    // {
-    //     if (this.currentSymbol) 
-    //     {
-    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
-    //     }
-    // }
 
     enterLabel(ctx: LabelContext) 
     {
@@ -220,7 +205,6 @@ export class DetailsListener implements BasicParserListener
         {
             this.currentSymbol = this.symbolTable.addNewSymbolOfType(AnySymbol, undefined, ctx.variableName().identifier().IDENTIFIER().text);
             this.currentSymbol.context = ctx.variableName().identifier().IDENTIFIER();
-            //this.symbolStack.push(this.currentSymbol);
 
             let currentSymbol = this.currentSymbol;
             this.symbolTable.linkSymbolsVar(currentSymbol, this.currentSymbol);
@@ -229,7 +213,6 @@ export class DetailsListener implements BasicParserListener
             {
                 this.currentSymbol = this.symbolTable.addNewSymbolOfType(AnySymbol, undefined, item.identifier().IDENTIFIER().text);
                 this.currentSymbol.context = item.identifier().IDENTIFIER();
-                //this.symbolStack.push(this.currentSymbol);
                 let entitySymbol = this.currentSymbol;
 
                 this.symbolTable.linkSymbolsVar(currentSymbol, entitySymbol);
@@ -237,6 +220,66 @@ export class DetailsListener implements BasicParserListener
         }
     }
     exitVariable(ctx: VariableContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
+    enterVariableInt(ctx: VariableIntContext)
+    {
+        let blocks = ctx.variableChildName();
+
+        if(blocks.length > 0)
+        {
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(AnySymbol, undefined, ctx.variableName().identifier().IDENTIFIER().text);
+            this.currentSymbol.context = ctx.variableName().identifier().IDENTIFIER();
+
+            let currentSymbol = this.currentSymbol;
+            this.symbolTable.linkSymbolsVar(currentSymbol, this.currentSymbol);
+
+            for(let item of blocks)
+            {
+                this.currentSymbol = this.symbolTable.addNewSymbolOfType(AnySymbol, undefined, item.identifier().IDENTIFIER().text);
+                this.currentSymbol.context = item.identifier().IDENTIFIER();
+                let entitySymbol = this.currentSymbol;
+
+                this.symbolTable.linkSymbolsVar(currentSymbol, entitySymbol);
+            }
+        }
+    }
+    exitVariableInt(ctx: VariableIntContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
+    enterVariableStr(ctx: VariableStrContext)
+    {
+        let blocks = ctx.variableChildName();
+
+        if(blocks.length > 0)
+        {
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(AnySymbol, undefined, ctx.variableName().identifier().IDENTIFIER().text);
+            this.currentSymbol.context = ctx.variableName().identifier().IDENTIFIER();
+
+            let currentSymbol = this.currentSymbol;
+            this.symbolTable.linkSymbolsVar(currentSymbol, this.currentSymbol);
+
+            for(let item of blocks)
+            {
+                this.currentSymbol = this.symbolTable.addNewSymbolOfType(AnySymbol, undefined, item.identifier().IDENTIFIER().text);
+                this.currentSymbol.context = item.identifier().IDENTIFIER();
+                let entitySymbol = this.currentSymbol;
+
+                this.symbolTable.linkSymbolsVar(currentSymbol, entitySymbol);
+            }
+        }
+    }
+    exitVariableStr(ctx: VariableStrContext) 
     {
         if (this.currentSymbol) 
         {
@@ -595,22 +638,6 @@ export class DetailsListener implements BasicParserListener
             }
         }
     }
-
-    // enterGroupClause(ctx: GroupClauseContext) 
-    // {
-    //     this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeBlockDclSymbol, undefined, ctx.text);
-    //     this.currentSymbol.context = ctx;
-
-    //     this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, ctx.groupName().identifier().IDENTIFIER().text);
-    //     this.currentSymbol.context = ctx.groupName().identifier().IDENTIFIER();
-    // }
-    // exitGroupClause(ctx: GroupClauseContext) 
-    // {
-    //     if (this.currentSymbol) 
-    //     {
-    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
-    //     }
-    // }
 
     enterDeclaration(ctx: DeclarationContext) 
     {
