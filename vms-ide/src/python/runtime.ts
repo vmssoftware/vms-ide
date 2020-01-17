@@ -62,20 +62,20 @@ export interface IPythonThread {
 };
 
 export interface IPythonFrame {
+    ident: number;
+    frame: number;
     file: string;
     line: number;
     function: string;
 };
 
 export interface IPythonVariable {
-    varId: number;
+    id: number;
+    ident: number;
+    frame: number;
     name: string;
+    type: string;
     value?: string;
-    type?: string,
-    typeName?: string,
-    arraySize?: number,
-    parentId?: number;
-    vars?: IPythonVariable[];
 };
 
 // see tracer.py
@@ -83,8 +83,8 @@ const _rgxBpConfirm = /BP_CONFIRM "(.*?)" (\d+)/;
 const _rgxThreads   = /THREADS (\d+) current (\d+)/;
 const _rgxFrames    = /thread (\d+) frames (\d+) is (\S+)/;
 const _rgxFrame     = /file: "(.*?)" line: (\d+) function: "(.*?)"/;
-const _rgxLocal     = /LOCALS (\d+)/;
-const _rgxVar       = /name: "(.*?)" type: "(.*?)" value: "(.*?)"/;
+const _rgxLocals    = /LOCALS (\d+)/;
+const _rgxVariable  = /name: "(.*?)" type: "(.*?)"/;
 
 export class PythonShellRuntime extends EventEmitter {
     
@@ -216,11 +216,13 @@ export class PythonShellRuntime extends EventEmitter {
                         paused: match[3] == 'paused',
                     } as IPythonThread;
                     threads.push(pythonThread);
-                }
-                if (threads.length == threadNum) {
-                    return ListenerResponse.stop;
+                    if (threads.length == threadNum) {
+                        return ListenerResponse.stop;
+                    }
+                    return ListenerResponse.needMoreLines;
                 }
             }
+            this.onUnexpectedLine(line);
             return ListenerResponse.needMoreLines;
         });
         this.threads = threads;
@@ -246,6 +248,7 @@ export class PythonShellRuntime extends EventEmitter {
             let numFrames = endFrame - startFrame;
             if (numFrames > 0) {
                 let command = `${PythonServerCommand.FRAME} ${ident} ${startFrame} ${numFrames}`;
+                let parsedFrame = 0;
                 await this.queue.postCommand(command, (cmd, line) => {
                     if (line === undefined) {
                         this.logFn(LogType.debug, () => `frames: aborted`);
@@ -254,16 +257,20 @@ export class PythonShellRuntime extends EventEmitter {
                     const match = line.match(_rgxFrame);
                     if (match) {
                         const frame: IPythonFrame = {
+                            ident,
+                            frame: startFrame + parsedFrame,
                             file: match[1],
                             line: +match[2],
                             function: match[3],
                         };
+                        ++parsedFrame;
                         frames.push(frame);
-                        --numFrames;
-                        if (numFrames == 0) {
+                        if (parsedFrame >= numFrames) {
                             return ListenerResponse.stop;
                         }
+                        return ListenerResponse.needMoreLines;
                     }
+                    this.onUnexpectedLine(line);
                     return ListenerResponse.needMoreLines;
                 });
             }
@@ -282,13 +289,41 @@ export class PythonShellRuntime extends EventEmitter {
             return variables;
         }
         let command = `${PythonServerCommand.LOCALS} ${frame} ${ident}`;
+        let numLocals: number | undefined;
+        let parsedLocals = 0;
         await this.queue.postCommand(command, (cmd, line) => {
             if (line === undefined) {
                 this.logFn(LogType.debug, () => `locals: aborted`);
                 return ListenerResponse.stop;
             }
-            const match = line.match(_rgxLocal);
-            return ListenerResponse.stop;
+            if (numLocals == undefined) {
+                const match = line.match(_rgxLocals);
+                if (match) {
+                    numLocals = +match[1];
+                    if (numLocals == 0) {
+                        return ListenerResponse.stop;
+                    }
+                    return ListenerResponse.needMoreLines;
+                }
+            } else {
+                const match = line.match(_rgxVariable);
+                if (match) {
+                    variables.push({
+                        id: 0,
+                        ident,
+                        frame,
+                        name: match[1],
+                        type: match[2],
+                    });
+                    ++parsedLocals;
+                    if (parsedLocals >= numLocals) {
+                        return ListenerResponse.stop;
+                    }
+                    return ListenerResponse.needMoreLines;
+                }
+            }
+            this.onUnexpectedLine(line);
+            return ListenerResponse.needMoreLines;
         });
         this.locker.release();
         return variables;

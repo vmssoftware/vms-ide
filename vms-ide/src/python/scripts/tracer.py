@@ -346,6 +346,9 @@ class Tracer:
                     break
                 currentFrameNum = currentFrameNum + 1
                 currentFrame = currentFrame.f_back
+            # check if given frame isn't debugger frame
+            if self._isDebuggerFrame(currentFrame):
+                currentFrame = None
             if currentFrame == None:
                 self._sendDbgMessage('%s: %s has no frame %s' % (self._messages.SYNTAX_ERROR, ident, frameNum))
             else:
@@ -360,10 +363,10 @@ class Tracer:
         if frame != None:
             self._sendDbgMessage(self._messages.LOCALS + (' %i') % len(frame.f_locals))
             for name, value in frame.f_locals.items():
-                self._sendDbgMessage('name: "%s" type: "%s" value: "%s"' % (name, type(value), repr(value)))
+                self._sendDbgMessage('name: "%s" type: "%s"' % (name, value.__class__.__name__))
     
     def _isDebuggerFrame(self, frame):
-        return frame.f_code.co_filename == self._fileName and frame.f_code.co_name == "_runscript"
+        return frame and frame.f_code.co_filename == self._fileName and frame.f_code.co_name == "_runscript"
 
     def _showThreads(self, ident):
         self._sendDbgMessage(self._messages.THREADS + (' %i current %i' % (len(self._threads), ident)))
@@ -374,13 +377,12 @@ class Tracer:
                     'paused' if threadEntry['paused'] else 'running' ))
     
     def _showFrame(self, ident, frameStart, numFrames):
-        frameNum = 0
         if frameStart == None:
             frameStart = 0
         frame = self._getFrame(ident, frameStart)
+        frameNum = 0
         while frame != None and frameNum != numFrames:
             if self._isDebuggerFrame(frame):
-                frame = None
                 break
             self._sendDbgMessage('file: "%s" line: %i function: "%s"' % (frame.f_code.co_filename, frame.f_lineno, frame.f_code.co_name))
             frameNum = frameNum + 1

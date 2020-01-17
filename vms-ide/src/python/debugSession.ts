@@ -398,19 +398,26 @@ export class PythonDebugSession extends LoggingDebugSession {
         });
     }
 
+    private readonly _locals_scope_type = '-scope-';
+    private readonly _locals_scope_name = '-locals-';
+
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
         response.body = {
             scopes: []
         };
+        const frame = this._frameHandles.get(args.frameId);
         const localScope: IPythonVariable = {
-            name: 'locals',
-            varId: 0,
-        }
-        localScope.varId = this._variableHandles.create(localScope);
+            id: 0,
+            ident: frame.ident,
+            frame: frame.frame,
+            name: this._locals_scope_name,
+            type: this._locals_scope_type,
+        };
+        localScope.id = this._variableHandles.create(localScope);
         response.body.scopes.push({
             name: localScope.name,
-            variablesReference: localScope.varId,
-            expensive: localScope.vars !== undefined && localScope.vars.length > 8
+            variablesReference: localScope.id,
+            expensive: true
         });
         response.success = true;
         this.sendResponse(response);
@@ -418,18 +425,24 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments) {
 
-        // const variables = new Array<DebugProtocol.Variable>();
-        // const parentVar = this._variableHandles.get(args.variablesReference);
-
+        let variables: DebugProtocol.Variable[] = [];
         let parent = this._variableHandles.get(args.variablesReference);
-
-        const innerVar: DebugProtocol.Variable = {
-            name: 'test',
-            value: '1',
-            variablesReference: 0,
-        };
+        if (parent !== undefined) {
+            if (parent.type == this._locals_scope_type) {
+                const localVars = await this._runtime.localsRequest(parent.ident, parent.frame);
+                for(let localVar of localVars) {
+                    const innerVar: DebugProtocol.Variable = {
+                        name: localVar.name,
+                        type: localVar.type,
+                        value: '',
+                        variablesReference: this._variableHandles.create(localVar),
+                    };
+                    variables.push(innerVar);
+                }
+            }
+        }
         response.body = {
-            variables: [innerVar]
+            variables
         };
         response.success = true;
         this.sendResponse(response);
