@@ -309,19 +309,27 @@ class Tracer:
             # ---------------------------------------------
         entry['paused'] = False
         return self._traceFunc
-    
+
+    def _numFrames(self, startFrame):
+        numFrames = 0
+        while startFrame:
+            if self._isDebuggerFrame(startFrame):
+                startFrame = None
+                break
+            numFrames = numFrames + 1
+            startFrame = startFrame.f_back
+        return numFrames
+
     def _showInfo(self, ident):
         self._sendDbgMessage(self._messages.INFO)
         self._sendDbgMessage('Main: %i' % self._mainThread)
         self._sendDbgMessage('Where: %i' % ident)
         self._sendDbgMessage('Threads: %i' % len(self._threads))
         for threadEntry in self._threads.values():
-            numFrames = 0
-            stackFrame = threadEntry['frame']
-            while stackFrame:
-                numFrames = numFrames + 1
-                stackFrame = stackFrame.f_back
-            self._sendDbgMessage('  thread %i frames %i %s:' % (threadEntry['ident'], numFrames, 'paused' if threadEntry['paused'] else 'running'))
+            self._sendDbgMessage('  thread %i frames %i %s:' % ( 
+                    threadEntry['ident'],
+                    self._numFrames(threadEntry['frame']),
+                    'paused' if threadEntry['paused'] else 'running' ))
             self._sendDbgMessage('    file: "%s"' % threadEntry['frame'].f_code.co_filename)
             self._sendDbgMessage('    line: %i' % threadEntry['frame'].f_lineno)
             self._sendDbgMessage('    function: "%s"' % threadEntry['frame'].f_code.co_name)
@@ -333,6 +341,9 @@ class Tracer:
             currentFrame = threadEntry['frame']
             currentFrameNum = 0
             while frameNum != currentFrameNum and currentFrame:
+                if self._isDebuggerFrame(currentFrame):
+                    currentFrame = None
+                    break
                 currentFrameNum = currentFrameNum + 1
                 currentFrame = currentFrame.f_back
             if currentFrame == None:
@@ -347,18 +358,20 @@ class Tracer:
     def _showLocals(self, ident, frameNum):
         frame = self._getFrame(ident, frameNum)
         if frame != None:
-            self._sendDbgMessage(self._messages.LOCALS)
-            self._sendDbgMessage(repr(frame.f_locals))
+            self._sendDbgMessage(self._messages.LOCALS + (' %i') % len(frame.f_locals))
+            for name, value in frame.f_locals.items():
+                self._sendDbgMessage('name: "%s" type: "%s" value: "%s"' % (name, type(value), repr(value)))
+    
+    def _isDebuggerFrame(self, frame):
+        return frame.f_code.co_filename == self._fileName and frame.f_code.co_name == "_runscript"
 
     def _showThreads(self, ident):
         self._sendDbgMessage(self._messages.THREADS + (' %i current %i' % (len(self._threads), ident)))
         for threadEntry in self._threads.values():
-            numFrames = 0
-            stackFrame = threadEntry['frame']
-            while stackFrame:
-                numFrames = numFrames + 1
-                stackFrame = stackFrame.f_back
-            self._sendDbgMessage('thread %i frames %i is %s' % (threadEntry['ident'], numFrames, 'paused' if threadEntry['paused'] else 'running'))
+            self._sendDbgMessage('thread %i frames %i is %s' % (
+                    threadEntry['ident'], 
+                    self._numFrames(threadEntry['frame']),
+                    'paused' if threadEntry['paused'] else 'running' ))
     
     def _showFrame(self, ident, frameStart, numFrames):
         frameNum = 0
@@ -366,6 +379,9 @@ class Tracer:
             frameStart = 0
         frame = self._getFrame(ident, frameStart)
         while frame != None and frameNum != numFrames:
+            if self._isDebuggerFrame(frame):
+                frame = None
+                break
             self._sendDbgMessage('file: "%s" line: %i function: "%s"' % (frame.f_code.co_filename, frame.f_lineno, frame.f_code.co_name))
             frameNum = frameNum + 1
             frame = frame.f_back
@@ -428,20 +444,14 @@ class Tracer:
 
     def _resetBp(self, bp_file, bp_line):
         if bp_file:
-            if bp_file in self._breakpointsWait:
-                if bp_line != None:
-                    self._breakpointsWait[bp_file].discard(bp_line)
-                    self._sendDbgMessage(self._messages.BP_RESET + (' "%s" %i' % (bp_file, bp_line)))
-                else:
-                    self._breakpointsWait[bp_file].clear()
-                    self._sendDbgMessage(self._messages.BP_RESET + (' "%s"' % bp_file))
-            if bp_file in self._breakpointsConfirmed:
-                if bp_line != None:
-                    self._breakpointsConfirmed[bp_file].discard(bp_line)
-                    self._sendDbgMessage(self._messages.BP_RESET + (' "%s" %i' % (bp_file, bp_line)))
-                else:
-                    self._breakpointsConfirmed[bp_file].clear()
-                    self._sendDbgMessage(self._messages.BP_RESET + (' "%s"' % bp_file))
+            if bp_line != None:
+                self._breakpointsWait[bp_file].discard(bp_line)
+                self._breakpointsConfirmed[bp_file].discard(bp_line)
+                self._sendDbgMessage(self._messages.BP_RESET + (' "%s" %i' % (bp_file, bp_line)))
+            else:
+                del self._breakpointsWait[bp_file]
+                del self._breakpointsConfirmed[bp_file]
+                self._sendDbgMessage(self._messages.BP_RESET + (' "%s"' % bp_file))
         else:
             self._breakpointsWait.clear()
             self._breakpointsConfirmed.clear()

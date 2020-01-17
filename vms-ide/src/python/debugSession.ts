@@ -37,6 +37,12 @@ export enum EStartResult {
     error,
 };
 
+interface IBreakPoint {
+    id: number;
+    verified: boolean;
+    sent: boolean;
+};
+
 export class PythonDebugSession extends LoggingDebugSession {
 
     private _logFn: LogFunction;
@@ -53,6 +59,9 @@ export class PythonDebugSession extends LoggingDebugSession {
     private _runtime: PythonShellRuntime;
 
     private _variableHandles = new Handles<IPythonVariable>();
+    private _frameHandles = new Handles<IPythonFrame>();
+    private _breakPoints = new Map<string, Map<number, IBreakPoint>>();  // file->line->BP
+    private _nextBp = 0;
     
     constructor(logFn?: LogFunction) {
         super("vms-python-debugger.txt");
@@ -72,6 +81,15 @@ export class PythonDebugSession extends LoggingDebugSession {
         // setup event handlers
         
         this._runtime.on(PythonRuntimeEvents.stopOnEntry, (threadId) => {
+            for (let [file, bplines] of this._breakPoints) {
+                for (let [line, ibp] of bplines) {
+                    if (!ibp.sent) {
+                        this._runtime.setBreakPoint(file, line).then((ok) => {
+                            ibp.sent = ok;
+                        });
+                    }
+                }
+            }
             this.sendStoppedEvent('entry', threadId);
         });
         
@@ -104,15 +122,18 @@ export class PythonDebugSession extends LoggingDebugSession {
         });
         
         this._runtime.on(PythonRuntimeEvents.breakpointValidated, (file: string, line: number) => {
-            // for (const [file, ids] of this._breakPoints) {
-            //     const line = ids.get(id);
-            //     if (line) {
-            //         this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ id, verified, line }));
-            //         return;
-            //     }
-            // }
-            // // for function breakpoint
-            // this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ id, verified }));
+            const lines = this._breakPoints.get(file);
+            if (lines) {
+                const breakpoint = lines.get(line);
+                if (breakpoint) {
+                    breakpoint.verified = true;
+                    this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ 
+                        id: breakpoint.id,
+                        verified: breakpoint.verified,
+                        line 
+                    }));
+                }
+            }
         });
 
         this._runtime.on(PythonRuntimeEvents.output, async (text, filePath?, line?, column?) => {
@@ -343,7 +364,6 @@ export class PythonDebugSession extends LoggingDebugSession {
             response.body = {
                 threads: respThreads
             };
-            this._variableHandles.reset();
             this.sendResponse(response);
         });
     }
@@ -367,8 +387,10 @@ export class PythonDebugSession extends LoggingDebugSession {
 
         this._runtime.framesRequest(args.threadId, startFrame, endFrame).then((frames) => {
             response.body = {
-                stackFrames: frames.map((frame, index) =>
-                    new StackFrame(startFrame + index, frame.function, this.frameSource(frame), this.convertDebuggerLineToClient(frame.line))),
+                stackFrames: frames.map((frame) => {
+                    const idx = this._frameHandles.create(frame);
+                    return new StackFrame(idx, frame.function, this.frameSource(frame), this.convertDebuggerLineToClient(frame.line));
+                }),
                 totalFrames: this._runtime.threadsCollected()?.find(x => x.id == args.threadId)?.framesNum
             };
             response.success = true;
@@ -382,11 +404,12 @@ export class PythonDebugSession extends LoggingDebugSession {
         };
         const localScope: IPythonVariable = {
             name: 'locals',
-            varId: 1,
+            varId: 0,
         }
+        localScope.varId = this._variableHandles.create(localScope);
         response.body.scopes.push({
             name: localScope.name,
-            variablesReference: this._variableHandles.create(localScope),
+            variablesReference: localScope.varId,
             expensive: localScope.vars !== undefined && localScope.vars.length > 8
         });
         response.success = true;
@@ -397,6 +420,8 @@ export class PythonDebugSession extends LoggingDebugSession {
 
         // const variables = new Array<DebugProtocol.Variable>();
         // const parentVar = this._variableHandles.get(args.variablesReference);
+
+        let parent = this._variableHandles.get(args.variablesReference);
 
         const innerVar: DebugProtocol.Variable = {
             name: 'test',
@@ -410,7 +435,57 @@ export class PythonDebugSession extends LoggingDebugSession {
         this.sendResponse(response);
     }
 
+    protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments) {
+        response.body = {
+            breakpoints: []
+        };
+        // set and verify breakpoint locations
+        if (args.breakpoints && args.source.path) {
+            const fileName = workspace.asRelativePath(args.source.path);
+            const lines = this._breakPoints.get(fileName);
+            const newLines = new Map<number, IBreakPoint>();
+            for (const sourceBp of args.breakpoints) {
+                const oldBp = lines?.get(sourceBp.line);
+                if (oldBp === undefined) {
+                    const ibp: IBreakPoint = {
+                        id: ++this._nextBp,
+                        verified: false,
+                        sent: false,
+                    };
+                    newLines.set(sourceBp.line, ibp);
+                    if (await this._runtime.setBreakPoint(fileName, sourceBp.line)) {
+                        ibp.sent = true;
+                    }
+                    response.body.breakpoints.push({
+                        id: ibp.id,
+                        line: sourceBp.line,
+                        verified: ibp.verified
+                    });
+                } else {
+                    newLines.set(sourceBp.line, oldBp);
+                }
+            }
+            if (lines) {
+                for(let [line, breakpoint] of lines) {
+                    if (!newLines.has(line)) {
+                        await this._runtime.reSetBreakPoint(fileName, line);
+                    }
+                }
+            }
+            // always replace
+            this._breakPoints.set(fileName, newLines);
+        }
+        response.success = true;
+        this.sendResponse(response);
+    }
+
+    private onStartRunning() {
+        this._variableHandles.reset();
+        this._frameHandles.reset();
+    }
+
     protected async continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments) {
+        this.onStartRunning();
         response.body = {
             allThreadsContinued: true,
         };
@@ -419,16 +494,19 @@ export class PythonDebugSession extends LoggingDebugSession {
     }
 
     protected async nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments) {
+        this.onStartRunning();
         response.success = await this._runtime.nextRequest();
         this.sendResponse(response);
     }
 
     protected async stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments) {
+        this.onStartRunning();
         response.success = await this._runtime.stepInRequest();
         this.sendResponse(response);
     }
 
     protected async stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments) {
+        this.onStartRunning();
         response.success = await this._runtime.stepOutRequest();
         this.sendResponse(response);
     }

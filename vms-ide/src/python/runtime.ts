@@ -83,6 +83,8 @@ const _rgxBpConfirm = /BP_CONFIRM "(.*?)" (\d+)/;
 const _rgxThreads   = /THREADS (\d+) current (\d+)/;
 const _rgxFrames    = /thread (\d+) frames (\d+) is (\S+)/;
 const _rgxFrame     = /file: "(.*?)" line: (\d+) function: "(.*?)"/;
+const _rgxLocal     = /LOCALS (\d+)/;
+const _rgxVar       = /name: "(.*?)" type: "(.*?)" value: "(.*?)"/;
 
 export class PythonShellRuntime extends EventEmitter {
     
@@ -231,11 +233,7 @@ export class PythonShellRuntime extends EventEmitter {
         await this.locker.acquire();
 
         const frames: IPythonFrame[] = [];
-        if (!this.started) {
-            this.locker.release();
-            return frames;
-        }
-        if (this.running) {
+        if (!this.started || this.running) {
             this.locker.release();
             return frames;
         }
@@ -250,7 +248,7 @@ export class PythonShellRuntime extends EventEmitter {
                 let command = `${PythonServerCommand.FRAME} ${ident} ${startFrame} ${numFrames}`;
                 await this.queue.postCommand(command, (cmd, line) => {
                     if (line === undefined) {
-                        this.logFn(LogType.debug, () => `threads: aborted`);
+                        this.logFn(LogType.debug, () => `frames: aborted`);
                         return ListenerResponse.stop;
                     }
                     const match = line.match(_rgxFrame);
@@ -272,6 +270,28 @@ export class PythonShellRuntime extends EventEmitter {
         }
         this.locker.release();
         return frames;
+    }
+
+    public async localsRequest(ident: number, frame: number): Promise<IPythonVariable[]> {
+
+        await this.locker.acquire();
+
+        const variables: IPythonVariable[] = [];
+        if (!this.started || this.running) {
+            this.locker.release();
+            return variables;
+        }
+        let command = `${PythonServerCommand.LOCALS} ${frame} ${ident}`;
+        await this.queue.postCommand(command, (cmd, line) => {
+            if (line === undefined) {
+                this.logFn(LogType.debug, () => `locals: aborted`);
+                return ListenerResponse.stop;
+            }
+            const match = line.match(_rgxLocal);
+            return ListenerResponse.stop;
+        });
+        this.locker.release();
+        return variables;
     }
 
     private setRunning() {
@@ -339,6 +359,32 @@ export class PythonShellRuntime extends EventEmitter {
             return false;
         }
         return this.queue.postCommand(PythonServerCommand.PAUSE, undefined).then((ok) => {
+            this.locker.release();
+            return ok;
+        });
+    }
+
+    public async setBreakPoint(file: string, line: number) {
+        await this.locker.acquire();
+        if (!this.started) {
+            this.locker.release()
+            return false;
+        }
+        let command = `${PythonServerCommand.BP_SET} ${file} ${line}`;
+        return this.queue.postCommand(command, undefined).then((ok) => {
+            this.locker.release();
+            return ok;
+        });
+    }
+
+    public async reSetBreakPoint(file: string, line: number) {
+        await this.locker.acquire();
+        if (!this.started) {
+            this.locker.release()
+            return false;
+        }
+        let command = `${PythonServerCommand.BP_RESET} ${file} ${line}`;
+        return this.queue.postCommand(command, undefined).then((ok) => {
             this.locker.release();
             return ok;
         });
