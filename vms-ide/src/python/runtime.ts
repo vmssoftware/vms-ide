@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import * as nls from "vscode-nls";
 
-import { LogFunction, LogType } from "../common/main";
+import { LogFunction, LogType, Lock } from "../common/main";
 import { ICmdQueue, ListenerResponse } from "../vms_jvm_debug/communication";
 
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -88,10 +88,12 @@ export class PythonShellRuntime extends EventEmitter {
     
     private logFn: LogFunction;
 
-    private threads: IPythonThread[];
+    private threads?: IPythonThread[];
 
     private started: boolean;
     private running: boolean;
+
+    private locker = new Lock();
 
     private ident: number | undefined;
 
@@ -103,7 +105,6 @@ export class PythonShellRuntime extends EventEmitter {
 
         this.started = false;
         this.running = false;
-        this.threads = [];
         
         this.queue.onUnexpectedLine((line) => {
             this.onUnexpectedLine(line);
@@ -148,7 +149,6 @@ export class PythonShellRuntime extends EventEmitter {
                     return;
                 }
                 if (trimmed == PythonServerMessage.CONTINUED) {
-                    this.running = true;
                     //this.sendEvent(PythonRuntimeEvents.);
                     return;
                 }
@@ -177,14 +177,20 @@ export class PythonShellRuntime extends EventEmitter {
     }
     
     public async threadsRequest() {
-        if (!this.started) {
-            return [];
+
+        await this.locker.acquire();
+
+        if (!this.started || this.running) {
+            this.locker.release();
+            return undefined;
         }
-        if (this.running) {
-            return [];
+        
+        if (this.threads != undefined) {
+            this.locker.release();
+            return this.threads;
         }
-        this.threads = [];
-        this.ident = undefined;
+
+        let threads: IPythonThread[] = [];
         let threadNum: number | undefined;
         let pythonThread: IPythonThread | undefined = undefined;
         await this.queue.postCommand(PythonServerCommand.THREADS, (cmd, line) => {
@@ -207,26 +213,33 @@ export class PythonShellRuntime extends EventEmitter {
                         framesNum: +match[2],
                         paused: match[3] == 'paused',
                     } as IPythonThread;
-                    this.threads.push(pythonThread);
+                    threads.push(pythonThread);
                 }
-                if (this.threads.length == threadNum) {
+                if (threads.length == threadNum) {
                     return ListenerResponse.stop;
                 }
             }
             return ListenerResponse.needMoreLines;
         });
+        this.threads = threads;
+        this.locker.release();
         return this.threads;
     }
 
     public async framesRequest(ident: number, startFrame: number, endFrame: number): Promise<IPythonFrame[]> {
+
+        await this.locker.acquire();
+
         const frames: IPythonFrame[] = [];
         if (!this.started) {
+            this.locker.release();
             return frames;
         }
         if (this.running) {
+            this.locker.release();
             return frames;
         }
-        const maxFrame = this.threadsCollected().find(x => x.id == ident)?.framesNum;
+        const maxFrame = this.threads?.find(x => x.id == ident)?.framesNum;
         if (maxFrame !== undefined) {
             startFrame = Math.min(startFrame, maxFrame);
             startFrame = Math.max(startFrame, 0);
@@ -257,57 +270,78 @@ export class PythonShellRuntime extends EventEmitter {
                 });
             }
         }
+        this.locker.release();
         return frames;
     }
 
+    private setRunning() {
+        this.running = true;
+        this.threads = undefined;
+        this.ident = undefined;
+    }
+
     public async continueRequest() {
-        if (!this.started) {
+        await this.locker.acquire();
+        if (!this.started || this.running) {
+            this.locker.release()
             return false;
         }
-        if (this.running) {
-            return false;
-        }
-        return this.queue.postCommand(PythonServerCommand.CONTINUE, undefined);
+        this.setRunning();
+        return this.queue.postCommand(PythonServerCommand.CONTINUE, undefined).then((ok) => {
+            this.locker.release();
+            return ok;
+        });
     }
 
     public async nextRequest() {
-        if (!this.started) {
+        await this.locker.acquire();
+        if (!this.started || this.running) {
+            this.locker.release()
             return false;
         }
-        if (this.running) {
-            return false;
-        }
-        return this.queue.postCommand(PythonServerCommand.STEP, undefined);
+        this.setRunning();
+        return this.queue.postCommand(PythonServerCommand.STEP, undefined).then((ok) => {
+            this.locker.release();
+            return ok;
+        });
     }
 
     public async stepInRequest() {
-        if (!this.started) {
+        await this.locker.acquire();
+        if (!this.started || this.running) {
+            this.locker.release()
             return false;
         }
-        if (this.running) {
-            return false;
-        }
-        return this.queue.postCommand(PythonServerCommand.STEP, undefined);
+        this.setRunning();
+        return this.queue.postCommand(PythonServerCommand.STEP, undefined).then((ok) => {
+            this.locker.release();
+            return ok;
+        });
     }
 
     public async stepOutRequest() {
-        if (!this.started) {
+        await this.locker.acquire();
+        if (!this.started || this.running) {
+            this.locker.release()
             return false;
         }
-        if (this.running) {
-            return false;
-        }
-        return this.queue.postCommand(PythonServerCommand.STEP, undefined);
+        this.setRunning();
+        return this.queue.postCommand(PythonServerCommand.STEP, undefined).then((ok) => {
+            this.locker.release();
+            return ok;
+        });
     }
 
     public async pauseRequest() {
-        if (!this.started) {
+        await this.locker.acquire();
+        if (!this.started || !this.running) {
+            this.locker.release()
             return false;
         }
-        if (!this.running) {
-            return true;
-        }
-        return this.queue.postCommand(PythonServerCommand.PAUSE, undefined);
+        return this.queue.postCommand(PythonServerCommand.PAUSE, undefined).then((ok) => {
+            this.locker.release();
+            return ok;
+        });
     }
 
     /******************************************************************************************/

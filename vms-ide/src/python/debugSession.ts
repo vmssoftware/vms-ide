@@ -369,7 +369,7 @@ export class PythonDebugSession extends LoggingDebugSession {
             response.body = {
                 stackFrames: frames.map((frame, index) =>
                     new StackFrame(startFrame + index, frame.function, this.frameSource(frame), this.convertDebuggerLineToClient(frame.line))),
-                totalFrames: this._runtime.threadsCollected().find(x => x.id == args.threadId)?.framesNum
+                totalFrames: this._runtime.threadsCollected()?.find(x => x.id == args.threadId)?.framesNum
             };
             response.success = true;
             this.sendResponse(response);

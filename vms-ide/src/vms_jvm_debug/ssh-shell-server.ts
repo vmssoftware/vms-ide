@@ -103,7 +103,7 @@ export class SshShellServer implements ICmdServer, ICmdClient {
                 this._shell.on("cleanChannel", () => {
                     this.dispose();
                 });
-                if (await this._shell.attachUser(new ShellSplitter(this), new ShellSplitter(this._stderr))) {
+                if (await this._shell.attachUser(new ShellSplitter(this, undefined, this.logFn), new ShellSplitter(this._stderr, undefined, this.logFn))) {
                     return true;
                 }
                 // in case of 'false' fall to dispose()
