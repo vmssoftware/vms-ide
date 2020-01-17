@@ -7,6 +7,9 @@ lockThreadConsole = threading.Lock()
 def thread_function(name):
     global lockThreadConsole
     tVar = name
+    boolVar = True
+    floatVar = float(1.23e1)
+    complexVar = complex(3.21, 4.56)
     with lockThreadConsole: 
         print("Thread %s: starting, %s" % (name, tVar))
     for i in range(5):

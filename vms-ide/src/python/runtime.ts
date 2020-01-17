@@ -84,7 +84,7 @@ const _rgxThreads   = /THREADS (\d+) current (\d+)/;
 const _rgxFrames    = /thread (\d+) frames (\d+) is (\S+)/;
 const _rgxFrame     = /file: "(.*?)" line: (\d+) function: "(.*?)"/;
 const _rgxLocals    = /LOCALS (\d+)/;
-const _rgxVariable  = /name: "(.*?)" type: "(.*?)"/;
+const _rgxVariable  = /name: "(.*?)" type: "(.*?)"(?: value: "(.*?)")?/;
 
 export class PythonShellRuntime extends EventEmitter {
     
@@ -314,6 +314,7 @@ export class PythonShellRuntime extends EventEmitter {
                         frame,
                         name: match[1],
                         type: match[2],
+                        value: match[3],
                     });
                     ++parsedLocals;
                     if (parsedLocals >= numLocals) {
@@ -348,40 +349,43 @@ export class PythonShellRuntime extends EventEmitter {
         });
     }
 
-    public async nextRequest() {
+    public async nextRequest(ident: number) {
         await this.locker.acquire();
         if (!this.started || this.running) {
             this.locker.release()
             return false;
         }
         this.setRunning();
-        return this.queue.postCommand(PythonServerCommand.STEP, undefined).then((ok) => {
+        const command = `${PythonServerCommand.STEP} ${ident}`;
+        return this.queue.postCommand(command, undefined).then((ok) => {
             this.locker.release();
             return ok;
         });
     }
 
-    public async stepInRequest() {
+    public async stepInRequest(ident: number) {
         await this.locker.acquire();
         if (!this.started || this.running) {
             this.locker.release()
             return false;
         }
         this.setRunning();
-        return this.queue.postCommand(PythonServerCommand.STEP, undefined).then((ok) => {
+        const command = `${PythonServerCommand.STEP} ${ident}`;
+        return this.queue.postCommand(command, undefined).then((ok) => {
             this.locker.release();
             return ok;
         });
     }
 
-    public async stepOutRequest() {
+    public async stepOutRequest(ident: number) {
         await this.locker.acquire();
         if (!this.started || this.running) {
             this.locker.release()
             return false;
         }
         this.setRunning();
-        return this.queue.postCommand(PythonServerCommand.STEP, undefined).then((ok) => {
+        const command = `${PythonServerCommand.STEP} ${ident}`;
+        return this.queue.postCommand(command, undefined).then((ok) => {
             this.locker.release();
             return ok;
         });

@@ -435,8 +435,13 @@ export class PythonDebugSession extends LoggingDebugSession {
                         name: localVar.name,
                         type: localVar.type,
                         value: '',
-                        variablesReference: this._variableHandles.create(localVar),
+                        variablesReference: 0,
                     };
+                    if (localVar.value !== undefined) {
+                        innerVar.value = localVar.value;
+                    } else {
+                        innerVar.variablesReference = this._variableHandles.create(localVar);
+                    }
                     variables.push(innerVar);
                 }
             }
@@ -508,19 +513,19 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     protected async nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments) {
         this.onStartRunning();
-        response.success = await this._runtime.nextRequest();
+        response.success = await this._runtime.nextRequest(args.threadId);
         this.sendResponse(response);
     }
 
     protected async stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments) {
         this.onStartRunning();
-        response.success = await this._runtime.stepInRequest();
+        response.success = await this._runtime.stepInRequest(args.threadId);
         this.sendResponse(response);
     }
 
     protected async stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments) {
         this.onStartRunning();
-        response.success = await this._runtime.stepOutRequest();
+        response.success = await this._runtime.stepOutRequest(args.threadId);
         this.sendResponse(response);
     }
 

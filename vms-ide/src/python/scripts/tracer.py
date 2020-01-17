@@ -29,11 +29,12 @@ class MESSAGE:
     SIGNAL = 'SIGNAL'
     SYNTAX_ERROR = 'SYNTAX_ERROR'
     LOCALS = 'LOCALS'
+
 # command to receive
 class COMMAND:
     PAUSE = 'p'
     CONTINUE = 'c'
-    STEP = 's'
+    STEP = 's'              # s [ident]
     INFO = 'i'
     THREADS = 't'
     FRAME  = 'f'            # f [ident [frameStart [frameNum]]]     // frame is zero-based
@@ -43,6 +44,7 @@ class COMMAND:
 
 class Tracer:
     def __init__(self, port):
+        self._knownTypes = ['int', 'str', 'float', 'bool', 'complex']
         self._port = port
         self._fileName = __file__
         self._socket = None
@@ -275,10 +277,15 @@ class Tracer:
                         if self._paused:
                             self._sendDbgMessage(self._messages.CONTINUED)
                         self._paused = False
-                    elif cmd == self._commands.STEP:
-                        self._sendDbgMessage(self._messages.CONTINUED)
-                        self._steppingThread = ident
+                        self._steppingThread = None
+                    elif cmd.startswith(self._commands.STEP):
+                        locals_args = cmd.split()
+                        if len(locals_args) == 1:
+                            self._steppingThread = ident
+                        elif len(locals_args) == 2:
+                            self._steppingThread = int(locals_args[1])
                         self._paused = False
+                        self._sendDbgMessage(self._messages.CONTINUED)
                         break
                     elif cmd == self._commands.THREADS:
                         self._showThreads(ident)
@@ -363,7 +370,10 @@ class Tracer:
         if frame != None:
             self._sendDbgMessage(self._messages.LOCALS + (' %i') % len(frame.f_locals))
             for name, value in frame.f_locals.items():
-                self._sendDbgMessage('name: "%s" type: "%s"' % (name, value.__class__.__name__))
+                if value.__class__.__name__ in self._knownTypes:
+                    self._sendDbgMessage('name: "%s" type: "%s" value: "%s"' % (name, value.__class__.__name__, str(value)))
+                else:
+                    self._sendDbgMessage('name: "%s" type: "%s"' % (name, value.__class__.__name__))
     
     def _isDebuggerFrame(self, frame):
         return frame and frame.f_code.co_filename == self._fileName and frame.f_code.co_name == "_runscript"
