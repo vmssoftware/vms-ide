@@ -45,6 +45,8 @@ export enum PythonServerCommand {
     PAUSE = 'p',
     CONTINUE = 'c',
     STEP = 's',
+    NEXT = 'n',
+    RETURN = 'r',
     INFO = 'i',
     QUIT = 'q',
     HELP = 'h',
@@ -84,7 +86,7 @@ const _rgxThreads   = /THREADS (\d+) current (\d+)/;
 const _rgxFrames    = /thread (\d+) frames (\d+) is (\S+)/;
 const _rgxFrame     = /file: "(.*?)" line: (\d+) function: "(.*?)"/;
 const _rgxLocals    = /LOCALS (\d+)/;
-const _rgxVariable  = /name: "(.*?)" <type '(.*?)'>(?: value: (.*))?/;
+const _rgxVariable  = /name: "(.*?)" <(type|class) '(.*?)'>(?: value: (.*))?/;
 
 export class PythonShellRuntime extends EventEmitter {
     
@@ -313,8 +315,8 @@ export class PythonShellRuntime extends EventEmitter {
                         ident,
                         frame,
                         name: match[1],
-                        type: match[2],
-                        value: match[3],
+                        type: match[3],
+                        value: match[4],
                     });
                     ++parsedLocals;
                     if (parsedLocals >= numLocals) {
@@ -356,7 +358,7 @@ export class PythonShellRuntime extends EventEmitter {
             return false;
         }
         this.setRunning();
-        const command = `${PythonServerCommand.STEP} ${ident}`;
+        const command = `${PythonServerCommand.NEXT} ${ident}`;
         return this.queue.postCommand(command, undefined).then((ok) => {
             this.locker.release();
             return ok;
@@ -384,7 +386,7 @@ export class PythonShellRuntime extends EventEmitter {
             return false;
         }
         this.setRunning();
-        const command = `${PythonServerCommand.STEP} ${ident}`;
+        const command = `${PythonServerCommand.RETURN} ${ident}`;
         return this.queue.postCommand(command, undefined).then((ok) => {
             this.locker.release();
             return ok;

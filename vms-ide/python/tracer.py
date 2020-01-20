@@ -34,7 +34,9 @@ class MESSAGE:
 class COMMAND:
     PAUSE = 'p'
     CONTINUE = 'c'
-    STEP = 's'              # s [ident]
+    STEP = 's'              # s [ident]     // step in
+    NEXT = 'n'              # n [ident]     // step over
+    RETURN = 'r'            # r [ident]     // step out
     INFO = 'i'
     THREADS = 't'
     FRAME  = 'f'            # f [ident [frameStart [frameNum]]]     // frame is zero-based
@@ -59,6 +61,7 @@ class Tracer:
         self._threads = {}                                          # thread enrties by [thread id]
         self._mainThread = None
         self._steppingThread = None
+        self._steppingLevel = None
         self._breakpointsConfirmed = collections.defaultdict(set)   # confirmed break line list by [file name]
         self._breakpointsWait = collections.defaultdict(set)        # wait break line list by [file name]
         self._lines = collections.defaultdict(dict)                 # all usable line list by [file name [ function name ]]
@@ -211,7 +214,7 @@ class Tracer:
             entry['level'] = entry['level'] + 1
         if event == 'return':
             entry['level'] = entry['level'] - 1
-            if entry['level'] == 0:
+            if entry['level'] <= 0:
                 # remove thread info and go out
                 del self._threads[ident]
                 return self._traceFunc
@@ -268,9 +271,12 @@ class Tracer:
             # test commands on pause
             if not self._paused:
                 if self._steppingThread == ident:
-                    self._steppingThread = None
-                    self._paused = True
-                    self._sendDbgMessage(self._messages.STEPPED)
+                    # test established level
+                    if self._steppingLevel == None or (self._steppingLevel == entry['level'] and event != 'return'):
+                        self._steppingThread = None
+                        self._steppingLevel = None
+                        self._paused = True
+                        self._sendDbgMessage(self._messages.STEPPED)
             while self._paused and self._isConnected():
                 if cmd:
                     if cmd == self._commands.CONTINUE:
@@ -278,13 +284,19 @@ class Tracer:
                             self._sendDbgMessage(self._messages.CONTINUED)
                         self._paused = False
                         self._steppingThread = None
-                    elif cmd.startswith(self._commands.STEP):
+                        self._steppingLevel = None
+                    elif cmd.startswith(self._commands.STEP) or cmd.startswith(self._commands.NEXT) or cmd.startswith(self._commands.RETURN):
                         locals_args = cmd.split()
                         if len(locals_args) == 1:
                             self._steppingThread = ident
                         elif len(locals_args) == 2:
                             self._steppingThread = int(locals_args[1])
                         self._paused = False
+                        self._steppingLevel = None
+                        if cmd.startswith(self._commands.NEXT):
+                            self._steppingLevel = entry['level']
+                        elif cmd.startswith(self._commands.RETURN):
+                            self._steppingLevel = entry['level'] - 1
                         self._sendDbgMessage(self._messages.CONTINUED)
                         break
                     elif cmd == self._commands.THREADS:
