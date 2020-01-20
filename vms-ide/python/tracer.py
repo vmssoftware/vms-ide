@@ -44,7 +44,7 @@ class COMMAND:
 
 class Tracer:
     def __init__(self, port):
-        self._knownTypes = ['int', 'str', 'float', 'bool', 'complex']
+        self._knownTypes = [int, str, float, bool, complex]
         self._port = port
         self._fileName = __file__
         self._socket = None
@@ -370,10 +370,10 @@ class Tracer:
         if frame != None:
             self._sendDbgMessage(self._messages.LOCALS + (' %i') % len(frame.f_locals))
             for name, value in frame.f_locals.items():
-                if value.__class__.__name__ in self._knownTypes:
-                    self._sendDbgMessage('name: "%s" type: "%s" value: "%s"' % (name, value.__class__.__name__, str(value)))
+                if type(value) in self._knownTypes:
+                    self._sendDbgMessage('name: "%s" %s value: %s' % (name, type(value), repr(value)))
                 else:
-                    self._sendDbgMessage('name: "%s" type: "%s"' % (name, value.__class__.__name__))
+                    self._sendDbgMessage('name: "%s" %s' % (name, type(value)))
     
     def _isDebuggerFrame(self, frame):
         return frame and frame.f_code.co_filename == self._fileName and frame.f_code.co_name == "_runscript"

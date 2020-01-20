@@ -84,7 +84,7 @@ const _rgxThreads   = /THREADS (\d+) current (\d+)/;
 const _rgxFrames    = /thread (\d+) frames (\d+) is (\S+)/;
 const _rgxFrame     = /file: "(.*?)" line: (\d+) function: "(.*?)"/;
 const _rgxLocals    = /LOCALS (\d+)/;
-const _rgxVariable  = /name: "(.*?)" type: "(.*?)"(?: value: "(.*?)")?/;
+const _rgxVariable  = /name: "(.*?)" <type '(.*?)'>(?: value: (.*))?/;
 
 export class PythonShellRuntime extends EventEmitter {
     
