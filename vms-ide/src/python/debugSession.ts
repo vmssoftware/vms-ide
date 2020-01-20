@@ -29,6 +29,7 @@ import { PythonShellRuntime, PythonRuntimeEvents, IPythonVariable, IPythonFrame 
 import { GetSshHelperType } from '../ext-api/ext-api';
 import { FsSource } from '../synchronizer/sync/fs-source';
 import { SftpSource } from '../synchronizer/sync/sftp-source';
+import { Synchronizer } from '../synchronizer/sync/synchronizer';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -564,7 +565,15 @@ export class PythonDebugSession extends LoggingDebugSession {
                     const files = ['server.py', 'tracer.py'];
                     let retCode = true;
                     for(const file of files) {
-                        retCode = retCode && await sshHelper.pipeFile(localSource, remoteSource, file, file, this._logFn);
+                        let [localDate, remoteDate] = await Promise.all([localSource.getDate(file), remoteSource.getDate(file)]);
+                        if (localDate !== undefined && remoteDate !== undefined) {
+                            // allow plus/minus two seconds
+                            if (Math.abs(localDate.valueOf() - remoteDate.valueOf()) < 2000) {
+                                continue;
+                            }
+                        }
+                        localDate = localDate || new Date();
+                        retCode = retCode && await Synchronizer.pipeFileAndSetDate(sshHelper, localSource, remoteSource, file, localDate, this._logFn);
                     }
                     return retCode;
                 }
