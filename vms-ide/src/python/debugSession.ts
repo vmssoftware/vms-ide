@@ -22,10 +22,13 @@ import { SshShellServer } from "../vms_jvm_debug/ssh-shell-server";
 import { CmdQueue } from "../vms_jvm_debug/cmd-queue";
 import { IPythonLaunchRequestArguments } from "./debugConfig";
 import { ListenerResponse } from "../vms_jvm_debug/communication";
-import { commands, workspace, WorkspaceFolder } from "vscode";
+import { commands, workspace, WorkspaceFolder, extensions } from "vscode";
 import { ensureSettings } from "../synchronizer/ensure-settings";
 import { VmsPathConverter } from "../synchronizer/vms/vms-path-converter";
 import { PythonShellRuntime, PythonRuntimeEvents, IPythonVariable, IPythonFrame } from "./runtime";
+import { GetSshHelperType } from '../ext-api/ext-api';
+import { FsSource } from '../synchronizer/sync/fs-source';
+import { SftpSource } from '../synchronizer/sync/sftp-source';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -291,16 +294,21 @@ export class PythonDebugSession extends LoggingDebugSession {
 
         // wait until configuration has finished (and configurationDoneRequest has been called)
         // let reallyDone = false;
-        let result = await Promise.race([
+        let tasks = [
+            Promise.race([
                 Delay(1000).then(() => true),
                 this._configurationDone.acquire().then(() => { 
                     // reallyDone = true;
                     this._configurationDone.release();
                     return true;
                  }),
-            ]);
-        result = result && await this._serverShellServer.create(this._workspace.name);
-        result = result && await this._tracerShellServer.create(this._workspace.name);
+            ]),
+            this._serverShellServer.create(this._workspace.name),
+            this._tracerShellServer.create(this._workspace.name),
+            this.testScripts()
+        ];
+
+        let result = (await Promise.all(tasks)).reduce((acc, x) => acc && x, true );
 
         if (!result) {
             this.sendEvent(new TerminatedEvent());
@@ -319,7 +327,7 @@ export class PythonDebugSession extends LoggingDebugSession {
                     listeningPortMax = listeningPort;
                 }
             }
-            let cdCommand = await this.cdRemoteRoot(this._workspace.name);
+            let cdCommand = await this.changeDirCmd(this._workspace.name);
             this._serverQueue.postCommand(cdCommand, (cmd, line) => {
                 if (line === undefined || line.includes("\0")) {
                     return ListenerResponse.stop;
@@ -538,6 +546,33 @@ export class PythonDebugSession extends LoggingDebugSession {
     ///     private
     ///
 
+    private async testScripts() {
+        const myPath = extensions.getExtension("VMSSoftwareInc.vms-ide")?.extensionPath;
+        if (myPath) {
+            const localPath = path.join(myPath, 'python');
+            // synchronize
+            const ensured = await ensureSettings(this._workspace?.name);
+            const sshHelperType = GetSshHelperType();
+            if (ensured && sshHelperType) {
+                const sshHelper = new sshHelperType(this._logFn);
+                const sftp = await sshHelper.getDefaultSftp(this._workspace?.name);
+                if (sftp) {
+                    const localSource = new FsSource(localPath, this._logFn);
+                    const remoteSource = new SftpSource(sftp, ensured.projectSection.root, this._logFn);
+                    await remoteSource.ensureDirectory(ensured.projectSection.outdir);
+                    remoteSource.root = ensured.projectSection.root + ftpPathSeparator + ensured.projectSection.outdir;
+                    const files = ['server.py', 'tracer.py'];
+                    let retCode = true;
+                    for(const file of files) {
+                        retCode = retCode && await sshHelper.pipeFile(localSource, remoteSource, file, file, this._logFn);
+                    }
+                    return retCode;
+                }
+            }
+        }
+        return false;
+    }
+
     private async tryRunServer(port: number) {
 
         const rgxListening = /listening port (\d+)/;
@@ -545,7 +580,12 @@ export class PythonDebugSession extends LoggingDebugSession {
         const rgxMsg = /^((%|-)(\S+)-(\S)-(\S*)),\s(.*)/;
 
         let result = EStartResult.unknown;
-        let runCommand = `python server.py -p ${port}`;
+        let scriptPath = '';
+        const ensured = await ensureSettings(this._workspace?.name);
+        if (ensured) {
+            scriptPath = `[.${ensured.projectSection.outdir}]`;
+        }
+        let runCommand = `python ${scriptPath}server.py -p ${port}`;
         const lines: string[] = [];
         return this._serverQueue.postCommand(runCommand, (cmd, line) => {
             if (!line) {
@@ -584,7 +624,12 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     private async runTracer(port: number, script: string, args?: string) {
         let result = EStartResult.unknown;
-        let runCommand = `python tracer.py -p ${port} ${script}${args?' ' + args : ''}`;
+        let scriptPath = '';
+        const ensured = await ensureSettings(this._workspace?.name);
+        if (ensured) {
+            scriptPath = `[.${ensured.projectSection.outdir}]`;
+        }
+        let runCommand = `python ${scriptPath}tracer.py -p ${port} ${script}${args?' ' + args : ''}`;
         return this._tracerQueue.postCommand(runCommand, (cmd, line) => {
             if (!line) {
                 result = EStartResult.error;
@@ -599,7 +644,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         });
     }
 
-    public async cdRemoteRoot(scope?: string) {
+    public async changeDirCmd(scope?: string) {
         if (!scope) {
             scope = await commands.executeCommand("vmssoftware.synchronizer.getCurrentScope");
         }
@@ -607,7 +652,7 @@ export class PythonDebugSession extends LoggingDebugSession {
             const ensured = await ensureSettings(scope);
             if (ensured) {
                 const vmsPath = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
-                return `set def ${vmsPath.directory}`;
+                return `set default ${vmsPath.directory}`;
             }
         }
         return "";
