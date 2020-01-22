@@ -27,8 +27,6 @@ import { VmsPathConverter } from "../synchronizer/vms/vms-path-converter";
 import { 
     EPythonConst,
     IPythonFrame,
-     
-    
     IPythonVariable,
     PythonRuntimeEvents,
     PythonShellRuntime,
@@ -460,6 +458,7 @@ export class PythonDebugSession extends LoggingDebugSession {
                         innerVar.variablesReference = this._variableHandles.create(localVar);
                         if (localVar.size !== undefined) {
                             innerVar.indexedVariables = localVar.size;
+                            innerVar.value = `${innerVar.type}[${innerVar.indexedVariables}]`;
                         }
                     }
                     variables.push(innerVar);

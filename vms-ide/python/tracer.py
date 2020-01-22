@@ -422,11 +422,20 @@ class Tracer:
                                     if count == None or start + count > length:
                                         count = length - start
                                     self._sendDbgMessage('%s "%s" %s length: %s' % (self._messages.DISPLAY, displayName, resultType, count))
-                                    # enumerate through
-                                    enumerated = enumerate(iter(result), start=start)
+                                    # enumerate through, cutting displayName
+                                    displayName = fullName.rpartition('.')[2]
+                                    enumerated = enumerate(iter(result))
                                     for x in enumerated:
-                                        if count >= 0:
+                                        if start > 0:
+                                            # wait a start
+                                            start = start - 1
+                                            continue
+                                        if count > 0:
+                                            # until count
                                             idx, value = x
+                                            if type(result) == dict:
+                                                idx = repr(value)
+                                                value = result[value]
                                             resultType = type(value)
                                             if resultType in self._knownValueTypes:
                                                 self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName + ('[%s]' % idx), resultType, repr(value)))
