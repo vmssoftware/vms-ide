@@ -28,7 +28,7 @@ class MESSAGE:
     EXCEPTION = 'EXCEPTION'
     SIGNAL = 'SIGNAL'
     SYNTAX_ERROR = 'SYNTAX_ERROR'
-    LOCALS = 'LOCALS'
+    DISPLAY = 'DISPLAY'
 
 # command to receive
 class COMMAND:
@@ -39,14 +39,14 @@ class COMMAND:
     RETURN = 'r'            # r [ident]     // step out
     INFO = 'i'
     THREADS = 't'
-    FRAME  = 'f'            # f [ident [frameStart [frameNum]]]     // frame is zero-based
+    FRAME  = 'f'            # f [ident [frameStart [frameNum]]]                 // frame is zero-based
     BP_SET = 'bps'          # bps file line
     BP_RESET = 'bpr'        # bpr [file [line]]
-    LOCALS = 'l'            # l [frame [ident]]                     // frame is zero-based
+    DISPLAY = 'd'           # d [frameNum [ident [fullName [start [count]]]]]   // frame is zero-based
 
 class Tracer:
     def __init__(self, port):
-        self._knownTypes = [int, str, float, bool, complex]
+        self._knownValueTypes = [int, str, float, bool, complex, type(None)]
         self._port = port
         self._fileName = __file__
         self._socket = None
@@ -81,6 +81,14 @@ class Tracer:
         self._messages = MESSAGE
         self._commands = COMMAND
         self._sig_int = signal.SIGINT
+        self._builtin_eval = eval
+        self._builtin_repr = repr
+        self._builtin_len = len
+        self._builtin_iter = iter
+        self._builtin_next = next
+        self._builtin_open = open
+        self._builtin_ord = ord
+        self._builtin_isnstance = isinstance
         # self._sig_break = signal.SIGBREAK
         self._sig_def = signal.SIG_DFL
 
@@ -224,15 +232,15 @@ class Tracer:
                 # collect usable code lines
                 lines = []
                 lineno = frame.f_lineno
-                values = iter(frame.f_code.co_lnotab)
+                values = self._builtin_iter(frame.f_code.co_lnotab)
                 while True:
                     try:
-                        addr_incr = next(values)
-                        line_incr = next(values)
-                        if isinstance(addr_incr, str):
-                            addr_incr = ord(addr_incr)
-                        if isinstance(line_incr, str):
-                            line_incr = ord(line_incr)
+                        addr_incr = self._builtin_next(values)
+                        line_incr = self._builtin_next(values)
+                        if self._builtin_isnstance(addr_incr, str):
+                            addr_incr = self._builtin_ord(addr_incr)
+                        if self._builtin_isnstance(line_incr, str):
+                            line_incr = self._builtin_ord(line_incr)
                         if addr_incr == 0:
                             lineno += line_incr
                             continue
@@ -254,7 +262,7 @@ class Tracer:
             # examine exception
             if event == 'exception':
                 self._sendDbgMessage(self._messages.EXCEPTION)
-                self._sendDbgMessage(repr(arg[1]))
+                self._sendDbgMessage(self._builtin_repr(arg[1]))
                 self._paused = True
             # tests runtime commands
             cmd = self._readDbgMessage()
@@ -287,9 +295,9 @@ class Tracer:
                         self._steppingLevel = None
                     elif cmd.startswith(self._commands.STEP) or cmd.startswith(self._commands.NEXT) or cmd.startswith(self._commands.RETURN):
                         locals_args = cmd.split()
-                        if len(locals_args) == 1:
+                        if self._builtin_len(locals_args) == 1:
                             self._steppingThread = ident
-                        elif len(locals_args) == 2:
+                        elif self._builtin_len(locals_args) == 2:
                             self._steppingThread = int(locals_args[1])
                         self._paused = False
                         self._steppingLevel = None
@@ -303,22 +311,28 @@ class Tracer:
                         self._showThreads(ident)
                     elif cmd.startswith(self._commands.FRAME):
                         locals_args = cmd.split()
-                        if len(locals_args) == 1:
+                        if self._builtin_len(locals_args) == 1:
                             self._showFrame(ident, None, None)                          # all frames in current ident
-                        elif len(locals_args) == 2:
+                        elif self._builtin_len(locals_args) == 2:
                             self._showFrame(int(locals_args[1]), None, None)            # all frames in given ident
-                        elif len(locals_args) == 3:
+                        elif self._builtin_len(locals_args) == 3:
                             self._showFrame(int(locals_args[1]), int(locals_args[2]), 1) # one given frame in given ident
-                        elif len(locals_args) == 4:
+                        elif self._builtin_len(locals_args) == 4:
                             self._showFrame(int(locals_args[1]), int(locals_args[2]), int(locals_args[3])) # given amount of frames starting given frame in given ident
-                    elif cmd.startswith(self._commands.LOCALS):
+                    elif cmd.startswith(self._commands.DISPLAY):
                         locals_args = cmd.split()
-                        if len(locals_args) == 1:
-                            self._showLocals(ident, 0)
-                        elif len(locals_args) == 2:
-                            self._showLocals(ident, int(locals_args[1]))
-                        elif len(locals_args) == 3:
-                            self._showLocals(int(locals_args[2]), int(locals_args[1]))
+                        if self._builtin_len(locals_args) == 1:
+                            self._display(ident, 0, '.', None, None)
+                        elif self._builtin_len(locals_args) == 2:
+                            self._display(ident, int(locals_args[1]), '.', None, None)
+                        elif self._builtin_len(locals_args) == 3:
+                            self._display(int(locals_args[2]), int(locals_args[1]), '.', None, None)
+                        elif self._builtin_len(locals_args) == 4:
+                            self._display(int(locals_args[2]), int(locals_args[1]), locals_args[3], None, None)
+                        elif self._builtin_len(locals_args) == 5:
+                            self._display(int(locals_args[2]), int(locals_args[1]), locals_args[3], int(locals_args[4]), None)
+                        elif self._builtin_len(locals_args) == 6:
+                            self._display(int(locals_args[2]), int(locals_args[1]), locals_args[3], int(locals_args[4]), int(locals_args[5]))
                     elif cmd == self._commands.INFO:
                         self._showInfo(ident)
                     else:
@@ -370,6 +384,7 @@ class Tracer:
                 currentFrame = None
             if currentFrame == None:
                 self._sendDbgMessage('%s: %s has no frame %s' % (self._messages.SYNTAX_ERROR, ident, frameNum))
+                return None
             else:
                 return currentFrame
             break
@@ -377,21 +392,61 @@ class Tracer:
             self._sendDbgMessage('%s: invalid ident %s' % (self._messages.SYNTAX_ERROR, ident))
         return None
 
-    def _showLocals(self, ident, frameNum):
+    def _display(self, ident, frameNum, fullName, start, count):
         frame = self._getFrame(ident, frameNum)
         if frame != None:
-            self._sendDbgMessage(self._messages.LOCALS + (' %i') % len(frame.f_locals))
-            for name, value in frame.f_locals.items():
-                if type(value) in self._knownTypes:
-                    self._sendDbgMessage('name: "%s" %s value: %s' % (name, type(value), repr(value)))
+            try:
+                if fullName.endswith('.'):
+                    displayChildren = True
+                    fullName = fullName[:-1]
+                    displayName = fullName
                 else:
-                    self._sendDbgMessage('name: "%s" %s' % (name, type(value)))
-    
+                    displayChildren = False
+                    displayName = fullName.rpartition('.')[2]
+                if fullName:
+                    try:
+                        resultType = self._builtin_eval('type(%s)' % fullName, {}, frame.f_locals)
+                    except:
+                        try:
+                            resultType = type(self._builtin_eval(fullName, {}, frame.f_locals))
+                        except:
+                            resultType = type(None)
+                    if resultType in self._knownValueTypes:
+                        result = self._builtin_eval(fullName, {}, frame.f_locals)
+                        self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName, resultType, repr(result)))
+                        return
+                    else:
+                        try:
+                            length = self._builtin_eval('len(%s)' % fullName, {}, frame.f_locals)
+                            if start != None:
+                                if start < length:
+                                    if count == None or start + count > length:
+                                        count = length - start
+                                    self._sendDbgMessage('%s "%s" %s length: %s' % (self._messages.DISPLAY, displayName, resultType, count))
+                                    for x in range(start, start + count):
+                                        self._display(ident, frameNum, fullName + ('[%i]' % x), None, None)
+                                else:
+                                    self._sendDbgMessage('%s "%s" %s length: 0' % (self._messages.DISPLAY, displayName, resultType))
+                                return
+                            self._sendDbgMessage('%s "%s" %s length: %s' % (self._messages.DISPLAY, displayName, resultType, length))
+                            return
+                        except:
+                            pass
+                else:
+                    resultType = "<type '-locals-'>"
+                children = self._builtin_eval('dir(%s)' % fullName, {}, frame.f_locals)
+                self._sendDbgMessage('%s "%s" %s children: %s' % (self._messages.DISPLAY, displayName, resultType, len(children)))
+                if displayChildren:
+                    for childName in children:
+                        self._display(ident, frameNum, (fullName + '.' if fullName else '') + childName, None, None)
+            except Exception as ex:
+                self._sendDbgMessage('%s "%s" failed: %s' % (self._messages.DISPLAY, displayName, self._builtin_repr(ex)))
+
     def _isDebuggerFrame(self, frame):
         return frame and frame.f_code.co_filename == self._fileName and frame.f_code.co_name == "_runscript"
 
     def _showThreads(self, ident):
-        self._sendDbgMessage(self._messages.THREADS + (' %i current %i' % (len(self._threads), ident)))
+        self._sendDbgMessage(self._messages.THREADS + (' %i current %i' % (self._builtin_len(self._threads), ident)))
         for threadEntry in self._threads.values():
             self._sendDbgMessage('thread %i frames %i is %s' % (
                     threadEntry['ident'], 
@@ -444,7 +499,7 @@ class Tracer:
                 self._setBp(bp_file, int(bp_line))
             except Exception as ex:
                 self._sendDbgMessage(self._messages.EXCEPTION)
-                self._sendDbgMessage(repr(ex))
+                self._sendDbgMessage(self._builtin_repr(ex))
         elif cmd.startswith(self._commands.BP_RESET):
             try:
                 bp_args = cmd.split()
@@ -458,7 +513,7 @@ class Tracer:
                     self._resetBp(bp_file, int(bp_line))
             except Exception as ex:
                 self._sendDbgMessage(self._messages.EXCEPTION)
-                self._sendDbgMessage(repr(ex))
+                self._sendDbgMessage(self._builtin_repr(ex))
 
     def _setBp(self, bp_file, bp_line):
         if self._testBreakpoint(bp_file, bp_line):
@@ -503,16 +558,16 @@ class Tracer:
                 self._startTracing = True
                 execfile(filename, globalsT, globalsT)
             else:
-                with open(filename, 'rb') as fp:
+                with self._builtin_open(filename, 'rb') as fp:
                     statement = "exec(compile(%r, %r, 'exec'))" % (fp.read(), filename)
                 self._startTracing = True
                 exec(statement, globalsT, globalsT)
         except Exception as ex:
             if self._isConnected():
                 self._sendDbgMessage(self._messages.EXCEPTION)
-                self._sendDbgMessage(repr(ex))
+                self._sendDbgMessage(self._builtin_repr(ex))
             else:
-                print(repr(ex))
+                print(self._builtin_repr(ex))
     
     def run(self, filename):
         self._setupTrace()

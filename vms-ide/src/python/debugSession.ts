@@ -1,18 +1,17 @@
 import * as path from 'path';
 import {
-    LoggingDebugSession,
-    StoppedEvent,
-    InitializedEvent,
-    OutputEvent,
-    TerminatedEvent,
-    Logger,
-    logger,
     BreakpointEvent,
-    Thread,
-    StackFrame,
-    Source,
     Handles,
-    Scope
+    InitializedEvent,
+    Logger,
+    LoggingDebugSession,
+    OutputEvent,
+    Source,
+    StackFrame,
+    StoppedEvent,
+    TerminatedEvent,
+    Thread,
+    logger,
 } from "vscode-debugadapter";
 import { DebugProtocol } from 'vscode-debugprotocol';
 import * as nls from "vscode-nls";
@@ -25,7 +24,15 @@ import { ListenerResponse } from "../vms_jvm_debug/communication";
 import { commands, workspace, WorkspaceFolder, extensions } from "vscode";
 import { ensureSettings } from "../synchronizer/ensure-settings";
 import { VmsPathConverter } from "../synchronizer/vms/vms-path-converter";
-import { PythonShellRuntime, PythonRuntimeEvents, IPythonVariable, IPythonFrame } from "./runtime";
+import { 
+    EPythonConst,
+    IPythonFrame,
+     
+    
+    IPythonVariable,
+    PythonRuntimeEvents,
+    PythonShellRuntime,
+} from "./runtime";
 import { GetSshHelperType } from '../ext-api/ext-api';
 import { FsSource } from '../synchronizer/sync/fs-source';
 import { SftpSource } from '../synchronizer/sync/sftp-source';
@@ -407,25 +414,20 @@ export class PythonDebugSession extends LoggingDebugSession {
         });
     }
 
-    private readonly _locals_scope_type = '-scope-';
-    private readonly _locals_scope_name = '-locals-';
-
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
         response.body = {
             scopes: []
         };
         const frame = this._frameHandles.get(args.frameId);
         const localScope: IPythonVariable = {
-            id: 0,
             ident: frame.ident,
             frame: frame.frame,
-            name: this._locals_scope_name,
-            type: this._locals_scope_type,
+            name: '',                   // used in variable request, leave it empty
+            type: EPythonConst.locals,
         };
-        localScope.id = this._variableHandles.create(localScope);
         response.body.scopes.push({
-            name: localScope.name,
-            variablesReference: localScope.id,
+            name: EPythonConst.locals,
+            variablesReference: this._variableHandles.create(localScope),
             expensive: true
         });
         response.success = true;
@@ -435,11 +437,17 @@ export class PythonDebugSession extends LoggingDebugSession {
     protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments) {
 
         let variables: DebugProtocol.Variable[] = [];
-        let parent = this._variableHandles.get(args.variablesReference);
-        if (parent !== undefined) {
-            if (parent.type == this._locals_scope_type) {
-                const localVars = await this._runtime.localsRequest(parent.ident, parent.frame);
-                for(let localVar of localVars) {
+        let baseVariable = this._variableHandles.get(args.variablesReference);
+        if (baseVariable !== undefined) {
+            let baseVariableFullName = (baseVariable.path ? baseVariable.path + '.' : '') + baseVariable.name;
+            let vars = await this._runtime.variableRequest(
+                baseVariable.ident,
+                baseVariable.frame,
+                baseVariableFullName,
+                args.start,
+                args.count);
+            for(let localVar of vars) {
+                if (!localVar.name.startsWith("__")) {
                     const innerVar: DebugProtocol.Variable = {
                         name: localVar.name,
                         type: localVar.type,
@@ -450,6 +458,9 @@ export class PythonDebugSession extends LoggingDebugSession {
                         innerVar.value = localVar.value;
                     } else {
                         innerVar.variablesReference = this._variableHandles.create(localVar);
+                        if (localVar.size !== undefined) {
+                            innerVar.indexedVariables = localVar.size;
+                        }
                     }
                     variables.push(innerVar);
                 }

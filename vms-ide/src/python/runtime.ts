@@ -37,7 +37,7 @@ export enum PythonServerMessage {
     EXCEPTION = 'EXCEPTION',
     SIGNAL = 'SIGNAL',
     SYNTAX_ERROR = 'SYNTAX_ERROR',
-    LOCALS = 'LOCALS',
+    DISPLAY = 'DISPLAY',
 };
 
 // see tracer.py
@@ -54,7 +54,7 @@ export enum PythonServerCommand {
     FRAME  = 'f',
     BP_SET = 'bps',
     BP_RESET = 'bpr',
-    LOCALS = 'l'
+    DISPLAY = 'd',
 };
 
 export interface IPythonThread {
@@ -72,12 +72,37 @@ export interface IPythonFrame {
 };
 
 export interface IPythonVariable {
-    id: number;
     ident: number;
     frame: number;
     name: string;
+    path?: string;
     type: string;
+    size?: number;
     value?: string;
+};
+
+export enum EPythonConst {
+    locals = '-locals-',
+    failed = 'failed',
+    value = 'value',
+    children = 'children',
+    length = 'length',
+};
+
+export enum EPythonValueType {
+    'int',
+    'str',
+    'float',
+    'complex',
+    'NoneType'
+};
+
+export enum EPythonArrayType {
+    'list',
+};
+
+export enum EPythonInstanceType {
+    'instance',
 };
 
 // see tracer.py
@@ -85,8 +110,12 @@ const _rgxBpConfirm = /BP_CONFIRM "(.*?)" (\d+)/;
 const _rgxThreads   = /THREADS (\d+) current (\d+)/;
 const _rgxFrames    = /thread (\d+) frames (\d+) is (\S+)/;
 const _rgxFrame     = /file: "(.*?)" line: (\d+) function: "(.*?)"/;
-const _rgxLocals    = /LOCALS (\d+)/;
-const _rgxVariable  = /name: "(.*?)" <(type|class) '(.*?)'>(?: value: (.*))?/;
+const _rgxDisplay   = /DISPLAY "(.*?)" (failed|<(?:type|class) '(.*?)'> (?:(value|children|length): (.*)))/;
+const _rgxDisplay_Name = 1
+const _rgxDisplay_Result = 2
+const _rgxDisplay_Type = 3
+const _rgxDisplay_ValueDescr = 4
+const _rgxDisplay_Value = 5
 
 export class PythonShellRuntime extends EventEmitter {
     
@@ -202,6 +231,9 @@ export class PythonShellRuntime extends EventEmitter {
                 this.logFn(LogType.debug, () => `threads: aborted`);
                 return ListenerResponse.stop;
             }
+            if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
+                return ListenerResponse.stop;
+            }
             if (threadNum == undefined) {
                 const match = line.match(_rgxThreads);
                 if (match) {
@@ -256,6 +288,9 @@ export class PythonShellRuntime extends EventEmitter {
                         this.logFn(LogType.debug, () => `frames: aborted`);
                         return ListenerResponse.stop;
                     }
+                    if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
+                        return ListenerResponse.stop;
+                    }
                     const match = line.match(_rgxFrame);
                     if (match) {
                         const frame: IPythonFrame = {
@@ -281,45 +316,193 @@ export class PythonShellRuntime extends EventEmitter {
         return frames;
     }
 
-    public async localsRequest(ident: number, frame: number): Promise<IPythonVariable[]> {
+    // public async localsRequest(ident: number, frame: number): Promise<IPythonVariable[]> {
 
-        await this.locker.acquire();
+    //     await this.locker.acquire();
+
+    //     const variables: IPythonVariable[] = [];
+    //     if (!this.started || this.running) {
+    //         this.locker.release();
+    //         return variables;
+    //     }
+    //     let command = `${PythonServerCommand.DISPLAY} ${frame} ${ident}`;
+    //     let numLocals: number | undefined;
+    //     let parsedLocals = 0;
+    //     await this.queue.postCommand(command, (cmd, line) => {
+    //         if (line === undefined) {
+    //             this.logFn(LogType.debug, () => `locals: aborted`);
+    //             return ListenerResponse.stop;
+    //         }
+    //         if (numLocals == undefined) {
+    //             const match = line.match(_rgxDisplay);
+    //             if (match) {
+    //                 if (match[_rgxDisplay_Name] !== '' ||
+    //                     match[_rgxDisplay_Result] === PythonConst.failed || 
+    //                     match[_rgxDisplay_Type] !== PythonConst.locals) {
+    //                     return ListenerResponse.stop;
+    //                 }
+    //                 if ( match[_rgxDisplay_ValueDescr] === PythonConst.children) {
+    //                     numLocals = +match[_rgxDisplay_Value];
+    //                     if (numLocals == 0) {
+    //                         return ListenerResponse.stop;
+    //                     }
+    //                     return ListenerResponse.needMoreLines;
+    //                 }
+    //                 return ListenerResponse.stop;
+    //             }
+    //         } else {
+    //             const match = line.match(_rgxDisplay);
+    //             if (match) {
+    //                 const nameMatched = match[_rgxDisplay_Name];
+    //                 variables.push({
+    //                     id: 0,
+    //                     ident,
+    //                     frame,
+    //                     name: nameMatched,
+    //                     type: match[_rgxDisplay_Type],
+    //                     value: match[_rgxDisplay_Value],
+    //                 });
+    //                 ++parsedLocals;
+    //                 if (parsedLocals >= numLocals) {
+    //                     return ListenerResponse.stop;
+    //                 }
+    //                 return ListenerResponse.needMoreLines;
+    //             }
+    //         }
+    //         this.onUnexpectedLine(line);
+    //         return ListenerResponse.needMoreLines;
+    //     });
+    //     this.locker.release();
+    //     return variables;
+    // }
+
+    /**
+     * 
+     * @param ident 
+     * @param frame 
+     * @param variableFullName set to empty string to get locals
+     */
+    public async variableRequest(ident: number, frame: number, variableFullName: string, start?: number, count?: number): Promise<IPythonVariable[]> {
 
         const variables: IPythonVariable[] = [];
         if (!this.started || this.running) {
-            this.locker.release();
             return variables;
         }
-        let command = `${PythonServerCommand.LOCALS} ${frame} ${ident}`;
-        let numLocals: number | undefined;
-        let parsedLocals = 0;
+
+        await this.locker.acquire();
+
+        let varPath = variableFullName;
+        if (variableFullName) {
+            //if it is not a locals (in case of empty variable), add dot to the end to get children names (if they exist)
+            varPath = variableFullName + '.';
+        }
+
+        let command = `${PythonServerCommand.DISPLAY} ${frame} ${ident} ${varPath}`;
+        let innerPath: string | undefined = variableFullName ? variableFullName : undefined;
+        if (start !== undefined) {
+            let lastDot = variableFullName.lastIndexOf('.');
+            if (lastDot > 0) {
+                innerPath = variableFullName.substr(0, lastDot);
+            } else {
+                innerPath = undefined;
+            }
+            command += ` ${start}`;
+            if (count !== undefined) {
+                command += ` ${count}`;
+            }
+        }
+        let numVars: number | undefined;
+        let parsedVars = 0;
+        let waitQuota: string | undefined;
+        let lastVar: IPythonVariable | undefined;
         await this.queue.postCommand(command, (cmd, line) => {
             if (line === undefined) {
-                this.logFn(LogType.debug, () => `locals: aborted`);
+                this.logFn(LogType.debug, () => `variables: aborted`);
                 return ListenerResponse.stop;
             }
-            if (numLocals == undefined) {
-                const match = line.match(_rgxLocals);
-                if (match) {
-                    numLocals = +match[1];
-                    if (numLocals == 0) {
+            // first test case when string is splitted onto several lines
+            if (waitQuota !== undefined && lastVar !== undefined) {
+                if (lastVar.value !== undefined) {
+                    lastVar.value += line;
+                } else {
+                    lastVar.value = line;
+                }
+                if (lastVar.value.trim().endsWith(waitQuota)) {
+                    let pos = lastVar.value.lastIndexOf(waitQuota);
+                    lastVar.value = lastVar.value.substr(0, pos + 1);   // include last quota
+                    waitQuota = undefined;
+                    lastVar = undefined;
+                    if (numVars === undefined) {
+                        // it was main variable
+                        return ListenerResponse.stop;
+                    } else {
+                        // proceed to the next variable
+                        ++parsedVars;
+                        if (parsedVars >= numVars) {
+                            return ListenerResponse.stop;
+                        }
+                        return ListenerResponse.needMoreLines;
+                    }
+                } else {
+                    return ListenerResponse.needMoreLines;
+                }
+            }
+            // second test - if SYNTAX_ERROR
+            if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
+                return ListenerResponse.stop;
+            }
+            const match = line.match(_rgxDisplay);
+            if (match) {
+                if (numVars === undefined) {
+                    // parse first line - parent
+                    // must succeed
+                    if (match[_rgxDisplay_Result] === EPythonConst.failed) {
+                        return ListenerResponse.stop;
+                    }
+                    // must have children or length
+                    if (match[_rgxDisplay_ValueDescr] === EPythonConst.value) {
+                        return ListenerResponse.stop;
+                    }
+                    numVars = +match[_rgxDisplay_Value];
+                    if (numVars === 0) {
                         return ListenerResponse.stop;
                     }
                     return ListenerResponse.needMoreLines;
-                }
-            } else {
-                const match = line.match(_rgxVariable);
-                if (match) {
-                    variables.push({
-                        id: 0,
-                        ident,
-                        frame,
-                        name: match[1],
-                        type: match[3],
-                        value: match[4],
-                    });
-                    ++parsedLocals;
-                    if (parsedLocals >= numLocals) {
+                } else {
+                    // parse other lines - children
+                    if (match[_rgxDisplay_Result] !== EPythonConst.failed) {
+                        lastVar = {
+                            ident,
+                            frame,
+                            name: match[_rgxDisplay_Name],
+                            path: innerPath,
+                            type: match[_rgxDisplay_Type],
+                        };
+                        if (start !== undefined) {
+                            // patch the name
+                        }
+                        // do not handle children length, not necessary at this point
+                        if (match[_rgxDisplay_ValueDescr] == EPythonConst.length) {
+                            lastVar.size = +match[_rgxDisplay_Value];
+                        } else if (match[_rgxDisplay_ValueDescr] == EPythonConst.value) {
+                            lastVar.value = match[_rgxDisplay_Value];
+                        } 
+                        variables.push(lastVar);
+                        // test if variable is long string
+                        if (lastVar.value && (lastVar.value.startsWith('"') || lastVar.value.startsWith("'"))) {
+                            waitQuota = lastVar.value[0];
+                            if (lastVar.value.trim().endsWith(waitQuota)) {
+                                // does not split
+                                waitQuota = undefined;
+                                lastVar = undefined;
+                            } else {
+                                // split, wait the end of string
+                                return ListenerResponse.needMoreLines;
+                            }
+                        }
+                    }
+                    ++parsedVars;
+                    if (parsedVars >= numVars) {
                         return ListenerResponse.stop;
                     }
                     return ListenerResponse.needMoreLines;

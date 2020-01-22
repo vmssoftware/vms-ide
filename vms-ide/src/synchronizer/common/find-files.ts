@@ -98,7 +98,7 @@ export async function findFiles(canReadDir: IReadDirectory,
 
     function separateFilesAndDirsAndMatch(acc: ISepFileDir, fileEntry: IFileEntry): ISepFileDir {
         if (fileEntry.isDirectory) {
-            const list = micromatch([fileEntry.filename], "*", options);
+            const list = micromatch([fileEntry.filename], "**/*", options);
             if (list.length) {
                 acc.dirs.push(fileEntry);
             }
