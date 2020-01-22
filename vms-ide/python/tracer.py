@@ -423,8 +423,25 @@ class Tracer:
                                     if count == None or start + count > length:
                                         count = length - start
                                     self._sendDbgMessage('%s "%s" %s length: %s' % (self._messages.DISPLAY, displayName, resultType, count))
-                                    for x in range(start, start + count):
-                                        self._display(ident, frameNum, fullName + ('[%i]' % x), None, None)
+                                    enumerated = self._builtin_eval('enumerate(iter(%s), start=%i)' % (fullName, start), {}, frame.f_locals)
+                                    for x in enumerated:
+                                        if count >= 0:
+                                            idx, value = x
+                                            resultType = type(value)
+                                            if resultType in self._knownValueTypes:
+                                                self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName + ('[%s]' % idx), resultType, repr(value)))
+                                            else:
+                                                try:
+                                                    length = len(value)
+                                                    self._sendDbgMessage('%s "%s" %s length: %s' % (self._messages.DISPLAY, displayName + ('[%s]' % idx), resultType, length))
+                                                except:
+                                                    children = dir(value)
+                                                    self._sendDbgMessage('%s "%s" %s children: %s' % (self._messages.DISPLAY, displayName + ('[%s]' % idx), resultType, len(children)))
+                                            count = count - 1
+                                        else:
+                                            break
+                                    # for x in range(start, start + count):
+                                    #     self._display(ident, frameNum, fullName + ('[%i]' % x), None, None)
                                 else:
                                     self._sendDbgMessage('%s "%s" %s length: 0' % (self._messages.DISPLAY, displayName, resultType))
                                 return
