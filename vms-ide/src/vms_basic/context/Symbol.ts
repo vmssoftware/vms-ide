@@ -132,7 +132,7 @@ export const BuiltInValueTypes: string[] =
     "real",
     "char",
     "boolean",
-    "STRINGing",
+    "string",
 ];
 
 export interface IBuildInFunc 
@@ -217,7 +217,7 @@ export const BuiltInFunctions: IBuildInFunc[] =
     },
     {   
         name: "DECIMAL",
-        prototype: "DECIMAL = DECIMAL (exp [, INTEGER-const1, INTEGER-const2 ] )"
+        prototype: "DECIMAL = DECIMAL (expression [, INTEGER const, INTEGER const ] )"
     },
     {   
         name: "DET",
@@ -261,7 +261,7 @@ export const BuiltInFunctions: IBuildInFunc[] =
     },
     {   
         name: "FORMAT$",
-        prototype: "STRING = FORMAT$ (exp, STRING)"
+        prototype: "STRING = FORMAT$ (expression, STRING)"
     },
     {   
         name: "FSP$",
@@ -272,12 +272,12 @@ export const BuiltInFunctions: IBuildInFunc[] =
         prototype: "rfa = GETRFA (chanal)"
     },
     {   
-        name:" INKEY$",
+        name:"INKEY$",
         prototype: "STRING = INKEY$ (chanal [ ,WAIT [ INTEGER ] ] )"
     },
     {   
         name: "INSTR",
-        prototype: "INTEGER = INSTRING (INTEGER , STRING, STRING)"
+        prototype: "INTEGER = INSTR (INTEGER , STRING, STRING)"
     },
     {   
         name: "INT",
@@ -285,11 +285,11 @@ export const BuiltInFunctions: IBuildInFunc[] =
     },
     {   
         name: "INTEGER",
-        prototype: "INTEGER = INTEGEREGER (exp [, BYTE | , WORD | , LONG | , QUAD])"
+        prototype: "INTEGER = INTEGER (expression [, BYTE | , WORD | , LONG | , QUAD])"
     },
     {   
         name: "LBOUND",
-        prototype: "number = LBOUND (array-name [ , INTEGER ])"
+        prototype: "number = LBOUND (array [ , INTEGER ])"
     },
     {   
         name: "LEFT",
@@ -317,11 +317,11 @@ export const BuiltInFunctions: IBuildInFunc[] =
     },
     {   
         name: "MAG",
-        prototype: "variable = MAG (exp)"
+        prototype: "variable = MAG (expression)"
     },
     {   
         name: "MAGTAPE",
-        prototype: "INTEGER = MAGTAPE (func-code, INTEGER, chanal)"
+        prototype: "INTEGER = MAGTAPE (function, INTEGER, chanal)"
     },
     {   
         name: "MAR",
@@ -333,7 +333,7 @@ export const BuiltInFunctions: IBuildInFunc[] =
     },
     {   
         name: "MAX",
-        prototype: "number = MAX ( number , number [ , num3 ,... ] )"
+        prototype: "number = MAX ( number , number [ , number ,... ] )"
     },
     {   
         name: "MID",
@@ -345,7 +345,7 @@ export const BuiltInFunctions: IBuildInFunc[] =
     },
     {   
         name: "MIN",
-        prototype: "number = MIN ( number, number [ , num3 ,... ] )"
+        prototype: "number = MIN ( number, number [ , number ,... ] )"
     },
     {   
         name: "MOD",
@@ -401,7 +401,7 @@ export const BuiltInFunctions: IBuildInFunc[] =
     },
     {   
         name: "REAL",
-        prototype: "REAL = REAL (exp [, SINGLE | , DOUBLE | , GFLOAT | , SFLOAT | , TFLOAT | , XFLOAT | , HFLOAT])"
+        prototype: "REAL = REAL (expression [, SINGLE | , DOUBLE | , GFLOAT | , SFLOAT | , TFLOAT | , XFLOAT | , HFLOAT])"
     },
     {   
         name: "RECOUNT",
@@ -489,14 +489,14 @@ export const BuiltInFunctions: IBuildInFunc[] =
     },
     {   
         name: "UBOUND",
-        prototype: "number = UBOUND (array-name [ , INTEGER ] )"
+        prototype: "number = UBOUND (array [ , INTEGER ] )"
     },
     {   
         name: "VAL",
         prototype: "REAL = VAL (STRING)"
     },
     {   
-        name: "VAL% ",
+        name: "VAL%",
         prototype: "INTEGER = VAL% (STRING)"
     },
     {   

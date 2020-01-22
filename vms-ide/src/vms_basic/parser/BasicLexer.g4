@@ -1548,23 +1548,28 @@ STRING_LITERAL
    ;
 
 DEC_NUMBER
-   : ([dD])? '"'([0-9])+'"' [bBwWlLqQfFdDgGsStTxXpPcC]
+   : [dD] '"'([0-9])+'"' ([bBwWlLqQfFdDgGsStTxXpPcC])?
+   | '"'([0-9])+'"' [bBwWlLqQfFdDgGsStTxXpPcC]
    ;
 
 BIN_NUMBER
-   : [bB] '"'([0-1])+'"' [bBwWlLqQfFdDgGsStTxXpPcC]
+   : [bB] '"'([0-1])+'"' ([bBwWlLqQfFdDgGsStTxXpPcC])?
+   | '"'([0-1])+'"' [bBwWlLqQfFdDgGsStTxXpPcC]
    ;
 
 HEX_NUMBER
-   : [xX] '"'([0-9A-Fa-f])+'"' [bBwWlLqQfFdDgGsStTxXpPcC]
+   : [xX] '"'([0-9A-Fa-f])+'"' ([bBwWlLqQfFdDgGsStTxXpPcC])?
+   | '"'([0-9A-Fa-f])+'"' [bBwWlLqQfFdDgGsStTxXpPcC]
    ;
 
 OCT_NUMBER
-   : [oO] '"'([0-7])+'"' [bBwWlLqQfFdDgGsStTxXpPcC]
+   : [oO] '"'([0-7])+'"' ([bBwWlLqQfFdDgGsStTxXpPcC])?
+   | '"'([0-7])+'"' [bBwWlLqQfFdDgGsStTxXpPcC]
    ;
 
 CH_NUMBER
-   : [aA] '"'([a-zA-Z])+'"' [bBwWlLqQfFdDgGsStTxXpPcC]
+   : [aA] '"'([a-zA-Z])+'"' ([bBwWlLqQfFdDgGsStTxXpPcC])?
+   | '"'([a-zA-Z])+'"' [bBwWlLqQfFdDgGsStTxXpPcC]
    ;  
 
 

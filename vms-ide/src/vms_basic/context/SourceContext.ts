@@ -415,7 +415,7 @@ export class SourceContext
 
                 if (context) 
                 {
-                    symbolInfo = SourceContext.globalSymbols.getSymbolInfo(context.text);
+                    symbolInfo = SourceContext.globalSymbols.getSymbolInfo(context.text.toUpperCase());
                 }
             }
         }

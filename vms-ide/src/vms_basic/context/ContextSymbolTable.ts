@@ -660,7 +660,8 @@ export class ContextSymbolTable extends SymbolTable
     }
 
     public getSymbolOccurences(symbol: Symbol, column: number, row: number, localOnly: boolean): SymbolInfo[] 
-    {
+    { 
+        let innerDecl = false;
         let result: SymbolInfo[] = [];
         let localBlock: Symbol | undefined;
         
@@ -668,23 +669,39 @@ export class ContextSymbolTable extends SymbolTable
         let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, true);
         let innerBlocks = this.getAllSymbols(VariableInnerBlockDclSymbol, true);
 
-        for (let block of innerBlocks)//search block witch contain symbol
+        for (let block of innerBlocks)//search inner block witch contain symbol
         {
-            if(this.checkSymbolLocationBlock(symbol, block))
+            let item = this.findSimbolDedlarationInBlock(symbol, block, true);
+
+            if(item)
             {
-                localBlock = block;
+                innerDecl = true;
                 break;
             }
         }
 
-        if(!localBlock)
+        if(innerDecl)
         {
-            for (let block of blocks)//search block witch contain symbol
+            for (let block of innerBlocks)//search block witch contain symbol
             {
                 if(this.checkSymbolLocationBlock(symbol, block))
                 {
                     localBlock = block;
                     break;
+                }
+            }
+        }
+        else
+        {
+            if(!localBlock)
+            {
+                for (let block of blocks)//search block witch contain symbol
+                {
+                    if(this.checkSymbolLocationBlock(symbol, block))
+                    {
+                        localBlock = block;
+                        break;
+                    }
                 }
             }
         }
@@ -704,7 +721,7 @@ export class ContextSymbolTable extends SymbolTable
                     {
                         const info = this.getSymbolInfo(item);
         
-                        if (info && info.definition && info.kind === SymbolKind.Label) 
+                        if (info && info.definition && info.kind === SymbolKind.Any) 
                         {
                             if(info.definition.range.start.row >= startLine && info.definition.range.start.row <= stopLine)
                             {
@@ -756,7 +773,7 @@ export class ContextSymbolTable extends SymbolTable
                                         //search symbol
                                         for(let item of variable.symbolTable.children)
                                         {
-                                            if(ContextSymbolTable.getKindFromSymbol(item) === SymbolKind.Label)//check symbol type
+                                            if(ContextSymbolTable.getKindFromSymbol(item) === SymbolKind.Any)//check symbol type
                                             {
                                                 if(item.name.toLowerCase() === symbol.name.toLowerCase())
                                                 {
@@ -769,6 +786,8 @@ export class ContextSymbolTable extends SymbolTable
                                                 }
                                             }
                                         }
+
+                                        break;
                                     }
                                 }
                             }
@@ -801,7 +820,7 @@ export class ContextSymbolTable extends SymbolTable
                     {
                         const info = this.getSymbolInfo(item);
 
-                        if (info && info.kind === SymbolKind.Label) 
+                        if (info && info.kind === SymbolKind.Any) 
                         {
                             result.push(info);
                         }
