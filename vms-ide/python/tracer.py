@@ -404,26 +404,26 @@ class Tracer:
                     displayChildren = False
                     displayName = fullName.rpartition('.')[2]
                 if fullName:
-                    try:
-                        resultType = self._builtin_eval('type(%s)' % fullName, {}, frame.f_locals)
-                    except:
-                        try:
-                            resultType = type(self._builtin_eval(fullName, {}, frame.f_locals))
-                        except:
-                            resultType = type(None)
+                    # we have a name - get its value
+                    result = self._builtin_eval(fullName, {}, frame.f_locals)
+                    resultType = type(result)
                     if resultType in self._knownValueTypes:
-                        result = self._builtin_eval(fullName, {}, frame.f_locals)
+                        # if we know that is valueType, display it
                         self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName, resultType, repr(result)))
                         return
                     else:
                         try:
-                            length = self._builtin_eval('len(%s)' % fullName, {}, frame.f_locals)
+                            # in first try to get length of value (test if it is enumerable)
+                            length = len(result)
+                            # we have a length, so test given start and count
                             if start != None:
+                                # go through indexed children
                                 if start < length:
                                     if count == None or start + count > length:
                                         count = length - start
                                     self._sendDbgMessage('%s "%s" %s length: %s' % (self._messages.DISPLAY, displayName, resultType, count))
-                                    enumerated = self._builtin_eval('enumerate(iter(%s), start=%i)' % (fullName, start), {}, frame.f_locals)
+                                    # enumerate through
+                                    enumerated = enumerate(iter(result), start=start)
                                     for x in enumerated:
                                         if count >= 0:
                                             idx, value = x
@@ -440,18 +440,24 @@ class Tracer:
                                             count = count - 1
                                         else:
                                             break
-                                    # for x in range(start, start + count):
-                                    #     self._display(ident, frameNum, fullName + ('[%i]' % x), None, None)
+                                    # enumerated all
+                                    return
                                 else:
+                                    # have no corresponding children
                                     self._sendDbgMessage('%s "%s" %s length: 0' % (self._messages.DISPLAY, displayName, resultType))
+                                    return
+                            else:
+                                # no start, just return length of children
+                                self._sendDbgMessage('%s "%s" %s length: %s' % (self._messages.DISPLAY, displayName, resultType, length))
                                 return
-                            self._sendDbgMessage('%s "%s" %s length: %s' % (self._messages.DISPLAY, displayName, resultType, length))
-                            return
                         except:
-                            pass
+                            children = dir(result)
                 else:
+                    # localc
                     resultType = "<type '-locals-'>"
-                children = self._builtin_eval('dir(%s)' % fullName, {}, frame.f_locals)
+                    children = frame.f_locals
+                    displayChildren = True
+                # test if variable has at least children
                 self._sendDbgMessage('%s "%s" %s children: %s' % (self._messages.DISPLAY, displayName, resultType, len(children)))
                 if displayChildren:
                     for childName in children:
