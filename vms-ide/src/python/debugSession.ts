@@ -225,7 +225,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         /** The debug adapter supports breakpoints that break execution after a specified number of hits. */
         supportsHitConditionalBreakpoints: true,
         /** The debug adapter supports function breakpoints. */
-        supportsFunctionBreakpoints: true,
+        supportsFunctionBreakpoints: false,
         /** The debug adapter supports data breakpoints. */
         supportsDataBreakpoints: true
     }
@@ -472,6 +472,18 @@ export class PythonDebugSession extends LoggingDebugSession {
         this.sendResponse(response);
     }
 
+    protected async setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments) {
+        const parent = this._variableHandles.get(args.variablesReference);
+
+        response.body = {
+            value: args.value,
+        };
+
+        ({"success": response.success, "value": response.body.value} = await this._runtime.requestSetVariable(parent, args.name, args.value));
+
+        this.sendResponse(response);
+    }
+
     protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments) {
         response.body = {
             breakpoints: []
@@ -493,11 +505,6 @@ export class PythonDebugSession extends LoggingDebugSession {
                     if (await this._runtime.setBreakPoint(fileName, sourceBp.line)) {
                         ibp.sent = true;
                     }
-                    response.body.breakpoints.push({
-                        id: ibp.id,
-                        line: sourceBp.line,
-                        verified: ibp.verified
-                    });
                 } else {
                     newLines.set(sourceBp.line, oldBp);
                 }
@@ -511,6 +518,13 @@ export class PythonDebugSession extends LoggingDebugSession {
             }
             // always replace
             this._breakPoints.set(fileName, newLines);
+            for (let [line, bp] of newLines) {
+                response.body.breakpoints.push({
+                    id: bp.id,
+                    line,
+                    verified: bp.verified
+                });
+            }
         }
         response.success = true;
         this.sendResponse(response);

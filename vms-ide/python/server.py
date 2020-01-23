@@ -15,43 +15,59 @@ class TYPE:
 
 # messages
 class MESSAGE:
-    DEBUG = 'DEBUG'
-    PAUSED = 'PAUSED'
-    BREAK = 'BREAK'
+    AMENDED = 'AMENDED'
     BP_CONFIRM = 'BP_CONFIRM'
-    BP_WAIT = 'BP_WAIT'
     BP_RESET = 'BP_RESET'
-    EXITED = 'EXITED'
+    BP_WAIT = 'BP_WAIT'
+    BREAK = 'BREAK'
     CONTINUED = 'CONTINUED'
-    STEPPED = 'STEPPED'
-    THREADS = 'THREADS'
-    INFO = 'INFO'
+    DEBUG = 'DEBUG'
+    DISPLAY = 'DISPLAY'
+    ENTRY = 'ENTRY'
     EXCEPTION = 'EXCEPTION'
+    EXITED = 'EXITED'
+    INFO = 'INFO'
+    PAUSED = 'PAUSED'
     SIGNAL = 'SIGNAL'
+    STEPPED = 'STEPPED'
     SYNTAX_ERROR = 'SYNTAX_ERROR'
-    LOCALS = 'LOCALS'
+    THREADS = 'THREADS'
 
 # commands
 class COMMAND:
-    PAUSE = 'p'
-    CONTINUE = 'c'
-    STEP = 's'
-    INFO = 'i'
-    THREADS = 't'
-    FRAME  = 'f'            # f [frameNum [ident]]
-    BP_SET = 'bps'          # bps file line
+    AMEND = 'a'             # a ident frame name value
     BP_RESET = 'bpr'        # bpr [file [line]]
-    LOCALS = 'l'            # l [frameNum [ident]]     // current farme is zero
+    BP_SET = 'bps'          # bps file line
+    CONTINUE = 'c'
+    DISPLAY = 'd'           # d [frameNum [ident [fullName [start [count]]]]]   // frame is zero-based
+    FRAME  = 'f'            # f [ident [frameStart [frameNum]]]                 // frame is zero-based
+    INFO = 'i'
+    NEXT = 'n'              # n [ident]     // step over
+    PAUSE = 'p'
+    RETURN = 'r'            # r [ident]     // step out
+    STEP = 's'              # s [ident]     // step in
+    THREADS = 't'
+    # server only commands
     QUIT = 'q'
     HELP = 'h'
 
 _helpInfo = """\
-p Pause
-c Continue
-s Step
-i Info
-q Quit
-h Help"""
+    AMEND = 'a'             # a ident frame name value
+    BP_RESET = 'bpr'        # bpr [file [line]]
+    BP_SET = 'bps'          # bps file line
+    CONTINUE = 'c'
+    DISPLAY = 'd'           # d [ident [frame [fullName [start [count]]]]]      // frame is zero-based
+    FRAME  = 'f'            # f [ident [frameStart [frameNum]]]                 // frame is zero-based
+    INFO = 'i'
+    NEXT = 'n'              # n [ident]     // step over
+    PAUSE = 'p'
+    RETURN = 'r'            # r [ident]     // step out
+    STEP = 's'              # s [ident]     // step in
+    THREADS = 't'
+    # server only commands
+    QUIT = 'q'
+    HELP = 'h'
+"""
 
 class Connection:
     def __init__(self, socket):

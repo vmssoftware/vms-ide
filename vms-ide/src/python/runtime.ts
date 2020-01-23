@@ -42,19 +42,20 @@ export enum PythonServerMessage {
 
 // see tracer.py
 export enum PythonServerCommand {
-    PAUSE = 'p',
-    CONTINUE = 'c',
-    STEP = 's',
-    NEXT = 'n',
-    RETURN = 'r',
-    INFO = 'i',
-    QUIT = 'q',
-    HELP = 'h',
-    THREADS = 't',
-    FRAME  = 'f',
-    BP_SET = 'bps',
+    AMEND = 'a',
     BP_RESET = 'bpr',
+    BP_SET = 'bps',
+    CONTINUE = 'c',
     DISPLAY = 'd',
+    FRAME  = 'f',
+    HELP = 'h',
+    INFO = 'i',
+    NEXT = 'n',
+    PAUSE = 'p',
+    QUIT = 'q',
+    RETURN = 'r',
+    STEP = 's',
+    THREADS = 't',
 };
 
 export interface IPythonThread {
@@ -82,11 +83,12 @@ export interface IPythonVariable {
 };
 
 export enum EPythonConst {
-    locals = '-locals-',
-    failed = 'failed',
-    value = 'value',
-    children = 'children',
-    length = 'length',
+    locals      = '-locals-',
+    failed      = 'failed',
+    ok          = 'ok',
+    value       = 'value',
+    children    = 'children',
+    length      = 'length',
 };
 
 export enum EPythonValueType {
@@ -106,16 +108,34 @@ export enum EPythonInstanceType {
 };
 
 // see tracer.py
-const _rgxBpConfirm = /BP_CONFIRM "(.*?)" (\d+)/;
-const _rgxThreads   = /THREADS (\d+) current (\d+)/;
-const _rgxFrames    = /thread (\d+) frames (\d+) is (\S+)/;
-const _rgxFrame     = /file: "(.*?)" line: (\d+) function: "(.*?)"/;
-const _rgxDisplay   = /DISPLAY "(.*?)" (failed|<(?:type|class) '(.*?)'> (?:(value|children|length): (.*)))/;
-const _rgxDisplay_Name = 1
-const _rgxDisplay_Result = 2
-const _rgxDisplay_Type = 3
-const _rgxDisplay_ValueDescr = 4
-const _rgxDisplay_Value = 5
+const _rgxBpConfirm         = /BP_CONFIRM "(.*?)" (\d+)/;
+const _rgxBpConfirm_File    = 1;
+const _rgxBpConfirm_Line    = 2;
+
+const _rgxThreads           = /THREADS (\d+) current (\d+)/;
+const _rgxThreads_Thread    = 1;
+const _rgxThreads_Current   = 2;
+
+const _rgxFrames            = /thread (\d+) frames (\d+) is (\S+)/;
+const _rgxFrames_Thread     = 1;
+const _rgxFrames_Frames     = 2;
+const _rgxFrames_State      = 3;
+
+const _rgxFrame             = /file: "(.*?)" line: (\d+) function: "(.*?)"/;
+const _rgxFrame_File        = 1;
+const _rgxFrame_Line        = 2;
+const _rgxFrame_Function    = 3;
+
+const _rgxDisplay               = /DISPLAY "(.*?)" (failed|<(?:type|class) '(.*?)'> (?:(value|children|length): (.*)))/;
+const _rgxDisplay_Name          = 1;
+const _rgxDisplay_Result        = 2;
+const _rgxDisplay_Type          = 3;
+const _rgxDisplay_ValueDescr    = 4;
+const _rgxDisplay_Value         = 5;
+
+const _rgxAmend                 = /AMEND (failed|ok) (.*)/;
+const _rgxAmend_Result          = 1;
+const _rgxAmend_Value           = 2;
 
 export class PythonShellRuntime extends EventEmitter {
     
@@ -126,6 +146,9 @@ export class PythonShellRuntime extends EventEmitter {
     private started: boolean;
     private running: boolean;
 
+    /**
+     * should be acquired exactly at the start of each public procedure
+     */
     private locker = new Lock();
 
     private ident: number | undefined;
@@ -188,7 +211,7 @@ export class PythonShellRuntime extends EventEmitter {
                 if (trimmed.startsWith(PythonServerMessage.BP_CONFIRM)) {
                     const match = trimmed.match(_rgxBpConfirm);
                     if (match) {
-                        this.sendEvent(PythonRuntimeEvents.breakpointValidated, match[1], +match[2]);
+                        this.sendEvent(PythonRuntimeEvents.breakpointValidated, match[_rgxBpConfirm_File], +match[_rgxBpConfirm_Line]);
                     }
                     return;
                 }
@@ -237,17 +260,17 @@ export class PythonShellRuntime extends EventEmitter {
             if (threadNum == undefined) {
                 const match = line.match(_rgxThreads);
                 if (match) {
-                    threadNum = +match[1];
-                    this.ident = +match[2];
+                    threadNum = +match[_rgxThreads_Thread];
+                    this.ident = +match[_rgxThreads_Current];
                     return ListenerResponse.needMoreLines;
                 }
             } else {
                 const match = line.match(_rgxFrames);
                 if (match) {
                     pythonThread = {
-                        id: +match[1],
-                        framesNum: +match[2],
-                        paused: match[3] == 'paused',
+                        id: +match[_rgxFrames_Thread],
+                        framesNum: +match[_rgxFrames_Frames],
+                        paused: match[_rgxFrames_State] == 'paused',
                     } as IPythonThread;
                     threads.push(pythonThread);
                     if (threads.length == threadNum) {
@@ -296,9 +319,9 @@ export class PythonShellRuntime extends EventEmitter {
                         const frame: IPythonFrame = {
                             ident,
                             frame: startFrame + parsedFrame,
-                            file: match[1],
-                            line: +match[2],
-                            function: match[3],
+                            file: match[_rgxFrame_File],
+                            line: +match[_rgxFrame_Line],
+                            function: match[_rgxFrame_Function],
                         };
                         ++parsedFrame;
                         frames.push(frame);
@@ -384,12 +407,13 @@ export class PythonShellRuntime extends EventEmitter {
      */
     public async variableRequest(ident: number, frame: number, variableFullName: string, start?: number, count?: number): Promise<IPythonVariable[]> {
 
+        await this.locker.acquire();
+
         const variables: IPythonVariable[] = [];
         if (!this.started || this.running) {
+            this.locker.release();
             return variables;
         }
-
-        await this.locker.acquire();
 
         let varPath = variableFullName;
         if (variableFullName) {
@@ -397,7 +421,7 @@ export class PythonShellRuntime extends EventEmitter {
             varPath = variableFullName + '.';
         }
 
-        let command = `${PythonServerCommand.DISPLAY} ${frame} ${ident} ${varPath}`;
+        let command = `${PythonServerCommand.DISPLAY} ${ident} ${frame} ${varPath}`;
         let innerPath: string | undefined = variableFullName ? variableFullName : undefined;
         if (start !== undefined) {
             let lastDot = variableFullName.lastIndexOf('.');
@@ -513,6 +537,44 @@ export class PythonShellRuntime extends EventEmitter {
         });
         this.locker.release();
         return variables;
+    }
+
+    public async requestSetVariable(parent: IPythonVariable, name: string, value: string) {
+        
+        await this.locker.acquire();
+        
+        let success = false;
+        if (!this.started || this.running) {
+            this.locker.release();
+            return { success, value };
+        }
+
+        let fullName = (parent.path ? parent.path + '.' : '') + (parent.name ? parent.name + '.' : '') + name;
+        let command = `${PythonServerCommand.AMEND} ${parent.ident} ${parent.frame} ${fullName} ${value}`;
+        let posted = await this.queue.postCommand(command, (cmd, line) => {
+            if (line === undefined) {
+                this.logFn(LogType.debug, () => `amend: aborted`);
+                return ListenerResponse.stop;
+            }
+            if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
+                return ListenerResponse.stop;
+            }
+            const match = line.match(_rgxAmend);
+            if (match) {
+                if (match[_rgxAmend_Result] === EPythonConst.ok) {
+                    success = true;
+                    value = match[_rgxAmend_Value];
+                } else {
+                    this.logFn(LogType.warning, () => match[_rgxAmend_Value], true);
+                }
+                return ListenerResponse.stop;
+            }
+            this.onUnexpectedLine(line);
+            return ListenerResponse.needMoreLines;
+        });
+        success = success && posted;
+        this.locker.release();
+        return { success, value };
     }
 
     private setRunning() {
