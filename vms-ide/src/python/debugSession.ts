@@ -211,6 +211,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         supportsExceptionOptions: false,
         /** The debug adapter supports the 'exceptionInfo' request. */
         supportsExceptionInfoRequest: false,
+        
         /** The debug adapter supports the delayed loading of parts of the stack, which requires that both the 'startFrame' and 'levels' arguments and the 'totalFrames' result of the 'StackTrace' request are supported. */
         supportsDelayedStackTraceLoading: true,
         /** The debug adapter supports the 'loadedSources' request. */

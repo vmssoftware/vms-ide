@@ -62,6 +62,7 @@ export interface IPythonThread {
     id: number;
     paused: boolean;
     framesNum: number;
+    frames?: IPythonFrame[];
 };
 
 export interface IPythonFrame {
@@ -338,66 +339,6 @@ export class PythonShellRuntime extends EventEmitter {
         this.locker.release();
         return frames;
     }
-
-    // public async localsRequest(ident: number, frame: number): Promise<IPythonVariable[]> {
-
-    //     await this.locker.acquire();
-
-    //     const variables: IPythonVariable[] = [];
-    //     if (!this.started || this.running) {
-    //         this.locker.release();
-    //         return variables;
-    //     }
-    //     let command = `${PythonServerCommand.DISPLAY} ${frame} ${ident}`;
-    //     let numLocals: number | undefined;
-    //     let parsedLocals = 0;
-    //     await this.queue.postCommand(command, (cmd, line) => {
-    //         if (line === undefined) {
-    //             this.logFn(LogType.debug, () => `locals: aborted`);
-    //             return ListenerResponse.stop;
-    //         }
-    //         if (numLocals == undefined) {
-    //             const match = line.match(_rgxDisplay);
-    //             if (match) {
-    //                 if (match[_rgxDisplay_Name] !== '' ||
-    //                     match[_rgxDisplay_Result] === PythonConst.failed || 
-    //                     match[_rgxDisplay_Type] !== PythonConst.locals) {
-    //                     return ListenerResponse.stop;
-    //                 }
-    //                 if ( match[_rgxDisplay_ValueDescr] === PythonConst.children) {
-    //                     numLocals = +match[_rgxDisplay_Value];
-    //                     if (numLocals == 0) {
-    //                         return ListenerResponse.stop;
-    //                     }
-    //                     return ListenerResponse.needMoreLines;
-    //                 }
-    //                 return ListenerResponse.stop;
-    //             }
-    //         } else {
-    //             const match = line.match(_rgxDisplay);
-    //             if (match) {
-    //                 const nameMatched = match[_rgxDisplay_Name];
-    //                 variables.push({
-    //                     id: 0,
-    //                     ident,
-    //                     frame,
-    //                     name: nameMatched,
-    //                     type: match[_rgxDisplay_Type],
-    //                     value: match[_rgxDisplay_Value],
-    //                 });
-    //                 ++parsedLocals;
-    //                 if (parsedLocals >= numLocals) {
-    //                     return ListenerResponse.stop;
-    //                 }
-    //                 return ListenerResponse.needMoreLines;
-    //             }
-    //         }
-    //         this.onUnexpectedLine(line);
-    //         return ListenerResponse.needMoreLines;
-    //     });
-    //     this.locker.release();
-    //     return variables;
-    // }
 
     /**
      * 

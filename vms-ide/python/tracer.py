@@ -333,11 +333,14 @@ class Tracer:
                 cmd = self._readDbgMessage()
             # ---------------------------------------------
         entry['paused'] = False
-        # unhandled exception
-        if entry['exception'] != None and entry['level'] <= 0:
-            if ident == self._mainThread:
-                self._sendDbgMessage(self._messages.EXITED)
-            raise SystemExit()
+        if entry['level'] <= 0:
+            # last line in this thread
+            del self._threads[ident]
+            if entry['exception'] != None:
+                # unhandled exception
+                if ident == self._mainThread:
+                    self._sendDbgMessage(self._messages.EXITED)
+                raise SystemExit()
         return self._traceFunc
     
     def _doDisplay(self, cmd, ident):
@@ -395,14 +398,21 @@ class Tracer:
         self._steppingLevel = None
         self._sendDbgMessage(self._messages.CONTINUED)
 
-    def _numFrames(self, startFrame):
+    def _numFrames(self, entry):
         numFrames = 0
-        while startFrame:
-            if self._isDebuggerFrame(startFrame):
-                startFrame = None
-                break
-            numFrames = numFrames + 1
-            startFrame = startFrame.f_back
+        if entry['traceback'] == None or entry['level'] > 0:
+            frame = entry['frame']
+            while frame:
+                if self._isDebuggerFrame(frame):
+                    frame = None
+                    break
+                numFrames = numFrames + 1
+                frame = frame.f_back
+        else:
+            trace = entry['traceback']
+            while trace:
+                numFrames = numFrames + 1
+                trace = trace.tb_next
         return numFrames
 
     def _showInfo(self, ident):
@@ -411,41 +421,58 @@ class Tracer:
         self._sendDbgMessage('Where: %i' % ident)
         self._sendDbgMessage('Threads: %i' % len(self._threads))
         for threadEntry in self._threads.values():
-            self._sendDbgMessage('  thread %i frames %i %s:' % ( 
-                    threadEntry['ident'],
-                    self._numFrames(threadEntry['frame']),
-                    'paused' if threadEntry['paused'] else 'running' ))
-            self._sendDbgMessage('    file: "%s"' % threadEntry['frame'].f_code.co_filename)
-            self._sendDbgMessage('    line: %i' % threadEntry['frame'].f_lineno)
-            self._sendDbgMessage('    function: "%s"' % threadEntry['frame'].f_code.co_name)
+            if threadEntry['exception'] != None and threadEntry['level'] <= 0:
+                # post-mortem info
+                self._sendDbgMessage('  thread %i unhandled exception:' % threadEntry['ident'])
+            else:
+                # runing info
+                self._sendDbgMessage('  thread %i frames %i %s:' % ( 
+                        threadEntry['ident'],
+                        self._numFrames(threadEntry),
+                        'paused' if threadEntry['paused'] else 'running' ))
+                self._sendDbgMessage('    file: "%s"' % threadEntry['frame'].f_code.co_filename)
+                self._sendDbgMessage('    line: %i' % threadEntry['frame'].f_lineno)
+                self._sendDbgMessage('    function: "%s"' % threadEntry['frame'].f_code.co_name)
 
     def _getFrame(self, ident, frameNum):
-        for threadEntry in self._threads.values():
-            if threadEntry['ident'] != ident:
+        for entry in self._threads.values():
+            if entry['ident'] != ident:
                 continue
-            currentFrame = threadEntry['frame']
-            currentFrameNum = 0
-            while frameNum != currentFrameNum and currentFrame:
+            if entry['traceback'] == None or entry['level'] > 0:
+                currentFrame = entry['frame']
+                currentFrameNum = 0
+                while frameNum != currentFrameNum and currentFrame:
+                    if self._isDebuggerFrame(currentFrame):
+                        currentFrame = None
+                        break
+                    currentFrameNum = currentFrameNum + 1
+                    currentFrame = currentFrame.f_back
+                # check if given frame isn't debugger frame
                 if self._isDebuggerFrame(currentFrame):
                     currentFrame = None
-                    break
-                currentFrameNum = currentFrameNum + 1
-                currentFrame = currentFrame.f_back
-            # check if given frame isn't debugger frame
-            if self._isDebuggerFrame(currentFrame):
-                currentFrame = None
-            if currentFrame == None:
-                self._sendDbgMessage('%s: %s has no frame %s' % (self._messages.SYNTAX_ERROR, ident, frameNum))
-                return None
+                if currentFrame == None:
+                    self._sendDbgMessage('%s: %s has no frame %s' % (self._messages.SYNTAX_ERROR, ident, frameNum))
+                    return (None, False)
+                else:
+                    return (currentFrame, False)
+                break
             else:
-                return currentFrame
-            break
+                frames = []
+                trace = entry['traceback']
+                while trace:
+                    frames.append(trace.tb_frame)
+                    trace = trace.tb_next
+                if len(frames) > frameNum:
+                    return (frames[len(frames) - frameNum - 1], True)
         else:
             self._sendDbgMessage('%s: invalid ident %s' % (self._messages.SYNTAX_ERROR, ident))
-        return None
+        return (None, False)
 
     def _amend(self, ident, frameNum, name, value):
-        frame = self._getFrame(ident, frameNum)
+        frame, isPostMortem = self._getFrame(ident, frameNum)
+        if isPostMortem:
+            self._sendDbgMessage('%s failed Cannot amend post-mortem frames' % self._messages.AMEND)
+            return
         if frame != None:
             try:
                 if name in frame.f_locals:
@@ -455,11 +482,14 @@ class Tracer:
                     exec(statement, {}, frame.f_locals)
                 result = eval('%s' % name, {}, frame.f_locals)
                 self._sendDbgMessage('%s ok %s' % (self._messages.AMEND, repr(result)))
+                return
             except Exception as ex:
                 self._sendDbgMessage('%s failed %s' % (self._messages.AMEND, str(ex)))
+                return
+        self._sendDbgMessage('%s failed Invalid frame' % self._messages.AMEND)
 
     def _display(self, ident, frameNum, fullName, start, count):
-        frame = self._getFrame(ident, frameNum)
+        frame, isPostMortem = self._getFrame(ident, frameNum)
         if frame != None:
             try:
                 if fullName.endswith('.'):
@@ -548,13 +578,13 @@ class Tracer:
         for threadEntry in self._threads.values():
             self._sendDbgMessage('thread %i frames %i is %s' % (
                     threadEntry['ident'], 
-                    self._numFrames(threadEntry['frame']),
+                    self._numFrames(threadEntry),
                     'paused' if threadEntry['paused'] else 'running' ))
     
     def _showFrame(self, ident, frameStart, numFrames):
         if frameStart == None:
             frameStart = 0
-        frame = self._getFrame(ident, frameStart)
+        frame, isPostMortem = self._getFrame(ident, frameStart)
         frameNum = 0
         while frame != None and frameNum != numFrames:
             if self._isDebuggerFrame(frame):
