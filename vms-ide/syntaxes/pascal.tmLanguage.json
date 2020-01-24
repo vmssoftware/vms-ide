@@ -95,7 +95,8 @@
             ]
         }
         ,"name": {
-            "match": "(?i)(?<![0-9])[a-z_][a-z0-9$_]*"
+            "match": "(?i)(?<![0-9])[a-z_$][a-z0-9$_]*"
+            ,"name": "variable"
         }
         ,"reserved-control": {
             "match": "(?i)(BEGIN|CASE|DOWNTO|DO|ELSE|END|FOR|GOTO|IF|IN|LABEL|OF|REPEAT|THEN|TO|UNTIL|WHILE|WITH)(?=[^a-z0-9$_])"
@@ -119,7 +120,7 @@
         }
         ,"predeclared-integer-constant": {
             "match": "(?i)(MAXINT|MAXINT64|MAXUNSIGNED|MAXUNSIGNED64)(?=[^a-z0-9$_])"
-            ,"name": "variable.other"
+            ,"name": "constant.numeric"
         }        
         ,"predeclared-char-type": {
             "match": "(?i)(CHAR|TEXT|STRING)(?=[^a-z0-9$_])"
@@ -135,7 +136,7 @@
         }
         ,"predeclared-boolean-constant": {
             "match": "(?i)(TRUE|FALSE)(?=[^a-z0-9$_])"
-            ,"name": "variable.other"
+            ,"name": "constant.language"
         }        
         ,"predeclared-real-type": {
             "match": "(?i)(REAL|SINGLE|DOUBLE|QUADRUPLE)(?=[^a-z0-9$_])"
@@ -151,7 +152,7 @@
         }
         ,"predeclared-pointer-constant": {
             "match": "(?i)(NIL)(?=[^a-z0-9$_])"
-            ,"name": "variable.other"
+            ,"name": "constant.language"
         }
         ,"predeclared-time-type": {
             "match": "(?i)(TIMESTAMP)(?=[^a-z0-9$_])"
@@ -163,23 +164,63 @@
         }
         ,"predeclared": {
             "match": "(?i)(ABS|ADD_ATOMIC|ADD_INTERLOCKED|ADDRESS|AND_ATOMIC|ARCTAN|ARGC|ARGUMENT|ARGUMENT_LIST_LENGTH|ARGV|ASSERT|BARRIER|BIN|BIT_OFFSET|BITNEXT|BITSIZE|BOOLEAN|BYTE_OFFSET|CARD|CARDINAL|CARDINAL16|CARDINAL32|CHAR|CHR|CLEAR_INTERLOCKED|CLOCK|C_STR|C_STR_T|CLOSE|COS|CREATE_DIRECTORY|D_FLOAT|DATE|DBLE|DEC|DELETE|DELETE_FILE|DISPOSE|DOUBLE|EOF|EOLN|EPSDOUBLE|EPSQUADRUPLE|EPSREAL|EQ|ESTABLISH|EXP|EXPO|EXTEND|F_FLOAT|FALSE|FIND|FIND_FIRST_BIT_CLEAR|FIND_FIRST_BIT_SET|FIND_MEMBER|FIND_NONMEMBER|FINDK|G_FLOAT|GE|GET|GETTIMESTAMP|GT|H_FLOAT|HALT|HEX|IADDRESS|IADDRESS64|INDEX|INPUT|INT|INTEGER|INTEGER8|INTEGER16|INTEGER32|INTEGER64|INTEGER_ADDRESS|LE|LENGTH|LINELIMIT|LN|LOCATE|LOWER|LSHIFT|LT|MALLOC_C_STR|MAX|MAXCHAR|MAXDOUBLE|MAXINT|MAXQUADRUPLE|MAXREAL|MAXUNSIGNED|MIN|MINDOUBLE|MINQUADRUPLE|MINREAL|NE|NEW|NEXT|NIL|OCT|ODD|OPEN|OR_ATOMIC|ORD|OUTPUT|PACK|PAD|PAGE|PAS_STR|PAS_STRCPY|POINTER|PRED|PRESENT|PUT|QUAD|QUADRUPLE|RANDOM|READ|READLN|READV|REAL|RENAME_FILE|RESET|RESETK|REVERT|REWRITE|ROUND|ROUND64|RSHIFT|S_FLOAT|SEED|SET_INTERLOCKED|SIN|SINGLE|SIZE|SNGL|SQR|SQRT|STATUS|STATUSV|STRING|SUBSTR|SUCC|SYSCLOCK|T_FLOAT|TEXT|TIME|TIMESTAMP|TRUE|TRUNC|TRUNC64|TRUNCATE|UAND|UDEC|UFB|UINT|UNDEFINED|UNLOCK|UNOT|UNPACK|UNSIGNED|UNSIGNED8|UNSIGNED16|UNSIGNED32|UNSIGNED64|UOR|UPDATE|UPPER|UROUND|UROUND64|UTRUNC|UTRUNC64|UXOR|WALLCLOCK|WRITE|WRITELN|WRITEV|X_FLOAT|XOR|ZERO)(?=[^a-z0-9$_])"
-            ,"name": "keyword.predeclared"
+            ,"name": "support.function.intrinsic"
         }
         ,"attribute": {
             "match": "(?i)(ALIGN|ALIGNED|UNALIGNED|AT|AUTOMATIC|COMMON|STATIC|PSECT|ASYNCHRONOUS|CHECK|FLOAT|ENUMERATION_SIZE|ENVIRONMENT|PEN_CHECKING_STYLE|HIDDEN|IDENT|INHERIT|INITIALIZE|KEY|LIST|OPTIMIZE|NOOPTIMIZE|CLASS_A|CLASS_NCA|CLASS_S|IMMEDIATE|REFERENCE|POS|READONLY|BIT|BYTE|WORD|LONG|QUAD|OCTA|TRUNCATE|UNBOUND|UNSAFE|VALUE|LOCAL|EXTERNAL|GLOBAL|WEAK_EXTERNAL|WEAK_GLOBAL|VOLATILE|WRITEONLY)(?=[^a-z0-9$_])"
             ,"name": "keyword.attribute"
         }
         ,"directive": {
-            "match": "(?i)%(INCLUDE|DICTIONARY|TITLE|SUBTITLE|IF|ELSE|ELIF|ENDIF|DEFINED|ERROR|WARN|INFO|MESSAGE|ARCH_NAME|SYSTEM_NAME|SYSTEM_VERSION|DATE|TIME|COMPILER_VERSION|LINE|FILE|ROUTINE|MODULE|IDENT)(?=[^a-z0-9$_])"
+            "match": "(?i)%(INCLUDE|DICTIONARY|TITLE|SUBTITLE|THEN|IF|ELSE|ELIF|ENDIF|DEFINED|ERROR|WARN|INFO|MESSAGE|ARCH_NAME|SYSTEM_NAME|SYSTEM_VERSION|DATE|TIME|COMPILER_VERSION|LINE|FILE|ROUTINE|MODULE|IDENT)(?=[^a-z0-9$_])"
             ,"name": "keyword.control.directive"
         }
+        ,"function": {
+            "begin": "(?i)([a-z0-9$_%]+)\\s?\\s*(\\()",
+            "beginCaptures": {
+                "1": {
+                    "name": "support.function.intrinsic"
+                },
+                "2": {
+                    "name": "punctuation.parentheses.left"
+                }
+            },
+            "end": "(\\(?)"
+        }
+        ,"type-def": {
+            "begin": "(?i)([a-z0-9$_%]+)\\s?\\s*\\:\\:?\\s*(\\[.+\\])?\\s*\\^?\\s*([a-z_$][a-z0-9$_%]*+)\\s*(;|(VALUE)|:=|\\)|$)",
+            "beginCaptures": {
+                "1": {
+                    "name": "variable"
+                },
+                "2": {
+                    "patterns": [
+                        {
+                            "include": "#string"
+                        },
+                        {
+                            "include": "#number"
+                        },
+                        {
+                            "include": "#known-word"
+                        }
+                    ]
+                },
+                "3": {
+                    "name": "entity.name.class"
+                },
+                "5": {
+                    "name": "keyword"
+                }
+            },
+            "end": "(?=[^a-z0-9$_%\\.])"
+        } 
         ,"known-word": {
-            "name": "pascal.known-word"
-            ,"begin": "(?i)(?<![0-9])(?=[%$a-z_])"
-            ,"end": "(?i)(?=[^%a-z0-9$_])"
-            ,"patterns": [
+           "patterns": [
                 {
                     "include": "#reserved-control"
+                }
+                ,{
+                    "include": "#type-def"
                 }
                 ,{
                     "include": "#directive"
@@ -234,6 +275,9 @@
                 }
                 ,{
                     "include": "#redefinable"
+                }
+                ,{
+                    "include": "#function"
                 }
                 ,{
                     "include": "#name"
