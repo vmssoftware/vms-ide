@@ -187,9 +187,9 @@ export class PythonShellRuntime extends EventEmitter {
                     case PythonServerMessage.STEPPED:
                         stopReason = PythonRuntimeEvents.stopOnStep;
                         break;
-                    case PythonServerMessage.EXCEPTION:
-                        stopReason = PythonRuntimeEvents.stopOnException;
-                        break;
+                }
+                if (stopReason === undefined && trimmed.startsWith(PythonServerMessage.EXCEPTION)) {
+                    stopReason = PythonRuntimeEvents.stopOnException;
                 }
                 if (stopReason !== undefined) {
                     this.running = false;
@@ -617,6 +617,17 @@ export class PythonShellRuntime extends EventEmitter {
         });
     }
 
+    public async exceptionRequest(ident: number) {
+        await this.locker.acquire();
+        
+        let success = false;
+        if (!this.started || this.running) {
+            this.locker.release();
+            return { success, info: "" };
+        }
+
+        return { success, info: "Exception info" };
+    }
     /******************************************************************************************/
     // private
     /******************************************************************************************/

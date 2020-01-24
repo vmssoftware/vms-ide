@@ -211,7 +211,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         supportsExceptionOptions: false,
         /** The debug adapter supports the 'exceptionInfo' request. */
         supportsExceptionInfoRequest: false,
-        
+
         /** The debug adapter supports the delayed loading of parts of the stack, which requires that both the 'startFrame' and 'levels' arguments and the 'totalFrames' result of the 'StackTrace' request are supported. */
         supportsDelayedStackTraceLoading: true,
         /** The debug adapter supports the 'loadedSources' request. */
@@ -567,6 +567,24 @@ export class PythonDebugSession extends LoggingDebugSession {
         response.success = await this._runtime.pauseRequest();
         this.sendResponse(response);
     }
+
+    // protected async exceptionInfoRequest(response: DebugProtocol.ExceptionInfoResponse, args: DebugProtocol.ExceptionInfoArguments, request?: DebugProtocol.Request) {
+    //     let {success, info} = await this._runtime.exceptionRequest(args.threadId);
+    //     response.success = success;
+    //     if (success) {
+    //         response.body = {
+    //             /** ID of the exception that was thrown. */
+    //             exceptionId: info,
+    //             /** Descriptive text for the exception provided by the debug adapter. */
+    //             // description?: string,
+    //             /** Mode that caused the exception notification to be raised. */
+    //             breakMode: "unhandled",
+    //             /** Detailed information about the exception. */
+    //             // details?: ExceptionDetails,
+    //         }
+    //     }
+    //     this.sendResponse(response);
+    // }
 
     ///
     ///     private

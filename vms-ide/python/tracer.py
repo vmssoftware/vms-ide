@@ -233,8 +233,7 @@ class Tracer:
 
         # pause on unhandled exception
         if entry['exception'] != None and entry['level'] <= 0:
-            self._sendDbgMessage(self._messages.EXCEPTION)
-            self._sendDbgMessage(repr(entry['exception']))
+            self._sendDbgMessage(self._messages.EXCEPTION + ' ' + repr(entry['exception']))
             self._paused = True
 
         with self._lockTrace:
@@ -589,7 +588,7 @@ class Tracer:
         while frame != None and frameNum != numFrames:
             if self._isDebuggerFrame(frame):
                 break
-            self._sendDbgMessage('file: "%s" line: %i function: "%s"' % (frame.f_code.co_filename, frame.f_lineno, frame.f_code.co_name))
+            self._sendDbgMessage('file: "%s" line: %i function: "%s" %s' % (frame.f_code.co_filename, frame.f_lineno, frame.f_code.co_name, 'dead' if isPostMortem else 'alive' ))
             frameNum = frameNum + 1
             frame = frame.f_back
 
@@ -625,8 +624,7 @@ class Tracer:
             cmd, bp_file, bp_line = cmd.split()
             self._setBp(bp_file, int(bp_line))
         except Exception as ex:
-            self._sendDbgMessage(self._messages.EXCEPTION)
-            self._sendDbgMessage(repr(ex))
+            self._sendDbgMessage(self._messages.EXCEPTION + ' ' + repr(ex))
 
     def _doResetBreakPoint(self, cmd):
         try:
@@ -640,8 +638,7 @@ class Tracer:
                 cmd, bp_file, bp_line = bp_args
                 self._resetBp(bp_file, int(bp_line))
         except Exception as ex:
-            self._sendDbgMessage(self._messages.EXCEPTION)
-            self._sendDbgMessage(repr(ex))
+            self._sendDbgMessage(self._messages.EXCEPTION + ' ' + repr(ex))
 
     def _setBp(self, bp_file, bp_line):
         if self._testBreakpoint(bp_file, bp_line):
@@ -682,18 +679,13 @@ class Tracer:
         self._waitingForAFile = filename
         globalsT = __main__.__dict__
         try:
-            if self._versionInfo[0] < 3:
-                self._startTracing = True
-                execfile(filename, globalsT, globalsT)
-            else:
-                with open(filename, 'rb') as fp:
-                    statement = "exec(compile(%r, %r, 'exec'))" % (fp.read(), filename)
-                self._startTracing = True
-                exec(statement, globalsT, globalsT)
+            with open(filename, 'rb') as fp:
+                statement = "exec(compile(%r, %r, 'exec'))" % (fp.read(), filename)
+            self._startTracing = True
+            exec(statement, globalsT, globalsT)
         except Exception as ex:
             if self._isConnected():
-                self._sendDbgMessage(self._messages.EXCEPTION)
-                self._sendDbgMessage(repr(ex))
+                self._sendDbgMessage(self._messages.EXCEPTION + ' ' + repr(ex))
             else:
                 print(repr(ex))
     
