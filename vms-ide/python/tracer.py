@@ -178,18 +178,23 @@ class Tracer:
         return None
 
     def _traceFunc(self, frame, event, arg):
+
         # wait until tracing enabled
         if not self._startTracing:
             return self._traceFunc
+
         # skip this file
         if frame.f_code.co_filename == self._fileName:
             return self._traceFunc
+
         # skip system files
         if self._os_path_abspath(frame.f_code.co_filename) == frame.f_code.co_filename:
             return self._traceFunc
+
         # skip no files
         if frame.f_code.co_filename == '<string>':
             return self._traceFunc
+
         # wait untin tracing file entered
         if self._waitingForAFile:
             if self._waitingForAFile != frame.f_code.co_filename:
@@ -199,29 +204,41 @@ class Tracer:
             # autopause
             self._sendDbgMessage(self._messages.ENTRY)
             self._paused = True
+        
+        # take an ident
         ident = self._currentThread().ident
         if self._mainThread == None: 
             self._mainThread = ident
-        entry = {'ident': ident, 'frame': frame, 'event': event, 'arg': arg, 'paused': True, 'level': 0}
+        
+        # create current entry
+        entry = {'ident': ident, 'frame': frame, 'event': event, 'arg': arg, 'paused': True, 'level': 0, 'exception': None, 'traceback': None }
         if ident in self._threads:
-            # get level from dictionary
+            # get previous entry information from dictionary
             entry['level'] = self._threads[ident]['level']
-        else:
-            # first thread entry
-            pass
+            entry['exception'] = self._threads[ident]['exception']
+            entry['traceback'] = self._threads[ident]['traceback']
         # save entry to dictionary
         self._threads[ident] = entry
+
         # frame level tracking
         if event == 'call':
             entry['level'] = entry['level'] + 1
         if event == 'return':
             entry['level'] = entry['level'] - 1
-            if entry['level'] <= 0:
-                # remove thread info and go out
-                del self._threads[ident]
-                return self._traceFunc
+
+        # clear exception info if it is already handled
+        if event not in ['exception', 'return']:
+            entry['exception'] = None
+            entry['traceback'] = None
+
+        # pause on unhandled exception
+        if entry['exception'] != None and entry['level'] <= 0:
+            self._sendDbgMessage(self._messages.EXCEPTION)
+            self._sendDbgMessage(repr(entry['exception']))
+            self._paused = True
+
         with self._lockTrace:
-            # point of tracing (comment next line in release)
+            # point of tracing
             if frame.f_code.co_name not in self._lines[frame.f_code.co_filename]:
                 # collect usable code lines
                 lines = []
@@ -246,18 +263,17 @@ class Tracer:
                         break
                 self._lines[frame.f_code.co_filename][frame.f_code.co_name] = lines
                 self._checkFileBreakpoints(frame.f_code.co_filename, lines)
-            # show message when pause
-            # if self._paused:
-            #     self._sendDbgMessage(self._messages.PAUSED)
+
             # examine breakpoint
             if frame.f_lineno in self._breakpointsConfirmed[frame.f_code.co_filename]:
                 self._sendDbgMessage(self._messages.BREAK)
                 self._paused = True
-            # examine exception
+
+            # examine exception and save it
             if event == 'exception':
-                self._sendDbgMessage(self._messages.EXCEPTION)
-                self._sendDbgMessage(repr(arg[1]))
-                self._paused = True
+                entry['exception'] = arg[1]
+                entry['traceback'] = arg[2]
+
             # tests runtime commands
             cmd = self._readDbgMessage()
             while cmd:
@@ -267,82 +283,117 @@ class Tracer:
                     self._paused = True
                 elif cmd == self._commands.INFO:
                     self._showInfo(ident)
-                else:
-                    self._parseBp(cmd)
+                # breakpoints
+                elif cmd.startswith(self._commands.BP_SET):
+                    self._doSetBreakPoint(cmd)
+                elif cmd.startswith(self._commands.BP_RESET):
+                    self._doResetBreakPoint(cmd)
                 cmd = self._readDbgMessage()
-            # test commands on pause
-            if not self._paused:
-                if self._steppingThread == ident:
-                    # test established level
-                    if self._steppingLevel == None or (self._steppingLevel == entry['level'] and event != 'return'):
-                        self._steppingThread = None
-                        self._steppingLevel = None
-                        self._paused = True
-                        self._sendDbgMessage(self._messages.STEPPED)
+
+            # test stepping
+            if not self._paused and self._steppingThread == ident and self._steppingLevel == None or (self._steppingLevel == entry['level'] and event != 'return'):
+                self._steppingThread = None
+                self._steppingLevel = None
+                self._paused = True
+                self._sendDbgMessage(self._messages.STEPPED)
+            
+            # pause loop
             while self._paused and self._isConnected():
                 if cmd:
+                    # continue
                     if cmd == self._commands.CONTINUE:
-                        if self._paused:
-                            self._sendDbgMessage(self._messages.CONTINUED)
-                        self._paused = False
-                        self._steppingThread = None
-                        self._steppingLevel = None
+                        self._doContinue()
+                        break   # break pause loop
+                    # step
                     elif cmd.startswith(self._commands.STEP) or cmd.startswith(self._commands.NEXT) or cmd.startswith(self._commands.RETURN):
-                        locals_args = cmd.split()
-                        if len(locals_args) == 1:
-                            self._steppingThread = ident
-                        elif len(locals_args) == 2:
-                            self._steppingThread = int(locals_args[1])
-                        self._paused = False
-                        self._steppingLevel = None
-                        if cmd.startswith(self._commands.NEXT):
-                            self._steppingLevel = entry['level']
-                        elif cmd.startswith(self._commands.RETURN):
-                            self._steppingLevel = entry['level'] - 1
-                        self._sendDbgMessage(self._messages.CONTINUED)
-                        break
+                        self._doStepping(cmd, ident, entry)
+                        break   # break pause loop
+                    # show threads
                     elif cmd == self._commands.THREADS:
                         self._showThreads(ident)
+                    # change variable
                     elif cmd.startswith(self._commands.AMEND):
-                        sep = ' '
-                        cmd, sep, tail = cmd.partition(sep)
-                        aIdent, sep, tail = tail.partition(sep)
-                        aFrame, sep, tail = tail.partition(sep)
-                        aName, sep, aValue = tail.partition(sep)
-                        self._amend(int(aIdent), int(aFrame), aName, aValue)
+                        self._doAmend(cmd)
+                    # show frames
                     elif cmd.startswith(self._commands.FRAME):
-                        locals_args = cmd.split()
-                        if len(locals_args) == 1:
-                            self._showFrame(ident, None, None)                          # all frames in current ident
-                        elif len(locals_args) == 2:
-                            self._showFrame(int(locals_args[1]), None, None)            # all frames in given ident
-                        elif len(locals_args) == 3:
-                            self._showFrame(int(locals_args[1]), int(locals_args[2]), 1) # one given frame in given ident
-                        elif len(locals_args) == 4:
-                            self._showFrame(int(locals_args[1]), int(locals_args[2]), int(locals_args[3])) # given amount of frames starting given frame in given ident
+                        self._doFrames(cmd, ident)
+                    # display variable
                     elif cmd.startswith(self._commands.DISPLAY):
-                        locals_args = cmd.split()
-                        if len(locals_args) == 1:
-                            self._display(ident, 0, '.', None, None)
-                        elif len(locals_args) == 2:
-                            self._display(int(locals_args[1]), 0, '.', None, None)
-                        elif len(locals_args) == 3:
-                            self._display(int(locals_args[1]), int(locals_args[2]), '.', None, None)
-                        elif len(locals_args) == 4:
-                            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], None, None)
-                        elif len(locals_args) == 5:
-                            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), None)
-                        elif len(locals_args) == 6:
-                            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), int(locals_args[5]))
+                        self._doDisplay(cmd, ident)
+                    # information (unused)
                     elif cmd == self._commands.INFO:
                         self._showInfo(ident)
-                    else:
-                        self._parseBp(cmd)
+                    # breakpoints
+                    elif cmd.startswith(self._commands.BP_SET):
+                        self._doSetBreakPoint(cmd)
+                    elif cmd.startswith(self._commands.BP_RESET):
+                        self._doResetBreakPoint(cmd)
+                # wait and read command again
                 self._sleep(0.3)
                 cmd = self._readDbgMessage()
             # ---------------------------------------------
         entry['paused'] = False
+        # unhandled exception
+        if entry['exception'] != None and entry['level'] <= 0:
+            if ident == self._mainThread:
+                self._sendDbgMessage(self._messages.EXITED)
+            raise SystemExit()
         return self._traceFunc
+    
+    def _doDisplay(self, cmd, ident):
+        locals_args = cmd.split()
+        if len(locals_args) == 1:
+            self._display(ident, 0, '.', None, None)
+        elif len(locals_args) == 2:
+            self._display(int(locals_args[1]), 0, '.', None, None)
+        elif len(locals_args) == 3:
+            self._display(int(locals_args[1]), int(locals_args[2]), '.', None, None)
+        elif len(locals_args) == 4:
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], None, None)
+        elif len(locals_args) == 5:
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), None)
+        elif len(locals_args) == 6:
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), int(locals_args[5]))
+
+    def _doFrames(self, cmd, ident):
+        locals_args = cmd.split()
+        if len(locals_args) == 1:
+            self._showFrame(ident, None, None)                          # all frames in current ident
+        elif len(locals_args) == 2:
+            self._showFrame(int(locals_args[1]), None, None)            # all frames in given ident
+        elif len(locals_args) == 3:
+            self._showFrame(int(locals_args[1]), int(locals_args[2]), 1) # one given frame in given ident
+        elif len(locals_args) == 4:
+            self._showFrame(int(locals_args[1]), int(locals_args[2]), int(locals_args[3])) # given amount of frames starting given frame in given ident
+    
+    def _doAmend(self, cmd):
+        sep = ' '
+        cmd, sep, tail = cmd.partition(sep)
+        aIdent, sep, tail = tail.partition(sep)
+        aFrame, sep, tail = tail.partition(sep)
+        aName, sep, aValue = tail.partition(sep)
+        self._amend(int(aIdent), int(aFrame), aName, aValue)
+    
+    def _doContinue(self):
+        if self._paused:
+            self._sendDbgMessage(self._messages.CONTINUED)
+        self._paused = False
+        self._steppingThread = None
+        self._steppingLevel = None
+
+    def _doStepping(self, cmd, ident, entry):
+        locals_args = cmd.split()
+        if len(locals_args) == 1:
+            self._steppingThread = ident
+        elif len(locals_args) == 2:
+            self._steppingThread = int(locals_args[1])
+        if cmd.startswith(self._commands.NEXT):
+            self._steppingLevel = entry['level']
+        elif cmd.startswith(self._commands.RETURN):
+            self._steppingLevel = entry['level'] - 1
+        self._paused = False
+        self._steppingLevel = None
+        self._sendDbgMessage(self._messages.CONTINUED)
 
     def _numFrames(self, startFrame):
         numFrames = 0
@@ -538,29 +589,29 @@ class Tracer:
         """ add for waiting """
         self._sendDbgMessage(self._messages.BP_WAIT + (' "%s" %i' % (bp_file, bp_line)))
         self._breakpointsWait[bp_file].add(bp_line)
+    
+    def _doSetBreakPoint(self, cmd):
+        try:
+            cmd, bp_file, bp_line = cmd.split()
+            self._setBp(bp_file, int(bp_line))
+        except Exception as ex:
+            self._sendDbgMessage(self._messages.EXCEPTION)
+            self._sendDbgMessage(repr(ex))
 
-    def _parseBp(self, cmd):
-        if cmd.startswith(self._commands.BP_SET):
-            try:
-                cmd, bp_file, bp_line = cmd.split()
-                self._setBp(bp_file, int(bp_line))
-            except Exception as ex:
-                self._sendDbgMessage(self._messages.EXCEPTION)
-                self._sendDbgMessage(repr(ex))
-        elif cmd.startswith(self._commands.BP_RESET):
-            try:
-                bp_args = cmd.split()
-                if len(bp_args) == 1:
-                    self._resetBp(None, None)
-                elif len(bp_args) == 2:
-                    cmd, bp_file = bp_args
-                    self._resetBp(bp_file, None)
-                else:
-                    cmd, bp_file, bp_line = bp_args
-                    self._resetBp(bp_file, int(bp_line))
-            except Exception as ex:
-                self._sendDbgMessage(self._messages.EXCEPTION)
-                self._sendDbgMessage(repr(ex))
+    def _doResetBreakPoint(self, cmd):
+        try:
+            bp_args = cmd.split()
+            if len(bp_args) == 1:
+                self._resetBp(None, None)
+            elif len(bp_args) == 2:
+                cmd, bp_file = bp_args
+                self._resetBp(bp_file, None)
+            else:
+                cmd, bp_file, bp_line = bp_args
+                self._resetBp(bp_file, int(bp_line))
+        except Exception as ex:
+            self._sendDbgMessage(self._messages.EXCEPTION)
+            self._sendDbgMessage(repr(ex))
 
     def _setBp(self, bp_file, bp_line):
         if self._testBreakpoint(bp_file, bp_line):
