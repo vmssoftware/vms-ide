@@ -313,6 +313,7 @@ export class PythonDebugSession extends LoggingDebugSession {
 
         // make sure to 'Stop' the buffered logging if 'trace' is not set
         logger.setup(Logger.LogLevel.Stop, false);
+        //logger.setup(Logger.LogLevel.Verbose, false);
 
         response.success = true;
         this.sendResponse(response);
@@ -608,19 +609,16 @@ export class PythonDebugSession extends LoggingDebugSession {
     protected async gotoTargetsRequest(response: DebugProtocol.GotoTargetsResponse, args: DebugProtocol.GotoTargetsArguments, request?: DebugProtocol.Request) {
         if (args.source.path) {
             const localPath = workspace.asRelativePath(args.source.path)
-            const lines = await this._runtime.requestGotoTargets(localPath, args.line);
+            response.success = await this._runtime.requestGotoTargets(localPath, args.line);
+            const gtt: GotoTarget = {
+                id: 0,
+                label: `go to line ${args.line}`,
+                line: args.line,
+            };
+            gtt.id = this._gotoHandles.create(gtt);
             response.body = {
-                targets: lines.map((line) => {
-                    const gtt: GotoTarget = {
-                        id: 0,
-                        label: `${localPath}: ${line}`,
-                        line,
-                    };
-                    gtt.id = this._gotoHandles.create(gtt);
-                    return gtt;
-                })
+                targets: [gtt]
             }
-            response.success = lines.length > 0;
             this.sendResponse(response);
         }
     }
@@ -692,7 +690,8 @@ export class PythonDebugSession extends LoggingDebugSession {
         let scriptPath = '';
         const ensured = await ensureSettings(this._workspace?.name);
         if (ensured) {
-            scriptPath = `[.${ensured.projectSection.outdir}]`;
+            // scriptPath = `[.${ensured.projectSection.outdir}]`;
+            scriptPath = ensured.projectSection.outdir + ftpPathSeparator;
         }
         let runCommand = `python ${scriptPath}server.py -p ${port}`;
         const lines: string[] = [];
@@ -736,7 +735,8 @@ export class PythonDebugSession extends LoggingDebugSession {
         let scriptPath = '';
         const ensured = await ensureSettings(this._workspace?.name);
         if (ensured) {
-            scriptPath = `[.${ensured.projectSection.outdir}]`;
+            // scriptPath = `[.${ensured.projectSection.outdir}]`;
+            scriptPath = ensured.projectSection.outdir + ftpPathSeparator;
         }
         let runCommand = `python ${scriptPath}tracer.py -p ${port} ${script}${args?' ' + args : ''}`;
         return this._tracerQueue.postCommand(runCommand, (cmd, line) => {

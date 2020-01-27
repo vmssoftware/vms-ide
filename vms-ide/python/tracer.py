@@ -42,7 +42,7 @@ class COMMAND:
     DISPLAY = 'd'           # d [ident [frame [fullName [start [count]]]]]      // frame is zero-based
     FRAME  = 'f'            # f [ident [frameStart [frameNum]]]                 // frame is zero-based
     GOTO = 'g'              # g ident line
-    GOTO_TARGETS = 'gt'     # gt file line  // for current place
+    GOTO_TARGETS = 'gt'     # gt file line  // test if we can go to target from current place
     INFO = 'i'
     NEXT = 'n'              # n [ident]     // step over
     PAUSE = 'p'
@@ -182,6 +182,7 @@ class Tracer:
         return None
 
     def _traceFunc(self, frame, event, arg):
+        """ Do not forget not sending any data without locking (but ENTRY) """
 
         # wait until tracing enabled
         if not self._startTracing:
@@ -235,11 +236,6 @@ class Tracer:
             entry['exception'] = None
             entry['traceback'] = None
 
-        # pause on unhandled exception
-        if entry['exception'] != None and entry['level'] <= 0:
-            self._sendDbgMessage(self._messages.EXCEPTION + ' ' + repr(entry['exception']))
-            self._paused = True
-
         with self._lockTrace:
             # point of tracing
             if frame.f_code.co_name not in self._lines[frame.f_code.co_filename]:
@@ -268,8 +264,13 @@ class Tracer:
                 self._lines[frame.f_code.co_filename][frame.f_code.co_name] = lines
                 self._checkFileBreakpoints(frame.f_code.co_filename, lines)
 
+            # pause on unhandled exception
+            if entry['exception'] != None and entry['level'] <= 0:
+                self._sendDbgMessage(self._messages.EXCEPTION + ' ' + repr(entry['exception']))
+                self._paused = True
+
             # examine breakpoint
-            if frame.f_lineno in self._breakpointsConfirmed[frame.f_code.co_filename]:
+            if not self._paused and frame.f_lineno in self._breakpointsConfirmed[frame.f_code.co_filename]:
                 self._sendDbgMessage(self._messages.BREAK)
                 self._paused = True
 
@@ -295,7 +296,7 @@ class Tracer:
                 cmd = self._readDbgMessage()
 
             # test stepping
-            if not self._paused and self._steppingThread == ident and self._steppingLevel == None or (self._steppingLevel == entry['level'] and event != 'return'):
+            if not self._paused and self._steppingThread == ident and (self._steppingLevel == None or self._steppingLevel == entry['level'] and event != 'return'):
                 self._steppingThread = None
                 self._steppingLevel = None
                 self._paused = True
@@ -333,7 +334,7 @@ class Tracer:
                     elif cmd.startswith(self._commands.BP_RESET):
                         self._doResetBreakPoint(cmd)
                     elif cmd.startswith(self._commands.GOTO_TARGETS):
-                        self._doGotoTargets(cmd)
+                        self._doGotoTargets(cmd, ident)
                     elif cmd.startswith(self._commands.GOTO):
                         self._doGoto(cmd)
                 # wait and read command again
@@ -365,19 +366,20 @@ class Tracer:
         except Exception as ex:
             self._sendDbgMessage('%s %s %s' % (self._messages.GOTO, 'failed', repr(ex)))
     
-    def _doGotoTargets(self, cmd):
+    def _doGotoTargets(self, cmd, ident):
         locals_args = cmd.split()
         try:
-            currFile = locals_args[1]
-            currLine = int(locals_args[2])
-            for funcLines in self._lines[currFile].values():
-                if currLine in funcLines:
-                    self._sendDbgMessage('%s %s %s' % (self._messages.GOTO_TARGETS, len(funcLines), repr(funcLines)))
-                    break
-            else:
-                self._sendDbgMessage('%s 0 []' % self._messages.GOTO_TARGETS)
+            gotoFile = locals_args[1]
+            gotoLine = int(locals_args[2])
+            codeObj = self._threads[ident]['frame'].f_code
+            if codeObj.co_filename == gotoFile:
+                if gotoLine in self._lines[gotoFile][codeObj.co_name]:
+                    self._sendDbgMessage('%s ok' % self._messages.GOTO_TARGETS)
+                    return
         except Exception as ex:
-            self._sendDbgMessage('%s %s %s' % (self._messages.GOTO_TARGETS, 'failed', repr(ex)))
+            self._sendDbgMessage('%s failed %s' % (self._messages.GOTO_TARGETS, repr(ex)))
+            return
+        self._sendDbgMessage('%s failed' % self._messages.GOTO_TARGETS)
 
     def _doDisplay(self, cmd, ident):
         locals_args = cmd.split()

@@ -142,10 +142,8 @@ const _rgxAmend                 = /AMEND (failed|ok) (.*)/;
 const _rgxAmend_Result          = 1;
 const _rgxAmend_Value           = 2;
 
-const _rgxGotoTargtes           = /GOTO_TARGETS (failed|(\d+))(?: \[(((?:, )?\d+)*)\])?/;
+const _rgxGotoTargtes           = /GOTO_TARGETS (failed|ok)(.*)/;
 const _rgxGotoTargtes_Result    = 1;
-const _rgxGotoTargtes_Num       = 2;
-const _rgxGotoTargtes_Lines     = 3;
 
 const _rgxGoto                  = /GOTO (failed|ok)/;
 const _rgxGoto_Result           = 1;
@@ -545,15 +543,14 @@ export class PythonShellRuntime extends EventEmitter {
     public async requestGotoTargets(currFile: string, currLine: number) {
         await this.locker.acquire();
 
-        const gotoLines: number[] = [];
-        
+        let awailable = false;
         if (!this.started || this.running) {
             this.locker.release();
-            return gotoLines;
+            return awailable;
         }
 
         let command = `${PythonServerCommand.GOTO_TARGETS} ${currFile} ${currLine}`;
-        await this.queue.postCommand(command, (cmd, line) => {
+        let posted = await this.queue.postCommand(command, (cmd, line) => {
             if (line === undefined) {
                 this.logFn(LogType.debug, () => `gototargets: aborted`);
                 return ListenerResponse.stop;
@@ -565,16 +562,7 @@ export class PythonShellRuntime extends EventEmitter {
                 }
                 const match = line.match(_rgxGotoTargtes);
                 if (match) {
-                    if (match[_rgxGotoTargtes_Result] !== EPythonConst.failed) {
-                        const linesStr = match[_rgxGotoTargtes_Lines];
-                        if (linesStr) {
-                            for(let numStr of linesStr.split(', ')) {
-                                if (numStr) {
-                                    gotoLines.push(+numStr);
-                                }
-                            }
-                        }
-                    }
+                    awailable = match[_rgxGotoTargtes_Result] === EPythonConst.ok;
                     return ListenerResponse.stop;
                 }
                 this.onUnexpectedLine(line);
@@ -582,7 +570,7 @@ export class PythonShellRuntime extends EventEmitter {
             return ListenerResponse.needMoreLines;
         });
         this.locker.release();
-        return gotoLines;
+        return posted && awailable;
     }
 
     public async requestGoto(ident: number, nextLine: number) {
