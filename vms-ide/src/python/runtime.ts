@@ -22,22 +22,24 @@ export enum PythonRuntimeEvents {
 };
 
 export enum PythonServerMessage {
-    DEBUG = 'DEBUG',
-    ENTRY = 'ENTRY',
-    PAUSED = 'PAUSED',
-    BREAK = 'BREAK',
     BP_CONFIRM = 'BP_CONFIRM',
-    BP_WAIT = 'BP_WAIT',
     BP_RESET = 'BP_RESET',
-    EXITED = 'EXITED',
+    BP_WAIT = 'BP_WAIT',
+    BREAK = 'BREAK',
     CONTINUED = 'CONTINUED',
-    STEPPED = 'STEPPED',
-    THREADS = 'THREADS',
-    INFO = 'INFO',
-    EXCEPTION = 'EXCEPTION',
-    SIGNAL = 'SIGNAL',
-    SYNTAX_ERROR = 'SYNTAX_ERROR',
+    DEBUG = 'DEBUG',
     DISPLAY = 'DISPLAY',
+    ENTRY = 'ENTRY',
+    EXCEPTION = 'EXCEPTION',
+    EXITED = 'EXITED',
+    GOTO = 'GOTO',
+    GOTO_TARGETS = 'GOTO_TARGETS',
+    INFO = 'INFO',
+    PAUSED = 'PAUSED',
+    SIGNAL = 'SIGNAL',
+    STEPPED = 'STEPPED',
+    SYNTAX_ERROR = 'SYNTAX_ERROR',
+    THREADS = 'THREADS',
 };
 
 // see tracer.py
@@ -48,6 +50,8 @@ export enum PythonServerCommand {
     CONTINUE = 'c',
     DISPLAY = 'd',
     FRAME  = 'f',
+    GOTO = 'g',
+    GOTO_TARGETS = 'gt',
     HELP = 'h',
     INFO = 'i',
     NEXT = 'n',
@@ -138,6 +142,14 @@ const _rgxAmend                 = /AMEND (failed|ok) (.*)/;
 const _rgxAmend_Result          = 1;
 const _rgxAmend_Value           = 2;
 
+const _rgxGotoTargtes           = /GOTO_TARGETS (failed|(\d+))(?: \[(((?:, )?\d+)*)\])?/;
+const _rgxGotoTargtes_Result    = 1;
+const _rgxGotoTargtes_Num       = 2;
+const _rgxGotoTargtes_Lines     = 3;
+
+const _rgxGoto                  = /GOTO (failed|ok)/;
+const _rgxGoto_Result           = 1;
+
 export class PythonShellRuntime extends EventEmitter {
     
     private logFn: LogFunction;
@@ -170,11 +182,11 @@ export class PythonShellRuntime extends EventEmitter {
 
     private onUnexpectedLine(line: string | undefined): void {
         if (line) {
-            const trimmed = line.trim();
-            if (trimmed) {
-                this.sendEvent(PythonRuntimeEvents.output, trimmed);
+            line = line.trim();
+            if (line) {
+                this.sendEvent(PythonRuntimeEvents.output, line);
                 let stopReason: PythonRuntimeEvents | undefined;
-                switch(trimmed) {
+                switch(line) {
                     case  PythonServerMessage.PAUSED:
                         stopReason = PythonRuntimeEvents.stopOnPause;
                         break;
@@ -188,7 +200,7 @@ export class PythonShellRuntime extends EventEmitter {
                         stopReason = PythonRuntimeEvents.stopOnStep;
                         break;
                 }
-                if (stopReason === undefined && trimmed.startsWith(PythonServerMessage.EXCEPTION)) {
+                if (stopReason === undefined && line.startsWith(PythonServerMessage.EXCEPTION)) {
                     stopReason = PythonRuntimeEvents.stopOnException;
                 }
                 if (stopReason !== undefined) {
@@ -199,18 +211,18 @@ export class PythonShellRuntime extends EventEmitter {
                     });
                     return;
                 }
-                if (trimmed == PythonServerMessage.EXITED) {
+                if (line == PythonServerMessage.EXITED) {
                     this.running = false;
                     this.queue.postCommand(PythonServerCommand.QUIT);
                     this.sendEvent(PythonRuntimeEvents.end);
                     return;
                 }
-                if (trimmed == PythonServerMessage.CONTINUED) {
+                if (line == PythonServerMessage.CONTINUED) {
                     //this.sendEvent(PythonRuntimeEvents.);
                     return;
                 }
-                if (trimmed.startsWith(PythonServerMessage.BP_CONFIRM)) {
-                    const match = trimmed.match(_rgxBpConfirm);
+                if (line.startsWith(PythonServerMessage.BP_CONFIRM)) {
+                    const match = line.match(_rgxBpConfirm);
                     if (match) {
                         this.sendEvent(PythonRuntimeEvents.breakpointValidated, match[_rgxBpConfirm_File], +match[_rgxBpConfirm_Line]);
                     }
@@ -255,32 +267,35 @@ export class PythonShellRuntime extends EventEmitter {
                 this.logFn(LogType.debug, () => `threads: aborted`);
                 return ListenerResponse.stop;
             }
-            if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
-                return ListenerResponse.stop;
-            }
-            if (threadNum == undefined) {
-                const match = line.match(_rgxThreads);
-                if (match) {
-                    threadNum = +match[_rgxThreads_Thread];
-                    this.ident = +match[_rgxThreads_Current];
-                    return ListenerResponse.needMoreLines;
+            line = line.trim();
+            if (line) {
+                if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
+                    return ListenerResponse.stop;
                 }
-            } else {
-                const match = line.match(_rgxFrames);
-                if (match) {
-                    pythonThread = {
-                        id: +match[_rgxFrames_Thread],
-                        framesNum: +match[_rgxFrames_Frames],
-                        paused: match[_rgxFrames_State] == 'paused',
-                    } as IPythonThread;
-                    threads.push(pythonThread);
-                    if (threads.length == threadNum) {
-                        return ListenerResponse.stop;
+                if (threadNum == undefined) {
+                    const match = line.match(_rgxThreads);
+                    if (match) {
+                        threadNum = +match[_rgxThreads_Thread];
+                        this.ident = +match[_rgxThreads_Current];
+                        return ListenerResponse.needMoreLines;
                     }
-                    return ListenerResponse.needMoreLines;
+                } else {
+                    const match = line.match(_rgxFrames);
+                    if (match) {
+                        pythonThread = {
+                            id: +match[_rgxFrames_Thread],
+                            framesNum: +match[_rgxFrames_Frames],
+                            paused: match[_rgxFrames_State] == 'paused',
+                        } as IPythonThread;
+                        threads.push(pythonThread);
+                        if (threads.length == threadNum) {
+                            return ListenerResponse.stop;
+                        }
+                        return ListenerResponse.needMoreLines;
+                    }
                 }
+                this.onUnexpectedLine(line);
             }
-            this.onUnexpectedLine(line);
             return ListenerResponse.needMoreLines;
         });
         this.threads = threads;
@@ -312,26 +327,29 @@ export class PythonShellRuntime extends EventEmitter {
                         this.logFn(LogType.debug, () => `frames: aborted`);
                         return ListenerResponse.stop;
                     }
-                    if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
-                        return ListenerResponse.stop;
-                    }
-                    const match = line.match(_rgxFrame);
-                    if (match) {
-                        const frame: IPythonFrame = {
-                            ident,
-                            frame: startFrame + parsedFrame,
-                            file: match[_rgxFrame_File],
-                            line: +match[_rgxFrame_Line],
-                            function: match[_rgxFrame_Function],
-                        };
-                        ++parsedFrame;
-                        frames.push(frame);
-                        if (parsedFrame >= numFrames) {
+                    line = line.trim();
+                    if (line) {
+                        if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
                             return ListenerResponse.stop;
                         }
-                        return ListenerResponse.needMoreLines;
+                        const match = line.match(_rgxFrame);
+                        if (match) {
+                            const frame: IPythonFrame = {
+                                ident,
+                                frame: startFrame + parsedFrame,
+                                file: match[_rgxFrame_File],
+                                line: +match[_rgxFrame_Line],
+                                function: match[_rgxFrame_Function],
+                            };
+                            ++parsedFrame;
+                            frames.push(frame);
+                            if (parsedFrame >= numFrames) {
+                                return ListenerResponse.stop;
+                            }
+                            return ListenerResponse.needMoreLines;
+                        }
+                        this.onUnexpectedLine(line);
                     }
-                    this.onUnexpectedLine(line);
                     return ListenerResponse.needMoreLines;
                 });
             }
@@ -412,68 +430,71 @@ export class PythonShellRuntime extends EventEmitter {
                     return ListenerResponse.needMoreLines;
                 }
             }
-            // second test - if SYNTAX_ERROR
-            if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
-                return ListenerResponse.stop;
-            }
-            const match = line.match(_rgxDisplay);
-            if (match) {
-                if (numVars === undefined) {
-                    // parse first line - parent
-                    // must succeed
-                    if (match[_rgxDisplay_Result] === EPythonConst.failed) {
-                        return ListenerResponse.stop;
-                    }
-                    // must have children or length
-                    if (match[_rgxDisplay_ValueDescr] === EPythonConst.value) {
-                        return ListenerResponse.stop;
-                    }
-                    numVars = +match[_rgxDisplay_Value];
-                    if (numVars === 0) {
-                        return ListenerResponse.stop;
-                    }
-                    return ListenerResponse.needMoreLines;
-                } else {
-                    // parse other lines - children
-                    if (match[_rgxDisplay_Result] !== EPythonConst.failed) {
-                        lastVar = {
-                            ident,
-                            frame,
-                            name: match[_rgxDisplay_Name],
-                            path: innerPath,
-                            type: match[_rgxDisplay_Type],
-                        };
-                        if (start !== undefined) {
-                            // patch the name
+            line = line.trim();
+            if (line) {
+                // second test - if SYNTAX_ERROR
+                if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
+                    return ListenerResponse.stop;
+                }
+                const match = line.match(_rgxDisplay);
+                if (match) {
+                    if (numVars === undefined) {
+                        // parse first line - parent
+                        // must succeed
+                        if (match[_rgxDisplay_Result] === EPythonConst.failed) {
+                            return ListenerResponse.stop;
                         }
-                        // do not handle children length, not necessary at this point
-                        if (match[_rgxDisplay_ValueDescr] == EPythonConst.length) {
-                            lastVar.size = +match[_rgxDisplay_Value];
-                        } else if (match[_rgxDisplay_ValueDescr] == EPythonConst.value) {
-                            lastVar.value = match[_rgxDisplay_Value];
-                        } 
-                        variables.push(lastVar);
-                        // test if variable is long string
-                        if (lastVar.value && (lastVar.value.startsWith('"') || lastVar.value.startsWith("'"))) {
-                            waitQuota = lastVar.value[0];
-                            if (lastVar.value.trim().endsWith(waitQuota)) {
-                                // does not split
-                                waitQuota = undefined;
-                                lastVar = undefined;
-                            } else {
-                                // split, wait the end of string
-                                return ListenerResponse.needMoreLines;
+                        // must have children or length
+                        if (match[_rgxDisplay_ValueDescr] === EPythonConst.value) {
+                            return ListenerResponse.stop;
+                        }
+                        numVars = +match[_rgxDisplay_Value];
+                        if (numVars === 0) {
+                            return ListenerResponse.stop;
+                        }
+                        return ListenerResponse.needMoreLines;
+                    } else {
+                        // parse other lines - children
+                        if (match[_rgxDisplay_Result] !== EPythonConst.failed) {
+                            lastVar = {
+                                ident,
+                                frame,
+                                name: match[_rgxDisplay_Name],
+                                path: innerPath,
+                                type: match[_rgxDisplay_Type],
+                            };
+                            if (start !== undefined) {
+                                // patch the name
+                            }
+                            // do not handle children length, not necessary at this point
+                            if (match[_rgxDisplay_ValueDescr] == EPythonConst.length) {
+                                lastVar.size = +match[_rgxDisplay_Value];
+                            } else if (match[_rgxDisplay_ValueDescr] == EPythonConst.value) {
+                                lastVar.value = match[_rgxDisplay_Value];
+                            } 
+                            variables.push(lastVar);
+                            // test if variable is long string
+                            if (lastVar.value && (lastVar.value.startsWith('"') || lastVar.value.startsWith("'"))) {
+                                waitQuota = lastVar.value[0];
+                                if (lastVar.value.trim().endsWith(waitQuota)) {
+                                    // does not split
+                                    waitQuota = undefined;
+                                    lastVar = undefined;
+                                } else {
+                                    // split, wait the end of string
+                                    return ListenerResponse.needMoreLines;
+                                }
                             }
                         }
+                        ++parsedVars;
+                        if (parsedVars >= numVars) {
+                            return ListenerResponse.stop;
+                        }
+                        return ListenerResponse.needMoreLines;
                     }
-                    ++parsedVars;
-                    if (parsedVars >= numVars) {
-                        return ListenerResponse.stop;
-                    }
-                    return ListenerResponse.needMoreLines;
                 }
+                this.onUnexpectedLine(line);
             }
-            this.onUnexpectedLine(line);
             return ListenerResponse.needMoreLines;
         });
         this.locker.release();
@@ -497,25 +518,102 @@ export class PythonShellRuntime extends EventEmitter {
                 this.logFn(LogType.debug, () => `amend: aborted`);
                 return ListenerResponse.stop;
             }
-            if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
-                return ListenerResponse.stop;
-            }
-            const match = line.match(_rgxAmend);
-            if (match) {
-                if (match[_rgxAmend_Result] === EPythonConst.ok) {
-                    success = true;
-                    value = match[_rgxAmend_Value];
-                } else {
-                    this.logFn(LogType.warning, () => match[_rgxAmend_Value], true);
+            line = line.trim();
+            if (line) {
+                if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
+                    return ListenerResponse.stop;
                 }
-                return ListenerResponse.stop;
+                const match = line.match(_rgxAmend);
+                if (match) {
+                    if (match[_rgxAmend_Result] === EPythonConst.ok) {
+                        success = true;
+                        value = match[_rgxAmend_Value];
+                    } else {
+                        this.logFn(LogType.warning, () => match[_rgxAmend_Value], true);
+                    }
+                    return ListenerResponse.stop;
+                }
+                this.onUnexpectedLine(line);
             }
-            this.onUnexpectedLine(line);
             return ListenerResponse.needMoreLines;
         });
         success = success && posted;
         this.locker.release();
         return { success, value };
+    }
+
+    public async requestGotoTargets(currFile: string, currLine: number) {
+        await this.locker.acquire();
+
+        const gotoLines: number[] = [];
+        
+        if (!this.started || this.running) {
+            this.locker.release();
+            return gotoLines;
+        }
+
+        let command = `${PythonServerCommand.GOTO_TARGETS} ${currFile} ${currLine}`;
+        await this.queue.postCommand(command, (cmd, line) => {
+            if (line === undefined) {
+                this.logFn(LogType.debug, () => `gototargets: aborted`);
+                return ListenerResponse.stop;
+            }
+            line = line.trim();
+            if (line) {
+                if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
+                    return ListenerResponse.stop;
+                }
+                const match = line.match(_rgxGotoTargtes);
+                if (match) {
+                    if (match[_rgxGotoTargtes_Result] !== EPythonConst.failed) {
+                        const linesStr = match[_rgxGotoTargtes_Lines];
+                        if (linesStr) {
+                            for(let numStr of linesStr.split(', ')) {
+                                if (numStr) {
+                                    gotoLines.push(+numStr);
+                                }
+                            }
+                        }
+                    }
+                    return ListenerResponse.stop;
+                }
+                this.onUnexpectedLine(line);
+            }
+            return ListenerResponse.needMoreLines;
+        });
+        this.locker.release();
+        return gotoLines;
+    }
+
+    public async requestGoto(ident: number, nextLine: number) {
+        await this.locker.acquire();
+
+        if (!this.started || this.running) {
+            this.locker.release();
+            return false;
+        }
+
+        let command = `${PythonServerCommand.GOTO} ${ident} ${nextLine}`;
+        let posted = await this.queue.postCommand(command, (cmd, line) => {
+            if (line === undefined) {
+                this.logFn(LogType.debug, () => `goto: aborted`);
+                return ListenerResponse.stop;
+            }
+            line = line.trim();
+            if (line) {
+                if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
+                    return ListenerResponse.stop;
+                }
+                const match = line.match(_rgxGoto);
+                if (match) {
+                    return ListenerResponse.stop;
+                }
+                this.onUnexpectedLine(line);
+            }
+            return ListenerResponse.needMoreLines;
+        });
+        this.locker.release();
+        return posted;
     }
 
     private setRunning() {

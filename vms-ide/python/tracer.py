@@ -24,6 +24,8 @@ class MESSAGE:
     ENTRY = 'ENTRY'
     EXCEPTION = 'EXCEPTION'
     EXITED = 'EXITED'
+    GOTO = 'GOTO'
+    GOTO_TARGETS = 'GOTO_TARGETS'
     INFO = 'INFO'
     PAUSED = 'PAUSED'
     SIGNAL = 'SIGNAL'
@@ -39,6 +41,8 @@ class COMMAND:
     CONTINUE = 'c'
     DISPLAY = 'd'           # d [ident [frame [fullName [start [count]]]]]      // frame is zero-based
     FRAME  = 'f'            # f [ident [frameStart [frameNum]]]                 // frame is zero-based
+    GOTO = 'g'              # g ident line
+    GOTO_TARGETS = 'gt'     # gt file line  // for current place
     INFO = 'i'
     NEXT = 'n'              # n [ident]     // step over
     PAUSE = 'p'
@@ -242,6 +246,7 @@ class Tracer:
                 # collect usable code lines
                 lines = []
                 lineno = frame.f_lineno
+                # lines.append(lineno)
                 values = iter(frame.f_code.co_lnotab)
                 while True:
                     try:
@@ -327,6 +332,10 @@ class Tracer:
                         self._doSetBreakPoint(cmd)
                     elif cmd.startswith(self._commands.BP_RESET):
                         self._doResetBreakPoint(cmd)
+                    elif cmd.startswith(self._commands.GOTO_TARGETS):
+                        self._doGotoTargets(cmd)
+                    elif cmd.startswith(self._commands.GOTO):
+                        self._doGoto(cmd)
                 # wait and read command again
                 self._sleep(0.3)
                 cmd = self._readDbgMessage()
@@ -342,6 +351,34 @@ class Tracer:
                 raise SystemExit()
         return self._traceFunc
     
+    def _doGoto(self, cmd):
+        locals_args = cmd.split()
+        try:
+            ident = int(locals_args[1])
+            nextLine = int(locals_args[2])
+            currFrame, isPostMortem = self._getFrame(ident, 0)
+            isPostMortem = isPostMortem
+            if currFrame != None:
+                currFrame.f_lineno = nextLine
+                self._sendDbgMessage('%s %s' % (self._messages.GOTO, 'ok'))
+                # self._doStepping('s %i' % ident, ident, self._threads[ident])
+        except Exception as ex:
+            self._sendDbgMessage('%s %s %s' % (self._messages.GOTO, 'failed', repr(ex)))
+    
+    def _doGotoTargets(self, cmd):
+        locals_args = cmd.split()
+        try:
+            currFile = locals_args[1]
+            currLine = int(locals_args[2])
+            for funcLines in self._lines[currFile].values():
+                if currLine in funcLines:
+                    self._sendDbgMessage('%s %s %s' % (self._messages.GOTO_TARGETS, len(funcLines), repr(funcLines)))
+                    break
+            else:
+                self._sendDbgMessage('%s 0 []' % self._messages.GOTO_TARGETS)
+        except Exception as ex:
+            self._sendDbgMessage('%s %s %s' % (self._messages.GOTO_TARGETS, 'failed', repr(ex)))
+
     def _doDisplay(self, cmd, ident):
         locals_args = cmd.split()
         if len(locals_args) == 1:
@@ -389,12 +426,12 @@ class Tracer:
             self._steppingThread = ident
         elif len(locals_args) == 2:
             self._steppingThread = int(locals_args[1])
+        self._steppingLevel = None
         if cmd.startswith(self._commands.NEXT):
             self._steppingLevel = entry['level']
         elif cmd.startswith(self._commands.RETURN):
             self._steppingLevel = entry['level'] - 1
         self._paused = False
-        self._steppingLevel = None
         self._sendDbgMessage(self._messages.CONTINUED)
 
     def _numFrames(self, entry):
@@ -489,6 +526,7 @@ class Tracer:
 
     def _display(self, ident, frameNum, fullName, start, count):
         frame, isPostMortem = self._getFrame(ident, frameNum)
+        isPostMortem = isPostMortem
         if frame != None:
             try:
                 if fullName.endswith('.'):

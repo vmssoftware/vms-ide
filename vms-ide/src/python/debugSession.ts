@@ -39,6 +39,23 @@ import { Synchronizer } from '../synchronizer/sync/synchronizer';
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
+interface GotoTarget {
+    /** Unique identifier for a goto target. This is used in the goto request. */
+    id: number;
+    /** The name of the goto target (shown in the UI). */
+    label: string;
+    /** The line of the goto target. */
+    line: number;
+    /** An optional column of the goto target. */
+    column?: number;
+    /** An optional end line of the range covered by the goto target. */
+    endLine?: number;
+    /** An optional end column of the range covered by the goto target. */
+    endColumn?: number;
+    /** Optional memory reference for the instruction pointer value represented by this target. */
+    instructionPointerReference?: string;
+}
+
 export enum EStartResult {
     unknown,
     started,
@@ -71,6 +88,9 @@ export class PythonDebugSession extends LoggingDebugSession {
     private _frameHandles = new Handles<IPythonFrame>();
     private _breakPoints = new Map<string, Map<number, IBreakPoint>>();  // file->line->BP
     private _nextBp = 0;
+
+    private _gotoHandles = new Handles<GotoTarget>();
+    private _nextGoto = 0;
     
     constructor(logFn?: LogFunction) {
         super("vms-python-debugger.txt");
@@ -177,7 +197,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         /** The debug adapter supports the 'stepInTargets' request. */
         supportsStepInTargetsRequest: true,
         /** The debug adapter supports the 'gotoTargets' request. */
-        supportsGotoTargetsRequest: false,
+        supportsGotoTargetsRequest: true,
         /** The debug adapter supports restarting a frame. */
         supportsRestartFrame: false,
         /** The debug adapter supports the 'restart' request. In this case a client should not implement 'restart' by terminating and relaunching the adapter but by calling the RestartRequest. */
@@ -534,6 +554,7 @@ export class PythonDebugSession extends LoggingDebugSession {
     private onStartRunning() {
         this._variableHandles.reset();
         this._frameHandles.reset();
+        this._gotoHandles.reset();
     }
 
     protected async continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments) {
@@ -566,6 +587,42 @@ export class PythonDebugSession extends LoggingDebugSession {
     protected async pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments) {
         response.success = await this._runtime.pauseRequest();
         this.sendResponse(response);
+    }
+
+    protected async gotoRequest(response: DebugProtocol.GotoResponse, args: DebugProtocol.GotoArguments, request?: DebugProtocol.Request) {
+        response.success = false;
+        let target = this._gotoHandles.get(args.targetId);
+        if (target) {
+            await this._runtime.requestGoto(args.threadId, target.line);
+            response.success = true;
+            this.sendResponse(response);
+            // emulate step
+            this.onStartRunning();
+            this.sendStoppedEvent('step', args.threadId);
+        } else {
+            response.success = false;
+            this.sendResponse(response);
+        }
+    }
+
+    protected async gotoTargetsRequest(response: DebugProtocol.GotoTargetsResponse, args: DebugProtocol.GotoTargetsArguments, request?: DebugProtocol.Request) {
+        if (args.source.path) {
+            const localPath = workspace.asRelativePath(args.source.path)
+            const lines = await this._runtime.requestGotoTargets(localPath, args.line);
+            response.body = {
+                targets: lines.map((line) => {
+                    const gtt: GotoTarget = {
+                        id: 0,
+                        label: `${localPath}: ${line}`,
+                        line,
+                    };
+                    gtt.id = this._gotoHandles.create(gtt);
+                    return gtt;
+                })
+            }
+            response.success = lines.length > 0;
+            this.sendResponse(response);
+        }
     }
 
     // protected async exceptionInfoRequest(response: DebugProtocol.ExceptionInfoResponse, args: DebugProtocol.ExceptionInfoArguments, request?: DebugProtocol.Request) {
