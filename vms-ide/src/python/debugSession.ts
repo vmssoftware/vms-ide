@@ -210,7 +210,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         supportsTerminateThreadsRequest: false,
 
         /** The debug adapter supports a (side effect free) evaluate request for data hovers. */
-        supportsEvaluateForHovers: true,
+        supportsEvaluateForHovers: false,
         /** The debug adapter supports setting a variable to a value. */
         supportsSetVariable: true,
         /** The debug adapter supports a 'format' attribute on the stackTraceRequest, variablesRequest, and evaluateRequest. */
@@ -454,18 +454,24 @@ export class PythonDebugSession extends LoggingDebugSession {
         this.sendResponse(response);
     }
 
+    public static buildFullName(path: string | undefined, name: string) {
+        return (path ? path + (name.startsWith('[') ? '' : '.') : '') + name;
+    }
+
     protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments) {
 
         let variables: DebugProtocol.Variable[] = [];
         let baseVariable = this._variableHandles.get(args.variablesReference);
         if (baseVariable !== undefined) {
-            let baseVariableFullName = (baseVariable.path ? baseVariable.path + '.' : '') + baseVariable.name;
+            // build full name like <path.name> or <path[name]> or just <name>
+            let baseVariableFullName = PythonDebugSession.buildFullName(baseVariable.path, baseVariable.name);
             let vars = await this._runtime.variableRequest(
                 baseVariable.ident,
                 baseVariable.frame,
                 baseVariableFullName,
                 args.start,
-                args.count);
+                args.count,
+                args.format?.hex);
             for(let localVar of vars) {
                 if (!localVar.name.startsWith("__")) {
                     const innerVar: DebugProtocol.Variable = {
@@ -501,7 +507,9 @@ export class PythonDebugSession extends LoggingDebugSession {
             value: args.value,
         };
 
-        ({"success": response.success, "value": response.body.value} = await this._runtime.requestSetVariable(parent, args.name, args.value));
+        let fullName = PythonDebugSession.buildFullName(parent.path, parent.name);
+        fullName = PythonDebugSession.buildFullName(fullName, args.name);
+        ({"success": response.success, "value": response.body.value} = await this._runtime.requestSetVariable(parent.ident, parent.frame, fullName, args.value));
 
         this.sendResponse(response);
     }

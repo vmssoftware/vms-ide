@@ -62,6 +62,11 @@ export enum PythonServerCommand {
     THREADS = 't',
 };
 
+export enum EPythonValueFormat {
+    decimal,
+    hex
+}
+
 export interface IPythonThread {
     id: number;
     paused: boolean;
@@ -362,7 +367,7 @@ export class PythonShellRuntime extends EventEmitter {
      * @param frame 
      * @param variableFullName set to empty string to get locals
      */
-    public async variableRequest(ident: number, frame: number, variableFullName: string, start?: number, count?: number): Promise<IPythonVariable[]> {
+    public async variableRequest(ident: number, frame: number, variableFullName: string, start?: number, count?: number, showHex?: boolean): Promise<IPythonVariable[]> {
 
         await this.locker.acquire();
 
@@ -374,19 +379,13 @@ export class PythonShellRuntime extends EventEmitter {
 
         let varPath = variableFullName;
         if (variableFullName) {
-            //if it is not a locals (in case of empty variable), add dot to the end to get children names (if they exist)
+            // if it is not a locals (in case of empty variable), add dot to the end to get children names (if they exist)
+            // it is only for inner purpose, this dot doesn't pass to tracer, so indexed variables must work fine
             varPath = variableFullName + '.';
         }
 
-        let command = `${PythonServerCommand.DISPLAY} ${ident} ${frame} ${varPath}`;
-        let innerPath: string | undefined = variableFullName ? variableFullName : undefined;
+        let command = `${PythonServerCommand.DISPLAY}${showHex?'h':''} ${ident} ${frame} ${varPath}`;
         if (start !== undefined) {
-            let lastDot = variableFullName.lastIndexOf('.');
-            if (lastDot > 0) {
-                innerPath = variableFullName.substr(0, lastDot);
-            } else {
-                innerPath = undefined;
-            }
             command += ` ${start}`;
             if (count !== undefined) {
                 command += ` ${count}`;
@@ -458,11 +457,12 @@ export class PythonShellRuntime extends EventEmitter {
                                 ident,
                                 frame,
                                 name: match[_rgxDisplay_Name],
-                                path: innerPath,
+                                path: variableFullName,
                                 type: match[_rgxDisplay_Type],
                             };
                             if (start !== undefined) {
                                 // patch the name
+                                lastVar.name = lastVar.name.substr(variableFullName.length);
                             }
                             // do not handle children length, not necessary at this point
                             if (match[_rgxDisplay_ValueDescr] == EPythonConst.length) {
@@ -499,7 +499,7 @@ export class PythonShellRuntime extends EventEmitter {
         return variables;
     }
 
-    public async requestSetVariable(parent: IPythonVariable, name: string, value: string) {
+    public async requestSetVariable(ident: number, frame: number, fullName: string, value: string) {
         
         await this.locker.acquire();
         
@@ -509,8 +509,7 @@ export class PythonShellRuntime extends EventEmitter {
             return { success, value };
         }
 
-        let fullName = (parent.path ? parent.path + '.' : '') + (parent.name ? parent.name + '.' : '') + name;
-        let command = `${PythonServerCommand.AMEND} ${parent.ident} ${parent.frame} ${fullName} ${value}`;
+        let command = `${PythonServerCommand.AMEND} ${ident} ${frame} ${fullName} ${value}`;
         let posted = await this.queue.postCommand(command, (cmd, line) => {
             if (line === undefined) {
                 this.logFn(LogType.debug, () => `amend: aborted`);

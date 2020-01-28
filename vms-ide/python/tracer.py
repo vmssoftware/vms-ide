@@ -39,7 +39,7 @@ class COMMAND:
     BP_RESET = 'bpr'        # bpr [file [line]]
     BP_SET = 'bps'          # bps file line
     CONTINUE = 'c'
-    DISPLAY = 'd'           # d [ident [frame [fullName [start [count]]]]]      // frame is zero-based
+    DISPLAY = 'd'           # d[h] [ident [frame [fullName [start [count]]]]]   // frame is zero-based
     FRAME  = 'f'            # f [ident [frameStart [frameNum]]]                 // frame is zero-based
     GOTO = 'g'              # g ident line
     GOTO_TARGETS = 'gt'     # gt file line  // test if we can go to target from current place
@@ -242,7 +242,7 @@ class Tracer:
                 # collect usable code lines
                 lines = []
                 lineno = frame.f_lineno
-                # lines.append(lineno)
+                lines.append(lineno)
                 values = iter(frame.f_code.co_lnotab)
                 while True:
                     try:
@@ -263,6 +263,7 @@ class Tracer:
                         break
                 self._lines[frame.f_code.co_filename][frame.f_code.co_name] = lines
                 self._checkFileBreakpoints(frame.f_code.co_filename, lines)
+                # self._sendDbgMessage('NEW FRAME: %s %s %s' % (frame.f_code.co_filename, frame.f_code.co_name, repr(lines)))
 
             # pause on unhandled exception
             if entry['exception'] != None and entry['level'] <= 0:
@@ -384,17 +385,17 @@ class Tracer:
     def _doDisplay(self, cmd, ident):
         locals_args = cmd.split()
         if len(locals_args) == 1:
-            self._display(ident, 0, '.', None, None)
+            self._display(ident, 0, '.', None, None, locals_args[0].endswith('h'))
         elif len(locals_args) == 2:
-            self._display(int(locals_args[1]), 0, '.', None, None)
+            self._display(int(locals_args[1]), 0, '.', None, None, locals_args[0].endswith('h'))
         elif len(locals_args) == 3:
-            self._display(int(locals_args[1]), int(locals_args[2]), '.', None, None)
+            self._display(int(locals_args[1]), int(locals_args[2]), '.', None, None, locals_args[0].endswith('h'))
         elif len(locals_args) == 4:
-            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], None, None)
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], None, None, locals_args[0].endswith('h'))
         elif len(locals_args) == 5:
-            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), None)
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), None, locals_args[0].endswith('h'))
         elif len(locals_args) == 6:
-            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), int(locals_args[5]))
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), int(locals_args[5]), locals_args[0].endswith('h'))
 
     def _doFrames(self, cmd, ident):
         locals_args = cmd.split()
@@ -526,7 +527,7 @@ class Tracer:
                 return
         self._sendDbgMessage('%s failed Invalid frame' % self._messages.AMEND)
 
-    def _display(self, ident, frameNum, fullName, start, count):
+    def _display(self, ident, frameNum, fullName, start, count, showHex):
         frame, isPostMortem = self._getFrame(ident, frameNum)
         isPostMortem = isPostMortem
         if frame != None:
@@ -544,7 +545,10 @@ class Tracer:
                     resultType = type(result)
                     if resultType in self._knownValueTypes:
                         # if we know that is valueType, display it
-                        self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName, resultType, repr(result)))
+                        if resultType == int and showHex:
+                            self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName, resultType, hex(result)))
+                        else:
+                            self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName, resultType, repr(result)))
                         return
                     else:
                         try:
@@ -573,7 +577,10 @@ class Tracer:
                                                 value = result[value]
                                             resultType = type(value)
                                             if resultType in self._knownValueTypes:
-                                                self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName + ('[%s]' % idx), resultType, repr(value)))
+                                                if resultType == int and showHex:
+                                                    self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName + ('[%s]' % idx), resultType, hex(value)))
+                                                else:
+                                                    self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName + ('[%s]' % idx), resultType, repr(value)))
                                             else:
                                                 try:
                                                     length = len(value)
@@ -605,7 +612,7 @@ class Tracer:
                 self._sendDbgMessage('%s "%s" %s children: %s' % (self._messages.DISPLAY, displayName, resultType, len(children)))
                 if displayChildren:
                     for childName in children:
-                        self._display(ident, frameNum, (fullName + '.' if fullName else '') + childName, None, None)
+                        self._display(ident, frameNum, (fullName + '.' if fullName else '') + childName, None, None, showHex)
             except Exception as ex:
                 self._sendDbgMessage('%s "%s" failed: %s' % (self._messages.DISPLAY, displayName, repr(ex)))
 
@@ -708,6 +715,7 @@ class Tracer:
         self._changeLocals(self._Obj(frame), self._Int(0))
 
     def _runscript(self, filename):
+        sys.path.insert(0, '')      # add cwd
         # === Given from PDB.PY ===
         import __main__
         builtinsT = __builtins__
@@ -719,6 +727,7 @@ class Tracer:
         self._waitingForAFile = filename
         globalsT = __main__.__dict__
         try:
+            # self._sendDbgMessage('PATH: %s' % repr(sys.path))
             with open(filename, 'rb') as fp:
                 statement = "exec(compile(%r, %r, 'exec'))" % (fp.read(), filename)
             self._startTracing = True

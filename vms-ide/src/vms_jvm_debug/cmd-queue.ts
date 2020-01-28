@@ -40,7 +40,7 @@ export class CmdQueue implements ICmdQueue {
                 return false;
             }
             const waitSession = new Lock(true);
-            const session = this._server.onLineReceived((line: string | undefined) => {
+            const session = this._server?.onLineReceived((line: string | undefined) => {
                 let result = ListenerResponse.stop;
                 if (listener) {
                     result = listener(cmd, line);
