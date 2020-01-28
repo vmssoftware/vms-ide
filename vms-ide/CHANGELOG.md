@@ -1,5 +1,11 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.4.0
+* Fix PASCAL syntax parser and highlighting issues.
+* Add BASIC highlighting and syntax parser.
+* Add experimental Pyhton debugger.
+* Fix glob patterns (project settings masks).
+
 ## 1.3.6
 * Fix PASCAL syntax parser issues.
 
