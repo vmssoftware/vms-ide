@@ -76,7 +76,8 @@ export async function findFiles(canReadDir: IReadDirectory,
                                 progress?: IProgress) {
     include = include || "";
     const options: micromatch.Options = {
-        basename: true,
+        basename: false,
+        dot: true,
         nocase: true,
         nodupes: true,
         unixify: false,

@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.3.6
+* Fix PASCAL syntax parser issues.
+
 ## 1.3.5
 * Fix PASCAL syntax parser issues.
 
