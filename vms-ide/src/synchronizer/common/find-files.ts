@@ -81,7 +81,7 @@ export async function findFiles(canReadDir: IReadDirectory,
         nocase: true,
         nodupes: true,
         unixify: false,
-    };
+};
     let {expandedMask: splitInclude , missed_curly_bracket} = expandMask(include);
     if (debugLog && missed_curly_bracket) {
         debugLog(LogType.warning, () => localize("check.inc.mask", "Please check include file masks for correct curly brackets"), true);
@@ -98,7 +98,7 @@ export async function findFiles(canReadDir: IReadDirectory,
 
     function separateFilesAndDirsAndMatch(acc: ISepFileDir, fileEntry: IFileEntry): ISepFileDir {
         if (fileEntry.isDirectory) {
-            const list = micromatch([fileEntry.filename], "*", options);
+            const list = micromatch([fileEntry.filename], "**/*", options);
             if (list.length) {
                 acc.dirs.push(fileEntry);
             }

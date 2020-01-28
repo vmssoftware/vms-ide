@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "1.3.7",
+    "version": "1.4.0",
     "publisher": "VMSSoftwareInc",
     "license": "SEE LICENSE IN LICENSE.md",
     "repository": {
@@ -872,6 +872,9 @@
             },
             {
                 "language": "java"
+            },
+            {
+                "language": "python"
             }
         ],
         "debuggers": [
@@ -1030,6 +1033,58 @@
                     "FillClassName": "vms_jvm_debugger.fillClassName",
                     "FillClassPath": "vms_jvm_debugger.fillClassPath"
                 }
+            },
+            {
+                "type": "vms python debugger",
+                "label": "%vms_python_debug.label.description%",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "script"
+                        ],
+                        "properties": {
+                            "script": {
+                                "type": "string",
+                                "description": "%vms_python_debug.script.description%",
+                                "default": "${file}"
+                            },
+                            "port": {
+                                "type": "string",
+                                "description": "%vms_python_debug.port.description%",
+                                "default": "55005-55105"
+                            },
+                            "arguments": {
+                                "type": "string",
+                                "description": "%vms_python_debug.arguments.description%",
+                                "default": ""
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "vms python debugger",
+                        "request": "launch",
+                        "name": "Launch Python Script",
+                        "script": "${file}",
+                        "port": "55005-55105",
+                        "arguments": ""
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "VMS IDE: Launch Python Script",
+                        "description": "A new configuration for 'debugging' Python",
+                        "body": {
+                            "type": "vms python debugger",
+                            "request": "launch",
+                            "name": "Launch Python Script",
+                            "script": "^\"\\${file}\"",
+                            "port": "55005-55105",
+                            "arguments": ""
+                        }
+                    }
+                ]
             }
         ]
     },
@@ -1066,7 +1121,7 @@
         "npm-run-all": "^4.1.5",
         "ts-loader": "^5.4.5",
         "tslint": "^5.18.0",
-        "typescript": "^3.5.3",
+        "typescript": "^3.7.4",
         "vsce": "^1.65.0",
         "vscode": "^1.1.35",
         "vscode-nls-dev": "github:vorfol/vscode-nls-dev",

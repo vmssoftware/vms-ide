@@ -507,7 +507,7 @@ export async function Perform(actionName: ActionType, scope: string | undefined,
         });
 }
 
-const purgeCmd = printLike`purge [${"directory"}...]`;
+const purgeCmd = printLike`purge ${"disk"}[${"directory"}...]`;
 
 /**
  * Uploads source using preferred way, sets synchronized and executes purge if required
@@ -535,7 +535,7 @@ async function doUpload(ensured: IEnsured, logFn: LogFunction, forceZip = false,
                 const sshHelper = new sshHelperType(logFn);
                 const shell = await sshHelper.getDefaultVmsShell(ensured.scope);
                 if (shell) {
-                    await shell.execCmd(purgeCmd(converter.bareDirectory));
+                    await shell.execCmd(purgeCmd(converter.disk, converter.bareDirectory));
                     shell.dispose();
                 }
             }

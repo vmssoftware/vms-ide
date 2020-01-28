@@ -16,8 +16,8 @@ const localize = nls.loadMessageBundle();
 export class UploadZip {
 
     private static readonly unzipCmd = printLike`unzip -oo "-D" ${"zipFileName"}`;
-    private static readonly freeAllCmd = printLike`set security /prot=(o:rwed) [${"directory"}...]*.*;*`;
-    private static readonly delAllCmd = printLike`delete/tree [${"directory"}...]*.*;*`;
+    private static readonly freeAllCmd = printLike`set security /prot=(o:rwed) ${"disk"}[${"directory"}...]*.*;*`;
+    private static readonly delAllCmd = printLike`delete/tree ${"disk"}[${"directory"}...]*.*;*`;
 
     public logFn: LogFunction;
     constructor(log?: LogFunction) {
@@ -77,8 +77,8 @@ export class UploadZip {
                         case "yes":
                         case "true":
                         case "clear":
-                            await shell.execCmd(UploadZip.freeAllCmd(converter.bareDirectory));
-                            await shell.execCmd(UploadZip.delAllCmd(converter.bareDirectory));
+                            await shell.execCmd(UploadZip.freeAllCmd(converter.disk, converter.bareDirectory));
+                            await shell.execCmd(UploadZip.delAllCmd(converter.disk, converter.bareDirectory));
                             break;
                     }
                 }
