@@ -11,8 +11,8 @@ import { DiagnosticEntry, SymbolKind, SymbolInfo } from './Facade';
 import { ContextErrorListener, ContextLexerErrorListener } from './ContextErrorListener';
 import { PredictionMode } from 'antlr4ts/atn/PredictionMode';
 import { AnalysisListener} from './AnalysisListener';
-import { SyntaxSymbol, BuiltInTypeSymbol, ContextSymbolTable } from './ContextSymbolTable';
-import { BuiltInValueTypes, symbolDescriptionFromEnum } from './Symbol';
+import { InFunctionSymbol, SyntaxSymbol, BuiltInTypeSymbol, ContextSymbolTable } from './ContextSymbolTable';
+import { BuiltInValueTypes, BuiltInFunctions } from './Symbol';
 import { DetailsListener } from './DetailsListener';
 import { parseTreeFromPosition } from '../../common/parser/Helpers';
 
@@ -51,6 +51,12 @@ export class SourceContext
             for (const builtintype of BuiltInValueTypes) 
             {
                 SourceContext.globalSymbols.addNewSymbolOfType(BuiltInTypeSymbol, undefined, builtintype);
+            }
+
+            for (const builtInFunc of BuiltInFunctions) 
+            {
+                let symbol = SourceContext.globalSymbols.addNewSymbolOfType(InFunctionSymbol, undefined, builtInFunc.name);
+                symbol.functionDefinition = builtInFunc;
             }
         }
     }
@@ -406,7 +412,22 @@ export class SourceContext
 
     public symbolInfoAtPosition(column: number, row: number): SymbolInfo | undefined 
     {
-        return this.symbolTable.getSymbolDefinition(this.symbolAtPosition(column, row));
+        let symbolInfo = this.symbolTable.getSymbolDefinition(this.symbolAtPosition(column, row));
+
+        if(symbolInfo === undefined)//get global symbol
+        {
+            if (this.tree) 
+            {
+                const context = parseTreeFromPosition(this.tree, column, row - 1);
+
+                if (context) 
+                {
+                    symbolInfo = SourceContext.globalSymbols.getSymbolInfo(context.text.toUpperCase());
+                }
+            }
+        }
+
+        return symbolInfo;
     }
 
     public symbolAtPosition(column: number, row: number): Symbol | undefined 

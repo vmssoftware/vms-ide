@@ -62,6 +62,13 @@ export class PascalHoverProvider implements HoverProvider
                 
                 showParseData = true;
             }
+            else
+            {
+                if(info.dataInfo)
+                {
+                    data = info.dataInfo;
+                }
+            }
         }
 
         const description = symbolDescriptionFromEnum(info.kind);

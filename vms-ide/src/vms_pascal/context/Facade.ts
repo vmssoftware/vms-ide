@@ -9,6 +9,7 @@ export enum SymbolKind
     Type,
     TypeRef,
     BuiltInType,
+    BuiltInFunc,
     Parameter,
     Qualifier,
     Keyword,
@@ -57,7 +58,9 @@ export interface SymbolInfo
     name: string;
     source: string;
     definition?: Definition;
+    definitionBlock?: Definition;
     description?: string;  // Used for code completion. Provides a small description for certain symbols.
+    dataInfo?: string;
 }
 
 export enum DiagnosticType 

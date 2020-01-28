@@ -5,7 +5,7 @@ import { SymbolKind, SymbolInfo, Definition } from './Facade';
 import { SourceContext } from './SourceContext';
 import { Interval } from 'antlr4ts/misc';
 import { ParseTree, TerminalNode } from 'antlr4ts/tree';
-import { symbolDescriptionFromEnum } from './Symbol';
+import { symbolDescriptionFromEnum, IBuildInFunc } from './Symbol';
 
 
 export class ContextSymbolTable extends SymbolTable 
@@ -345,6 +345,25 @@ export class ContextSymbolTable extends SymbolTable
             result.description = symbolDescriptionFromEnum(ContextSymbolTable.getKindFromSymbol(definitionSymbol));
         }
 
+        if (symbol instanceof InFunctionSymbol)
+        {
+            if(symbol.functionDefinition)
+            {
+                result.dataInfo = "{\n\t@description: " + symbol.functionDefinition.description;
+
+                if(symbol.functionDefinition.arguments !== "")
+                {
+                    result.dataInfo += "\n\t@arguments: " + symbol.functionDefinition.arguments;
+                }                
+                if(symbol.functionDefinition.result !== "")
+                {
+                    result.dataInfo += "\n\t@result: " + symbol.functionDefinition.result;
+                }
+                
+                result.dataInfo += "\n}\n" + symbol.functionDefinition.prototype;
+            }
+        }
+
         return result;
     }
     
@@ -589,6 +608,14 @@ export class ContextSymbolTable extends SymbolTable
         {
             return SymbolKind.BuiltInType;
         }
+        if (symbol instanceof BuiltInFuncSymbol) 
+        {
+            return SymbolKind.BuiltInFunc;
+        }
+        if (symbol instanceof InFunctionSymbol) 
+        {
+            return SymbolKind.BuiltInFunc;
+        }
         if (symbol instanceof ParameterSymbol) 
         {
             return SymbolKind.Parameter;
@@ -692,9 +719,15 @@ export class WithTypeReference extends ScopedSymbol
     public typeReference?: EntityCollection;
 }
 
+export class InFunctionSymbol extends Symbol 
+{ 
+    public functionDefinition?: IBuildInFunc;
+}
+
 export class SyntaxSymbol extends EntityCollection { }
 export class TypeSymbol extends EntityCollection { }
 export class BuiltInTypeSymbol extends Symbol { }
+export class BuiltInFuncSymbol extends InFunctionSymbol{ }
 export class TypeRefSymbol extends Symbol { }
 export class EntitySymbol extends Symbol { }
 export class ParameterSymbol extends WithTypeReference { }
