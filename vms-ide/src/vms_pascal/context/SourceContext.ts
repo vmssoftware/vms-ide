@@ -44,20 +44,15 @@ export class SourceContext
         this.sourceId = path.basename(fileName, path.extname(fileName));
         this.symbolTable =  new ContextSymbolTable(this.sourceId, { allowDuplicateSymbols: true }, this);
 
-        if (!SourceContext.globalSymbols.resolve("EOF")) 
+        for (const builtintype of BuiltInValueTypes) 
         {
-            SourceContext.globalSymbols.addNewSymbolOfType(Symbol, undefined, "EOF");
+            SourceContext.globalSymbols.addNewSymbolOfType(BuiltInTypeSymbol, undefined, builtintype);
+        }
 
-            for (const builtintype of BuiltInValueTypes) 
-            {
-                SourceContext.globalSymbols.addNewSymbolOfType(BuiltInTypeSymbol, undefined, builtintype);
-            }
-
-            for (const builtInFunc of BuiltInFunctions) 
-            {
-                let symbol = SourceContext.globalSymbols.addNewSymbolOfType(InFunctionSymbol, undefined, builtInFunc.name);
-                symbol.functionDefinition = builtInFunc;
-            }
+        for (const builtInFunc of BuiltInFunctions) 
+        {
+            let symbol = SourceContext.globalSymbols.addNewSymbolOfType(InFunctionSymbol, undefined, builtInFunc.name);
+            symbol.functionDefinition = builtInFunc;
         }
     }
 
