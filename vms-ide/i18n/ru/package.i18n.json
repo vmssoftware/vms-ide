@@ -91,5 +91,9 @@
     "vms_jvm_debug.trace.description": "Enable logging of the Debug Adapter Protocol",
     "vms_basic.extension.vms_reparse": "Reparse Basic project",
     "vms_fortran.extension.vms_reparse": "Reparse Fortran project",
-    "vms_pascal.extension.vms_reparse": "Reparse Pascal project"
+    "vms_pascal.extension.vms_reparse": "Reparse Pascal project",
+    "vms_python_debug.label.description": "VMS Python Debugger",
+    "vms_pyhton_debug.script.description": "Script name",
+    "vms_pyhton_debug.port.description": "Port range",
+    "vms_python_debug.arguments.description": "Script arguments"
 }

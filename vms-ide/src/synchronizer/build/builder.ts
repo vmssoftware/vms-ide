@@ -443,7 +443,6 @@ export class Builder {
     }
 
     protected async smartClean(scopeData: IScopeBuildData, files: string[], buildName: string) {
-        
         for (const file of files) {
             const vms = new VmsPathConverter(file);
             const objDir = scopeData.ensured.projectSection.outdir + "." + buildName + ".obj";
@@ -1043,7 +1042,7 @@ export class Builder {
                     let cd = `set default ${zipFolderConverter.directory}`;
                     answer = await scopeData.shell.execCmd(cd);
                     // create zip file 
-                    let {expandedMask: expandedList , missed_curly_bracket} = expandMask(scopeData.ensured.projectSection.listing);
+                    let {expandedMask: expandedList, missed_curly_bracket} = expandMask(scopeData.ensured.projectSection.listing);
                     if (missed_curly_bracket) {
                         this.logFn(LogType.warning, () => localize("check.inc.mask", "Please check listing file masks for correct curly brackets"), true);
                     }

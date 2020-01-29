@@ -19,8 +19,12 @@ export class VmsPathConverter {
         return this.directory + this.file;
     }
 
+    public get disk(): string {
+        return this.vmsDisk ? this.vmsDisk + ":" : "";
+    }
+
     public get directory(): string {
-        return this.vmsBareDir ? "[" + this.vmsBareDir + "]" : "";
+        return this.disk + (this.vmsBareDir ? "[" + this.vmsBareDir + "]" : "");
     }
 
     public get bareDirectory(): string {
@@ -47,12 +51,16 @@ export class VmsPathConverter {
         const converter = new VmsPathConverter();
         const match = relPath.match(vmsPathRgx);
         if (match) {
+            converter.vmsDisk = match[VmsPathPart.disk] || "";
             converter.vmsBareDir = match[VmsPathPart.bareDir] || "";
             converter.vmsFileName = match[VmsPathPart.fileName] || "";
             converter.vmsFileExt = match[VmsPathPart.fileExt] || "";
             if (converter.vmsBareDir) {
                 if (!match[VmsPathPart.isRelative]) {
                     converter.fsPath = ftpPathSeparator;
+                }
+                if (converter.vmsDisk) {
+                    converter.fsPath = ftpPathSeparator + converter.vmsDisk + ftpPathSeparator;
                 }
                 converter.fsPath += converter.vmsBareDir.split(".").filter((s) => !!s).join(ftpPathSeparator);
                 converter.fsPath += ftpPathSeparator;
@@ -62,6 +70,7 @@ export class VmsPathConverter {
         return converter;
     }
 
+    private vmsDisk: string = "";
     private vmsBareDir: string = "";
     private vmsFileName: string = "";
     private vmsFileExt: string = "";
@@ -76,10 +85,14 @@ export class VmsPathConverter {
                 this.vmsBareDir = fsPath.slice(0, dirEnd);
                 this.vmsBareDir = this.vmsBareDir.replace(splitter, ".");
                 if (this.vmsBareDir[0] === ".") {
-                    // if starts with "/" then remove "." (so path is absolute)
-                    this.vmsBareDir = this.vmsBareDir.slice(1);
+                    // if starts with "/" then path is absolute and has a disk
+                    const dirPos = this.vmsBareDir.indexOf(".", 1);
+                    if (dirPos > 0) {
+                        this.vmsDisk = this.vmsBareDir.slice(1, dirPos);
+                        this.vmsBareDir = this.vmsBareDir.slice(dirPos + 1);
+                    }
                 } else {
-                    // else add "." (so path is relative)
+                    // else add "." (so path is relative to home)
                     this.vmsBareDir = "." + this.vmsBareDir;
                 }
             }

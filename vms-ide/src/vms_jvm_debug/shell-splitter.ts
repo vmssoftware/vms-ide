@@ -1,6 +1,7 @@
 import { Transform } from "stream";
 import { EventEmitter } from "events";
 import { ICmdClient } from "./communication";
+import { LogFunction, LogType } from "../common/main";
 
 //const _rgxNL = /(?:\r)?\n/g;
 const _rgxNL = /\n/g;
@@ -9,7 +10,7 @@ export class ShellSplitter extends Transform {
 
     public _lastError: string | undefined;
 
-	constructor(private _client: ICmdClient, private _timeout = 100) {
+	constructor(private _client: ICmdClient, private _timeout = 100, private logFn?: LogFunction) {
 		super();
 
         this.on('close', () => {
@@ -33,6 +34,9 @@ export class ShellSplitter extends Transform {
             content = chunk.toString("utf8");
         } else if (typeof chunk === "string") {
             content = chunk;
+        }
+        if (this.logFn) {
+            this.logFn(LogType.debug, () => '===' + content);
         }
         this._buffer += content;
         let matchNL = _rgxNL.exec(this._buffer);

@@ -30,7 +30,7 @@ interface IScopeSyncData {
     sshWatcher: IDispose;
 }
 
-const purgeCmd = printLike`purge [${"directory"}...]`;
+const purgeCmd = printLike`purge ${"disk"}[${"directory"}...]`;
 
 export class Synchronizer {
 
@@ -247,7 +247,7 @@ export class Synchronizer {
                 const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
                 const shell = await this.sshHelper.getDefaultVmsShell(ensured.scope);
                 if (shell) {
-                    await shell.execCmd(purgeCmd(converter.bareDirectory));
+                    await shell.execCmd(purgeCmd(converter.disk, converter.bareDirectory));
                     shell.dispose();
                 }
             }
@@ -550,22 +550,11 @@ export class Synchronizer {
             });
     }
 
-    /**
-     * Transfer file and set date
-     * @param from from
-     * @param to to
-     * @param file file in unix format
-     * @param date date
-     */
-    private async transferFile(from: ISource, to: ISource, file: string, date: Date) {
-        await this.transferBarrier.acquire();
-        let dir = "";
-        const dirInFileEnd = file.lastIndexOf(ftpPathSeparator);
-        if (dirInFileEnd !== -1) {
-            dir = file.slice(0, dirInFileEnd);
+    public static async pipeFileAndSetDate(sshHelper: SshHelper | undefined, from: ISource, to: ISource, file: string, date: Date, logFn: LogFunction) {
+        if (sshHelper === undefined) {
+            return false;
         }
-        await to.ensureDirectory(dir);
-        return this.sshHelper!.pipeFile(from, to, file, file, this.logFn)
+        return sshHelper.pipeFile(from, to, file, file, logFn)
             .then(async (ok) => {
                 if (ok) {
                     // TODO: test anyhow that file is completely written before setting date
@@ -586,7 +575,7 @@ export class Synchronizer {
                                 if (lastDate !== undefined) {
                                     const lastDiff = date.valueOf() - lastDate.valueOf();
                                     if (Math.abs(lastDiff) > 1000) {
-                                        this.logFn(LogType.warning, () => `set time for ${file} missed by ${lastDiff}, must be ${date.toISOString()}, but set as ${lastDate.toISOString()} `);
+                                        logFn(LogType.warning, () => `set time for ${file} missed by ${lastDiff}, must be ${date.toISOString()}, but set as ${lastDate.toISOString()} `);
                                     }
                                 }
                                 return retCode;
@@ -597,11 +586,32 @@ export class Synchronizer {
                     }
                 }
                 return false;
-            })
+            });
+    }
+
+    /**
+     * Transfer file and set date
+     * @param from from
+     * @param to to
+     * @param file file in unix format
+     * @param date date
+     */
+    private async transferFile(from: ISource, to: ISource, file: string, date: Date) {
+        await this.transferBarrier.acquire();
+        let dir = "";
+        const dirInFileEnd = file.lastIndexOf(ftpPathSeparator);
+        if (dirInFileEnd !== -1) {
+            dir = file.slice(0, dirInFileEnd);
+        }
+        await to.ensureDirectory(dir);
+        return Synchronizer.pipeFileAndSetDate(this.sshHelper, from, to, file, date, this.logFn)
             .then((done) => {
                 this.transferBarrier.release();
                 return done;
-            });
+            }).catch((reason) => {
+                this.transferBarrier.release();
+                return false;
+            })
     }
 
     /**
