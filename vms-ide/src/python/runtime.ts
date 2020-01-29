@@ -244,6 +244,14 @@ export class PythonShellRuntime extends EventEmitter {
         this.running = true;
     }
 
+    public isRunning() {
+        return this.started && this.running;
+    }
+
+    public isPaused() {
+        return this.started && !this.running;
+    }
+
     public threadsCollected() {
         return this.threads;
     }

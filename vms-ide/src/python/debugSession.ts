@@ -560,6 +560,32 @@ export class PythonDebugSession extends LoggingDebugSession {
         this.sendResponse(response);
     }
 
+    protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments) {
+        switch (args.context) {
+            case 'repl':
+                if (this._runtime.isRunning()) {
+                    this._tracerQueue.postCommand(args.expression);
+                    response.body = {
+                        result: ``,
+                        variablesReference: 0
+                    };
+                } else if (this._runtime.isPaused()) {
+                    // TODO: filter only allowed command
+                    this._serverQueue.postCommand(args.expression);
+                    response.body = {
+                        result: ``,
+                        variablesReference: 0
+                    };
+                }
+                break;
+            case 'hover':
+                break;
+            case 'watch':
+                break;
+        }
+        this.sendResponse(response);
+    }
+
     private onStartRunning() {
         this._variableHandles.reset();
         this._frameHandles.reset();
