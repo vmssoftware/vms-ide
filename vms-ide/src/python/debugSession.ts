@@ -30,6 +30,7 @@ import {
     IPythonVariable,
     PythonRuntimeEvents,
     PythonShellRuntime,
+    rgxEsc,
 } from "./runtime";
 import { GetSshHelperType } from '../ext-api/ext-api';
 import { FsSource } from '../synchronizer/sync/fs-source';
@@ -281,8 +282,11 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     private userOutput(line?: string) {
         if (line) {
-            const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stdout');
-            this.sendEvent(e);
+            line = line.replace(rgxEsc, '');
+            if (line) {
+                const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stdout');
+                this.sendEvent(e);
+            }
         }
     }
 
@@ -570,7 +574,7 @@ export class PythonDebugSession extends LoggingDebugSession {
                         variablesReference: 0
                     };
                 } else if (this._runtime.isPaused()) {
-                    // TODO: filter only allowed command
+                    // we woun't filter anything, use it on your own risk
                     this._serverQueue.postCommand(args.expression);
                     response.body = {
                         result: ``,

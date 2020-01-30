@@ -72,7 +72,6 @@ export interface ISynchronizeSection  {
     downloadNewFiles: DownloadAction;
     keepAlive: boolean;
     setTimeAttempts: number;
-    setTimeByShell: boolean;
     unzipCmd: string;
     preferZip: boolean;
     forceLocalTime: boolean;

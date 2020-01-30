@@ -18,7 +18,7 @@
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
-    "main": "./out/index",
+    "main": "./out/extension",
     "activationEvents": [
         "*",
         "onView:vmssoftware.project-dep.projectDependencies",
@@ -605,6 +605,12 @@
                     "default": false,
                     "description": "%ssh-helper.configuration.skipSignatureVerification%"
                 },
+                "vmssoftware.ssh-helper.connection.supportSetFileTime": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%ssh-helper.configuration.supportSetFileTime%"
+                },
                 "vmssoftware.ssh-helper.connection.algorithms": {
                     "scope": "resource",
                     "type": "object",
@@ -647,7 +653,8 @@
                             "password": "",
                             "keyFile": "",
                             "skipSignatureVerification": false,
-                            "algorithms": {}
+                            "algorithms": {},
+                            "supportSetFileTime": true
                         }
                     ],
                     "description": "%ssh-helper.configuration.hosts-collection%"
@@ -790,12 +797,6 @@
                     "type": "number",
                     "default": 3,
                     "description": "%synchronizer.properties.synchronize.setTimeAttempts.description%"
-                },
-                "vmssoftware.synchronizer.synchronize.setTimeByShell": {
-                    "scope": "resource",
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%synchronizer.properties.synchronize.setTimeByShell.description%"
                 },
                 "vmssoftware.synchronizer.synchronize.unzipCmd": {
                     "scope": "resource",

@@ -107,6 +107,7 @@ export interface IConnectionSection {
     keyFile?: string;
     skipSignatureVerification?: boolean;
     algorithms?: IAlgorithms;
+    supportSetFileTime?: boolean;
 }
 
 export interface IHost extends IConnectionSection {

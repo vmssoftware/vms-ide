@@ -153,6 +153,8 @@ const _rgxGotoTargtes_Result    = 1;
 const _rgxGoto                  = /GOTO (failed|ok)/;
 const _rgxGoto_Result           = 1;
 
+export const rgxEsc = /\x1B(?:[@-Z\\-_=>]|\[[0-?]*[ -/]*[@-~]|[)(][AB012])/g;
+
 export class PythonShellRuntime extends EventEmitter {
     
     private logFn: LogFunction;
@@ -185,7 +187,7 @@ export class PythonShellRuntime extends EventEmitter {
 
     private onUnexpectedLine(line: string | undefined): void {
         if (line) {
-            line = line.trim();
+            line = line.trim().replace(rgxEsc, '');
             if (line) {
                 this.sendEvent(PythonRuntimeEvents.output, line);
                 let stopReason: PythonRuntimeEvents | undefined;

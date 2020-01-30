@@ -13,7 +13,8 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             (typeof candidate.username === "string" || candidate.username === undefined) &&
             (typeof candidate.keyFile === "string" || candidate.keyFile === undefined) &&
             (typeof candidate.password === "string" || candidate.password === undefined) &&
-            (typeof candidate.skipSignatureVerification === "boolean" || candidate.skipSignatureVerification === undefined);
+            (typeof candidate.skipSignatureVerification === "boolean" || candidate.skipSignatureVerification === undefined) &&
+            (typeof candidate.supportSetFileTime === "boolean" || candidate.supportSetFileTime === undefined);
     }
 
     public host: string = "";
@@ -23,6 +24,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
     public username?: string = "";
     public skipSignatureVerification?: boolean = false;
     public algorithms?: IAlgorithms;
+    public supportSetFileTime?: boolean = true;
 
     public name(): string {
         return ConnectionSection.section;
@@ -44,6 +46,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             username: this.username || "",
             skipSignatureVerification: this.skipSignatureVerification || false,
             algorithms: this.algorithms as ValueData,
+            supportSetFileTime: this.supportSetFileTime === undefined ? true : this.supportSetFileTime,
         };
     }
 
@@ -56,6 +59,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             this.username = data.username;
             this.skipSignatureVerification = data.skipSignatureVerification;
             this.algorithms = data.algorithms;
+            this.supportSetFileTime = data.supportSetFileTime;
             return true;
         }
         return false;

@@ -265,6 +265,14 @@ class Tracer:
                 self._checkFileBreakpoints(frame.f_code.co_filename, lines)
                 # self._sendDbgMessage('NEW FRAME: %s %s %s' % (frame.f_code.co_filename, frame.f_code.co_name, repr(lines)))
 
+            # examine exception and save it
+            if event == 'exception':
+                entry['exception'] = arg[1]
+                entry['traceback'] = arg[2]
+                # for testing purpose => always stop
+                self._sendDbgMessage(self._messages.EXCEPTION + ' ' + repr(entry['exception']))
+                self._paused = True
+
             # pause on unhandled exception
             if entry['exception'] != None and entry['level'] <= 0:
                 self._sendDbgMessage(self._messages.EXCEPTION + ' ' + repr(entry['exception']))
@@ -274,11 +282,6 @@ class Tracer:
             if not self._paused and frame.f_lineno in self._breakpointsConfirmed[frame.f_code.co_filename]:
                 self._sendDbgMessage(self._messages.BREAK)
                 self._paused = True
-
-            # examine exception and save it
-            if event == 'exception':
-                entry['exception'] = arg[1]
-                entry['traceback'] = arg[2]
 
             # tests runtime commands
             cmd = self._readDbgMessage()
