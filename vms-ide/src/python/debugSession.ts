@@ -694,22 +694,25 @@ export class PythonDebugSession extends LoggingDebugSession {
                 const sshHelper = new sshHelperType(this._logFn);
                 const sftp = await sshHelper.getDefaultSftp(this._workspace?.name);
                 if (sftp) {
+                    let   retCode = false;
                     const localSource = new FsSource(localPath, this._logFn);
-                    const remoteSource = new SftpSource(sftp, ensured.projectSection.root, this._logFn);
-                    await remoteSource.ensureDirectory(ensured.projectSection.outdir);
-                    remoteSource.root = ensured.projectSection.root + ftpPathSeparator + ensured.projectSection.outdir;
-                    const files = ['server.py', 'tracer.py'];
-                    let retCode = true;
-                    for(const file of files) {
-                        let [localDate, remoteDate] = await Promise.all([localSource.getDate(file), remoteSource.getDate(file)]);
-                        if (localDate !== undefined && remoteDate !== undefined) {
-                            // allow plus/minus two seconds
-                            if (Math.abs(localDate.valueOf() - remoteDate.valueOf()) < 2000) {
-                                continue;
+                    const remoteSource = await Synchronizer.acquire(this._logFn).requestSource(ensured, "remote");
+                    if (remoteSource) {
+                        await remoteSource.ensureDirectory(ensured.projectSection.outdir);
+                        remoteSource.root = ensured.projectSection.root + ftpPathSeparator + ensured.projectSection.outdir;
+                        const files = ['server.py', 'tracer.py'];
+                        retCode = true;
+                        for (const file of files) {
+                            let [localDate, remoteDate] = await Promise.all([localSource.getDate(file), remoteSource.getDate(file)]);
+                            if (localDate !== undefined && remoteDate !== undefined) {
+                                // allow plus/minus two seconds
+                                if (Math.abs(localDate.valueOf() - remoteDate.valueOf()) < 2000) {
+                                    continue;
+                                }
                             }
+                            localDate = localDate || new Date();
+                            retCode = retCode && await Synchronizer.pipeFileAndSetDate(sshHelper, localSource, remoteSource, file, localDate, this._logFn);
                         }
-                        localDate = localDate || new Date();
-                        retCode = retCode && await Synchronizer.pipeFileAndSetDate(sshHelper, localSource, remoteSource, file, localDate, this._logFn);
                     }
                     return retCode;
                 }

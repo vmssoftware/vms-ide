@@ -136,7 +136,7 @@ const _rgxFrame_File        = 1;
 const _rgxFrame_Line        = 2;
 const _rgxFrame_Function    = 3;
 
-const _rgxDisplay               = /DISPLAY "(.*?)" (failed|<(?:type|class) '(.*?)'> (?:(value|children|length): (.*)))/;
+const _rgxDisplay               = /DISPLAY "(.*?)" (failed|<(?:type|class|enum) '(.*?)'> (?:(value|children|length): (.*)))/;
 const _rgxDisplay_Name          = 1;
 const _rgxDisplay_Result        = 2;
 const _rgxDisplay_Type          = 3;

@@ -99,10 +99,6 @@ class Connection:
             # first message is the type
             if not self._type:
                 self._type = line
-                if self._type == TYPE.DEBUG:
-                    # send PAUSE (TODO: make command line option)
-                    # autopause
-                    self.post(COMMAND.PAUSE)
             elif line:
                 lines.append(line)
             start = idx + 1
