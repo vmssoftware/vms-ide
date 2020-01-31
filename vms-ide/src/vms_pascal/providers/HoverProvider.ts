@@ -12,6 +12,7 @@ export class PascalHoverProvider implements HoverProvider
     public async provideHover(document: TextDocument, position: Position, token: CancellationToken)//: ProviderResult<Hover>
     {
         let showParseData = false;
+        let positionInfo = "";
         let data : string = "";
         let info = this.backend.symbolInfoAtPosition(document.fileName, position.character + 1, position.line + 1);
         
@@ -27,11 +28,7 @@ export class PascalHoverProvider implements HoverProvider
         {
             if(info.definition)
             {
-                let startRow = info.definition.range.start.row-1;
-                let endRow = info.definition.range.end.row;
-                let range = new Range(startRow, 0, endRow, 0);
-
-                data = document.getText(range).trim();
+                data = info.definition.text;
             }
         }
         else
@@ -71,9 +68,17 @@ export class PascalHoverProvider implements HoverProvider
             }
         }
 
+        if(info.definition)
+        {
+            if (info.definition.range) 
+            {
+                positionInfo += ` at ${info.definition.range.start.row}:${info.definition.range.start.column}`;
+            }
+        }
+
         const description = symbolDescriptionFromEnum(info.kind);
         return new Hover([
-            "**" + description + "**\ndefined in: " + path.basename(info.source),
+            "**" + description + "**\ndefined in: " + path.basename(info.source) + positionInfo,
             { language: Pascal.language, value: (showParseData ? data : info.definition? info.definition.text : data) }
         ]);
     }
