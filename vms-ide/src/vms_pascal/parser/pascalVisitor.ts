@@ -43,6 +43,7 @@ import { SimpleTypeContext } from "./pascalParser";
 import { EnumTypeContext } from "./pascalParser";
 import { SubrangeTypeContext } from "./pascalParser";
 import { TypeIdentifierContext } from "./pascalParser";
+import { VariableDescriptionContext } from "./pascalParser";
 import { StructuredTypeContext } from "./pascalParser";
 import { UnpackedStructuredTypeContext } from "./pascalParser";
 import { StringtypeContext } from "./pascalParser";
@@ -440,6 +441,13 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitTypeIdentifier?: (ctx: TypeIdentifierContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.variableDescription`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVariableDescription?: (ctx: VariableDescriptionContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.structuredType`.

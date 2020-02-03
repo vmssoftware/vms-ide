@@ -272,6 +272,10 @@ typeIdentifier
    // | (DOUBLE | QUADRUPLE)
    ;
 
+variableDescription
+   : identifierList COLON attributePart type
+   ;
+
 structuredType
    : PACKED unpackedStructuredType
    | unpackedStructuredType
@@ -325,7 +329,7 @@ fixedPart
    ;
 
 recordSection
-   : identifierList COLON attributePart type (variablePreDeclaration)?
+   : variableDescription (variablePreDeclaration)?
    ;
 
 variantPart
@@ -366,7 +370,7 @@ schemaType
    ;
 
 schemaList
-   : (identifier (COMMA identifier)* COLON attributePart type)
+   : variableDescription
    ;
 
 schemaName
@@ -449,7 +453,7 @@ variableDeclarationPart
    ;
 
 variableDeclaration
-   : identifierList COLON attributePart type (variablePreDeclaration)?
+   : variableDescription (variablePreDeclaration)?
    ;
 
 variablePreDeclaration
@@ -504,7 +508,7 @@ formalParameterSection
    ;
 
 parameterGroup
-   : identifierList COLON attributePart type assignExpression
+   : variableDescription assignExpression
    ;
 
 assignExpression

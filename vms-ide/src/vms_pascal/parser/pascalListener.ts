@@ -43,6 +43,7 @@ import { SimpleTypeContext } from "./pascalParser";
 import { EnumTypeContext } from "./pascalParser";
 import { SubrangeTypeContext } from "./pascalParser";
 import { TypeIdentifierContext } from "./pascalParser";
+import { VariableDescriptionContext } from "./pascalParser";
 import { StructuredTypeContext } from "./pascalParser";
 import { UnpackedStructuredTypeContext } from "./pascalParser";
 import { StringtypeContext } from "./pascalParser";
@@ -597,6 +598,17 @@ export interface pascalListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitTypeIdentifier?: (ctx: TypeIdentifierContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.variableDescription`.
+	 * @param ctx the parse tree
+	 */
+	enterVariableDescription?: (ctx: VariableDescriptionContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.variableDescription`.
+	 * @param ctx the parse tree
+	 */
+	exitVariableDescription?: (ctx: VariableDescriptionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `pascalParser.structuredType`.

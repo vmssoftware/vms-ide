@@ -18,6 +18,7 @@ import {
     LabelBlockDclSymbol,
     ConstBlockDclSymbol,
     UnitBlockDclSymbol,
+    WithTypeScopedSymbol,
 } from './ContextSymbolTable';
 
 import { 
@@ -40,7 +41,7 @@ import {
     FunctionDesignatorContext,
     ProcedureStatementContext,
     TypeDefinitionContext,
-    RecordSectionContext,
+    VariableDescriptionContext,
     ConstantDefinitionPartContext,
     ConstantDefinitionContext,
     TypeDefinitionPartContext,
@@ -144,18 +145,41 @@ export class DetailsListener implements pascalListener
         }
     }
 
-    enterIdentifierList(ctx: IdentifierListContext) 
+    // enterIdentifierList(ctx: IdentifierListContext) 
+    // {
+    //     let list = ctx.identifier(); 
+
+    //     for(let item of list)
+    //     {
+    //         this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.text);
+    //         this.currentSymbol.context = item;
+    //     }
+    // }
+    // exitIdentifierList(ctx: IdentifierListContext) 
+    // {
+    //     if (this.currentSymbol) 
+    //     {
+    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+    //     }
+    // }
+
+    enterVariableDescription(ctx: VariableDescriptionContext) 
     {
-        let list = ctx.identifier(); 
+        let list = ctx.identifierList().identifier(); 
 
         for(let item of list)
         {
             this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.text);
             this.currentSymbol.context = item;
+
+            if (this.currentSymbol instanceof WithTypeScopedSymbol) 
+            {
+                this.currentSymbol.symbolType = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, ctx.type().text);
+                this.currentSymbol.symbolType.context = ctx.type();
+            }
         }
     }
-
-    exitIdentifierList(ctx: IdentifierListContext) 
+    exitVariableDescription(ctx: VariableDescriptionContext) 
     {
         if (this.currentSymbol) 
         {
@@ -325,7 +349,6 @@ export class DetailsListener implements pascalListener
             this.currentSymbol.context = ctx.schemaType()!.schemaName();
         }
     }
-
     exitTypeDefinition(ctx: TypeDefinitionContext) 
     {
         if (this.currentSymbol) 
@@ -333,28 +356,6 @@ export class DetailsListener implements pascalListener
             this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
         }
     }
-
-    // enterRecordSection(ctx: RecordSectionContext) 
-    // {
-    //     let list = ctx.identifierList().identifier(); 
-
-    //     for(let item of list)
-    //     {
-    //         if(item.IDENTIFIER())
-    //         {
-    //             this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.IDENTIFIER()!.text);
-    //             this.currentSymbol.context = item.IDENTIFIER();
-    //         }
-    //     }
-    // }
-
-    // exitRecordSection(ctx: RecordSectionContext) 
-    // {
-    //     if (this.currentSymbol) 
-    //     {
-    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
-    //     }
-    // }
 
     enterConstantDefinitionPart(ctx: ConstantDefinitionPartContext) 
     {

@@ -11,61 +11,12 @@ export class PascalHoverProvider implements HoverProvider
 
     public async provideHover(document: TextDocument, position: Position, token: CancellationToken)//: ProviderResult<Hover>
     {
-        let showParseData = false;
         let positionInfo = "";
-        let data : string = "";
         let info = this.backend.symbolInfoAtPosition(document.fileName, position.character + 1, position.line + 1);
         
         if (!info) 
         {
             return undefined;
-        }
-
-        if(info.kind === SymbolKind.RoutineDcl ||
-             info.kind === SymbolKind.TypeBlockDcl ||
-             info.kind === SymbolKind.ConstBlockDcl ||
-             info.kind === SymbolKind.RoutineHeader)
-        {
-            if(info.definition)
-            {
-                data = info.definition.text;
-            }
-        }
-        else
-        {
-            if(info.definition)
-            {
-                let startRow = info.definition.range.start.row-1;
-                let endRow = info.definition.range.end.row;
-                let range = new Range(startRow, 0, endRow, 0);
-
-                if(document.fileName !== info.source)
-                {
-                    document = await workspace.openTextDocument(Uri.file(info.source));
-                }
-
-                data = document.getText(range);
-                data = data.substr(info.definition.range.start.column);
-                data = data.substr(0, data.indexOf(";"));
-                if(data.includes("("))
-                {
-                    data = data.substr(0, data.indexOf("("));
-                } 
-                else if(data.includes(")"))
-                {
-                    data = data.substr(0, data.indexOf(")"));
-                }           
-                data = info.definition.text + data.substr(data.indexOf(":"));
-                
-                showParseData = true;
-            }
-            else
-            {
-                if(info.dataInfo)
-                {
-                    data = info.dataInfo;
-                }
-            }
         }
 
         if(info.definition)
@@ -79,7 +30,7 @@ export class PascalHoverProvider implements HoverProvider
         const description = symbolDescriptionFromEnum(info.kind);
         return new Hover([
             "**" + description + "**\ndefined in: " + path.basename(info.source) + positionInfo,
-            { language: Pascal.language, value: (showParseData ? data : info.definition? info.definition.text : data) }
+            { language: Pascal.language, value: (info.dataInfo? info.dataInfo : "") }
         ]);
     }
 }

@@ -345,6 +345,40 @@ export class ContextSymbolTable extends SymbolTable
             result.description = symbolDescriptionFromEnum(ContextSymbolTable.getKindFromSymbol(definitionSymbol));
         }
 
+        result.dataInfo = "";
+
+        if (symbol instanceof WithTypeScopedSymbol)
+        {
+            if(symbol.symbolType)
+            {
+                result.definitionBlock = this.definitionFromSymbol(symbol.symbolType);
+
+                if(result.definition)
+                {
+                    result.dataInfo = result.definition.text;
+                }
+
+                if(result.definitionBlock)
+                {
+                    result.dataInfo +=": " + result.definitionBlock.text + ";";
+                }
+            }
+            else
+            {
+                if(result.definition)
+                {
+                    result.dataInfo = result.definition.text;
+                }
+            }
+        }
+        else
+        {
+            if(result.definition)
+            {
+                result.dataInfo = result.definition.text;
+            }
+        }
+
         if (symbol instanceof InFunctionSymbol)
         {
             if(symbol.functionDefinition)
@@ -719,6 +753,12 @@ export class WithTypeReference extends ScopedSymbol
     public typeReference?: EntityCollection;
 }
 
+export class WithTypeScopedSymbol extends ScopedSymbol 
+{ 
+    public symbolType?: Symbol;
+    public symbolBlock?: Symbol;
+}
+
 export class InFunctionSymbol extends Symbol 
 { 
     public functionDefinition?: IBuildInFunc;
@@ -741,15 +781,15 @@ export class RoutineSymbol extends EntityCollection { }
 export class RoutineHeaderSymbol extends EntityCollection { }
 export class RoutineDclSymbol extends EntityCollection { }
 export class RoutineBlockDclSymbol extends EntityCollection { }
-export class VariableDclSymbol extends EntityCollection { }
+export class VariableDclSymbol extends WithTypeScopedSymbol { }
 export class VariableBlockDclSymbol extends EntityCollection { }
 export class VariableGlobalBlockDclSymbol extends EntityCollection { }
-export class TypeDclSymbol extends EntityCollection { }
+export class TypeDclSymbol extends WithTypeScopedSymbol { }
 export class ConstantDclSymbol extends EntityCollection { }
 export class TypeBlockDclSymbol extends EntityCollection { }
 export class LabelDclSymbol extends EntityCollection { }
 export class LabelBlockDclSymbol extends EntityCollection { }
-export class ConstDclSymbol extends EntityCollection { }
+export class ConstDclSymbol extends WithTypeScopedSymbol { }
 export class ConstBlockDclSymbol extends EntityCollection { }
 export class UnitDclSymbol extends EntityCollection { }
 export class UnitBlockDclSymbol extends EntityCollection { }
