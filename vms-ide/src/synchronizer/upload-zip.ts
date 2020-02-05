@@ -28,6 +28,7 @@ export class UploadZip {
     public async perform(ensured: IEnsured, clear?: string) {
         if (ensured.scope &&
             ensured.configHelper.workspaceFolder) {
+            const synchronizer = Synchronizer.acquire(this.logFn);
             const ZipApiType = await GetZipApi();
             if (!ZipApiType) {
                 this.logFn(LogType.error, () => localize("zip.missed", "The extension vmssoftware.zip-helper isn't found."));
@@ -56,6 +57,10 @@ export class UploadZip {
             for (const fileEntry of fileEntries) {
                 const fileName = path.join(localPath, fileEntry.filename);
                 zipApi.addFile(fileName, fileEntry.filename);
+                if (synchronizer.stopIssued) {
+                    this.logFn(LogType.error, () => localize("zip.ssh.stopped", "Stopped."));
+                    return false;
+                }
             }
             zipApi.stop();
             if (await zipFinished) {
@@ -84,7 +89,11 @@ export class UploadZip {
                 }
                 // 1. upload zipFileName
                 if (await Synchronizer.acquire(this.logFn).uploadFiles(ensured, [zipFileName])) {
-                    // 2. unzip
+                    if (synchronizer.stopIssued) {
+                        this.logFn(LogType.error, () => localize("zip.ssh.stopped", "Stopped."));
+                        return false;
+                    }
+                        // 2. unzip
                     // set default directory for shell - project root
                     const cd = `set default ${converter.directory}`;
                     const answer = await shell.execCmd(cd);

@@ -4,6 +4,7 @@ import * as path from "path";
 import { EndOfLine, Range, TextEdit, Uri, workspace, WorkspaceEdit } from "vscode";
 import { IEnsured } from "./ensure-settings";
 import { FsSource } from "./sync/fs-source";
+import { Synchronizer } from "./sync/synchronizer";
 
 export class ChangeCrLf {
 
@@ -15,6 +16,7 @@ export class ChangeCrLf {
 
     public async perform(ensured: IEnsured) {
         if (ensured.configHelper.workspaceFolder) {
+            const synchronizer = Synchronizer.acquire(this.logFn);
             const filesCfg = workspace.getConfiguration("files", ensured.configHelper.workspaceFolder.uri);
             filesCfg.update("eol", "\n", false);
             const localPath = ensured.configHelper.workspaceFolder.uri.fsPath;
@@ -23,6 +25,10 @@ export class ChangeCrLf {
             const fileEntries = await localSource.findFiles(fileNames, ensured.projectSection.exclude);
             if (fileEntries) {
                 for (const fileEntry of fileEntries) {
+                    if (synchronizer.stopIssued) {
+                        this.logFn(LogType.information, () => `Stopped`);
+                        return false;
+                    }
                     try {
                         const uri = Uri.file(path.join(localPath, fileEntry.filename));
                         const doc = await workspace.openTextDocument(uri);

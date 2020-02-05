@@ -487,6 +487,8 @@ export async function Perform(actionName: ActionType, scope: string | undefined,
     setContext(CommandContext.isInAction, true);
     const scopeStr = scope ? ` [${scope}]` : ` [All]`;
     const msg = window.setStatusBarMessage(actionToDo.status + scopeStr);
+    Synchronizer.acquire().enableRemote();
+    Builder.acquire().enableRemote();
     return actionToDo.actionFunc(scope, logFn, param)
         .catch((err) => {
             logFn(LogType.error, () => err);

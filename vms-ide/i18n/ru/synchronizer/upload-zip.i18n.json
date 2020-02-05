@@ -2,6 +2,7 @@
     "zip.missed": "Расширение vmssoftware.zip-helper не найдено.",
     "zip.cannot_start": "Не удалось запустить Zip.",
     "zip.nothing": "Nothing to Zip.",
+    "zip.ssh.stopped": "Stopped.",
     "zip.ssh.failed": "Расширение vmssoftware.ssh-helper не найдено.",
     "zip.shell.failed": "Не удалось создать shell на удалённой машине.",
     "zip.cd.failed": "Не удалось установить текущую директорию.",
