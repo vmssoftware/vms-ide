@@ -71,6 +71,7 @@ class Tracer:
         self._breakpointsConfirmed = collections.defaultdict(set)   # confirmed break line list by [file name]
         self._breakpointsWait = collections.defaultdict(set)        # wait break line list by [file name]
         self._lines = collections.defaultdict(dict)                 # all usable line list by [file name [ function name ]]
+        self._files = set()
         # incapsulate functions from other classes
         self._lockTrace = threading.Lock()
         self._currentThread = threading.current_thread
@@ -184,25 +185,30 @@ class Tracer:
     def _traceFunc(self, frame, event, arg):
         """ Do not forget not sending any data without locking (but ENTRY) """
 
+        currentFile = self.canonizeFile(frame.f_code.co_filename)
+        if not currentFile in self._files:
+            self._files.add(currentFile)
+            # self._sendDbgMessage('NEW FILE: %s' % currentFile)
+
         # wait until tracing enabled
         if not self._startTracing:
             return self._traceFunc
 
         # skip this file
-        if frame.f_code.co_filename == self._fileName:
+        if currentFile == self._fileName:
             return self._traceFunc
 
         # skip system files
-        if self._os_path_abspath(frame.f_code.co_filename) == frame.f_code.co_filename:
+        if self._os_path_abspath(currentFile) == currentFile:
             return self._traceFunc
 
         # skip no files
-        if frame.f_code.co_filename == '<string>':
+        if currentFile == '<string>':
             return self._traceFunc
 
         # wait untin tracing file entered
         if self._waitingForAFile:
-            if self._waitingForAFile != frame.f_code.co_filename:
+            if self._waitingForAFile != currentFile:
                 return self._traceFunc
             # now we are ready to trace
             self._waitingForAFile = None
@@ -238,7 +244,7 @@ class Tracer:
 
         with self._lockTrace:
             # point of tracing
-            if frame.f_code.co_name not in self._lines[frame.f_code.co_filename]:
+            if frame.f_code.co_name not in self._lines[currentFile]:
                 # collect usable code lines
                 lines = []
                 lineno = frame.f_lineno
@@ -261,9 +267,17 @@ class Tracer:
                         lines.append(lineno)
                     except: # Exception as ex:
                         break
-                self._lines[frame.f_code.co_filename][frame.f_code.co_name] = lines
-                self._checkFileBreakpoints(frame.f_code.co_filename, lines)
-                # self._sendDbgMessage('NEW FRAME: %s %s %s' % (frame.f_code.co_filename, frame.f_code.co_name, repr(lines)))
+                self._lines[currentFile][frame.f_code.co_name] = lines
+                self._checkFileBreakpoints(currentFile, lines)
+                # self._sendDbgMessage('NEW FRAME: %s %s %s' % (currentFile, frame.f_code.co_name, repr(lines)))
+
+            # examine exception and save it
+            if event == 'exception':
+                entry['exception'] = arg[1]
+                entry['traceback'] = arg[2]
+                # for testing purpose => always stop
+                # self._sendDbgMessage(self._messages.EXCEPTION + ' ' + repr(entry['exception']))
+                # self._paused = True
 
             # pause on unhandled exception
             if entry['exception'] != None and entry['level'] <= 0:
@@ -271,14 +285,9 @@ class Tracer:
                 self._paused = True
 
             # examine breakpoint
-            if not self._paused and frame.f_lineno in self._breakpointsConfirmed[frame.f_code.co_filename]:
+            if not self._paused and frame.f_lineno in self._breakpointsConfirmed[currentFile]:
                 self._sendDbgMessage(self._messages.BREAK)
                 self._paused = True
-
-            # examine exception and save it
-            if event == 'exception':
-                entry['exception'] = arg[1]
-                entry['traceback'] = arg[2]
 
             # tests runtime commands
             cmd = self._readDbgMessage()
@@ -353,6 +362,11 @@ class Tracer:
                 raise SystemExit()
         return self._traceFunc
     
+    def canonizeFile(self, fileName):
+        if fileName.startswith('./'):
+            return fileName[2:]
+        return fileName
+    
     def _doGoto(self, cmd):
         locals_args = cmd.split()
         try:
@@ -373,7 +387,7 @@ class Tracer:
             gotoFile = locals_args[1]
             gotoLine = int(locals_args[2])
             codeObj = self._threads[ident]['frame'].f_code
-            if codeObj.co_filename == gotoFile:
+            if self.canonizeFile(codeObj.co_filename) == gotoFile:
                 if gotoLine in self._lines[gotoFile][codeObj.co_name]:
                     self._sendDbgMessage('%s ok' % self._messages.GOTO_TARGETS)
                     return
@@ -469,7 +483,7 @@ class Tracer:
                         threadEntry['ident'],
                         self._numFrames(threadEntry),
                         'paused' if threadEntry['paused'] else 'running' ))
-                self._sendDbgMessage('    file: "%s"' % threadEntry['frame'].f_code.co_filename)
+                self._sendDbgMessage('    file: "%s"' % self.canonizeFile(threadEntry['frame'].f_code.co_filename))
                 self._sendDbgMessage('    line: %i' % threadEntry['frame'].f_lineno)
                 self._sendDbgMessage('    function: "%s"' % threadEntry['frame'].f_code.co_name)
 
@@ -617,7 +631,7 @@ class Tracer:
                 self._sendDbgMessage('%s "%s" failed: %s' % (self._messages.DISPLAY, displayName, repr(ex)))
 
     def _isDebuggerFrame(self, frame):
-        return frame and frame.f_code.co_filename == self._fileName and frame.f_code.co_name == "_runscript"
+        return frame and self.canonizeFile(frame.f_code.co_filename) == self._fileName and frame.f_code.co_name == "_runscript"
 
     def _showThreads(self, ident):
         self._sendDbgMessage(self._messages.THREADS + (' %i current %i' % (len(self._threads), ident)))
@@ -635,7 +649,7 @@ class Tracer:
         while frame != None and frameNum != numFrames:
             if self._isDebuggerFrame(frame):
                 break
-            self._sendDbgMessage('file: "%s" line: %i function: "%s" %s' % (frame.f_code.co_filename, frame.f_lineno, frame.f_code.co_name, 'dead' if isPostMortem else 'alive' ))
+            self._sendDbgMessage('file: "%s" line: %i function: "%s" %s' % (self.canonizeFile(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name, 'dead' if isPostMortem else 'alive' ))
             frameNum = frameNum + 1
             frame = frame.f_back
 
@@ -715,7 +729,7 @@ class Tracer:
         self._changeLocals(self._Obj(frame), self._Int(0))
 
     def _runscript(self, filename):
-        sys.path.insert(0, '')      # add cwd
+        sys.path.insert(0, '.')      # add cwd
         # === Given from PDB.PY ===
         import __main__
         builtinsT = __builtins__

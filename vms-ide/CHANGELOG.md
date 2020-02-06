@@ -1,4 +1,7 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
+## 1.4.1
+* Python debugger now supports entering data from debug console
+* setTimeByShell settings is deleted from SynchronizeSection, supportSetFileTime is added to ConnectionSection
 
 ## 1.4.0
 * Fix PASCAL syntax parser and highlighting issues.

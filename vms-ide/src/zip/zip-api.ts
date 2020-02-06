@@ -5,6 +5,7 @@ import {Zlib} from "unzipt";
 
 import { LogFunction, ftpPathSeparator, Resolve }      from "../common/main";
 import { LogType }          from "../common/main";
+import { Synchronizer } from "../synchronizer/sync/synchronizer";
 
 export class ZipApi {
 
@@ -134,6 +135,10 @@ export class ZipApi {
     }
 
     private testFinish() {
+        if (Synchronizer.acquire().stopIssued) {
+            this.archive?.abort();
+            this.clear(false);
+        }
         if (this.stopped && this.entries === 0) {
             if (this.archive) {
                 this.archive.finalize();

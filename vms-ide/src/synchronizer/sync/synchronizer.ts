@@ -118,9 +118,9 @@ export class Synchronizer {
                 this.sshHelper.getDefaultVmsShell(scope),
             ]);
         if (sftp && shell) {
-            return ensured.synchronizeSection.setTimeByShell
-            ? new VmsShellSource(new VmsSftpClient(sftp), shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts)
-            : new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
+            return await this.isSupportSetFileTime() // ensured.synchronizeSection.setTimeByShell
+            ? new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts)
+            : new VmsShellSource(new VmsSftpClient(sftp), shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
         }
         return undefined;
     }
@@ -614,6 +614,15 @@ export class Synchronizer {
             })
     }
 
+    public async isSupportSetFileTime() {
+        const settings = await this.sshHelper?.getSettings();
+        if (settings) {
+            let connection = settings.connectConfigResolver.testConnectConfig(settings.connectionSection).settings;
+            return !!connection?.supportSetFileTime;
+        }
+        return true;
+    }
+
     /**
      * Prepare sources if missed, also get settings
      */
@@ -642,7 +651,9 @@ export class Synchronizer {
                 markInvalid();
             });
             const remoteSource = await (async (sshHelper)=> {
-                if (ensured.synchronizeSection.setTimeByShell) {
+                if (await this.isSupportSetFileTime()) {
+                    return new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
+                } else {
                     const shell = await sshHelper.getDefaultVmsShell(scope);
                     if (!shell) {
                         return undefined;
@@ -654,8 +665,6 @@ export class Synchronizer {
                         markInvalid();
                     });
                     return new VmsShellSource(new VmsSftpClient(sftp), shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
-                } else {
-                    return new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
                 }
             })(this.sshHelper);
             if (!remoteSource) {

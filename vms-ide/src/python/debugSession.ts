@@ -30,6 +30,7 @@ import {
     IPythonVariable,
     PythonRuntimeEvents,
     PythonShellRuntime,
+    rgxEsc,
 } from "./runtime";
 import { GetSshHelperType } from '../ext-api/ext-api';
 import { FsSource } from '../synchronizer/sync/fs-source';
@@ -281,8 +282,11 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     private userOutput(line?: string) {
         if (line) {
-            const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stdout');
-            this.sendEvent(e);
+            line = line.replace(rgxEsc, '');
+            if (line) {
+                const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stdout');
+                this.sendEvent(e);
+            }
         }
     }
 
@@ -560,6 +564,32 @@ export class PythonDebugSession extends LoggingDebugSession {
         this.sendResponse(response);
     }
 
+    protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments) {
+        switch (args.context) {
+            case 'repl':
+                if (this._runtime.isRunning()) {
+                    this._tracerQueue.postCommand(args.expression);
+                    response.body = {
+                        result: ``,
+                        variablesReference: 0
+                    };
+                } else if (this._runtime.isPaused()) {
+                    // we woun't filter anything, use it on your own risk
+                    this._serverQueue.postCommand(args.expression);
+                    response.body = {
+                        result: ``,
+                        variablesReference: 0
+                    };
+                }
+                break;
+            case 'hover':
+                break;
+            case 'watch':
+                break;
+        }
+        this.sendResponse(response);
+    }
+
     private onStartRunning() {
         this._variableHandles.reset();
         this._frameHandles.reset();
@@ -664,22 +694,25 @@ export class PythonDebugSession extends LoggingDebugSession {
                 const sshHelper = new sshHelperType(this._logFn);
                 const sftp = await sshHelper.getDefaultSftp(this._workspace?.name);
                 if (sftp) {
+                    let   retCode = false;
                     const localSource = new FsSource(localPath, this._logFn);
-                    const remoteSource = new SftpSource(sftp, ensured.projectSection.root, this._logFn);
-                    await remoteSource.ensureDirectory(ensured.projectSection.outdir);
-                    remoteSource.root = ensured.projectSection.root + ftpPathSeparator + ensured.projectSection.outdir;
-                    const files = ['server.py', 'tracer.py'];
-                    let retCode = true;
-                    for(const file of files) {
-                        let [localDate, remoteDate] = await Promise.all([localSource.getDate(file), remoteSource.getDate(file)]);
-                        if (localDate !== undefined && remoteDate !== undefined) {
-                            // allow plus/minus two seconds
-                            if (Math.abs(localDate.valueOf() - remoteDate.valueOf()) < 2000) {
-                                continue;
+                    const remoteSource = await Synchronizer.acquire(this._logFn).requestSource(ensured, "remote");
+                    if (remoteSource) {
+                        await remoteSource.ensureDirectory(ensured.projectSection.outdir);
+                        remoteSource.root = ensured.projectSection.root + ftpPathSeparator + ensured.projectSection.outdir;
+                        const files = ['server.py', 'tracer.py'];
+                        retCode = true;
+                        for (const file of files) {
+                            let [localDate, remoteDate] = await Promise.all([localSource.getDate(file), remoteSource.getDate(file)]);
+                            if (localDate !== undefined && remoteDate !== undefined) {
+                                // allow plus/minus two seconds
+                                if (Math.abs(localDate.valueOf() - remoteDate.valueOf()) < 2000) {
+                                    continue;
+                                }
                             }
+                            localDate = localDate || new Date();
+                            retCode = retCode && await Synchronizer.pipeFileAndSetDate(sshHelper, localSource, remoteSource, file, localDate, this._logFn);
                         }
-                        localDate = localDate || new Date();
-                        retCode = retCode && await Synchronizer.pipeFileAndSetDate(sshHelper, localSource, remoteSource, file, localDate, this._logFn);
                     }
                     return retCode;
                 }

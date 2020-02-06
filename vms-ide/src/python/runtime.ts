@@ -136,7 +136,7 @@ const _rgxFrame_File        = 1;
 const _rgxFrame_Line        = 2;
 const _rgxFrame_Function    = 3;
 
-const _rgxDisplay               = /DISPLAY "(.*?)" (failed|<(?:type|class) '(.*?)'> (?:(value|children|length): (.*)))/;
+const _rgxDisplay               = /DISPLAY "(.*?)" (failed|<(?:type|class|enum) '(.*?)'> (?:(value|children|length): (.*)))/;
 const _rgxDisplay_Name          = 1;
 const _rgxDisplay_Result        = 2;
 const _rgxDisplay_Type          = 3;
@@ -152,6 +152,8 @@ const _rgxGotoTargtes_Result    = 1;
 
 const _rgxGoto                  = /GOTO (failed|ok)/;
 const _rgxGoto_Result           = 1;
+
+export const rgxEsc = /\x1B(?:[@-Z\\-_=>]|\[[0-?]*[ -/]*[@-~]|[)(][AB012])/g;
 
 export class PythonShellRuntime extends EventEmitter {
     
@@ -185,7 +187,7 @@ export class PythonShellRuntime extends EventEmitter {
 
     private onUnexpectedLine(line: string | undefined): void {
         if (line) {
-            line = line.trim();
+            line = line.trim().replace(rgxEsc, '');
             if (line) {
                 this.sendEvent(PythonRuntimeEvents.output, line);
                 let stopReason: PythonRuntimeEvents | undefined;
@@ -242,6 +244,14 @@ export class PythonShellRuntime extends EventEmitter {
     public async start() {
         this.started = true;
         this.running = true;
+    }
+
+    public isRunning() {
+        return this.started && this.running;
+    }
+
+    public isPaused() {
+        return this.started && !this.running;
     }
 
     public threadsCollected() {
