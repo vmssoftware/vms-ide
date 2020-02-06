@@ -34,6 +34,7 @@ import { BoolContext } from "./pascalParser";
 import { StringContext } from "./pascalParser";
 import { ValueDefinitionPartContext } from "./pascalParser";
 import { VariableNameContext } from "./pascalParser";
+import { VariableChildNameContext } from "./pascalParser";
 import { TypeDefinitionPartContext } from "./pascalParser";
 import { TypeDefinitionContext } from "./pascalParser";
 import { FunctionTypeContext } from "./pascalParser";
@@ -378,6 +379,13 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitVariableName?: (ctx: VariableNameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.variableChildName`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVariableChildName?: (ctx: VariableChildNameContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.typeDefinitionPart`.

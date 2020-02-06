@@ -34,6 +34,7 @@ import { BoolContext } from "./pascalParser";
 import { StringContext } from "./pascalParser";
 import { ValueDefinitionPartContext } from "./pascalParser";
 import { VariableNameContext } from "./pascalParser";
+import { VariableChildNameContext } from "./pascalParser";
 import { TypeDefinitionPartContext } from "./pascalParser";
 import { TypeDefinitionContext } from "./pascalParser";
 import { FunctionTypeContext } from "./pascalParser";
@@ -499,6 +500,17 @@ export interface pascalListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitVariableName?: (ctx: VariableNameContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.variableChildName`.
+	 * @param ctx the parse tree
+	 */
+	enterVariableChildName?: (ctx: VariableChildNameContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.variableChildName`.
+	 * @param ctx the parse tree
+	 */
+	exitVariableChildName?: (ctx: VariableChildNameContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `pascalParser.typeDefinitionPart`.
