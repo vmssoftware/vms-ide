@@ -120,7 +120,10 @@ export class ContextSymbolTable extends SymbolTable
         {
             for (let block of blocks)//search block witch contain symbol
             {
-                let item = this.findSimbolDedlarationInBlock(array[0], block, true);
+                let index = 0;
+                let item = this.findSimbolDedlarationInBlock(array[index], block, true);
+
+                index++;
 
                 if(item)
                 {
@@ -128,19 +131,33 @@ export class ContextSymbolTable extends SymbolTable
                     {
                         if(item.symbolType)
                         {
+                            let slavesType: Symbol[] | undefined;
                             let nameVar = item.symbolType;
 
-                            for(let i = 1; i < array.length; i++)
+                            while (index < array.length)
                             {
-                                nameVar += "." + array[i].name;
+                                nameVar += "." + array[index].name;
+                                slavesType = this.referencesType.get(nameVar.toUpperCase());
+                                
+                                ++index;
+
+                                if (index < array.length)
+                                {
+                                    if(slavesType)
+                                    {
+                                        let symbol = slavesType[0];
+
+                                        if (symbol instanceof WithTypeScopedSymbol && symbol.symbolType)
+                                        {
+                                            nameVar = symbol.symbolType;
+                                        }                                        
+                                    }
+                                }
                             }
 
-
-                            let slavesT = this.referencesType.get(nameVar.toUpperCase());
-
-                            if(slavesT)
+                            if(slavesType)
                             {
-                                let result = this.getSymbolInfo(slavesT[0]);
+                                let result = this.getSymbolInfo(slavesType[0]);
 
                                 if(result)
                                 {
