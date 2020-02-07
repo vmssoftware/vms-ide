@@ -11,8 +11,7 @@ export class PascalHoverProvider implements HoverProvider
 
     public async provideHover(document: TextDocument, position: Position, token: CancellationToken)//: ProviderResult<Hover>
     {
-        let showParseData = false;
-        let data : string = "";
+        let positionInfo = "";
         let info = this.backend.symbolInfoAtPosition(document.fileName, position.character + 1, position.line + 1);
         
         if (!info) 
@@ -20,61 +19,18 @@ export class PascalHoverProvider implements HoverProvider
             return undefined;
         }
 
-        if(info.kind === SymbolKind.RoutineDcl ||
-             info.kind === SymbolKind.TypeBlockDcl ||
-             info.kind === SymbolKind.ConstBlockDcl ||
-             info.kind === SymbolKind.RoutineHeader)
+        if(info.definition)
         {
-            if(info.definition)
+            if (info.definition.range) 
             {
-                let startRow = info.definition.range.start.row-1;
-                let endRow = info.definition.range.end.row;
-                let range = new Range(startRow, 0, endRow, 0);
-
-                data = document.getText(range).trim();
-            }
-        }
-        else
-        {
-            if(info.definition)
-            {
-                let startRow = info.definition.range.start.row-1;
-                let endRow = info.definition.range.end.row;
-                let range = new Range(startRow, 0, endRow, 0);
-
-                if(document.fileName !== info.source)
-                {
-                    document = await workspace.openTextDocument(Uri.file(info.source));
-                }
-
-                data = document.getText(range);
-                data = data.substr(info.definition.range.start.column);
-                data = data.substr(0, data.indexOf(";"));
-                if(data.includes("("))
-                {
-                    data = data.substr(0, data.indexOf("("));
-                } 
-                else if(data.includes(")"))
-                {
-                    data = data.substr(0, data.indexOf(")"));
-                }           
-                data = info.definition.text + data.substr(data.indexOf(":"));
-                
-                showParseData = true;
-            }
-            else
-            {
-                if(info.dataInfo)
-                {
-                    data = info.dataInfo;
-                }
+                positionInfo += ` at ${info.definition.range.start.row}:${info.definition.range.start.column}`;
             }
         }
 
         const description = symbolDescriptionFromEnum(info.kind);
         return new Hover([
-            "**" + description + "**\ndefined in: " + path.basename(info.source),
-            { language: Pascal.language, value: (showParseData ? data : info.definition? info.definition.text : data) }
+            "**" + description + "**\ndefined in: " + path.basename(info.source) + positionInfo,
+            { language: Pascal.language, value: (info.dataInfo? info.dataInfo : "") }
         ]);
     }
 }

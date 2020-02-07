@@ -163,7 +163,7 @@ export const BuiltInFunctions: IBuildInFunc[] =
     },
     {   
         name: "ADDRESS",
-        prototype: "function ADDRESS( x: ^type): ^type;",
+        prototype: "function ADDRESS(x: ^type): ^type;",
         description: "The ADDRESS function returns a pointer value that is the address of the parameter.",
         arguments: "The parameter x can be a variable of any type except a component of a packed structured type.",
         result: "returns a pointer value"
@@ -212,7 +212,7 @@ export const BuiltInFunctions: IBuildInFunc[] =
     },
     {   
         name: "BIN",
-        prototype: "function BIN(x[[, length[[, digits]] ]]): character-string;",
+        prototype: "function BIN(x [[, length[[, digits]] ]]): character-string;",
         description: "The BIN function returns a character-string value that is the binary equivalent of the specified parameter.",
         arguments: "The parameter x is the expression to be converted. This parameter must have a size that is known at compile time; it cannot be VARYING OF CHAR, a conformant parameter, or a schema type. Two optional integer parameters specify the length of the resulting string and the minimum number of significant digits to be returned.",
         result: "returns a character-string value"
@@ -323,7 +323,7 @@ procedures: The parameter str must be of type PACKED ARRAY[1..11] OF CHAR.",
     },
     {
         name: "DEC",
-        prototype: "function DEC(x[[, length[[, digits]] ]]): string;",
+        prototype: "function DEC(x [[, length[[, digits]] ]]): string;",
         description: "The DEC function returns a character-string value that is the decimal equivalent of the specified parameter. The return value is compatible with all other string types.",
         arguments: "The parameter x is the expression to be converted. Two optional integer parameters specify the length of the resulting string and the minimum number of significant digits to be returned.",
         result: "returns a string value"
@@ -337,7 +337,7 @@ procedures: The parameter str must be of type PACKED ARRAY[1..11] OF CHAR.",
     },
     {
         name: "DISPOSE",
-        prototype: "procedure DISPOSE(p [[, t1,...,tn]]);",
+        prototype: "procedure DISPOSE(p [[, t1,... ,tn]]);",
         description: "The DISPOSE procedure deallocates memory for a dynamic variable.",
         arguments: "The parameter p is a pointer expression. The t parameters are constant expressions that match the corresponding t parameter used in the call to the NEW procedure that allocated the memory.",
         result: ""
@@ -428,7 +428,7 @@ procedures: The parameter str must be of type PACKED ARRAY[1..11] OF CHAR.",
     },
     {
         name: "HEX",
-        prototype: "function HEX(x[[, length[[, digits]] ]]): character-string;",
+        prototype: "function HEX(x [[, length[[, digits]] ]]): character-string;",
         description: "The HEX function returns a character-string value that is the hexadecimal equivalent of the specified parameter. The return value is compatible with all other string types.",
         arguments: "The parameter x is the expression to be converted. Two optional integer parameters specify the length of the resulting string and the minimum number of significant digits to be returned.",
         result: "returns a character-string value"
@@ -526,7 +526,7 @@ procedures: The parameter str must be of type PACKED ARRAY[1..11] OF CHAR.",
     },
     {
         name: "MAX",
-        prototype: "function MAX(x1,...,xn: arithmetic): arithmetic;",
+        prototype: "function MAX(x1,... ,xn: arithmetic): arithmetic;",
         description: "The MAX function returns a value (the same type as that of the parameters) that is the maximum value of a specified list of parameters.",
         arguments: "The parameters can be any arithmetic type, but they must all be of the same type.",
         result: "returns a value the same type as that of the parameters"
@@ -540,7 +540,7 @@ procedures: The parameter str must be of type PACKED ARRAY[1..11] OF CHAR.",
     },
     {
         name: "MIN",
-        prototype: "function MIN(x1,...,xn: arithmetic): arithmetic;",
+        prototype: "function MIN(x1,... ,xn: arithmetic): arithmetic;",
         description: "The MIN function returns a value (of the same type as that of the parameters) that is the minimum value of a specified list of parameters.",
         arguments: "The parameters can be any arithmetic type, but must all be of the same type.",
         result: "returns a value of the same type as that of the parameters"
@@ -561,9 +561,9 @@ procedures: The parameter str must be of type PACKED ARRAY[1..11] OF CHAR.",
     },
     {
         name: "NEW",
-        prototype: "procedure NEW( p: pointer [[, {t1,...,tn: ordinal | d1,...,dn: ordinal} ]]);",
+        prototype: "procedure NEW(p: pointer [[, (t1,... ,tn: ordinal | d1,... ,dn: ordinal) ]]);",
         description: "The NEW procedure allocates memory for the dynamic variable to which a pointer variable refers.",
-        arguments: "The parameter p is a pointer variable.The parameters t1,...,tn are constant expressions of an ordinal type that represent nested tag-field values, where t1 is the outermost variant.The parameters d1,...,dn are compile-time or run-time ordinal values that must be the same type as the formal discriminants of the object.",
+        arguments: "The parameter p is a pointer variable.The parameters t1,... ,tn are constant expressions of an ordinal type that represent nested tag-field values, where t1 is the outermost variant.The parameters d1,... ,dn are compile-time or run-time ordinal values that must be the same type as the formal discriminants of the object.",
         result: ""
     },
     {
@@ -575,7 +575,7 @@ procedures: The parameter str must be of type PACKED ARRAY[1..11] OF CHAR.",
     },
     {
         name: "OCT",
-        prototype: "function OCT( x[[, length: integer[[, digits: integer]] ]]): character-string;",
+        prototype: "function OCT(x [[, length: integer[[, digits: integer]] ]]): character-string;",
         description: "The OCT function returns a character-string value that is the octal equivalent of the specified parameter. The return value is compatible with all other string types.",
         arguments: "The parameter x is the expression to be converted. Two optional integer parameters specify the length of the resulting string and the minimum number of significant digits to be returned.",
         result: "returns a character-string value"
@@ -603,7 +603,7 @@ procedures: The parameter str must be of type PACKED ARRAY[1..11] OF CHAR.",
     },
     {
         name: "PACK",
-        prototype: "procedure PACK( a: unpacked array, i: integer, z: packed array);",
+        prototype: "procedure PACK(a: unpacked array, i: integer, z: packed array);",
         description: "The PACK procedure copies components of an unpacked array variable to a packed array variable.",
         arguments: "The parameter a is an unpacked array. The parameter i is a value to indicate the starting value of the index of a. The parameter z is a packed array of the same component type as a.",
         result: ""
@@ -659,7 +659,7 @@ procedures: The parameter str must be of type PACKED ARRAY[1..11] OF CHAR.",
     },
     {
         name: "READV",
-        prototype: "procedure READV(str: string, {variable-identifier[[ : radix-specifier ]]},... [[, ERROR := error-recovery ]]);",
+        prototype: "procedure READV(str: string, (variable-identifier[[ : radix-specifier ]]),... [[, ERROR := error-recovery ]]);",
         description: "The READV procedure reads characters from a character-string expression and assigns them to parameters in the READV call. The behavior of READV is similar to that of READLN; the character string is similar to a one-line file.",
         arguments: "The str parameter is the string to be read. The radix-specifier parameter is one of the format values BIN, OCT, or HEX. The error-recovery parameter is the action to be taken if an error occurs during execution of the routine.",
         result: ""
@@ -723,7 +723,7 @@ procedures: The parameter str must be of type PACKED ARRAY[1..11] OF CHAR.",
     },
     {
         name: "SIZE",
-        prototype: "function SIZE(var x[[,t1,...,tn]]): integer;",
+        prototype: "function SIZE(var x [[,t1,... ,tn]]): integer;",
         description: "The SIZE function returns an integer value that indicates the possible or actual number of bytes that are allocated for a specified data type or variable.",
         arguments: "The parameter x can be a type identifier or variable. In addition, you can supply additional parameters t1 through tn that correspond to the case labels of the record. The function returns an integer value that indicates the number of bytes that would be allocated by the NEW procedure for a dynamic variable of the specified variant.",
         result: "returns an integer value"
@@ -801,7 +801,7 @@ procedures: The parameter str must be of type PACKED ARRAY[1..11] OF CHAR.",
     },
     {
         name: "UDEC",
-        prototype: "function UDEC( x[[, length[[, digits]] ]] ): string;",
+        prototype: "function UDEC(x [[, length[[, digits]] ]]): string;",
         description: "The UDEC function returns a character-string value that is the unsigned decimal equivalent of the specified parameter. The return value is compatible with all other string types.",
         arguments: "The parameter x is the expression to be converted. The UDEC function can take a parameter of any type except VARYING of CHAR, conformant parameters, or schema types. Two optional integer parameters specify the length of the resulting string and the minimum number of significant digits to be returned.",
         result: "return value is compatible with all other string types"
@@ -920,8 +920,14 @@ procedures: The parameter str must be of type PACKED ARRAY[1..11] OF CHAR.",
     },
     {
         name: "CLOSE",
-        prototype: "procedure CLOSE(file_variable, [[disposition]], [[user_action]] ,[[ERROR := error_recovery]]);\n\
-CLOSE (FILE_VARIABLE := file_variable [[,DISPOSITION := disposition]] [[,USER_ACTION := user_action]] [[,ERROR := error_recovery]] ...);",
+        prototype: "procedure CLOSE(file_variable,\n\
+            [[disposition]],\n\
+            [[user_action]],\n\
+            [[ERROR := error_recovery]]);\n\
+procedure CLOSE (FILE_VARIABLE := file_variable\n\
+            [[,DISPOSITION := disposition]]\n\
+            [[,USER_ACTION := user_action]]\n\
+            [[,ERROR := error_recovery]] ...);",
         description: "The CLOSE procedure closes an open file. You can use either positional or nonpositional syntax in the call.",
         arguments: "disposition: (same as for OPEN procedure) A value that determines what HP Pascal is to do with the file after closing it. The disposition values are the same as those used for the OPEN procedure. The disposition value in the CLOSE procedure supersedes a disposition value specified in the OPEN procedure.\n\
 \tuser_action: (no default) A routine name that HP Pascal calls to close the file. You can use a user-action routine to close the file using environment-specific capabilities.\n\
@@ -930,7 +936,7 @@ CLOSE (FILE_VARIABLE := file_variable [[,DISPOSITION := disposition]] [[,USER_AC
     },
     {
         name: "DELETE",
-        prototype: "procedure DELETE(file_variable[[, ERROR := error-recovery]]);",
+        prototype: "procedure DELETE(file_variable [[, ERROR := error-recovery]]);",
         description: "The DELETE procedure deletes the current file component. DELETE can be used only on files with relative or indexed organization that have been opened for direct or keyed access; it cannot be used on files with sequential organization.",
         arguments: "file_variable: The name of the file variable associated with the file from which a component is to be deleted.\n\
 \terror-recovery: The action to be taken if an error occurs during execution of the routine.",
@@ -970,7 +976,7 @@ CLOSE (FILE_VARIABLE := file_variable [[,DISPOSITION := disposition]] [[,USER_AC
     },
     {
         name: "FINDK",
-        prototype: "procedure FINDK(file_variable, key-number, key-value[[, match-type]] [[, ERROR := error-recovery]]);",
+        prototype: "procedure FINDK(file_variable, key-number, key-value [[, match-type]] [[, ERROR := error-recovery]]);",
         description: "The FINDK procedure searches the index of an indexed file opened for keyed access and locates a specific component.",
         arguments: "file_variable: The name of the file variable associated with the file to be searched.\n\
 \tkey-number: A positive integer expression that indicates the key position.\n\
@@ -1014,8 +1020,31 @@ CLOSE (FILE_VARIABLE := file_variable [[,DISPOSITION := disposition]] [[,USER_AC
     },
     {
         name: "OPEN",
-        prototype: "procedure OPEN(file_variable, [[file_name]], [[history]], [[record_length]], [[access_method]], [[record_type]], [[carriage_control]], [[organization]], [[disposition]], [[file_sharing]], [[user_action]], [[default_file_name]], [[ERROR := error_recovery]]);\n\
-OPEN(FILE_VARIABLE := file_variable [[,FILE_NAME := file_name]] [[,HISTORY := history]] [[,RECORD_LENGTH := record_length]] [[,ACCESS_METHOD := access_method]] [[,RECORD_TYPE := record_type]] [[,CARRIAGE_CONTROL := carriage_control]] [[,ORGANIZATION := organization]] [[,DISPOSITION := disposition]] [[,SHARING := file_sharing]] [[,USER_ACTION := user_action]] [[,DEFAULT := default_file_name]][[,ERROR := error_recovery]] ...);",
+        prototype: "procedure OPEN(file_variable,\n\
+            [[file_name]],\n\
+            [[history]],\n\
+            [[record_length]],\n\
+            [[access_method]], [[record_type]],\n\
+            [[carriage_control]],\n\
+            [[organization]],\n\
+            [[disposition]],\n\
+            [[file_sharing]],\n\
+            [[user_action]],\n\
+            [[default_file_name]],\n\
+            [[ERROR := error_recovery]]);\n\
+procedure OPEN(FILE_VARIABLE := file_variable\n\
+            [[,FILE_NAME := file_name]]\n\
+            [[,HISTORY := history]]\n\
+            [[,RECORD_LENGTH := record_length]]\n\
+            [[,ACCESS_METHOD := access_method]]\n\
+            [[,RECORD_TYPE := record_type]]\n\
+            [[,CARRIAGE_CONTROL := carriage_control]]\n\
+            [[,ORGANIZATION := organization]]\n\
+            [[,DISPOSITION := disposition]]\n\
+            [[,SHARING := file_sharing]]\n\
+            [[,USER_ACTION := user_action]]\n\
+            [[,DEFAULT := default_file_name]]\n\
+            [[,ERROR := error_recovery]] ...);",
         description: "The OPEN procedure opens a file and allows you to specify file characteristics using either positional or nonpositional syntax.",
         arguments: "file_variable: (no default) The name of the file variable associated with the file that HP Pascal is to open.\n\
 \tfile_name: (environment specific (default)) A character-string expression containing the external file name. HP Pascal determines the default file name according to the environment in which you are programming.\n\
@@ -1050,7 +1079,7 @@ OPEN(FILE_VARIABLE := file_variable [[,FILE_NAME := file_name]] [[,HISTORY := hi
     },
     {
         name: "READ",
-        prototype: "procedure READ([[file_variable,]] {variable-identifier [[:radix-specifier]]},... [[, ERROR := error-recovery]]);",
+        prototype: "procedure READ([[file_variable,]] (variable-identifier [[:radix-specifier]]),... [[, ERROR := error-recovery]]);",
         description: "The READ procedure reads one or more file components into a variable.",
         arguments: "file_variable: The name of the file variable associated with the input file. If you omit the name of the file, the default is INPUT.\n\
 \tvariable-identifier: The name of the variable into which a file component will be read; multiple identifiers must be separated with commas.\n\
@@ -1060,7 +1089,7 @@ OPEN(FILE_VARIABLE := file_variable [[,FILE_NAME := file_name]] [[,HISTORY := hi
     },
     {
         name: "READLN",
-        prototype: "procedure READLN [[([[file_variable,]] {variable-identifier [[:radix-specifier]]},...[[, ERROR := error-recovery]])]];",
+        prototype: "procedure READLN [[([[file_variable,]] (variable-identifier [[:radix-specifier]]),... [[, ERROR := error-recovery]])]];",
         description: "The READLN procedure reads lines of data from a TEXT file.",
         arguments: "file_variable: The name of the file variable associated with the TEXT file to be read. If you omit the name of the file, the default is INPUT.\n\
 \tvariable-identifier: The name of the variable into which a value will be read; multiple identifiers must be separated with commas. If you do not specify any variable names, READLN skips a line in the specified file.\n\
@@ -1079,7 +1108,7 @@ OPEN(FILE_VARIABLE := file_variable [[,FILE_NAME := file_name]] [[,HISTORY := hi
     },
     {
         name: "RESETK",
-        prototype: "procedure RESETK(file_variable, key-number[[, ERROR := error-recovery]]);",
+        prototype: "procedure RESETK(file_variable, key-number [[, ERROR := error-recovery]]);",
         description: "The RESETK procedure puts an indexed file into inspection mode, in which it can be read. RESETK can be applied only to indexed files opened for random access by key.",
         arguments: "file_variable: The name of the file variable associated with the input file.\n\
 \tkey-number: A nonnegative integer expression that indicates the key position.\n\
@@ -1127,7 +1156,7 @@ OPEN(FILE_VARIABLE := file_variable [[,FILE_NAME := file_name]] [[,HISTORY := hi
     },
     {
         name: "UPDATE",
-        prototype: "procedure UPDATE(file_variable[[, ERROR := error-recovery]]);",
+        prototype: "procedure UPDATE(file_variable [[, ERROR := error-recovery]]);",
         description: "The UPDATE procedure writes the contents of the file buffer into the current component.",
         arguments: "file_variable: The name of the file variable associated with the file whose component is to be updated.\n\
 \terror-recovery: The action to be taken if an error occurs during execution of the routine.",
@@ -1135,7 +1164,7 @@ OPEN(FILE_VARIABLE := file_variable [[,FILE_NAME := file_name]] [[,HISTORY := hi
     },
     {
         name: "WRITE",
-        prototype: "procedure WRITE([[file_variable, ]]{expression},... [[, ERROR := error-recovery]]);",
+        prototype: "procedure WRITE([[file_variable, ]] expression,... [[, ERROR := error-recovery]]);",
         description: "The WRITE procedure assigns data to an output file.",
         arguments: "file_variable: The name of the file variable associated with the output file. If you omit the name of the file, the default is OUTPUT.\n\
 \texpression: An expression whose value is to be written; multiple output values must be separated with commas. An output value must have the same type as the file components; however, values written to a TEXT file can also be expressions of any ordinal, real, or string type. You can specify the output format of the expression as described in Section 9.6.\n\
@@ -1144,7 +1173,7 @@ OPEN(FILE_VARIABLE := file_variable [[,FILE_NAME := file_name]] [[,HISTORY := hi
     },
     {
         name: "WRITELN",
-        prototype: "procedure WRITELN [[([[file_variable,]] {expression,... [[, ERROR := error-recovery]])]];",
+        prototype: "procedure WRITELN [[([[file_variable,]] expression,... [[, ERROR := error-recovery]])]];",
         description: "The WRITELN procedure writes a line of data to a text file.",
         arguments: "file_variable: The name of the file variable associated with the text file to be written. If you omit the name of the file, the default is OUTPUT.\n\
 \texpression: An expression whose value is to be written; multiple output values must be separated by commas. The expressions can be of any ordinal, real, or string type and are written with a default field width, which you can override as described in Section 9.6.\n\

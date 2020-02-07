@@ -207,7 +207,7 @@ export class SourceContext
 
     public getReferenceCount(symbol: Symbol): number 
     {
-        let result = this.symbolTable.getReferenceCount(symbol);
+        let result = 0;
 
         for (let reference of this.references) 
         {

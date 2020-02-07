@@ -14,10 +14,11 @@ import {
     VariableGlobalBlockDclSymbol,
     TypeDclSymbol,
     ConstantDclSymbol,
+    TypeSymbol,
     TypeBlockDclSymbol,
     LabelBlockDclSymbol,
     ConstBlockDclSymbol,
-    UnitBlockDclSymbol,
+    WithTypeScopedSymbol,
 } from './ContextSymbolTable';
 
 import { 
@@ -28,11 +29,9 @@ import {
 import { 
     ProgramContext,
     ProgramHeadingContext,
-    //InheritContext,
     IdentifierContext,
     AttributeDefContext,
-    IdentifierListContext,
-    BlockContext,
+    VariableContext,
     BlockDeclarationsContext,
     ProcedureAndFunctionDeclarationPartContext,
     ProcedureDeclarationContext,
@@ -40,15 +39,19 @@ import {
     FunctionDesignatorContext,
     ProcedureStatementContext,
     TypeDefinitionContext,
-    RecordSectionContext,
+    VariableDescriptionContext,
+    FieldListContext,
     ConstantDefinitionPartContext,
     ConstantDefinitionContext,
-    TypeDefinitionPartContext,
 } from '../parser/pascalParser';
 
 
 export class DetailsListener implements pascalListener 
 {
+    private recordName: string = "";
+    private recordBlock: Symbol | undefined;
+    private currentSymbol: Symbol | undefined;
+
     constructor(private symbolTable: ContextSymbolTable, private imports: string[]) 
     {    }
 
@@ -66,7 +69,6 @@ export class DetailsListener implements pascalListener
             this.currentSymbol.context = item;
         }
     }
-
     exitProgram(ctx: ProgramContext) 
     {
         if (this.currentSymbol) 
@@ -80,7 +82,6 @@ export class DetailsListener implements pascalListener
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(SyntaxSymbol, undefined, ctx.identifier().text);
         this.currentSymbol.context = ctx.identifier();
     }
-
     exitProgramHeading(ctx: ProgramHeadingContext) 
     {
         if (this.currentSymbol) 
@@ -88,28 +89,6 @@ export class DetailsListener implements pascalListener
             this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
         }
     }
-
-    // enterInherit(ctx: InheritContext) 
-    // {
-    //     let list = ctx.string(); 
-
-    //     for(let item of list)
-    //     {
-    //         this.currentSymbol = this.symbolTable.addNewSymbolOfType(SyntaxSymbol, undefined, item.text);
-    //         this.currentSymbol.context = item;
-
-    //         let refName = unquote(item.STRING_LITERAL().text, "'");
-    //         this.imports.push(refName);
-    //     }
-    // }
-
-    // exitInherit(ctx: InheritContext) 
-    // {
-    //     if (this.currentSymbol) 
-    //     {
-    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
-    //     }
-    // }
 
     enterIdentifier(ctx: IdentifierContext) 
     {
@@ -121,7 +100,6 @@ export class DetailsListener implements pascalListener
             this.currentSymbol.context = ident;
         }
     }
-
     exitIdentifier(ctx: IdentifierContext) 
     {
         if (this.currentSymbol) 
@@ -135,7 +113,6 @@ export class DetailsListener implements pascalListener
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(LabelSymbol, undefined, ctx.attribute().text);
         this.currentSymbol.context = ctx.attribute();
     }
-
     exitAttributeDef(ctx: AttributeDefContext) 
     {
         if (this.currentSymbol) 
@@ -144,18 +121,90 @@ export class DetailsListener implements pascalListener
         }
     }
 
-    enterIdentifierList(ctx: IdentifierListContext) 
+    enterVariable(ctx: VariableContext)
     {
-        let list = ctx.identifier(); 
+        let blocks = ctx.variableChildName();
+
+        if(blocks.length > 0)
+        {
+            let ident = getIdentifier(ctx.variableName().identifier());
+            this.currentSymbol = this.symbolTable.addNewSymbolOfType(LabelSymbol, undefined, ident!.text);
+            this.currentSymbol.context = ident;
+
+            let currentSymbol = this.currentSymbol;
+            this.symbolTable.linkSymbolsVar(currentSymbol, this.currentSymbol);
+
+            for(let item of blocks)
+            {
+                ident = getIdentifier(item.identifier());
+                this.currentSymbol = this.symbolTable.addNewSymbolOfType(LabelSymbol, undefined, ident!.text);
+                this.currentSymbol.context = ident;
+                let entitySymbol = this.currentSymbol;
+
+                this.symbolTable.linkSymbolsVar(currentSymbol, entitySymbol);
+            }
+        }
+    }
+    exitVariable(ctx: VariableContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
+        }
+    }
+
+    enterVariableDescription(ctx: VariableDescriptionContext) 
+    {
+        let list = ctx.identifierList().identifier(); 
 
         for(let item of list)
         {
             this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.text);
             this.currentSymbol.context = item;
+
+            if (this.currentSymbol instanceof WithTypeScopedSymbol) 
+            {
+                this.currentSymbol.symbolType = this.symbolTable.addNewSymbolOfType(TypeSymbol, undefined, ctx.type().text);
+                this.currentSymbol.symbolType.context = ctx.type();
+            }
+        }
+    }
+    exitVariableDescription(ctx: VariableDescriptionContext) 
+    {
+        if (this.currentSymbol) 
+        {
+            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
         }
     }
 
-    exitIdentifierList(ctx: IdentifierListContext) 
+    enterFieldList(ctx: FieldListContext) 
+    {
+        if (ctx.fixedPart())
+        {
+            let listS = ctx.fixedPart()!.recordSection(); 
+
+            for(let itemS of listS)
+            {
+                let list = itemS.variableDescription().identifierList().identifier(); 
+
+                for(let item of list)
+                {
+                    this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.text);
+                    this.currentSymbol.context = item;
+
+                    this.symbolTable.linkSymbolsType((this.recordName + "." + this.currentSymbol.name).toUpperCase(),  this.currentSymbol);
+
+                    if (this.currentSymbol instanceof WithTypeScopedSymbol) 
+                    {
+                        this.currentSymbol.symbolType = this.symbolTable.addNewSymbolOfType(TypeSymbol, undefined, itemS.variableDescription().type().text);
+                        this.currentSymbol.symbolType.context = itemS.variableDescription().type();
+                        this.currentSymbol.symbolBlock = this.recordBlock;
+                    }
+                }
+            }
+        }
+    }
+    exitFieldList(ctx: FieldListContext) 
     {
         if (this.currentSymbol) 
         {
@@ -208,7 +257,6 @@ export class DetailsListener implements pascalListener
             this.currentSymbol.context = item;
         }
     }
-
     exitBlockDeclarations(ctx: BlockDeclarationsContext) 
     {
         if (this.currentSymbol) 
@@ -228,7 +276,6 @@ export class DetailsListener implements pascalListener
         // this.currentSymbol = this.symbolTable.addNewSymbolOfType(BlockSymbol, undefined, ctx.block().text);
         // this.currentSymbol.context = ctx.block();
     }
-
     exitProcedureAndFunctionDeclarationPart(ctx: ProcedureAndFunctionDeclarationPartContext) 
     {
         if (this.currentSymbol) 
@@ -242,7 +289,6 @@ export class DetailsListener implements pascalListener
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(RoutineDclSymbol, undefined, ctx.identifier().text);
         this.currentSymbol.context = ctx.identifier();
     }
-
     exitProcedureDeclaration(ctx: ProcedureDeclarationContext) 
     {
         if (this.currentSymbol) 
@@ -256,7 +302,6 @@ export class DetailsListener implements pascalListener
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(RoutineDclSymbol, undefined, ctx.identifier().text);
         this.currentSymbol.context = ctx.identifier();
     }
-
     exitFunctionDeclaration(ctx: FunctionDeclarationContext) 
     {
         if (this.currentSymbol) 
@@ -270,7 +315,6 @@ export class DetailsListener implements pascalListener
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(RoutineSymbol, undefined, ctx.identifier().text);
         this.currentSymbol.context = ctx.identifier();
     }
-
     exitFunctionDesignator(ctx: FunctionDesignatorContext) 
     {
         if (this.currentSymbol) 
@@ -284,27 +328,7 @@ export class DetailsListener implements pascalListener
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(RoutineSymbol, undefined, ctx.identifier().text);
         this.currentSymbol.context = ctx.identifier();
     }
-
     exitProcedureStatement(ctx: ProcedureStatementContext) 
-    {
-        if (this.currentSymbol) 
-        {
-            this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
-        }
-    }
-
-    enterTypeDefinitionPart(ctx: TypeDefinitionPartContext) 
-    {
-        let list = ctx.typeDefinition(); 
-
-        for(let item of list)
-        {
-            this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeBlockDclSymbol, undefined, item.text);
-            this.currentSymbol.context = item;
-        }
-    }
-
-    exitTypeDefinitionPart(ctx: TypeDefinitionPartContext) 
     {
         if (this.currentSymbol) 
         {
@@ -318,6 +342,18 @@ export class DetailsListener implements pascalListener
         {
             this.currentSymbol = this.symbolTable.addNewSymbolOfType(TypeDclSymbol, undefined, ctx.typeName()!.identifier().text);
             this.currentSymbol.context = ctx.typeName()!.identifier();
+
+            if (this.currentSymbol instanceof WithTypeScopedSymbol)
+            {
+                this.recordBlock = this.symbolTable.addNewSymbolOfType(TypeBlockDclSymbol, undefined, ctx.text);
+                this.recordBlock.context = ctx;
+                this.currentSymbol.symbolBlock = this.recordBlock;
+            }
+
+            if(ctx.type())
+            {
+                this.recordName = ctx.typeName()!.text;
+            }
         }
         else if(ctx.schemaType())
         {
@@ -325,7 +361,6 @@ export class DetailsListener implements pascalListener
             this.currentSymbol.context = ctx.schemaType()!.schemaName();
         }
     }
-
     exitTypeDefinition(ctx: TypeDefinitionContext) 
     {
         if (this.currentSymbol) 
@@ -333,28 +368,6 @@ export class DetailsListener implements pascalListener
             this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
         }
     }
-
-    // enterRecordSection(ctx: RecordSectionContext) 
-    // {
-    //     let list = ctx.identifierList().identifier(); 
-
-    //     for(let item of list)
-    //     {
-    //         if(item.IDENTIFIER())
-    //         {
-    //             this.currentSymbol = this.symbolTable.addNewSymbolOfType(VariableDclSymbol, undefined, item.IDENTIFIER()!.text);
-    //             this.currentSymbol.context = item.IDENTIFIER();
-    //         }
-    //     }
-    // }
-
-    // exitRecordSection(ctx: RecordSectionContext) 
-    // {
-    //     if (this.currentSymbol) 
-    //     {
-    //         this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
-    //     }
-    // }
 
     enterConstantDefinitionPart(ctx: ConstantDefinitionPartContext) 
     {
@@ -366,7 +379,6 @@ export class DetailsListener implements pascalListener
             this.currentSymbol.context = item;
         }
     }
-
     exitConstantDefinitionPart(ctx: ConstantDefinitionPartContext) 
     {
         if (this.currentSymbol) 
@@ -380,7 +392,6 @@ export class DetailsListener implements pascalListener
         this.currentSymbol = this.symbolTable.addNewSymbolOfType(ConstantDclSymbol, undefined, ctx.constantName().identifier().text);
         this.currentSymbol.context = ctx.constantName().identifier();
     }
-
     exitConstantDefinition(ctx: ConstantDefinitionContext) 
     {
         if (this.currentSymbol) 
@@ -388,8 +399,6 @@ export class DetailsListener implements pascalListener
             this.currentSymbol = this.currentSymbol.parent as ScopedSymbol;
         }
     }
-
-    private currentSymbol: Symbol | undefined;
 }
 
 function unquote(input: string, quoteChar?: string) 

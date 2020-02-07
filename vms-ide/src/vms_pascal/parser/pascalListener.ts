@@ -34,6 +34,7 @@ import { BoolContext } from "./pascalParser";
 import { StringContext } from "./pascalParser";
 import { ValueDefinitionPartContext } from "./pascalParser";
 import { VariableNameContext } from "./pascalParser";
+import { VariableChildNameContext } from "./pascalParser";
 import { TypeDefinitionPartContext } from "./pascalParser";
 import { TypeDefinitionContext } from "./pascalParser";
 import { FunctionTypeContext } from "./pascalParser";
@@ -43,6 +44,7 @@ import { SimpleTypeContext } from "./pascalParser";
 import { EnumTypeContext } from "./pascalParser";
 import { SubrangeTypeContext } from "./pascalParser";
 import { TypeIdentifierContext } from "./pascalParser";
+import { VariableDescriptionContext } from "./pascalParser";
 import { StructuredTypeContext } from "./pascalParser";
 import { UnpackedStructuredTypeContext } from "./pascalParser";
 import { StringtypeContext } from "./pascalParser";
@@ -500,6 +502,17 @@ export interface pascalListener extends ParseTreeListener {
 	exitVariableName?: (ctx: VariableNameContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `pascalParser.variableChildName`.
+	 * @param ctx the parse tree
+	 */
+	enterVariableChildName?: (ctx: VariableChildNameContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.variableChildName`.
+	 * @param ctx the parse tree
+	 */
+	exitVariableChildName?: (ctx: VariableChildNameContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `pascalParser.typeDefinitionPart`.
 	 * @param ctx the parse tree
 	 */
@@ -597,6 +610,17 @@ export interface pascalListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitTypeIdentifier?: (ctx: TypeIdentifierContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.variableDescription`.
+	 * @param ctx the parse tree
+	 */
+	enterVariableDescription?: (ctx: VariableDescriptionContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.variableDescription`.
+	 * @param ctx the parse tree
+	 */
+	exitVariableDescription?: (ctx: VariableDescriptionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `pascalParser.structuredType`.

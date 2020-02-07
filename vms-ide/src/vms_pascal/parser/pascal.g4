@@ -9,19 +9,6 @@ programHeading
    | attributeModule MODULE identifier (LPAREN identifierList RPAREN)? SEMI
    ;
 
-// inheritAttr
-//    : LBRACK inherit RBRACK
-//    ;
-
-// inherit
-//    : INHERIT LPAREN string (COMMA string)* RPAREN
-//    ;
-   
-// invironmentAttr
-//    : LBRACK ENVIRONMENT (LPAREN string RPAREN)? (COMMA inherit)? RBRACK
-//    | LBRACK inherit (COMMA ENVIRONMENT (LPAREN string RPAREN)?)? RBRACK
-//    ;
-
 identifier
    : IDENTIFIER
    | attribute
@@ -223,6 +210,10 @@ variableName
    : identifier
    ;
 
+variableChildName
+   : identifier
+   ;
+
 typeDefinitionPart
    : attributeType TYPE ((typeDefinition SEMI) | includeDirective) +
    ;
@@ -270,6 +261,10 @@ typeIdentifier
    // | (INTEGER8 | INTEGER16 | INTEGER32 | INTEGER64)
    // | (UNSIGNED8 | UNSIGNED16 | CARDINAL16 | UNSIGNED32 | CARDINAL32 | UNSIGNED64)
    // | (DOUBLE | QUADRUPLE)
+   ;
+
+variableDescription
+   : identifierList COLON attributePart type
    ;
 
 structuredType
@@ -325,7 +320,7 @@ fixedPart
    ;
 
 recordSection
-   : identifierList COLON attributePart type (variablePreDeclaration)?
+   : variableDescription (variablePreDeclaration)?
    ;
 
 variantPart
@@ -366,7 +361,7 @@ schemaType
    ;
 
 schemaList
-   : (identifier (COMMA identifier)* COLON attributePart type)
+   : variableDescription
    ;
 
 schemaName
@@ -449,7 +444,7 @@ variableDeclarationPart
    ;
 
 variableDeclaration
-   : identifierList COLON attributePart type (variablePreDeclaration)?
+   : variableDescription (variablePreDeclaration)?
    ;
 
 variablePreDeclaration
@@ -504,7 +499,7 @@ formalParameterSection
    ;
 
 parameterGroup
-   : identifierList COLON attributePart type assignExpression
+   : variableDescription assignExpression
    ;
 
 assignExpression
@@ -554,7 +549,7 @@ assignmentStatement
    ;
 
 variable
-   : (ATP identifier | identifier) (LBRACK expression (COMMA expression)* RBRACK | LBRACK2 expression (COMMA expression)* RBRACK2 | DOT identifier | POINTER_)* (COLON COLON identifier (DOT identifier | POINTER_)*)?
+   : ATP? variableName (LBRACK expression (COMMA expression)* RBRACK | LBRACK2 expression (COMMA expression)* RBRACK2 | DOT variableChildName | POINTER_)* (COLON COLON identifier (DOT identifier | POINTER_)*)?
    ;
 
 expression
