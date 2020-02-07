@@ -1,6 +1,7 @@
 import * as nls from "vscode-nls";
 import micromatch from "micromatch";
 import path from 'path';
+import fs from 'fs';
 import { Disposable, workspace, WorkspaceFolder, RelativePattern, commands } from "vscode";
 import { EventEmitter } from "events";
 
@@ -110,9 +111,11 @@ async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelp
         const fsWatcher = workspace.createFileSystemWatcher(relativePattern, false, false, false);
         const rootLength = folder.uri.fsPath.length + 1;
         fsWatcher.onDidCreate((uri) => {
-            const fileType = getFileType(uri.fsPath.slice(rootLength));
-            if (fileType !== EFileType.unknown) {
-                ProjectFilesWatchEmitter.emitCreated(folder.name, uri.fsPath.slice(rootLength), fileType);
+            if (fs.statSync(uri.fsPath).isFile()) {
+                const fileType = getFileType(uri.fsPath.slice(rootLength));
+                if (fileType !== EFileType.unknown) {
+                    ProjectFilesWatchEmitter.emitCreated(folder.name, uri.fsPath.slice(rootLength), fileType);
+                }
             }
         });
         fsWatcher.onDidDelete((uri) => {
@@ -122,9 +125,11 @@ async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelp
             }
         });
         fsWatcher.onDidChange((uri) => {
-            const fileType = getFileType(uri.fsPath.slice(rootLength));
-            if (fileType !== EFileType.unknown) {
-                ProjectFilesWatchEmitter.emitChanged(folder.name, uri.fsPath.slice(rootLength), fileType);
+            if (fs.statSync(uri.fsPath).isFile()) {
+                const fileType = getFileType(uri.fsPath.slice(rootLength));
+                if (fileType !== EFileType.unknown) {
+                    ProjectFilesWatchEmitter.emitChanged(folder.name, uri.fsPath.slice(rootLength), fileType);
+                }
             }
         });
         scopeWatchers.push(fsWatcher);
