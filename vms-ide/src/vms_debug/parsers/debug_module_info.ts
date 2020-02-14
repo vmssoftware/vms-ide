@@ -8,70 +8,45 @@ export interface IModuleInfo
 
 export class HolderModuleInfo
 {
-	private moduleInfo = new Array<IModuleInfo>();	
+	private moduleInfo = new Map<string, IModuleInfo>();
+	private fileInfo = new Map<string, IModuleInfo>();
 
 	public getSize() : number
 	{
-		return this.moduleInfo.length;
+		return this.moduleInfo.size;
 	}
 
-	public getItems() : Array<IModuleInfo>
+	public getItems() : IModuleInfo[]
 	{
-		return this.moduleInfo;
-	}
-
-	public getIndexItem(moduleName : string) : number
-	{
-		let index : number = -1;
-		moduleName = moduleName.toUpperCase();
-
-		for (let item of this.moduleInfo)
-		{
-			index++;
-
-			if(item.moduleName === moduleName)
-			{
-				return index;
-			}
+		let infos: IModuleInfo[] = [];
+		for(let [moduleName, moduleInfo] of this.moduleInfo) {
+			infos.push(moduleInfo);
 		}
-
-		return index;
+		return infos;
 	}
 
 	public getItem(moduleName : string) : IModuleInfo
 	{
-		moduleName = moduleName.toUpperCase();
-
-		for (let item of this.moduleInfo)
-		{
-			if(item.moduleName === moduleName)
-			{
-				return item;
-			}
+		let info = this.moduleInfo.get(moduleName.toUpperCase());
+		if (info !== undefined) {
+			return info;
 		}
-
 		return <IModuleInfo> { moduleName: "", sourcePath: "", listingPath: "", language: "" };
 	}
 
 	public getItemByPath(sourcePath : string) : IModuleInfo
 	{
-		for (let item of this.moduleInfo)
-		{
-			if(item.sourcePath === sourcePath)
-			{
-				return item;
-			}
+		let info = this.fileInfo.get(sourcePath);
+		if (info !== undefined) {
+			return info;
 		}
-
 		return <IModuleInfo> { moduleName: "", sourcePath: "", listingPath: "", language: "" };
 	}
 
-	public setItem(moduleName: string, sourcePath: string, listingPath: string, language: string) : number
+	public setItem(moduleName: string, sourcePath: string, listingPath: string, language: string)
 	{
-		moduleName = moduleName.toUpperCase();
-
-		let item = <IModuleInfo> { moduleName, sourcePath, listingPath, language };
-
-		return this.moduleInfo.push(item);
+		let item = <IModuleInfo> { moduleName: moduleName.toUpperCase(), sourcePath, listingPath, language };
+		this.moduleInfo.set(item.moduleName, item);
+		this.fileInfo.set(item.sourcePath, item);
 	}
 }
