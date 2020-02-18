@@ -122,7 +122,7 @@ export class HolderModuleInfo
 							moduleName = this.moduleNamesFromMAP.get(baseName) || "";
 						}
 						// do not use module name given form LIS in case of BASIC because it is incorrect
-						if (moduleName || languageInfo.includes("BASIC")) {
+						if (moduleName && !languageInfo.includes("BASIC")) {
 							// fix some cases
 							if(languageInfo.includes("COBOL")) {
 								moduleName = moduleName.replace(/-/g, "_");
@@ -172,6 +172,22 @@ export class HolderModuleInfo
 		let info = this.moduleInfo.get(this.makeModulesUppercase? moduleName.toUpperCase() : moduleName);
 		if (info !== undefined) {
 			return info;
+		}
+		// try getting with case ignorance
+		moduleName = moduleName.toLowerCase();
+		info = this.moduleInfo.get(moduleName);
+		if (info) {
+			return info;
+		}
+		moduleName = moduleName.toUpperCase();
+		info = this.moduleInfo.get(moduleName);
+		if (info) {
+			return info;
+		}
+		for(let [moduleNameI, infoI] of this.moduleInfo) {
+			if (moduleNameI.toUpperCase() == moduleName) {
+				return infoI;
+			}
 		}
 		return <IModuleInfo> { moduleName: "", sourcePath: "", listingPath: "", language: "" };
 	}

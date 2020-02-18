@@ -317,9 +317,6 @@ export class VMSRuntime extends EventEmitter
 
 		for(let sourcePath of sourcePaths) {
 			let listingPath = this.findPathFileByName(sourcePath, lisPaths, "LIS");
-			if (sourcePath.toLowerCase().indexOf("main") >= 0) {
-				listingPath = this.findPathFileByName(sourcePath, lisPaths, "LIS");
-			}
 			await info.addLisFile(sourcePath, listingPath, this.logFn);
 		}
 		
