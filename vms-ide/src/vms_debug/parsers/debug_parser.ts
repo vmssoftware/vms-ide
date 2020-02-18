@@ -70,7 +70,7 @@ export class DebugParser
 	private displayDataString : string[] = ["", "", ""];
 	private framesOld = new Array<any>();
 
-	constructor()
+	constructor(public makeModulesUppercase: boolean)
 	{
 		this.fileInfo = new HolderDebugFileInfo();
 		this.varsInfo = new HolderDebugVariableInfo();
@@ -552,21 +552,21 @@ export class DebugParser
 
 					if(matchesR)
 					{
-						moduleName = matchesR[matchesR.length-2].toUpperCase();
+						moduleName = this.makeModulesUppercase ? matchesR[matchesR.length-2].toUpperCase() : matchesR[matchesR.length-2];
 						functionName = "";
 						variableName = matchesR[matchesR.length-1];
 					}
 				}
 				else if(matches)//Class
 				{
-					moduleName = matches[matches.length-3].toUpperCase();
+					moduleName = this.makeModulesUppercase ? matches[matches.length-3].toUpperCase() : matches[matches.length-3];
 					functionName = matches[matches.length-2];
 					variableName = matches[matches.length-1];
 				}
 				else
 				{
 					let infoData = info.split("\\");
-					moduleName = infoData[0].toUpperCase();
+					moduleName = this.makeModulesUppercase ? infoData[0].toUpperCase() : infoData[0];
 					functionName = infoData[infoData.length-2];
 					variableName = infoData[infoData.length-1];
 					variableNameFull = info;

@@ -106,10 +106,10 @@ export class VMSRuntime extends EventEmitter
 		this.buttonPressd = DebugButtonEvent.btnNoEvent;
 		this.rootFolderName = folder ? folder.name : "";
 		this.osCmd = new OsCommands();
-		this.dbgCmd = new DebugCommands();
-		this.dbgParser = new DebugParser();
+		this.dbgCmd = new DebugCommands(false);
+		this.dbgParser = new DebugParser(false);
 		this.varsInfo = new HolderDebugVariableInfo();
-		this.modulesHolder = new HolderModuleInfo();
+		this.modulesHolder = new HolderModuleInfo(false);
 		this.stopOnEntry = false;
 		this.debugRun = false;
 		this.programEnd = false;
@@ -209,8 +209,8 @@ export class VMSRuntime extends EventEmitter
 			return;
 		}
 
-		this.checkLisFiles(this.sourcePaths, this.lisPaths);
-		this.modulesHolder = await this.getModuleInfo(this.sourcePaths, this.lisPaths);
+		// this.checkLisFiles(this.sourcePaths, this.lisPaths);
+		this.modulesHolder = await this.collectModuleInfos(this.sourcePaths, this.lisPaths);
 		this.shell.resetParameters();
 		this.abortKey = section.break;
 
@@ -305,136 +305,19 @@ export class VMSRuntime extends EventEmitter
 		}
 	}
 
-// Module/Image     File           Ident              Attributes          Bytes  Creation Date      Creator
-// ------------     ----           -----           ----------------       -----  -------------      -------
-// ADD                             V1.0                Lkg     Dnrm        224   2-APR-2019 00:41  VSI C V7.4-001
-//                  WORK:[KULIKOVSKIY.project.OUT.DEBUG.OBJ]ADD.OBJ;2
-// REM_TEST_LONG_NAME_CALL         V1.0                Lkg     Dnrm        120  20-MAR-2019 07:41  VSI C V7.4-001
-//                  WORK:[KULIKOVSKIY.project.OUT.DEBUG.OBJ.INTO]REM_TEST_LONG_NAME_CALL.OBJ;1
-// DECC$SHR                        V8.4-00             Lkg                   0  15-FEB-2016 11:06  Linker I02-37
-//                  SYS$COMMON:[SYSLIB]DECC$SHR.EXE;1
-	private async getModuleInfo(sourcePaths: string[], lisPaths: string[]) : Promise<HolderModuleInfo>
+	private async collectModuleInfos(sourcePaths: string[], lisPaths: string[]) : Promise<HolderModuleInfo>
 	{
-		const matcher = /^(\S+)?\s+Source (?:Code )?Listing\s+\d{1,2}-[A-Z]{3}-\d{4} \d{2}:\d{2}:\d{2}\s+(.*)(?:\s+Page \d+)?$/;				//MODULE_NAME  Source Listing  25-APR-2019 02:09:09  VSI LANGUAGE V3.1-0007
-		const matcherHead = /^Module\/Image\s*File\s*Ident/;				//Module/Image     File    Ident
-		const matcherModule = /^(\S+)\s*.*\s(\d*-\S+-\d+\s*\d+:\d+)\s+(.*)/;//BASIC_MENU    Fast   8235  19-JUN-2019 05:35   I64 BASIC V1.8-004
-		const matcherFile = /^\s*\S+:\[\S+\](\S+)\.O\S+;/i;					// WORK:[KULIKOVSKIY.project.OUT.DEBUG.OBJ]ADD.OBJ;2
+		let info : HolderModuleInfo = new HolderModuleInfo(false);
 
-		let moduleNames = new Map<string, string>();
-		let info : HolderModuleInfo = new HolderModuleInfo();
-
-		for(let path of lisPaths)
-		{
-			if (this.checkExtension(path, "MAP"))
-			{
-				let block = false;
-				let sourceLines = this.dbgParser.loadFileContext(path);
-				
-				for(let i = 0; i < sourceLines.length; i++)
-				{
-					if(block)
-					{
-						if(sourceLines[i] !== "")
-						{
-							let matchesM = sourceLines[i].match(matcherModule);
-							let matchesN = sourceLines[i+1].match(matcherFile);
-
-							if(matchesN && matchesM && matchesM.length === 4 && matchesN.length === 2)
-							{
-								moduleNames.set(matchesM[1].toUpperCase(), matchesN[1].toUpperCase());
-								i++;
-							}
-						}
-						else
-						{
-							break;
-						}						
-					}
-					else
-					{
-						let matches = sourceLines[i].match(matcherHead);
-
-						if(matches)//find heaader line
-						{
-							block = true;
-						}
-					}
-				}
+		for(let path of lisPaths) {
+			if (this.checkExtension(path, "MAP")) {
+				await info.addMapFile(path);
 			}
 		}
 
-		for(let sourcePath of sourcePaths)
-		{
+		for(let sourcePath of sourcePaths) {
 			let listingPath = this.findPathFileByName(sourcePath, lisPaths, "LIS");
-			let sourceLines = this.dbgParser.loadFileContext(listingPath);
-
-			for(let line of sourceLines)
-			{
-				let matches = line.match(matcher);
-
-				if(matches && matches.length === 3)
-				{
-					let find = false;
-					let moduleName = matches[1];
-					let languageInfo = matches[2].toUpperCase();
-
-					// try to find module name in MAP file
-					if (moduleName == undefined) {
-						let ext = path.extname(sourcePath);
-						let baseName = path.basename(sourcePath, ext).toUpperCase();
-						for(let [moduleEntry, file] of moduleNames) {
-							if (file === baseName) {
-								moduleName = moduleEntry;
-								break;
-							}
-						}
-					}
-					if (!moduleName) {
-						continue;
-					}
-		
-					if(languageInfo.includes("COBOL"))
-					{
-						moduleName = moduleName.replace(/-/g, "_");
-					}
-
-					if(moduleName.includes("$BLK"))
-					{
-						moduleName = moduleName.replace("$BLK", "");
-					}
-
-					if(languageInfo.includes("BASIC"))
-					{
-						if(moduleNames.size === 0)
-						{
-							const message = localize('runtime.map_not_find', ".MAP file or module name could not be found");
-							vscode.window.showWarningMessage(message);
-
-							if (this.logFn)
-							{
-								this.logFn(LogType.information, () => message + "\n");
-							}
-						}
-						else
-						{
-							let entry = moduleNames.get(moduleName.toUpperCase());
-							if (entry !== undefined)
-							{
-								moduleName = entry;
-								find = true;
-							}
-
-							if(!find)
-							{
-								moduleName = this.getNameFromPath(sourcePath);
-							}
-						}
-					}
-
-					info.setItem(moduleName, sourcePath, listingPath, languageInfo);
-					break;
-				}
-			}
+			await info.addLisFile(sourcePath, listingPath, this.logFn);
 		}
 		
 		return info;

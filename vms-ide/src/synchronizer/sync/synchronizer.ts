@@ -288,14 +288,16 @@ export class Synchronizer {
             ensured.projectSection.builders,
         ];
         const include = includes.join(",");
+        const progressRemote = new Progress();
         const [remoteList, localList] = await Promise.all(
-            [scopeData.remoteSource.findFiles(include, ensured.projectSection.exclude),
+            [scopeData.remoteSource.findFiles(include, ensured.projectSection.exclude, progressRemote),
              scopeData.localSource.findFiles(include, ensured.projectSection.exclude)]);
         let retCode = false;
         // compare them
         if (remoteList && localList) {
             const compareResult = this.compareLists(localList, remoteList);
-            retCode = await this.executeAction(scopeData, compareResult.upload, "upload")
+            const progressProcess = new Progress();
+            retCode = await this.executeAction(scopeData, compareResult.upload, "upload", progressProcess)
                 .catch((err) => {
                     this.logFn(LogType.debug, () => localize("debug.upload.error", "Error while uploading {0}", String(err)));
                     return false;
@@ -326,8 +328,9 @@ export class Synchronizer {
         scopeData.remoteSource.root += ftpPathSeparator + outdir;    // find only in output directory
         const localRoot = scopeData.localSource.root;
         scopeData.localSource.root += ftpPathSeparator + outdir;     // download exactly in output directory
+        const progressRemote = new Progress();
         const [remoteList, localList] = await Promise.all(
-                [scopeData.remoteSource.findFiles(ensured.projectSection.listing),
+                [scopeData.remoteSource.findFiles(ensured.projectSection.listing, undefined, progressRemote),
                 scopeData.localSource.findFiles(ensured.projectSection.listing)]);
         // compare them
         let retCode = false;
