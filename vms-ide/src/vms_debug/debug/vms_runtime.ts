@@ -106,10 +106,10 @@ export class VMSRuntime extends EventEmitter
 		this.buttonPressd = DebugButtonEvent.btnNoEvent;
 		this.rootFolderName = folder ? folder.name : "";
 		this.osCmd = new OsCommands();
-		this.dbgCmd = new DebugCommands();
-		this.dbgParser = new DebugParser();
+		this.dbgCmd = new DebugCommands(false);
+		this.dbgParser = new DebugParser(false);
 		this.varsInfo = new HolderDebugVariableInfo();
-		this.modulesHolder = new HolderModuleInfo();
+		this.modulesHolder = new HolderModuleInfo(false);
 		this.stopOnEntry = false;
 		this.debugRun = false;
 		this.programEnd = false;
@@ -307,7 +307,7 @@ export class VMSRuntime extends EventEmitter
 
 	private async collectModuleInfos(sourcePaths: string[], lisPaths: string[]) : Promise<HolderModuleInfo>
 	{
-		let info : HolderModuleInfo = new HolderModuleInfo();
+		let info : HolderModuleInfo = new HolderModuleInfo(false);
 
 		for(let path of lisPaths) {
 			if (this.checkExtension(path, "MAP")) {
@@ -317,6 +317,9 @@ export class VMSRuntime extends EventEmitter
 
 		for(let sourcePath of sourcePaths) {
 			let listingPath = this.findPathFileByName(sourcePath, lisPaths, "LIS");
+			if (sourcePath.toLowerCase().indexOf("main") >= 0) {
+				listingPath = this.findPathFileByName(sourcePath, lisPaths, "LIS");
+			}
 			await info.addLisFile(sourcePath, listingPath, this.logFn);
 		}
 		

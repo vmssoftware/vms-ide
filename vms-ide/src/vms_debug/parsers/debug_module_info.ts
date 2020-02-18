@@ -29,12 +29,16 @@ export class HolderModuleInfo
 {
 	public moduleInfo = new Map<string, IModuleInfo>();
 	public fileInfo = new Map<string, IModuleInfo>();
-	public moduleNames = new Map<string, string>();
+	public moduleNamesFromMAP = new Map<string, string>();	// BASE NAME -> MODULE NAME
 
-	public static matcher = /^(\S+)?\s+Source (?:Code )?Listing\s+\d{1,2}-[A-Z]{3}-\d{4} \d{2}:\d{2}:\d{2}\s+(.*)(?:\s+Page \d+)?$/;				//MODULE_NAME  Source Listing  25-APR-2019 02:09:09  VSI LANGUAGE V3.1-0007
+	public static matcherLis = /^(\S+)?\s+Source (?:Code )?Listing\s+\d{1,2}-[A-Z]{3}-\d{4} \d{2}:\d{2}:\d{2}\s+(.*)(?:\s+Page \d+)?$/;				//MODULE_NAME  Source Listing  25-APR-2019 02:09:09  VSI LANGUAGE V3.1-0007
 	public static matcherHead = /^Module\/Image\s*File\s*Ident/;				//Module/Image     File    Ident
 	public static matcherModule = /^(\S+)\s*.*\s(\d*-\S+-\d+\s*\d+:\d+)\s+(.*)/;//BASIC_MENU    Fast   8235  19-JUN-2019 05:35   I64 BASIC V1.8-004
-	public static matcherFile = /^\s*\S+:\[\S+\](\S+)\.O\S+;/i;					// WORK:[KULIKOVSKIY.project.OUT.DEBUG.OBJ]ADD.OBJ;2
+	public static matcherFile = /^\s*\S+:\[\S+\](\S+)\.OBJ;/i;				// only OBJ, not OLB, like -> WORK:[project.OUT.DEBUG.OBJ]MODULE.OBJ;1
+
+	public constructor(public makeModulesUppercase: boolean) {
+		//
+	}
 
 	public async addMapFile(mapFile: string) {
 		return new Promise<Boolean>((resolve) => {
@@ -52,11 +56,15 @@ export class HolderModuleInfo
 				reader.on("line", (line: string) => {
 					if(block) {
 						if(line) {
-							let matchesN = line.match(HolderModuleInfo.matcherFile);
-							if(matchesN && matchesN.length === 2) {
-								let matchesM = lastLine.match(HolderModuleInfo.matcherModule);
-								if (matchesM && matchesM.length === 4) {
-									this.moduleNames.set(matchesM[1].toUpperCase(), matchesN[1].toUpperCase());
+							let matchesFile = line.match(HolderModuleInfo.matcherFile);
+							if(matchesFile && matchesFile.length === 2) {
+								let matchesModule = lastLine.match(HolderModuleInfo.matcherModule);
+								if (matchesModule && matchesModule.length === 4) {
+									let fileName = this.makeModulesUppercase? matchesFile[1].toUpperCase() : matchesFile[1];
+									let moduleName = this.makeModulesUppercase? matchesModule[1].toUpperCase() : matchesModule[1];
+									if (!this.moduleNamesFromMAP.has(moduleName)) {
+										this.moduleNamesFromMAP.set(moduleName, fileName);
+									}
 								}
 							}
 						} else {
@@ -89,6 +97,10 @@ export class HolderModuleInfo
 	}
 
 	public async addLisFile(sourceFile: string, lisFile: string, logFn?: LogFunction) {
+		let baseName = path.basename(sourceFile, path.extname(sourceFile));
+		if (this.makeModulesUppercase) {
+			baseName = baseName.toUpperCase();
+		}
 		return new Promise<Boolean>((resolve) => {
 			try {
 				let stream = fs.createReadStream(lisFile);
@@ -101,46 +113,29 @@ export class HolderModuleInfo
 					crlfDelay: Infinity
 				});
 				reader.on("line", (line: string) => {
-					let matches = line.match(HolderModuleInfo.matcher);
+					let matches = line.match(HolderModuleInfo.matcherLis);
 					if(matches && matches.length === 3) {
 						let moduleName = matches[1];
 						let languageInfo = matches[2].toUpperCase();
 						if (moduleName == undefined) {
 							// try to find module name in MAP file
-							let ext = path.extname(sourceFile);
-							let baseName = path.basename(sourceFile, ext).toUpperCase();
-							for(let [moduleEntry, file] of this.moduleNames) {
-								if (file === baseName) {
-									moduleName = moduleEntry;
-									break;
-								}
-							}
+							moduleName = this.moduleNamesFromMAP.get(baseName) || "";
 						}
-						if (moduleName) {
+						// do not use module name given form LIS in case of BASIC because it is incorrect
+						if (moduleName || languageInfo.includes("BASIC")) {
+							// fix some cases
 							if(languageInfo.includes("COBOL")) {
 								moduleName = moduleName.replace(/-/g, "_");
 							}
 							if(moduleName.includes("$BLK")) {
 								moduleName = moduleName.replace("$BLK", "");
 							}
-							if(languageInfo.includes("BASIC")) {
-								if(this.moduleNames.size === 0){
-									const message = localize('runtime.map_not_find', ".MAP file or module name could not be found");
-									if (logFn) {
-										logFn(LogType.information, () => message + "\n", true);
-									}
-								} else {
-									let entry = this.moduleNames.get(moduleName.toUpperCase());
-									if (entry !== undefined) {
-										moduleName = entry;
-									} else {
-										moduleName = path.basename(sourceFile, path.extname(sourceFile));
-									}
-								}
-							}
-							this.setItem(moduleName, sourceFile, lisFile, languageInfo);
-							reader.close();
+						} else {
+							// just set MODULE as FILENAME
+							moduleName = baseName;
 						}
+						this.setItem(moduleName, sourceFile, lisFile, languageInfo);
+						reader.close();
 					}
 				});
 
@@ -174,7 +169,7 @@ export class HolderModuleInfo
 
 	public getItem(moduleName : string) : IModuleInfo
 	{
-		let info = this.moduleInfo.get(moduleName.toUpperCase());
+		let info = this.moduleInfo.get(this.makeModulesUppercase? moduleName.toUpperCase() : moduleName);
 		if (info !== undefined) {
 			return info;
 		}
@@ -192,7 +187,10 @@ export class HolderModuleInfo
 
 	public setItem(moduleName: string, sourcePath: string, listingPath: string, language: string)
 	{
-		let item = <IModuleInfo> { moduleName: moduleName.toUpperCase(), sourcePath, listingPath, language };
+		let item = <IModuleInfo> { 
+			moduleName: this.makeModulesUppercase? moduleName.toUpperCase() : moduleName,
+			sourcePath, listingPath, language 
+		};
 		this.moduleInfo.set(item.moduleName, item);
 		this.fileInfo.set(item.sourcePath, item);
 	}
