@@ -209,7 +209,7 @@ export class VMSRuntime extends EventEmitter
 			return;
 		}
 
-		// this.checkLisFiles(this.sourcePaths, this.lisPaths);
+		this.checkLisFiles(this.sourcePaths, this.lisPaths);
 		this.modulesHolder = await this.collectModuleInfos(this.sourcePaths, this.lisPaths);
 		this.shell.resetParameters();
 		this.abortKey = section.break;
@@ -274,6 +274,10 @@ export class VMSRuntime extends EventEmitter
 
 	private checkLisFiles(sources : string[], lis : string[])
 	{
+		let messageFiles: string = "";
+		let countFiles = 0;
+		const message = localize('runtime.lis_not_find', ".LIS file doesn't find for the source file");
+
 		for(let itemSource of sources)
 		{
 			let found = false;
@@ -294,8 +298,8 @@ export class VMSRuntime extends EventEmitter
 
 			if(!found)
 			{
-				const message = localize('runtime.lis_not_find', ".LIS file doesn't find for the source file");
-				vscode.window.showWarningMessage(message + " " + itemSource);
+				messageFiles += itemSource + "\n";
+				countFiles++;
 
 				if (this.logFn)
 				{
@@ -303,6 +307,11 @@ export class VMSRuntime extends EventEmitter
 				}
 			}
 		}
+		
+		if(messageFiles !== "")
+		{
+			vscode.window.showWarningMessage(message + ": (" + countFiles.toString() + " files)\n"+ messageFiles);
+		}		
 	}
 
 	private async collectModuleInfos(sourcePaths: string[], lisPaths: string[]) : Promise<HolderModuleInfo>

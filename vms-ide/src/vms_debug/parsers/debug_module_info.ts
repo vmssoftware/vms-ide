@@ -89,7 +89,7 @@ export class HolderModuleInfo
 
 				reader.on("error", () => {
 					resolve(false);
-				})
+				});
 			} catch (error) {
 				resolve(false);
 			}
@@ -117,7 +117,7 @@ export class HolderModuleInfo
 					if(matches && matches.length === 3) {
 						let moduleName = matches[1];
 						let languageInfo = matches[2].toUpperCase();
-						if (moduleName == undefined) {
+						if (moduleName === undefined) {
 							// try to find module name in MAP file
 							moduleName = this.moduleNamesFromMAP.get(baseName) || "";
 						}
@@ -185,7 +185,7 @@ export class HolderModuleInfo
 			return info;
 		}
 		for(let [moduleNameI, infoI] of this.moduleInfo) {
-			if (moduleNameI.toUpperCase() == moduleName) {
+			if (moduleNameI.toUpperCase() === moduleName) {
 				return infoI;
 			}
 		}
