@@ -1,4 +1,4 @@
-// Generated from c:\Users\akulikovskiy\ts_projects\vms_ide\vms-ide\src\vms_basic\parser/BasicLexer.g4 by ANTLR 4.7.1
+// Generated from c:\Users\akulikovskiy\ts_projects\vms_ide\vms-ide\src\vms_basic\parser\BasicLexer.g4 by ANTLR 4.7.1
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
@@ -1891,14 +1891,14 @@ public class BasicLexer extends Lexer {
 		"\u0fab\3\2\2\2\u0fa2\u0fa4\7$\2\2\u0fa3\u0fa5\t.\2\2\u0fa4\u0fa3\3\2\2"+
 		"\2\u0fa5\u0fa6\3\2\2\2\u0fa6\u0fa4\3\2\2\2\u0fa6\u0fa7\3\2\2\2\u0fa7\u0fa8"+
 		"\3\2\2\2\u0fa8\u0fa9\7$\2\2\u0fa9\u0fab\t*\2\2\u0faa\u0f97\3\2\2\2\u0faa"+
-		"\u0fa2\3\2\2\2\u0fab\u03dc\3\2\2\2\u0fac\u0fae\7g\2\2\u0fad\u0faf\t/\2"+
-		"\2\u0fae\u0fad\3\2\2\2\u0fae\u0faf\3\2\2\2\u0faf\u0fb1\3\2\2\2\u0fb0\u0fb2"+
-		"\4\62;\2\u0fb1\u0fb0\3\2\2\2\u0fb2\u0fb3\3\2\2\2\u0fb3\u0fb1\3\2\2\2\u0fb3"+
-		"\u0fb4\3\2\2\2\u0fb4\u03de\3\2\2\2\62\2\u043a\u0ec1\u0ec9\u0ece\u0ed5"+
-		"\u0edc\u0ee5\u0eec\u0ef2\u0ef7\u0efe\u0f01\u0f06\u0f0c\u0f0f\u0f11\u0f14"+
-		"\u0f1a\u0f21\u0f23\u0f2b\u0f33\u0f35\u0f3d\u0f41\u0f48\u0f4c\u0f52\u0f56"+
-		"\u0f5d\u0f61\u0f67\u0f6b\u0f72\u0f76\u0f7c\u0f80\u0f87\u0f8b\u0f91\u0f95"+
-		"\u0f9c\u0fa0\u0fa6\u0faa\u0fae\u0fb3\4\2\3\2\b\2\2";
+		"\u0fa2\3\2\2\2\u0fab\u03dc\3\2\2\2\u0fac\u0fae\t\6\2\2\u0fad\u0faf\t/"+
+		"\2\2\u0fae\u0fad\3\2\2\2\u0fae\u0faf\3\2\2\2\u0faf\u0fb1\3\2\2\2\u0fb0"+
+		"\u0fb2\4\62;\2\u0fb1\u0fb0\3\2\2\2\u0fb2\u0fb3\3\2\2\2\u0fb3\u0fb1\3\2"+
+		"\2\2\u0fb3\u0fb4\3\2\2\2\u0fb4\u03de\3\2\2\2\62\2\u043a\u0ec1\u0ec9\u0ece"+
+		"\u0ed5\u0edc\u0ee5\u0eec\u0ef2\u0ef7\u0efe\u0f01\u0f06\u0f0c\u0f0f\u0f11"+
+		"\u0f14\u0f1a\u0f21\u0f23\u0f2b\u0f33\u0f35\u0f3d\u0f41\u0f48\u0f4c\u0f52"+
+		"\u0f56\u0f5d\u0f61\u0f67\u0f6b\u0f72\u0f76\u0f7c\u0f80\u0f87\u0f8b\u0f91"+
+		"\u0f95\u0f9c\u0fa0\u0fa6\u0faa\u0fae\u0fb3\4\2\3\2\b\2\2";
 	public static final String _serializedATN = Utils.join(
 		new String[] {
 			_serializedATNSegment0,
