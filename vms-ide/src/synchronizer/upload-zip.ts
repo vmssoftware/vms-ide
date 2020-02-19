@@ -104,8 +104,9 @@ export class UploadZip {
                     }
                     // overwrite always, use current time for timestamping, wait 3sec before rejecting
                     let command = UploadZip.unzipCmd(zipFileName);
-                    if (ensured.synchronizeSection.unzipCmd) {
-                        command = ensured.synchronizeSection.unzipCmd + " " + zipFileName;
+                    let unzipCmd = synchronizer.getUnzipCmd();
+                    if (unzipCmd) {
+                        command = unzipCmd + " " + zipFileName;
                     }
                     const unzipResult = await shell.execCmd(command, 3000);
                     if (!unzipResult || shell.lastError) {

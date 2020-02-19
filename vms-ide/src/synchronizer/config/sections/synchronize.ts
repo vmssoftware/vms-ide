@@ -10,7 +10,6 @@ export class SynchronizeSection implements ISynchronizeSection, IConfigSection {
         typeof candidate.downloadNewFiles === "string" &&
         typeof candidate.keepAlive === "boolean" &&
         typeof candidate.setTimeAttempts === "number" &&
-        typeof candidate.unzipCmd === "string" &&
         typeof candidate.preferZip === "boolean" &&
         typeof candidate.forceLocalTime === "boolean" &&
         typeof candidate.purge === "boolean";
@@ -19,7 +18,6 @@ export class SynchronizeSection implements ISynchronizeSection, IConfigSection {
     public downloadNewFiles: DownloadAction = "edit";
     public keepAlive: boolean = false;
     public setTimeAttempts: number = 3;
-    public unzipCmd: string = "";
     public preferZip: boolean = false;
     public forceLocalTime: boolean = true;
     public purge: boolean = false;
@@ -40,7 +38,6 @@ export class SynchronizeSection implements ISynchronizeSection, IConfigSection {
             forceLocalTime: this.forceLocalTime,
             purge: this.purge,
             setTimeAttempts: this.setTimeAttempts,
-            unzipCmd: this.unzipCmd,
         };
     }
 
@@ -58,7 +55,6 @@ export class SynchronizeSection implements ISynchronizeSection, IConfigSection {
             }
             this.keepAlive = data.keepAlive;
             this.setTimeAttempts = data.setTimeAttempts;
-            this.unzipCmd = data.unzipCmd;
             this.preferZip = data.preferZip;
             this.forceLocalTime = data.forceLocalTime;
             this.purge = data.purge;

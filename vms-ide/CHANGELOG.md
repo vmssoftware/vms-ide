@@ -1,4 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
+## 1.4.4
+* Unzip command moved from Project settings to SSH settings
+* Changed the way how the debugger finds source by module name.
+
 ## 1.4.1
 * Python debugger now supports entering data from debug console
 * setTimeByShell settings is deleted from SynchronizeSection, supportSetFileTime is added to ConnectionSection

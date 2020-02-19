@@ -626,6 +626,15 @@ export class Synchronizer {
         return true;
     }
 
+    public async getUnzipCmd() {
+        const settings = await this.sshHelper?.getSettings();
+        if (settings) {
+            let connection = settings.connectConfigResolver.testConnectConfig(settings.connectionSection).settings;
+            return connection?.unzipCmd;
+        }
+        return undefined;
+    }
+
     /**
      * Prepare sources if missed, also get settings
      */

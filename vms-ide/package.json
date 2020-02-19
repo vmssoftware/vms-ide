@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "1.4.3",
+    "version": "1.4.4",
     "publisher": "VMSSoftwareInc",
     "license": "SEE LICENSE IN LICENSE.md",
     "repository": {
@@ -611,6 +611,12 @@
                     "default": true,
                     "description": "%ssh-helper.configuration.supportSetFileTime%"
                 },
+                "vmssoftware.ssh-helper.connection.unzipCmd": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%ssh-helper.connection.unzipCmd.description%"
+                },
                 "vmssoftware.ssh-helper.connection.algorithms": {
                     "scope": "resource",
                     "type": "object",
@@ -654,7 +660,8 @@
                             "keyFile": "",
                             "skipSignatureVerification": false,
                             "algorithms": {},
-                            "supportSetFileTime": true
+                            "supportSetFileTime": true,
+                            "unzipCmd": ""
                         }
                     ],
                     "description": "%ssh-helper.configuration.hosts-collection%"
@@ -797,12 +804,6 @@
                     "type": "number",
                     "default": 3,
                     "description": "%synchronizer.properties.synchronize.setTimeAttempts.description%"
-                },
-                "vmssoftware.synchronizer.synchronize.unzipCmd": {
-                    "scope": "resource",
-                    "type": "string",
-                    "default": "",
-                    "description": "%synchronizer.properties.synchronize.unzipCmd.description%"
                 },
                 "vmssoftware.synchronizer.synchronize.preferZip": {
                     "scope": "resource",

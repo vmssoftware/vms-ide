@@ -14,6 +14,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             (typeof candidate.keyFile === "string" || candidate.keyFile === undefined) &&
             (typeof candidate.password === "string" || candidate.password === undefined) &&
             (typeof candidate.skipSignatureVerification === "boolean" || candidate.skipSignatureVerification === undefined) &&
+            (typeof candidate.unzipCmd === "string" || candidate.unzipCmd === undefined) &&
             (typeof candidate.supportSetFileTime === "boolean" || candidate.supportSetFileTime === undefined);
     }
 
@@ -25,6 +26,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
     public skipSignatureVerification?: boolean = false;
     public algorithms?: IAlgorithms;
     public supportSetFileTime?: boolean = true;
+    public unzipCmd?: string;
 
     public name(): string {
         return ConnectionSection.section;
@@ -47,6 +49,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             skipSignatureVerification: this.skipSignatureVerification || false,
             algorithms: this.algorithms as ValueData,
             supportSetFileTime: this.supportSetFileTime === undefined ? true : this.supportSetFileTime,
+            unzipCmd: this.unzipCmd || "",
         };
     }
 
@@ -60,6 +63,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             this.skipSignatureVerification = data.skipSignatureVerification;
             this.algorithms = data.algorithms;
             this.supportSetFileTime = data.supportSetFileTime;
+            this.unzipCmd = data.unzipCmd;
             return true;
         }
         return false;
