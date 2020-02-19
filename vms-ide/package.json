@@ -615,7 +615,7 @@
                     "scope": "resource",
                     "type": "string",
                     "default": "",
-                    "description": "%ssh-helper.connection.unzipCmd.description%"
+                    "description": "%ssh-helper.configuration.unzipCmd%"
                 },
                 "vmssoftware.ssh-helper.connection.algorithms": {
                     "scope": "resource",

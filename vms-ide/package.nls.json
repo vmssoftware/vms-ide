@@ -17,7 +17,7 @@
     "ssh-helper.configuration.keyFile": "SSH key file or leave it empty to use password authentication.",
     "ssh-helper.configuration.skipSignatureVerification": "Skip signature verification",
     "ssh-helper.configuration.supportSetFileTime": "Server supports setting file time. Else shell will be used.",
-    "ssh-helper.configuration.unzipCmd.description": "Command to unzip archive on VMS side",
+    "ssh-helper.configuration.unzipCmd": "Command to unzip archive on VMS side",
     "ssh-helper.configuration.algorithms": "Additional algorithms passed to SSH connection",
     "ssh-helper.configuration.timeouts.command": "Time out for command answer",
     "ssh-helper.configuration.timeouts.feedback": "Feedback timeout",
