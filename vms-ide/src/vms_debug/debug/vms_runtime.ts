@@ -16,6 +16,7 @@ import { DebugParser, MessageDebuger, Parameters } from "../parsers/debug_parser
 import { DebugVariable, HolderDebugVariableInfo, ReflectKind, VariableFileInfo } from "../parsers/debug_variable_info";
 import { Queue } from "../queue/queues";
 import { HolderModuleInfo } from "../parsers/debug_module_info";
+import { VmsPathConverter } from "../../synchronizer/vms/vms-path-converter";
 
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
@@ -228,8 +229,11 @@ export class VMSRuntime extends EventEmitter
 			// run appropriate COM file, if it exists
 			if (found && found.length === 1)
 			{
-				const dotted_root = section.root.replace(/\//g, ".");
-				const pathToPreRunFile = `[.${dotted_root}]${preRunFile} DEBUG`;
+				const converter = new VmsPathConverter(
+					[	section.root,
+						preRunFile,
+					].join(ftpPathSeparator));
+				const pathToPreRunFile = `${converter.fullPath} DEBUG`;
 				this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
 			}
 			//set vms terminal

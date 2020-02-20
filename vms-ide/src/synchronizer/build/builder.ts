@@ -597,10 +597,17 @@ export class Builder {
                             const vmsRoot = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
                             const projName = depEnsured.projectSection.projectName.toUpperCase();
                             const outDir = depEnsured.projectSection.outdir;
-                            contentFirst.push(`    ${projName}_INC_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}]"`);
-                            contentFirst.push(`    DEFINE ${projName}_INC_DIR '${projName}_INC_SYMB'`);
-                            contentFirst.push(`    ${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.$(CONFIG)]"`);
-                            contentFirst.push(`    DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
+                            if (vmsRoot.disk) {
+                                contentFirst.push(`    ${projName}_INC_SYMB = "${vmsRoot.directory}"`);
+                                contentFirst.push(`    DEFINE ${projName}_INC_DIR '${projName}_INC_SYMB'`);
+                                contentFirst.push(`    ${projName}_LIB_SYMB = "${vmsRoot.directory}"-"]"+".${outDir}.$(CONFIG)]"`);
+                                contentFirst.push(`    DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
+                            } else {
+                                contentFirst.push(`    ${projName}_INC_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}]"`);
+                                contentFirst.push(`    DEFINE ${projName}_INC_DIR '${projName}_INC_SYMB'`);
+                                contentFirst.push(`    ${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.$(CONFIG)]"`);
+                                contentFirst.push(`    DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
+                            }
                             cxxIncludes.push(`${projName}_INC_DIR`);
                             if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library]) {
                                 optLines.push(`${projName}_LIB_DIR:${projName}/LIBRARY`);
@@ -610,7 +617,11 @@ export class Builder {
                                 // com file
                                 comLines.push(`CONFIG:=DEBUG`);
                                 comLines.push(`if P1 .NES. "" THEN CONFIG:='P1'`);
-                                comLines.push(`${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.'CONFIG']"`);
+                                if (vmsRoot.disk) {
+                                    comLines.push(`${projName}_LIB_SYMB = "${vmsRoot.directory}"-"]"+".${outDir}.'CONFIG']"`);
+                                } else {
+                                    comLines.push(`${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.'CONFIG']"`);
+                                }
                                 comLines.push(`DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
                                 comLines.push(`DEFINE ${projName} ${projName}_LIB_DIR:${projName}.exe`);
                             }

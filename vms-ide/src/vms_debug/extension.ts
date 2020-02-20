@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { LogFunction, LogType } from "../common/main";
+import { LogFunction, LogType, ftpPathSeparator } from "../common/main";
 const { Subject } = require("await-notify");
 import * as Net from "net";
 import { CancellationToken, DebugConfiguration, ProviderResult, WorkspaceFolder } from "vscode";
@@ -18,6 +18,7 @@ import { ModeWork, ShellSession, TypeDataMessage } from "./net/shell-session";
 import { StatusBarDebug } from "./ui/status_bar";
 import { TerminalVMS } from "./ui/terminal";
 import { RgxFromStr } from "../common/rgx-from-str";
+import { VmsPathConverter } from "../synchronizer/vms/vms-path-converter";
 
 
 export enum TypeRunConfig
@@ -247,10 +248,13 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 
 						if (projectSection)
 						{
-							const buildType = config.typeRun === "DEBUG" ? "debug" : "release";
-							const dotted_root = projectSection.root.replace(/\//g, ".");
-							const pathToExecutable = `[.${dotted_root}.${projectSection.outdir}.${buildType}]${projectSection.projectName}.exe`;
-							config.program = pathToExecutable;
+							const converter = new VmsPathConverter(
+								[	projectSection.root,
+									projectSection.outdir,
+									config.typeRun === "DEBUG" ? "debug" : "release",
+									projectSection.projectName + ".exe"
+								].join(ftpPathSeparator));
+							config.program = converter.fullPath;
 						}
 						else
 						{

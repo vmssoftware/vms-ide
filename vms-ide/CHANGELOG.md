@@ -2,6 +2,7 @@ For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Ch
 ## 1.4.4
 * Unzip command moved from Project settings to SSH settings
 * Changed the way how the debugger finds source by module name.
+* Absolute path is allowed in root (starts from /)
 
 ## 1.4.1
 * Python debugger now supports entering data from debug console

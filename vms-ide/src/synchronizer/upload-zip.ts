@@ -109,26 +109,30 @@ export class UploadZip {
                         command = unzipCmd + " " + zipFileName;
                     }
                     const unzipResult = await shell.execCmd(command, 3000);
+                    let retCode = true;
                     if (!unzipResult || shell.lastError) {
                         this.logFn(LogType.error, () => localize("zip.unzip.failed", "Unzip command failed: {0}", shell.lastError || "unknown error" ));
                         if (unzipResult && unzipResult.length) {
+                            unzipResult.unshift(command);
                             this.logFn(LogType.error, () => localize("zip.unzip.error_output", "Unzip command output:\n {0}", unzipResult.join("\n")));
                         }
-                        shell.dispose();
-                        return false;
+                        retCode = false;
                     } else {
                         // parse unzip result
                         if (unzipResult && unzipResult.length) {
+                            unzipResult.unshift(command);
                             if (unzipResult.some((s) => s.startsWith("%DCL-W-IVVERB"))) {
                                 this.logFn(LogType.error, () => localize("zip.unzip.not.installed", "It seems 'unzip' isn't installed" ));
                                 this.logFn(LogType.error, () => localize("zip.unzip.error_output", "Unzip command output:\n {0}", unzipResult.join("\n")));
-                                shell.dispose();
-                                return false;
+                                retCode = false;
+                            } else if (unzipResult.some((s) => s.startsWith("%DCL-"))) {
+                                this.logFn(LogType.error, () => localize("zip.unzip.error_output", "Unzip command output:\n {0}", unzipResult.join("\n")));
+                                retCode = false;
                             }
                         }
                     }
                     shell.dispose();
-                    return true;
+                    return retCode;
                 }
             } else {
                 this.logFn(LogType.error, () => localize("zip.cannot_finish", "Cannot finish Zip."));
