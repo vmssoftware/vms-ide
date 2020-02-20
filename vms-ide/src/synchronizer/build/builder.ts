@@ -1098,7 +1098,13 @@ export class Builder {
             this.logFn(LogType.warning, () => line);
         }
         let cwd = "";
-        cwd = scopeData.shellRootConverter.initial + scopeData.ensured.projectSection.root + ftpPathSeparator;
+        if (scopeData.ensured.projectSection.root.startsWith(ftpPathSeparator)) {
+            // absolute path
+            cwd = scopeData.ensured.projectSection.root + ftpPathSeparator;
+        } else {
+            // relative to home folder
+            cwd = scopeData.shellRootConverter.initial + scopeData.ensured.projectSection.root + ftpPathSeparator;
+        }
         cwd = cwd.toUpperCase();
         let hardlinkFolder = "";
         switch (scopeData.ensured.projectSection.projectType) {

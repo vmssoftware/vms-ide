@@ -17,6 +17,7 @@ import { VmsSftpClient } from "./vms-sftp-client";
 import { VmsShellSource } from "./vms-shell-source";
 import { ProjectState } from "../dep-tree/proj-state";
 import { VmsPathConverter } from "../vms/vms-path-converter";
+import { middleSepRg } from "../../synchronizer/common/find-files";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -220,7 +221,7 @@ export class Synchronizer {
             // delete deleted files
             const deletedList = ProjectState.acquire().getDeletedList(ensured.scope);
             for (let fileToDelete of deletedList) {
-                fileToDelete = fileToDelete.replace(/[/\\]/g, ftpPathSeparator);
+                fileToDelete = fileToDelete.replace(middleSepRg, ftpPathSeparator);
                 if (!(await scopeData.remoteSource.deleteFile(fileToDelete))) {
                     this.logFn(LogType.error, () => localize("debug.quick.delete", "Delete remote file failed: {0}", fileToDelete));
                     retCode = false;
@@ -233,7 +234,7 @@ export class Synchronizer {
             const uploadList: string[] = [];
             const modifiedList = ProjectState.acquire().getModifiedList(ensured.scope);
             for (let fileToUpload of modifiedList) {
-                fileToUpload = fileToUpload.replace(/[/\\]/g, ftpPathSeparator);
+                fileToUpload = fileToUpload.replace(middleSepRg, ftpPathSeparator);
                 if (await scopeData.localSource.accessFile(fileToUpload)) {
                     uploadList.push(fileToUpload);
                 }

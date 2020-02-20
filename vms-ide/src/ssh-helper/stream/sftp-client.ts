@@ -12,6 +12,7 @@ import { IFileEntry } from "../../common/main";
 import { IConnectConfigResolver, IInputAttributes, IStats } from "../api";
 import { IConnectConfig } from "../api";
 import { SshClient } from "./ssh-client";
+import { leadingSepRg, trailingSepRg, middleSepRg } from "../../synchronizer/common/find-files";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -187,10 +188,7 @@ export class SftpClient extends SshClient {
         await this.waitOperation.acquire();
         if (await this.ensureSftp()) {
             if (this.sftp) {
-                const leading = /^[/\\]+/g;
-                const middle = /[/\\]+/g;
-                const trailing = /[/\\]+$/g;
-                directory = directory.replace(leading, "").replace(trailing, "").replace(middle, ftpPathSeparator);
+                directory = directory.replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
                 this.waitOperation.release();   // let getStat work
                 const stat = await this.getStat(directory);
                 await this.waitOperation.acquire();

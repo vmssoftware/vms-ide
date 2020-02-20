@@ -20,7 +20,6 @@ export class FsSource implements ISource, IReadDirectory {
 
     public set root(anyRoot: string | undefined) {
         anyRoot = anyRoot || "";
-        // this.ftpLikeRoot = anyRoot.replace(leadingSepRg, "").replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
         this.ftpLikeRoot = anyRoot.replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
     }
 
