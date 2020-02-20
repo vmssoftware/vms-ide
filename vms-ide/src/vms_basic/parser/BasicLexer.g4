@@ -1534,6 +1534,7 @@ NUMBER
 
 NUMBER_REAL
    : ('0' .. '9') + (('.' ('0' .. '9') + (EXPONENT)?)? | EXPONENT)
+   | '.' ('0' .. '9') + (EXPONENT)?
    ;
 
 IDENTIFIER
@@ -1574,5 +1575,5 @@ CH_NUMBER
 
 
 fragment EXPONENT
-   : [eE] ('+' | '-')? ('0' .. '9') +
+   : [eE] ('+' | '-')? ('0' .. '9') *
    ;
