@@ -119,7 +119,7 @@ export class Synchronizer {
                 this.sshHelper.getDefaultVmsShell(scope),
             ]);
         if (sftp && shell) {
-            return await this.isSupportSetFileTime() // ensured.synchronizeSection.setTimeByShell
+            return await this.isSupportSetFileTime(scope) // ensured.synchronizeSection.setTimeByShell
             ? new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts)
             : new VmsShellSource(new VmsSftpClient(sftp), shell, ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
         }
@@ -618,8 +618,8 @@ export class Synchronizer {
             })
     }
 
-    public async isSupportSetFileTime() {
-        const settings = await this.sshHelper?.getSettings();
+    public async isSupportSetFileTime(scope?: string) {
+        const settings = await this.sshHelper?.getSettings(scope);
         if (settings) {
             let connection = settings.connectConfigResolver.testConnectConfig(settings.connectionSection).settings;
             return !!connection?.supportSetFileTime;
@@ -627,8 +627,8 @@ export class Synchronizer {
         return true;
     }
 
-    public async getUnzipCmd() {
-        const settings = await this.sshHelper?.getSettings();
+    public async getUnzipCmd(scope?: string) {
+        const settings = await this.sshHelper?.getSettings(scope);
         if (settings) {
             let connection = settings.connectConfigResolver.testConnectConfig(settings.connectionSection).settings;
             return connection?.unzipCmd;
@@ -664,7 +664,7 @@ export class Synchronizer {
                 markInvalid();
             });
             const remoteSource = await (async (sshHelper)=> {
-                if (await this.isSupportSetFileTime()) {
+                if (await this.isSupportSetFileTime(scope)) {
                     return new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts);
                 } else {
                     const shell = await sshHelper.getDefaultVmsShell(scope);
