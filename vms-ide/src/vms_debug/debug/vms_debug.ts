@@ -50,6 +50,8 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	private configurationDone = new Subject();
 
+	private commandWait = new Subject();
+
 	private responseStackTrace =  new Queue<DebugProtocol.StackTraceResponse>();
 
 	/**
@@ -456,6 +458,8 @@ export class VMSDebugSession extends LoggingDebugSession
 		else if(args.context === "repl")//data from debug console
 		{
 			this.runtime.sendDataToProgram(args.expression);
+
+			await this.commandWait.wait(1000);
 
 			response.body =
 			{
