@@ -228,7 +228,20 @@ export class JvmProjectHelper {
             const scopedata = await this.chooseScope(scope);
             if (scopedata) {
                 const vmsPath = new VmsPathConverter(scopedata.ensured.projectSection.root + ftpPathSeparator);
-                return `set def ${vmsPath.directory}`;
+                return `set default ${vmsPath.directory}`;
+            }
+        }
+        return "";
+    }
+
+    public static async runComFile(scope?: string) {
+        if (!scope) {
+            scope = await commands.executeCommand("vmssoftware.synchronizer.getCurrentScope");
+        }
+        if (scope && typeof scope === "string") {
+            const scopedata = await this.chooseScope(scope);
+            if (scopedata) {
+                return `@${scopedata.ensured.projectSection.projectName}.com`;
             }
         }
         return "";

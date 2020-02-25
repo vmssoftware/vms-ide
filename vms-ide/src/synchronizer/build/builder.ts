@@ -147,6 +147,7 @@ export class Builder {
         }
     }
 
+    // for DEBUG only
     public async getClassPath(ensured: IEnsured, buildName: string) {
 
         if (ensured.projectSection.projectType === ProjectType[ProjectType.java] ||
@@ -158,13 +159,12 @@ export class Builder {
             const scalaRuntime = "/scala$root/lib/scala-library.jar";
             let hasKotlin = false;
             let hasScala = false;
-            
+
             // project dependecies
             let depClassPath = ensured.projectSection.addLibraries.split(",").join(":");
             let deps = new ProjDepTree().getDepList(ensured.scope);
             if (deps.length > 0) {
                 // first is this project
-                const depPathStart = (".." + ftpPathSeparator).repeat(ensured.projectSection.root.split(ftpPathSeparator).length);
                 for (const depPrj of deps) {
                     const depEnsured = await ensureSettings(depPrj, this.logFn);
                     if (depEnsured) {
@@ -180,15 +180,15 @@ export class Builder {
                             default:
                                 continue;   // go to next dependency
                         }
-                        const depPath = depPathStart + 
-                                        [depEnsured.projectSection.root,
-                                         depEnsured.projectSection.outdir,
-                                         buildName,
-                                         depEnsured.projectSection.projectName].join(ftpPathSeparator) + ".jar";
                         if (depClassPath) {
                             depClassPath += ":";
                         }
-                        depClassPath += depPath;
+                        const projName = depEnsured.projectSection.projectName;
+                        if (ensured.scope == depEnsured.scope) {
+                            depClassPath += `${ensured.projectSection.outdir}/DEBUG/${projName}.jar`;
+                        } else {
+                            depClassPath += `/${projName.toUpperCase()}_LIB_DIR/${projName}.jar`;
+                        }
                     }
                 }
             }
@@ -563,6 +563,7 @@ export class Builder {
 
         const cxxIncludes: string[] = [];
         const contentFirst: string[] = [".FIRST"];
+        const contentLast: string[] = [".LAST"];
         const mainModuleLines: string[] = [];
         const flagLines : string[] = [];
         const middleLines : string[] = [];
@@ -615,8 +616,10 @@ export class Builder {
                             if (depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
                                 optLines.push(`${projName}_LIB_DIR:${projName}/SHAREABLE`);
                                 // com file
-                                comLines.push(`CONFIG:=DEBUG`);
-                                comLines.push(`if P1 .NES. "" THEN CONFIG:='P1'`);
+                                if (comLines.length === 0) {
+                                    comLines.push(`CONFIG:=DEBUG`);
+                                    comLines.push(`if P1 .NES. "" THEN CONFIG:='P1'`);
+                                }
                                 if (vmsRoot.disk) {
                                     comLines.push(`${projName}_LIB_SYMB = "${vmsRoot.directory}"-"]"+".${outDir}.'CONFIG']"`);
                                 } else {
@@ -772,10 +775,9 @@ export class Builder {
                 contentFirst.push(`    pipe create/dir [.$(OUTDIR).tmp] | copy SYS$INPUT nl:`);
             }
             // delete all current hard link after the process
-            contentFirst.push(`.LAST`);
-            contentFirst.push(`    pipe del/tree [.$(OUTDIR).src]*.*;* | copy SYS$INPUT nl:`);
+            contentLast.push(`    pipe del/tree [.$(OUTDIR).src]*.*;* | copy SYS$INPUT nl:`);
             if (ensured.projectSection.projectType === ProjectType[ProjectType.java]) {
-                contentFirst.push(`    pipe del/tree [.$(OUTDIR).tmp...]*.*;* | copy SYS$INPUT nl:`);
+                contentLast.push(`    pipe del/tree [.$(OUTDIR).tmp...]*.*;* | copy SYS$INPUT nl:`);
             }
                     
             middleLines.push(...[
@@ -786,7 +788,6 @@ export class Builder {
             let depClassPath = ensured.projectSection.addLibraries.split(",").join(":");
             let deps = new ProjDepTree().getDepList(ensured.scope);
             if (deps.length > 1) {  // first is this project
-                const depPathStart = (".." + ftpPathSeparator).repeat(ensured.projectSection.root.split(ftpPathSeparator).length);
                 deps = deps.splice(1);
                 for (const depPrj of deps) {
                     const depEnsured = await ensureSettings(depPrj, this.logFn);
@@ -794,16 +795,31 @@ export class Builder {
                         switch (depEnsured.projectSection.projectType) {
                             case ProjectType[ProjectType.java]:
                             case ProjectType[ProjectType.scala]:
-                            case ProjectType[ProjectType.kotlin]:
-                                const depPath = depPathStart + 
-                                                [depEnsured.projectSection.root,
-                                                 depEnsured.projectSection.outdir,
-                                                 "$(CONFIG)",
-                                                 depEnsured.projectSection.projectName].join(ftpPathSeparator) + ".jar";
-                                if (depClassPath) {
-                                    depClassPath += ":";
+                            case ProjectType[ProjectType.kotlin]: {
+                                    const vmsRoot = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
+                                    const projName = depEnsured.projectSection.projectName;
+                                    const projNameUpper = projName.toUpperCase();
+                                    const outDir = depEnsured.projectSection.outdir;
+                                    // com file
+                                    if (comLines.length === 0) {
+                                        comLines.push(`CONFIG:=DEBUG`);
+                                        comLines.push(`if P1 .NES. "" THEN CONFIG:='P1'`);
+                                    }
+                                    if (vmsRoot.disk) {
+                                        contentFirst.push(`    ${projNameUpper}_LIB_SYMB = "${vmsRoot.directory}"-"]"+".${outDir}.$(CONFIG)]"`);
+                                        contentFirst.push(`    DEFINE ${projNameUpper}_LIB_DIR '${projNameUpper}_LIB_SYMB'`);
+                                        comLines.push(`${projNameUpper}_LIB_SYMB = "${vmsRoot.directory}"-"]"+".${outDir}.'CONFIG']"`);
+                                    } else {
+                                        contentFirst.push(`    ${projNameUpper}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.$(CONFIG)]"`);
+                                        contentFirst.push(`    DEFINE ${projNameUpper}_LIB_DIR '${projNameUpper}_LIB_SYMB'`);
+                                        comLines.push(`${projNameUpper}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.'CONFIG']"`);
+                                    }
+                                    comLines.push(`DEFINE ${projNameUpper}_LIB_DIR '${projNameUpper}_LIB_SYMB'`);
+                                    if (depClassPath) {
+                                        depClassPath += ":";
+                                    }
+                                    depClassPath += `/${projNameUpper}_LIB_DIR/${projName}.jar`;
                                 }
-                                depClassPath += depPath;
                                 break;
                         }
                     }
@@ -848,6 +864,7 @@ export class Builder {
             ...sourceLines,
             `! dependencies`,
             ...contentFirst,
+            ...contentLast,
             `! compiler/linker options`,
             ...flagLines,
             `! directives`,
@@ -1041,15 +1058,16 @@ export class Builder {
                         currentPath = VmsPathConverter.fromVms(answer[0].trim());
                     }
                     // go to folder for zipping files
-                    const zipFolder = 
-                        scopeData.shellRootConverter.initial
-                        + scopeData.ensured.projectSection.root
-                        + ftpPathSeparator
-                        + scopeData.ensured.projectSection.outdir
-                        + ftpPathSeparator
-                        + buildCfg.label
-                        + ftpPathSeparator;
-                    const zipFolderConverter = new VmsPathConverter(zipFolder);
+                    let zipFolderChain: string[] = [
+                        scopeData.ensured.projectSection.root,
+                        scopeData.ensured.projectSection.outdir,
+                        buildCfg.label,
+                    ];
+                    if (!scopeData.ensured.projectSection.root.startsWith(ftpPathSeparator)) {
+                        // relative path
+                        zipFolderChain.unshift(scopeData.shellRootConverter.initial);
+                    }
+                    const zipFolderConverter = new VmsPathConverter(zipFolderChain.join(ftpPathSeparator));
                     let cd = `set default ${zipFolderConverter.directory}`;
                     answer = await scopeData.shell.execCmd(cd);
                     // create zip file 
@@ -1262,8 +1280,8 @@ export class Builder {
             }
             const shellRootConverter = VmsPathConverter.fromVms(answer[0]);
             // set default directory for shell - project root
-            const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
-            const cd = `set default ${converter.directory}`;
+            const projectRootFolder = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
+            const cd = `set default ${projectRootFolder.directory}`;
             answer = await shell.execCmd(cd);
             if (!answer) {
                 return undefined;

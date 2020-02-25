@@ -280,43 +280,52 @@ export class JvmDebugSession extends LoggingDebugSession {
                 }
             }
             let cdCommand = await JvmProjectHelper.cdRemoteRoot(this._scope);
-            this._jvmQueue.postCommand(cdCommand, (cmd, line) => {
+            await this._jvmQueue.postCommand(cdCommand, (cmd, line) => {
                 if (line === undefined || line.includes("\0")) {
                     return ListenerResponse.stop;
                 }
                 return ListenerResponse.needMoreLines;
-            }).then(async () => {
-                while (listeningPort <= listeningPortMax) {
-                    let result = await this.tryRunJVM(listeningPort, args.class, args.classpath, args.arguments);
-                    if (result === jvmStartResult.started) {
-                        if (args.stopOnEntry) {
-                            const bp = await this._runtime.setBreakPoint(await JvmProjectHelper.stopOnEntryClass(args.class, this._scope), "main");
-                            if (bp) {
-                                this._stopOnEntryBp = bp.breakId;
-                            }
-                        }
-                        args.port = String(listeningPort);
-                        this._jvmQueue.onUnexpectedLine((line) => {
-                            if (line) { // && !line.includes('\0')) {
-                                this.userOutput(line);
-                            }
-                        });
-                        this._jvmQueue.onErrorLine((line) => {
-                            if (line) { // && !line.includes('\0')) {
-                                this.userErrorOutput(line);
-                            }
-                        });
-                        return this._runtime.start(args);
-                    } else if (result === jvmStartResult.portIsBusy) {
-                        this._logFn(LogType.information, () => localize("jvm.port.busy", "Port {0} is busy.", String(listeningPort)));
-                        ++listeningPort;
-                    } else {
-                        break;
-                    }
-                }
-                this.sendEvent(new TerminatedEvent());
-                return false;
             });
+            let runComFileCommand = await JvmProjectHelper.runComFile(this._scope);
+            await this._jvmQueue.postCommand(runComFileCommand, (cmd, line) => {
+                if (line === undefined || line.includes("\0")) {
+                    return ListenerResponse.stop;
+                }
+                return ListenerResponse.needMoreLines;
+            });
+            let result: jvmStartResult = jvmStartResult.unknown;
+            while (listeningPort <= listeningPortMax) {
+                result = await this.tryRunJVM(listeningPort, args.class, args.classpath, args.arguments);
+                if (result === jvmStartResult.started) {
+                    if (args.stopOnEntry) {
+                        const bp = await this._runtime.setBreakPoint(await JvmProjectHelper.stopOnEntryClass(args.class, this._scope), "main");
+                        if (bp) {
+                            this._stopOnEntryBp = bp.breakId;
+                        }
+                    }
+                    args.port = String(listeningPort);
+                    this._jvmQueue.onUnexpectedLine((line) => {
+                        if (line) { // && !line.includes('\0')) {
+                            this.userOutput(line);
+                        }
+                    });
+                    this._jvmQueue.onErrorLine((line) => {
+                        if (line) { // && !line.includes('\0')) {
+                            this.userErrorOutput(line);
+                        }
+                    });
+                    this._runtime.start(args);
+                    break;
+                } else if (result === jvmStartResult.portIsBusy) {
+                    this._logFn(LogType.information, () => localize("jvm.port.busy", "Port {0} is busy.", String(listeningPort)));
+                    ++listeningPort;
+                } else {
+                    break;
+                }
+            }
+            if (result !== jvmStartResult.started) {
+                this.sendEvent(new TerminatedEvent());
+            }
         }
     }
 
