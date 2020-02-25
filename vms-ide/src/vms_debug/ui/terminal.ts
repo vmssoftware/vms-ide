@@ -32,8 +32,11 @@ export class TerminalVMS
 		return terminal;
 	}
 
-	public start(terminal : vscode.Terminal, host : string, userName : string, password? : string)
+	public async start(terminal : vscode.Terminal, host : string, userName : string, password? : string)
 	{
+		let setPassword = false;
+		let configurationDone = new Subject();
+
 		this.prompt = userName + "@" + host + "'s password:";
 
 		if((<any>terminal).onDidWriteData)
@@ -44,6 +47,7 @@ export class TerminalVMS
 				{
 					if(this.passwd !== "")
 					{
+						setPassword = true;
 						terminal.sendText(this.passwd);
 					}
 				}
@@ -60,6 +64,13 @@ export class TerminalVMS
 			}
 
 			terminal.show();
+
+			await configurationDone.wait(3000);
+
+			if(!setPassword)
+			{
+				terminal.sendText(this.passwd);
+			}
 		}
 	}
 
