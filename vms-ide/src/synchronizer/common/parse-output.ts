@@ -85,7 +85,7 @@ const parseRgxCLD: IParseRgx = {
 };
 
 const rgxMsgMMS = /^((%|-)(MMS)-(\S)-(\S*)),\s(.*)$/;
-const rgxMsgFileSintax = /(.*) in file (.*), line (\d)+\.$/;
+const rgxMsgFileSintax = /(.*) in file (.*), line (\d+)\.$/;
 
 const mmsExt = ".MMS";
 

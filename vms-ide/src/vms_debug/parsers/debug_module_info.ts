@@ -29,7 +29,7 @@ export class HolderModuleInfo
 {
 	public moduleInfo = new Map<string, IModuleInfo>();
 	public fileInfo = new Map<string, IModuleInfo>();
-	public moduleNamesFromMAP = new Map<string, string>();	// BASE NAME -> MODULE NAME
+	public moduleNamesFromMAP = new Map<string, string>();	// file base name -> first MODULE name
 
 	public static matcherLis = /^(\S+)?\s+Source (?:Code )?Listing\s+\d{1,2}-[A-Z]{3}-\d{4} \d{2}:\d{2}:\d{2}\s+(.*)(?:\s+Page \d+)?$/;				//MODULE_NAME  Source Listing  25-APR-2019 02:09:09  VSI LANGUAGE V3.1-0007
 	public static matcherHead = /^Module\/Image\s*File\s*Ident/;				//Module/Image     File    Ident
@@ -62,8 +62,8 @@ export class HolderModuleInfo
 								if (matchesModule && matchesModule.length === 4) {
 									let fileName = this.makeModulesUppercase? matchesFile[1].toUpperCase() : matchesFile[1];
 									let moduleName = this.makeModulesUppercase? matchesModule[1].toUpperCase() : matchesModule[1];
-									if (!this.moduleNamesFromMAP.has(moduleName)) {
-										this.moduleNamesFromMAP.set(moduleName, fileName);
+									if (!this.moduleNamesFromMAP.has(fileName)) {
+										this.moduleNamesFromMAP.set(fileName, moduleName);
 									}
 								}
 							}

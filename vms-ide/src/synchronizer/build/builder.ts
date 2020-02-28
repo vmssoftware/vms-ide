@@ -632,7 +632,6 @@ export class Builder {
                     }
                 }
             }
-            contentFirst.push("");
 
             if (ensured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
                 optLines.push(`GSMATCH=LEQUAL,1,1001    ! adjust vesrion`);
@@ -854,6 +853,9 @@ export class Builder {
         }
 
         localSource.dispose();
+
+        contentFirst.push("");
+        contentLast.push("");
 
         const allLines = [
             `! header`,
