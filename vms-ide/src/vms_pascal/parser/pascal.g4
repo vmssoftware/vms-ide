@@ -600,6 +600,7 @@ signedFactor
 
 factor
    : variable
+   | constList
    | LPAREN expression RPAREN
    | functionDesignator
    | unsignedConstant

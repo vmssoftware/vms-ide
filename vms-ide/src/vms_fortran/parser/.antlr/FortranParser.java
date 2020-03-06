@@ -46,11 +46,11 @@ public class FortranParser extends Parser {
 		DISPOSE=182, DISP=183, EXTENDSIZE=184, INITIALSIZE=185, KEY=186, KEYID=187, 
 		KEYEQ=188, KEYGE=189, KEYLE=190, KEYGT=191, KEYLT=192, KEYNXT=193, KEYNXTNE=194, 
 		ASCENDING=195, DESCENDING=196, KEYED=197, MAXREC=198, NOSPANBLOCKS=199, 
-		ORGANIZATION=200, RECORDTYPE=201, SHARED=202, SIGN=203, S_CONST=204, CONTN=205, 
-		CONT6=206, CONTTAB=207, EOS=208, DEBUG_COMMENT=209, WS=210, I_CONST=211, 
-		H_CONST=212, B_CONST=213, O_CONST=214, Z_CONST=215, P_CONST=216, X_CONST=217, 
-		F_CONST=218, IDENTIFIER=219, R_CONST=220, COMMENT=221, FIXED_COMMENT=222, 
-		SconSingle=223, SconDouble=224;
+		ORGANIZATION=200, RECORDTYPE=201, SHARED=202, SIGN=203, WHITESPACE_=204, 
+		S_CONST=205, CONTN=206, CONT6=207, CONTTAB=208, EOS=209, DEBUG_COMMENT=210, 
+		WS=211, I_CONST=212, H_CONST=213, B_CONST=214, O_CONST=215, Z_CONST=216, 
+		P_CONST=217, X_CONST=218, F_CONST=219, IDENTIFIER=220, R_CONST=221, COMMENT=222, 
+		FIXED_COMMENT=223, SconSingle=224, SconDouble=225;
 	public static final int
 		RULE_program = 0, RULE_programUnit = 1, RULE_optionsStatement = 2, RULE_mainProgram = 3, 
 		RULE_mainRange = 4, RULE_bodyConstruct = 5, RULE_body = 6, RULE_specificationPartConstruct = 7, 
@@ -291,10 +291,10 @@ public class FortranParser extends Parser {
 		"DEFAULTFILE", "DISPOSE", "DISP", "EXTENDSIZE", "INITIALSIZE", "KEY", 
 		"KEYID", "KEYEQ", "KEYGE", "KEYLE", "KEYGT", "KEYLT", "KEYNXT", "KEYNXTNE", 
 		"ASCENDING", "DESCENDING", "KEYED", "MAXREC", "NOSPANBLOCKS", "ORGANIZATION", 
-		"RECORDTYPE", "SHARED", "SIGN", "S_CONST", "CONTN", "CONT6", "CONTTAB", 
-		"EOS", "DEBUG_COMMENT", "WS", "I_CONST", "H_CONST", "B_CONST", "O_CONST", 
-		"Z_CONST", "P_CONST", "X_CONST", "F_CONST", "IDENTIFIER", "R_CONST", "COMMENT", 
-		"FIXED_COMMENT", "SconSingle", "SconDouble"
+		"RECORDTYPE", "SHARED", "SIGN", "WHITESPACE_", "S_CONST", "CONTN", "CONT6", 
+		"CONTTAB", "EOS", "DEBUG_COMMENT", "WS", "I_CONST", "H_CONST", "B_CONST", 
+		"O_CONST", "Z_CONST", "P_CONST", "X_CONST", "F_CONST", "IDENTIFIER", "R_CONST", 
+		"COMMENT", "FIXED_COMMENT", "SconSingle", "SconDouble"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -8789,7 +8789,7 @@ public class FortranParser extends Parser {
 			{
 			setState(1745);
 			_la = _input.LA(1);
-			if ( !(((((_la - 213)) & ~0x3f) == 0 && ((1L << (_la - 213)) & ((1L << (B_CONST - 213)) | (1L << (O_CONST - 213)) | (1L << (Z_CONST - 213)))) != 0)) ) {
+			if ( !(((((_la - 214)) & ~0x3f) == 0 && ((1L << (_la - 214)) & ((1L << (B_CONST - 214)) | (1L << (O_CONST - 214)) | (1L << (Z_CONST - 214)))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -27407,7 +27407,7 @@ public class FortranParser extends Parser {
 
 	private static final int _serializedATNSegments = 2;
 	private static final String _serializedATNSegment0 =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\u00e2\u1263\4\2\t"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\u00e3\u1263\4\2\t"+
 		"\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13"+
 		"\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
@@ -27943,7 +27943,7 @@ public class FortranParser extends Parser {
 		"\u0294\u0296\u0298\u029a\u029c\u029e\u02a0\u02a2\u02a4\u02a6\u02a8\u02aa"+
 		"\u02ac\u02ae\u02b0\u02b2\u02b4\u02b6\u02b8\u02ba\u02bc\u02be\u02c0\u02c2"+
 		"\u02c4\u02c6\u02c8\u02ca\2\17\17\2\t\13\20\22\30\37!!$&(\62CDNNPRW`\u0087"+
-		"\u00a3\u00a5\u00cc\u00dd\u00dd\5\2vv||~~\3\2\u00d7\u00d9\3\2\20\21\3\2"+
+		"\u00a3\u00a5\u00cc\u00de\u00de\5\2vv||~~\3\2\u00d8\u00da\3\2\20\21\3\2"+
 		"qr\3\2|}\3\2yz\4\2hm\u0081\u0086\3\2de\4\2\"\"\'\'\3\2\u00c5\u00c6\3\2"+
 		"IJ\4\2\13\13LL\2\u140f\2\u02cd\3\2\2\2\4\u02da\3\2\2\2\6\u02dc\3\2\2\2"+
 		"\b\u02ea\3\2\2\2\n\u02f4\3\2\2\2\f\u02f9\3\2\2\2\16\u02fc\3\2\2\2\20\u0308"+
@@ -28118,9 +28118,9 @@ public class FortranParser extends Parser {
 		"\u0365\5\u0220\u0111\2\u0364\u035b\3\2\2\2\u0364\u035c\3\2\2\2\u0364\u035d"+
 		"\3\2\2\2\u0364\u035e\3\2\2\2\u0364\u035f\3\2\2\2\u0364\u0360\3\2\2\2\u0364"+
 		"\u0361\3\2\2\2\u0364\u0362\3\2\2\2\u0364\u0363\3\2\2\2\u0365!\3\2\2\2"+
-		"\u0366\u0368\7\u00d2\2\2\u0367\u0366\3\2\2\2\u0368\u0369\3\2\2\2\u0369"+
-		"\u0367\3\2\2\2\u0369\u036a\3\2\2\2\u036a#\3\2\2\2\u036b\u036c\7\u00d5"+
-		"\2\2\u036c%\3\2\2\2\u036d\u036e\7\u00d5\2\2\u036e\'\3\2\2\2\u036f\u0370"+
+		"\u0366\u0368\7\u00d3\2\2\u0367\u0366\3\2\2\2\u0368\u0369\3\2\2\2\u0369"+
+		"\u0367\3\2\2\2\u0369\u036a\3\2\2\2\u036a#\3\2\2\2\u036b\u036c\7\u00d6"+
+		"\2\2\u036c%\3\2\2\2\u036d\u036e\7\u00d6\2\2\u036e\'\3\2\2\2\u036f\u0370"+
 		"\t\2\2\2\u0370)\3\2\2\2\u0371\u0373\5&\24\2\u0372\u0371\3\2\2\2\u0372"+
 		"\u0373\3\2\2\2\u0373\u0374\3\2\2\2\u0374\u0375\7N\2\2\u0375\u0377\7t\2"+
 		"\2\u0376\u0378\5,\27\2\u0377\u0376\3\2\2\2\u0377\u0378\3\2\2\2\u0378\u0379"+
@@ -28136,18 +28136,18 @@ public class FortranParser extends Parser {
 		"\u0395\5\66\34\2\u0395\u0396\5\60\31\2\u0396\u0398\3\2\2\2\u0397\u0391"+
 		"\3\2\2\2\u0397\u0393\3\2\2\2\u0398\u039b\3\2\2\2\u0399\u0397\3\2\2\2\u0399"+
 		"\u039a\3\2\2\2\u039a/\3\2\2\2\u039b\u0399\3\2\2\2\u039c\u03a8\5\62\32"+
-		"\2\u039d\u039e\7\u00d5\2\2\u039e\u03a8\5\62\32\2\u039f\u03a8\7\u00db\2"+
-		"\2\u03a0\u03a8\7\u00da\2\2\u03a1\u03a2\7\u00da\2\2\u03a2\u03a8\5\62\32"+
-		"\2\u03a3\u03a4\7\u00da\2\2\u03a4\u03a5\7\u00d5\2\2\u03a5\u03a8\5\62\32"+
+		"\2\u039d\u039e\7\u00d6\2\2\u039e\u03a8\5\62\32\2\u039f\u03a8\7\u00dc\2"+
+		"\2\u03a0\u03a8\7\u00db\2\2\u03a1\u03a2\7\u00db\2\2\u03a2\u03a8\5\62\32"+
+		"\2\u03a3\u03a4\7\u00db\2\2\u03a4\u03a5\7\u00d6\2\2\u03a5\u03a8\5\62\32"+
 		"\2\u03a6\u03a8\7{\2\2\u03a7\u039c\3\2\2\2\u03a7\u039d\3\2\2\2\u03a7\u039f"+
 		"\3\2\2\2\u03a7\u03a0\3\2\2\2\u03a7\u03a1\3\2\2\2\u03a7\u03a3\3\2\2\2\u03a7"+
-		"\u03a6\3\2\2\2\u03a8\61\3\2\2\2\u03a9\u03b3\7\u00dc\2\2\u03aa\u03b3\5"+
-		"\64\33\2\u03ab\u03b3\7\u00ce\2\2\u03ac\u03b3\7\u00d6\2\2\u03ad\u03b3\5"+
+		"\u03a6\3\2\2\2\u03a8\61\3\2\2\2\u03a9\u03b3\7\u00dd\2\2\u03aa\u03b3\5"+
+		"\64\33\2\u03ab\u03b3\7\u00cf\2\2\u03ac\u03b3\7\u00d7\2\2\u03ad\u03b3\5"+
 		"(\25\2\u03ae\u03af\7t\2\2\u03af\u03b0\5,\27\2\u03b0\u03b1\7u\2\2\u03b1"+
 		"\u03b3\3\2\2\2\u03b2\u03a9\3\2\2\2\u03b2\u03aa\3\2\2\2\u03b2\u03ab\3\2"+
 		"\2\2\u03b2\u03ac\3\2\2\2\u03b2\u03ad\3\2\2\2\u03b2\u03ae\3\2\2\2\u03b3"+
-		"\63\3\2\2\2\u03b4\u03b5\7\u00de\2\2\u03b5\u03ba\7\u00de\2\2\u03b6\u03b7"+
-		"\5(\25\2\u03b7\u03b8\7\u00de\2\2\u03b8\u03ba\3\2\2\2\u03b9\u03b4\3\2\2"+
+		"\63\3\2\2\2\u03b4\u03b5\7\u00df\2\2\u03b5\u03ba\7\u00df\2\2\u03b6\u03b7"+
+		"\5(\25\2\u03b7\u03b8\7\u00df\2\2\u03b8\u03ba\3\2\2\2\u03b9\u03b4\3\2\2"+
 		"\2\u03b9\u03b6\3\2\2\2\u03ba\65\3\2\2\2\u03bb\u03bc\t\3\2\2\u03bc\67\3"+
 		"\2\2\2\u03bd\u03bf\5&\24\2\u03be\u03bd\3\2\2\2\u03be\u03bf\3\2\2\2\u03bf"+
 		"\u03c0\3\2\2\2\u03c0\u03c1\7\4\2\2\u03c1\u03c2\5b\62\2\u03c2\u03c3\5\""+
@@ -28186,8 +28186,8 @@ public class FortranParser extends Parser {
 		"\u0432\3\2\2\2\u0432\u0433\7\27\2\2\u0433\u0435\7\5\2\2\u0434\u0436\5"+
 		"P)\2\u0435\u0434\3\2\2\2\u0435\u0436\3\2\2\2\u0436\u0437\3\2\2\2\u0437"+
 		"\u0439\5\"\22\2\u0438\u042b\3\2\2\2\u0438\u0430\3\2\2\2\u0439{\3\2\2\2"+
-		"\u043a\u043b\7\6\2\2\u043b\u043c\7\u00ce\2\2\u043c\u043d\5\"\22\2\u043d"+
-		"}\3\2\2\2\u043e\u043f\7\7\2\2\u043f\u0440\7\u00ce\2\2\u0440\u0441\5\""+
+		"\u043a\u043b\7\6\2\2\u043b\u043c\7\u00cf\2\2\u043c\u043d\5\"\22\2\u043d"+
+		"}\3\2\2\2\u043e\u043f\7\7\2\2\u043f\u0440\7\u00cf\2\2\u0440\u0441\5\""+
 		"\22\2\u0441\177\3\2\2\2\u0442\u0444\5&\24\2\u0443\u0442\3\2\2\2\u0443"+
 		"\u0444\3\2\2\2\u0444\u0445\3\2\2\2\u0445\u0446\7\b\2\2\u0446\u0449\5B"+
 		"\"\2\u0447\u0448\7s\2\2\u0448\u044a\5\u0082B\2\u0449\u0447\3\2\2\2\u0449"+
@@ -28399,18 +28399,18 @@ public class FortranParser extends Parser {
 		"\7s\2\2\u06a8\u06aa\5d\63\2\u06a9\u06a7\3\2\2\2\u06aa\u06ad\3\2\2\2\u06ab"+
 		"\u06a9\3\2\2\2\u06ab\u06ac\3\2\2\2\u06ac\u00fd\3\2\2\2\u06ad\u06ab\3\2"+
 		"\2\2\u06ae\u06af\5$\23\2\u06af\u06b0\7\u0080\2\2\u06b0\u06b1\5\u0100\u0081"+
-		"\2\u06b1\u06b9\3\2\2\2\u06b2\u06b3\7\u00de\2\2\u06b3\u06b4\7\u0080\2\2"+
-		"\u06b4\u06b9\5\u0100\u0081\2\u06b5\u06b9\5$\23\2\u06b6\u06b9\7\u00de\2"+
+		"\2\u06b1\u06b9\3\2\2\2\u06b2\u06b3\7\u00df\2\2\u06b3\u06b4\7\u0080\2\2"+
+		"\u06b4\u06b9\5\u0100\u0081\2\u06b5\u06b9\5$\23\2\u06b6\u06b9\7\u00df\2"+
 		"\2\u06b7\u06b9\5\u01f6\u00fc\2\u06b8\u06ae\3\2\2\2\u06b8\u06b2\3\2\2\2"+
 		"\u06b8\u06b5\3\2\2\2\u06b8\u06b6\3\2\2\2\u06b8\u06b7\3\2\2\2\u06b9\u00ff"+
 		"\3\2\2\2\u06ba\u06bd\5$\23\2\u06bb\u06bd\5v<\2\u06bc\u06ba\3\2\2\2\u06bc"+
 		"\u06bb\3\2\2\2\u06bd\u0101\3\2\2\2\u06be\u06d2\5v<\2\u06bf\u06d2\5\u00fe"+
 		"\u0080\2\u06c0\u06c1\7z\2\2\u06c1\u06d2\5\u00fe\u0080\2\u06c2\u06c3\7"+
-		"y\2\2\u06c3\u06d2\5\u00fe\u0080\2\u06c4\u06d2\7\u00ce\2\2\u06c5\u06d2"+
+		"y\2\2\u06c3\u06d2\5\u00fe\u0080\2\u06c4\u06d2\7\u00cf\2\2\u06c5\u06d2"+
 		"\5\u0106\u0084\2\u06c6\u06c7\5$\23\2\u06c7\u06c8\7\u0080\2\2\u06c8\u06c9"+
-		"\7\u00ce\2\2\u06c9\u06d2\3\2\2\2\u06ca\u06cb\5v<\2\u06cb\u06cc\7\u0080"+
-		"\2\2\u06cc\u06cd\7\u00ce\2\2\u06cd\u06d2\3\2\2\2\u06ce\u06d2\5\u011e\u0090"+
-		"\2\u06cf\u06d2\5\u0104\u0083\2\u06d0\u06d2\7\u00d6\2\2\u06d1\u06be\3\2"+
+		"\7\u00cf\2\2\u06c9\u06d2\3\2\2\2\u06ca\u06cb\5v<\2\u06cb\u06cc\7\u0080"+
+		"\2\2\u06cc\u06cd\7\u00cf\2\2\u06cd\u06d2\3\2\2\2\u06ce\u06d2\5\u011e\u0090"+
+		"\2\u06cf\u06d2\5\u0104\u0083\2\u06d0\u06d2\7\u00d7\2\2\u06d1\u06be\3\2"+
 		"\2\2\u06d1\u06bf\3\2\2\2\u06d1\u06c0\3\2\2\2\u06d1\u06c2\3\2\2\2\u06d1"+
 		"\u06c4\3\2\2\2\u06d1\u06c5\3\2\2\2\u06d1\u06c6\3\2\2\2\u06d1\u06ca\3\2"+
 		"\2\2\u06d1\u06ce\3\2\2\2\u06d1\u06cf\3\2\2\2\u06d1\u06d0\3\2\2\2\u06d2"+
@@ -28876,8 +28876,8 @@ public class FortranParser extends Parser {
 		"\u0c01\3\2\2\2\u0c01\u01eb\3\2\2\2\u0c02\u0c00\3\2\2\2\u0c03\u0c09\5\u01ee"+
 		"\u00f8\2\u0c04\u0c05\5\u01ee\u00f8\2\u0c05\u0c06\5\u0202\u0102\2\u0c06"+
 		"\u0c07\5\u01ec\u00f7\2\u0c07\u0c09\3\2\2\2\u0c08\u0c03\3\2\2\2\u0c08\u0c04"+
-		"\3\2\2\2\u0c09\u01ed\3\2\2\2\u0c0a\u0c15\5$\23\2\u0c0b\u0c15\7\u00ce\2"+
-		"\2\u0c0c\u0c15\7\u00d6\2\2\u0c0d\u0c15\5B\"\2\u0c0e\u0c15\5\u00ceh\2\u0c0f"+
+		"\3\2\2\2\u0c09\u01ed\3\2\2\2\u0c0a\u0c15\5$\23\2\u0c0b\u0c15\7\u00cf\2"+
+		"\2\u0c0c\u0c15\7\u00d7\2\2\u0c0d\u0c15\5B\"\2\u0c0e\u0c15\5\u00ceh\2\u0c0f"+
 		"\u0c15\5\u01c0\u00e1\2\u0c10\u0c11\7t\2\2\u0c11\u0c12\5\u01e8\u00f5\2"+
 		"\u0c12\u0c13\7u\2\2\u0c13\u0c15\3\2\2\2\u0c14\u0c0a\3\2\2\2\u0c14\u0c0b"+
 		"\3\2\2\2\u0c14\u0c0c\3\2\2\2\u0c14\u0c0d\3\2\2\2\u0c14\u0c0e\3\2\2\2\u0c14"+
@@ -28886,16 +28886,16 @@ public class FortranParser extends Parser {
 		"\u0c1b\3\2\2\2\u0c1a\u0c17\3\2\2\2\u0c1a\u0c1b\3\2\2\2\u0c1b\u01f1\3\2"+
 		"\2\2\u0c1c\u0c22\5\u01f4\u00fb\2\u0c1d\u0c1e\7t\2\2\u0c1e\u0c1f\5\u01f0"+
 		"\u00f9\2\u0c1f\u0c20\7u\2\2\u0c20\u0c22\3\2\2\2\u0c21\u0c1c\3\2\2\2\u0c21"+
-		"\u0c1d\3\2\2\2\u0c22\u01f3\3\2\2\2\u0c23\u0c29\7\u00ce\2\2\u0c24\u0c29"+
+		"\u0c1d\3\2\2\2\u0c22\u01f3\3\2\2\2\u0c23\u0c29\7\u00cf\2\2\u0c24\u0c29"+
 		"\5B\"\2\u0c25\u0c29\5\u01c0\u00e1\2\u0c26\u0c29\5\u00ceh\2\u0c27\u0c29"+
-		"\7\u00d6\2\2\u0c28\u0c23\3\2\2\2\u0c28\u0c24\3\2\2\2\u0c28\u0c25\3\2\2"+
+		"\7\u00d7\2\2\u0c28\u0c23\3\2\2\2\u0c28\u0c24\3\2\2\2\u0c28\u0c25\3\2\2"+
 		"\2\u0c28\u0c26\3\2\2\2\u0c28\u0c27\3\2\2\2\u0c29\u01f5\3\2\2\2\u0c2a\u0c2b"+
 		"\7t\2\2\u0c2b\u0c2c\5\u0222\u0112\2\u0c2c\u0c2d\7s\2\2\u0c2d\u0c2e\5\u0222"+
 		"\u0112\2\u0c2e\u0c2f\7u\2\2\u0c2f\u01f7\3\2\2\2\u0c30\u0c3e\5\u0120\u0091"+
 		"\2\u0c31\u0c3e\5\u00fe\u0080\2\u0c32\u0c3e\5B\"\2\u0c33\u0c3e\5\u01c0"+
 		"\u00e1\2\u0c34\u0c3e\5\u00ceh\2\u0c35\u0c36\7t\2\2\u0c36\u0c37\5\u0222"+
-		"\u0112\2\u0c37\u0c38\7u\2\2\u0c38\u0c3e\3\2\2\2\u0c39\u0c3e\7\u00ce\2"+
-		"\2\u0c3a\u0c3e\5\u0106\u0084\2\u0c3b\u0c3e\7\u00d6\2\2\u0c3c\u0c3e\5\u0102"+
+		"\u0112\2\u0c37\u0c38\7u\2\2\u0c38\u0c3e\3\2\2\2\u0c39\u0c3e\7\u00cf\2"+
+		"\2\u0c3a\u0c3e\5\u0106\u0084\2\u0c3b\u0c3e\7\u00d7\2\2\u0c3c\u0c3e\5\u0102"+
 		"\u0082\2\u0c3d\u0c30\3\2\2\2\u0c3d\u0c31\3\2\2\2\u0c3d\u0c32\3\2\2\2\u0c3d"+
 		"\u0c33\3\2\2\2\u0c3d\u0c34\3\2\2\2\u0c3d\u0c35\3\2\2\2\u0c3d\u0c39\3\2"+
 		"\2\2\u0c3d\u0c3a\3\2\2\2\u0c3d\u0c3b\3\2\2\2\u0c3d\u0c3c\3\2\2\2\u0c3e"+
@@ -29197,11 +29197,11 @@ public class FortranParser extends Parser {
 		"&\24\2\u0f8f\u0f8e\3\2\2\2\u0f8f\u0f90\3\2\2\2\u0f90\u0f91\3\2\2\2\u0f91"+
 		"\u0f92\7E\2\2\u0f92\u0f93\5\"\22\2\u0f93\u0285\3\2\2\2\u0f94\u0f96\5&"+
 		"\24\2\u0f95\u0f94\3\2\2\2\u0f95\u0f96\3\2\2\2\u0f96\u0f97\3\2\2\2\u0f97"+
-		"\u0f9a\7F\2\2\u0f98\u0f9b\5$\23\2\u0f99\u0f9b\7\u00ce\2\2\u0f9a\u0f98"+
+		"\u0f9a\7F\2\2\u0f98\u0f9b\5$\23\2\u0f99\u0f9b\7\u00cf\2\2\u0f9a\u0f98"+
 		"\3\2\2\2\u0f9a\u0f99\3\2\2\2\u0f9a\u0f9b\3\2\2\2\u0f9b\u0f9c\3\2\2\2\u0f9c"+
 		"\u0f9d\5\"\22\2\u0f9d\u0287\3\2\2\2\u0f9e\u0fa0\5&\24\2\u0f9f\u0f9e\3"+
 		"\2\2\2\u0f9f\u0fa0\3\2\2\2\u0fa0\u0fa1\3\2\2\2\u0fa1\u0fa4\7H\2\2\u0fa2"+
-		"\u0fa5\5$\23\2\u0fa3\u0fa5\7\u00ce\2\2\u0fa4\u0fa2\3\2\2\2\u0fa4\u0fa3"+
+		"\u0fa5\5$\23\2\u0fa3\u0fa5\7\u00cf\2\2\u0fa4\u0fa2\3\2\2\2\u0fa4\u0fa3"+
 		"\3\2\2\2\u0fa4\u0fa5\3\2\2\2\u0fa5\u0fa6\3\2\2\2\u0fa6\u0fa7\5\"\22\2"+
 		"\u0fa7\u0289\3\2\2\2\u0fa8\u0fab\5\u01e8\u00f5\2\u0fa9\u0fab\7}\2\2\u0faa"+
 		"\u0fa8\3\2\2\2\u0faa\u0fa9\3\2\2\2\u0fab\u028b\3\2\2\2\u0fac\u0fae\5&"+
@@ -29239,8 +29239,8 @@ public class FortranParser extends Parser {
 		"\7\u00b9\2\2\u100a\u100b\7x\2\2\u100b\u102d\5\u01f0\u00f9\2\u100c\u100d"+
 		"\7\u00ba\2\2\u100d\u100e\7x\2\2\u100e\u102d\5\u0222\u0112\2\u100f\u1010"+
 		"\7\u00bb\2\2\u1010\u1011\7x\2\2\u1011\u102d\5\u0222\u0112\2\u1012\u1013"+
-		"\7\u00bc\2\2\u1013\u1014\7x\2\2\u1014\u1015\7t\2\2\u1015\u1016\7\u00d5"+
-		"\2\2\u1016\u1017\7v\2\2\u1017\u101e\7\u00d5\2\2\u1018\u1019\7v\2\2\u1019"+
+		"\7\u00bc\2\2\u1013\u1014\7x\2\2\u1014\u1015\7t\2\2\u1015\u1016\7\u00d6"+
+		"\2\2\u1016\u1017\7v\2\2\u1017\u101e\7\u00d6\2\2\u1018\u1019\7v\2\2\u1019"+
 		"\u101c\t\13\2\2\u101a\u101b\7v\2\2\u101b\u101d\t\f\2\2\u101c\u101a\3\2"+
 		"\2\2\u101c\u101d\3\2\2\2\u101d\u101f\3\2\2\2\u101e\u1018\3\2\2\2\u101e"+
 		"\u101f\3\2\2\2\u101f\u1020\3\2\2\2\u1020\u102d\7u\2\2\u1021\u1022\7\u00c8"+
