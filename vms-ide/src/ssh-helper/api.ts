@@ -109,6 +109,7 @@ export interface IConnectionSection {
     algorithms?: IAlgorithms;
     supportSetFileTime?: boolean;
     unzipCmd?: string;
+    zipCmd?: string;
 }
 
 export interface IHost extends IConnectionSection {

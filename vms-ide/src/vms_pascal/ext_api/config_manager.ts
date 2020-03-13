@@ -160,7 +160,7 @@ export class ConfigManager
 		return this.localSource;
 	}
 
-	public async loadPathListFiles(pattern : string) : Promise<string[]>
+	public async loadPathListFiles(pattern : string, exclude?: string) : Promise<string[]>
 	{
 		if (!await this.ensureLocalSource())
 		{
@@ -168,7 +168,7 @@ export class ConfigManager
 		}
 
 		let list : string[] = [];
-		let entries : IFileEntry[] | undefined = await this.localSource!.findFiles(pattern);
+		let entries : IFileEntry[] | undefined = await this.localSource!.findFiles(pattern, exclude);
 
 		if (entries) {
 			for(let item of entries)

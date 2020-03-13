@@ -103,24 +103,23 @@ export class UploadZip {
                         return false;
                     }
                     // overwrite always, use current time for timestamping, wait 3sec before rejecting
-                    let command = UploadZip.unzipCmd(zipFileName);
-                    let unzipCmd = await synchronizer.getUnzipCmd(ensured.scope);
-                    if (unzipCmd) {
-                        command = unzipCmd + " " + zipFileName;
+                    let unzipCmd = await synchronizer.getUnzipCmd(ensured.scope, zipFileName);
+                    if (!unzipCmd) {
+                        unzipCmd = UploadZip.unzipCmd(zipFileName);
                     }
-                    const unzipResult = await shell.execCmd(command, 3000);
+                    const unzipResult = await shell.execCmd(unzipCmd, 3000);
                     let retCode = true;
                     if (!unzipResult || shell.lastError) {
                         this.logFn(LogType.error, () => localize("zip.unzip.failed", "Unzip command failed: {0}", shell.lastError || "unknown error" ));
                         if (unzipResult && unzipResult.length) {
-                            unzipResult.unshift(command);
+                            unzipResult.unshift(unzipCmd);
                             this.logFn(LogType.error, () => localize("zip.unzip.error_output", "Unzip command output:\n {0}", unzipResult.join("\n")));
                         }
                         retCode = false;
                     } else {
                         // parse unzip result
                         if (unzipResult && unzipResult.length) {
-                            unzipResult.unshift(command);
+                            unzipResult.unshift(unzipCmd);
                             if (unzipResult.some((s) => s.startsWith("%DCL-W-IVVERB"))) {
                                 this.logFn(LogType.error, () => localize("zip.unzip.not.installed", "It seems 'unzip' isn't installed" ));
                                 this.logFn(LogType.error, () => localize("zip.unzip.error_output", "Unzip command output:\n {0}", unzipResult.join("\n")));

@@ -18,6 +18,7 @@ import { VmsShellSource } from "./vms-shell-source";
 import { ProjectState } from "../dep-tree/proj-state";
 import { VmsPathConverter } from "../vms/vms-path-converter";
 import { middleSepRg } from "../../synchronizer/common/find-files";
+import { RgxFromStr } from "../../common/rgx-from-str";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -627,11 +628,73 @@ export class Synchronizer {
         return true;
     }
 
-    public async getUnzipCmd(scope?: string) {
+    public async getUnzipCmd(scope: string, zipFile: string) {
         const settings = await this.sshHelper?.getSettings(scope);
         if (settings) {
             let connection = settings.connectConfigResolver.testConnectConfig(settings.connectionSection).settings;
-            return connection?.unzipCmd;
+            if (connection?.unzipCmd) {
+                // replace values
+                let commandT = connection?.unzipCmd;
+                const rgxField = /\${(\w+?)}/g;
+                let matchField = rgxField.exec(commandT);
+                let amended = false;
+                while (matchField) 
+                {
+                    const field = matchField[1];
+                    let value = "";
+                    if (field.toUpperCase() === "ZIPFILE") {
+                        value = zipFile;
+                        amended = true;
+                    }
+                    if (value) {
+                        const rgxReplace = RgxFromStr(matchField[0]);
+                        commandT = commandT.replace(rgxReplace, value);
+                        rgxField.lastIndex = 0;
+                    }
+                    matchField = rgxField.exec(commandT);
+                }
+                if (!amended) {
+                    commandT += " " + zipFile;
+                }
+                return commandT;
+            }
+        }
+        return undefined;
+    }
+
+    public async getZipCmd(scope: string, zipFile: string, addFile: string) {
+        const settings = await this.sshHelper?.getSettings(scope);
+        if (settings) {
+            let connection = settings.connectConfigResolver.testConnectConfig(settings.connectionSection).settings;
+            if (connection?.zipCmd) {
+                // replace values
+                let commandT = connection?.zipCmd;
+                const rgxField = /\${(\w+?)}/g;
+                let matchField = rgxField.exec(commandT);
+                let amendedZ = false;
+                let amendedA = false;
+                while (matchField) 
+                {
+                    const field = matchField[1];
+                    let value = "";
+                    if (field.toUpperCase() === "ZIPFILE") {
+                        value = zipFile;
+                        amendedZ = true;
+                    } else if (field.toUpperCase() === "ADDFILE") {
+                        value = addFile;
+                        amendedA = true;
+                    }
+                    if (value) {
+                        const rgxReplace = RgxFromStr(matchField[0]);
+                        commandT = commandT.replace(rgxReplace, value);
+                        rgxField.lastIndex = 0;
+                    }
+                    matchField = rgxField.exec(commandT);
+                }
+                if (amendedZ && amendedA) {
+                    return commandT;
+                }
+            }
         }
         return undefined;
     }

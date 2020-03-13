@@ -119,7 +119,7 @@ export class JvmProjectHelper {
         if (scope && typeof scope === "string") {
             const scopedata = await this.chooseScope(scope);
             if (scopedata) {
-                const found = await scopedata.localSource.findFiles("**/" + remoteFile);
+                const found = await scopedata.localSource.findFiles("**/" + remoteFile, scopedata.ensured.projectSection.exclude);
                 if (found && found.length === 1) {
                     return path.join(scopedata.localSource.root!, found[0].filename);
                 }
@@ -130,7 +130,7 @@ export class JvmProjectHelper {
                 if (wsFolder.name !== scope) {
                     const scopedataT = await this.chooseScope(wsFolder.name);
                     if (scopedataT) {
-                        const found = await scopedataT.localSource.findFiles("**/" + remoteFile);
+                        const found = await scopedataT.localSource.findFiles("**/" + remoteFile, scopedataT.ensured.projectSection.exclude);
                         if (found && found.length === 1) {
                             return path.join(scopedataT.localSource.root!, found[0].filename);
                         }
@@ -150,7 +150,7 @@ export class JvmProjectHelper {
             if (scopedata) {
                 const fileInfo = scopedata.jvmProject.findFileByPlace(stackPlace);
                 if (fileInfo) {
-                    const found = await scopedata.localSource.findFiles("**/" + fileInfo.name);
+                    const found = await scopedata.localSource.findFiles("**/" + fileInfo.name, scopedata.ensured.projectSection.exclude);
                     if (found && found.length === 1) {
                         return path.join(scopedata.localSource.root!, found[0].filename);
                     }
@@ -164,7 +164,7 @@ export class JvmProjectHelper {
                     if (scopedataT) {
                         const fileInfo = scopedataT.jvmProject.findFileByPlace(stackPlace);
                         if (fileInfo) {
-                            const found = await scopedataT.localSource.findFiles("**/" + fileInfo.name);
+                            const found = await scopedataT.localSource.findFiles("**/" + fileInfo.name, scopedataT.ensured.projectSection.exclude);
                             if (found && found.length === 1) {
                                 return path.join(scopedataT.localSource.root!, found[0].filename);
                             }

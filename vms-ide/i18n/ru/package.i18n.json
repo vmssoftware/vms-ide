@@ -18,6 +18,7 @@
     "ssh-helper.configuration.skipSignatureVerification": "Skip signature verification",
     "ssh-helper.configuration.supportSetFileTime": "Server supports setting file time. Else shell will be used.",
     "ssh-helper.configuration.unzipCmd": "Команда распаковки на строне VMS",
+    "ssh-helper.configuration.zipCmd": "Command to zip archive on VMS side",
     "ssh-helper.configuration.algorithms": "Additional algorithms passed to SSH connection",
     "ssh-helper.configuration.timeouts.command": "Таймаут команды",
     "ssh-helper.configuration.timeouts.feedback": "Таймаут ответа сервера",

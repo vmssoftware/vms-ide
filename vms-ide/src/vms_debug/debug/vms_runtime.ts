@@ -171,7 +171,8 @@ export class VMSRuntime extends EventEmitter
 
 						if (sectionCur)
 						{
-							let sourcePaths = await fileM.loadPathListFiles(sectionCur.source);
+							let project = await fileM.getProjectSection();
+							let sourcePaths = await fileM.loadPathListFiles(sectionCur.source, project?.exclude);
 							let lisPaths = await fileM.loadPathListFiles(sectionCur.listing);
 
 							this.addPrefixToArray(path, sourcePaths);
@@ -225,7 +226,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			const preRunFile = section.projectName + ".com";
 			let localSource = await configManager.getLocalSource();
-			const found = await localSource!.findFiles(preRunFile);
+			const found = await localSource!.findFiles(preRunFile, section.exclude);
 			// run appropriate COM file, if it exists
 			if (found && found.length === 1)
 			{
@@ -248,6 +249,7 @@ export class VMSRuntime extends EventEmitter
 			this.shell.SendCommandToQueue(this.dbgCmd.setAbortKey(this.abortKey));
 			this.shell.SendCommandToQueue(this.dbgCmd.run(programName, programArgs));
 			this.shell.SendCommandToQueue(this.dbgCmd.setScopeBase());
+			this.shell.SendCommandToQueue(this.dbgCmd.customCommand("set module /all"));
 		}
 		else//reload program
 		{

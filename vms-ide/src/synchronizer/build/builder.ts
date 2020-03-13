@@ -984,7 +984,7 @@ export class Builder {
     private async ensureMmsCreated(scopeData: IScopeBuildData, autoCreate = false) {
 
         const localMmsFile = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
-        const foundMms = await scopeData.localSource.findFiles(localMmsFile);
+        const foundMms = await scopeData.localSource.findFiles(localMmsFile, scopeData.ensured.projectSection.exclude);
         let createMMS = true;
         if (foundMms && foundMms.length === 1) {
             const localMmsPath = scopeData.localSource.root + ftpPathSeparator + localMmsFile;
@@ -1050,6 +1050,7 @@ export class Builder {
         if (output) {
             const retCode = await this.parseProblems(scopeData, output, buildCfg);
             if (scopeData.ensured.projectSection.listing) {
+                const synchronizer = Synchronizer.acquire(this.logFn);
                 // always try to download listing, for all configurations
                 let downloadedByZip = false;
                 if (scopeData.ensured.synchronizeSection.preferZip) {
@@ -1063,13 +1064,14 @@ export class Builder {
                     let zipFolderChain: string[] = [
                         scopeData.ensured.projectSection.root,
                         scopeData.ensured.projectSection.outdir,
-                        buildCfg.label,
+                        buildCfg.label
                     ];
+                    let zipFolder = zipFolderChain.join(ftpPathSeparator) + ftpPathSeparator;   // must be a folder
                     if (!scopeData.ensured.projectSection.root.startsWith(ftpPathSeparator)) {
-                        // relative path
-                        zipFolderChain.unshift(scopeData.shellRootConverter.initial);
+                        // relative path, add CWD
+                        zipFolder = scopeData.shellRootConverter.initial + zipFolder;
                     }
-                    const zipFolderConverter = new VmsPathConverter(zipFolderChain.join(ftpPathSeparator));
+                    const zipFolderConverter = new VmsPathConverter(zipFolder);
                     let cd = `set default ${zipFolderConverter.directory}`;
                     answer = await scopeData.shell.execCmd(cd);
                     // create zip file 
@@ -1077,14 +1079,29 @@ export class Builder {
                     if (missed_curly_bracket) {
                         this.logFn(LogType.warning, () => localize("check.inc.mask", "Please check listing file masks for correct curly brackets"), true);
                     }
-                    const unbracedList = expandedList.join(" ");
-                    const zipCmd = Builder.zipCmd(Builder.zipName, unbracedList);
-                    answer = await scopeData.shell.execCmd(zipCmd);
+                    // delete zip file on OpenVMS side if it exists
+                    answer = await scopeData.shell.execCmd(`delete ${Builder.zipName + Builder.zipExt};*`);
+                    // add files to zip by entry
+                    for(let kind of expandedList) {
+                        // zip already must have an option to do recursive search
+                        if (kind.startsWith("**/")) {
+                            kind = kind.substr(3);
+                        }
+                        let zipCmd: string | undefined;
+                        if (scopeData.ensured.scope) {
+                            zipCmd = await synchronizer.getZipCmd(scopeData.ensured.scope, Builder.zipName, kind);
+                        }
+                        if (!zipCmd) {
+                            zipCmd = Builder.zipCmd(Builder.zipName, kind);
+                        }
+                        answer = await scopeData.shell.execCmd(zipCmd);
+                    }
                     // download zip file
-                    const relZipName = scopeData.ensured.projectSection.outdir + 
-                            ftpPathSeparator + buildCfg.label + 
-                            ftpPathSeparator + Builder.zipName + Builder.zipExt;
-                    const downloaded = await Synchronizer.acquire(this.logFn).downloadFiles(scopeData.ensured, [relZipName]);
+                    const relZipName = [
+                            scopeData.ensured.projectSection.outdir,
+                            buildCfg.label,
+                            Builder.zipName + Builder.zipExt].join(ftpPathSeparator);
+                    const downloaded = await synchronizer.downloadFiles(scopeData.ensured, [relZipName]);
                     if (downloaded) {
                         // unzip it
                         const zipApi = GetZipApi();
@@ -1097,12 +1114,12 @@ export class Builder {
                     answer = await scopeData.shell.execCmd(`delete ${Builder.zipName + Builder.zipExt};*`);
                     // go back to saved current folder
                     if (currentPath) {
-                        cd = `set def ${currentPath.directory}`;
+                        cd = `set default ${currentPath.directory}`;
                         answer = await scopeData.shell.execCmd(cd);
                     }
                 }
                 if (!downloadedByZip) {
-                    await Synchronizer.acquire(this.logFn).downloadListings(scopeData.ensured);
+                    await synchronizer.downloadListings(scopeData.ensured);
                 }
             }
             return retCode;
@@ -1137,6 +1154,7 @@ export class Builder {
         }
         const errMap = new Map<string, Diagnostic[]>();
         let hasError = false;
+        const fileNameCache = new Map<string, string>();
         for (const entry of result.problems) {
             if (entry.message) {
                 const diagnostic = new Diagnostic(Builder.defRange, entry.message);
@@ -1203,14 +1221,22 @@ export class Builder {
                         localFile = "**" + ftpPathSeparator + localFile.slice(hardlinkFolder.length);
                     }
                     // find case-insensitive
-                    const found = await scopeData.localSource.findFiles(localFile);
-                    if (found && found.length === 1) {
-                        localFile = found[0].filename;
-                    } else if (found && found.length > 1) {
-                        localFile = found[0].filename;
-                        this.logFn(LogType.warning, () => localize("too_many_files", "There are more than one file named {0}", localFile));
+                    let cachedFile = fileNameCache.get(localFile);
+                    if (cachedFile) {
+                        localFile = cachedFile;
                     } else {
-                        this.logFn(LogType.warning, () => localize("no_file", "Cannot find the file named {0}", localFile));
+                        const found = await scopeData.localSource.findFiles(localFile, scopeData.ensured.projectSection.exclude);
+                        if (found && found.length === 1) {
+                            fileNameCache.set(localFile, found[0].filename);
+                            localFile = found[0].filename;
+                        } else if (found && found.length > 1) {
+                            fileNameCache.set(localFile, found[0].filename);
+                            localFile = found[0].filename;
+                            this.logFn(LogType.warning, () => localize("too_many_files", "There are more than one file named {0}", localFile));
+                        } else {
+                            fileNameCache.set(localFile, localFile);
+                            this.logFn(LogType.warning, () => localize("no_file", "Cannot find the file named {0}", localFile));
+                        }
                     }
                     uri = Uri.file(path.join(scopeData.ensured.configHelper.workspaceFolder!.uri.fsPath, localFile));
                 } else {

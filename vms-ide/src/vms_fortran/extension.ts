@@ -156,7 +156,7 @@ async function reparseProject() : Promise<void>
 
                     if (sectionCur)
                     {
-                        let sources = await fileM.loadPathListFiles(sectionCur.source);
+                        let sources = await fileM.loadPathListFiles(sectionCur.source, sectionCur.exclude);
                         addPathToFiles(sourcePaths, path, sources);
                     }
                 }
