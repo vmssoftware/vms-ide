@@ -1,4 +1,9 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
+
+## 1.4.9
+* Added command to ZIP listing files on VMS side.
+* Fix PASCAL syntax parser issues.
+
 ## 1.4.4
 * Unzip command moved from Project settings to SSH settings
 * Changed the way how the debugger finds source by module name.
