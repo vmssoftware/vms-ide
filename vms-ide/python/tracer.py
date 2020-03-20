@@ -193,19 +193,27 @@ class Tracer:
 
         # wait until tracing enabled
         if not self._startTracing:
-            return self._traceFunc
+            if self._waitingForAFile:
+                return self._traceFunc
+            return None
 
         # skip this file
         if currentFile == self._fileName:
-            return self._traceFunc
+            if self._waitingForAFile:
+                return self._traceFunc
+            return None
 
         # skip system files
         if self._os_path_abspath(currentFile) == currentFile:
-            return self._traceFunc
+            if self._waitingForAFile:
+                return self._traceFunc
+            return None
 
         # skip no files
         if currentFile == '<string>':
-            return self._traceFunc
+            if self._waitingForAFile:
+                return self._traceFunc
+            return None
 
         # wait untin tracing file entered
         if self._waitingForAFile:
