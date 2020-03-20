@@ -52,6 +52,7 @@ class COMMAND:
 
 class Tracer:
     def __init__(self, port):
+        self._co_lnotab_signed = sys.version_info.major >= 3 and sys.version_info.minor >= 6
         self._knownValueTypes = [int, str, float, bool, complex, type(None)]
         self._port = port
         self._fileName = __file__
@@ -250,6 +251,7 @@ class Tracer:
                 lineno = frame.f_lineno
                 lines.append(lineno)
                 values = iter(frame.f_code.co_lnotab)
+                # self._sendDbgMessage('f_code.co_lnotab for: %s %s %s' % (currentFile, frame.f_code.co_name, repr(frame.f_code.co_lnotab)))
                 while True:
                     try:
                         addr_incr = next(values)
@@ -258,6 +260,11 @@ class Tracer:
                             addr_incr = ord(addr_incr)
                         if isinstance(line_incr, str):
                             line_incr = ord(line_incr)
+                        if self._co_lnotab_signed:
+                            if line_incr > 127:
+                                line_incr = line_incr - 256
+                            if addr_incr > 127:
+                                addr_incr = addr_incr - 256
                         if addr_incr == 0:
                             lineno += line_incr
                             continue
