@@ -1,4 +1,6 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
+## 1.4.10
+* Fix Python debugger
 
 ## 1.4.9
 * Added command to ZIP listing files on VMS side.
