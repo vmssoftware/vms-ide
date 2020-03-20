@@ -1007,7 +1007,7 @@ export class Builder {
         } else if (isCommandCOM(command)) {
             command = '@' + command + Builder.cleanSuffix;
         } else if (isCommandMMS(command)) {
-            command = Builder.mmsUserCmd(command) + Builder.cleanSuffix;
+            command = Builder.mmsUserCmd(command) + " " + buildCfg.parameter + " " + Builder.cleanSuffix;
         } else {
             this.logFn(LogType.error, () => localize("cannot.clean", "Have no idea how to clean configuration: {0}", buildCfg.label));
             return false;
