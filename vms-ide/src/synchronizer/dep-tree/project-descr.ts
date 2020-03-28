@@ -227,8 +227,9 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
             };
             const newBuildName = await vscode.window.showQuickPick([...buildNames], opt);
             if (newBuildName) {
-                ProjectState.acquire().setDefBuildName(newBuildName);
-                this.didChangeTreeEmitter.fire();
+                ProjectState.acquire().setDefBuildName(newBuildName).then(() => {
+                    this.didChangeTreeEmitter.fire();
+                });
             }
         }
     }
