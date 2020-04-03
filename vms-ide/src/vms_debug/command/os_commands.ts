@@ -15,8 +15,14 @@ export enum OsCmdVMS
 	osRunCOM = "@",
 	osRunMMS = "mms/description=",
 	osVersion = "write sys$output f$getsyi(\"VERSION\")",
+	osTerminalShow = "show terminal/brief",
 	osTerminalType = "set terminal/device=",
 	osTerminalWidth = "set terminal/width=",
+
+	osSetProcess = "set process/priv=",
+	osSetAcl = "SET ACL/OBJECT_TYPE=DEVICE/ACL=",
+	osSetProtection = "SET PROTECTION=",
+	osDefine = "DEFINE",
 }
 
 
@@ -90,6 +96,11 @@ export class OsCommands
 		return new CommandMessage(OsCmdVMS.osVersion, "");
 	}
 
+	public showTerminal() : CommandMessage
+	{
+		return new CommandMessage(OsCmdVMS.osTerminalShow, "");
+	}
+
 	public setTerminalType(type : string) : CommandMessage
 	{
 		return new CommandMessage(OsCmdVMS.osTerminalType, type);
@@ -98,5 +109,25 @@ export class OsCommands
 	public setTerminalWidth(width : string) : CommandMessage
 	{
 		return new CommandMessage(OsCmdVMS.osTerminalWidth, width);
+	}
+
+	public setProcessPriv(type : string) : CommandMessage
+	{
+		return new CommandMessage(OsCmdVMS.osSetProcess, type);
+	}
+
+	public setAclDevice(userName : string, terminalName: string) : CommandMessage
+	{
+		return new CommandMessage(OsCmdVMS.osSetAcl, `(IDENT=${userName},ACCESS=READ+WRITE) ${terminalName}`);
+	}
+
+	public setProtectionDeviceRW(terminalName: string) : CommandMessage
+	{
+		return new CommandMessage(OsCmdVMS.osSetProtection, `WORLD:RW/DEVICE ${terminalName}`);
+	}
+
+	public redefineStreemToTerminal(streem: string, terminalName: string) : CommandMessage
+	{
+		return new CommandMessage(OsCmdVMS.osDefine, `${streem} ${terminalName}`);
 	}
 }

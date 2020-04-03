@@ -66,8 +66,7 @@ export class DebugParser
 	private commandDone : boolean;
 	private commandButtonDone : boolean;
 	private typeBracketsSquare : boolean = false;
-	private topicNumberString : Array<number> = new Array<number>();
-	private displayDataString : string[] = ["", "", ""];
+	private displayDataString : string[] = ["", ""];
 	private framesOld = new Array<any>();
 
 	constructor(public makeModulesUppercase: boolean)
@@ -151,7 +150,7 @@ export class DebugParser
 					break;
 
 				case "":
-					this.queueMsgUser.push(/*MessagePrompt.prmtUSER +*/ this.displayDataString[1]);
+					this.queueMsgUser.push(this.displayDataString[1]);
 					break;
 
 				default:
@@ -165,206 +164,62 @@ export class DebugParser
 	{
 		let cmdBody = command.getBody();
 
+		if (cmdBody === "")
+		{
+			cmdBody = commandPrev.getBody();
+		}
+
 		if(data.length > 0)
 		{
-			//clean the old data
-			this.displayDataString[0] = "";//debugger message
-			this.displayDataString[1] = "";//debugger data
-			this.displayDataString[2] = "";//user data
-
 			if(type === TypeDataMessage.typeCmd)//command
 			{
-				let position = data.indexOf(command.getBody());
-				let itemsData = data.split("\r\n");
-
-				for(let item of itemsData)
-				{
-					if(item !== "" && command.getCommand().includes(item))
-					{
-						data = data.replace(item, "").trim();
-					}
-				}
-
-				if(position > 0)
-				{
-					cmdBody = commandPrev.getBody();
-				}
-
 				this.queueMsgCommand.push(MessagePrompt.prmtCMD + command.getCommand());
-
-				if(data !== "")//data
-				{
-					this.parseEscSequence(data);
-				}
 			}
 			else//data
 			{
-				this.parseEscSequence(data);
+				//clean the old data
+				this.displayDataString[0] = "";//debugger message
+				this.displayDataString[1] = "";//debugger data
+
+				let msgLines = data.split("\n");//debugger data
+
+				for(let item of msgLines)
+				{
+					if(item !== "")
+					{
+						if(item.includes("%DEBUG"))
+						{
+							this.queueMsgDebug.push(MessagePrompt.prmtDBG + item);
+						}
+						else
+						{
+							this.displayDataString[1] += item + "\n";
+						}
+					}
+				}
+		
+				for(let i = 0; i < this.displayDataString.length; i++)
+				{
+					if(this.displayDataString[i].includes("\x0E\x60\x0F"))
+					{
+						let pieces = this.displayDataString[i].split("\x0E\x60\x0F\n");
+						this.displayDataString[i] = "";
+		
+						for(let j = 0; j < pieces.length; j++)
+						{
+							this.displayDataString[i] += pieces[j];
+						}
+					}
+				}
+		
+				if(this.displayDataString[0] !== "")
+				{
+					this.queueMsgDebug.push(MessagePrompt.prmtDBG + this.displayDataString[0].trim());
+				}
 			}
 		}
 
 		return cmdBody;
-	}
-
-	private parseEscSequence(data : string)
-	{
-		let topicMsg = false;
-		let positionOld : number = 0;
-		let escapes = data.split("\x1B");//[ESC]
-		let dataPrompt = escapes.shift();
-
-		if(dataPrompt)//prompt data (coommand and user data)
-		{
-			dataPrompt = dataPrompt.trim();
-
-			if(dataPrompt !== "")
-			{
-				this.queueMsgUser.push(/*MessagePrompt.prmtUSER +*/ dataPrompt);
-			}
-		}
-
-		for (let item of escapes)//windows data (debug, error)
-		{
-			item = item.trim();
-
-			if(item !== "")
-			{
-				if(item.charAt(0) === "[")
-				{
-					let position : number[] = [0, 0];
-					let index : number = 0;
-
-					for(let i = 1; i < item.length; i++)
-					{
-						if(item.charAt(i) === "H")
-						{
-							let positionLine = item.substr(1, i-1).split(";");
-
-							if(positionLine.length === 2)
-							{
-								if(positionLine[0] !== "")
-								{
-									position[0] = parseInt(positionLine[0], 10);
-									position[1] = parseInt(positionLine[1], 10);
-
-									if((i + 1) < item.length)
-									{
-										index = i + 1;
-									}
-									else
-									{
-										positionOld = position[0];
-									}
-								}
-							}
-
-							break;
-						}
-					}
-
-					if(index > 0)
-					{
-						if(item.charAt(index) === "\x0E")//topic of display
-						{
-							if(item.charAt(index+2) === "\x0F")
-							{
-								let numFind = false;
-
-								for(let item of this.topicNumberString)
-								{
-									if(item === position[0])
-									{
-										numFind = true;
-										break;
-									}
-								}
-
-								if(!numFind)
-								{
-									this.topicNumberString.push(position[0]);
-								}
-
-								topicMsg = true;
-							}
-						}
-						else//data of display
-						{
-							for(let i = this.topicNumberString.length-1; i >= 0; i--)
-							{
-								if(position[0] > this.topicNumberString[i])
-								{
-									if(positionOld === position[0])
-									{
-										this.displayDataString[i] = this.addLine(this.displayDataString[i], item.substr(index, item.length), position[1]);
-									}
-									else
-									{
-										if(this.displayDataString[i] === "")
-										{
-											this.displayDataString[i] = this.addLine(this.displayDataString[i], item.substr(index, item.length), position[1]);
-										}
-										else
-										{
-											this.displayDataString[i] += "\n";
-											this.displayDataString[i] = this.addLine(this.displayDataString[i], item.substr(index, item.length), position[1]);
-										}
-									}
-
-									positionOld = position[0];
-									break;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		if(topicMsg)
-		{
-			for(let i = 0; i < this.topicNumberString.length; i++)
-			{
-				this.displayDataString[i] = "";
-			}
-		}
-
-		for(let i = 0; i < this.displayDataString.length; i++)
-		{
-			if(this.displayDataString[i].includes("\x0E\x60\x0F"))
-			{
-				let pieces = this.displayDataString[i].split("\x0E\x60\x0F\n");
-				this.displayDataString[i] = "";
-
-				for(let j = 0; j < pieces.length; j++)
-				{
-					this.displayDataString[i] += pieces[j];
-				}
-			}
-		}
-
-		if(this.displayDataString[0] !== "")
-		{
-			this.queueMsgDebug.push(MessagePrompt.prmtDBG + this.displayDataString[0]);
-		}
-		if(this.displayDataString[2] !== "")
-		{
-			this.queueMsgUser.push(/*MessagePrompt.prmtUSER +*/ this.displayDataString[2]);
-		}
-	}
-
-	private addLine(lineBase : string, lineAdd : string, position : number) : string
-	{
-		let items = lineBase.split("\n");
-		let sizeLastLine = items[items.length - 1].length;
-
-		for(let i = 0; i < (position - sizeLastLine - 1); i++)
-		{
-			lineBase += " ";
-		}
-
-		lineBase += lineAdd;
-
-		return lineBase;
 	}
 
 	private parseLineMsg(msgLine: string)
@@ -410,7 +265,8 @@ export class DebugParser
 
 		for(let i = 1; i < msgLines.length; i++)
 		{
-			columns = msgLines[i].trim().split(/\s+/);
+			msgLines[i] = msgLines[i].trim();
+			columns = msgLines[i].split(/\s+/);
 
 			if(columns[0].includes("*"))
 			{
@@ -421,13 +277,13 @@ export class DebugParser
 				if(columns.length === 1)//module name is long
 				{
 					i += 1;
-					columns = msgLines[i].trim().split(/\s+/);
+					columns = msgLines[i].split(/\s+/);
 					routineName = columns[0];
 
 					if(columns.length === 1)//routine name is long
 					{
 						i += 1;
-						columns = msgLines[i].trim().split(/\s+/);
+						columns = msgLines[i].split(/\s+/);
 
 						if(columns.length === 3)
 						{
@@ -449,7 +305,7 @@ export class DebugParser
 					if(columns.length === 2)//routine name is long
 					{
 						i += 1;
-						columns = msgLines[i].trim().split(/\s+/);
+						columns = msgLines[i].split(/\s+/);
 
 						if(columns.length === 3)
 						{
@@ -472,11 +328,14 @@ export class DebugParser
 				if(pathFile !== "" && pathLisFile !== "")
 				{
 					let debugInfo = this.fileInfo.infoByFile(pathFile);
-					if (debugInfo === undefined) {
+
+					if (debugInfo === undefined)
+					{
 						this.fileInfo.pushEntry(pathFile, pathLisFile);
 						debugInfo = this.fileInfo.infoByFile(pathFile);
 					}
-					if (debugInfo) {
+					if (debugInfo)
+					{
 						// update module info
 						debugInfo.moduleName = moduleName.toLowerCase();
 						let foundLine = this.fileInfo.sourceLineFromListLineByInfo(debugInfo, +numberLineDebug);
@@ -532,7 +391,8 @@ export class DebugParser
 
 		for(let i = 0; i < msgLines.length; i++)
 		{
-			let type = msgLines[i].trim().split(/\s+/);
+			msgLines[i] = msgLines[i].trim();
+			let type = msgLines[i].split(/\s+/);
 
 			if(type[0] === "data" || type[0] === "record")
 			{
@@ -774,7 +634,7 @@ export class DebugParser
 									else
 									{
 										item.variableKind = ReflectKind.Struct;
-									}								
+									}
 								}
 								else if(item.variableType.includes("pointer to") ||
 									item.variableType.includes("pointer type"))
@@ -1038,7 +898,7 @@ export class DebugParser
 								else
 								{
 									itemInfo += "\n" + items[prm.counter].trim();
-								}								
+								}
 								prm.counter++;
 							}
 							else if(kind === ReflectKind.Value)
@@ -1051,7 +911,7 @@ export class DebugParser
 								prm.counter++;
 							}
 
-						} while(kind === ReflectKind.Invalid && prm.counter < items.length);						
+						} while(kind === ReflectKind.Invalid && prm.counter < items.length);
 					}
 					else
 					{
@@ -1086,7 +946,7 @@ export class DebugParser
 										else
 										{
 											itemInfo += "\n" + items[prm.counter].trim();
-										}										
+										}
 										prm.counter++;
 									}
 		
@@ -1121,9 +981,9 @@ export class DebugParser
 								else
 								{
 									itemInfo += "\n" + items[prm.counter].trim();
-								}								
+								}
 								prm.counter++;
-							}							
+							}
 							else if(kind === ReflectKind.Value)
 							{
 								v += ": " + items[prm.counter];
@@ -1134,7 +994,7 @@ export class DebugParser
 								prm.counter++;
 							}
 
-						} while(kind === ReflectKind.Invalid && prm.counter < items.length);						
+						} while(kind === ReflectKind.Invalid && prm.counter < items.length);
 					}
 					else
 					{
@@ -1283,7 +1143,7 @@ export class DebugParser
 			}
 			else
 			{
-				let matchesStruct = item.match(matcherStructType);				
+				let matchesStruct = item.match(matcherStructType);
 				let items = item.trim().split(/\s+/);
 				let matchesNumber = items[0].match(matcherIsNumber);
 
@@ -1297,7 +1157,7 @@ export class DebugParser
 				}
 				else
 				{
-					return ReflectKind.Invalid;					
+					return ReflectKind.Invalid;
 				}
 			}
 		}
@@ -1327,7 +1187,7 @@ export class DebugParser
 				else
 				{
 					endIndexis = matchesArr[1];
-				}									
+				}
 			}
 
 			let itemNext = items[nextIndex];
@@ -1384,7 +1244,7 @@ export class DebugParser
 				for(let i = itemsStart[0]; i <= itemsEnd[0]; i ++)
 				{
 					itemsArray.push(this.createItemLabelArray(itemsStart));
-					itemsStart[0]++;					
+					itemsStart[0]++;
 				}
 			}
 		}
@@ -1420,7 +1280,7 @@ export class DebugParser
 
 						if(itemsStart[i] > itemsMax[i])
 						{
-							itemsStart[i] = itemsMin[i];					
+							itemsStart[i] = itemsMin[i];
 						}
 						else
 						{
@@ -1459,7 +1319,7 @@ export class DebugParser
 			else
 			{
 				item += "," + String(itemsStart[i]);
-			}					
+			}
 		}
 
 		if(this.typeBracketsSquare === true)
@@ -1639,38 +1499,6 @@ export class DebugParser
 		return  name;
 	}
 
-	// private getNumberLineSourceCode(debugLineNumber : string, lisLines: string[]) : number
-	// {
-	// 	let indexLine : number = 0;
-	// 	let shiftHeader : number = 3;
-	// 	let LineSourceCode : number = -1;
-
-	// 	for(let i = shiftHeader; i < lisLines.length; i++)
-	// 	{
-	// 		let line = lisLines[i];
-	// 		const matcher = /^\s*\S*\s*\d*\s*\d*[\tX]\s*(\d+)/;// (/^\s*\d*\t\s*(\d+)/; (c/c++)) X - for preprocessor
-	// 		const matches = line.match(matcher);
-
-	// 		if(matches && matches.length === 2)
-	// 		{
-	// 			if(!Number.isNaN(parseInt(matches[1], 10)))
-	// 			{
-	// 				let lisLineNumber = matches[1];
-
-	// 				if(debugLineNumber === lisLineNumber)
-	// 				{
-	// 					LineSourceCode = indexLine;
-	// 					break;
-	// 				}
-
-	// 				indexLine++;
-	// 			}
-	// 		}
-	// 	}
-
-	// 	return LineSourceCode;
-	// }
-
 	//examples a lines of lis file
 	// 		1634 int main ()
 	// 1    1635 {
@@ -1679,43 +1507,19 @@ export class DebugParser
 	public findBreakPointNumberLine(filePath: string, listPath: string, currentNumberLine : number) : number
 	{
 		let debugInfo = this.fileInfo.infoByFile(filePath);
-		if (debugInfo === undefined) {
+
+		if (debugInfo === undefined) 
+		{
 			this.fileInfo.pushEntry(filePath, listPath);
 			debugInfo = this.fileInfo.infoByFile(filePath);
 		}
-		if (debugInfo) {
+		if (debugInfo) 
+		{
 			let foundLine = this.fileInfo.listLineFromSourceLineByInfo(debugInfo, currentNumberLine);
 			return foundLine || NaN;
 		}
 
 		return NaN;
-
-		// let indexLine : number = 0;
-		// let shiftHeader : number = 3;
-		// let number : number = NaN;
-
-		// for(let i = shiftHeader; i < sourceLisLines.length; i++)
-		// {
-		// 	let line = sourceLisLines[i];
-		// 	const matcher = /^\s*\S*\s*\d*\s*\d*[\tX]\s*(\d+)/;// (/^\s*\d*\t\s*(\d+)/; (c/c++)) X - for preprocessor
-		// 	const matches = line.match(matcher);
-
-		// 	if(matches && matches.length === 2)
-		// 	{
-		// 		if(!Number.isNaN(parseInt(matches[1], 10)))
-		// 		{
-		// 			if(indexLine === currentNumberLine)
-		// 			{
-		// 				number = parseInt(matches[1], 10);
-		// 				break;
-		// 			}
-
-		// 			indexLine++;
-		// 		}
-		// 	}
-		// }
-
-		// return number;
 	}
 
 	//module\routine\%LINE NUMBER\variable
@@ -1732,23 +1536,6 @@ export class DebugParser
 
 		return number;
 	}
-
-	// public getNumberLineScope(fileName : string, fullVariableName : string) : number
-	// {
-	// 	let numberLine = -1;
-
-	// 	// let info = this.fileInfo.getItem(fileName);
-
-	// 	// if(info)
-	// 	// {
-	// 	// 	let varNumberLine = parseInt(this.findNumberLineScope(fullVariableName), 10);
-	// 	// 	numberLine = varNumberLine - this.fileInfo.getShiftLine(fileName);
-	// 	// }
-	// 	let varNumberLine = parseInt(this.findNumberLineScope(fullVariableName), 10);
-	// 	let foundLine = this.fileInfo.sourceLineFromListLine(varNumberLine);
-
-	// 	return numberLine;
-	// }
 
 	public loadFileContext(file: string) : string[]
 	{

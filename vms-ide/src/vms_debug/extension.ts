@@ -41,11 +41,13 @@ let logFn: LogFunction;
 
 let nameTerminalVMS : string = "VMS Terminal";
 let shell : ShellSession;
+let shellDbg : ShellSession;
 let session : VMSDebugSession | undefined;
 let sessionRun : VMSNoDebugSession | undefined;
 let typeRunConfig : TypeRunConfig = TypeRunConfig.TypeRunNone;
 let statusConnBar : StatusBarDebug = new StatusBarDebug();
 let statusShell : StatusConnection = StatusConnection.StatusDisconnected;
+let statusShellDbg : StatusConnection = StatusConnection.StatusDisconnected;
 let terminals : TerminalVMS = new TerminalVMS();
 let configManager : ConfigManager = new ConfigManager("");
 
@@ -70,6 +72,7 @@ export function deactivate()
 	// nothing to do
 	terminals.exit(nameTerminalVMS);
 	shell.DisconectSession(false, "");
+	shellDbg.DisconectSession(false, "");
 }
 
 
@@ -157,7 +160,9 @@ async function ConnectShell(folder: WorkspaceFolder | undefined, wait : boolean)
 	{
 		let configurationDone = new Subject();
 		statusShell = StatusConnection.StatusConnecting;
+		statusShellDbg = StatusConnection.StatusConnecting;
 		shell = new ShellSession(folder, ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, logFn);
+		shellDbg = new ShellSession(folder, ExtensionDbgDataCb, ExtensionDbgReadyCb, ExtensionDbgCloseCb, logFn);
 
 		const message = localize('extention.conecting', "Connecting to the server ...");
 		const messageBar = localize('extention.bar.conecting', "Connecting ...");
@@ -166,7 +171,8 @@ async function ConnectShell(folder: WorkspaceFolder | undefined, wait : boolean)
 
 		if(wait)
 		{
-			while(statusShell === StatusConnection.StatusConnecting)
+			while(statusShell === StatusConnection.StatusConnecting ||
+				statusShellDbg === StatusConnection.StatusConnecting)
 			{
 				await configurationDone.wait(500);
 			}
@@ -182,7 +188,7 @@ let ExtensionDataCb = function(mode: ModeWork, type: TypeDataMessage, data: stri
 	{
 		if(session)
 		{
-			session.receiveDataShell(mode, type, data);
+			session.receiveDataShell(1, mode, type, data);
 		}
 	}
 	else if(typeRunConfig === TypeRunConfig.TypeRunRun)
@@ -209,6 +215,53 @@ let ExtensionReadyCb = function() : void
 let ExtensionCloseCb = function(reasonMessage: string) : void
 {
 	statusShell = StatusConnection.StatusDisconnected;
+
+	const message = localize('extention.closed', "Connection is closed");
+	const messageBar = localize('extention.bar.disconnected', "Disconnected");
+	vscode.window.showWarningMessage(message + reasonMessage);
+	statusConnBar.setMessage(messageBar);
+
+	logFn(LogType.information, () => message, false);
+
+	if(session)
+	{
+		session.closeDebugSession();
+	}
+};
+
+let ExtensionDbgDataCb = function(mode: ModeWork, type: TypeDataMessage, data: string) : void
+{
+	if(typeRunConfig === TypeRunConfig.TypeRunDebug)
+	{
+		if(session)
+		{
+			session.receiveDataShell(2, mode, type, data);
+		}
+	}
+	else if(typeRunConfig === TypeRunConfig.TypeRunRun)
+	{
+		if(sessionRun)
+		{
+			sessionRun.receiveDataShell(mode, type, data);
+		}
+	}
+};
+
+let ExtensionDbgReadyCb = function() : void
+{
+	statusShellDbg = StatusConnection.StatusConnected;
+
+	const message = localize('extention.connected', "Connected to the server");
+	const messageBar = localize('extention.bar.connected', "Connected");
+	vscode.window.showInformationMessage(message);
+	statusConnBar.setMessage(messageBar);
+
+	logFn(LogType.information, () => message, true);
+};
+
+let ExtensionDbgCloseCb = function(reasonMessage: string) : void
+{
+	statusShellDbg = StatusConnection.StatusDisconnected;
 
 	const message = localize('extention.closed', "Connection is closed");
 	const messageBar = localize('extention.bar.disconnected', "Disconnected");
@@ -286,7 +339,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 						// start listening on a random port
 						this.serverDbg = Net.createServer(socket =>
 						{
-							session = new VMSDebugSession(folder, shell, logFn);
+							session = new VMSDebugSession(folder, shell, shellDbg, logFn);
 							session.setRunAsServer(true);
 							session.start(<NodeJS.ReadableStream>socket, socket);
 						}).listen(0);

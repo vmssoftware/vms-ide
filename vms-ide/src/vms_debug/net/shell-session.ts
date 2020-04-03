@@ -8,6 +8,7 @@ import { Queue } from "../queue/queues";
 import { ShellParser } from "./shell-parser";
 import { OsCmdVMS, OsCommands } from '../command/os_commands';
 import * as nls from "vscode-nls";
+import { copy } from "fs-extra";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -22,6 +23,8 @@ export enum TypeDataMessage
 {
     typeCmd = 1,
     typeData,
+    typeClose,
+    typeError,
 }
 
 
@@ -38,9 +41,12 @@ export class ShellSession
     private completeCmd : boolean = false;
     private receiveCmd : boolean = false;
     private disconnect : boolean = false;
+    private dbgModeOn : boolean = false;
+    private dbgLastCmd : boolean = false;
     private checkVersion : number;
     private currentCmd : CommandMessage = new CommandMessage("", "");
     private previousCmd : CommandMessage = new CommandMessage("", "");
+    private callbackIn : ((data: string) => void) | undefined;
 
     private sshHelper?: SshHelper;
     private sshShell?: ISshShell;
@@ -55,6 +61,7 @@ export class ShellSession
         this.extensionDataCb = ExtensionDataCb;
         this.extensionReadyCb = ExtensionReadyCb;
         this.extensionCloseCb = ExtensionCloseCb;
+        this.callbackIn = undefined;
         this.shellParser = new ShellParser(this.DataCb, this.CloseCb, this.ClientErrorCb, logFn);
 
         this.resetParameters();
@@ -136,8 +143,28 @@ export class ShellSession
         }
     }
 
+    public async SendCommandAsync(command : CommandMessage, DataCb: (type: TypeDataMessage, data: string) => void)
+    {
+        //set callback
+        this.onDataReceived((data: string) => 
+        {
+            DataCb(TypeDataMessage.typeData, data);
+        });
+        //send command
+        this.SendCommand(command);
+        //wait
+    }
+
+    private onDataReceived(callback: (data: string) => void): void
+    {
+        this.callbackIn = callback;
+    }
+
+
     private DataCb = (data: string) : void =>
     {
+        console.log(data);
+        
         if(this.promptCmd === "" || this.checkVersion !== 0)
         {
             if(this.checkVersion !== 0 && this.promptCmd !== "")
@@ -215,13 +242,6 @@ export class ShellSession
                 }
             }
         }
-        // if(this.promptCmd === "")
-        // {
-        //     this.promptCmd = this.sshShell!.prompt!;//set prompt
-        //     this.readyCmd = true;
-        //     this.completeCmd = true;
-        //     this.extensionReadyCb();
-        // }
         else if(data.includes("\x00") && (data.includes(this.promptCmd) || data.includes("DBG> ")))
         {
             if(this.receiveCmd || data.includes(this.currentCmd.getBody()))
@@ -232,17 +252,17 @@ export class ShellSession
                     let dataS = data.substr(0, indexEnd-1);
                     let dataP = data.substr(indexEnd-1);
                     indexEnd = dataP.indexOf(" ");
-                    //let dataE = dataP.substr(indexEnd, dataP.length-1);//data of next command
 
-                    this.resultData += dataS;// + dataE;
+                    this.resultData += dataS;
                     this.mode = ModeWork.debug;
+                    this.dbgModeOn = true;
                 }
                 else
                 {
                     let indexEnd = data.indexOf("\x00");
                     data = data.substr(0, indexEnd-1);
 
-                    this.resultData += data + "> ";
+                    this.resultData += data;// + "> ";
                     this.mode = ModeWork.shell;
 
                     if (this.disconnect)
@@ -261,6 +281,7 @@ export class ShellSession
                         {
                             this.extensionDataCb(this.mode, TypeDataMessage.typeCmd, this.resultData);
                             this.resultData = "";
+                            this.receiveCmd = true;
                         }
                     }
                     else
@@ -277,7 +298,8 @@ export class ShellSession
                     cmd.includes(DebugCmdVMS.dbgStepIn) ||
                     cmd.includes(DebugCmdVMS.dbgStepReturn) ||
                     cmd.includes(OsCmdVMS.osRunProgram) ||
-                    cmd.includes(OsCmdVMS.osRunProgramArgs)))
+                    cmd.includes(OsCmdVMS.osRunProgramArgs) ||
+                    cmd === ""))
                 {
                     this.previousCmd = this.currentCmd;
                     this.currentCmd = new CommandMessage("", "");
@@ -305,13 +327,14 @@ export class ShellSession
                 cmd.includes(DebugCmdVMS.dbgStepOver) ||
                 cmd.includes(DebugCmdVMS.dbgStepIn) ||
                 cmd.includes(DebugCmdVMS.dbgStepReturn) ||
+                cmd.includes(OsCmdVMS.osRunDbg)/* ||
                 cmd.includes(OsCmdVMS.osRunProgram) ||
                 cmd.includes(OsCmdVMS.osRunProgramArgs) ||
-                cmd === "")
+                cmd === ""*/)
             {
                 if(this.resultData !== "")
                 {
-                    this.extensionDataCb(this.mode, TypeDataMessage.typeData, this.resultData);
+                    this.extensionDataCb(ModeWork.debug, TypeDataMessage.typeData, this.resultData);
                     this.resultData = "";
                 }
             }
@@ -359,6 +382,8 @@ export class ShellSession
         this.completeCmd = true;
         this.receiveCmd = false;
         this.disconnect = false;
+        this.dbgModeOn = false;
+        this.dbgLastCmd = false;
         this.currentCmd = new CommandMessage("", "");
         this.previousCmd = new CommandMessage("", "");
         this.queueCmd = new Queue<CommandMessage>();
@@ -412,12 +437,30 @@ export class ShellSession
                 this.previousCmd = this.currentCmd;
             }
 
-            this.currentCmd = command;
-            this.receiveCmd = false;
             this.readyCmd = false;
             this.completeCmd = false;
 
-            result = this.shellParser.push(command.getCommand() + '\r\n');
+            if(this.dbgModeOn)
+            {
+                if(this.mode === ModeWork.debug)
+                {
+                    this.currentCmd = command;
+                    this.receiveCmd = false;
+
+                    result = this.shellParser.push(command.getCommand() + '\r\n');
+                }
+                else
+                {
+                    this.shellParser.push('\r\n');
+                }
+            }
+            else
+            {
+                this.currentCmd = command;
+                this.receiveCmd = false;
+
+                result = this.shellParser.push(command.getCommand() + '\r\n');
+            }
         }
 
         return result;
@@ -435,17 +478,28 @@ export class ShellSession
                 {
                     let result = this.SendCommand(cmd);
 
-                    if(!result)
+                    if(!result)//???
                     {
-                        this.readyCmd = true;
-                        this.completeCmd = true;
+                        // this.readyCmd = true;
+                        // this.completeCmd = true;
                     }
                     else
                     {
                         this.queueCmd.pop();
                         this.readyCmd = false;
                         this.completeCmd = false;
+                        this.dbgLastCmd = true;
                     }
+                }
+            }
+            else if(this.dbgModeOn && this.dbgLastCmd)
+            {
+                if(this.mode !== ModeWork.debug)
+                {
+                    this.readyCmd = false;
+                    this.completeCmd = false;
+                    this.dbgLastCmd = false;
+                    this.shellParser.push('\r\n');
                 }
             }
         }

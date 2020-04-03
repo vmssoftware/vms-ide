@@ -9,10 +9,10 @@ import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import path from "path";
 import { DebugCmdVMS, DebugCommands } from "../command/debug_commands";
-import { OsCommands } from "../command/os_commands";
+import { OsCmdVMS, OsCommands } from "../command/os_commands";
 import { ConfigManager } from "../ext-api/config_manager";
 import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
-import { DebugParser, MessageDebuger, Parameters } from "../parsers/debug_parser";
+import { DebugParser, MessageDebuger, Parameters, MessagePrompt } from "../parsers/debug_parser";
 import { DebugVariable, HolderDebugVariableInfo, ReflectKind, VariableFileInfo } from "../parsers/debug_variable_info";
 import { Queue } from "../queue/queues";
 import { HolderModuleInfo } from "../parsers/debug_module_info";
@@ -55,6 +55,7 @@ export class VMSRuntime extends EventEmitter
 	//private lisFile: string;
 	private buttonPressd : DebugButtonEvent;
 	private shell : ShellSession;
+	private shellDbg : ShellSession;
 	private osCmd : OsCommands;
 	private dbgCmd : DebugCommands;
 	private dbgParser : DebugParser;
@@ -98,12 +99,17 @@ export class VMSRuntime extends EventEmitter
 	private pointerPeriod = "->";//"->", "^."
 	private pointerDereferencing = ".";//"*", "^."
 
+	private userName = "";
+	private terminalName = "";
+	private programName : string = "";
+	private programArgs : string = "";
 
-	constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, public logFn?: LogFunction)
+	constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, shellDbg : ShellSession, public logFn?: LogFunction)
 	{
 		super();
 
 		this.shell = shell;
+		this.shellDbg = shellDbg;
 		this.buttonPressd = DebugButtonEvent.btnNoEvent;
 		this.rootFolderName = folder ? folder.name : "";
 		this.osCmd = new OsCommands();
@@ -128,7 +134,15 @@ export class VMSRuntime extends EventEmitter
 		this.programEnd = false;
 		let configManager = new ConfigManager(this.rootFolderName);
 		let section = await configManager.getProjectSection();
+		let connection = await configManager.getConnectionSection();
 		const messageSync = localize('runtime.sync_api_not_find', "Sync API doesn't find");
+
+		if(connection && connection.username)
+		{
+			this.userName = connection.username;
+		}
+		this.programName = programName;
+		this.programArgs = programArgs;
 
 		if (!section)
 		{
@@ -180,7 +194,7 @@ export class VMSRuntime extends EventEmitter
 
 							this.sourcePaths = this.sourcePaths.concat(sourcePaths);
 							this.lisPaths = this.lisPaths.concat(lisPaths);
-						}						
+						}
 					}
 				}
 			}
@@ -214,6 +228,7 @@ export class VMSRuntime extends EventEmitter
 		this.checkLisFiles(this.sourcePaths, this.lisPaths);
 		this.modulesHolder = await this.collectModuleInfos(this.sourcePaths, this.lisPaths);
 		this.shell.resetParameters();
+		this.shellDbg.resetParameters();
 		this.abortKey = section.break;
 
 		if(this.shell.getModeWork() !== ModeWork.shell)
@@ -237,35 +252,41 @@ export class VMSRuntime extends EventEmitter
 				const pathToPreRunFile = `${converter.fullPath} DEBUG`;
 				this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
 			}
+			// //set vms terminal
+			// this.shell.SendCommandToQueue(this.osCmd.setTerminalType("vt102"));
+			// this.shell.SendCommandToQueue(this.osCmd.setTerminalWidth("160"));
+			// //config debugger
+			// this.shell.SendCommandToQueue(this.osCmd.runDebug());
+			// this.shell.SendCommandToQueue(this.dbgCmd.setDisplay("dbge", "q1", "output"));
+			// this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("error", "dbge"));
+			// this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
+			// this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
+			// this.shell.SendCommandToQueue(this.dbgCmd.setAbortKey(this.abortKey));
+			// this.shell.SendCommandToQueue(this.dbgCmd.run(programName, programArgs));
+			// this.shell.SendCommandToQueue(this.dbgCmd.setScopeBase());
+			// this.shell.SendCommandToQueue(this.dbgCmd.customCommand("set module /all"));
+
+			//set term 2
 			//set vms terminal
-			this.shell.SendCommandToQueue(this.osCmd.setTerminalType("vt102"));
-			this.shell.SendCommandToQueue(this.osCmd.setTerminalWidth("160"));
-			//config debugger
-			this.shell.SendCommandToQueue(this.osCmd.runDebug());
-			this.shell.SendCommandToQueue(this.dbgCmd.setDisplay("dbge", "q1", "output"));
-			this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("error", "dbge"));
-			this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
-			this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
-			this.shell.SendCommandToQueue(this.dbgCmd.setAbortKey(this.abortKey));
-			this.shell.SendCommandToQueue(this.dbgCmd.run(programName, programArgs));
-			this.shell.SendCommandToQueue(this.dbgCmd.setScopeBase());
-			this.shell.SendCommandToQueue(this.dbgCmd.customCommand("set module /all"));
+			this.shellDbg.SendCommandToQueue(this.osCmd.setTerminalType("vt102"));
+			this.shellDbg.SendCommandToQueue(this.osCmd.setTerminalWidth("160"));
+			this.shellDbg.SendCommandToQueue(this.osCmd.showTerminal());
 		}
 		else//reload program
 		{
 			// this.shell.SendCommandToQueue(this.dbgCmd.clearDisplay("dbge, out"));
 			// this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
-			// this.shell.SendCommandToQueue(this.dbgCmd.rerun());
-			this.sendEvent('restart');//go to restart debugger
+			 this.shellDbg.SendCommandToQueue(this.dbgCmd.rerun());
+			//this.sendEvent('restart');//go to restart debugger
 			return;
 		}
-		//clear entry breakpoint
-		if(!stopOnEntry)
-		{
-			this.shell.SendCommandToQueue(this.dbgCmd.breakPointsRemove());//remove entry breakpoint
-		}
-		//set breakpoint
-		await this.setRemoteBreakpointsAll();
+		// //clear entry breakpoint
+		// if(!stopOnEntry)
+		// {
+		// 	this.shell.SendCommandToQueue(this.dbgCmd.breakPointsRemove());//remove entry breakpoint
+		// }
+		// //set breakpoint
+		// await this.setRemoteBreakpointsAll();
 
 		vscode.debug.activeDebugConsole.append("\n\x1B[2J\x1B[H");//clean old data from DEBUG CONSOLE
 	}
@@ -343,25 +364,25 @@ export class VMSRuntime extends EventEmitter
 	public continueExec()
 	{
 		this.buttonPressd = DebugButtonEvent.btnContinue;
-		this.shell.SendCommandToQueue(this.dbgCmd.go());
+		this.shellDbg.SendCommandToQueue(this.dbgCmd.go());
 	}
 
 	public stepOver()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStepOver;
-		this.shell.SendCommandToQueue(this.dbgCmd.step());
+		this.shellDbg.SendCommandToQueue(this.dbgCmd.step());
 	}
 
 	public stepInto()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStepInto;
-		this.shell.SendCommandToQueue(this.dbgCmd.stepIn());
+		this.shellDbg.SendCommandToQueue(this.dbgCmd.stepIn());
 	}
 
 	public stepOut()
 	{
 		this.buttonPressd = DebugButtonEvent.btnStepOut;
-		this.shell.SendCommandToQueue(this.dbgCmd.stepReturn());
+		this.shellDbg.SendCommandToQueue(this.dbgCmd.stepReturn());
 	}
 
 	public stop()
@@ -371,8 +392,9 @@ export class VMSRuntime extends EventEmitter
 		{
 			this.buttonPressd = DebugButtonEvent.btnPause;
 			let symbol = this.dbgCmd.getCtrlPlusSymbol(this.abortKey);
-			this.shell.SendData(this.dbgCmd.customCommand(symbol).getCommand());//interrupt program execution
-			this.shell.SendData(this.dbgCmd.stop().getCommand());
+			this.shellDbg.SendData(this.dbgCmd.customCommand(symbol).getCommand());//interrupt program execution
+			//this.shellDbg.SendData(this.dbgCmd.stop().getCommand());
+			this.shellDbg.SendData("");
 		}
 	}
 
@@ -380,21 +402,25 @@ export class VMSRuntime extends EventEmitter
 	{
 		this.buttonPressd = DebugButtonEvent.btnStop;
 		//if the programm is running
-		if(this.programEnd === false && this.shell.getCurrentCommand().getBody() !== "")
+		if(this.programEnd === false && this.shellDbg.getCurrentCommand().getBody() !== "")
 		{
 			let symbol = this.dbgCmd.getCtrlPlusSymbol(this.abortKey);
-			this.shell.SendData(this.dbgCmd.customCommand(symbol).getCommand());//interrupt program execution
-			this.shell.SendCommand(this.dbgCmd.stop());
+			this.shellDbg.SendData(this.dbgCmd.customCommand(symbol).getCommand());//interrupt program execution
+			//this.shellDbg.SendCommand(this.dbgCmd.stop());
+			this.shellDbg.SendData("");
 		}
 
-		this.shell.resetParameters();
+		this.shellDbg.resetParameters();
 
 		if(!restart)
 		{
-			this.shell.SetDisconnectInShellSession();
+			this.shellDbg.SetDisconnectInShellSession();
+			this.shellDbg.SendCommandToQueue(this.dbgCmd.exit());
 		}
-
-		this.shell.SendCommandToQueue(this.dbgCmd.exit());
+		else
+		{
+			this.sendEvent('restart');//???
+		}
 	}
 
 	public stack(startFrame: number, endFrame: number)
@@ -403,7 +429,7 @@ export class VMSRuntime extends EventEmitter
 		this.stackEndFrame = endFrame;
 
 		this.resetNotifys();
-		this.shell.SendCommandToQueue(this.dbgCmd.callStack());
+		this.shellDbg.SendCommandToQueue(this.dbgCmd.callStack());
 	}
 
 	public async setVariableValue(nameVar : string, valueVar : string): Promise<boolean>
@@ -419,7 +445,7 @@ export class VMSRuntime extends EventEmitter
 			else
 			{
 				nameVar = this.convertVariable(nameVar);
-				this.shell.SendCommandToQueue(this.dbgCmd.deposit(nameVar, valueVar));
+				this.shellDbg.SendCommandToQueue(this.dbgCmd.deposit(nameVar, valueVar));
 
 				this.waitDeposit.message = "";
 				await this.waitDeposit.wait(5000);
@@ -561,7 +587,7 @@ export class VMSRuntime extends EventEmitter
 						nameVar = nameVar + " " + params;
 					}
 
-					this.shell.SendCommandToQueue(this.dbgCmd.watchPointSet(nameVar));
+					this.shellDbg.SendCommandToQueue(this.dbgCmd.watchPointSet(nameVar));
 				}
 				else if(wpChanged)//cancel watch
 				{
@@ -569,7 +595,7 @@ export class VMSRuntime extends EventEmitter
 					this.watchPoints.delete("keyWatchPoints");
 					this.watchPoints.set("keyWatchPoints", currWps);
 
-					this.shell.SendCommandToQueue(this.dbgCmd.watchPointRemove(nameVar));
+					this.shellDbg.SendCommandToQueue(this.dbgCmd.watchPointRemove(nameVar));
 				}
 				else
 				{
@@ -596,7 +622,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				for(let wp of currWps)
 				{
-					this.shell.SendCommandToQueue(this.dbgCmd.watchPointRemove(wp.name));
+					this.shellDbg.SendCommandToQueue(this.dbgCmd.watchPointRemove(wp.name));
 				}
 
 				this.watchPoints.delete("keyWatchPoints");
@@ -622,7 +648,7 @@ export class VMSRuntime extends EventEmitter
 				
 				if(!wpFind)
 				{
-					this.shell.SendCommandToQueue(this.dbgCmd.watchPointRemove(wpc.name));
+					this.shellDbg.SendCommandToQueue(this.dbgCmd.watchPointRemove(wpc.name));
 				}				
 			}
 		}
@@ -756,7 +782,7 @@ export class VMSRuntime extends EventEmitter
 			if(!vars)//request variables info
 			{
 				let moduleName = this.modulesHolder.getItemByPath(this.currentFilePath).moduleName;
-				this.shell.SendCommandToQueue(this.dbgCmd.showSymbols(moduleName));
+				this.shellDbg.SendCommandToQueue(this.dbgCmd.showSymbols(moduleName));
 				await this.waitSymbols.wait(5000);
 
 				vars = this.varsInfo.getVariableFile(this.currentFilePath);
@@ -776,7 +802,7 @@ export class VMSRuntime extends EventEmitter
 				let nameVars : string = "";
 				let namePtrs : string = "";
 
-				this.shell.SendCommandToQueue(this.dbgCmd.showScope());
+				this.shellDbg.SendCommandToQueue(this.dbgCmd.showScope());
 				await this.waitScope.wait(5000);
 
 				for(let item of vars)//create string of variables
@@ -875,7 +901,7 @@ export class VMSRuntime extends EventEmitter
 	{
 		if(this.buttonPressd === 0)
 		{
-			this.shell.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of variables
+			this.shellDbg.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of variables
 
 			let wait = new Subject();
 			this.queueWaitVar.push(wait);
@@ -914,7 +940,7 @@ export class VMSRuntime extends EventEmitter
 				variables += ",";
 			}
 
-			nameVar = item.variableName;
+			nameVar = item.variableName.trim();
 
 			if(pointer === true)
 			{
@@ -1008,7 +1034,7 @@ export class VMSRuntime extends EventEmitter
 	{
 		let result = false;
 
-		if(this.shell.getCurrentCommand().getBody() !== "")//go, step
+		if(this.shellDbg.getCurrentCommand().getBody() !== "")//go, step
 		{
 			this.shell.SendData(data);
 			result = true;
@@ -1044,12 +1070,14 @@ export class VMSRuntime extends EventEmitter
 					}
 					else
 					{
-						this.shell.SendData(data);//send command to the debugger
+						this.shellDbg.SendData(data);//send command to the debugger
+						this.shellDbg.SendData("");
 					}
 					break;
 
 				default:
-					this.shell.SendData(data);//send command to the debugger
+					this.shellDbg.SendData(data);//send command to the debugger
+					this.shellDbg.SendData("");
 					break;
 			}
 
@@ -1101,7 +1129,7 @@ export class VMSRuntime extends EventEmitter
 
 				if(!bpFound)
 				{
-					if(this.shell.getCurrentCommand().getBody() !== DebugCmdVMS.dbgGo)
+					if(this.shellDbg.getCurrentCommand().getBody() !== DebugCmdVMS.dbgGo)
 					{
 						remBps.push(bpO);
 					}
@@ -1128,7 +1156,7 @@ export class VMSRuntime extends EventEmitter
 
 				if(!bpFound)
 				{
-					if(this.shell.getCurrentCommand().getBody() !== DebugCmdVMS.dbgGo)
+					if(this.shellDbg.getCurrentCommand().getBody() !== DebugCmdVMS.dbgGo)
 					{
 						setBps.push(bpN);
 					}
@@ -1143,7 +1171,7 @@ export class VMSRuntime extends EventEmitter
 		{
 			for(let bpN of newBps)
 			{
-				if(this.shell.getCurrentCommand().getBody() !== DebugCmdVMS.dbgGo)
+				if(this.shellDbg.getCurrentCommand().getBody() !== DebugCmdVMS.dbgGo)
 				{
 					setBps.push(bpN);
 				}
@@ -1399,7 +1427,7 @@ export class VMSRuntime extends EventEmitter
 					if(!Number.isNaN(numberLine))
 					{
 						let moduleName = this.modulesHolder.getItemByPath(path).moduleName;
-						this.shell.SendCommandToQueue(this.dbgCmd.breakPointRemove(moduleName, numberLine));
+						this.shellDbg.SendCommandToQueue(this.dbgCmd.breakPointRemove(moduleName, numberLine));
 					}
 					else//clear breakpoint
 					{
@@ -1427,7 +1455,7 @@ export class VMSRuntime extends EventEmitter
 					if(!Number.isNaN(numberLine))
 					{
 						let moduleName = this.modulesHolder.getItemByPath(path).moduleName;
-						this.shell.SendCommandToQueue(this.dbgCmd.breakPointSet(moduleName, numberLine));
+						this.shellDbg.SendCommandToQueue(this.dbgCmd.breakPointSet(moduleName, numberLine));
 					}
 					else//clear breakpoint
 					{
@@ -1448,231 +1476,323 @@ export class VMSRuntime extends EventEmitter
 		});
 	}
 
+	private startDbg = true;
+	private startUser = false;
 
-	public receiveData(mode: ModeWork, type: TypeDataMessage, data: string) : void
+	public receiveData(nTerm: number, mode: ModeWork, type: TypeDataMessage, data: string) : void
 	{
-		if(mode === ModeWork.shell)
+		if(nTerm === 1)//user output
 		{
-			this.debugRun = false;
-		}
-		else if(mode === ModeWork.debug)
-		{
-			this.debugRun = true;
-
-			this.dbgParser.parseDebugData(this.shell, type, data);
-
-			let messageCommand = this.dbgParser.getCommandMessage();
-			let messageDebug = this.dbgParser.getDebugMessage();
-			let messageUser = this.dbgParser.getUserMessage();
-			let messageData = this.dbgParser.getDataMessage();
-			let messageDebugInfo = this.dbgParser.getDebugInfoMessage();
-
-
-			if(messageCommand !== "")
+			//if current cmd debud => run program and e.t.c
+			if(this.shell.getCurrentCommand().getBody() === OsCmdVMS.osRunDbg)
 			{
-				if (this.logFn)
+				if (this.startUser)
 				{
-					this.logFn(LogType.information, () => messageCommand);
-				}
-			}
-			if(messageData !== "")
-			{
-				switch(this.shell.getCurrentCommand().getBody())
-				{
-					case DebugCmdVMS.dbgExamine:
-						this.dbgParser.parseVariableValuesMsg(this.currentFilePath, messageData, this.pointerDereferencing);
-
-						if(this.queueWaitVar.size() > 0)
-						{
-							let event = this.queueWaitVar.pop();
-							event.message = "OK";
-							event.notify();
-						}
-						break;
-
-					case DebugCmdVMS.dbgCallStack:
-						let stack = this.dbgParser.parseCallStackMsg(messageData, this.modulesHolder, this.stackStartFrame, this.stackEndFrame);
-						//get current file and routine
-						if(stack.count > 0)
-						{
-							this.currentFilePath = stack.frames[0].file;
-							this.currentRoutine = stack.frames[0].name.substr(0, stack.frames[0].name.indexOf("["));
-							
-							let moduleItem = this.modulesHolder.getItemByPath(this.currentFilePath);
-							this.language = this.getLanguageFromInfo(moduleItem.language);
-							this.setDelimiters(this.language);
-						}
-						this.sendEvent(DebugCmdVMS.dbgStack, stack);
-						break;
-
-					case DebugCmdVMS.dbgSymbol:
-						this.dbgParser.parseVariableMsg(this.modulesHolder, messageData);
-						this.waitSymbols.notify();
-						break;
-
-					case DebugCmdVMS.dbgShowScope:
-						this.currentScope = this.dbgParser.parseScopeMsg(messageData);
-						this.waitScope.notify();
-						break;
-
-					default:
-						break;
-				}
-			}
-			if(messageUser !== "")
-			{
-				if (this.logFn)
-				{
-					this.logFn(LogType.information, () => messageUser);
-				}
-
-				vscode.debug.activeDebugConsole.append(messageUser);
-
-				if(messageUser.includes(MessageDebuger.msgNoImage))
-				{
-					this.programEnd = true;
-					this.shell.cleanQueueCommands();
-					this.sendEvent('end');//close debugger
-				}
-			}
-			if(messageDebug !== "")
-			{
-				let showMsg : boolean = true;
-
-				if (this.logFn)
-				{
-					this.logFn(LogType.information, () => messageDebug);
-				}
-
-				if(messageDebug.includes(MessageDebuger.msgEnd))
-				{
-					this.programEnd = true;
-					this.shell.cleanQueueCommands();
-					this.sendEvent('end');//close debugger
-				}
-				else if(messageDebug.includes(MessageDebuger.msgNoSccess))
-				{
-					let indexStart = messageDebug.indexOf(":");
-					let addressStr = messageDebug.substr(indexStart+1).replace(MessageDebuger.msgNoSccess, "");
-					let address = parseInt(addressStr, 16) >> 0;
-
-					if(!Number.isNaN(address))
+					if (this.logFn)
 					{
-						let vars = this.varsInfo.getVariableFile(this.currentFilePath);
+						this.logFn(LogType.information, () => data);
+					}
 
-						if(vars)
+					vscode.debug.activeDebugConsole.append(data);
+
+					if(data.includes(MessageDebuger.msgNoImage))
+					{
+						this.programEnd = true;
+						this.shellDbg.cleanQueueCommands();
+						this.sendEvent('end');//close debugger
+					}
+				}
+				else
+				{
+					this.startUser = true;
+
+					this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(""));
+					this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(""));
+					this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(""));
+				}
+			}
+		}
+		else if (nTerm === 2)//debug output
+		{
+			if(mode === ModeWork.shell)
+			{
+				this.debugRun = false;
+
+				if(this.shellDbg.getCurrentCommand().getBody() === OsCmdVMS.osTerminalShow)
+				{
+					const matcher = /^\s*T\S+\s+(\S+)\s+/;
+					let msgLines = data.split("\n");
+					let matches = msgLines[0].match(matcher);
+
+					if(matches && matches.length === 2)//debug message
+					{
+						this.terminalName = matches[1];
+
+						this.shell.SendCommandToQueue(this.osCmd.setProcessPriv("log_io"));
+						this.shell.SendCommandToQueue(this.osCmd.setProcessPriv("oper"));
+						this.shell.SendCommandToQueue(this.osCmd.setProcessPriv("share"));
+						this.shell.SendCommandToQueue(this.osCmd.setAclDevice(this.userName, this.terminalName));
+						this.shell.SendCommandToQueue(this.osCmd.setProtectionDeviceRW(this.terminalName));
+						this.shell.SendCommandToQueue(this.osCmd.redefineStreemToTerminal("DBG$INPUT", this.terminalName));
+						this.shell.SendCommandToQueue(this.osCmd.redefineStreemToTerminal("DBG$OUTPUT", this.terminalName));
+						this.shell.SendCommandToQueue(this.osCmd.redefineStreemToTerminal("DBG$ERROR", this.terminalName));
+						this.shell.SendCommandToQueue(this.osCmd.runDebug());
+					}
+				}
+
+				if(type === TypeDataMessage.typeCmd)//command
+				{
+					if(data !== "")
+					{
+						let messageCommand = MessagePrompt.prmtCMD + data;
+
+						if (this.logFn)
 						{
-							for(let item of vars)//check the unresolved address of variable
+							this.logFn(LogType.information, () => messageCommand);
+						}
+					}
+				}
+			}
+			else if(mode === ModeWork.debug)
+			{
+				if(this.startDbg)
+				{
+					this.startDbg = false;
+					this.shellDbg.SendCommandToQueue(this.dbgCmd.setAbortKey(this.abortKey));
+					this.shellDbg.SendCommandToQueue(this.dbgCmd.run(this.programName, this.programArgs));
+					this.shellDbg.SendCommandToQueue(this.dbgCmd.setScopeBase());
+					this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand("set module /all"));
+					//clear entry breakpoint
+					// if(!stopOnEntry)
+					// {
+					// 	this.shell.SendCommandToQueue(this.dbgCmd.breakPointsRemove());//remove entry breakpoint
+					// }
+					//set breakpoint
+					this.setRemoteBreakpointsAll();
+				}
+
+				this.debugRun = true;
+
+				this.dbgParser.parseDebugData(this.shellDbg, type, data);
+
+				let messageCommand = this.dbgParser.getCommandMessage();
+				let messageDebug = this.dbgParser.getDebugMessage();
+				let messageUser = this.dbgParser.getUserMessage();
+				let messageData = this.dbgParser.getDataMessage();
+				let messageDebugInfo = this.dbgParser.getDebugInfoMessage();
+
+
+				if(messageCommand !== "")
+				{
+					if (this.logFn)
+					{
+						this.logFn(LogType.information, () => messageCommand);
+					}
+				}
+				if(messageData !== "")
+				{
+					switch(this.shellDbg.getPreviousCommand().getBody())
+					{
+						case DebugCmdVMS.dbgExamine:
+							this.dbgParser.parseVariableValuesMsg(this.currentFilePath, messageData, this.pointerDereferencing);
+
+							if(this.queueWaitVar.size() > 0)
 							{
-								if(item.functionName === this.currentRoutine)
+								let event = this.queueWaitVar.pop();
+								event.message = "OK";
+								event.notify();
+							}
+							break;
+
+						case DebugCmdVMS.dbgCallStack:
+							let stack = this.dbgParser.parseCallStackMsg(messageData, this.modulesHolder, this.stackStartFrame, this.stackEndFrame);
+							//get current file and routine
+							if(stack.count > 0)
+							{
+								this.currentFilePath = stack.frames[0].file;
+								this.currentRoutine = stack.frames[0].name.substr(0, stack.frames[0].name.indexOf("["));
+								
+								let moduleItem = this.modulesHolder.getItemByPath(this.currentFilePath);
+								this.language = this.getLanguageFromInfo(moduleItem.language);
+								this.setDelimiters(this.language);
+							}
+							this.sendEvent(DebugCmdVMS.dbgStack, stack);
+							break;
+
+						case DebugCmdVMS.dbgSymbol:
+							this.dbgParser.parseVariableMsg(this.modulesHolder, messageData);
+							this.waitSymbols.notify();
+							break;
+
+						case DebugCmdVMS.dbgShowScope:
+							this.currentScope = this.dbgParser.parseScopeMsg(messageData);
+							this.waitScope.notify();
+							break;
+
+						default:
+							break;
+					}
+				}
+				if(messageUser !== "")
+				{
+					if (this.logFn)
+					{
+						this.logFn(LogType.information, () => messageUser);
+					}
+
+					vscode.debug.activeDebugConsole.append(messageUser);
+
+					if(messageUser.includes(MessageDebuger.msgNoImage))
+					{
+						this.programEnd = true;
+						this.shellDbg.cleanQueueCommands();
+						this.sendEvent('end');//close debugger
+					}
+				}
+				if(messageDebug !== "")
+				{
+					let showMsg : boolean = true;
+
+					if (this.logFn)
+					{
+						this.logFn(LogType.information, () => messageDebug);
+					}
+
+					if(messageDebug.includes(MessageDebuger.msgEnd))
+					{
+						this.programEnd = true;
+						this.shellDbg.cleanQueueCommands();
+						this.sendEvent('end');//close debugger
+					}
+					else if(messageDebug.includes(MessageDebuger.msgNoSccess))
+					{
+						let indexStart = messageDebug.indexOf(":");
+						let addressStr = messageDebug.substr(indexStart+1).replace(MessageDebuger.msgNoSccess, "");
+						let address = parseInt(addressStr, 16) >> 0;
+
+						if(!Number.isNaN(address))
+						{
+							let vars = this.varsInfo.getVariableFile(this.currentFilePath);
+
+							if(vars)
+							{
+								for(let item of vars)//check the unresolved address of variable
 								{
-									if(!item.variableValue && item.variableAddress)
+									if(item.functionName === this.currentRoutine)
 									{
-										if(item.variableAddress === address)
+										if(!item.variableValue && item.variableAddress)
 										{
-											showMsg = false;
-											item.variableAddress = 0;
-											break;
+											if(item.variableAddress === address)
+											{
+												showMsg = false;
+												item.variableAddress = 0;
+												break;
+											}
 										}
 									}
 								}
 							}
 						}
-					}
 
-					if(this.queueWaitVar.size() > 0)
-					{
-						let event = this.queueWaitVar.pop();
-						event.message = "ERROR";
-						event.notify();
-					}
-				}
-				else if(messageDebug.includes(MessageDebuger.msgNoFind) ||
-						messageDebug.includes(MessageDebuger.msgUnAlloc) ||
-						messageDebug.includes(MessageDebuger.msgNoSymbol) ||
-						messageDebug.includes(MessageDebuger.msgNotAct) ||
-						messageDebug.includes(MessageDebuger.msgNullPtr)||
-						messageDebug.includes(MessageDebuger.msgMisplaced))
-				{
-					if(this.queueWaitVar.size() > 0)
-					{
-						let event = this.queueWaitVar.pop();
-						event.message = "ERROR";
-						event.notify();
-					}
-				}
-				else if(messageDebug.includes(MessageDebuger.msgNoProcess))
-				{
-					this.shell.cleanQueueCommands();
-					this.sendEvent('end');//close debugger //Error loading image
-				}
-				else if(messageDebug.includes(MessageDebuger.msgInitial))
-				{
-					const matcherLang = /^.*Language: (\S+),/;
-					let matches = messageDebug.match(matcherLang);
-
-					if(matches && matches.length === 2)
-					{
-						this.language = matches[1];
-						this.setDelimiters(this.language);
-					}
-
-					if(this.stopOnEntry)
-					{
-						if(messageDebug.includes(MessageDebuger.msgGoMain))
+						if(this.queueWaitVar.size() > 0)
 						{
-							this.continueExec();
+							let event = this.queueWaitVar.pop();
+							event.message = "ERROR";
+							event.notify();
+						}
+					}
+					else if(messageDebug.includes(MessageDebuger.msgNoFind) ||
+							messageDebug.includes(MessageDebuger.msgUnAlloc) ||
+							messageDebug.includes(MessageDebuger.msgNoSymbol) ||
+							messageDebug.includes(MessageDebuger.msgNotAct) ||
+							messageDebug.includes(MessageDebuger.msgNullPtr)||
+							messageDebug.includes(MessageDebuger.msgMisplaced))
+					{
+						if(this.queueWaitVar.size() > 0)
+						{
+							let event = this.queueWaitVar.pop();
+							event.message = "ERROR";
+							event.notify();
+						}
+					}
+					else if(messageDebug.includes(MessageDebuger.msgNoProcess))
+					{
+						this.shellDbg.cleanQueueCommands();
+						this.sendEvent('end');//close debugger //Error loading image
+					}
+					else if(messageDebug.includes(MessageDebuger.msgInitial))
+					{
+						const matcherLang = /^.*Language: (\S+),/;
+						let matches = messageDebug.match(matcherLang);
+
+						if(matches && matches.length === 2)
+						{
+							this.language = matches[1];
+							this.setDelimiters(this.language);
+						}
+
+						if(this.stopOnEntry)
+						{
+							if(messageDebug.includes(MessageDebuger.msgGoMain))
+							{
+								this.continueExec();
+							}
+							else
+							{
+								this.stepOver();
+							}
 						}
 						else
 						{
-							this.stepOver();
+							this.continueExec();
 						}
 					}
-					else
+
+					if(showMsg)
 					{
-						this.continueExec();
+						vscode.debug.activeDebugConsole.append(messageDebug);
+					}
+				}
+				if(messageDebugInfo !== "")
+				{
+					if (this.logFn)
+					{
+						this.logFn(LogType.information, () => messageDebugInfo);
 					}
 				}
 
-				if(showMsg)
+				if(type === TypeDataMessage.typeData)
 				{
-					vscode.debug.activeDebugConsole.append(messageDebug);
-				}
-			}
-			if(messageDebugInfo !== "")
-			{
-				if (this.logFn)
-				{
-					this.logFn(LogType.information, () => messageDebugInfo);
-				}
-			}
-
-			if(type === TypeDataMessage.typeData)
-			{
-				if(this.shell.getCurrentCommand().getBody() === DebugCmdVMS.dbgDeposit)
-				{
-					if(messageDebug !== "")
+					if(this.shellDbg.getCurrentCommand().getBody() === DebugCmdVMS.dbgDeposit)
 					{
-						if(messageDebug.includes(MessageDebuger.msgNoAccessr) ||
-							messageDebug.includes(MessageDebuger.msgOpNotAllow) ||
-							messageDebug.includes(MessageDebuger.msgInvNumStr) ||
-							messageDebug.includes(MessageDebuger.msgInvNumber) ||
-							messageDebug.includes(MessageDebuger.msgNoSymbol) ||
-							messageDebug.includes(MessageDebuger.msgMisInvOper) ||
-							messageDebug.includes(MessageDebuger.msgIllPathIdent) ||
-							messageDebug.includes(MessageDebuger.msgMisOpeMis) ||
-							messageDebug.includes(MessageDebuger.msgSynErrExpr) ||
-							messageDebug.includes(MessageDebuger.msgDivByZero) ||
-							messageDebug.includes(MessageDebuger.msgNullPtr) ||
-							messageDebug.includes(MessageDebuger.msgAnaCvt) ||
-							messageDebug.includes(MessageDebuger.msgIllType) ||
-							messageDebug.includes(MessageDebuger.msgMatQuoMis) ||
-							messageDebug.includes(MessageDebuger.msgNoValue) ||
-							messageDebug.includes(MessageDebuger.msgAmpersand) ||
-							messageDebug.includes(MessageDebuger.msgIvalOutBnds))
+						if(messageDebug !== "")
 						{
-							this.waitDeposit.message = "ERROR";
-							this.waitDeposit.notify();
+							if(messageDebug.includes(MessageDebuger.msgNoAccessr) ||
+								messageDebug.includes(MessageDebuger.msgOpNotAllow) ||
+								messageDebug.includes(MessageDebuger.msgInvNumStr) ||
+								messageDebug.includes(MessageDebuger.msgInvNumber) ||
+								messageDebug.includes(MessageDebuger.msgNoSymbol) ||
+								messageDebug.includes(MessageDebuger.msgMisInvOper) ||
+								messageDebug.includes(MessageDebuger.msgIllPathIdent) ||
+								messageDebug.includes(MessageDebuger.msgMisOpeMis) ||
+								messageDebug.includes(MessageDebuger.msgSynErrExpr) ||
+								messageDebug.includes(MessageDebuger.msgDivByZero) ||
+								messageDebug.includes(MessageDebuger.msgNullPtr) ||
+								messageDebug.includes(MessageDebuger.msgAnaCvt) ||
+								messageDebug.includes(MessageDebuger.msgIllType) ||
+								messageDebug.includes(MessageDebuger.msgMatQuoMis) ||
+								messageDebug.includes(MessageDebuger.msgNoValue) ||
+								messageDebug.includes(MessageDebuger.msgAmpersand) ||
+								messageDebug.includes(MessageDebuger.msgIvalOutBnds))
+							{
+								this.waitDeposit.message = "ERROR";
+								this.waitDeposit.notify();
+							}
+							else
+							{
+								this.waitDeposit.message = "OK";
+								this.waitDeposit.notify();
+							}
 						}
 						else
 						{
@@ -1680,54 +1800,49 @@ export class VMSRuntime extends EventEmitter
 							this.waitDeposit.notify();
 						}
 					}
-					else
-					{
-						this.waitDeposit.message = "OK";
-						this.waitDeposit.notify();
-					}
 				}
-			}
 
 
-			if(this.dbgParser.getCommandButtonStatus())
-			{
-				switch(this.buttonPressd)
+				if(this.dbgParser.getCommandButtonStatus())
 				{
-					case DebugButtonEvent.btnContinue:
-						this.sendEvent('stopOnBreakpoint');
-						this.buttonPressd = 0;
-						break;
+					switch(this.buttonPressd)
+					{
+						case DebugButtonEvent.btnContinue:
+							this.sendEvent('stopOnBreakpoint');
+							this.buttonPressd = 0;
+							break;
 
-					case DebugButtonEvent.btnStepOver:
-						this.sendEvent('stopOnStep');
-						this.buttonPressd = 0;
-						break;
+						case DebugButtonEvent.btnStepOver:
+							this.sendEvent('stopOnStep');
+							this.buttonPressd = 0;
+							break;
 
-					case DebugButtonEvent.btnStepInto:
-						this.sendEvent('stopOnStep');
-						this.buttonPressd = 0;
-						break;
+						case DebugButtonEvent.btnStepInto:
+							this.sendEvent('stopOnStep');
+							this.buttonPressd = 0;
+							break;
 
-					case DebugButtonEvent.btnStepOut:
-						this.buttonPressd = DebugButtonEvent.btnStepOver;
-						this.shell.SendCommandToQueue(this.dbgCmd.step());
-						break;
+						case DebugButtonEvent.btnStepOut:
+							this.buttonPressd = DebugButtonEvent.btnStepOver;
+							this.shellDbg.SendCommandToQueue(this.dbgCmd.step());
+							break;
 
-					case DebugButtonEvent.btnRestart:
-						this.buttonPressd = 0;
-						break;
+						case DebugButtonEvent.btnRestart:
+							this.buttonPressd = 0;
+							break;
 
-					case DebugButtonEvent.btnPause:
-						this.sendEvent('stopOnStep');
-						this.buttonPressd = 0;
-						break;
+						case DebugButtonEvent.btnPause:
+							this.sendEvent('stopOnStep');
+							this.buttonPressd = 0;
+							break;
 
-					case DebugButtonEvent.btnStop:
-						this.buttonPressd = 0;
-						break;
+						case DebugButtonEvent.btnStop:
+							this.buttonPressd = 0;
+							break;
 
-					default:
-						break;
+						default:
+							break;
+					}
 				}
 			}
 		}

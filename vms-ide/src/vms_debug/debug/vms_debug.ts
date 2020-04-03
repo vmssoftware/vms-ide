@@ -58,7 +58,7 @@ export class VMSDebugSession extends LoggingDebugSession
 	 * Creates a new debug adapter that is used for one debug session.
 	 * We configure the default implementation of a debug adapter here.
 	 */
-	public constructor(public folder: WorkspaceFolder | undefined, shell : ShellSession, public logFn?: LogFunction)
+	public constructor(public folder: WorkspaceFolder | undefined, shell : ShellSession, shellDbg : ShellSession, public logFn?: LogFunction)
 	{
 		super("vms-debug.txt");
 
@@ -66,7 +66,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.setDebuggerLinesStartAt1(false);
 		this.setDebuggerColumnsStartAt1(false);
 
-		this.runtime = new VMSRuntime(folder, shell, logFn);
+		this.runtime = new VMSRuntime(folder, shell, shellDbg, logFn);
 
 		// response event handlers
 		this.runtime.on(DebugCmdVMS.dbgStack, (stack : any) =>
@@ -543,9 +543,9 @@ export class VMSDebugSession extends LoggingDebugSession
 	}
 
 
-	public receiveDataShell(mode: ModeWork, type: TypeDataMessage, data: string)
+	public receiveDataShell(nTerm: number, mode: ModeWork, type: TypeDataMessage, data: string)
 	{
-		this.runtime.receiveData(mode, type, data);
+		this.runtime.receiveData(nTerm, mode, type, data);
 	}
 
 	public closeDebugSession()
