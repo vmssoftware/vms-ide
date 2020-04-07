@@ -382,7 +382,6 @@ export class ShellSession
         this.completeCmd = true;
         this.receiveCmd = false;
         this.disconnect = false;
-        this.dbgModeOn = false;
         this.dbgLastCmd = false;
         this.currentCmd = new CommandMessage("", "");
         this.previousCmd = new CommandMessage("", "");
@@ -412,6 +411,11 @@ export class ShellSession
     public getPreviousCommand() : CommandMessage
     {
         return this.previousCmd;
+    }
+
+    public getDbgModeOn() : boolean
+    {
+        return this.dbgModeOn;
     }
 
     public SendData(data : string) : boolean

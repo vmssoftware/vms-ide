@@ -102,7 +102,10 @@ export class VMSRuntime extends EventEmitter
 	private userName = "";
 	private terminalName = "";
 	private programName : string = "";
-	private programArgs : string = "";
+	private programArgs : string = "";	
+	private startDbgCmd = true;
+	private startUser = false;
+
 
 	constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, shellDbg : ShellSession, public logFn?: LogFunction)
 	{
@@ -231,13 +234,23 @@ export class VMSRuntime extends EventEmitter
 		this.shellDbg.resetParameters();
 		this.abortKey = section.break;
 
-		if(this.shell.getModeWork() !== ModeWork.shell)
+		// if(this.shell.getModeWork() !== ModeWork.shell)
+		// {
+		// 	await this.waitShellMode.wait(1000);//wait ending the debugger
+		// }
+
+		if (this.shellDbg.getDbgModeOn())
 		{
-			await this.waitShellMode.wait(1000);//wait ending the debugger
+			this.startDbgCmd = false;
 		}
+		else
+		{
+			this.startDbgCmd = true;
+		}
+		
 
 		//run debugger
-		if(this.shell.getModeWork() === ModeWork.shell)
+		if(this.shellDbg.getModeWork() === ModeWork.shell)
 		{
 			const preRunFile = section.projectName + ".com";
 			let localSource = await configManager.getLocalSource();
@@ -277,6 +290,7 @@ export class VMSRuntime extends EventEmitter
 			// this.shell.SendCommandToQueue(this.dbgCmd.clearDisplay("dbge, out"));
 			// this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
 			 this.shellDbg.SendCommandToQueue(this.dbgCmd.rerun());
+			 this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(""));
 			//this.sendEvent('restart');//go to restart debugger
 			return;
 		}
@@ -419,6 +433,7 @@ export class VMSRuntime extends EventEmitter
 		}
 		else
 		{
+			console.log("restart");
 			this.sendEvent('restart');//???
 		}
 	}
@@ -1476,8 +1491,6 @@ export class VMSRuntime extends EventEmitter
 		});
 	}
 
-	private startDbg = true;
-	private startUser = false;
 
 	public receiveData(nTerm: number, mode: ModeWork, type: TypeDataMessage, data: string) : void
 	{
@@ -1555,18 +1568,18 @@ export class VMSRuntime extends EventEmitter
 			}
 			else if(mode === ModeWork.debug)
 			{
-				if(this.startDbg)
+				if(this.startDbgCmd)
 				{
-					this.startDbg = false;
+					this.startDbgCmd = false;
 					this.shellDbg.SendCommandToQueue(this.dbgCmd.setAbortKey(this.abortKey));
 					this.shellDbg.SendCommandToQueue(this.dbgCmd.run(this.programName, this.programArgs));
 					this.shellDbg.SendCommandToQueue(this.dbgCmd.setScopeBase());
 					this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand("set module /all"));
 					//clear entry breakpoint
-					// if(!stopOnEntry)
-					// {
-					// 	this.shell.SendCommandToQueue(this.dbgCmd.breakPointsRemove());//remove entry breakpoint
-					// }
+					if(!this.stopOnEntry)
+					{
+						this.shell.SendCommandToQueue(this.dbgCmd.breakPointsRemove());//remove entry breakpoint
+					}
 					//set breakpoint
 					this.setRemoteBreakpointsAll();
 				}
@@ -1723,7 +1736,7 @@ export class VMSRuntime extends EventEmitter
 					else if(messageDebug.includes(MessageDebuger.msgInitial))
 					{
 						const matcherLang = /^.*Language: (\S+),/;
-						let matches = messageDebug.match(matcherLang);
+						let matches = messageDebug.trim().match(matcherLang);
 
 						if(matches && matches.length === 2)
 						{
