@@ -270,30 +270,17 @@ class Tracer:
                 lines = []
                 lineno = frame.f_lineno
                 lines.append(lineno)
-                values = iter(frame.f_code.co_lnotab)
-                # self._sendDbgMessage('f_code.co_lnotab for: %s %s %s' % (currentFile, frame.f_code.co_name, repr(frame.f_code.co_lnotab)))
-                while True:
-                    try:
-                        addr_incr = next(values)
-                        line_incr = next(values)
-                        if isinstance(addr_incr, str):
-                            addr_incr = ord(addr_incr)
+                tail = frame.f_code.co_lnotab
+                while tail:
+                    _, line_incr, *tail = tail
+                    if line_incr:
                         if isinstance(line_incr, str):
                             line_incr = ord(line_incr)
                         if self._co_lnotab_signed:
                             if line_incr > 127:
                                 line_incr = line_incr - 256
-                            if addr_incr > 127:
-                                addr_incr = addr_incr - 256
-                        if addr_incr == 0:
-                            lineno += line_incr
-                            continue
-                        if line_incr == 0:
-                            continue
                         lineno += line_incr
                         lines.append(lineno)
-                    except: # Exception as ex:
-                        break
                 self._lines[currentFile][frame.f_code.co_name] = lines
                 self._checkFileBreakpoints(currentFile, lines)
                 # self._sendDbgMessage('NEW FRAME: %s %s %s' % (currentFile, frame.f_code.co_name, repr(lines)))
