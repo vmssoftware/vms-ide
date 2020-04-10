@@ -224,9 +224,8 @@ export class ProjectState {
         return value;
     }
 
-    public setDefBuildName(buildName: string) {
+    public async setDefBuildName(buildName: string) {
         const config = vscode.workspace.getConfiguration(ProjDepTree.configName, null);
-        config.update(ProjectState.configBuildNameSection, buildName, false);
-        return true;
+        return config.update(ProjectState.configBuildNameSection, buildName, false);
     }
 }

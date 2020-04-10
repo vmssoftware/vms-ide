@@ -52,6 +52,7 @@ class COMMAND:
 
 class Tracer:
     def __init__(self, port):
+        self._co_lnotab_signed = sys.version_info.major >= 3 and sys.version_info.minor >= 6
         self._knownValueTypes = [int, str, float, bool, complex, type(None)]
         self._port = port
         self._fileName = __file__
@@ -90,6 +91,8 @@ class Tracer:
         self._sig_int = signal.SIGINT
         # self._sig_break = signal.SIGBREAK
         self._sig_def = signal.SIG_DFL
+        # DEBUG
+        # self._enter_counter = 0
 
     def _setupTrace(self):
         self._setSignal(self._sig_int, self._signalHandler)
@@ -185,25 +188,43 @@ class Tracer:
     def _traceFunc(self, frame, event, arg):
         """ Do not forget not sending any data without locking (but ENTRY) """
 
+        # self._enter_counter = self._enter_counter + 1
+
         currentFile = self.canonizeFile(frame.f_code.co_filename)
-        if not currentFile in self._files:
-            self._files.add(currentFile)
+        # if not currentFile in self._files:
+        #     self._files.add(currentFile)
             # self._sendDbgMessage('NEW FILE: %s' % currentFile)
 
         # wait until tracing enabled
         if not self._startTracing:
+            if not self._waitingForAFile:
+                return None
             return self._traceFunc
 
         # skip this file
         if currentFile == self._fileName:
+            if not self._waitingForAFile:
+                return None
             return self._traceFunc
 
         # skip system files
-        if self._os_path_abspath(currentFile) == currentFile:
+        # if self._os_path_abspath(currentFile) == currentFile:
+        #     if not self._waitingForAFile:
+        #         return None
+        #     return self._traceFunc
+        if currentFile.startswith("/"):
+            if not self._waitingForAFile:
+                return None
             return self._traceFunc
 
         # skip no files
-        if currentFile == '<string>':
+        # if currentFile == '<string>':
+        #     if not self._waitingForAFile:
+        #         return None
+        #     return self._traceFunc
+        if currentFile.startswith('<'):
+            if not self._waitingForAFile:
+                return None
             return self._traceFunc
 
         # wait untin tracing file entered
@@ -249,24 +270,17 @@ class Tracer:
                 lines = []
                 lineno = frame.f_lineno
                 lines.append(lineno)
-                values = iter(frame.f_code.co_lnotab)
-                while True:
-                    try:
-                        addr_incr = next(values)
-                        line_incr = next(values)
-                        if isinstance(addr_incr, str):
-                            addr_incr = ord(addr_incr)
+                tail = frame.f_code.co_lnotab
+                while tail:
+                    _, line_incr, *tail = tail
+                    if line_incr:
                         if isinstance(line_incr, str):
                             line_incr = ord(line_incr)
-                        if addr_incr == 0:
-                            lineno += line_incr
-                            continue
-                        if line_incr == 0:
-                            continue
+                        if self._co_lnotab_signed:
+                            if line_incr > 127:
+                                line_incr = line_incr - 256
                         lineno += line_incr
                         lines.append(lineno)
-                    except: # Exception as ex:
-                        break
                 self._lines[currentFile][frame.f_code.co_name] = lines
                 self._checkFileBreakpoints(currentFile, lines)
                 # self._sendDbgMessage('NEW FRAME: %s %s %s' % (currentFile, frame.f_code.co_name, repr(lines)))
@@ -287,6 +301,7 @@ class Tracer:
             # examine breakpoint
             if not self._paused and frame.f_lineno in self._breakpointsConfirmed[currentFile]:
                 self._sendDbgMessage(self._messages.BREAK)
+                # self._sendDbgMessage('_COUNTER_ ' + repr(self._enter_counter) + '\n')
                 self._paused = True
 
             # tests runtime commands
@@ -295,6 +310,7 @@ class Tracer:
                 if cmd == self._commands.PAUSE:
                     if not self._paused:
                         self._sendDbgMessage(self._messages.PAUSED)
+                        # self._sendDbgMessage('_COUNTER_ ' + repr(self._enter_counter) + '\n')
                     self._paused = True
                 elif cmd == self._commands.INFO:
                     self._showInfo(ident)
@@ -311,7 +327,8 @@ class Tracer:
                 self._steppingLevel = None
                 self._paused = True
                 self._sendDbgMessage(self._messages.STEPPED)
-            
+                # self._sendDbgMessage('_COUNTER_ ' + repr(self._enter_counter) + '\n')
+
             # pause loop
             while self._paused and self._isConnected():
                 if cmd:

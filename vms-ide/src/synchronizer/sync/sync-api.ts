@@ -91,7 +91,7 @@ export interface IBuildConfigSection {
      */
     command: string;
     /**
-     * applecable only for default command: "DEBUG", "RELEASE" or empty
+     * will be added to the end of the command
      */
     parameter: string;
 }

@@ -688,7 +688,7 @@ functionDesignatorInt
    | LOC LPAREN (variableName | routineName) RPAREN
    | MAGTAPE LPAREN expression COMMA variableName COMMA chnlExp RPAREN
    | (POS) LPAREN strExp COMMA strExp COMMA intExp RPAREN
-   | RMSSTATUS LPAREN chnlExp COMMA (STATUS | VALUE) RPAREN
+   | RMSSTATUS LPAREN chnlExp (COMMA (STATUS | VALUE))? RPAREN
    | routineName (LPAREN parameterList RPAREN)?
    ;
 

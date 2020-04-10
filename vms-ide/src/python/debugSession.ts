@@ -734,6 +734,7 @@ export class PythonDebugSession extends LoggingDebugSession {
             // scriptPath = `[.${ensured.projectSection.outdir}]`;
             scriptPath = ensured.projectSection.outdir + ftpPathSeparator;
         }
+        // TODO: move command to the settings
         let runCommand = `python ${scriptPath}server.py -p ${port}`;
         const lines: string[] = [];
         return this._serverQueue.postCommand(runCommand, (cmd, line) => {
@@ -743,17 +744,17 @@ export class PythonDebugSession extends LoggingDebugSession {
             }
             lines.push(line);
             if (result === EStartResult.unknown) {
-                if (line.match(rgxListening)) {
+                if (line.trim().match(rgxListening)) {
                     result = EStartResult.started;
                     return ListenerResponse.stop;   // go out, no prompt required
                 }
-                if (line.match(rgxPortError)) {
+                if (line.trim().match(rgxPortError)) {
                     result = EStartResult.portIsBusy;
                     return ListenerResponse.needMoreLines;    // wait a prompt
                 }
-                if (line.match(rgxMsg)) {
+                if (line.trim().match(rgxMsg)) {
                     result = EStartResult.error;
-                    this._logFn(LogType.information, () => lines.join(''));
+                    this._logFn(LogType.warning, () => lines.join(''), true);
                     return ListenerResponse.needMoreLines;    // wait a prompt
                 }
                 return ListenerResponse.needMoreLines;        // need more lines
