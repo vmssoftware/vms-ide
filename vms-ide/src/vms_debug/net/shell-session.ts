@@ -152,7 +152,7 @@ export class ShellSession
 
     private DataCb = (data: string) : void =>
     {
-        console.log(data);
+        //console.log(data);
         
         if(this.promptCmd === "" || this.checkVersion !== 0)
         {
