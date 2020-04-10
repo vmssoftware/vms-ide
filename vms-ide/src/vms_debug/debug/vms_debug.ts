@@ -14,7 +14,7 @@ import {
 } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DebugCmdVMS } from "../command/debug_commands";
-import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
+import { ModeWork, ShellSession, TypeDataMessage, TypeTerminal } from "../net/shell-session";
 import { DebugVariable, ReflectKind } from "../parsers/debug_variable_info";
 import { Queue } from "../queue/queues";
 import { VMSBreakpoint, VMSRuntime } from "./vms_runtime";
@@ -179,14 +179,13 @@ export class VMSDebugSession extends LoggingDebugSession
 	{
 		// make sure to 'Stop' the buffered logging if 'trace' is not set
 		logger.setup(args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false);
+		this.sendResponse(response);
 
 		// wait until configuration has finished (and configurationDoneRequest has been called)
 		await this.configurationDone.wait(1000);
 
 		// start the program in the runtime
 		await this.runtime.start(args.program, args.arguments, !!args.stopOnEntry);
-
-		this.sendResponse(response);
 	}
 
 	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments) : Promise<void>
@@ -531,8 +530,8 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void
 	{
-		this.runtime.exit(args.restart);
 		this.sendResponse(response);//disconnect or restart event
+		this.runtime.exit(args.restart);
 	}
 
 	//---- helpers
@@ -543,9 +542,9 @@ export class VMSDebugSession extends LoggingDebugSession
 	}
 
 
-	public receiveDataShell(nTerm: number, mode: ModeWork, type: TypeDataMessage, data: string)
+	public receiveDataShell(typeTerminal: TypeTerminal, mode: ModeWork, type: TypeDataMessage, data: string)
 	{
-		this.runtime.receiveData(nTerm, mode, type, data);
+		this.runtime.receiveData(typeTerminal, mode, type, data);
 	}
 
 	public closeDebugSession()

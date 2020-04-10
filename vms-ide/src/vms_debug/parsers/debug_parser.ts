@@ -277,12 +277,14 @@ export class DebugParser
 				if(columns.length === 1)//module name is long
 				{
 					i += 1;
+					msgLines[i] = msgLines[i].trim();
 					columns = msgLines[i].split(/\s+/);
 					routineName = columns[0];
 
 					if(columns.length === 1)//routine name is long
 					{
 						i += 1;
+						msgLines[i] = msgLines[i].trim();
 						columns = msgLines[i].split(/\s+/);
 
 						if(columns.length === 3)
@@ -305,6 +307,7 @@ export class DebugParser
 					if(columns.length === 2)//routine name is long
 					{
 						i += 1;
+						msgLines[i] = msgLines[i].trim();
 						columns = msgLines[i].split(/\s+/);
 
 						if(columns.length === 3)
@@ -1422,7 +1425,7 @@ export class DebugParser
 
 		while(this.queueMsgDebug.size() > 0)
 		{
-			message += this.queueMsgDebug.pop() + "\n";
+			message += this.queueMsgDebug.pop().trim() + "\n";
 		}
 
 		return message;

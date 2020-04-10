@@ -19,6 +19,12 @@ export enum ModeWork
     debug,
 }
 
+export enum TypeTerminal
+{
+    user = 1,
+    debug,
+}
+
 export enum TypeDataMessage
 {
     typeCmd = 1,
@@ -32,6 +38,7 @@ export class ShellSession
 {
     private promptCmd : string;
     private mode : ModeWork;
+    private typeTerminal: TypeTerminal;
     private resultData : string = "";
     private extensionDataCb : Function;
     private extensionReadyCb : Function;
@@ -46,22 +53,22 @@ export class ShellSession
     private checkVersion : number;
     private currentCmd : CommandMessage = new CommandMessage("", "");
     private previousCmd : CommandMessage = new CommandMessage("", "");
-    private callbackIn : ((data: string) => void) | undefined;
 
     private sshHelper?: SshHelper;
     private sshShell?: ISshShell;
 
     private shellParser: ShellParser;
 
-    constructor(public folder: WorkspaceFolder | undefined, ExtensionDataCb: (mode: ModeWork, type: TypeDataMessage, data: string) => void, ExtensionReadyCb: () => void, ExtensionCloseCb: (reasonMessage: string) => void, public logFn?: LogFunction)
+    constructor(public folder: WorkspaceFolder | undefined, typeTerminal: TypeTerminal, ExtensionDataCb: (mode: ModeWork, type: TypeDataMessage, data: string) => void, ExtensionReadyCb: () => void, ExtensionCloseCb: (reasonMessage: string) => void, public logFn?: LogFunction)
     {
         this.checkVersion = -1;
         this.promptCmd = "";
         this.mode = ModeWork.shell;
+        this.typeTerminal = typeTerminal;
+
         this.extensionDataCb = ExtensionDataCb;
         this.extensionReadyCb = ExtensionReadyCb;
         this.extensionCloseCb = ExtensionCloseCb;
-        this.callbackIn = undefined;
         this.shellParser = new ShellParser(this.DataCb, this.CloseCb, this.ClientErrorCb, logFn);
 
         this.resetParameters();
@@ -143,24 +150,6 @@ export class ShellSession
         }
     }
 
-    public async SendCommandAsync(command : CommandMessage, DataCb: (type: TypeDataMessage, data: string) => void)
-    {
-        //set callback
-        this.onDataReceived((data: string) => 
-        {
-            DataCb(TypeDataMessage.typeData, data);
-        });
-        //send command
-        this.SendCommand(command);
-        //wait
-    }
-
-    private onDataReceived(callback: (data: string) => void): void
-    {
-        this.callbackIn = callback;
-    }
-
-
     private DataCb = (data: string) : void =>
     {
         console.log(data);
@@ -221,6 +210,9 @@ export class ShellSession
                         this.checkVersion = -1;
                         this.DisconectSession(true, ": OS don't support");
                     }
+
+                    this.readyCmd = true;
+                    this.completeCmd = true;
                 }
 
                 if(data.includes(this.currentCmd.getBody()))
@@ -237,7 +229,7 @@ export class ShellSession
                 if(this.checkVersion === -1)
                 {
                     this.checkVersion = 1;
-                    let  osCmd = new OsCommands();
+                    let osCmd = new OsCommands();
                     this.SendCommand(osCmd.getVersionOS());
                 }
             }
@@ -323,19 +315,35 @@ export class ShellSession
                     this.receiveCmd = true;
                 }
             }
-            else if(cmd.includes(DebugCmdVMS.dbgGo) ||
-                cmd.includes(DebugCmdVMS.dbgStepOver) ||
-                cmd.includes(DebugCmdVMS.dbgStepIn) ||
-                cmd.includes(DebugCmdVMS.dbgStepReturn) ||
-                cmd.includes(OsCmdVMS.osRunDbg)/* ||
-                cmd.includes(OsCmdVMS.osRunProgram) ||
-                cmd.includes(OsCmdVMS.osRunProgramArgs) ||
-                cmd === ""*/)
+            else
             {
-                if(this.resultData !== "")
+                if (this.typeTerminal === TypeTerminal.user)
                 {
-                    this.extensionDataCb(ModeWork.debug, TypeDataMessage.typeData, this.resultData);
-                    this.resultData = "";
+                    if(cmd.includes(OsCmdVMS.osRunDbg) ||
+                        cmd.includes(OsCmdVMS.osRunProgram) ||
+                        cmd.includes(OsCmdVMS.osRunProgramArgs) ||
+                        cmd === "")
+                    {
+                        if(this.resultData !== "")
+                        {
+                            this.extensionDataCb(ModeWork.shell, TypeDataMessage.typeData, this.resultData);
+                            this.resultData = "";
+                        }
+                    }
+                }
+                else
+                {
+                    if(cmd.includes(DebugCmdVMS.dbgGo) ||
+                        cmd.includes(DebugCmdVMS.dbgStepOver) ||
+                        cmd.includes(DebugCmdVMS.dbgStepIn) ||
+                        cmd.includes(DebugCmdVMS.dbgStepReturn))
+                    {
+                        if(this.resultData !== "")
+                        {
+                            this.extensionDataCb(ModeWork.debug, TypeDataMessage.typeData, this.resultData);
+                            this.resultData = "";
+                        }
+                    }
                 }
             }
         }
@@ -378,8 +386,8 @@ export class ShellSession
     public resetParameters()
     {
         this.resultData = "";
-        this.readyCmd = true;
-        this.completeCmd = true;
+        // this.readyCmd = true;
+        // this.completeCmd = true;
         this.receiveCmd = false;
         this.disconnect = false;
         this.dbgLastCmd = false;
@@ -424,6 +432,9 @@ export class ShellSession
 
         if(this.sshShell)
         {
+            this.readyCmd = false;
+            this.completeCmd = false;
+
             result = this.shellParser.push(data + '\r\n');
         }
 

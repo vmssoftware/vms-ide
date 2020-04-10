@@ -11,7 +11,7 @@ import path from "path";
 import { DebugCmdVMS, DebugCommands } from "../command/debug_commands";
 import { OsCmdVMS, OsCommands } from "../command/os_commands";
 import { ConfigManager } from "../ext-api/config_manager";
-import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
+import { ModeWork, ShellSession, TypeDataMessage, TypeTerminal } from "../net/shell-session";
 import { DebugParser, MessageDebuger, Parameters, MessagePrompt } from "../parsers/debug_parser";
 import { DebugVariable, HolderDebugVariableInfo, ReflectKind, VariableFileInfo } from "../parsers/debug_variable_info";
 import { Queue } from "../queue/queues";
@@ -66,7 +66,6 @@ export class VMSRuntime extends EventEmitter
 	private waitSymbols = new Subject();
 	private waitScope = new Subject();
 	private waitDeposit = new Subject();
-	private waitShellMode = new Subject();
 	private queueWaitVar = new Queue<any>();
 
 	private stackStartFrame: number = 0;
@@ -105,6 +104,7 @@ export class VMSRuntime extends EventEmitter
 	private programArgs : string = "";	
 	private startDbgCmd = true;
 	private startUser = false;
+	private startUserDebugCmd = false;
 
 
 	constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, shellDbg : ShellSession, public logFn?: LogFunction)
@@ -234,20 +234,17 @@ export class VMSRuntime extends EventEmitter
 		this.shellDbg.resetParameters();
 		this.abortKey = section.break;
 
-		// if(this.shell.getModeWork() !== ModeWork.shell)
-		// {
-		// 	await this.waitShellMode.wait(1000);//wait ending the debugger
-		// }
 
 		if (this.shellDbg.getDbgModeOn())
 		{
 			this.startDbgCmd = false;
+			this.startUser = true;
 		}
 		else
 		{
 			this.startDbgCmd = true;
+			this.startUser = false;
 		}
-		
 
 		//run debugger
 		if(this.shellDbg.getModeWork() === ModeWork.shell)
@@ -265,42 +262,18 @@ export class VMSRuntime extends EventEmitter
 				const pathToPreRunFile = `${converter.fullPath} DEBUG`;
 				this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
 			}
-			// //set vms terminal
-			// this.shell.SendCommandToQueue(this.osCmd.setTerminalType("vt102"));
-			// this.shell.SendCommandToQueue(this.osCmd.setTerminalWidth("160"));
-			// //config debugger
-			// this.shell.SendCommandToQueue(this.osCmd.runDebug());
-			// this.shell.SendCommandToQueue(this.dbgCmd.setDisplay("dbge", "q1", "output"));
-			// this.shell.SendCommandToQueue(this.dbgCmd.redirectDataToDisplay("error", "dbge"));
-			// this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
-			// this.shell.SendCommandToQueue(this.dbgCmd.removeDisplay("src"));
-			// this.shell.SendCommandToQueue(this.dbgCmd.setAbortKey(this.abortKey));
-			// this.shell.SendCommandToQueue(this.dbgCmd.run(programName, programArgs));
-			// this.shell.SendCommandToQueue(this.dbgCmd.setScopeBase());
-			// this.shell.SendCommandToQueue(this.dbgCmd.customCommand("set module /all"));
-
-			//set term 2
-			//set vms terminal
+			//set vms debug terminal
 			this.shellDbg.SendCommandToQueue(this.osCmd.setTerminalType("vt102"));
 			this.shellDbg.SendCommandToQueue(this.osCmd.setTerminalWidth("160"));
 			this.shellDbg.SendCommandToQueue(this.osCmd.showTerminal());
 		}
 		else//reload program
 		{
-			// this.shell.SendCommandToQueue(this.dbgCmd.clearDisplay("dbge, out"));
-			// this.shell.SendCommandToQueue(this.dbgCmd.modeScreen());
-			 this.shellDbg.SendCommandToQueue(this.dbgCmd.rerun());
-			 this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(""));
+			this.shellDbg.SendCommandToQueue(this.dbgCmd.rerun());
+			this.shellDbg.SendCommandToQueue(this.dbgCmd.setScopeBase());
 			//this.sendEvent('restart');//go to restart debugger
 			return;
 		}
-		// //clear entry breakpoint
-		// if(!stopOnEntry)
-		// {
-		// 	this.shell.SendCommandToQueue(this.dbgCmd.breakPointsRemove());//remove entry breakpoint
-		// }
-		// //set breakpoint
-		// await this.setRemoteBreakpointsAll();
 
 		vscode.debug.activeDebugConsole.append("\n\x1B[2J\x1B[H");//clean old data from DEBUG CONSOLE
 	}
@@ -407,8 +380,7 @@ export class VMSRuntime extends EventEmitter
 			this.buttonPressd = DebugButtonEvent.btnPause;
 			let symbol = this.dbgCmd.getCtrlPlusSymbol(this.abortKey);
 			this.shellDbg.SendData(this.dbgCmd.customCommand(symbol).getCommand());//interrupt program execution
-			//this.shellDbg.SendData(this.dbgCmd.stop().getCommand());
-			this.shellDbg.SendData("");
+			this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(""));
 		}
 	}
 
@@ -420,21 +392,22 @@ export class VMSRuntime extends EventEmitter
 		{
 			let symbol = this.dbgCmd.getCtrlPlusSymbol(this.abortKey);
 			this.shellDbg.SendData(this.dbgCmd.customCommand(symbol).getCommand());//interrupt program execution
-			//this.shellDbg.SendCommand(this.dbgCmd.stop());
-			this.shellDbg.SendData("");
+			this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(""));
 		}
-
-		this.shellDbg.resetParameters();
 
 		if(!restart)
 		{
+			this.shellDbg.resetParameters();
+			this.shell.resetParameters();
+
 			this.shellDbg.SetDisconnectInShellSession();
 			this.shellDbg.SendCommandToQueue(this.dbgCmd.exit());
+			this.shell.SetDisconnectInShellSession();
+			this.shell.SendCommandToQueue(this.dbgCmd.exit());
 		}
 		else
 		{
-			console.log("restart");
-			this.sendEvent('restart');//???
+			this.sendEvent('restart');
 		}
 	}
 
@@ -1085,12 +1058,14 @@ export class VMSRuntime extends EventEmitter
 					}
 					else
 					{
+						this.startUserDebugCmd = true;
 						this.shellDbg.SendData(data);//send command to the debugger
 						this.shellDbg.SendData("");
 					}
 					break;
 
 				default:
+					this.startUserDebugCmd = true;
 					this.shellDbg.SendData(data);//send command to the debugger
 					this.shellDbg.SendData("");
 					break;
@@ -1492,9 +1467,11 @@ export class VMSRuntime extends EventEmitter
 	}
 
 
-	public receiveData(nTerm: number, mode: ModeWork, type: TypeDataMessage, data: string) : void
+	public receiveData(typeTerminal: TypeTerminal, mode: ModeWork, type: TypeDataMessage, data: string) : void
 	{
-		if(nTerm === 1)//user output
+		data = data.replace(/\r/g, '');
+
+		if(typeTerminal === TypeTerminal.user)//user output
 		{
 			//if current cmd debud => run program and e.t.c
 			if(this.shell.getCurrentCommand().getBody() === OsCmdVMS.osRunDbg)
@@ -1524,10 +1501,34 @@ export class VMSRuntime extends EventEmitter
 					this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(""));
 				}
 			}
+			else if (this.startUser)
+			{
+				if (this.logFn)
+				{
+					this.logFn(LogType.information, () => data);
+				}
+
+				vscode.debug.activeDebugConsole.append(data);
+
+				if(data.includes(MessageDebuger.msgNoImage))
+				{
+					this.programEnd = true;
+					this.shellDbg.cleanQueueCommands();
+					this.sendEvent('end');//close debugger
+				}
+			}
 		}
-		else if (nTerm === 2)//debug output
+		else if (typeTerminal === TypeTerminal.debug)//debug output
 		{
-			if(mode === ModeWork.shell)
+			if(this.startUserDebugCmd)
+			{
+				if(mode !== ModeWork.shell)
+				{
+					vscode.debug.activeDebugConsole.append(data);//show output user command
+					this.startUserDebugCmd = false;
+				}
+			}
+			else if(mode === ModeWork.shell)
 			{
 				this.debugRun = false;
 
@@ -1563,6 +1564,37 @@ export class VMSRuntime extends EventEmitter
 						{
 							this.logFn(LogType.information, () => messageCommand);
 						}
+
+						if (data.includes("OpenVMS"))
+						{
+							vscode.debug.activeDebugConsole.append(data.trim() + "\r\n");
+						}
+					}
+				}
+				else
+				{
+					this.dbgParser.parseDebugData(this.shellDbg, type, data);
+
+					let messageDebug = this.dbgParser.getDebugMessage();
+
+					if(messageDebug !== "")
+					{
+						let showMsg : boolean = true;
+
+						if (this.logFn)
+						{
+							this.logFn(LogType.information, () => messageDebug);
+						}
+
+						if(messageDebug.includes(MessageDebuger.msgInitial))
+						{
+							this.parseMsgInitial(messageDebug);
+						}
+
+						if(showMsg)
+						{
+							vscode.debug.activeDebugConsole.append(messageDebug);
+						}
 					}
 				}
 			}
@@ -1590,7 +1622,6 @@ export class VMSRuntime extends EventEmitter
 
 				let messageCommand = this.dbgParser.getCommandMessage();
 				let messageDebug = this.dbgParser.getDebugMessage();
-				let messageUser = this.dbgParser.getUserMessage();
 				let messageData = this.dbgParser.getDataMessage();
 				let messageDebugInfo = this.dbgParser.getDebugInfoMessage();
 
@@ -1644,22 +1675,6 @@ export class VMSRuntime extends EventEmitter
 
 						default:
 							break;
-					}
-				}
-				if(messageUser !== "")
-				{
-					if (this.logFn)
-					{
-						this.logFn(LogType.information, () => messageUser);
-					}
-
-					vscode.debug.activeDebugConsole.append(messageUser);
-
-					if(messageUser.includes(MessageDebuger.msgNoImage))
-					{
-						this.programEnd = true;
-						this.shellDbg.cleanQueueCommands();
-						this.sendEvent('end');//close debugger
 					}
 				}
 				if(messageDebug !== "")
@@ -1735,30 +1750,7 @@ export class VMSRuntime extends EventEmitter
 					}
 					else if(messageDebug.includes(MessageDebuger.msgInitial))
 					{
-						const matcherLang = /^.*Language: (\S+),/;
-						let matches = messageDebug.trim().match(matcherLang);
-
-						if(matches && matches.length === 2)
-						{
-							this.language = matches[1];
-							this.setDelimiters(this.language);
-						}
-
-						if(this.stopOnEntry)
-						{
-							if(messageDebug.includes(MessageDebuger.msgGoMain))
-							{
-								this.continueExec();
-							}
-							else
-							{
-								this.stepOver();
-							}
-						}
-						else
-						{
-							this.continueExec();
-						}
+						this.parseMsgInitial(messageDebug);
 					}
 
 					if(showMsg)
@@ -1858,6 +1850,34 @@ export class VMSRuntime extends EventEmitter
 					}
 				}
 			}
+		}
+	}
+
+	private parseMsgInitial(msgInitial: string) : void
+	{
+		const matcherLang = /^.*Language: (\S+),/;
+		let matches = msgInitial.trim().match(matcherLang);
+
+		if(matches && matches.length === 2)
+		{
+			this.language = matches[1];
+			this.setDelimiters(this.language);
+		}
+
+		if(this.stopOnEntry)
+		{
+			if(msgInitial.includes(MessageDebuger.msgGoMain))
+			{
+				this.continueExec();
+			}
+			else
+			{
+				this.stepOver();
+			}
+		}
+		else
+		{
+			this.continueExec();
 		}
 	}
 

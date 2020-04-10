@@ -14,7 +14,7 @@ import { VMSDebugSession } from "./debug/vms_debug";
 import { VMSNoDebugSession } from "./debug/vms_debug_run";
 import { ConfigManager } from "./ext-api/config_manager";
 import { createLogFunction } from '../config-helper/log';
-import { ModeWork, ShellSession, TypeDataMessage } from "./net/shell-session";
+import { ModeWork, ShellSession, TypeDataMessage, TypeTerminal } from "./net/shell-session";
 import { StatusBarDebug } from "./ui/status_bar";
 import { TerminalVMS } from "./ui/terminal";
 import { RgxFromStr } from "../common/rgx-from-str";
@@ -72,7 +72,11 @@ export function deactivate()
 	// nothing to do
 	terminals.exit(nameTerminalVMS);
 	shell.DisconectSession(false, "");
-	shellDbg.DisconectSession(false, "");
+
+	if (shellDbg)
+	{
+		shellDbg.DisconectSession(false, "");
+	}
 }
 
 
@@ -154,15 +158,28 @@ async function createTerminal() : Promise<void>
 	});
 }
 
-async function ConnectShell(folder: WorkspaceFolder | undefined, wait : boolean) : Promise<StatusConnection>
+async function ConnectShell(folder: WorkspaceFolder | undefined, config: DebugConfiguration, wait : boolean) : Promise<StatusConnection>
 {
 	if(statusShell === StatusConnection.StatusDisconnected)
 	{
 		let configurationDone = new Subject();
+		
+		if(config.noDebug)//if user hit Ctrl+F5
+		{
+			if(config.noDebug === true)//start without debugging
+			{
+				config.typeRun = "RUN";
+			}
+		}
+		
 		statusShell = StatusConnection.StatusConnecting;
-		statusShellDbg = StatusConnection.StatusConnecting;
-		shell = new ShellSession(folder, ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, logFn);
-		shellDbg = new ShellSession(folder, ExtensionDbgDataCb, ExtensionDbgReadyCb, ExtensionDbgCloseCb, logFn);
+		shell = new ShellSession(folder, TypeTerminal.user, ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, logFn);
+
+		if(config.typeRun === "DEBUG")
+		{
+			statusShellDbg = StatusConnection.StatusConnecting;
+			shellDbg = new ShellSession(folder, TypeTerminal.debug, ExtensionDbgDataCb, ExtensionDbgReadyCb, ExtensionDbgCloseCb, logFn);
+		}
 
 		const message = localize('extention.conecting', "Connecting to the server ...");
 		const messageBar = localize('extention.bar.conecting', "Connecting ...");
@@ -188,7 +205,7 @@ let ExtensionDataCb = function(mode: ModeWork, type: TypeDataMessage, data: stri
 	{
 		if(session)
 		{
-			session.receiveDataShell(1, mode, type, data);
+			session.receiveDataShell(TypeTerminal.user, mode, type, data);
 		}
 	}
 	else if(typeRunConfig === TypeRunConfig.TypeRunRun)
@@ -235,7 +252,7 @@ let ExtensionDbgDataCb = function(mode: ModeWork, type: TypeDataMessage, data: s
 	{
 		if(session)
 		{
-			session.receiveDataShell(2, mode, type, data);
+			session.receiveDataShell(TypeTerminal.debug, mode, type, data);
 		}
 	}
 	else if(typeRunConfig === TypeRunConfig.TypeRunRun)
@@ -290,7 +307,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 
 			if (config.type)
 			{
-				let status = await ConnectShell(folder, true);
+				let status = await ConnectShell(folder, config, true);
 
 				if(status === StatusConnection.StatusConnected)
 				{
