@@ -265,25 +265,28 @@ class Tracer:
 
         with self._lockTrace:
             # point of tracing
-            if frame.f_code.co_name not in self._lines[currentFile]:
-                # collect usable code lines
-                lines = []
-                lineno = frame.f_lineno
-                lines.append(lineno)
-                tail = frame.f_code.co_lnotab
-                while tail:
-                    _, line_incr, *tail = tail
-                    if line_incr:
-                        if isinstance(line_incr, str):
-                            line_incr = ord(line_incr)
-                        if self._co_lnotab_signed:
-                            if line_incr > 127:
-                                line_incr = line_incr - 256
-                        lineno += line_incr
-                        lines.append(lineno)
-                self._lines[currentFile][frame.f_code.co_name] = sorted(lines)
-                self._checkFileBreakpoints(currentFile, lines)
-                # self._sendDbgMessage('NEW FRAME: %s %s %s' % (currentFile, frame.f_code.co_name, repr(lines)))
+            if event == 'call':
+                # test if that function not in list
+                code_name = frame.f_code.co_name + ":" + str(frame.f_lineno)
+                if code_name not in self._lines[currentFile]:
+                    # collect usable code lines
+                    lines = []
+                    lineno = frame.f_lineno
+                    lines.append(lineno)
+                    tail = frame.f_code.co_lnotab
+                    while tail:
+                        _, line_incr, *tail = tail
+                        if line_incr:
+                            if isinstance(line_incr, str):
+                                line_incr = ord(line_incr)
+                            if self._co_lnotab_signed:
+                                if line_incr > 127:
+                                    line_incr = line_incr - 256
+                            lineno += line_incr
+                            lines.append(lineno)
+                    self._lines[currentFile][code_name] = sorted(lines)
+                    self._checkFileBreakpoints(currentFile, lines)
+                    # self._sendDbgMessage('NEW FRAME: %s %s %s' % (currentFile, frame.f_code.co_name, repr(lines)))
 
             # examine exception and save it
             if event == 'exception':
@@ -677,11 +680,17 @@ class Tracer:
             if bp_line in lines:
                 self._confirmBreakpoint(file, bp_line, None)
             else:
-                if bp_line >= lines[0] and bp_line <= lines[-1]:
-                    bp_line_real = next(line for line in reversed(lines) if line <= bp_line)
-                    self._confirmBreakpoint(file, bp_line, bp_line_real)
-                    pass
-                unconfirmed.add(bp_line)
+                confirmed = False
+                # if bp at the non-code line between adjacent real-code lines
+                if bp_line > lines[0] and bp_line < lines[-1]:
+                    for i in range(len(lines) - 1):
+                        if bp_line < lines[i+1]:
+                            if lines[i+1] - lines[i] < 3:
+                                self._confirmBreakpoint(file, bp_line, lines[i])
+                                confirmed = True
+                            break
+                if not confirmed:
+                    unconfirmed.add(bp_line)
         self._breakpointsWait[file] = unconfirmed
     
     def _testBreakpoint(self, bp_file, bp_line):
