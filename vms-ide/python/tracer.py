@@ -281,7 +281,7 @@ class Tracer:
                                 line_incr = line_incr - 256
                         lineno += line_incr
                         lines.append(lineno)
-                self._lines[currentFile][frame.f_code.co_name] = lines
+                self._lines[currentFile][frame.f_code.co_name] = sorted(lines)
                 self._checkFileBreakpoints(currentFile, lines)
                 # self._sendDbgMessage('NEW FRAME: %s %s %s' % (currentFile, frame.f_code.co_name, repr(lines)))
 
@@ -675,8 +675,12 @@ class Tracer:
         unconfirmed = set()
         for bp_line in self._breakpointsWait[file]:
             if bp_line in lines:
-                self._confirmBreakpoint(file, bp_line)
+                self._confirmBreakpoint(file, bp_line, None)
             else:
+                if bp_line >= lines[0] and bp_line <= lines[-1]:
+                    bp_line_real = next(line for line in reversed(lines) if line <= bp_line)
+                    self._confirmBreakpoint(file, bp_line, bp_line_real)
+                    pass
                 unconfirmed.add(bp_line)
         self._breakpointsWait[file] = unconfirmed
     
@@ -687,10 +691,14 @@ class Tracer:
                 return True
         return False
     
-    def _confirmBreakpoint(self, bp_file, bp_line):
+    def _confirmBreakpoint(self, bp_file, bp_line, bp_line_real):
         """ add to confirmed """
-        self._sendDbgMessage(self._messages.BP_CONFIRM + (' "%s" %i' % (bp_file, bp_line)))
-        self._breakpointsConfirmed[bp_file].add(bp_line)
+        if bp_line_real != None:
+            self._sendDbgMessage(self._messages.BP_CONFIRM + (' "%s" %i %i' % (bp_file, bp_line, bp_line_real)))
+            self._breakpointsConfirmed[bp_file].add(bp_line_real)
+        else:
+            self._sendDbgMessage(self._messages.BP_CONFIRM + (' "%s" %i' % (bp_file, bp_line)))
+            self._breakpointsConfirmed[bp_file].add(bp_line)
 
     def _waitBreakpoint(self, bp_file, bp_line):
         """ add for waiting """
@@ -720,7 +728,7 @@ class Tracer:
 
     def _setBp(self, bp_file, bp_line):
         if self._testBreakpoint(bp_file, bp_line):
-            self._confirmBreakpoint(bp_file, bp_line)
+            self._confirmBreakpoint(bp_file, bp_line, None)
         else:
             self._waitBreakpoint(bp_file, bp_line)
 

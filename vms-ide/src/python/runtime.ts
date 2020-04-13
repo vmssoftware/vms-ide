@@ -118,9 +118,10 @@ export enum EPythonInstanceType {
 };
 
 // see tracer.py
-const _rgxBpConfirm         = /BP_CONFIRM "(.*?)" (\d+)/;
+const _rgxBpConfirm         = /BP_CONFIRM "(.*?)" (\d+)(?: (\d+))?/;
 const _rgxBpConfirm_File    = 1;
 const _rgxBpConfirm_Line    = 2;
+const _rgxBpConfirm_Line_R  = 3;
 
 const _rgxThreads           = /THREADS (\d+) current (\d+)/;
 const _rgxThreads_Thread    = 1;
@@ -229,7 +230,10 @@ export class PythonShellRuntime extends EventEmitter {
                 if (line.startsWith(PythonServerMessage.BP_CONFIRM)) {
                     const match = line.match(_rgxBpConfirm);
                     if (match) {
-                        this.sendEvent(PythonRuntimeEvents.breakpointValidated, match[_rgxBpConfirm_File], +match[_rgxBpConfirm_Line]);
+                        this.sendEvent(PythonRuntimeEvents.breakpointValidated, 
+                            match[_rgxBpConfirm_File], 
+                            +match[_rgxBpConfirm_Line],
+                            match[_rgxBpConfirm_Line_R]?+match[_rgxBpConfirm_Line_R]:undefined);
                     }
                     return;
                 }
@@ -699,7 +703,7 @@ export class PythonShellRuntime extends EventEmitter {
         });
     }
 
-    public async reSetBreakPoint(file: string, line: number) {
+    public async resetBreakPoint(file: string, line: number) {
         await this.locker.acquire();
         if (!this.started) {
             this.locker.release()
