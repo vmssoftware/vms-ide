@@ -243,6 +243,7 @@ let ExtensionCloseCb = function(reasonMessage: string) : void
 	if(session)
 	{
 		session.closeDebugSession();
+		session = undefined;
 	}
 };
 
@@ -290,6 +291,7 @@ let ExtensionDbgCloseCb = function(reasonMessage: string) : void
 	if(session)
 	{
 		session.closeDebugSession();
+		session = undefined;
 	}
 };
 
@@ -356,7 +358,10 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 						// start listening on a random port
 						this.serverDbg = Net.createServer(socket =>
 						{
-							session = new VMSDebugSession(folder, shell, shellDbg, logFn);
+							if(!session)
+							{
+								session = new VMSDebugSession(folder, shell, shellDbg, logFn);
+							}
 							session.setRunAsServer(true);
 							session.start(<NodeJS.ReadableStream>socket, socket);
 						}).listen(0);

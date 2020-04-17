@@ -135,6 +135,7 @@ export class VMSRuntime extends EventEmitter
 	{
 		this.stopOnEntry = stopOnEntry;
 		this.programEnd = false;
+		this.debugRun = false;
 		let configManager = new ConfigManager(this.rootFolderName);
 		let section = await configManager.getProjectSection();
 		let connection = await configManager.getConnectionSection();
@@ -160,80 +161,7 @@ export class VMSRuntime extends EventEmitter
 			return;
 		}
 
-		if(vscode.workspace.workspaceFolders)
-		{
-			let listFolders = await configManager.getDependencyList();
-
-			if(listFolders)
-			{
-				for(let folder of listFolders)
-				{
-					let path = "";
-
-					for(let item of vscode.workspace.workspaceFolders)
-					{
-						if(item.name === folder)
-						{
-							path = item.uri.fsPath;
-							path = path.replace(/\\/g, ftpPathSeparator);
-							this.rootFolderNames.push(path);
-							break;
-						}
-					}
-
-					if(path !== "")
-					{
-						let fileM = new ConfigManager(folder);
-						let sectionCur = await fileM.getProjectSection();
-
-						if (sectionCur)
-						{
-							let project = await fileM.getProjectSection();
-							let sourcePaths = await fileM.loadPathListFiles(sectionCur.source, project?.exclude);
-							let lisPaths = await fileM.loadPathListFiles(sectionCur.listing);
-
-							this.addPrefixToArray(path, sourcePaths);
-							this.addPrefixToArray(path, lisPaths);
-
-							this.sourcePaths = this.sourcePaths.concat(sourcePaths);
-							this.lisPaths = this.lisPaths.concat(lisPaths);
-						}
-					}
-				}
-			}
-			else
-			{
-				vscode.window.showErrorMessage(messageSync);
-
-				if (this.logFn)
-				{
-					this.logFn(LogType.information, () => messageSync + "\n");
-				}
-
-				this.sendEvent('end');//close debugger
-				return;
-			}
-		}
-		else
-		{
-			const message = localize('runtime.workspace_not_find', "Workspace Folders don't find");
-			vscode.window.showErrorMessage(message);
-
-			if (this.logFn)
-			{
-				this.logFn(LogType.information, () => message + "\n");
-			}
-
-			this.sendEvent('end');//close debugger
-			return;
-		}
-
-		this.checkLisFiles(this.sourcePaths, this.lisPaths);
-		this.modulesHolder = await this.collectModuleInfos(this.sourcePaths, this.lisPaths);
-		this.shell.resetParameters();
-		this.shellDbg.resetParameters();
 		this.abortKey = section.break;
-
 
 		if (this.shellDbg.getDbgModeOn())
 		{
@@ -247,8 +175,82 @@ export class VMSRuntime extends EventEmitter
 		}
 
 		//run debugger
-		if(this.shellDbg.getModeWork() === ModeWork.shell)
+		//if(this.shellDbg.getModeWork() === ModeWork.shell)
+		if (!this.shellDbg.getDbgModeOn())
 		{
+			if(vscode.workspace.workspaceFolders)
+			{
+				let listFolders = await configManager.getDependencyList();
+
+				if(listFolders)
+				{
+					for(let folder of listFolders)
+					{
+						let path = "";
+
+						for(let item of vscode.workspace.workspaceFolders)
+						{
+							if(item.name === folder)
+							{
+								path = item.uri.fsPath;
+								path = path.replace(/\\/g, ftpPathSeparator);
+								this.rootFolderNames.push(path);
+								break;
+							}
+						}
+
+						if(path !== "")
+						{
+							let fileM = new ConfigManager(folder);
+							let sectionCur = await fileM.getProjectSection();
+
+							if (sectionCur)
+							{
+								let project = await fileM.getProjectSection();
+								let sourcePaths = await fileM.loadPathListFiles(sectionCur.source, project?.exclude);
+								let lisPaths = await fileM.loadPathListFiles(sectionCur.listing);
+
+								this.addPrefixToArray(path, sourcePaths);
+								this.addPrefixToArray(path, lisPaths);
+
+								this.sourcePaths = this.sourcePaths.concat(sourcePaths);
+								this.lisPaths = this.lisPaths.concat(lisPaths);
+							}
+						}
+					}
+				}
+				else
+				{
+					vscode.window.showErrorMessage(messageSync);
+
+					if (this.logFn)
+					{
+						this.logFn(LogType.information, () => messageSync + "\n");
+					}
+
+					this.sendEvent('end');//close debugger
+					return;
+				}
+			}
+			else
+			{
+				const message = localize('runtime.workspace_not_find', "Workspace Folders don't find");
+				vscode.window.showErrorMessage(message);
+
+				if (this.logFn)
+				{
+					this.logFn(LogType.information, () => message + "\n");
+				}
+
+				this.sendEvent('end');//close debugger
+				return;
+			}
+
+			this.checkLisFiles(this.sourcePaths, this.lisPaths);
+			this.modulesHolder = await this.collectModuleInfos(this.sourcePaths, this.lisPaths);
+			this.shell.resetParameters();
+			this.shellDbg.resetParameters();
+
 			const preRunFile = section.projectName + ".com";
 			let localSource = await configManager.getLocalSource();
 			const found = await localSource!.findFiles(preRunFile, section.exclude);
@@ -263,6 +265,7 @@ export class VMSRuntime extends EventEmitter
 				this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
 			}
 			//set vms debug terminal
+			//this.shellDbg.SendCommandToQueue(this.dbgCmd.exit());
 			this.shellDbg.SendCommandToQueue(this.osCmd.setTerminalType("vt102"));
 			this.shellDbg.SendCommandToQueue(this.osCmd.setTerminalWidth("160"));
 			this.shellDbg.SendCommandToQueue(this.osCmd.showTerminal());
@@ -271,8 +274,6 @@ export class VMSRuntime extends EventEmitter
 		{
 			this.shellDbg.SendCommandToQueue(this.dbgCmd.rerun());
 			this.shellDbg.SendCommandToQueue(this.dbgCmd.setScopeBase());
-			//this.sendEvent('restart');//go to restart debugger
-			return;
 		}
 
 		vscode.debug.activeDebugConsole.append("\n\x1B[2J\x1B[H");//clean old data from DEBUG CONSOLE
@@ -1059,15 +1060,17 @@ export class VMSRuntime extends EventEmitter
 					else
 					{
 						this.startUserDebugCmd = true;
-						this.shellDbg.SendData(data);//send command to the debugger
-						this.shellDbg.SendData("");
+						// this.shellDbg.SendData(data);//send command to the debugger
+						// this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(""));
+						this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(data));
 					}
 					break;
 
 				default:
 					this.startUserDebugCmd = true;
-					this.shellDbg.SendData(data);//send command to the debugger
-					this.shellDbg.SendData("");
+					// this.shellDbg.SendData(data);//send command to the debugger
+					// this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(""));
+					this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(data));
 					break;
 			}
 
@@ -1483,7 +1486,7 @@ export class VMSRuntime extends EventEmitter
 						this.logFn(LogType.information, () => data);
 					}
 
-					vscode.debug.activeDebugConsole.append(data);
+					vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(data, 92));
 
 					if(data.includes(MessageDebuger.msgNoImage))
 					{
@@ -1508,7 +1511,7 @@ export class VMSRuntime extends EventEmitter
 					this.logFn(LogType.information, () => data);
 				}
 
-				vscode.debug.activeDebugConsole.append(data);
+				vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(data, 92));
 
 				if(data.includes(MessageDebuger.msgNoImage))
 				{
@@ -1522,16 +1525,19 @@ export class VMSRuntime extends EventEmitter
 		{
 			if(this.startUserDebugCmd)
 			{
-				if(mode !== ModeWork.shell)
+				if(mode !== ModeWork.shell && !data.includes("DBG> "))
 				{
-					vscode.debug.activeDebugConsole.append(data);//show output user command
 					this.startUserDebugCmd = false;
+					vscode.debug.activeDebugConsole.append(data);//show output user command
+				}
+				else if(data.includes("DBG> "))
+				{
+					this.startUserDebugCmd = false;
+					vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(data.trim(), 93));//show output user command
 				}
 			}
 			else if(mode === ModeWork.shell)
 			{
-				this.debugRun = false;
-
 				if(this.shellDbg.getCurrentCommand().getBody() === OsCmdVMS.osTerminalShow)
 				{
 					const matcher = /^\s*T\S+\s+(\S+)\s+/;
@@ -1567,7 +1573,7 @@ export class VMSRuntime extends EventEmitter
 
 						if (data.includes("OpenVMS"))
 						{
-							vscode.debug.activeDebugConsole.append(data.trim() + "\r\n");
+							vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(data.trim(), 92) + "\r\n");
 						}
 					}
 				}
@@ -1593,7 +1599,7 @@ export class VMSRuntime extends EventEmitter
 
 						if(showMsg)
 						{
-							vscode.debug.activeDebugConsole.append(messageDebug);
+							vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(messageDebug, 91));
 						}
 					}
 				}
@@ -1755,7 +1761,7 @@ export class VMSRuntime extends EventEmitter
 
 					if(showMsg)
 					{
-						vscode.debug.activeDebugConsole.append(messageDebug);
+						vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(messageDebug, 91));
 					}
 				}
 				if(messageDebugInfo !== "")
@@ -1851,6 +1857,11 @@ export class VMSRuntime extends EventEmitter
 				}
 			}
 		}
+	}
+
+	public addColorToTerminalString(text: string, colorId: number): string
+	{
+		return '\u001b[' + colorId + 'm' + text + '\u001b[0m';
 	}
 
 	private parseMsgInitial(msgInitial: string) : void
