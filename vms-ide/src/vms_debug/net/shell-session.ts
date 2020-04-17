@@ -261,6 +261,10 @@ export class ShellSession
                     {
                         this.DisconectSession(true, ": The program complete");//close SSH session
                     }
+                    if (this.dbgModeOn)
+                    {
+                        this.dbgLastCmd = true;
+                    }
                 }
 
                 this.readyCmd = true;
