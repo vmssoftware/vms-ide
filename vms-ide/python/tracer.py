@@ -407,10 +407,12 @@ class Tracer:
             gotoFile = locals_args[1]
             gotoLine = int(locals_args[2])
             codeObj = self._threads[ident]['frame'].f_code
+            currentLine = self._threads[ident]['frame'].f_lineno
             if self.canonizeFile(codeObj.co_filename) == gotoFile:
-                if gotoLine in self._lines[gotoFile][codeObj.co_name]:
-                    self._sendDbgMessage('%s ok' % self._messages.GOTO_TARGETS)
-                    return
+                for _, code_lines in self._lines[gotoFile].items():
+                    if currentLine in code_lines and gotoLine in code_lines:
+                        self._sendDbgMessage('%s ok' % self._messages.GOTO_TARGETS)
+                        return
         except Exception as ex:
             self._sendDbgMessage('%s failed %s' % (self._messages.GOTO_TARGETS, repr(ex)))
             return
