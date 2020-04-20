@@ -68,6 +68,7 @@ interface IBreakPoint {
     id: number;
     verified: boolean;
     sent: boolean;
+    real_line: number;
 };
 
 export class PythonDebugSession extends LoggingDebugSession {
@@ -114,7 +115,7 @@ export class PythonDebugSession extends LoggingDebugSession {
             for (let [file, bplines] of this._breakPoints) {
                 for (let [line, ibp] of bplines) {
                     if (!ibp.sent) {
-                        this._runtime.setBreakPoint(file, line).then((ok) => {
+                        this._runtime.setBreakPoint(file, ibp.real_line).then((ok) => {
                             ibp.sent = ok;
                         });
                     }
@@ -151,16 +152,17 @@ export class PythonDebugSession extends LoggingDebugSession {
             this.sendStoppedEvent('data access', threadId);
         });
         
-        this._runtime.on(PythonRuntimeEvents.breakpointValidated, (file: string, line: number) => {
+        this._runtime.on(PythonRuntimeEvents.breakpointValidated, (file: string, line: number, line_real?: number) => {
             const lines = this._breakPoints.get(file);
             if (lines) {
                 const breakpoint = lines.get(line);
                 if (breakpoint) {
                     breakpoint.verified = true;
+                    breakpoint.real_line = line_real? line_real: line;
                     this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ 
                         id: breakpoint.id,
                         verified: breakpoint.verified,
-                        line 
+                        line: breakpoint.real_line
                     }));
                 }
             }
@@ -534,6 +536,7 @@ export class PythonDebugSession extends LoggingDebugSession {
                         id: ++this._nextBp,
                         verified: false,
                         sent: false,
+                        real_line: sourceBp.line
                     };
                     newLines.set(sourceBp.line, ibp);
                     if (await this._runtime.setBreakPoint(fileName, sourceBp.line)) {
@@ -544,9 +547,9 @@ export class PythonDebugSession extends LoggingDebugSession {
                 }
             }
             if (lines) {
-                for(let [line, breakpoint] of lines) {
+                for(let [line, bp] of lines) {
                     if (!newLines.has(line)) {
-                        await this._runtime.reSetBreakPoint(fileName, line);
+                        await this._runtime.resetBreakPoint(fileName, bp.real_line);
                     }
                 }
             }
@@ -555,7 +558,7 @@ export class PythonDebugSession extends LoggingDebugSession {
             for (let [line, bp] of newLines) {
                 response.body.breakpoints.push({
                     id: bp.id,
-                    line,
+                    line: bp.real_line,
                     verified: bp.verified
                 });
             }
