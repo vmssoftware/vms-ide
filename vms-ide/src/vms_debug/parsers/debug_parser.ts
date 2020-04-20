@@ -63,7 +63,6 @@ export class DebugParser
 	private queueMsgDebugInfo = new Queue<string>();
 	private fileInfo : HolderDebugFileInfo;
 	private varsInfo : HolderDebugVariableInfo;
-	private commandDone : boolean;
 	private commandButtonDone : boolean;
 	private typeBracketsSquare : boolean = false;
 	private displayDataString : string[] = ["", ""];
@@ -73,7 +72,6 @@ export class DebugParser
 	{
 		this.fileInfo = new HolderDebugFileInfo();
 		this.varsInfo = new HolderDebugVariableInfo();
-		this.commandDone = false;
 		this.commandButtonDone = false;
 	}
 
@@ -92,7 +90,6 @@ export class DebugParser
 				case DebugCmdVMS.dbgRerunExe:
 				case DebugCmdVMS.dbgStop:
 				case DebugCmdVMS.dbgExit:
-					this.commandDone = true;
 					this.commandButtonDone = true;
 					break;
 
@@ -100,12 +97,6 @@ export class DebugParser
 				case DebugCmdVMS.dbgStepOver:
 				case DebugCmdVMS.dbgStepIn:
 				case DebugCmdVMS.dbgStepReturn:
-					if(shell.getStatusCommand())
-					{
-						this.commandDone = true;
-						this.commandButtonDone = true;
-					}
-
 					for(let item of msgLines)
 					{
 						if(item !== "")
@@ -123,7 +114,6 @@ export class DebugParser
 				case DebugCmdVMS.dbgBreakPointShow:
 				case DebugCmdVMS.dbgBreakPointActivate:
 				case DebugCmdVMS.dbgBreakPointDeactivate:
-					this.commandDone = true;
 					break;
 
 				case DebugCmdVMS.dbgTypeLine:
@@ -142,7 +132,6 @@ export class DebugParser
 							if(!item.includes(cmd))
 							{
 								this.queueMsgData.push(item);
-								this.commandDone = true;
 								this.queueMsgDebugInfo.push(MessagePrompt.prmtDATA + item);
 							}
 						}
@@ -234,9 +223,9 @@ export class DebugParser
 		else if(msgLine.includes(MessageDebuger.msgStepped) ||
 			msgLine.includes(MessageDebuger.msgBreak) ||
 			msgLine.includes(MessageDebuger.msgSteppedOn) ||
-			msgLine.includes(MessageDebuger.msgBreakOn))
+			msgLine.includes(MessageDebuger.msgBreakOn) ||
+			msgLine.includes("DBG> "))
 		{
-			this.commandDone = true;
 			this.commandButtonDone = true;
 			this.queueMsgDebugInfo.push(MessagePrompt.prmtINFO + msgLine);
 		}
@@ -921,6 +910,11 @@ export class DebugParser
 						kind = ReflectKind.Array;
 					}
 				}
+				else if(typeVar === ReflectKind.Value)
+				{
+					kind = ReflectKind.Atomic;
+					matches = null;
+				}
 				else //struct
 				{
 					matches = v.match(matcherS);
@@ -1005,6 +999,10 @@ export class DebugParser
 						{
 							kind = ReflectKind.Atomic;
 						}
+						else if(variable.variableType.includes("subroutine"))
+						{
+							kind = ReflectKind.Atomic;
+						}
 						else
 						{
 							kind = ReflectKind.Struct;
@@ -1062,25 +1060,29 @@ export class DebugParser
 						let value : string;
 						let childsIn : DebugVariable[] = [];
 
-						if(kind !== ReflectKind.Atomic)
+						if(kind === ReflectKind.Atomic)
+						{
+							name = "value";
+							typeName = "atomic";
+							value = v;
+						}
+						else
 						{
 							name = v.split(":")[0].trim();
 							typeName = (kind === ReflectKind.Array) ? "array" : "struct";
 							value = "";
 
 							let itemNext = items[prm.counter];
-							let itemLevelNext = itemNext.length - itemNext.trim().length;
 
-							if(itemLevelNext > itemLevel)
+							if (itemNext)
 							{
-								childsIn = this.parseStructValues(variable, prm);//parse next inner level
+								let itemLevelNext = itemNext.length - itemNext.trim().length;
+
+								if(itemLevelNext > itemLevel)
+								{
+									childsIn = this.parseStructValues(variable, prm);//parse next inner level
+								}
 							}
-						}
-						else
-						{
-							name = "value";
-							typeName = "atomic";
-							value = v;
 						}
 
 						let child = <DebugVariable>
@@ -1367,14 +1369,6 @@ export class DebugParser
 		return this.varsInfo;
 	}
 
-	public getCommandStatus() : boolean
-	{
-		let status = this.commandDone;
-		this.commandDone = false;
-
-		return status;
-	}
-
 	public getCommandButtonStatus() : boolean
 	{
 		let status = this.commandButtonDone;
@@ -1425,7 +1419,7 @@ export class DebugParser
 
 		while(this.queueMsgDebug.size() > 0)
 		{
-			message += this.queueMsgDebug.pop().trim() + "\n";
+			message += "\n" + this.queueMsgDebug.pop().trim() + "\n";
 		}
 
 		return message;

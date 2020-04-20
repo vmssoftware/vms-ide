@@ -45,6 +45,7 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	// a VMS runtime (or debugger)
 	private runtime: VMSRuntime;
+	private launchProgram = false;
 
 	private variableHandles = new Handles<DebugVariable>();
 
@@ -177,15 +178,28 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments)
 	{
-		// make sure to 'Stop' the buffered logging if 'trace' is not set
-		logger.setup(args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false);
-		this.sendResponse(response);
+		if (this.launchProgram === false)
+		{
+			this.launchProgram = true;
+			// make sure to 'Stop' the buffered logging if 'trace' is not set
+			logger.setup(args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false);
+			// wait until configuration has finished (and configurationDoneRequest has been called)
+			await this.configurationDone.wait(1000);
 
-		// wait until configuration has finished (and configurationDoneRequest has been called)
-		await this.configurationDone.wait(1000);
+			this.sendResponse(response);
 
-		// start the program in the runtime
-		await this.runtime.start(args.program, args.arguments, !!args.stopOnEntry);
+			// start the program in the runtime
+			await this.runtime.start(args.program, args.arguments, !!args.stopOnEntry);
+
+			setTimeout(() => 
+			{
+				this.launchProgram = false;
+			}, 3000);
+		}
+		else
+		{
+			this.sendResponse(response);
+		}
 	}
 
 	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments) : Promise<void>

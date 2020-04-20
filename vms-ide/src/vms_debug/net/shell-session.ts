@@ -116,6 +116,10 @@ export class ShellSession
                         this.shellParser.push("\r\n");
                     }
                 }
+                else
+                {
+                    this.extensionCloseCb("Internal error: the session was interrupted.");
+                }
             }
         }
         catch(error)
@@ -237,22 +241,18 @@ export class ShellSession
         else if(data.includes("\x00") && (data.includes(this.promptCmd) || data.includes("DBG> ")))
         {
             if(this.receiveCmd || data.includes(this.currentCmd.getBody()))
-            {
+            { 
+                data = data.replace(/\x00/g, '');
+
                 if(data.includes("DBG> "))
                 {
-                    let indexEnd = data.indexOf("\x00");
-                    let dataS = data.substr(0, indexEnd-1);
-                    let dataP = data.substr(indexEnd-1);
-                    indexEnd = dataP.indexOf(" ");
-
-                    this.resultData += dataS;
+                    this.resultData += data;
                     this.mode = ModeWork.debug;
                     this.dbgModeOn = true;
                 }
                 else
                 {
-                    let indexEnd = data.indexOf("\x00");
-                    data = data.substr(0, indexEnd-1);
+                    data = data.replace(this.promptCmd, '');
 
                     this.resultData += data;// + "> ";
                     this.mode = ModeWork.shell;
@@ -261,11 +261,17 @@ export class ShellSession
                     {
                         this.DisconectSession(true, ": The program complete");//close SSH session
                     }
+                    if (this.dbgModeOn)
+                    {
+                        this.dbgLastCmd = true;
+                    }
                 }
 
                 this.readyCmd = true;
 
-                if(this.resultData !== "")
+                let emptyStr = this.resultData.trim();
+
+                if(emptyStr !== "")
                 {
                     if(!this.receiveCmd)
                     {
@@ -280,6 +286,10 @@ export class ShellSession
                     {
                         this.extensionDataCb(this.mode, TypeDataMessage.typeData, this.resultData);
                         this.resultData = "";
+                        if (this.dbgModeOn)
+                        {
+                            this.dbgLastCmd = true;
+                        }
                     }
                 }
 
@@ -305,6 +315,10 @@ export class ShellSession
         {
             this.resultData += data;
             let cmd = this.currentCmd.getBody();
+            if (this.dbgModeOn)
+            {
+                this.dbgLastCmd = true;
+            }
 
             if(!this.receiveCmd)
             {
@@ -386,8 +400,8 @@ export class ShellSession
     public resetParameters()
     {
         this.resultData = "";
-        // this.readyCmd = true;
-        // this.completeCmd = true;
+        this.readyCmd = true;
+        this.completeCmd = true;
         this.receiveCmd = false;
         this.disconnect = false;
         this.dbgLastCmd = false;
@@ -437,6 +451,10 @@ export class ShellSession
 
             result = this.shellParser.push(data + '\r\n');
         }
+        else
+        {
+            this.extensionCloseCb("Internal error: the session was interrupted.");
+        }
 
         return result;
     }
@@ -476,6 +494,10 @@ export class ShellSession
 
                 result = this.shellParser.push(command.getCommand() + '\r\n');
             }
+        }
+        else
+        {
+            this.extensionCloseCb("Internal error: the session was interrupted.");
         }
 
         return result;
