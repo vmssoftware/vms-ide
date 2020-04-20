@@ -217,13 +217,13 @@ export class PythonShellRuntime extends EventEmitter {
                     });
                     return;
                 }
-                if (line == PythonServerMessage.EXITED) {
+                if (line.startsWith(PythonServerMessage.EXITED)) {
                     this.running = false;
                     this.queue.postCommand(PythonServerCommand.QUIT);
                     this.sendEvent(PythonRuntimeEvents.end);
                     return;
                 }
-                if (line == PythonServerMessage.CONTINUED) {
+                if (line.startsWith(PythonServerMessage.CONTINUED)) {
                     //this.sendEvent(PythonRuntimeEvents.);
                     return;
                 }
