@@ -633,29 +633,27 @@ export class DebugParser
 								{
 									if(matches)
 									{
-										if((item.variableAddress && item.variableAddress !== 0) ||
+										if((item.variableAddress && item.variableAddress !== "") ||
 											pointerDereferencing === "")//for Fortran
 										{
 											item.variableValue = matches[matches.length-1];
 										}
 										else//it is address
 										{
-											let addr = parseInt(matches[matches.length-1], 10);
-
-											if(!Number.isNaN(addr))
+											if(!this.checkAdressIsNull(matches[matches.length-1]))
 											{
-												if(addr < 0x1000 /*&& addr > 0*/)//???
-												{
-													item.variableAddress = 0;
-												}
-												else
-												{
-													item.variableAddress = addr;
-												}
+												item.variableAddress = matches[matches.length-1];
 											}
 											else
 											{
-												item.variableInfo = matches[matches.length-1];
+												if (this.checkAdressIsNaN(matches[matches.length-1]))
+												{
+													item.variableInfo = matches[matches.length-1];
+												}
+												else
+												{
+													item.variableAddress = "";//null
+												}
 											}
 										}
 									}
@@ -666,7 +664,7 @@ export class DebugParser
 								{
 									if(matches)
 									{
-										if(item.variableAddress && item.variableAddress !== 0)
+										if(item.variableAddress && item.variableAddress !== "")
 										{
 											item.variableValue = matches[matches.length-1];
 										}
@@ -706,22 +704,13 @@ export class DebugParser
 												}
 											}
 
-											let addr = parseInt(addrString, 10);
-
-											if(!Number.isNaN(addr))
+											if(!this.checkAdressIsNull(addrString))
 											{
-												if(addr < 0x1000 && addr > 0)
-												{
-													item.variableAddress = 0;
-												}
-												else
-												{
-													item.variableAddress = addr;
-												}
+												item.variableAddress = addrString;
 											}
 											else
 											{
-												item.variableAddress = 0;
+												item.variableAddress = "";//null
 											}
 										}
 
@@ -789,6 +778,49 @@ export class DebugParser
 				}
 			}
 		}
+	}
+
+	private checkAdressIsNull(address: string): boolean
+	{
+		let result = true;
+		let addr = parseInt(address, 10);
+		
+		if(Number.isNaN(addr) || addr === 0)
+		{
+			addr = parseInt(address, 16);
+
+			if(Number.isNaN(addr) || addr === 0)
+			{
+				result = true;
+			}
+			else
+			{
+				result = false;
+			}
+		}
+		else
+		{
+			result = false;
+		}
+
+		return result;
+	}
+
+	public checkAdressIsNaN(address: string): boolean
+	{
+		let result = true;
+		let addr = parseInt(address, 16);
+		
+		if(Number.isNaN(addr))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
+		}
+
+		return result;
 	}
 
 	public parseStructValues(variable: VariableFileInfo, prm : Parameters) : DebugVariable[]
@@ -1036,7 +1068,7 @@ export class DebugParser
 						{
 							name: nameItem,
 							nameFull: "",
-							addr: 0,
+							addr: "",
 							type: "atomic",
 							kind: ReflectKind.Atomic,
 							value: value,
@@ -1089,7 +1121,7 @@ export class DebugParser
 						{
 							name: name,
 							nameFull: "",
-							addr: 0,
+							addr: "",
 							type: typeName,
 							kind: kind,
 							value: value,
