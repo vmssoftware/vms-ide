@@ -53,8 +53,8 @@ class COMMAND:
     THREADS = 't'
 
 class Tracer:
-    def __init__(self, port, fileLower=False, developerMode=False):
-        self._fileLower = fileLower
+    def __init__(self, port, insensitive=False, developerMode=False):
+        self._insensitive = insensitive
         self._developerMode = developerMode
         self._co_lnotab_signed = sys.version_info.major >= 3 and sys.version_info.minor >= 6
         self._knownValueTypes = [int, str, float, bool, complex, type(None)]
@@ -307,7 +307,7 @@ class Tracer:
                 self._paused = True
 
             # examine breakpoint
-            bp_file = currentFile.lower() if self._fileLower else currentFile
+            bp_file = currentFile.lower() if self._insensitive else currentFile
             if not self._paused and frame.f_lineno in self._breakpointsConfirmed[bp_file]:
                 self._sendDbgMessage(self._messages.BREAK)
                 # self._sendDbgMessage('_COUNTER_ ' + repr(self._enter_counter) + '\n')
@@ -415,7 +415,7 @@ class Tracer:
             frame = self._threads[ident]['frame']
             code_file = self.canonizeFile(frame.f_code.co_filename)
             gotoFile = locals_args[1]
-            if self._fileLower:
+            if self._insensitive:
                 gotoFile = gotoFile.lower()
                 code_file = code_file.lower()
             if code_file == gotoFile:
@@ -698,7 +698,7 @@ class Tracer:
     def _checkFileBreakpoints(self, bp_file, lines):
         """ test all waiting breakpoints for file """
         unconfirmed = set()
-        bp_file = bp_file.lower() if self._fileLower else bp_file
+        bp_file = bp_file.lower() if self._insensitive else bp_file
         for bp_line in self._breakpointsWait[bp_file]:
             if bp_line in lines:
                 self._confirmBreakpoint(bp_file, bp_line, None)
@@ -717,7 +717,7 @@ class Tracer:
         self._breakpointsWait[bp_file] = unconfirmed
 
     def _linesByFile(self, file):
-        if self._fileLower and self._lines:
+        if self._insensitive and self._lines:
             file = file.lower()
             for key, value in self._lines.items():
                 if key.lower() == file:
@@ -767,7 +767,7 @@ class Tracer:
             self._sendDbgMessage(self._messages.EXCEPTION + ' ' + repr(ex))
 
     def _setBp(self, bp_file, bp_line):
-        bp_file = bp_file.lower() if self._fileLower else bp_file
+        bp_file = bp_file.lower() if self._insensitive else bp_file
         if self._testBreakpoint(bp_file, bp_line):
             self._confirmBreakpoint(bp_file, bp_line, None)
         else:
@@ -775,7 +775,7 @@ class Tracer:
 
     def _resetBp(self, bp_file, bp_line):
         if bp_file:
-            bp_file = bp_file.lower() if self._fileLower else bp_file
+            bp_file = bp_file.lower() if self._insensitive else bp_file
             if bp_line != None:
                 self._breakpointsWait[bp_file].discard(bp_line)
                 self._breakpointsConfirmed[bp_file].discard(bp_line)
@@ -829,20 +829,20 @@ class Tracer:
 if __name__ == '__main__':
 
     _usage = """\
-usage: tracer.py -p port [-d] [-l] pyfile [arg] ...
+usage: tracer.py -p port [-d] [-i] pyfile [arg] ...
 
 Debug the Python program given by pyfile."""
 
     import getopt
 
-    opts, args = getopt.getopt(sys.argv[1:], 'hp:dl', ['help','port='])
+    opts, args = getopt.getopt(sys.argv[1:], 'hp:di', ['help','port='])
 
     if not args:
         print(_usage)
         sys.exit(2)
 
     developerMode = False
-    fileLower = False
+    insensitive = False
 
     for opt, optarg in opts:
         if opt in ['-h', '--help']:
@@ -852,12 +852,12 @@ Debug the Python program given by pyfile."""
             SETTINGS.PORT = int(optarg)
         elif opt in ['-d']:
             developerMode = True
-        elif opt in ['-l']:
-            fileLower = True
+        elif opt in ['-i']:
+            insensitive = True
         else:
             print('Unknown option %s' % opt)
 
     sys.argv = args
 
-    tracer = Tracer(SETTINGS.PORT, developerMode=developerMode, fileLower=fileLower)
+    tracer = Tracer(SETTINGS.PORT, developerMode=developerMode, insensitive=insensitive)
     tracer.run(args[0])

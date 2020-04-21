@@ -94,7 +94,7 @@
     "vms_fortran.extension.vms_reparse": "Заново парсить проект Fortran",
     "vms_pascal.extension.vms_reparse": "Заново парсить проект Pascal",
     "vms_python_debug.root.description": "Папка с системными скриптами Python",
-    "vms_python_debug.lower.description": "Не учитывать регистр файлов",
+    "vms_python_debug.insensitive.description": "Не учитывать регистр файлов",
     "vms_python_debug.developer.description": "Режим разработчика (позволяет трассировать системные файлы)",
     "vms_python_debug.label.description": "VMS Python отладчик",
     "vms_python_debug.script.description": "Имя скрипта",

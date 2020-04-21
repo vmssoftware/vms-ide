@@ -832,9 +832,9 @@ export class PythonDebugSession extends LoggingDebugSession {
             scriptPath = ensured.projectSection.outdir + ftpPathSeparator;
         }
         const config = workspace.getConfiguration("vmssoftware.vms_python_debug", null);
-        const fileLower = config.get<boolean>("lower");
+        const insensitive = config.get<boolean>("insensitive");
         const developerMode = config.get<boolean>("developer");
-        let runCommand = `python ${scriptPath}tracer.py -p ${port} ${fileLower ? '-l' : ''} ${developerMode ? '-d' : ''} ${script}${args?' ' + args : ''}`;
+        let runCommand = `python ${scriptPath}tracer.py -p ${port}${insensitive?' -i':''}${developerMode?' -d':''} ${script}${args?' '+args:''}`;
         return this._tracerQueue.postCommand(runCommand, (cmd, line) => {
             if (!line) {
                 result = EStartResult.error;
