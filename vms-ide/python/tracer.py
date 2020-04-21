@@ -20,6 +20,7 @@ class MESSAGE:
     BREAK = 'BREAK'
     CONTINUED = 'CONTINUED'
     DEBUG = 'DEBUG'
+    DEVELOPER = 'DEVELOPER'
     DISPLAY = 'DISPLAY'
     ENTRY = 'ENTRY'
     EXCEPTION = 'EXCEPTION'
@@ -58,7 +59,7 @@ class Tracer:
         self._co_lnotab_signed = sys.version_info.major >= 3 and sys.version_info.minor >= 6
         self._knownValueTypes = [int, str, float, bool, complex, type(None)]
         self._port = port
-        self._fileName = __file__.lower() if self._fileLower else __file__
+        self._fileName = __file__
         self._socket = None
         self._sendBuffer = b''
         self._recvBuffer = b''
@@ -271,7 +272,8 @@ class Tracer:
             if event == 'call':
                 # test if that function not in list
                 code_name = frame.f_code.co_name + ":" + str(frame.f_lineno)
-                if code_name not in self._lines[currentFile]:
+                code_lines = self._linesByFile(currentFile)
+                if code_name not in code_lines:
                     # collect usable code lines
                     lines = []
                     lineno = frame.f_lineno
@@ -287,7 +289,7 @@ class Tracer:
                                     line_incr = line_incr - 256
                             lineno += line_incr
                             lines.append(lineno)
-                    self._lines[currentFile][code_name] = sorted(lines)
+                    code_lines[code_name] = sorted(lines)
                     self._checkFileBreakpoints(currentFile, lines)
                     # self._sendDbgMessage('NEW FRAME: %s %s %s' % (currentFile, frame.f_code.co_name, repr(lines)))
 
@@ -389,7 +391,6 @@ class Tracer:
         return self._traceFunc
     
     def canonizeFile(self, fileName):
-        fileName = fileName.lower() if self._fileLower else fileName
         if fileName.startswith('./'):
             return fileName[2:]
         return fileName
@@ -411,12 +412,16 @@ class Tracer:
     def _doGotoTargets(self, cmd, ident):
         locals_args = cmd.split()
         try:
-            gotoFile = locals_args[1].lower() if self._fileLower else locals_args[1]
-            gotoLine = int(locals_args[2])
-            codeObj = self._threads[ident]['frame'].f_code
-            currentLine = self._threads[ident]['frame'].f_lineno
-            if self.canonizeFile(codeObj.co_filename) == gotoFile:
-                for _, code_lines in self._lines[gotoFile].items():
+            frame = self._threads[ident]['frame']
+            code_file = self.canonizeFile(frame.f_code.co_filename)
+            gotoFile = locals_args[1]
+            if self._fileLower:
+                gotoFile = gotoFile.lower()
+                code_file = code_file.lower()
+            if code_file == gotoFile:
+                gotoLine = int(locals_args[2])
+                currentLine = frame.f_lineno
+                for _, code_lines in self._linesByFile(gotoFile).items():
                     if currentLine in code_lines and gotoLine in code_lines:
                         self._sendDbgMessage('%s ok' % self._messages.GOTO_TARGETS)
                         return
@@ -485,7 +490,8 @@ class Tracer:
         if len(locals_args) == 1:
             self._developerMode = False
         elif len(locals_args) == 2:
-            self._developerMode = bool(locals_args[1])
+            self._developerMode = str(locals_args[1]).lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'certainly', 'uh-huh']
+        self._sendDbgMessage(self._messages.DEVELOPER + ' ' + str(self._developerMode))
 
     def _numFrames(self, entry):
         numFrames = 0
@@ -709,18 +715,24 @@ class Tracer:
                 if not confirmed:
                     unconfirmed.add(bp_line)
         self._breakpointsWait[bp_file] = unconfirmed
-    
+
+    def _linesByFile(self, file):
+        if self._fileLower and self._lines:
+            file = file.lower()
+            for key, value in self._lines.items():
+                if key.lower() == file:
+                    return value
+        return self._lines[file]
+
     def _testBreakpoint(self, bp_file, bp_line):
         """ test breakpoint """
-        bp_file = bp_file.lower() if self._fileLower else bp_file
-        for funcLines in self._lines[bp_file].values():
+        for funcLines in self._linesByFile(bp_file).values():
             if bp_line in funcLines:
                 return True
         return False
     
     def _confirmBreakpoint(self, bp_file, bp_line, bp_line_real):
         """ add to confirmed """
-        bp_file = bp_file.lower() if self._fileLower else bp_file
         if bp_line_real != None:
             self._sendDbgMessage(self._messages.BP_CONFIRM + (' "%s" %i %i' % (bp_file, bp_line, bp_line_real)))
             self._breakpointsConfirmed[bp_file].add(bp_line_real)
@@ -730,7 +742,6 @@ class Tracer:
 
     def _waitBreakpoint(self, bp_file, bp_line):
         """ add for waiting """
-        bp_file = bp_file.lower() if self._fileLower else bp_file
         self._sendDbgMessage(self._messages.BP_WAIT + (' "%s" %i' % (bp_file, bp_line)))
         self._breakpointsWait[bp_file].add(bp_line)
     
@@ -756,6 +767,7 @@ class Tracer:
             self._sendDbgMessage(self._messages.EXCEPTION + ' ' + repr(ex))
 
     def _setBp(self, bp_file, bp_line):
+        bp_file = bp_file.lower() if self._fileLower else bp_file
         if self._testBreakpoint(bp_file, bp_line):
             self._confirmBreakpoint(bp_file, bp_line, None)
         else:
@@ -793,7 +805,7 @@ class Tracer:
                                   '__file__'    : filename,
                                   '__builtins__': builtinsT,
                                  })
-        self._fileWaitingFor = filename.lower() if self._fileLower else filename
+        self._fileWaitingFor = filename
         globalsT = __main__.__dict__
         try:
             # self._sendDbgMessage('PATH: %s' % repr(sys.path))
