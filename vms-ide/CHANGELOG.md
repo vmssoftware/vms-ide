@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.0
+* Two-terminal debugger
+
 ## 1.4.12
 * Fix BASIC RMSSTATUS syntax
 
