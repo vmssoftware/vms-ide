@@ -261,7 +261,15 @@ export class ShellSession
                     {
                         this.DisconectSession(true, ": The program complete");//close SSH session
                     }
-                    if (this.dbgModeOn)
+
+                    if (this.dbgModeOn &&
+                        this.currentCmd.getBody() !== DebugCmdVMS.dbgGo &&
+                        this.currentCmd.getBody() !== DebugCmdVMS.dbgStepOver &&
+                        this.currentCmd.getBody() !== DebugCmdVMS.dbgStepIn &&
+                        this.currentCmd.getBody() !== DebugCmdVMS.dbgStepReturn &&
+                        this.currentCmd.getBody() !== DebugCmdVMS.dbgRunExe &&
+                        this.currentCmd.getBody() !== OsCmdVMS.osRunProgram &&
+                        this.currentCmd.getBody() !== OsCmdVMS.osRunProgramArgs)
                     {
                         this.dbgLastCmd = true;
                     }
