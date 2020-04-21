@@ -18,7 +18,7 @@
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
-    "main": "./out/index",
+    "main": "./out/extension",
     "activationEvents": [
         "*",
         "onView:vmssoftware.project-dep.projectDependencies",
@@ -847,6 +847,24 @@
                         }
                     ],
                     "description": "%synchronizer.properties.builds.configurations.description%"
+                },
+                "vmssoftware.vms_python_debug.roots": {
+                    "scope": "resource",
+                    "type": "object",
+                    "default": {},
+                    "description": "%vms_python_debug.root.description%"
+                },
+                "vmssoftware.vms_python_debug.lower": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%vms_python_debug.lower.description%"
+                },
+                "vmssoftware.vms_python_debug.developer": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%vms_python_debug.developer.description%"
                 }
             }
         },

@@ -58,7 +58,10 @@ _helpInfo = """\
     CONTINUE = 'c'
     DISPLAY = 'd'           # d [ident [frame [fullName [start [count]]]]]      // frame is zero-based
     FRAME  = 'f'            # f [ident [frameStart [frameNum]]]                 // frame is zero-based
+    GOTO = 'g'              # g ident line
+    GOTO_TARGETS = 'gt'     # gt file line  // test if we can go to target from current place
     INFO = 'i'
+    MODE = 'm'              # m [0|1]       // user | developer 
     NEXT = 'n'              # n [ident]     // step over
     PAUSE = 'p'
     RETURN = 'r'            # r [ident]     // step out
@@ -235,7 +238,7 @@ class DebugServer:
         self._selector = None
     
     def _acceptWrapper(self):
-        conn, addr = self._listenSocket.accept()
+        conn, _ = self._listenSocket.accept()
         # print("Connected %s" % repr(addr))
         conn.setblocking(False)
         connection = Connection(conn)

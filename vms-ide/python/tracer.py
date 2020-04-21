@@ -44,6 +44,7 @@ class COMMAND:
     GOTO = 'g'              # g ident line
     GOTO_TARGETS = 'gt'     # gt file line  // test if we can go to target from current place
     INFO = 'i'
+    MODE = 'm'              # m [0|1]       // user | developer 
     NEXT = 'n'              # n [ident]     // step over
     PAUSE = 'p'
     RETURN = 'r'            # r [ident]     // step out
@@ -51,17 +52,19 @@ class COMMAND:
     THREADS = 't'
 
 class Tracer:
-    def __init__(self, port):
+    def __init__(self, port, fileLower=False, developerMode=False):
+        self._fileLower = fileLower
+        self._developerMode = developerMode
         self._co_lnotab_signed = sys.version_info.major >= 3 and sys.version_info.minor >= 6
         self._knownValueTypes = [int, str, float, bool, complex, type(None)]
         self._port = port
-        self._fileName = __file__
+        self._fileName = __file__.lower() if self._fileLower else __file__
         self._socket = None
         self._sendBuffer = b''
         self._recvBuffer = b''
         self._oldSysTrace = None
         self._paused = False
-        self._waitingForAFile = None
+        self._fileWaitingFor = None
         self._startTracing = False
         self._originalSigint = None
         self._originalSigbreak = None
@@ -72,7 +75,7 @@ class Tracer:
         self._breakpointsConfirmed = collections.defaultdict(set)   # confirmed break line list by [file name]
         self._breakpointsWait = collections.defaultdict(set)        # wait break line list by [file name]
         self._lines = collections.defaultdict(dict)                 # all usable line list by [file name [ function name ]]
-        self._files = set()
+        # self._files = set()
         # incapsulate functions from other classes
         self._lockTrace = threading.Lock()
         self._currentThread = threading.current_thread
@@ -190,49 +193,49 @@ class Tracer:
 
         # self._enter_counter = self._enter_counter + 1
 
+        # wait until tracing enabled
+        if not self._startTracing:
+            if not self._fileWaitingFor:
+                return None
+            return self._traceFunc
+
         currentFile = self.canonizeFile(frame.f_code.co_filename)
         # if not currentFile in self._files:
         #     self._files.add(currentFile)
             # self._sendDbgMessage('NEW FILE: %s' % currentFile)
 
-        # wait until tracing enabled
-        if not self._startTracing:
-            if not self._waitingForAFile:
-                return None
-            return self._traceFunc
-
         # skip this file
         if currentFile == self._fileName:
-            if not self._waitingForAFile:
+            if not self._fileWaitingFor:
                 return None
             return self._traceFunc
 
         # skip system files
         # if self._os_path_abspath(currentFile) == currentFile:
-        #     if not self._waitingForAFile:
+        #     if not self._fileWaitingFor:
         #         return None
         #     return self._traceFunc
-        if currentFile.startswith("/"):
-            if not self._waitingForAFile:
+        if not self._developerMode and currentFile.startswith("/"):
+            if not self._fileWaitingFor:
                 return None
             return self._traceFunc
 
         # skip no files
         # if currentFile == '<string>':
-        #     if not self._waitingForAFile:
+        #     if not self._fileWaitingFor:
         #         return None
         #     return self._traceFunc
-        if currentFile.startswith('<'):
-            if not self._waitingForAFile:
+        if not self._developerMode and currentFile.startswith('<'):
+            if not self._fileWaitingFor:
                 return None
             return self._traceFunc
 
         # wait untin tracing file entered
-        if self._waitingForAFile:
-            if self._waitingForAFile != currentFile:
+        if self._fileWaitingFor:
+            if self._fileWaitingFor != currentFile:
                 return self._traceFunc
             # now we are ready to trace
-            self._waitingForAFile = None
+            self._fileWaitingFor = None
             # autopause
             self._sendDbgMessage(self._messages.ENTRY)
             self._paused = True
@@ -302,7 +305,8 @@ class Tracer:
                 self._paused = True
 
             # examine breakpoint
-            if not self._paused and frame.f_lineno in self._breakpointsConfirmed[currentFile]:
+            bp_file = currentFile.lower() if self._fileLower else currentFile
+            if not self._paused and frame.f_lineno in self._breakpointsConfirmed[bp_file]:
                 self._sendDbgMessage(self._messages.BREAK)
                 # self._sendDbgMessage('_COUNTER_ ' + repr(self._enter_counter) + '\n')
                 self._paused = True
@@ -367,6 +371,8 @@ class Tracer:
                         self._doGotoTargets(cmd, ident)
                     elif cmd.startswith(self._commands.GOTO):
                         self._doGoto(cmd)
+                    elif cmd.startswith(self._commands.MODE):
+                        self._doMode(cmd)
                 # wait and read command again
                 self._sleep(0.3)
                 cmd = self._readDbgMessage()
@@ -383,6 +389,7 @@ class Tracer:
         return self._traceFunc
     
     def canonizeFile(self, fileName):
+        fileName = fileName.lower() if self._fileLower else fileName
         if fileName.startswith('./'):
             return fileName[2:]
         return fileName
@@ -404,7 +411,7 @@ class Tracer:
     def _doGotoTargets(self, cmd, ident):
         locals_args = cmd.split()
         try:
-            gotoFile = locals_args[1]
+            gotoFile = locals_args[1].lower() if self._fileLower else locals_args[1]
             gotoLine = int(locals_args[2])
             codeObj = self._threads[ident]['frame'].f_code
             currentLine = self._threads[ident]['frame'].f_lineno
@@ -472,6 +479,13 @@ class Tracer:
             self._steppingLevel = entry['level'] - 1
         self._paused = False
         self._sendDbgMessage(self._messages.CONTINUED)
+
+    def _doMode(self, cmd):
+        locals_args = cmd.split()
+        if len(locals_args) == 1:
+            self._developerMode = False
+        elif len(locals_args) == 2:
+            self._developerMode = bool(locals_args[1])
 
     def _numFrames(self, entry):
         numFrames = 0
@@ -675,12 +689,13 @@ class Tracer:
             frameNum = frameNum + 1
             frame = frame.f_back
 
-    def _checkFileBreakpoints(self, file, lines):
+    def _checkFileBreakpoints(self, bp_file, lines):
         """ test all waiting breakpoints for file """
         unconfirmed = set()
-        for bp_line in self._breakpointsWait[file]:
+        bp_file = bp_file.lower() if self._fileLower else bp_file
+        for bp_line in self._breakpointsWait[bp_file]:
             if bp_line in lines:
-                self._confirmBreakpoint(file, bp_line, None)
+                self._confirmBreakpoint(bp_file, bp_line, None)
             else:
                 confirmed = False
                 # if bp at the non-code line between adjacent real-code lines
@@ -688,15 +703,16 @@ class Tracer:
                     for i in range(len(lines) - 1):
                         if bp_line < lines[i+1]:
                             if lines[i+1] - lines[i] < 3:
-                                self._confirmBreakpoint(file, bp_line, lines[i])
+                                self._confirmBreakpoint(bp_file, bp_line, lines[i])
                                 confirmed = True
                             break
                 if not confirmed:
                     unconfirmed.add(bp_line)
-        self._breakpointsWait[file] = unconfirmed
+        self._breakpointsWait[bp_file] = unconfirmed
     
     def _testBreakpoint(self, bp_file, bp_line):
         """ test breakpoint """
+        bp_file = bp_file.lower() if self._fileLower else bp_file
         for funcLines in self._lines[bp_file].values():
             if bp_line in funcLines:
                 return True
@@ -704,6 +720,7 @@ class Tracer:
     
     def _confirmBreakpoint(self, bp_file, bp_line, bp_line_real):
         """ add to confirmed """
+        bp_file = bp_file.lower() if self._fileLower else bp_file
         if bp_line_real != None:
             self._sendDbgMessage(self._messages.BP_CONFIRM + (' "%s" %i %i' % (bp_file, bp_line, bp_line_real)))
             self._breakpointsConfirmed[bp_file].add(bp_line_real)
@@ -713,6 +730,7 @@ class Tracer:
 
     def _waitBreakpoint(self, bp_file, bp_line):
         """ add for waiting """
+        bp_file = bp_file.lower() if self._fileLower else bp_file
         self._sendDbgMessage(self._messages.BP_WAIT + (' "%s" %i' % (bp_file, bp_line)))
         self._breakpointsWait[bp_file].add(bp_line)
     
@@ -745,6 +763,7 @@ class Tracer:
 
     def _resetBp(self, bp_file, bp_line):
         if bp_file:
+            bp_file = bp_file.lower() if self._fileLower else bp_file
             if bp_line != None:
                 self._breakpointsWait[bp_file].discard(bp_line)
                 self._breakpointsConfirmed[bp_file].discard(bp_line)
@@ -774,7 +793,7 @@ class Tracer:
                                   '__file__'    : filename,
                                   '__builtins__': builtinsT,
                                  })
-        self._waitingForAFile = filename
+        self._fileWaitingFor = filename.lower() if self._fileLower else filename
         globalsT = __main__.__dict__
         try:
             # self._sendDbgMessage('PATH: %s' % repr(sys.path))
@@ -798,17 +817,20 @@ class Tracer:
 if __name__ == '__main__':
 
     _usage = """\
-usage: tracer.py -p port pyfile [arg] ...
+usage: tracer.py -p port [-d] [-l] pyfile [arg] ...
 
 Debug the Python program given by pyfile."""
 
     import getopt
 
-    opts, args = getopt.getopt(sys.argv[1:], 'hp:', ['help','port='])
+    opts, args = getopt.getopt(sys.argv[1:], 'hp:dl', ['help','port='])
 
     if not args:
         print(_usage)
         sys.exit(2)
+
+    developerMode = False
+    fileLower = False
 
     for opt, optarg in opts:
         if opt in ['-h', '--help']:
@@ -816,10 +838,14 @@ Debug the Python program given by pyfile."""
             sys.exit()
         elif opt in ['-p', '--port']:
             SETTINGS.PORT = int(optarg)
+        elif opt in ['-d']:
+            developerMode = True
+        elif opt in ['-l']:
+            fileLower = True
         else:
             print('Unknown option %s' % opt)
 
     sys.argv = args
 
-    tracer = Tracer(SETTINGS.PORT)
+    tracer = Tracer(SETTINGS.PORT, developerMode=developerMode, fileLower=fileLower)
     tracer.run(args[0])

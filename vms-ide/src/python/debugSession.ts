@@ -36,6 +36,7 @@ import { GetSshHelperType } from '../ext-api/ext-api';
 import { FsSource } from '../synchronizer/sync/fs-source';
 import { SftpSource } from '../synchronizer/sync/sftp-source';
 import { Synchronizer } from '../synchronizer/sync/synchronizer';
+import { middleSepRg } from '../synchronizer/common/find-files';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -92,7 +93,8 @@ export class PythonDebugSession extends LoggingDebugSession {
     private _nextBp = 0;
 
     private _gotoHandles = new Handles<GotoTarget>();
-    private _nextGoto = 0;
+
+    private _rootMap = new Map<string, string>();
     
     constructor(logFn?: LogFunction) {
         super("vms-python-debugger.txt");
@@ -153,7 +155,16 @@ export class PythonDebugSession extends LoggingDebugSession {
         });
         
         this._runtime.on(PythonRuntimeEvents.breakpointValidated, (file: string, line: number, line_real?: number) => {
-            const lines = this._breakPoints.get(file);
+            let lines = this._breakPoints.get(file);
+            if (lines === undefined) {
+                file = file.toLowerCase();
+                for (let [key, value] of this._breakPoints.entries()) {
+                    if (key.toLowerCase() == file) {
+                        lines = value;
+                        break;
+                    }
+                }
+            }
             if (lines) {
                 const breakpoint = lines.get(line);
                 if (breakpoint) {
@@ -321,6 +332,17 @@ export class PythonDebugSession extends LoggingDebugSession {
         logger.setup(Logger.LogLevel.Stop, false);
         //logger.setup(Logger.LogLevel.Verbose, false);
 
+        this._rootMap = new Map<string, string>();
+        const config = workspace.getConfiguration("vmssoftware.vms_python_debug", null);
+        const root = config.get<object>("roots");
+        if (root) {
+            for(const [key, value] of Object.entries(root)) {
+                if (typeof(key) === "string" && typeof(value) === "string") {
+                    this._rootMap.set(key, value);
+                }
+            }
+        }
+
         response.success = true;
         this.sendResponse(response);
 
@@ -413,7 +435,12 @@ export class PythonDebugSession extends LoggingDebugSession {
     protected frameSource(frame: IPythonFrame) {
         let framePath = frame.file;
         if (framePath.startsWith('/')) {
-            framePath = '';
+            for (const [key, value] of this._rootMap) {
+                if (framePath.toLowerCase().startsWith(key.toLowerCase())) {
+                    framePath = value + framePath.substring(key.length);
+                    break;
+                }
+            }
         } else {
             if (this._workspace) {
                 framePath = path.join(this._workspace.uri.fsPath, framePath);
@@ -526,8 +553,23 @@ export class PythonDebugSession extends LoggingDebugSession {
         };
         // set and verify breakpoint locations
         if (args.breakpoints && args.source.path) {
-            const fileName = workspace.asRelativePath(args.source.path);
-            const lines = this._breakPoints.get(fileName);
+            let fileName = workspace.asRelativePath(args.source.path);
+            for (const [key, value] of this._rootMap) {
+                if (fileName.toLowerCase().startsWith(value.toLowerCase())) {
+                    fileName = (key + fileName.substring(value.length)).replace(middleSepRg, ftpPathSeparator);
+                    break;
+                }
+            }
+            let lines = this._breakPoints.get(fileName);
+            if (lines === undefined) {
+                fileName = fileName.toLowerCase();
+                for (let [key, value] of this._breakPoints.entries()) {
+                    if (key.toLowerCase() == fileName) {
+                        lines = value;
+                        break;
+                    }
+                }
+            }
             const newLines = new Map<number, IBreakPoint>();
             for (const sourceBp of args.breakpoints) {
                 const oldBp = lines?.get(sourceBp.line);
@@ -649,7 +691,13 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     protected async gotoTargetsRequest(response: DebugProtocol.GotoTargetsResponse, args: DebugProtocol.GotoTargetsArguments, request?: DebugProtocol.Request) {
         if (args.source.path) {
-            const localPath = workspace.asRelativePath(args.source.path)
+            let localPath = workspace.asRelativePath(args.source.path)
+            for (const [key, value] of this._rootMap) {
+                if (localPath.toLowerCase().startsWith(value.toLowerCase())) {
+                    localPath = (key + localPath.substring(value.length)).replace(middleSepRg, ftpPathSeparator);
+                    break;
+                }
+            }
             response.success = await this._runtime.requestGotoTargets(localPath, args.line);
             const gtt: GotoTarget = {
                 id: 0,
@@ -783,7 +831,10 @@ export class PythonDebugSession extends LoggingDebugSession {
             // scriptPath = `[.${ensured.projectSection.outdir}]`;
             scriptPath = ensured.projectSection.outdir + ftpPathSeparator;
         }
-        let runCommand = `python ${scriptPath}tracer.py -p ${port} ${script}${args?' ' + args : ''}`;
+        const config = workspace.getConfiguration("vmssoftware.vms_python_debug", null);
+        const fileLower = config.get<boolean>("lower");
+        const developerMode = config.get<boolean>("developer");
+        let runCommand = `python ${scriptPath}tracer.py -p ${port} ${fileLower ? '-l' : ''} ${developerMode ? '-d' : ''} ${script}${args?' ' + args : ''}`;
         return this._tracerQueue.postCommand(runCommand, (cmd, line) => {
             if (!line) {
                 result = EStartResult.error;
