@@ -98,6 +98,7 @@ export class VMSRuntime extends EventEmitter
 	private pointerPeriod = "->";//"->", "^."
 	private pointerDereferencing = ".";//"*", "^."
 
+	private varBadAddress = "";
 	private userName = "";
 	private terminalName = "";
 	private programName : string = "";
@@ -801,12 +802,12 @@ export class VMSRuntime extends EventEmitter
 					{
 						if(this.language !== "FORTRAN")
 						{
-							item.variableAddress = 0;
+							item.variableAddress = "";
 						}
 
 						if(item.variableType.includes("pointer to") ||
 							item.variableType.includes("pointer type") ||
-							item.variableType.includes("basic_string"))				
+							item.variableType.includes("basic_string"))
 						{
 							namePtrs = this.addVariableToString(namePtrs, item, false);
 						}
@@ -902,6 +903,16 @@ export class VMSRuntime extends EventEmitter
 				{
 					this.queueWaitVar.pop();
 				}
+			}
+			else if(this.varBadAddress !== "")//repeat request
+			{
+				nameVars = nameVars.replace("." + this.varBadAddress + ",", "");//remove bad variable
+				this.shellDbg.SendCommandToQueue(this.dbgCmd.examine(nameVars));//request values of variables
+
+				this.varBadAddress = "";
+				let wait = new Subject();
+				this.queueWaitVar.push(wait);
+				await wait.wait(5000);
 			}
 		}
 	}
@@ -1585,8 +1596,6 @@ export class VMSRuntime extends EventEmitter
 
 					if(messageDebug !== "")
 					{
-						let showMsg : boolean = true;
-
 						if (this.logFn)
 						{
 							this.logFn(LogType.information, () => messageDebug);
@@ -1597,10 +1606,7 @@ export class VMSRuntime extends EventEmitter
 							this.parseMsgInitial(messageDebug);
 						}
 
-						if(showMsg)
-						{
-							vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(messageDebug, 91));
-						}
+						vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(messageDebug, 91));
 					}
 				}
 			}
@@ -1685,8 +1691,6 @@ export class VMSRuntime extends EventEmitter
 				}
 				if(messageDebug !== "")
 				{
-					let showMsg : boolean = true;
-
 					if (this.logFn)
 					{
 						this.logFn(LogType.information, () => messageDebug);
@@ -1701,7 +1705,7 @@ export class VMSRuntime extends EventEmitter
 					else if(messageDebug.includes(MessageDebuger.msgNoSccess))
 					{
 						let indexStart = messageDebug.indexOf(":");
-						let addressStr = messageDebug.substr(indexStart+1).replace(MessageDebuger.msgNoSccess, "");
+						let addressStr = messageDebug.substr(indexStart+1).replace(MessageDebuger.msgNoSccess, "").trim();
 						let address = parseInt(addressStr, 16) >> 0;
 
 						if(!Number.isNaN(address))
@@ -1714,13 +1718,18 @@ export class VMSRuntime extends EventEmitter
 								{
 									if(item.functionName === this.currentRoutine)
 									{
-										if(!item.variableValue && item.variableAddress)
+										if(item.variableAddress)
 										{
-											if(item.variableAddress === address)
+											let addressD = parseInt(item.variableAddress, 10) >> 0;
+											let addressH = parseInt(item.variableAddress, 16) >> 0;
+
+											if(!Number.isNaN(addressH))
 											{
-												showMsg = false;
-												item.variableAddress = 0;
-												break;
+												if(addressD === address || addressH === address)
+												{
+													this.varBadAddress = item.variableName;
+													break;
+												}
 											}
 										}
 									}
@@ -1759,10 +1768,7 @@ export class VMSRuntime extends EventEmitter
 						this.parseMsgInitial(messageDebug);
 					}
 
-					if(showMsg)
-					{
-						vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(messageDebug, 91));
-					}
+					vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(messageDebug, 91));
 				}
 				if(messageDebugInfo !== "")
 				{

@@ -274,7 +274,7 @@ export class VMSDebugSession extends LoggingDebugSession
 			let localVariables = {
 				name: "Local",
 				nameFull: "",
-				addr: 0,
+				addr: "",
 				type: "",
 				kind: 0,
 				value: "",
@@ -288,7 +288,7 @@ export class VMSDebugSession extends LoggingDebugSession
 			// let globalVariables = {
 			// 	name: "Global",
 			//	nameFull: "",
-			// 	addr: 0,
+			// 	addr: "",
 			// 	type: "",
 			// 	kind: 0,
 			// 	value: "",
@@ -391,7 +391,7 @@ export class VMSDebugSession extends LoggingDebugSession
 		{
 			if(item.name === args.name)
 			{
-				if((item.children.length > 0 || item.addr === undefined || item.addr === 0) && item.kind !== ReflectKind.Atomic)
+				if((item.children.length > 0 || item.addr === undefined || item.addr === "") && item.kind !== ReflectKind.Atomic)
 				{
 					this.sendResponse(response);
 					return;
@@ -581,7 +581,7 @@ export class VMSDebugSession extends LoggingDebugSession
 
 		if (v.kind === ReflectKind.Pointer)
 		{
-			if (v.addr === 0)
+			if (v.addr === "")
 			{
 				return {
 					result: "null <" + info + ">",
@@ -591,7 +591,7 @@ export class VMSDebugSession extends LoggingDebugSession
 			else
 			{
 				return {
-					result: v.addr ? `(0x${(v.addr >>> 0).toString(16)}) <${info}>` : `<${info}>`,
+					result: v.addr ? `(${v.addr}) <${info}>` : `<${info}>`,
 					variablesReference: v.children.length > 0 ? this.variableHandles.create(v) : 0
 				};
 			}
@@ -607,13 +607,13 @@ export class VMSDebugSession extends LoggingDebugSession
 		{
 			if(!v.value)
 			{
-				if(v.addr === 0)
+				if(v.addr === "")
 				{
 					v.value = "null" + " <" + v.type + ">";
 				}
 				else
 				{
-					v.value = `(0x${(v.addr >>> 0).toString(16)})` + " <" + v.type + ">";
+					v.value = `(${v.addr})` + " <" + v.type + ">";
 				}
 			}
 

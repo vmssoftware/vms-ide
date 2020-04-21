@@ -17,7 +17,7 @@ export interface DebugVariable
 {
 	name: string;
 	nameFull: string;
-	addr: number;
+	addr: string;
 	type: string;
 	kind: ReflectKind;
 	value: string;
@@ -41,7 +41,7 @@ export interface VariableFileInfo
 	variableValue: string;
 	variableInfo: string;
 	variablePrefix: string;
-	variableAddress: number;
+	variableAddress: string;
 	variableKind: ReflectKind;
 }
 
