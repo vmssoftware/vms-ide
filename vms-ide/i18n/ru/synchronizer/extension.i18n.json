@@ -1,5 +1,5 @@
 {
     "debug.activated": "Расширение 'VMS синхронизация' активировано",
-    "scope.undefined": "There is no selected scope in Project explorer",
+    "scope.undefined": "Нет выделенного проекта в проводнике проектов",
     "debug.deactivated": "Расширение 'VMS синхронизация' выгружено"
 }

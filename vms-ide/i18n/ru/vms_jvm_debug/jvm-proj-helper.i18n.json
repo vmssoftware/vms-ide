@@ -1,3 +1,3 @@
 {
-    "breakpoint.no.line": "Cannot set breakpoint at {0}:{1} -> disabled"
+    "breakpoint.no.line": "Невозможно установить точку останова {0}:{1} -> отключена"
 }

@@ -1,5 +1,5 @@
 {
-    "hexnum": "Hexadecimal number",
-    "octnum": "Octal number",
-    "decnum": "Decimal number"
+    "hexnum": "Шестнадцатиричное число",
+    "octnum": "Восьмиричное число",
+    "decnum": "Десятичное число"
 }

@@ -7,5 +7,5 @@
     "synchronized": "Синхронизирован",
     "built": "Посторен",
     "not.built": "Не построен",
-    "select.buildName": "Select build configuration"
+    "select.buildName": "Выберите конфигурацию для построения"
 }

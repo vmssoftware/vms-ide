@@ -1,4 +1,4 @@
 {
-    "check.inc.mask": "Please check include file masks for correct curly brackets",
-    "check.exc.mask": "Please check exclude file masks for correct curly brackets"
+    "check.inc.mask": "Проверьте маску include на корректность скобок",
+    "check.exc.mask": "Проверьте маску exclude на корректность скобок"
 }

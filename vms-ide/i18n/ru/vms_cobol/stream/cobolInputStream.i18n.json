@@ -1,5 +1,5 @@
 {
-    "string.continuation.improperly": "Continuation must start at B",
-    "string.continuation.error": "Continuation error - string literal have to start with {0}",
-    "string.continuation.error.unpredictable": "Continuation unpredictable error"
+    "string.continuation.improperly": "Продолжение должно начинаться с зоны B",
+    "string.continuation.error": "Ошибка продолжения - строка должна начинаться с {0}",
+    "string.continuation.error.unpredictable": "Непредсказуемая ошибка продолжения"
 }

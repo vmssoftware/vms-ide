@@ -1,4 +1,4 @@
 {
-    "msg.class_name": "Enter class name to execute",
-    "msg.config.invalid": "Configuration is invalid"
+    "msg.class_name": "Введите класс для запуска",
+    "msg.config.invalid": "Неверная конфигурация"
 }
