@@ -476,7 +476,10 @@ export class PythonShellRuntime extends EventEmitter {
                             };
                             if (start !== undefined) {
                                 // patch the name
-                                lastVar.name = lastVar.name.substr(variableFullName.length);
+                                let pos = lastVar.name.lastIndexOf("[");
+                                if (pos >= 0) {
+                                    lastVar.name = lastVar.name.substr(pos);
+                                }
                             }
                             // do not handle children length, not necessary at this point
                             if (match[_rgxDisplay_ValueDescr] == EPythonConst.length) {

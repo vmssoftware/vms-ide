@@ -331,7 +331,7 @@ class Tracer:
                 cmd = self._readDbgMessage()
 
             # test stepping
-            if not self._paused and self._steppingThread == ident and (self._steppingLevel == None or self._steppingLevel == entry['level'] and event != 'return'):
+            if not self._paused and self._steppingThread == ident and (self._steppingLevel == None or self._steppingLevel >= entry['level'] and event != 'return'):
                 self._steppingThread = None
                 self._steppingLevel = None
                 self._paused = True
@@ -563,6 +563,37 @@ class Tracer:
             self._sendDbgMessage('%s: invalid ident %s' % (self._messages.SYNTAX_ERROR, ident))
         return (None, False)
 
+    def _eval_variable(self, name, root):
+        idxStart = name.find('[')
+        if idxStart < 0:
+            return eval(name, {}, root)
+        #get head
+        if idxStart:
+            head = name[:idxStart]
+            head = eval(head, {}, root)
+        else:
+            head = root
+        # get idx name
+        idxEnd = name.find("]", idxStart)
+        idx = name[idxStart+1:idxEnd]
+        # get tail
+        tail = name[idxEnd+1:]
+        # find a value by idx
+        result = None
+        if type(head) == dict:
+            for _, (k, v) in enumerate(head.items()):
+                if repr(k).replace(' ', '_') == idx:
+                    result = v
+                    break
+        else:
+            result = head[int(idx)]
+        if tail and result != None:
+            if tail.startswith('['):
+                return self._eval_variable(tail, result)
+            elif tail.startswith('.'):
+                return self._eval_variable(tail[1:], result.__dict__)
+        return result
+
     def _amend(self, ident, frameNum, name, value):
         frame, isPostMortem = self._getFrame(ident, frameNum)
         if isPostMortem:
@@ -571,11 +602,11 @@ class Tracer:
         if frame != None:
             try:
                 if name in frame.f_locals:
-                    self._changeLocalVar(frame, name, eval(value))
+                    self._changeLocalVar(frame, name, self._eval_variable(value, frame.f_locals))
                 else:
-                    statement = '%s = %s' % (name, value)
+                    statement = '%s = (%s)' % (name, value)
                     exec(statement, {}, frame.f_locals)
-                result = eval('%s' % name, {}, frame.f_locals)
+                result = self._eval_variable(name, frame.f_locals)
                 self._sendDbgMessage('%s ok %s' % (self._messages.AMEND, repr(result)))
                 return
             except Exception as ex:
@@ -584,6 +615,7 @@ class Tracer:
         self._sendDbgMessage('%s failed Invalid frame' % self._messages.AMEND)
 
     def _display(self, ident, frameNum, fullName, start, count, showHex):
+        self._sendDbgMessage('_display %s' % fullName)
         frame, isPostMortem = self._getFrame(ident, frameNum)
         isPostMortem = isPostMortem
         if frame != None:
@@ -597,7 +629,7 @@ class Tracer:
                     displayName = fullName.rpartition('.')[2]
                 if fullName:
                     # we have a name - get its value
-                    result = eval(fullName, {}, frame.f_locals)
+                    result = self._eval_variable(fullName, frame.f_locals)
                     resultType = type(result)
                     if resultType in self._knownValueTypes:
                         # if we know that is valueType, display it
@@ -629,7 +661,7 @@ class Tracer:
                                             # until count
                                             idx, value = x
                                             if type(result) == dict:
-                                                idx = repr(value)
+                                                idx = repr(value).replace(' ', '_')
                                                 value = result[value]
                                             resultType = type(value)
                                             if resultType in self._knownValueTypes:
