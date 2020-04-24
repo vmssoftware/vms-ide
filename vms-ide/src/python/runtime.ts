@@ -82,6 +82,13 @@ export interface IPythonFrame {
     function: string;
 };
 
+export interface IAmendResult {
+    success: boolean;
+    type?: string;
+    value?: string;
+    size?: number;
+};
+
 export interface IPythonVariable {
     ident: number;
     frame: number;
@@ -90,11 +97,13 @@ export interface IPythonVariable {
     type: string;
     size?: number;
     value?: string;
+    parent?: IPythonVariable;
 };
 
 export enum EPythonConst {
     locals      = '-locals-',
     failed      = 'failed',
+    aborted     = 'aborted',
     ok          = 'ok',
     value       = 'value',
     children    = 'children',
@@ -137,16 +146,23 @@ const _rgxFrame_File        = 1;
 const _rgxFrame_Line        = 2;
 const _rgxFrame_Function    = 3;
 
-const _rgxDisplay               = /DISPLAY "(.*?)" (failed|<(?:type|class|enum) '(.*?)'> (?:(value|children|length): (.*)))/;
+const _rgxDisplay               = /DISPLAY "(.*?)" (failed|aborted|<(?:type|class|enum) '(.*?)'> (?:(value|children|length): (.*)))/;
 const _rgxDisplay_Name          = 1;
 const _rgxDisplay_Result        = 2;
 const _rgxDisplay_Type          = 3;
 const _rgxDisplay_ValueDescr    = 4;
 const _rgxDisplay_Value         = 5;
 
-const _rgxAmend                 = /AMEND (failed|ok) (.*)/;
+const _rgxDisplay64             = /DISPLAY64 (\d+) (.*)/; 
+const _rgxDisplay64_Len         = 1;
+const _rgxDisplay64_Result      = 2;
+
+const _rgxAmend                 = /AMEND (failed|ok) (?:<(?:type|class|enum) '(.*?)'>(?: \[(\d+)\]| = (.*))?)?(.*)/;
 const _rgxAmend_Result          = 1;
-const _rgxAmend_Value           = 2;
+const _rgxAmend_Type            = 2;
+const _rgxAmend_Size            = 3;
+const _rgxAmend_Value           = 4;
+const _rgxAmend_Message         = 5;
 
 const _rgxGotoTargtes           = /GOTO_TARGETS (failed|ok)(.*)/;
 const _rgxGotoTargtes_Result    = 1;
@@ -409,6 +425,8 @@ export class PythonShellRuntime extends EventEmitter {
         let parsedVars = 0;
         let waitQuota: string | undefined;
         let lastVar: IPythonVariable | undefined;
+        let display64line: string | undefined;
+        let display64length: number | undefined;
         await this.queue.postCommand(command, (cmd, line) => {
             if (line === undefined) {
                 this.logFn(LogType.debug, () => `variables: aborted`);
@@ -441,11 +459,34 @@ export class PythonShellRuntime extends EventEmitter {
                     return ListenerResponse.needMoreLines;
                 }
             }
+            // test display64
+            if (display64line !== undefined && display64length !== undefined) {
+                display64line += line.trim();
+                if (display64line.length >= display64length) {
+                    display64line = Buffer.from(display64line, 'base64').toString('utf-8');
+                    line = 'DISPLAY ' + display64line;
+                    display64line = undefined;
+                    display64length = undefined;
+                }
+            }
             line = line.trim();
             if (line) {
                 // second test - if SYNTAX_ERROR
                 if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
                     return ListenerResponse.stop;
+                }
+                const match64 = line.match(_rgxDisplay64);
+                if (match64) {
+                    display64length = +match64[_rgxDisplay64_Len];
+                    display64line = match64[_rgxDisplay64_Result];
+                    if (display64line.length >= display64length) {
+                        display64line = Buffer.from(display64line, 'base64').toString('utf-8');
+                        line = 'DISPLAY ' + display64line;
+                        display64line = undefined;
+                        display64length = undefined;
+                    } else {
+                        return ListenerResponse.needMoreLines;
+                    }
                 }
                 const match = line.match(_rgxDisplay);
                 if (match) {
@@ -500,6 +541,8 @@ export class PythonShellRuntime extends EventEmitter {
                                     return ListenerResponse.needMoreLines;
                                 }
                             }
+                        } else if (match[_rgxDisplay_Result] !== EPythonConst.aborted) {
+                            return ListenerResponse.stop;
                         }
                         ++parsedVars;
                         if (parsedVars >= numVars) {
@@ -516,15 +559,17 @@ export class PythonShellRuntime extends EventEmitter {
         return variables;
     }
 
-    public async requestSetVariable(ident: number, frame: number, fullName: string, value: string) {
+    public async requestSetVariable(ident: number, frame: number, fullName: string, value: string): Promise<IAmendResult> {
         
         await this.locker.acquire();
         
         let success = false;
         if (!this.started || this.running) {
             this.locker.release();
-            return { success, value };
+            return { success };
         }
+        let type: string | undefined;
+        let size: number | undefined;
 
         let command = `${PythonServerCommand.AMEND} ${ident} ${frame} ${fullName} ${value}`;
         let posted = await this.queue.postCommand(command, (cmd, line) => {
@@ -541,9 +586,11 @@ export class PythonShellRuntime extends EventEmitter {
                 if (match) {
                     if (match[_rgxAmend_Result] === EPythonConst.ok) {
                         success = true;
+                        type = match[_rgxAmend_Type];
                         value = match[_rgxAmend_Value];
+                        size = match[_rgxAmend_Size] ? +match[_rgxAmend_Size] : undefined;
                     } else {
-                        this.logFn(LogType.warning, () => match[_rgxAmend_Value], true);
+                        this.logFn(LogType.warning, () => match[_rgxAmend_Message], true);
                     }
                     return ListenerResponse.stop;
                 }
@@ -553,7 +600,7 @@ export class PythonShellRuntime extends EventEmitter {
         });
         success = success && posted;
         this.locker.release();
-        return { success, value };
+        return { success, value, type, size };
     }
 
     public async requestGotoTargets(currFile: string, currLine: number) {

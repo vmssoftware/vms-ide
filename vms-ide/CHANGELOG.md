@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.5
+* Fix Python debugger (display/set variables).
+
 ## 1.5.3
 * Add developer mode for Python debugger. This feature allows tracing system files.
 

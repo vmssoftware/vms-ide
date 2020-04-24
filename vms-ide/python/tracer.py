@@ -6,6 +6,7 @@ import threading
 import time
 import os.path
 import collections
+import base64
 
 # settings
 class SETTINGS:
@@ -22,6 +23,7 @@ class MESSAGE:
     DEBUG = 'DEBUG'
     DEVELOPER = 'DEVELOPER'
     DISPLAY = 'DISPLAY'
+    DISPLAY64 = 'DISPLAY64'
     ENTRY = 'ENTRY'
     EXCEPTION = 'EXCEPTION'
     EXITED = 'EXITED'
@@ -55,6 +57,7 @@ class COMMAND:
 class Tracer:
     def __init__(self, port, insensitive=False, developerMode=False):
         self._insensitive = insensitive
+        self._showHex = False
         self._developerMode = developerMode
         self._co_lnotab_signed = sys.version_info.major >= 3 and sys.version_info.minor >= 6
         self._knownValueTypes = [int, str, float, bool, complex, type(None)]
@@ -95,6 +98,8 @@ class Tracer:
         self._sig_int = signal.SIGINT
         # self._sig_break = signal.SIGBREAK
         self._sig_def = signal.SIG_DFL
+        self._b64decode = base64.b64decode
+        self._b64encode = base64.b64encode
         # DEBUG
         # self._enter_counter = 0
 
@@ -581,8 +586,9 @@ class Tracer:
         # find a value by idx
         result = None
         if type(head) == dict:
+            idx = self._b64decode(idx).decode('utf-8')
             for _, (k, v) in enumerate(head.items()):
-                if repr(k).replace(' ', '_') == idx:
+                if repr(k) == idx:
                     result = v
                     break
         else:
@@ -594,6 +600,31 @@ class Tracer:
                 return self._eval_variable(tail[1:], result.__dict__)
         return result
 
+    def _amend_impl(self, name, value, root):
+        if not any((c in ".[]") for c in name):
+            root[name] = value
+        else:
+            if name.endswith(']'):
+                brkPos = name.rfind('[')
+                head = self._eval_variable(name[:brkPos], root)
+                idx  = name[brkPos+1:-1]
+                if type(head) == dict:
+                    try:
+                        idx = base64.b64decode(idx).decode('utf-8')
+                    except:
+                        pass
+                    for _, (k, _) in enumerate(head.items()):
+                        if repr(k) == idx:
+                            head[k] = value
+                            break
+                else:
+                    head[int(idx)] = value
+            else:
+                dotPos = name.rfind('.')
+                head = self._eval_variable(name[:dotPos], root)
+                head.__dict__[name[dotPos+1:]] = value
+        return
+
     def _amend(self, ident, frameNum, name, value):
         frame, isPostMortem = self._getFrame(ident, frameNum)
         if isPostMortem:
@@ -601,21 +632,37 @@ class Tracer:
             return
         if frame != None:
             try:
-                if name in frame.f_locals:
-                    self._changeLocalVar(frame, name, self._eval_variable(value, frame.f_locals))
-                else:
-                    statement = '%s = (%s)' % (name, value)
-                    exec(statement, {}, frame.f_locals)
+                value = eval(value, {}, {})
+                self._amend_impl(name, value, frame.f_locals)
                 result = self._eval_variable(name, frame.f_locals)
-                self._sendDbgMessage('%s ok %s' % (self._messages.AMEND, repr(result)))
+                resultType = type(result)
+                if resultType in self._knownValueTypes:
+                    # if we know that is valueType, display it
+                    if resultType == int and self._showHex:
+                        self._sendDbgMessage('%s ok %s = %s' % (self._messages.AMEND, resultType, hex(result)))
+                    else:
+                        self._sendDbgMessage('%s ok %s = %s' % (self._messages.AMEND, resultType, repr(result)))
+                    return
+                else:
+                    try:
+                        # in first try to get length of value (test if it is enumerable)
+                        length = len(result)
+                        self._sendDbgMessage('%s ok %s [%s]' % (self._messages.AMEND, resultType, length))
+                    except:
+                        self._sendDbgMessage('%s ok %s' % (self._messages.AMEND, resultType))
                 return
             except Exception as ex:
                 self._sendDbgMessage('%s failed %s' % (self._messages.AMEND, str(ex)))
                 return
         self._sendDbgMessage('%s failed Invalid frame' % self._messages.AMEND)
+    
+    def _sendDisplayResult(self, result):
+        result = self._b64encode(result.encode()).decode()
+        self._sendDbgMessage('%s %s %s' % (self._messages.DISPLAY64, len(result), result))
 
     def _display(self, ident, frameNum, fullName, start, count, showHex):
-        self._sendDbgMessage('_display %s' % fullName)
+        self._showHex = showHex
+        # self._sendDbgMessage('_display %s' % fullName)
         frame, isPostMortem = self._getFrame(ident, frameNum)
         isPostMortem = isPostMortem
         if frame != None:
@@ -633,10 +680,10 @@ class Tracer:
                     resultType = type(result)
                     if resultType in self._knownValueTypes:
                         # if we know that is valueType, display it
-                        if resultType == int and showHex:
-                            self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName, resultType, hex(result)))
+                        if resultType == int and self._showHex:
+                            self._sendDisplayResult('"%s" %s value: %s' % (displayName, resultType, hex(result)))
                         else:
-                            self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName, resultType, repr(result)))
+                            self._sendDisplayResult('"%s" %s value: %s' % (displayName, resultType, repr(result)))
                         return
                     else:
                         try:
@@ -648,10 +695,13 @@ class Tracer:
                                 if start < length:
                                     if count == None or start + count > length:
                                         count = length - start
-                                    self._sendDbgMessage('%s "%s" %s length: %s' % (self._messages.DISPLAY, displayName, resultType, count))
+                                    self._sendDisplayResult('"%s" %s length: %s' % (displayName, resultType, count))
                                     # enumerate through, cutting displayName
+                                    self._sendDbgMessage('_display fullName=%s' % fullName)
                                     displayName = fullName.rpartition('.')[2]
+                                    self._sendDbgMessage('_display displayName=%s' % displayName)
                                     enumerated = enumerate(iter(result))
+                                    self._sendDbgMessage('_display enumerated=%s' % repr(enumerated))
                                     for x in enumerated:
                                         if start > 0:
                                             # wait a start
@@ -661,33 +711,35 @@ class Tracer:
                                             # until count
                                             idx, value = x
                                             if type(result) == dict:
-                                                idx = repr(value).replace(' ', '_')
+                                                idx = repr(value)
                                                 value = result[value]
                                             resultType = type(value)
                                             if resultType in self._knownValueTypes:
-                                                if resultType == int and showHex:
-                                                    self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName + ('[%s]' % idx), resultType, hex(value)))
+                                                if resultType == int and self._showHex:
+                                                    self._sendDisplayResult('"%s" %s value: %s' % (displayName + ('[%s]' % idx), resultType, hex(value)))
                                                 else:
-                                                    self._sendDbgMessage('%s "%s" %s value: %s' % (self._messages.DISPLAY, displayName + ('[%s]' % idx), resultType, repr(value)))
+                                                    self._sendDisplayResult('"%s" %s value: %s' % (displayName + ('[%s]' % idx), resultType, repr(value)))
                                             else:
                                                 try:
                                                     length = len(value)
-                                                    self._sendDbgMessage('%s "%s" %s length: %s' % (self._messages.DISPLAY, displayName + ('[%s]' % idx), resultType, length))
+                                                    self._sendDisplayResult('"%s" %s length: %s' % (displayName + ('[%s]' % idx), resultType, length))
                                                 except:
                                                     children = dir(value)
-                                                    self._sendDbgMessage('%s "%s" %s children: %s' % (self._messages.DISPLAY, displayName + ('[%s]' % idx), resultType, len(children)))
+                                                    self._sendDisplayResult('"%s" %s children: %s' % (displayName + ('[%s]' % idx), resultType, len(children)))
                                             count = count - 1
                                         else:
                                             break
                                     # enumerated all
+                                    if count:
+                                        self._sendDisplayResult('"%s" aborted There are %s elements missed' % (displayName, repr(count)))
                                     return
                                 else:
                                     # have no corresponding children
-                                    self._sendDbgMessage('%s "%s" %s length: 0' % (self._messages.DISPLAY, displayName, resultType))
+                                    self._sendDisplayResult('"%s" %s length: 0' % (displayName, resultType))
                                     return
                             else:
                                 # no start, just return length of children
-                                self._sendDbgMessage('%s "%s" %s length: %s' % (self._messages.DISPLAY, displayName, resultType, length))
+                                self._sendDisplayResult('"%s" %s length: %s' % (displayName, resultType, length))
                                 return
                         except:
                             children = dir(result)
@@ -697,12 +749,12 @@ class Tracer:
                     children = frame.f_locals
                     displayChildren = True
                 # test if variable has at least children
-                self._sendDbgMessage('%s "%s" %s children: %s' % (self._messages.DISPLAY, displayName, resultType, len(children)))
+                self._sendDisplayResult('"%s" %s children: %s' % (displayName, resultType, len(children)))
                 if displayChildren:
                     for childName in children:
                         self._display(ident, frameNum, (fullName + '.' if fullName else '') + childName, None, None, showHex)
             except Exception as ex:
-                self._sendDbgMessage('%s "%s" failed: %s' % (self._messages.DISPLAY, displayName, repr(ex)))
+                self._sendDisplayResult('"%s" failed: %s' % (displayName, repr(ex)))
 
     def _isDebuggerFrame(self, frame):
         return frame and self.canonizeFile(frame.f_code.co_filename) == self._fileName and frame.f_code.co_name == "_runscript"

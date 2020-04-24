@@ -491,22 +491,37 @@ export class PythonDebugSession extends LoggingDebugSession {
         return (path ? path + (name.startsWith('[') ? '' : '.') : '') + name;
     }
 
+    public static encodeNames(variable: IPythonVariable): string {
+        if (variable.parent) {
+            let encodedName = this.encodeNames(variable.parent);
+            if (variable.parent.type == 'dict') {
+                let idx = variable.name.substring(1, variable.name.length - 1);
+                let buf = Buffer.from(idx, 'utf-8');
+                let encoded = buf.toString('base64');
+                return encodedName + '[' + encoded + ']';
+            }
+            return this.buildFullName(encodedName, variable.name);
+        }
+        return variable.name;
+    }
+
     protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments) {
 
         let variables: DebugProtocol.Variable[] = [];
-        let baseVariable = this._variableHandles.get(args.variablesReference);
-        if (baseVariable !== undefined) {
+        let parentVar = this._variableHandles.get(args.variablesReference);
+        if (parentVar !== undefined) {
             // build full name like <path.name> or <path[name]> or just <name>
-            let baseVariableFullName = PythonDebugSession.buildFullName(baseVariable.path, baseVariable.name);
+            let encodedName = PythonDebugSession.encodeNames(parentVar);
             let vars = await this._runtime.variableRequest(
-                baseVariable.ident,
-                baseVariable.frame,
-                baseVariableFullName,
+                parentVar.ident,
+                parentVar.frame,
+                encodedName,
                 args.start,
                 args.count,
                 args.format?.hex);
             for(let localVar of vars) {
                 if (!localVar.name.startsWith("__")) {
+                    localVar.parent = parentVar;
                     const innerVar: DebugProtocol.Variable = {
                         name: localVar.name,
                         type: localVar.type,
@@ -540,9 +555,36 @@ export class PythonDebugSession extends LoggingDebugSession {
             value: args.value,
         };
 
-        let fullName = PythonDebugSession.buildFullName(parent.path, parent.name);
-        fullName = PythonDebugSession.buildFullName(fullName, args.name);
-        ({"success": response.success, "value": response.body.value} = await this._runtime.requestSetVariable(parent.ident, parent.frame, fullName, args.value));
+        // encodeNames requires 'parent' and 'name' only
+        let tmpVar: IPythonVariable = {
+            frame: parent.frame,
+            ident: parent.ident,
+            name: args.name,
+            type: '',
+            parent: parent,
+        };
+        let encodedName = PythonDebugSession.encodeNames(tmpVar);
+        let result = await this._runtime.requestSetVariable(parent.ident, parent.frame, encodedName, args.value);
+        if (result.success && result.type) {
+            response.success = result.success;
+            response.body.type = result.type;
+            if (result.value !== undefined) {
+                response.body.variablesReference = 0;
+                response.body.value = result.value;
+            } else {
+                tmpVar.type = result.type;
+                response.body.variablesReference = this._variableHandles.create(tmpVar);
+                if (result.size !== undefined) {
+                    response.body.indexedVariables = result.size;
+                    response.body.value = `${result.type}[${result.size}]`;
+                } else {
+                    response.body.value = '';
+                }
+            }
+        } else {
+            response.success = false;
+            response.body.value = args.value;
+        }
 
         this.sendResponse(response);
     }
