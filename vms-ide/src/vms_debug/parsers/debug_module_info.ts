@@ -50,7 +50,7 @@ export class HolderModuleInfo
 					resolve(false);
 				});
 				let reader = readline.createInterface({
-					input: stream, 
+					input: stream,
 					crlfDelay: Infinity
 				});
 				reader.on("line", (line: string) => {
@@ -111,8 +111,12 @@ export class HolderModuleInfo
 				let reader = readline.createInterface({
 					input: stream,
 					crlfDelay: Infinity
-				});
+                });
+                let found = false;
 				reader.on("line", (line: string) => {
+                    if (found) {
+                        return;
+                    }
 					let matches = line.match(HolderModuleInfo.matcherLis);
 					if(matches && matches.length === 3) {
 						let moduleName = matches[1];
@@ -134,17 +138,20 @@ export class HolderModuleInfo
 							// just set MODULE as FILENAME
 							moduleName = baseName;
 						}
-						this.setItem(moduleName, sourceFile, lisFile, languageInfo);
-						reader.close();
+                        this.setItem(moduleName, sourceFile, lisFile, languageInfo);
+                        found = true;
+                        reader.close();
 					}
 				});
 
 				reader.on("close", () => {
-					resolve(true);
+                    resolve(true);
+                    reader.removeAllListeners();
 				});
 
 				reader.on("error", () => {
 					resolve(false);
+                    reader.removeAllListeners();
 				});
 
 			} catch (error) {
@@ -203,9 +210,9 @@ export class HolderModuleInfo
 
 	public setItem(moduleName: string, sourcePath: string, listingPath: string, language: string)
 	{
-		let item = <IModuleInfo> { 
+		let item = <IModuleInfo> {
 			moduleName: this.makeModulesUppercase? moduleName.toUpperCase() : moduleName,
-			sourcePath, listingPath, language 
+			sourcePath, listingPath, language
 		};
 		this.moduleInfo.set(item.moduleName, item);
 		this.fileInfo.set(item.sourcePath, item);

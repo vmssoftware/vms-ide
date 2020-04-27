@@ -4,7 +4,7 @@ export function RgxFromStr(str: string, mode = "g") {
 }
 
 export function RgxStrFromStr(str: string) {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return str.replace(/[.*+?^${}()|[\]\\\/]/g, "\\$&");
 }
 
 export function maskSpacesInTemplate(str: string, mask?: string) {

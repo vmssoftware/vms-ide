@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.6
+* Fix VMS debugger (resolving source files in different folders with the same basename).
+
 ## 1.5.5
 * Fix Python debugger (display/set variables).
 

@@ -17,6 +17,7 @@ import { DebugVariable, HolderDebugVariableInfo, ReflectKind, VariableFileInfo }
 import { Queue } from "../queue/queues";
 import { HolderModuleInfo } from "../parsers/debug_module_info";
 import { VmsPathConverter } from "../../synchronizer/vms/vms-path-converter";
+import { RgxStrFromStr } from "../../common/rgx-from-str";
 
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
@@ -93,7 +94,7 @@ export class VMSRuntime extends EventEmitter
 	// so that the frontend can match events with breakpoints.
 	private breakpointId = 1;
 	private abortKey = "C";//by default
-	private language = "";	
+	private language = "";
 	private variablePeriod = ".";//"::"
 	private pointerPeriod = "->";//"->", "^."
 	private pointerDereferencing = ".";//"*", "^."
@@ -102,7 +103,7 @@ export class VMSRuntime extends EventEmitter
 	private userName = "";
 	private terminalName = "";
 	private programName : string = "";
-	private programArgs : string = "";	
+	private programArgs : string = "";
 	private startDbgCmd = true;
 	private startUser = false;
 	private startUserDebugCmd = false;
@@ -323,11 +324,11 @@ export class VMSRuntime extends EventEmitter
 				}
 			}
 		}
-		
+
 		if(messageFiles !== "")
 		{
 			vscode.window.showWarningMessage(message + ": (" + countFiles.toString() + " files)\n"+ messageFiles);
-		}		
+		}
 	}
 
 	private async collectModuleInfos(sourcePaths: string[], lisPaths: string[]) : Promise<HolderModuleInfo>
@@ -344,11 +345,11 @@ export class VMSRuntime extends EventEmitter
 			let listingPath = this.findPathFileByName(sourcePath, lisPaths, "LIS");
 			await info.addLisFile(sourcePath, listingPath, this.logFn);
 		}
-		
+
 		return info;
 	}
 
-	//Continue execution to the end/beginning. 
+	//Continue execution to the end/beginning.
 	// renamed because "continue" is keyword
 	public continueExec()
 	{
@@ -440,7 +441,7 @@ export class VMSRuntime extends EventEmitter
 				this.waitDeposit.message = "";
 				await this.waitDeposit.wait(5000);
 			}
-			
+
 			if(this.waitDeposit.message === "OK")
 			{
 				result = true;
@@ -458,7 +459,7 @@ export class VMSRuntime extends EventEmitter
 	{
 		if(this.language === "COBOL")
 		{
-			const matcherArray = /^(\S+)([\(\[]\d+[\)\]])/;	
+			const matcherArray = /^(\S+)([\(\[]\d+[\)\]])/;
 			let items = nameVar.split(this.variablePeriod);
 			let ofVariable : string = "";
 
@@ -530,7 +531,7 @@ export class VMSRuntime extends EventEmitter
 					setWps.push(wp);
 					this.watchPointsSet.delete("keyWatchPointsSet");
 					this.watchPointsSet.set("keyWatchPointsSet", setWps);
-				}				
+				}
 			}
 
 			wpFound = false;
@@ -635,11 +636,11 @@ export class VMSRuntime extends EventEmitter
 						break;
 					}
 				}
-				
+
 				if(!wpFind)
 				{
 					this.shellDbg.SendCommandToQueue(this.dbgCmd.watchPointRemove(wpc.name));
-				}				
+				}
 			}
 		}
 
@@ -1327,21 +1328,18 @@ export class VMSRuntime extends EventEmitter
 		let pathFile : string = "";
 
 		let name = this.getNameFromPath(fileName);
-		let folder = this.getFolderName(fileName);
+        let folder = this.getFolderName(fileName);
+        let relative = fileName.slice(folder.length + 1, -path.basename(fileName).length);
+
+        let rgxStr = RgxStrFromStr(folder) + "(.*?)" + RgxStrFromStr(relative + name + "." + extension);
+        let rgx = new RegExp(rgxStr, "i");
 
 		for(let item of paths)
 		{
-			if(folder === this.getFolderName(item))
-			{
-				if (name === this.getNameFromPath(item))
-				{
-					if (this.checkExtension(item, extension))
-					{						
-						pathFile = item;
-						break;
-					}
-				}
-			}
+            if (item.match(rgx)) {
+                pathFile = item;
+                break;
+            }
 		}
 
 		return pathFile;
@@ -1667,7 +1665,7 @@ export class VMSRuntime extends EventEmitter
 							{
 								this.currentFilePath = stack.frames[0].file;
 								this.currentRoutine = stack.frames[0].name.substr(0, stack.frames[0].name.indexOf("["));
-								
+
 								let moduleItem = this.modulesHolder.getItemByPath(this.currentFilePath);
 								this.language = this.getLanguageFromInfo(moduleItem.language);
 								this.setDelimiters(this.language);
@@ -1907,7 +1905,7 @@ export class VMSRuntime extends EventEmitter
 	{
 		let language = "";
 		info = info.toUpperCase();
-		
+
 		if(info.includes("BASIC"))
 		{
 			language = "BASIC";
