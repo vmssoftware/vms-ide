@@ -387,7 +387,7 @@ export class VMSRuntime extends EventEmitter
 		}
 	}
 
-	public exit(restart? : boolean)
+	public async exit(restart? : boolean)
 	{
 		this.buttonPressd = DebugButtonEvent.btnStop;
 		//if the programm is running
@@ -403,10 +403,8 @@ export class VMSRuntime extends EventEmitter
 			this.shellDbg.resetParameters();
 			this.shell.resetParameters();
 
-			this.shellDbg.SetDisconnectInShellSession();
-			this.shellDbg.SendCommandToQueue(this.dbgCmd.exit());
-			this.shell.SetDisconnectInShellSession();
-			this.shell.SendCommandToQueue(this.dbgCmd.exit());
+			this.shellDbg.DisconectSession(true, ": The program complete");
+			this.shell.DisconectSession(true, ": The program complete");
 		}
 		else
 		{

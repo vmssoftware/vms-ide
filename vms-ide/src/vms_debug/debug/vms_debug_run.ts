@@ -69,6 +69,7 @@ export class VMSNoDebugSession extends LoggingDebugSession
 		response.body.supportsConfigurationDoneRequest = true;
 		// make VS Code to show a 'step back' button
 		response.body.supportsStepBack = false;
+		response.body.supportsBreakpointLocationsRequest = false;
 
 		this.sendResponse(response);
 

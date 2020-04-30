@@ -118,7 +118,7 @@ export class ShellSession
                 }
                 else
                 {
-                    this.extensionCloseCb("Internal error: the session was interrupted.");
+                    this.extensionCloseCb("(Internal error: the session was interrupted.)");
                 }
             }
         }
@@ -461,7 +461,7 @@ export class ShellSession
         }
         else
         {
-            this.extensionCloseCb("Internal error: the session was interrupted.");
+            this.extensionCloseCb("(Internal error: the session was interrupted.)");
         }
 
         return result;
@@ -505,7 +505,7 @@ export class ShellSession
         }
         else
         {
-            this.extensionCloseCb("Internal error: the session was interrupted.");
+            this.extensionCloseCb("(Internal error: the session was interrupted.)");
         }
 
         return result;
@@ -554,7 +554,10 @@ export class ShellSession
     {
         this.queueCmd.push(command);
 
-        this.SendCommandFromQueue();
+        if(this.queueCmd.size() === 1)
+        {
+            this.SendCommandFromQueue();
+        }
     }
 
     public DisconectSession(callCloseCb : boolean, reasonMessage: string)
