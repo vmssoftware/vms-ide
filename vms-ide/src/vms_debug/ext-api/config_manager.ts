@@ -66,31 +66,11 @@ export class ConfigManager
 			return undefined;
 		}
 
-		if(this.sshHelper)
+		if (this.sshHelper)
 		{
-			const configuredSettings = await this.sshHelper.getSettings(this.scope);
-
-			if (configuredSettings)
-			{
-				if(configuredSettings.connectionSection.password === "" &&
-				   configuredSettings.connectionSection.keyFile === "")
-				{
-					let connection = configuredSettings.connectConfigResolver.testConnectConfig(configuredSettings.connectionSection);
-
-					if(connection.settings)
-					{
-						return connection.settings;
-					}
-					else
-					{
-						return configuredSettings.connectionSection;
-					}
-				}
-				else
-				{
-					return configuredSettings.connectionSection;
-				}
-			}
+            const configuredSettings = await this.sshHelper.getSettings(this.scope);
+            let connection = configuredSettings?.connectConfigResolver.testConnectConfig(configuredSettings.connectionSection);
+            return connection?.settings;
 		}
 
 		return undefined;

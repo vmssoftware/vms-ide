@@ -7,7 +7,7 @@
 import { LogFunction, LogType, ftpPathSeparator } from "../common/main";
 const { Subject } = require("await-notify");
 import * as Net from "net";
-import { CancellationToken, DebugConfiguration, ProviderResult, WorkspaceFolder } from "vscode";
+import { CancellationToken, DebugConfiguration, ProviderResult, WorkspaceFolder, commands } from "vscode";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { VMSDebugSession } from "./debug/vms_debug";
@@ -82,9 +82,14 @@ export function deactivate()
 
 async function createTerminal() : Promise<void>
 {
-	if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
-		configManager.scope = vscode.workspace.workspaceFolders[0].name;
-	}
+    let scope: string | undefined = await commands.executeCommand("vmssoftware.synchronizer.getCurrentScope");
+	if (!scope && vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+		scope = vscode.workspace.workspaceFolders[0].name;
+    }
+    if (!scope) {
+        return;
+    }
+    configManager.scope = scope;
 	terminals.create(nameTerminalVMS)
 	.then(async(terminal) =>
 	{
@@ -96,14 +101,14 @@ async function createTerminal() : Promise<void>
 			if(connection && connection.username)
 			{
 				let terminalSection = await configManager.getTerminalSection();
-				if (terminalSection && terminalSection.command) 
+				if (terminalSection && terminalSection.command)
 				{
 					let commandT = terminalSection.command;
 					{
 						// replace direct values
 						const rgxField = /\${(\w+?)}/g;
 						let matchField = rgxField.exec(commandT);
-						while (matchField) 
+						while (matchField)
 						{
 							const field = matchField[1];
 							let value = "";
@@ -120,7 +125,7 @@ async function createTerminal() : Promise<void>
 						// replace question values
 						const rgxFieldQ = /\${(\w+?)\?([^{]*?)}/g;
 						let matchFieldQ = rgxFieldQ.exec(commandT);
-						while (matchFieldQ) 
+						while (matchFieldQ)
 						{
 							const field = matchFieldQ[1];
 							let value = "";
@@ -136,8 +141,8 @@ async function createTerminal() : Promise<void>
 
 					terminal.sendText(commandT);
 					terminal.show();
-				} 
-				else 
+				}
+				else
 				{
 					if(connection.keyFile)
 					{
@@ -161,7 +166,7 @@ async function createTerminal() : Promise<void>
 async function ConnectShell(folder: WorkspaceFolder | undefined, config: DebugConfiguration, wait : boolean) : Promise<StatusConnection>
 {
 	let configurationDone = new Subject();
-	
+
 	if(config.noDebug)//if user hit Ctrl+F5
 	{
 		if(config.noDebug === true)//start without debugging
@@ -169,7 +174,7 @@ async function ConnectShell(folder: WorkspaceFolder | undefined, config: DebugCo
 			config.typeRun = "RUN";
 		}
 	}
-	
+
 	statusShell = StatusConnection.StatusConnecting;
 	shell = new ShellSession(folder, TypeTerminal.user, ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, logFn);
 
