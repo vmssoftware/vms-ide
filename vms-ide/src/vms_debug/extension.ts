@@ -165,39 +165,36 @@ async function createTerminal() : Promise<void>
 
 async function ConnectShell(folder: WorkspaceFolder | undefined, config: DebugConfiguration, wait : boolean) : Promise<StatusConnection>
 {
-	if(statusShell === StatusConnection.StatusDisconnected)
+	let configurationDone = new Subject();
+
+	if(config.noDebug)//if user hit Ctrl+F5
 	{
-		let configurationDone = new Subject();
-
-		if(config.noDebug)//if user hit Ctrl+F5
+		if(config.noDebug === true)//start without debugging
 		{
-			if(config.noDebug === true)//start without debugging
-			{
-				config.typeRun = "RUN";
-			}
+			config.typeRun = "RUN";
 		}
+	}
 
-		statusShell = StatusConnection.StatusConnecting;
-		shell = new ShellSession(folder, TypeTerminal.user, ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, logFn);
+	statusShell = StatusConnection.StatusConnecting;
+	shell = new ShellSession(folder, TypeTerminal.user, ExtensionDataCb, ExtensionReadyCb, ExtensionCloseCb, logFn);
 
-		if(config.typeRun === "DEBUG")
+	if(config.typeRun === "DEBUG")
+	{
+		statusShellDbg = StatusConnection.StatusConnecting;
+		shellDbg = new ShellSession(folder, TypeTerminal.debug, ExtensionDbgDataCb, ExtensionDbgReadyCb, ExtensionDbgCloseCb, logFn);
+	}
+
+	const message = localize('extention.conecting', "Connecting to the server ...");
+	const messageBar = localize('extention.bar.conecting', "Connecting ...");
+	vscode.window.showInformationMessage(message);
+	statusConnBar.setMessage(messageBar);
+
+	if(wait)
+	{
+		while(statusShell === StatusConnection.StatusConnecting ||
+			statusShellDbg === StatusConnection.StatusConnecting)
 		{
-			statusShellDbg = StatusConnection.StatusConnecting;
-			shellDbg = new ShellSession(folder, TypeTerminal.debug, ExtensionDbgDataCb, ExtensionDbgReadyCb, ExtensionDbgCloseCb, logFn);
-		}
-
-		const message = localize('extention.conecting', "Connecting to the server ...");
-		const messageBar = localize('extention.bar.conecting', "Connecting ...");
-		vscode.window.showInformationMessage(message);
-		statusConnBar.setMessage(messageBar);
-
-		if(wait)
-		{
-			while(statusShell === StatusConnection.StatusConnecting ||
-				statusShellDbg === StatusConnection.StatusConnecting)
-			{
-				await configurationDone.wait(500);
-			}
+			await configurationDone.wait(500);
 		}
 	}
 

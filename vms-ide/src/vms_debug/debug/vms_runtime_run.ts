@@ -54,6 +54,10 @@ export class VMSRuntimeRun extends EventEmitter
 
 			this.shell.SendData(OsCmdVMS.osKillProgram);
 		}
+		else
+		{
+			this.shell.DisconectSession(true, ": The program complete");
+		}
 	}
 
 
@@ -83,7 +87,7 @@ export class VMSRuntimeRun extends EventEmitter
 			}
 			else
 			{
-				vscode.debug.activeDebugConsole.append(data);
+				vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(data, 92));
 
 				if (this.logFn)
 				{
@@ -93,13 +97,18 @@ export class VMSRuntimeRun extends EventEmitter
 				if(this.shell.getStatusCommand() && this.statusProgram)
 				{
 					this.statusProgram = false;
-					const message = localize('runtime.program_end', "Program complete!");
-					vscode.debug.activeDebugConsole.append(message + "\n\n");
+					const message = localize('runtime.program_end', "The program complete!");
+					vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(message + "\n\n", 92));
 					vscode.window.showWarningMessage(message);
 					this.sendEvent('end');
 				}
 			}
 		}
+	}
+
+	public addColorToTerminalString(text: string, colorId: number): string
+	{
+		return '\u001b[' + colorId + 'm' + text + '\u001b[0m';
 	}
 
 
