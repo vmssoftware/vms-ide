@@ -47,7 +47,7 @@ class COMMAND:
     GOTO = 'g'              # g ident line
     GOTO_TARGETS = 'gt'     # gt file line  // test if we can go to target from current place
     INFO = 'i'
-    MODE = 'm'              # m [0|1]       // user | developer 
+    MODE = 'm'              # m [0|1]       // user | developer
     NEXT = 'n'              # n [ident]     // step over
     PAUSE = 'p'
     RETURN = 'r'            # r [ident]     // step out
@@ -128,7 +128,7 @@ class Tracer:
         except:
             # print('Connect failed')
             self._socket = None
-    
+
     def _close(self):
         try:
             self._socket.close()
@@ -147,7 +147,7 @@ class Tracer:
     def _signalHandler(self, signum, frame):
         self._sendDbgMessage(self._messages.SIGNAL + ':' + str(signum))
         self._paused = True
-    
+
     def _isConnected(self):
         return bool(self._socket)
 
@@ -245,12 +245,12 @@ class Tracer:
             # autopause
             self._sendDbgMessage(self._messages.ENTRY)
             self._paused = True
-        
+
         # take an ident
         ident = self._currentThread().ident
-        if self._mainThread == None: 
+        if self._mainThread == None:
             self._mainThread = ident
-        
+
         # create current entry
         entry = {'ident': ident, 'frame': frame, 'event': event, 'arg': arg, 'paused': True, 'level': 0, 'exception': None, 'traceback': None }
         if ident in self._threads:
@@ -274,11 +274,15 @@ class Tracer:
 
         with self._lockTrace:
             # point of tracing
+            # if event != 'line':
+            #     self._sendDbgMessage('EVENT: %s' % event)
             if event == 'call':
                 # test if that function not in list
                 code_name = frame.f_code.co_name + ":" + str(frame.f_lineno)
                 code_lines = self._linesByFile(currentFile)
+                # self._sendDbgMessage('CALLED: %s %s' % (currentFile, code_name))
                 if code_name not in code_lines:
+                    # self._sendDbgMessage('not in lines')
                     # collect usable code lines
                     lines = []
                     lineno = frame.f_lineno
@@ -394,12 +398,12 @@ class Tracer:
                     self._sendDbgMessage(self._messages.EXITED)
                 raise SystemExit()
         return self._traceFunc
-    
+
     def canonizeFile(self, fileName):
         if fileName.startswith('./'):
             return fileName[2:]
         return fileName
-    
+
     def _doGoto(self, cmd):
         locals_args = cmd.split()
         try:
@@ -413,7 +417,7 @@ class Tracer:
                 # self._doStepping('s %i' % ident, ident, self._threads[ident])
         except Exception as ex:
             self._sendDbgMessage('%s %s %s' % (self._messages.GOTO, 'failed', repr(ex)))
-    
+
     def _doGotoTargets(self, cmd, ident):
         locals_args = cmd.split()
         try:
@@ -460,7 +464,7 @@ class Tracer:
             self._showFrame(int(locals_args[1]), int(locals_args[2]), 1) # one given frame in given ident
         elif len(locals_args) == 4:
             self._showFrame(int(locals_args[1]), int(locals_args[2]), int(locals_args[3])) # given amount of frames starting given frame in given ident
-    
+
     def _doAmend(self, cmd):
         sep = ' '
         cmd, sep, tail = cmd.partition(sep)
@@ -468,7 +472,7 @@ class Tracer:
         aFrame, sep, tail = tail.partition(sep)
         aName, sep, aValue = tail.partition(sep)
         self._amend(int(aIdent), int(aFrame), aName, aValue)
-    
+
     def _doContinue(self):
         if self._paused:
             self._sendDbgMessage(self._messages.CONTINUED)
@@ -526,7 +530,7 @@ class Tracer:
                 self._sendDbgMessage('  thread %i unhandled exception:' % threadEntry['ident'])
             else:
                 # runing info
-                self._sendDbgMessage('  thread %i frames %i %s:' % ( 
+                self._sendDbgMessage('  thread %i frames %i %s:' % (
                         threadEntry['ident'],
                         self._numFrames(threadEntry),
                         'paused' if threadEntry['paused'] else 'running' ))
@@ -655,7 +659,7 @@ class Tracer:
                 self._sendDbgMessage('%s failed %s' % (self._messages.AMEND, str(ex)))
                 return
         self._sendDbgMessage('%s failed Invalid frame' % self._messages.AMEND)
-    
+
     def _sendDisplayResult(self, result):
         result = self._b64encode(result.encode()).decode()
         self._sendDbgMessage('%s %s %s' % (self._messages.DISPLAY64, len(result), result))
@@ -763,10 +767,10 @@ class Tracer:
         self._sendDbgMessage(self._messages.THREADS + (' %i current %i' % (len(self._threads), ident)))
         for threadEntry in self._threads.values():
             self._sendDbgMessage('thread %i frames %i is %s' % (
-                    threadEntry['ident'], 
+                    threadEntry['ident'],
                     self._numFrames(threadEntry),
                     'paused' if threadEntry['paused'] else 'running' ))
-    
+
     def _showFrame(self, ident, frameStart, numFrames):
         if frameStart == None:
             frameStart = 0
@@ -814,7 +818,7 @@ class Tracer:
             if bp_line in funcLines:
                 return True
         return False
-    
+
     def _confirmBreakpoint(self, bp_file, bp_line, bp_line_real):
         """ add to confirmed """
         if bp_line_real != None:
@@ -828,7 +832,7 @@ class Tracer:
         """ add for waiting """
         self._sendDbgMessage(self._messages.BP_WAIT + (' "%s" %i' % (bp_file, bp_line)))
         self._breakpointsWait[bp_file].add(bp_line)
-    
+
     def _doSetBreakPoint(self, cmd):
         try:
             cmd, bp_file, bp_line = cmd.split()
@@ -902,7 +906,7 @@ class Tracer:
                 self._sendDbgMessage(self._messages.EXCEPTION + ' ' + repr(ex))
             else:
                 print(repr(ex))
-    
+
     def run(self, filename):
         self._setupTrace()
         self._runscript(filename)
