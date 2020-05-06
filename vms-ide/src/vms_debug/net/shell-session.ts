@@ -260,6 +260,9 @@ export class ShellSession
                     if (this.disconnect)
                     {
                         this.DisconectSession(true, ": The program complete");//close SSH session
+                        this.readyCmd = true;
+                        this.extensionDataCb(this.mode, TypeDataMessage.typeData, this.resultData);
+                        this.resultData = "";
                     }
 
                     if (this.dbgModeOn &&

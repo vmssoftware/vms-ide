@@ -54,10 +54,6 @@ export class VMSRuntimeRun extends EventEmitter
 
 			this.shell.SendData(OsCmdVMS.osKillProgram);
 		}
-		else
-		{
-			this.shell.DisconectSession(true, ": The program complete");
-		}
 	}
 
 
