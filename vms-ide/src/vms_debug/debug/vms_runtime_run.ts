@@ -94,7 +94,6 @@ export class VMSRuntimeRun extends EventEmitter
 				{
 					this.statusProgram = false;
 					const message = localize('runtime.program_end', "The program complete!");
-					vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(message + "\n\n", 92));
 					vscode.window.showWarningMessage(message);
 					this.sendEvent('end');
 				}

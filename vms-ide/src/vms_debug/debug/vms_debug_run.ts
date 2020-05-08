@@ -93,10 +93,20 @@ export class VMSNoDebugSession extends LoggingDebugSession
 
 		// wait until configuration has finished (and configurationDoneRequest has been called)
 		await this.configurationDone.wait(1000);
-
+		this.sendResponse(response);
+		
 		// start the program in the runtime
 		this.runtime.start(args.program, args.arguments);
+	}
 
+	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments) : Promise<void>
+	{
+		const actualBreakpoints : DebugProtocol.Breakpoint[] = [];
+
+		// send back the actual breakpoint positions
+		response.body = {
+			breakpoints: actualBreakpoints
+		};
 		this.sendResponse(response);
 	}
 
