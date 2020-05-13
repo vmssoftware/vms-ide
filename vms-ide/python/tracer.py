@@ -701,11 +701,11 @@ class Tracer:
                                         count = length - start
                                     self._sendDisplayResult('"%s" %s length: %s' % (displayName, resultType, count))
                                     # enumerate through, cutting displayName
-                                    self._sendDbgMessage('_display fullName=%s' % fullName)
+                                    # self._sendDbgMessage('_display fullName=%s' % fullName)
                                     displayName = fullName.rpartition('.')[2]
-                                    self._sendDbgMessage('_display displayName=%s' % displayName)
+                                    # self._sendDbgMessage('_display displayName=%s' % displayName)
                                     enumerated = enumerate(iter(result))
-                                    self._sendDbgMessage('_display enumerated=%s' % repr(enumerated))
+                                    # self._sendDbgMessage('_display enumerated=%s' % repr(enumerated))
                                     for x in enumerated:
                                         if start > 0:
                                             # wait a start
