@@ -166,7 +166,9 @@ export class ShellSession
                 {
                     let check = false;
                     let matcher = /^[V](\d+).(\d+)-?(\w+)?\s*/;
-                    let matches = data.trim().match(matcher);
+                    this.resultData += data;
+                    let matches = this.resultData.trim().match(matcher);
+                    this.resultData = "";
 
                     if(matches && matches.length === 3)//Vx.y
                     {
@@ -222,6 +224,7 @@ export class ShellSession
                 if(data.includes(this.currentCmd.getBody()))
                 {
                     this.checkVersion = 2;
+                    this.resultData = data.replace(this.currentCmd.getBody(), "");
                 }
             }
             else
