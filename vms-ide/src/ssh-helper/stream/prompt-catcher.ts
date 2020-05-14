@@ -15,9 +15,9 @@ export class PromptCatcher extends ShellParser implements IPromptCatcher {
 
     public _transform(chunk: any, encoding: string, callback: () => any) {
         super._transform(chunk, encoding, callback);
-        if (this.content.endsWith(this.prompt)) {
+        if (this.lastLine.endsWith(this.prompt)) {
             // remove prompt
-            this.content = this.content.slice(0, this.content.length - this.prompt.length);
+            this.lastLine = this.lastLine.slice(0, this.lastLine.length - this.prompt.length);
             // emit event and clear lastString
             this.setReady();
         }

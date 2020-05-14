@@ -1052,7 +1052,9 @@ export class Builder {
             return false;
         }
         // run if decided
-        const output = await scopeData.shell.execCmd(command);
+        const output = await scopeData.shell.execCmd(command, (line) => {
+            this.logFn(LogType.information, () => line);
+        });
         if (output) {
             const retCode = await this.parseProblems(scopeData, output, buildCfg);
             if (scopeData.ensured.projectSection.listing) {
@@ -1137,9 +1139,9 @@ export class Builder {
 
     private async parseProblems(scopeData: IScopeBuildData, output: string[], buildCfg: IBuildConfigSection) {
         const result = parseVmsOutput(output, scopeData.shell.width);
-        for (const line of result.lines) {
-            this.logFn(LogType.warning, () => line);
-        }
+        // for (const line of result.lines) {
+        //     this.logFn(LogType.warning, () => line);
+        // }
         let cwd = "";
         if (scopeData.ensured.projectSection.root.startsWith(ftpPathSeparator)) {
             // absolute path

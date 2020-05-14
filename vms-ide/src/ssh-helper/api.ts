@@ -50,8 +50,10 @@ export interface IStats extends IAttributes {
 }
 
 export interface IShellParser extends Transform {
-    content: string;
+    lines: string[];
+    lastLine: string;
     readyEvent: symbol;
+    lineEvent: symbol;
     lastError?: Error;
     timeout?: number;
     prepare(): void;
@@ -87,7 +89,7 @@ export interface ISshShell extends EventEmitter {
     dispose(): void;
     attachUser(user: Transform, stderr?: Transform): Promise<boolean>;
     detachUser(): Promise<void>;
-    execCmd(command: string, timeout?: number): Promise<string[] | undefined>;
+    execCmd(command: string, lineListener?: (line: string) => void, timeout?: number): Promise<string[] | undefined>;
 }
 
 

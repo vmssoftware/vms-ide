@@ -10,8 +10,10 @@ const localize = nls.loadMessageBundle();
 
 export class ShellParser extends Transform implements IShellParser {
 
-    public content = "";
+    public lines: string[] = [];
+    public lastLine = "";
     public readyEvent = Symbol("ready");
+    public lineEvent = Symbol("line");
     public lastError?: Error;
     public logFn: LogFunction;
 
@@ -34,7 +36,8 @@ export class ShellParser extends Transform implements IShellParser {
     }
 
     public prepare() {
-        this.content = "";
+        this.lines = [];
+        this.lastLine = "";
         this.lastError = undefined;
     }
 
@@ -49,7 +52,16 @@ export class ShellParser extends Transform implements IShellParser {
         if (Buffer.isBuffer(chunk)) {
             const strData = chunk.toString("utf8");
             this.logFn(LogType.debug, () => `${strData}`);
-            this.content += strData;
+            this.lastLine += strData;
+            let tLines = this.lastLine.split(/\r?\n/);
+            this.lastLine = tLines.pop() || "";
+            while(tLines.length) {
+                let line = tLines.shift()?.replace(/[\r\n]/g, "");
+                if (line) {
+                    this.lines.push(line);
+                    setImmediate(() => this.emit(this.lineEvent, line));
+                }
+            }
         } else {
             this.logFn(LogType.debug, () => localize("debug.nobuf", "ShellParser{0}: chunk is not Buffer", this.tag ? " " + this.tag : ""));
         }
@@ -58,9 +70,15 @@ export class ShellParser extends Transform implements IShellParser {
     }
 
     protected setReady() {
-        const readyContent = this.content;
-        setImmediate(() => this.emit(this.readyEvent, readyContent));
-        this.content = "";
+        if (this.lastLine) {
+            let line = this.lastLine;
+            this.lines.push(line);
+            setImmediate(() => this.emit(this.lineEvent, line));
+            this.lastLine = "";
+        }
+        const readyLines = this.lines;
+        setImmediate(() => this.emit(this.readyEvent, readyLines));
+        this.lines = [];
         if (this.timer) {
             clearTimeout(this.timer);
             this.timer = undefined;

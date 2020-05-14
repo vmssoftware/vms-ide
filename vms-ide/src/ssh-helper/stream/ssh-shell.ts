@@ -107,7 +107,7 @@ export class SshShell extends SshClient implements ISshShell {
      * Exec one command and continue. No "\r" or "\n" allowed inside command.
      * @param command command to execute
      */
-    public async execCmd(command: string, timeout?: number) {
+    public async execCmd(command: string, lineListener?: (line: string) => void, timeout?: number ) {
         let contentRet: string[] | undefined;
         this.lastError = undefined;
         this.logFn(LogType.debug, () => "waitOperation.acquire() on execCmd()");
@@ -123,48 +123,48 @@ export class SshShell extends SshClient implements ISshShell {
 
                 const waitReady = new Lock(true);
                 const trimmedCommand = command.trim();
-                const onReady = Subscribe(this.promptCatcher, this.promptCatcher.readyEvent, (content) => {
+                let onLine: IUnSubscribe | undefined = undefined;
+                if (lineListener) {
+                    onLine = Subscribe(this.promptCatcher, this.promptCatcher.lineEvent, (line: string) => {
+                        lineListener(line);
+                    });
+                }
+                const onReady = Subscribe(this.promptCatcher, this.promptCatcher.readyEvent, (lines: string[]) => {
                     if (this.promptCatcher && this.promptCatcher.lastError) {
                         this.lastError = String(this.promptCatcher.lastError);
                         this.logFn(LogType.debug, () => localize("debug.cmd.error", "shell{1} command error: {0}", this.lastError, this.tag ? " " + this.tag : ""));
-                        contentRet = typeof content === "string"
-                            ? [content]
-                            : this.promptCatcher
-                                ? [this.promptCatcher.content]
-                                : contentRet;
+                        contentRet = lines;
+                        if (contentRet.length == 0) {
+                            contentRet = this.promptCatcher.lines;
+                        }
                         commandEnded.call(this);
                     } else {
-                        if (typeof content === "string") {
-                            this.logFn(LogType.debug, () => localize("debug.cmd.raw", "shell{1} command raw output: {0}", content, this.tag ? " " + this.tag : ""));
+                        if (lines.length) {
+                            this.logFn(LogType.debug, () => localize("debug.cmd.raw", "shell{1} command raw output: {0}", lines.join('\n'), this.tag ? " " + this.tag : ""));
+                            // skip empty lines (as in previous version of code)
+                            lines = lines.filter(x => !!x);
                             // find written command in content and remove it
                             let garbage = false;
                             let contentPos = 0;
-                            for(let commandPos = 0; contentPos < content.length && commandPos < trimmedCommand.length; contentPos++) {
-                                if (content[contentPos] === "\r" || content[contentPos] === "\n") {
-                                    continue;
+                            let contentLine = 0;
+                            let commandPos = 0;
+                            while (commandPos < trimmedCommand.length) {
+                                while (contentPos >= lines[contentLine].length) {
+                                    ++contentLine;
+                                    contentPos = 0;
                                 }
-                                if (content[contentPos] !== trimmedCommand[commandPos]) {
+                                if (lines[contentLine][contentPos] !== trimmedCommand[commandPos]) {
                                     garbage = true;
                                     break;
                                 }
                                 commandPos++;
+                                contentPos++;
                             }
-                            // skip empty lines (as in previous version of code)
-                            let outPos = 0;
-                            while(outPos === 0 && contentPos < content.length) {
-                                switch (content[contentPos]) {
-                                    case "\r":
-                                    case "\n":
-                                        contentPos++;
-                                        break;
-                                    default:
-                                        outPos = contentPos;
-                                        break;
-                                }
-                            }
+                            // go to line after
+                            ++contentLine;
                             if (!garbage) {
                                 this.logFn(LogType.debug, () => localize("debug.cmd.out", "shell{0} command output found", this.tag ? " " + this.tag : ""));
-                                contentRet = outPos ? content.slice(outPos).split(/\r?\n|\r/) : [];
+                                contentRet = lines.slice(contentLine);
                                 commandEnded.call(this);
                             } else {
                                 this.logFn(LogType.debug, () => localize("debug.garbage", "shell{0} garbage output found", this.tag ? " " + this.tag : ""));
@@ -176,12 +176,12 @@ export class SshShell extends SshClient implements ISshShell {
                     }
                 });
                 const onClose = Subscribe(this.channel, "close", () => {
-                    contentRet = contentRet ? contentRet : this.promptCatcher ? [this.promptCatcher.content] : contentRet;
+                    contentRet = contentRet ? contentRet : this.promptCatcher ? this.promptCatcher.lines : contentRet;
                     commandEnded.call(this);
                     this.logFn(LogType.debug, () => localize("debug.closed", "shell{0} channel suddenly closed", this.tag ? " " + this.tag : ""));
                 });
                 const onExit = Subscribe(this.channel, "exit", (exitCode) => {
-                    contentRet = contentRet ? contentRet : this.promptCatcher ? [this.promptCatcher.content] : contentRet;
+                    contentRet = contentRet ? contentRet : this.promptCatcher ? this.promptCatcher.lines : contentRet;
                     commandEnded.call(this);
                     this.logFn(LogType.debug, () => localize("debug.channel.exit", "shell{0} channel suddenly exited", this.tag ? " " + this.tag : ""));
                 });
@@ -192,6 +192,7 @@ export class SshShell extends SshClient implements ISshShell {
                     this.channel.pipe(this.promptCatcher);
                     await waitReady.acquire();
                 }
+                onLine?.unsubscribe();
                 onReady.unsubscribe();
                 onClose.unsubscribe();
                 onExit.unsubscribe();
@@ -207,7 +208,7 @@ export class SshShell extends SshClient implements ISshShell {
                         this.logFn(LogType.debug, () => localize("debug.undef", "shell{0} channel undefined when trying to unpipe", this.tag ? " " + this.tag : ""));
                     }
                     if (this.promptCatcher) {
-                        this.promptCatcher.content = "";
+                        this.promptCatcher.prepare();
                     }
                 }
             }
@@ -247,7 +248,7 @@ export class SshShell extends SshClient implements ISshShell {
             } else {
                 this.logFn(LogType.debug, () => localize("debug.prompt.set", "shell{1} set prompt '{0}' to catcher", this.prompt, this.tag ? " " + this.tag : ""));
                 this.promptCatcher.prompt = this.promptGiven;
-                this.promptCatcher.content = "";
+                this.promptCatcher.prepare();
             }
             return true;
         }
@@ -305,7 +306,7 @@ export class SshShell extends SshClient implements ISshShell {
         }
         delete this.channel;
         delete this.promptGiven;
-        
+
         this.cleanClient();
 
         this.emit("cleanChannel");
