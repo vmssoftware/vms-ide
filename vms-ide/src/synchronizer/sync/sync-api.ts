@@ -53,6 +53,15 @@ export interface IProjectSection {
      */
     source: string;
     /**
+     * compiler qualifiers
+     */
+    addCompQual: string;
+    /**
+     * comma-separated compiler defines:
+     * define_var1=define_value1, define_var2
+     */
+    addCompDef: string;
+    /**
      * comma-separated libraries (or classes for jvm) list:
      * (java,scala,kotin): in UNIX format,
      * (executable,shareable,library): in VMS format

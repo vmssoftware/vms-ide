@@ -66,6 +66,8 @@
 	"synchronizer.properties.project.resource.description": "Файлы ресурсов",
 	"synchronizer.properties.project.root.description": "Корневая папка проекта на VMS",
 	"synchronizer.properties.project.source.description": "Исходные файлы",
+	"synchronizer.properties.project.addCompQual.description": "Дополнительные флаги компилятора",
+	"synchronizer.properties.project.addCompDef.description": "Дополнительные определения для компиляции",
 	"synchronizer.properties.project.addLibraries.description": "Дополнительные библиотеки",
 	"synchronizer.properties.project.addIncludes.description": "Дополнительные папки заголовочных файлов",
 	"synchronizer.properties.synchronize.downloadNewFiles.description": "Действия для более новых файлов из VMS",

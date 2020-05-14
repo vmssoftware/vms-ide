@@ -206,8 +206,8 @@ export class Builder {
     }
 
     /**
-     * 
-     * @param ensured 
+     *
+     * @param ensured
      * @param buildName label of build configuration
      */
     public async collectJavaClasses(ensured: IEnsured, buildName: string) {
@@ -220,7 +220,7 @@ export class Builder {
             default:
                 return false;
         }
-    
+
         const startTime = Date.now();
 
         const jarFile = `${ensured.projectSection.outdir}/${buildName}/${ensured.projectSection.projectName}.jar`;
@@ -240,7 +240,7 @@ export class Builder {
             return false;
         }
         this.enableRemote();
-            
+
         const resultLines = await scopeData.shell.execCmd(cmdJarClasses);
         if (!resultLines) {
             return false;
@@ -251,7 +251,7 @@ export class Builder {
         const maxCmdLength = 1024;
 
         const jvmProject = new JvmProject(ensured.scope, false);
-        
+
         // combine command until its length is more than maxCmdLength
         for (const line of resultLines) {
             const matched = line.match(rgxJavaClassName);
@@ -289,7 +289,7 @@ export class Builder {
                         // found next class
                         let fileInfo = jvmProject.getFileInfo(fileMatch[1], true);
                         const className = classNames.shift();
-                        if (className) {                                   
+                        if (className) {
                             classInfo = jvmProject.getClassInfo(className, fileInfo);
                             fieldInfo = undefined;
                         } else {
@@ -378,7 +378,7 @@ export class Builder {
     }
 
     /**
-     * Fast build, 
+     * Fast build,
      * @param ensured scope settings
      * @param buildName name of predefined build settings
      */
@@ -419,7 +419,7 @@ export class Builder {
 
         if (result && scopeData.ensured.synchronizeSection.purge) {
             await scopeData.shell.execCmd("purge [...]");
-        }                    
+        }
 
         result = await this.runRemoteBuild(scopeData, buildCfg);
 
@@ -641,7 +641,13 @@ export class Builder {
             const includeDirCxx = cxxIncludes.length
                 ? `/INCLUDE_DIRECTORY=(${cxxIncludes.join(",")})`
                 : "";
-            const cxxCommonFlags = `/OBJECT=$(MMS$TARGET)${includeDirCxx}`;
+            let cxxCommonFlags = `/OBJECT=$(MMS$TARGET)${includeDirCxx}`;
+            if (ensured.projectSection.addCompQual) {
+                cxxCommonFlags = cxxCommonFlags + ensured.projectSection.addCompQual;
+            }
+            if (ensured.projectSection.addCompDef) {
+                cxxCommonFlags = cxxCommonFlags + `/DEFINE=(${ensured.projectSection.addCompDef})`;
+            }
             const cxxDebugFlags = `/DEBUG/NOOP/LIST=$(MMS$TARGET_NAME)${cxxCommonFlags}`;
             const linkCommonFlags = ensured.projectSection.projectType === ProjectType[ProjectType.executable]
                 ? `/EXECUTABLE=$(MMS$TARGET)`
@@ -752,7 +758,7 @@ export class Builder {
                    ensured.projectSection.projectType === ProjectType[ProjectType.scala] ||
                    ensured.projectSection.projectType === ProjectType[ProjectType.kotlin] ) {
             // TODO: distinguish DEBUG and RELEASE
-            
+
             let extension = ".java";
             let compiler = "javac";
             switch(ensured.projectSection.projectType) {
@@ -778,7 +784,7 @@ export class Builder {
             if (ensured.projectSection.projectType === ProjectType[ProjectType.java]) {
                 contentLast.push(`    pipe del/tree [.$(OUTDIR).tmp...]*.*;* | copy SYS$INPUT nl:`);
             }
-                    
+
             middleLines.push(...[
                 `.SILENT`,
             ]);
@@ -924,7 +930,7 @@ export class Builder {
                 lineType = MmsLineType.sources;
                 blocksFound = blocksFound + 1;
                 continue;
-            } 
+            }
             if (lineType !== MmsLineType.nothing) {
                 const matched = line.match(vmsPathRgx);
                 if (matched && matched[VmsPathPart.fileName]) {
@@ -936,12 +942,12 @@ export class Builder {
                     continue;
                 } else {
                     lineType = MmsLineType.nothing;
-                }    
-            } 
+                }
+            }
             if (blocksFound === 2) {
                 // stop searching
                 break;
-            } 
+            }
         }
 
         const localSource = new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
@@ -1016,7 +1022,7 @@ export class Builder {
         const errors = ParseExecResult(await scopeData.shell.execCmd(command));
         if (errors.length === 0) {
             return true;
-        } 
+        }
         this.logFn(LogType.error, () => errors.join("\n"));
         return false;
     }
@@ -1074,7 +1080,7 @@ export class Builder {
                     const zipFolderConverter = new VmsPathConverter(zipFolder);
                     let cd = `set default ${zipFolderConverter.directory}`;
                     answer = await scopeData.shell.execCmd(cd);
-                    // create zip file 
+                    // create zip file
                     let {expandedMask: expandedList, missed_curly_bracket} = expandMask(scopeData.ensured.projectSection.listing);
                     if (missed_curly_bracket) {
                         this.logFn(LogType.warning, () => localize("check.inc.mask", "Please check listing file masks for correct curly brackets"), true);

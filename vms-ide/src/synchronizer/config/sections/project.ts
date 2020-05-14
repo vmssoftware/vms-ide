@@ -27,6 +27,8 @@ export class ProjectSection implements IProjectSection, IConfigSection {
         typeof candidate.resource === "string" &&
         typeof candidate.root === "string" &&
         typeof candidate.source === "string" &&
+        typeof candidate.addCompQual === "string" &&
+        typeof candidate.addCompDef === "string" &&
         typeof candidate.addLibraries === "string" &&
         typeof candidate.addIncludes === "string";
     }
@@ -42,6 +44,8 @@ export class ProjectSection implements IProjectSection, IConfigSection {
     public resource: string = "**/resource/**";
     public root: string = "project";
     public source: string = "*.{cpp,c,cld,msg}";
+    public addCompQual: string = "";
+    public addCompDef: string = "";
     public addLibraries: string = "";
     public addIncludes: string = "";
 
@@ -66,6 +70,8 @@ export class ProjectSection implements IProjectSection, IConfigSection {
             resource: this.resource,
             root: this.root,
             source: this.source,
+            addCompQual: this.addCompQual,
+            addCompDef: this.addCompDef,
             addLibraries: this.addLibraries,
             addIncludes: this.addIncludes,
         };
@@ -86,6 +92,8 @@ export class ProjectSection implements IProjectSection, IConfigSection {
             this.resource = data.resource;
             this.root = data.root;
             this.source = data.source;
+            this.addCompQual = data.addCompQual;
+            this.addCompDef = data.addCompDef;
             this.addLibraries = data.addLibraries;
             this.addIncludes = data.addIncludes;
             return true;
