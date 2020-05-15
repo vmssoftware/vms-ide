@@ -28,3 +28,13 @@ export async function createFile(fileUri: vscode.Uri, content: string) {
         return false;
     }
 }
+
+export async function loadFile(fileUri: vscode.Uri) {
+    try {
+        const textDoc = await vscode.workspace.openTextDocument(fileUri);
+        return textDoc.getText();
+    } catch (err) {
+        return "";
+    }
+}
+

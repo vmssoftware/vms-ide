@@ -18,6 +18,8 @@ import { Queue } from "../queue/queues";
 import { ModuleInfoCache } from "../parsers/debug_module_info";
 import { VmsPathConverter } from "../../synchronizer/vms/vms-path-converter";
 import { RgxStrFromStr } from "../../common/rgx-from-str";
+import { debugInfoFile } from "../../synchronizer/build/builder";
+import { readWholeStream } from "../../common/read_all_stream";
 
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
@@ -128,7 +130,19 @@ export class VMSRuntime extends EventEmitter
 		this.currentFilePath = "";
 		this.currentRoutine = "";
 		this.currentScope = "";
-	}
+    }
+
+    private static async ensureModuleInfoCache(scope: string | ConfigManager) {
+        if (typeof scope == "string") {
+            scope = new ConfigManager(scope);
+        }
+        let jsonStr = await readWholeStream(await (await scope.getLocalSource())?.createReadStream(debugInfoFile));
+        if (jsonStr) {
+            return ModuleInfoCache.loadJSON(jsonStr);
+        } else {
+            return await VMSRuntime.collectModuleInfo(scope);
+        }
+    }
 
 	// Start executing the given program.
 	public async start(programName : string, programArgs : string, stopOnEntry : boolean) : Promise<void>
@@ -170,23 +184,28 @@ export class VMSRuntime extends EventEmitter
 		//if(this.shellDbg.getModeWork() === ModeWork.shell)
 		if (!this.shellDbg.getDbgModeOn())
 		{
-            this.moduleInfoCache = await this.collectModuleInfo(this.scope);
-            let depList = await configManager.getDependencyList();
-            if (depList) {
-                for (let dep of depList) {
-                    if (dep !== this.scope) {
-                        let moduleInfoCache = await this.collectModuleInfo(dep);
-                        this.moduleInfoCache.depModuleInfoCache.push(moduleInfoCache);
+            let moduleInfoCache = await VMSRuntime.ensureModuleInfoCache(configManager);
+            if (moduleInfoCache) {
+                let depList = await configManager.getDependencyList();
+                if (depList) {
+                    for (let dep of depList) {
+                        if (dep !== this.scope) {
+                            let depModuleInfoCache = await VMSRuntime.ensureModuleInfoCache(dep);
+                            if (depModuleInfoCache) {
+                                moduleInfoCache.depModuleInfoCache.push(depModuleInfoCache);
+                            }
+                        }
                     }
                 }
             }
+            this.moduleInfoCache = moduleInfoCache;
 
 			this.shell.resetParameters();
 			this.shellDbg.resetParameters();
 
-			const preRunFile = section.projectName + ".com";
-			let localSource = await configManager.getLocalSource();
-			const found = await localSource!.findFiles(preRunFile, section.exclude);
+            const preRunFile = section.projectName + ".com";
+            const localSource = await configManager.getLocalSource();
+			const found = await localSource?.findFiles(preRunFile, section.exclude);
 			// run appropriate COM file, if it exists
 			if (found && found.length === 1)
 			{
@@ -212,25 +231,25 @@ export class VMSRuntime extends EventEmitter
 		vscode.debug.activeDebugConsole.append("\n\x1B[2J\x1B[H");//clean old data from DEBUG CONSOLE
 	}
 
-	private async collectModuleInfo(scope: string)
-	{
-        let moduleInfoCache = new ModuleInfoCache(scope, false);
+	public static async collectModuleInfo(scope: string | ConfigManager) {
+        if (typeof scope == "string") {
+            scope = new ConfigManager(scope);
+        }
+        let moduleInfoCache = new ModuleInfoCache(scope.scope, false);
 
-        let configManager = new ConfigManager(scope);
-
-        let sectionCur = await configManager.getProjectSection();
+        let sectionCur = await scope.getProjectSection();
         if (sectionCur) {
-            let project = await configManager.getProjectSection();
-            let sourcePaths = await configManager.findFiles(sectionCur.source, project?.exclude);
-            let lisPaths = await configManager.findFiles(sectionCur.listing);
-            for(let path of lisPaths) {
-                if (this.checkExtension(path, "MAP")) {
-                    await moduleInfoCache.addMapFile(path);
+            let project = await scope.getProjectSection();
+            let sources = await scope.findFiles(sectionCur.source, project?.exclude);
+            let listings = await scope.findFiles(sectionCur.listing);
+            for(let listing of listings) {
+                if (path.extname(listing).toUpperCase() == ".MAP") {
+                    await moduleInfoCache.addMapFile(listing);
                 }
             }
-            for(let sourcePath of sourcePaths) {
-                let listingPath = this.findLisFile(sourcePath, lisPaths, "LIS");
-                await moduleInfoCache.addLisFile(sourcePath, listingPath, this.logFn);
+            for(let source of sources) {
+                let listingPath = VMSRuntime.findLisFile(source, listings, "LIS");
+                await moduleInfoCache.addLisFile(source, listingPath);
             }
         }
         return moduleInfoCache;
@@ -1175,7 +1194,7 @@ export class VMSRuntime extends EventEmitter
 		return result;
 	}
 
-	private findLisFile(fileName: string, paths: string[], extToFind: string) : string
+	public static findLisFile(fileName: string, paths: string[], extToFind: string) : string
 	{
         fileName = vscode.workspace.asRelativePath(fileName, false);
         let dotPos = fileName.lastIndexOf('.');
@@ -1487,6 +1506,8 @@ export class VMSRuntime extends EventEmitter
                                     this.setDelimiters(this.language);
                                 }
                                 this.sendEvent(DebugCmdVMS.dbgStack, stack);
+                            } else {
+                                this.sendEvent('end');
                             }
 							break;
 
@@ -1494,6 +1515,8 @@ export class VMSRuntime extends EventEmitter
                             if (this.moduleInfoCache) {
                                 this.dbgParser.parseVariableMsg(this.moduleInfoCache, messageData);
                                 this.waitSymbols.notify();
+                            } else {
+                                this.sendEvent('end');
                             }
 							break;
 

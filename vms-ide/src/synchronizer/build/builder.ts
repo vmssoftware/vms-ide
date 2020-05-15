@@ -1,7 +1,7 @@
 
 import * as nls from "vscode-nls";
-import fs from "fs-extra";
 import path from "path";
+import fs from "fs-extra";
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, languages, Range, Uri, workspace } from "vscode";
 
 import { IFileEntry, LogFunction, LogType } from "../../common/main";
@@ -24,6 +24,9 @@ import { ParseExecResult } from "../../synchronizer/common/TestExecResult";
 import { JvmProject, IClassInfo, IFieldInfo, isFieldAccess } from "../../vms_jvm_debug/jvm-project";
 import { maskSpacesInTemplate } from "../../common/rgx-from-str";
 import { expandMask } from "../../synchronizer/common/find-files";
+import { VMSRuntime } from "../../vms_debug/debug/vms_runtime";
+import { createFile } from "../../synchronizer/common/create-file";
+import { writeWholeStream } from "../../common/read_all_stream";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -65,6 +68,8 @@ function isParameterDebug(parameter: string | undefined) {
     return !parameter || parameter.toUpperCase() === "DEBUG";
 }
 
+
+export const debugInfoFile = ".vscode/debug_info.json";
 
 export class Builder {
 
@@ -479,6 +484,11 @@ export class Builder {
             if (!downloadedByZip) {
                 await synchronizer.downloadListings(scopeData.ensured);
             }
+
+            let moduleInfoCache = await VMSRuntime.collectModuleInfo(ensured.scope || "");
+            let jsonStr = moduleInfoCache.saveJSON();
+            let stream = await scopeData.localSource.createWriteStream(debugInfoFile);
+            writeWholeStream(stream, jsonStr);
         }
 
         this.decideDispose(scopeData);
@@ -540,6 +550,13 @@ export class Builder {
                     // delete java classes info
                     if (ensured.configHelper.workspaceFolder) {
                         const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
+                        fs.unlink(fileName).catch(() => false);
+                    }
+                    break;
+                default:
+                    // delete debug info
+                    if (ensured.configHelper.workspaceFolder) {
+                        const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, debugInfoFile);
                         fs.unlink(fileName).catch(() => false);
                     }
                     break;

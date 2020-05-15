@@ -42,6 +42,42 @@ export class ModuleInfoCache
 		//
     }
 
+    public saveJSON() {
+        let strJson = JSON.stringify({
+            scope: this.scope,
+            uppercase: this.makeModulesUppercase,
+            moduleInfo: Array.from(this.moduleInfo.values()),
+        });
+        return strJson;
+    }
+
+    public static isModuleInfo(candidate: any): candidate is IModuleInfo {
+        return !!candidate &&
+            typeof(candidate.moduleName) == "string" &&
+            typeof(candidate.sourcePath) == "string" &&
+            typeof(candidate.listingPath) == "string" &&
+            typeof(candidate.language) == "string";
+    }
+
+    public static loadJSON(strJson: string) {
+        try {
+            let candidate = JSON.parse(strJson);
+            if (typeof(candidate.scope) == "string" && typeof(candidate.uppercase) == "boolean") {
+                let moduleInfoCache = new ModuleInfoCache(candidate.scope, candidate.uppercase);
+                if (Array.isArray(candidate.moduleInfo)) {
+                    for (let item of candidate.moduleInfo) {
+                        if (ModuleInfoCache.isModuleInfo(item)) {
+                            moduleInfoCache.setItem(item.moduleName, item.sourcePath, item.listingPath, item.language);
+                        }
+                    }
+                }
+                return moduleInfoCache;
+            }
+        } catch(ex) {
+        }
+        return undefined;
+    }
+
 	public async addMapFile(mapFile: string) {
 		return new Promise<Boolean>((resolve) => {
 			try {
@@ -98,7 +134,7 @@ export class ModuleInfoCache
 		});
 	}
 
-	public async addLisFile(sourceFile: string, lisFile: string, logFn?: LogFunction) {
+	public async addLisFile(sourceFile: string, lisFile: string) {
 		let baseName = path.basename(sourceFile, path.extname(sourceFile));
 		if (this.makeModulesUppercase) {
 			baseName = baseName.toUpperCase();
