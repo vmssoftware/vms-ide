@@ -15,7 +15,7 @@ import { ModeWork, ShellSession, TypeDataMessage, TypeTerminal } from "../net/sh
 import { DebugParser, MessageDebuger, Parameters, MessagePrompt } from "../parsers/debug_parser";
 import { DebugVariable, HolderDebugVariableInfo, ReflectKind, VariableFileInfo } from "../parsers/debug_variable_info";
 import { Queue } from "../queue/queues";
-import { HolderModuleInfo } from "../parsers/debug_module_info";
+import { ModuleInfoCache } from "../parsers/debug_module_info";
 import { VmsPathConverter } from "../../synchronizer/vms/vms-path-converter";
 import { RgxStrFromStr } from "../../common/rgx-from-str";
 
@@ -72,11 +72,9 @@ export class VMSRuntime extends EventEmitter
 	private stackStartFrame: number = 0;
 	private stackEndFrame: number = 0;
 
-	private modulesHolder: HolderModuleInfo;
-	private sourcePaths: string[];
-	private lisPaths: string[];
-	private rootFolderName: string;
-	private rootFolderNames = new Array<string>();
+	private moduleInfoCache: ModuleInfoCache | undefined;
+	private scope: string = "";
+    private depModuleInfoCache = new Map<string, ModuleInfoCache>();
 
 	private currentFilePath: string;
 	private currentRoutine: string;
@@ -108,28 +106,28 @@ export class VMSRuntime extends EventEmitter
 	private startUser = false;
 	private startUserDebugCmd = false;
 
+    public logFn: LogFunction;
 
-	constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, shellDbg : ShellSession, public logFn?: LogFunction)
+	constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, shellDbg : ShellSession, logFn?: LogFunction)
 	{
 		super();
 
-		this.shell = shell;
+        this.logFn = logFn || (() => {});
+
+        this.shell = shell;
 		this.shellDbg = shellDbg;
 		this.buttonPressd = DebugButtonEvent.btnNoEvent;
-		this.rootFolderName = folder ? folder.name : "";
+		this.scope = folder ? folder.name : "";
 		this.osCmd = new OsCommands();
 		this.dbgCmd = new DebugCommands(false);
 		this.dbgParser = new DebugParser(false);
 		this.varsInfo = new HolderDebugVariableInfo();
-		this.modulesHolder = new HolderModuleInfo(false);
 		this.stopOnEntry = false;
 		this.debugRun = false;
 		this.programEnd = false;
 		this.currentFilePath = "";
 		this.currentRoutine = "";
 		this.currentScope = "";
-		this.sourcePaths = [];
-		this.lisPaths = [];
 	}
 
 	// Start executing the given program.
@@ -138,10 +136,9 @@ export class VMSRuntime extends EventEmitter
 		this.stopOnEntry = stopOnEntry;
 		this.programEnd = false;
 		this.debugRun = false;
-		let configManager = new ConfigManager(this.rootFolderName);
+		let configManager = new ConfigManager(this.scope);
 		let section = await configManager.getProjectSection();
 		let connection = await configManager.getConnectionSection();
-		const messageSync = localize('runtime.sync_api_not_find', "Sync API doesn't find");
 
 		if(connection && connection.username)
 		{
@@ -150,15 +147,8 @@ export class VMSRuntime extends EventEmitter
 		this.programName = programName;
 		this.programArgs = programArgs;
 
-		if (!section)
-		{
-			vscode.window.showErrorMessage(messageSync);
-
-			if (this.logFn)
-			{
-				this.logFn(LogType.information, () => messageSync + "\n");
-			}
-
+		if (!section) {
+            this.logFn(LogType.error, () => localize("config_error", "Configuration error"), true);
 			this.sendEvent('end');//close debugger
 			return;
 		}
@@ -180,76 +170,17 @@ export class VMSRuntime extends EventEmitter
 		//if(this.shellDbg.getModeWork() === ModeWork.shell)
 		if (!this.shellDbg.getDbgModeOn())
 		{
-			if(vscode.workspace.workspaceFolders)
-			{
-				let listFolders = await configManager.getDependencyList();
+            this.moduleInfoCache = await this.collectModuleInfo(this.scope);
+            let depList = await configManager.getDependencyList();
+            if (depList) {
+                for (let dep of depList) {
+                    if (dep !== this.scope) {
+                        let moduleInfoCache = await this.collectModuleInfo(dep);
+                        this.moduleInfoCache.depModuleInfoCache.push(moduleInfoCache);
+                    }
+                }
+            }
 
-				if(listFolders)
-				{
-					for(let folder of listFolders)
-					{
-						let path = "";
-
-						for(let item of vscode.workspace.workspaceFolders)
-						{
-							if(item.name === folder)
-							{
-								path = item.uri.fsPath;
-								path = path.replace(/\\/g, ftpPathSeparator);
-								this.rootFolderNames.push(path);
-								break;
-							}
-						}
-
-						if(path !== "")
-						{
-							let fileM = new ConfigManager(folder);
-							let sectionCur = await fileM.getProjectSection();
-
-							if (sectionCur)
-							{
-								let project = await fileM.getProjectSection();
-								let sourcePaths = await fileM.loadPathListFiles(sectionCur.source, project?.exclude);
-								let lisPaths = await fileM.loadPathListFiles(sectionCur.listing);
-
-								this.addPrefixToArray(path, sourcePaths);
-								this.addPrefixToArray(path, lisPaths);
-
-								this.sourcePaths = this.sourcePaths.concat(sourcePaths);
-								this.lisPaths = this.lisPaths.concat(lisPaths);
-							}
-						}
-					}
-				}
-				else
-				{
-					vscode.window.showErrorMessage(messageSync);
-
-					if (this.logFn)
-					{
-						this.logFn(LogType.information, () => messageSync + "\n");
-					}
-
-					this.sendEvent('end');//close debugger
-					return;
-				}
-			}
-			else
-			{
-				const message = localize('runtime.workspace_not_find', "Workspace Folders don't find");
-				vscode.window.showErrorMessage(message);
-
-				if (this.logFn)
-				{
-					this.logFn(LogType.information, () => message + "\n");
-				}
-
-				this.sendEvent('end');//close debugger
-				return;
-			}
-
-			this.checkLisFiles(this.sourcePaths, this.lisPaths);
-			this.modulesHolder = await this.collectModuleInfos(this.sourcePaths, this.lisPaths);
 			this.shell.resetParameters();
 			this.shellDbg.resetParameters();
 
@@ -281,72 +212,28 @@ export class VMSRuntime extends EventEmitter
 		vscode.debug.activeDebugConsole.append("\n\x1B[2J\x1B[H");//clean old data from DEBUG CONSOLE
 	}
 
-	private addPrefixToArray(perfix : string, array : string[])
+	private async collectModuleInfo(scope: string)
 	{
-		for(let i = 0; i < array.length; i++)
-		{
-			array[i] = perfix + ftpPathSeparator + array[i];
-		}
-	}
+        let moduleInfoCache = new ModuleInfoCache(scope, false);
 
-	private checkLisFiles(sources : string[], lis : string[])
-	{
-		let messageFiles: string = "";
-		let countFiles = 0;
-		const message = localize('runtime.lis_not_find', ".LIS file doesn't find for the source file");
+        let configManager = new ConfigManager(scope);
 
-		for(let itemSource of sources)
-		{
-			let found = false;
-			let name = this.getNameFromPath(itemSource);
-			let folder = this.getFolderName(itemSource);
-
-			for(let itemLis of lis)
-			{
-				if(folder === this.getFolderName(itemLis))
-				{
-					if(name === this.getNameFromPath(itemLis))
-					{
-						found = true;
-						break;
-					}
-				}
-			}
-
-			if(!found)
-			{
-				messageFiles += itemSource + "\n";
-				countFiles++;
-
-				if (this.logFn)
-				{
-					this.logFn(LogType.information, () => message + " " + itemSource + "\n");
-				}
-			}
-		}
-
-		if(messageFiles !== "")
-		{
-			vscode.window.showWarningMessage(message + ": (" + countFiles.toString() + " files)\n"+ messageFiles);
-		}
-	}
-
-	private async collectModuleInfos(sourcePaths: string[], lisPaths: string[]) : Promise<HolderModuleInfo>
-	{
-		let info : HolderModuleInfo = new HolderModuleInfo(false);
-
-		for(let path of lisPaths) {
-			if (this.checkExtension(path, "MAP")) {
-				await info.addMapFile(path);
-			}
-		}
-
-		for(let sourcePath of sourcePaths) {
-			let listingPath = this.findPathFileByName(sourcePath, lisPaths, "LIS");
-			await info.addLisFile(sourcePath, listingPath, this.logFn);
-		}
-
-		return info;
+        let sectionCur = await configManager.getProjectSection();
+        if (sectionCur) {
+            let project = await configManager.getProjectSection();
+            let sourcePaths = await configManager.findFiles(sectionCur.source, project?.exclude);
+            let lisPaths = await configManager.findFiles(sectionCur.listing);
+            for(let path of lisPaths) {
+                if (this.checkExtension(path, "MAP")) {
+                    await moduleInfoCache.addMapFile(path);
+                }
+            }
+            for(let sourcePath of sourcePaths) {
+                let listingPath = this.findLisFile(sourcePath, lisPaths, "LIS");
+                await moduleInfoCache.addLisFile(sourcePath, listingPath, this.logFn);
+            }
+        }
+        return moduleInfoCache;
 	}
 
 	//Continue execution to the end/beginning.
@@ -768,9 +655,9 @@ export class VMSRuntime extends EventEmitter
 			this.varsInfo = this.dbgParser.getVariableFileInfo();
 			let vars = this.varsInfo.getVariableFile(this.currentFilePath);
 
-			if(!vars)//request variables info
+			if(!vars && this.moduleInfoCache)//request variables info
 			{
-				let moduleName = this.modulesHolder.getItemByPath(this.currentFilePath).moduleName;
+				let moduleName = this.moduleInfoCache.getItemBySource(this.currentFilePath).moduleName;
 				this.shellDbg.SendCommandToQueue(this.dbgCmd.showSymbols(moduleName));
 				await this.waitSymbols.wait(5000);
 
@@ -1266,25 +1153,7 @@ export class VMSRuntime extends EventEmitter
 		this.breakPoints.delete(path);
 	}
 
-	// private methods //
-
-	private getNameFromPath(item: string) : string
-	{
-		let namePos = item.lastIndexOf(ftpPathSeparator) + 1;// if no path -> from start (-1 + 1 = 0 ;)
-		let extPos = item.lastIndexOf(".");
-
-		if (extPos === -1)
-		{
-			extPos = item.length;// if no ext -> to the end
-		}
-
-		if (namePos >= 0 && namePos < extPos)
-		{
-			return item.slice(namePos, extPos).toLowerCase();// check name
-		}
-
-		return item;
-	}
+    // private methods //
 
 	private checkExtension(file: string, extension: string) : boolean
 	{
@@ -1306,53 +1175,27 @@ export class VMSRuntime extends EventEmitter
 		return result;
 	}
 
-	private getFolderName(fullPath: string) : string //get name of the folder project, item="folder/path/file.ext"
+	private findLisFile(fileName: string, paths: string[], extToFind: string) : string
 	{
-		let folderProject = "";
-
-		for(let item of this.rootFolderNames)
-		{
-			if(fullPath.includes(item))
-			{
-				folderProject = item;
-			}
-		}
-
-		return folderProject;
-	}
-
-	private findPathFileByName(fileName : string, paths : string[], extension: string) : string
-	{
-		let pathFile : string = "";
-
-		let name = this.getNameFromPath(fileName);
-        let folder = this.getFolderName(fileName);
-        let relative = fileName.slice(folder.length + 1, -path.basename(fileName).length);
-
-        let rgxStr = RgxStrFromStr(folder) + "(.*?)" + RgxStrFromStr(relative + name + "." + extension);
+        fileName = vscode.workspace.asRelativePath(fileName, false);
+        let dotPos = fileName.lastIndexOf('.');
+        if (dotPos > 0) {
+            fileName = fileName.substr(0, dotPos);
+        }
+        let rgxStr = "(.*?)" + RgxStrFromStr(fileName + '.' + extToFind);
         let rgx = new RegExp(rgxStr, "i");
 
-		for(let item of paths)
-		{
+        for(let item of paths) {
             if (item.match(rgx)) {
-                pathFile = item;
-                break;
+                return item;
             }
-		}
-
-		return pathFile;
+        }
+		return "";
 	}
 
 	private async loadSourceLang(file: string) : Promise<string[]>
 	{
 		return this.dbgParser.loadFileContext(file);
-	}
-
-	private async loadSourceLis(file: string) : Promise<string[]>
-	{
-		let pathFileLis = this.findPathFileByName(file, this.lisPaths, "LIS");
-
-		return this.dbgParser.loadFileContext(pathFileLis);
 	}
 
 	private async verifyBreakpoints(path: string) : Promise<void>
@@ -1390,83 +1233,57 @@ export class VMSRuntime extends EventEmitter
 		}
 	}
 
-	private async setRemoteBreakpointsAll() : Promise<void>
+	private setRemoteBreakpointsAll()
 	{
-		for(let path of this.sourcePaths)
-		{
-			await this.setRemoteBreakpoints(path);
+        let files: Set<string> = new Set<string>();
+
+        for (let file of this.breakPointsSet.keys()) {
+            files.add(file);
+        }
+
+        for (let file of this.breakPointsRem.keys()) {
+            files.add(file);
+        }
+
+        for(let path of files) {
+			this.setRemoteBreakpoints(path);
 		}
 	}
 
-	private async setRemoteBreakpointsPath(path: string) : Promise<void>
+	private setRemoteBreakpointsPath(path: string)
 	{
 		if(this.debugRun === true)
 		{
-			await this.setRemoteBreakpoints(path);
+			this.setRemoteBreakpoints(path);
 		}
-	}
+    }
 
-	private async setRemoteBreakpoints(path: string) : Promise<void>
+    private processBreakPont(bp: VMSBreakpoint, operation: "set" | "remove") {
+        let done = false;
+        let moduleInfo = this.moduleInfoCache?.getItemBySource(bp.path);
+        if (moduleInfo) {
+            let numberLine = this.dbgParser.findBreakPointNumberLine(bp.path, moduleInfo.listingPath, bp.line);
+            if(!Number.isNaN(numberLine)) {
+                if (operation === "set") {
+                    this.shellDbg.SendCommandToQueue(this.dbgCmd.breakPointSet(moduleInfo.moduleName, numberLine));
+                } else {
+                    this.shellDbg.SendCommandToQueue(this.dbgCmd.breakPointRemove(moduleInfo.moduleName, numberLine));
+                }
+                done = true;
+            }
+        }
+        if (!done) {
+            this.clearBreakPoint(bp.path, bp.line);
+            bp.verified = false;
+            this.sendEvent('breakpointValidated', bp); //breakpoint off
+        }
+    }
+
+	private setRemoteBreakpoints(path: string)
 	{
 		let key = path.toLowerCase();
-		let setBps = this.breakPointsSet.get(key);
-		let remBps = this.breakPointsRem.get(key);
-
-		if (remBps)
-		{
-			if(remBps.length > 0)
-			{
-				// let lisLines = await this.loadSourceLis(path);
-
-				remBps.forEach(bp =>
-				{
-					//finde number of line
-					let pathFileLis = this.findPathFileByName(path, this.lisPaths, "LIS");
-					let numberLine = this.dbgParser.findBreakPointNumberLine(path, pathFileLis, bp.line);
-
-					if(!Number.isNaN(numberLine))
-					{
-						let moduleName = this.modulesHolder.getItemByPath(path).moduleName;
-						this.shellDbg.SendCommandToQueue(this.dbgCmd.breakPointRemove(moduleName, numberLine));
-					}
-					else//clear breakpoint
-					{
-						this.clearBreakPoint(path, bp.line);
-
-						bp.verified = false;
-						this.sendEvent('breakpointValidated', bp);//breakpoint off
-					}
-				});
-			}
-		}
-
-		if (setBps)
-		{
-			if(setBps.length > 0)
-			{
-				//let lisLines = await this.loadSourceLis(path);
-
-				setBps.forEach(bp =>
-				{
-					//finde number of line
-					let pathFileLis = this.findPathFileByName(path, this.lisPaths, "LIS");
-					let numberLine = this.dbgParser.findBreakPointNumberLine(path, pathFileLis, bp.line);
-
-					if(!Number.isNaN(numberLine))
-					{
-						let moduleName = this.modulesHolder.getItemByPath(path).moduleName;
-						this.shellDbg.SendCommandToQueue(this.dbgCmd.breakPointSet(moduleName, numberLine));
-					}
-					else//clear breakpoint
-					{
-						this.clearBreakPoint(path, bp.line);
-
-						bp.verified = false;
-						this.sendEvent('breakpointValidated', bp);//breakpoint off
-					}
-				});
-			}
-		}
+		this.breakPointsRem.get(key)?.forEach(bp => this.processBreakPont(bp, "remove"));
+		this.breakPointsSet.get(key)?.forEach(bp => this.processBreakPont(bp, "set"));
 	}
 
 	private sendEvent(event: string, ... args: any[])
@@ -1657,23 +1474,27 @@ export class VMSRuntime extends EventEmitter
 							break;
 
 						case DebugCmdVMS.dbgCallStack:
-							let stack = this.dbgParser.parseCallStackMsg(messageData, this.modulesHolder, this.stackStartFrame, this.stackEndFrame);
-							//get current file and routine
-							if(stack.count > 0)
-							{
-								this.currentFilePath = stack.frames[0].file;
-								this.currentRoutine = stack.frames[0].name.substr(0, stack.frames[0].name.indexOf("["));
+                            if (this.moduleInfoCache) {
+                                let stack = this.dbgParser.parseCallStackMsg(messageData, this.moduleInfoCache, this.stackStartFrame, this.stackEndFrame);
+                                //get current file and routine
+                                if(stack.count > 0)
+                                {
+                                    this.currentFilePath = stack.frames[0].file;
+                                    this.currentRoutine = stack.frames[0].name.substr(0, stack.frames[0].name.indexOf("["));
 
-								let moduleItem = this.modulesHolder.getItemByPath(this.currentFilePath);
-								this.language = this.getLanguageFromInfo(moduleItem.language);
-								this.setDelimiters(this.language);
-							}
-							this.sendEvent(DebugCmdVMS.dbgStack, stack);
+                                    let moduleItem = this.moduleInfoCache.getItemBySource(this.currentFilePath);
+                                    this.language = this.getLanguageFromInfo(moduleItem.language);
+                                    this.setDelimiters(this.language);
+                                }
+                                this.sendEvent(DebugCmdVMS.dbgStack, stack);
+                            }
 							break;
 
 						case DebugCmdVMS.dbgSymbol:
-							this.dbgParser.parseVariableMsg(this.modulesHolder, messageData);
-							this.waitSymbols.notify();
+                            if (this.moduleInfoCache) {
+                                this.dbgParser.parseVariableMsg(this.moduleInfoCache, messageData);
+                                this.waitSymbols.notify();
+                            }
 							break;
 
 						case DebugCmdVMS.dbgShowScope:

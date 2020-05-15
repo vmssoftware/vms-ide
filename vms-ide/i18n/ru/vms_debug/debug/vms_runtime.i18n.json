@@ -1,7 +1,5 @@
 {
-    "runtime.sync_api_not_find": "Sync API не найдено",
-    "runtime.workspace_not_find": "Workspace не найден",
-    "runtime.lis_not_find": ".LIS файл не найден для исходного файла",
+    "config_error": "Ошибка конфигурации",
     "runtime.watch_error": "Watch: Ошибка параметра. Пример: (when (x > 3)) или ().",
     "runtime.command_ignore": "Команда запрещена!"
 }

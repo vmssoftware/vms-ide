@@ -1,4 +1,4 @@
-import { IFileEntry, Lock } from "../../common/main";
+import { IFileEntry, Lock, ftpPathSeparator } from "../../common/main";
 import * as readline from "readline";
 import { GetSshHelperType } from "../../ext-api/ext-api";
 import { GetSyncApi } from "../../ext-api/ext-api";
@@ -140,24 +140,19 @@ export class ConfigManager
 		return this.localSource;
 	}
 
-	public async loadPathListFiles(pattern : string, exclude?: string) : Promise<string[]>
+    /**
+     * Find files by mask
+     * @param pattern
+     * @param exclude
+     * @returns list of full paths
+     */
+	public async findFiles(pattern : string, exclude?: string) : Promise<string[]>
 	{
-		if (!await this.ensureLocalSource())
-		{
+		if (!await this.ensureLocalSource() || !this.localSource) {
 			return [] as string[];
-		}
-
-		let list : string[] = [];
-		let entries : IFileEntry[] | undefined = await this.localSource!.findFiles(pattern, exclude);
-
-		if (entries) {
-			for(let item of entries)
-			{
-				list.push(item.filename);
-			}
-		}
-
-		return list;
+        }
+        let root = this.localSource.root ? this.localSource.root + ftpPathSeparator : "";
+        return (await this.localSource.findFiles(pattern, exclude))?.map(x => root + x.filename) || [];
 	}
 
 	public async loadContextFile(file: string) : Promise<string[]>
