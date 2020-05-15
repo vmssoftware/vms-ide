@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "1.5.10",
+    "version": "1.5.11",
     "publisher": "VMSSoftwareInc",
     "license": "SEE LICENSE IN LICENSE.md",
     "repository": {
@@ -18,7 +18,7 @@
         "Other"
     ],
     "icon": "images/vms_128x128_v2.png",
-    "main": "./out/index",
+    "main": "./out/extension",
     "activationEvents": [
         "*",
         "onView:vmssoftware.project-dep.projectDependencies",
@@ -40,7 +40,7 @@
         "onCommand:vmssoftware.synchronizer.downloadHeaders",
         "onCommand:vmssoftware.synchronizer.buildOnlyProject",
         "onCommand:vmssoftware.synchronizer.reBuildOnlyProject",
-        "onCommand:vmssoftware.jvm.collectJavaClasses",
+        "onCommand:vmssoftware.synchronizer.prepareDebug",
         "onCommand:extension.vms-debug.terminal",
         "onDebug",
         "onLanguage:cld",
@@ -321,6 +321,10 @@
                     "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
                 },
                 {
+                    "command": "vmssoftware.project-dep.projectDependencies.prepareDebug",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
                     "command": "vmssoftware.project-dep.projectDependencies.syncProject",
                     "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
                 },
@@ -399,6 +403,10 @@
             {
                 "command": "vmssoftware.project-dep.projectDependencies.add",
                 "title": "%synchronizer.command.projectDependencies.add.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.prepareDebug",
+                "title": "%synchronizer.command.projectDependencies.prepareDebug.title%"
             },
             {
                 "command": "vmssoftware.project-dep.projectDependencies.syncProject",
@@ -533,8 +541,8 @@
                 "category": "%command.category%"
             },
             {
-                "command": "vmssoftware.jvm.collectJavaClasses",
-                "title": "%jvm.collectJavaClasses.title%",
+                "command": "vmssoftware.synchronizer.prepareDebug",
+                "title": "%synchronizer.prepareDebug.title%",
                 "category": "%command.category%"
             }
         ],

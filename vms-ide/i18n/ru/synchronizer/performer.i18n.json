@@ -32,9 +32,9 @@
     "upload.fail": "Выгрузка неудачна",
     "upload.status": "Выгрузка...",
     "upload.success": "Выгрузка завершена",
-    "collect.fail": "Сбор классов Java неудачен",
-    "collect.status": "Сбор классов Java...",
-    "collect.success": "Сбор классов Java завершён",
+    "collect.fail": "Подготовка DEBUG неудачна",
+    "collect.status": "Подготовка DEBUG...",
+    "collect.success": "Подготовка DEBUG завершена",
     "error.no_action": "Отсутсвует действие: {0}",
     "error.action_in_progress": "Невозможно выполнить, т.к. другое действие в процессе: {0}"
 }

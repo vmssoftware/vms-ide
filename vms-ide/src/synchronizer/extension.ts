@@ -1,4 +1,4 @@
-import { 
+import {
     Event,
     ExtensionContext,
     commands,
@@ -54,7 +54,7 @@ export async function activate(context: ExtensionContext) {
 
     const projectDependenciesProvider = new ProjDepProvider();
     setProjectDependenciesChanged(projectDependenciesProvider.didChangeDependencies as Event<void>);
-    
+
     const projectDescriptionProvider = new ProjDescrProvider();
 
     ProjectFilesWatchEmitter.on('created', (scope, filePath) => {
@@ -74,9 +74,9 @@ export async function activate(context: ExtensionContext) {
         ProjectState.acquire().create();
     });
 
-    context.subscriptions.push( commands.registerCommand("vmssoftware.jvm.collectJavaClasses", async (scope?: string) => {
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.prepareDebug", async (scope?: string) => {
         scope = checkScope(scope);
-        return Perform("collect java", scope, logFn);
+        return Perform("prepare debug", scope, logFn);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async (scope?: string) => {
@@ -224,6 +224,8 @@ export async function activate(context: ExtensionContext) {
         (element) => projectDependenciesProvider.select(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.add",
         (element) => projectDependenciesProvider.add(element)) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.prepareDebug",
+        (element) => projectDependenciesProvider.prepareDebug(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.syncProject",
         (element) => projectDependenciesProvider.syncProject(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.upload",
@@ -261,7 +263,7 @@ export async function activate(context: ExtensionContext) {
 
     /**
      * Returns current selected scope if given parameter is empty
-     * @param scope 
+     * @param scope
      */
     function checkScope(scope: string | undefined) {
         if (!scope) {
@@ -273,7 +275,7 @@ export async function activate(context: ExtensionContext) {
         }
         return scope;
     }
-    
+
 }
 
 // this method is called when your extension is deactivated

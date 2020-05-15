@@ -210,7 +210,7 @@ export class Builder {
      * @param ensured
      * @param buildName label of build configuration
      */
-    public async collectJavaClasses(ensured: IEnsured, buildName: string) {
+    private async collectJavaClasses(ensured: IEnsured, buildName: string) {
 
         switch(ensured.projectSection.projectType) {
             case ProjectType[ProjectType.java]:
@@ -232,14 +232,10 @@ export class Builder {
         const rgMain = /public\s+static\s+(final\s+)?void\s+main\(/;
         const rgField = /^(\s*)((?:public|private|protected)\s+)?((?:(?:static|abstract|synchronized|transient|volatile|final|native|strictfp|default)\s+)*)(<\S+\s+)?([^\s(;]+\s+)?([^\s(;]+)\s*(\(.*\))?\s*(?:throws .*)?;/;
 
-        if (this.sshHelper) {
-            this.sshHelper.clearPasswordCache();
-        }
         const scopeData = await this.prepareScopeData(ensured);
         if (!scopeData) {
             return false;
         }
-        this.enableRemote();
 
         const resultLines = await scopeData.shell.execCmd(cmdJarClasses);
         if (!resultLines) {
@@ -373,6 +369,119 @@ export class Builder {
 
         const seconds = Math.floor((Date.now() - startTime) / 1000);
         this.logFn(LogType.information, () => `Elapsed ${seconds} sec.`);
+
+        return true;
+    }
+
+    /**
+     * Fast build,
+     * @param ensured scope settings
+     * @param buildName name of predefined build settings
+     */
+    public async prepareDebug(ensured: IEnsured, buildName: string) {
+
+        // clear password cache
+        if (this.sshHelper) {
+            this.sshHelper.clearPasswordCache();
+        }
+
+        // enable
+        this.enableRemote();
+
+        switch(ensured.projectSection.projectType) {
+            case ProjectType[ProjectType.java]:
+            case ProjectType[ProjectType.scala]:
+            case ProjectType[ProjectType.kotlin]:
+                return this.collectJavaClasses(ensured, buildName);
+        }
+
+        const buildCfg = ensured.buildsSection.configurations.find((cfg) => cfg.label === buildName);
+        if (!buildCfg) {
+            this.logFn(LogType.error, () => localize("build.cfg", "There is no build configuration named {0}.", buildName));
+            return false;
+        }
+
+        // scope data
+        const scopeData = await this.prepareScopeData(ensured);
+        if (!scopeData) {
+            return false;
+        }
+
+        if (scopeData.ensured.projectSection.listing) {
+            const synchronizer = Synchronizer.acquire(this.logFn);
+            // always try to download listing, for all configurations
+            let downloadedByZip = false;
+            if (scopeData.ensured.synchronizeSection.preferZip) {
+                // get and save current folder
+                let currentPath: VmsPathConverter | undefined;
+                let answer = await scopeData.shell.execCmd('show default');
+                if (answer && answer.length !== 0) {
+                    currentPath = VmsPathConverter.fromVms(answer[0].trim());
+                }
+                // go to folder for zipping files
+                let zipFolderChain: string[] = [
+                    scopeData.ensured.projectSection.root,
+                    scopeData.ensured.projectSection.outdir,
+                    buildCfg.label
+                ];
+                let zipFolder = zipFolderChain.join(ftpPathSeparator) + ftpPathSeparator;   // must be a folder
+                if (!scopeData.ensured.projectSection.root.startsWith(ftpPathSeparator)) {
+                    // relative path, add CWD
+                    zipFolder = scopeData.shellRootConverter.initial + zipFolder;
+                }
+                const zipFolderConverter = new VmsPathConverter(zipFolder);
+                let cd = `set default ${zipFolderConverter.directory}`;
+                answer = await scopeData.shell.execCmd(cd);
+                // create zip file
+                let {expandedMask: expandedList, missed_curly_bracket} = expandMask(scopeData.ensured.projectSection.listing);
+                if (missed_curly_bracket) {
+                    this.logFn(LogType.warning, () => localize("check.inc.mask", "Please check listing file masks for correct curly brackets"), true);
+                }
+                // delete zip file on OpenVMS side if it exists
+                answer = await scopeData.shell.execCmd(`delete ${Builder.zipName + Builder.zipExt};*`);
+                // add files to zip by entry
+                for(let kind of expandedList) {
+                    // zip already must have an option to do recursive search
+                    if (kind.startsWith("**/")) {
+                        kind = kind.substr(3);
+                    }
+                    let zipCmd: string | undefined;
+                    if (scopeData.ensured.scope) {
+                        zipCmd = await synchronizer.getZipCmd(scopeData.ensured.scope, Builder.zipName, kind);
+                    }
+                    if (!zipCmd) {
+                        zipCmd = Builder.zipCmd(Builder.zipName, kind);
+                    }
+                    answer = await scopeData.shell.execCmd(zipCmd);
+                }
+                // download zip file
+                const relZipName = [
+                        scopeData.ensured.projectSection.outdir,
+                        buildCfg.label,
+                        Builder.zipName + Builder.zipExt].join(ftpPathSeparator);
+                const downloaded = await synchronizer.downloadFiles(scopeData.ensured, [relZipName]);
+                if (downloaded) {
+                    // unzip it
+                    const zipApi = GetZipApi();
+                    if (zipApi && scopeData.ensured.configHelper.workspaceFolder) {
+                        const fullZipName = path.join(scopeData.ensured.configHelper.workspaceFolder.uri.fsPath, relZipName);
+                        downloadedByZip = await new zipApi(this.logFn).unzip(fullZipName);
+                    }
+                }
+                // delete zip file on OpenVMS side
+                answer = await scopeData.shell.execCmd(`delete ${Builder.zipName + Builder.zipExt};*`);
+                // go back to saved current folder
+                if (currentPath) {
+                    cd = `set default ${currentPath.directory}`;
+                    answer = await scopeData.shell.execCmd(cd);
+                }
+            }
+            if (!downloadedByZip) {
+                await synchronizer.downloadListings(scopeData.ensured);
+            }
+        }
+
+        this.decideDispose(scopeData);
 
         return true;
     }
@@ -1057,79 +1166,6 @@ export class Builder {
         });
         if (output) {
             const retCode = await this.parseProblems(scopeData, output, buildCfg);
-            if (scopeData.ensured.projectSection.listing) {
-                const synchronizer = Synchronizer.acquire(this.logFn);
-                // always try to download listing, for all configurations
-                let downloadedByZip = false;
-                if (scopeData.ensured.synchronizeSection.preferZip) {
-                    // get and save current folder
-                    let currentPath: VmsPathConverter | undefined;
-                    let answer = await scopeData.shell.execCmd('show default');
-                    if (answer && answer.length !== 0) {
-                        currentPath = VmsPathConverter.fromVms(answer[0].trim());
-                    }
-                    // go to folder for zipping files
-                    let zipFolderChain: string[] = [
-                        scopeData.ensured.projectSection.root,
-                        scopeData.ensured.projectSection.outdir,
-                        buildCfg.label
-                    ];
-                    let zipFolder = zipFolderChain.join(ftpPathSeparator) + ftpPathSeparator;   // must be a folder
-                    if (!scopeData.ensured.projectSection.root.startsWith(ftpPathSeparator)) {
-                        // relative path, add CWD
-                        zipFolder = scopeData.shellRootConverter.initial + zipFolder;
-                    }
-                    const zipFolderConverter = new VmsPathConverter(zipFolder);
-                    let cd = `set default ${zipFolderConverter.directory}`;
-                    answer = await scopeData.shell.execCmd(cd);
-                    // create zip file
-                    let {expandedMask: expandedList, missed_curly_bracket} = expandMask(scopeData.ensured.projectSection.listing);
-                    if (missed_curly_bracket) {
-                        this.logFn(LogType.warning, () => localize("check.inc.mask", "Please check listing file masks for correct curly brackets"), true);
-                    }
-                    // delete zip file on OpenVMS side if it exists
-                    answer = await scopeData.shell.execCmd(`delete ${Builder.zipName + Builder.zipExt};*`);
-                    // add files to zip by entry
-                    for(let kind of expandedList) {
-                        // zip already must have an option to do recursive search
-                        if (kind.startsWith("**/")) {
-                            kind = kind.substr(3);
-                        }
-                        let zipCmd: string | undefined;
-                        if (scopeData.ensured.scope) {
-                            zipCmd = await synchronizer.getZipCmd(scopeData.ensured.scope, Builder.zipName, kind);
-                        }
-                        if (!zipCmd) {
-                            zipCmd = Builder.zipCmd(Builder.zipName, kind);
-                        }
-                        answer = await scopeData.shell.execCmd(zipCmd);
-                    }
-                    // download zip file
-                    const relZipName = [
-                            scopeData.ensured.projectSection.outdir,
-                            buildCfg.label,
-                            Builder.zipName + Builder.zipExt].join(ftpPathSeparator);
-                    const downloaded = await synchronizer.downloadFiles(scopeData.ensured, [relZipName]);
-                    if (downloaded) {
-                        // unzip it
-                        const zipApi = GetZipApi();
-                        if (zipApi && scopeData.ensured.configHelper.workspaceFolder) {
-                            const fullZipName = path.join(scopeData.ensured.configHelper.workspaceFolder.uri.fsPath, relZipName);
-                            downloadedByZip = await new zipApi(this.logFn).unzip(fullZipName);
-                        }
-                    }
-                    // delete zip file on OpenVMS side
-                    answer = await scopeData.shell.execCmd(`delete ${Builder.zipName + Builder.zipExt};*`);
-                    // go back to saved current folder
-                    if (currentPath) {
-                        cd = `set default ${currentPath.directory}`;
-                        answer = await scopeData.shell.execCmd(cd);
-                    }
-                }
-                if (!downloadedByZip) {
-                    await synchronizer.downloadListings(scopeData.ensured);
-                }
-            }
             return retCode;
         } else {
             this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute: {0}", command));
