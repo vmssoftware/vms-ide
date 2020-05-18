@@ -356,6 +356,7 @@ import { BackspaceStatementContext } from "./FortranParser";
 import { EndfileStatementContext } from "./FortranParser";
 import { RewindStatementContext } from "./FortranParser";
 import { DeleteStatementContext } from "./FortranParser";
+import { AcceptStatementContext } from "./FortranParser";
 import { PositionSpecContext } from "./FortranParser";
 import { DeleteSpecContext } from "./FortranParser";
 import { InquireStatementContext } from "./FortranParser";
@@ -4250,6 +4251,17 @@ export interface FortranParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitDeleteStatement?: (ctx: DeleteStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.acceptStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterAcceptStatement?: (ctx: AcceptStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.acceptStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitAcceptStatement?: (ctx: AcceptStatementContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `FortranParser.positionSpec`.

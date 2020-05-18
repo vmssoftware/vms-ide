@@ -254,6 +254,10 @@ CHARACTER
    : C H A R A C T E R
    ;
 
+VARCHAR
+   : V A R C H A R
+   ;
+
 PARAMETER
    : P A R A M E T E R
    ;
@@ -468,6 +472,10 @@ UNLOCK
 
 EXEC_SQL
    : E X E C ' ' S Q L
+   ;
+
+ACCEPT
+   : A C C E P T
    ;
 
 DESCR

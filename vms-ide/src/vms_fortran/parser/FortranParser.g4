@@ -134,6 +134,7 @@ actionStatement
    | stopStatement
    | writeStatement
    | deleteStatement
+   | acceptStatement
    ;
 
 definedOperator
@@ -939,6 +940,7 @@ typeSpec
    | LOGICAL kindSelector?
    | TYPE LPAREN typeName RPAREN
    | CHARACTER lengthSelector
+   | VARCHAR kindSelector?
    ;
 
 attrSpec
@@ -2020,6 +2022,11 @@ rewindStatement
 
 deleteStatement
    : label? DELETE LPAREN deleteSpec (COMMA deleteSpec)* RPAREN eos
+   ;
+
+acceptStatement
+   : label? ACCEPT (label | STAR) (COMMA outputItemList)? eos
+   | label? ACCEPT outputItemList eos
    ;
 
 positionSpec
