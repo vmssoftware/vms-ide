@@ -313,6 +313,7 @@ import { LabelDoStatementContext } from "./FortranParser";
 import { LoopControlContext } from "./FortranParser";
 import { Int_Real_Dp_ExpressionContext } from "./FortranParser";
 import { EndDoStatementContext } from "./FortranParser";
+import { ExecSqlStatementContext } from "./FortranParser";
 import { CycleStatementContext } from "./FortranParser";
 import { ExitStatementContext } from "./FortranParser";
 import { GoToKwContext } from "./FortranParser";
@@ -3776,6 +3777,17 @@ export interface FortranParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitEndDoStatement?: (ctx: EndDoStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.execSqlStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterExecSqlStatement?: (ctx: ExecSqlStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.execSqlStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitExecSqlStatement?: (ctx: ExecSqlStatementContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `FortranParser.cycleStatement`.

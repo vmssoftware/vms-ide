@@ -100,6 +100,7 @@ executableConstruct
    | caseConstruct
    | whereConstruct
    | endDoStatement
+   | execSqlStatement
    ;
 
 actionStatement
@@ -1765,6 +1766,10 @@ int_Real_Dp_Expression
 
 endDoStatement
    : label? (END DO | ENDDO) name? eos
+   ;
+
+execSqlStatement
+   : label? SQL_STATEMENT eos
    ;
 
 cycleStatement

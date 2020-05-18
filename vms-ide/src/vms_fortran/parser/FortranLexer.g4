@@ -466,6 +466,10 @@ UNLOCK
    : U N L O C K
    ;
 
+EXEC_SQL
+   : E X E C ' ' S Q L
+   ;
+
 DESCR
    : '%'D E S C R
    ;
@@ -1048,6 +1052,11 @@ COMMENT
 
 FIXED_COMMENT
    : ([\r\n] [*Cc!] (~ [\r\n])*)
+   ;
+
+SQL_STATEMENT
+   : EXEC_SQL ~ ([\r\n])*
+   | EXEC_SQL ~ ([\r\n])* ((CONT6|CONTN|CONTTAB) ~ ([\r\n])*)+
    ;
 
 SconSingle
