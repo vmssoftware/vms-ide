@@ -542,26 +542,27 @@ export class Builder {
 
         result = await this.runRemoteBuild(scopeData, buildCfg);
 
-        if (result) {
-            switch(ensured.projectSection.projectType) {
-                case ProjectType[ProjectType.java]:
-                case ProjectType[ProjectType.scala]:
-                case ProjectType[ProjectType.kotlin]:
-                    // delete java classes info
-                    if (ensured.configHelper.workspaceFolder) {
-                        const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
-                        fs.unlink(fileName).catch(() => false);
-                    }
-                    break;
-                default:
-                    // delete debug info
-                    if (ensured.configHelper.workspaceFolder) {
-                        const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, debugInfoFile);
-                        fs.unlink(fileName).catch(() => false);
-                    }
-                    break;
-            }
-        }
+        // TODO: use settings?
+        // if (result) {
+        //     switch(ensured.projectSection.projectType) {
+        //         case ProjectType[ProjectType.java]:
+        //         case ProjectType[ProjectType.scala]:
+        //         case ProjectType[ProjectType.kotlin]:
+        //             // delete java classes info
+        //             if (ensured.configHelper.workspaceFolder) {
+        //                 const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
+        //                 fs.unlink(fileName).catch(() => false);
+        //             }
+        //             break;
+        //         default:
+        //             // delete debug info
+        //             if (ensured.configHelper.workspaceFolder) {
+        //                 const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, debugInfoFile);
+        //                 fs.unlink(fileName).catch(() => false);
+        //             }
+        //             break;
+        //     }
+        // }
 
         this.decideDispose(scopeData);
 

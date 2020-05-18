@@ -468,9 +468,9 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "prepare debug",
-        fail: localize("collect.fail", "Preparing DEBUG failed"),
-        status: localize("collect.status", "Preparing DEBUG..."),
-        success: localize("collect.success", "Preparing DEBUG ok"),
+        fail: localize("collect.fail", "Preparing to debug failed"),
+        status: localize("collect.status", "Preparing to debug..."),
+        success: localize("collect.success", "Preparing to debug ok"),
     },
 ];
 
