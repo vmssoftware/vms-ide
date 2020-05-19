@@ -470,8 +470,12 @@ UNLOCK
    : U N L O C K
    ;
 
-EXEC_SQL
-   : E X E C ' ' S Q L
+EXEC
+   : E X E C
+   ;
+
+SQL
+   : S Q L
    ;
 
 ACCEPT
@@ -1063,8 +1067,8 @@ FIXED_COMMENT
    ;
 
 SQL_STATEMENT
-   : EXEC_SQL ~ ([\r\n])*
-   | EXEC_SQL ~ ([\r\n])* ((CONT6|CONTN|CONTTAB) ~ ([\r\n])*)+
+   : EXEC ([ \t\r])+ SQL ~ ([\r\n])*
+   | EXEC ([ \t\r])+ SQL ~ ([\r\n])* ((CONT6|CONTN|CONTTAB) ~ ([\r\n])*)+
    ;
 
 SconSingle
