@@ -595,7 +595,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         };
         // set and verify breakpoint locations
         if (args.breakpoints && args.source.path) {
-            let fileName = workspace.asRelativePath(args.source.path, true);
+            let fileName = workspace.asRelativePath(args.source.path, false);
             for (const [key, value] of this._rootMap) {
                 if (fileName.toLowerCase().startsWith(value.toLowerCase())) {
                     fileName = (key + fileName.substring(value.length)).replace(middleSepRg, ftpPathSeparator);
@@ -733,7 +733,7 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     protected async gotoTargetsRequest(response: DebugProtocol.GotoTargetsResponse, args: DebugProtocol.GotoTargetsArguments, request?: DebugProtocol.Request) {
         if (args.source.path) {
-            let localPath = workspace.asRelativePath(args.source.path, true)
+            let localPath = workspace.asRelativePath(args.source.path, false)
             for (const [key, value] of this._rootMap) {
                 if (localPath.toLowerCase().startsWith(value.toLowerCase())) {
                     localPath = (key + localPath.substring(value.length)).replace(middleSepRg, ftpPathSeparator);
