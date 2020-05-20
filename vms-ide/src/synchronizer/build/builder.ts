@@ -1,7 +1,7 @@
 
 import * as nls from "vscode-nls";
-import fs from "fs-extra";
 import path from "path";
+import fs from "fs-extra";
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, languages, Range, Uri, workspace } from "vscode";
 
 import { IFileEntry, LogFunction, LogType } from "../../common/main";
@@ -24,6 +24,9 @@ import { ParseExecResult } from "../../synchronizer/common/TestExecResult";
 import { JvmProject, IClassInfo, IFieldInfo, isFieldAccess } from "../../vms_jvm_debug/jvm-project";
 import { maskSpacesInTemplate } from "../../common/rgx-from-str";
 import { expandMask } from "../../synchronizer/common/find-files";
+import { VMSRuntime } from "../../vms_debug/debug/vms_runtime";
+import { createFile } from "../../synchronizer/common/create-file";
+import { writeWholeStream } from "../../common/read_all_stream";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -65,6 +68,8 @@ function isParameterDebug(parameter: string | undefined) {
     return !parameter || parameter.toUpperCase() === "DEBUG";
 }
 
+
+export const debugInfoFile = ".vscode/debug_info.json";
 
 export class Builder {
 
@@ -206,11 +211,11 @@ export class Builder {
     }
 
     /**
-     * 
-     * @param ensured 
+     *
+     * @param ensured
      * @param buildName label of build configuration
      */
-    public async collectJavaClasses(ensured: IEnsured, buildName: string) {
+    private async collectJavaClasses(ensured: IEnsured, buildName: string) {
 
         switch(ensured.projectSection.projectType) {
             case ProjectType[ProjectType.java]:
@@ -220,7 +225,7 @@ export class Builder {
             default:
                 return false;
         }
-    
+
         const startTime = Date.now();
 
         const jarFile = `${ensured.projectSection.outdir}/${buildName}/${ensured.projectSection.projectName}.jar`;
@@ -232,15 +237,11 @@ export class Builder {
         const rgMain = /public\s+static\s+(final\s+)?void\s+main\(/;
         const rgField = /^(\s*)((?:public|private|protected)\s+)?((?:(?:static|abstract|synchronized|transient|volatile|final|native|strictfp|default)\s+)*)(<\S+\s+)?([^\s(;]+\s+)?([^\s(;]+)\s*(\(.*\))?\s*(?:throws .*)?;/;
 
-        if (this.sshHelper) {
-            this.sshHelper.clearPasswordCache();
-        }
         const scopeData = await this.prepareScopeData(ensured);
         if (!scopeData) {
             return false;
         }
-        this.enableRemote();
-            
+
         const resultLines = await scopeData.shell.execCmd(cmdJarClasses);
         if (!resultLines) {
             return false;
@@ -251,7 +252,7 @@ export class Builder {
         const maxCmdLength = 1024;
 
         const jvmProject = new JvmProject(ensured.scope, false);
-        
+
         // combine command until its length is more than maxCmdLength
         for (const line of resultLines) {
             const matched = line.match(rgxJavaClassName);
@@ -289,7 +290,7 @@ export class Builder {
                         // found next class
                         let fileInfo = jvmProject.getFileInfo(fileMatch[1], true);
                         const className = classNames.shift();
-                        if (className) {                                   
+                        if (className) {
                             classInfo = jvmProject.getClassInfo(className, fileInfo);
                             fieldInfo = undefined;
                         } else {
@@ -378,7 +379,125 @@ export class Builder {
     }
 
     /**
-     * Fast build, 
+     * Fast build,
+     * @param ensured scope settings
+     * @param buildName name of predefined build settings
+     */
+    public async prepareDebug(ensured: IEnsured, buildName: string) {
+
+        // clear password cache
+        if (this.sshHelper) {
+            this.sshHelper.clearPasswordCache();
+        }
+
+        // enable
+        this.enableRemote();
+
+        switch(ensured.projectSection.projectType) {
+            case ProjectType[ProjectType.java]:
+            case ProjectType[ProjectType.scala]:
+            case ProjectType[ProjectType.kotlin]:
+                return this.collectJavaClasses(ensured, buildName);
+        }
+
+        const buildCfg = ensured.buildsSection.configurations.find((cfg) => cfg.label === buildName);
+        if (!buildCfg) {
+            this.logFn(LogType.error, () => localize("build.cfg", "There is no build configuration named {0}.", buildName));
+            return false;
+        }
+
+        // scope data
+        const scopeData = await this.prepareScopeData(ensured);
+        if (!scopeData) {
+            return false;
+        }
+
+        if (scopeData.ensured.projectSection.listing) {
+            const synchronizer = Synchronizer.acquire(this.logFn);
+            // always try to download listing, for all configurations
+            let downloadedByZip = false;
+            if (scopeData.ensured.synchronizeSection.preferZip) {
+                // get and save current folder
+                let currentPath: VmsPathConverter | undefined;
+                let answer = await scopeData.shell.execCmd('show default');
+                if (answer && answer.length !== 0) {
+                    currentPath = VmsPathConverter.fromVms(answer[0].trim());
+                }
+                // go to folder for zipping files
+                let zipFolderChain: string[] = [
+                    scopeData.ensured.projectSection.root,
+                    scopeData.ensured.projectSection.outdir,
+                    buildCfg.label
+                ];
+                let zipFolder = zipFolderChain.join(ftpPathSeparator) + ftpPathSeparator;   // must be a folder
+                if (!scopeData.ensured.projectSection.root.startsWith(ftpPathSeparator)) {
+                    // relative path, add CWD
+                    zipFolder = scopeData.shellRootConverter.initial + zipFolder;
+                }
+                const zipFolderConverter = new VmsPathConverter(zipFolder);
+                let cd = `set default ${zipFolderConverter.directory}`;
+                answer = await scopeData.shell.execCmd(cd);
+                // create zip file
+                let {expandedMask: expandedList, missed_curly_bracket} = expandMask(scopeData.ensured.projectSection.listing);
+                if (missed_curly_bracket) {
+                    this.logFn(LogType.warning, () => localize("check.inc.mask", "Please check listing file masks for correct curly brackets"), true);
+                }
+                // delete zip file on OpenVMS side if it exists
+                answer = await scopeData.shell.execCmd(`delete ${Builder.zipName + Builder.zipExt};*`);
+                // add files to zip by entry
+                for(let kind of expandedList) {
+                    // zip already must have an option to do recursive search
+                    if (kind.startsWith("**/")) {
+                        kind = kind.substr(3);
+                    }
+                    let zipCmd: string | undefined;
+                    if (scopeData.ensured.scope) {
+                        zipCmd = await synchronizer.getZipCmd(scopeData.ensured.scope, Builder.zipName, kind);
+                    }
+                    if (!zipCmd) {
+                        zipCmd = Builder.zipCmd(Builder.zipName, kind);
+                    }
+                    answer = await scopeData.shell.execCmd(zipCmd);
+                }
+                // download zip file
+                const relZipName = [
+                        scopeData.ensured.projectSection.outdir,
+                        buildCfg.label,
+                        Builder.zipName + Builder.zipExt].join(ftpPathSeparator);
+                const downloaded = await synchronizer.downloadFiles(scopeData.ensured, [relZipName]);
+                if (downloaded) {
+                    // unzip it
+                    const zipApi = GetZipApi();
+                    if (zipApi && scopeData.ensured.configHelper.workspaceFolder) {
+                        const fullZipName = path.join(scopeData.ensured.configHelper.workspaceFolder.uri.fsPath, relZipName);
+                        downloadedByZip = await new zipApi(this.logFn).unzip(fullZipName);
+                    }
+                }
+                // delete zip file on OpenVMS side
+                answer = await scopeData.shell.execCmd(`delete ${Builder.zipName + Builder.zipExt};*`);
+                // go back to saved current folder
+                if (currentPath) {
+                    cd = `set default ${currentPath.directory}`;
+                    answer = await scopeData.shell.execCmd(cd);
+                }
+            }
+            if (!downloadedByZip) {
+                await synchronizer.downloadListings(scopeData.ensured);
+            }
+
+            let moduleInfoCache = await VMSRuntime.collectModuleInfo(ensured.scope || "");
+            let jsonStr = moduleInfoCache.saveJSON();
+            let stream = await scopeData.localSource.createWriteStream(debugInfoFile);
+            writeWholeStream(stream, jsonStr);
+        }
+
+        this.decideDispose(scopeData);
+
+        return true;
+    }
+
+    /**
+     * Fast build,
      * @param ensured scope settings
      * @param buildName name of predefined build settings
      */
@@ -419,7 +538,7 @@ export class Builder {
 
         if (result && scopeData.ensured.synchronizeSection.purge) {
             await scopeData.shell.execCmd("purge [...]");
-        }                    
+        }
 
         result = await this.runRemoteBuild(scopeData, buildCfg);
 
@@ -431,6 +550,13 @@ export class Builder {
                     // delete java classes info
                     if (ensured.configHelper.workspaceFolder) {
                         const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, `.vscode`, `javaInfo.json`);
+                        fs.unlink(fileName).catch(() => false);
+                    }
+                    break;
+                default:
+                    // delete debug info
+                    if (ensured.configHelper.workspaceFolder) {
+                        const fileName = path.join(ensured.configHelper.workspaceFolder.uri.fsPath, debugInfoFile);
                         fs.unlink(fileName).catch(() => false);
                     }
                     break;
@@ -641,7 +767,13 @@ export class Builder {
             const includeDirCxx = cxxIncludes.length
                 ? `/INCLUDE_DIRECTORY=(${cxxIncludes.join(",")})`
                 : "";
-            const cxxCommonFlags = `/OBJECT=$(MMS$TARGET)${includeDirCxx}`;
+            let cxxCommonFlags = `/OBJECT=$(MMS$TARGET)${includeDirCxx}`;
+            if (ensured.projectSection.addCompQual) {
+                cxxCommonFlags = cxxCommonFlags + ensured.projectSection.addCompQual;
+            }
+            if (ensured.projectSection.addCompDef) {
+                cxxCommonFlags = cxxCommonFlags + `/DEFINE=(${ensured.projectSection.addCompDef})`;
+            }
             const cxxDebugFlags = `/DEBUG/NOOP/LIST=$(MMS$TARGET_NAME)${cxxCommonFlags}`;
             const linkCommonFlags = ensured.projectSection.projectType === ProjectType[ProjectType.executable]
                 ? `/EXECUTABLE=$(MMS$TARGET)`
@@ -752,7 +884,7 @@ export class Builder {
                    ensured.projectSection.projectType === ProjectType[ProjectType.scala] ||
                    ensured.projectSection.projectType === ProjectType[ProjectType.kotlin] ) {
             // TODO: distinguish DEBUG and RELEASE
-            
+
             let extension = ".java";
             let compiler = "javac";
             switch(ensured.projectSection.projectType) {
@@ -778,7 +910,7 @@ export class Builder {
             if (ensured.projectSection.projectType === ProjectType[ProjectType.java]) {
                 contentLast.push(`    pipe del/tree [.$(OUTDIR).tmp...]*.*;* | copy SYS$INPUT nl:`);
             }
-                    
+
             middleLines.push(...[
                 `.SILENT`,
             ]);
@@ -924,7 +1056,7 @@ export class Builder {
                 lineType = MmsLineType.sources;
                 blocksFound = blocksFound + 1;
                 continue;
-            } 
+            }
             if (lineType !== MmsLineType.nothing) {
                 const matched = line.match(vmsPathRgx);
                 if (matched && matched[VmsPathPart.fileName]) {
@@ -936,12 +1068,12 @@ export class Builder {
                     continue;
                 } else {
                     lineType = MmsLineType.nothing;
-                }    
-            } 
+                }
+            }
             if (blocksFound === 2) {
                 // stop searching
                 break;
-            } 
+            }
         }
 
         const localSource = new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
@@ -1016,7 +1148,7 @@ export class Builder {
         const errors = ParseExecResult(await scopeData.shell.execCmd(command));
         if (errors.length === 0) {
             return true;
-        } 
+        }
         this.logFn(LogType.error, () => errors.join("\n"));
         return false;
     }
@@ -1046,82 +1178,11 @@ export class Builder {
             return false;
         }
         // run if decided
-        const output = await scopeData.shell.execCmd(command);
+        const output = await scopeData.shell.execCmd(command, (line) => {
+            this.logFn(LogType.information, () => line);
+        });
         if (output) {
             const retCode = await this.parseProblems(scopeData, output, buildCfg);
-            if (scopeData.ensured.projectSection.listing) {
-                const synchronizer = Synchronizer.acquire(this.logFn);
-                // always try to download listing, for all configurations
-                let downloadedByZip = false;
-                if (scopeData.ensured.synchronizeSection.preferZip) {
-                    // get and save current folder
-                    let currentPath: VmsPathConverter | undefined;
-                    let answer = await scopeData.shell.execCmd('show default');
-                    if (answer && answer.length !== 0) {
-                        currentPath = VmsPathConverter.fromVms(answer[0].trim());
-                    }
-                    // go to folder for zipping files
-                    let zipFolderChain: string[] = [
-                        scopeData.ensured.projectSection.root,
-                        scopeData.ensured.projectSection.outdir,
-                        buildCfg.label
-                    ];
-                    let zipFolder = zipFolderChain.join(ftpPathSeparator) + ftpPathSeparator;   // must be a folder
-                    if (!scopeData.ensured.projectSection.root.startsWith(ftpPathSeparator)) {
-                        // relative path, add CWD
-                        zipFolder = scopeData.shellRootConverter.initial + zipFolder;
-                    }
-                    const zipFolderConverter = new VmsPathConverter(zipFolder);
-                    let cd = `set default ${zipFolderConverter.directory}`;
-                    answer = await scopeData.shell.execCmd(cd);
-                    // create zip file 
-                    let {expandedMask: expandedList, missed_curly_bracket} = expandMask(scopeData.ensured.projectSection.listing);
-                    if (missed_curly_bracket) {
-                        this.logFn(LogType.warning, () => localize("check.inc.mask", "Please check listing file masks for correct curly brackets"), true);
-                    }
-                    // delete zip file on OpenVMS side if it exists
-                    answer = await scopeData.shell.execCmd(`delete ${Builder.zipName + Builder.zipExt};*`);
-                    // add files to zip by entry
-                    for(let kind of expandedList) {
-                        // zip already must have an option to do recursive search
-                        if (kind.startsWith("**/")) {
-                            kind = kind.substr(3);
-                        }
-                        let zipCmd: string | undefined;
-                        if (scopeData.ensured.scope) {
-                            zipCmd = await synchronizer.getZipCmd(scopeData.ensured.scope, Builder.zipName, kind);
-                        }
-                        if (!zipCmd) {
-                            zipCmd = Builder.zipCmd(Builder.zipName, kind);
-                        }
-                        answer = await scopeData.shell.execCmd(zipCmd);
-                    }
-                    // download zip file
-                    const relZipName = [
-                            scopeData.ensured.projectSection.outdir,
-                            buildCfg.label,
-                            Builder.zipName + Builder.zipExt].join(ftpPathSeparator);
-                    const downloaded = await synchronizer.downloadFiles(scopeData.ensured, [relZipName]);
-                    if (downloaded) {
-                        // unzip it
-                        const zipApi = GetZipApi();
-                        if (zipApi && scopeData.ensured.configHelper.workspaceFolder) {
-                            const fullZipName = path.join(scopeData.ensured.configHelper.workspaceFolder.uri.fsPath, relZipName);
-                            downloadedByZip = await new zipApi(this.logFn).unzip(fullZipName);
-                        }
-                    }
-                    // delete zip file on OpenVMS side
-                    answer = await scopeData.shell.execCmd(`delete ${Builder.zipName + Builder.zipExt};*`);
-                    // go back to saved current folder
-                    if (currentPath) {
-                        cd = `set default ${currentPath.directory}`;
-                        answer = await scopeData.shell.execCmd(cd);
-                    }
-                }
-                if (!downloadedByZip) {
-                    await synchronizer.downloadListings(scopeData.ensured);
-                }
-            }
             return retCode;
         } else {
             this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute: {0}", command));
@@ -1131,9 +1192,9 @@ export class Builder {
 
     private async parseProblems(scopeData: IScopeBuildData, output: string[], buildCfg: IBuildConfigSection) {
         const result = parseVmsOutput(output, scopeData.shell.width);
-        for (const line of result.lines) {
-            this.logFn(LogType.warning, () => line);
-        }
+        // for (const line of result.lines) {
+        //     this.logFn(LogType.warning, () => line);
+        // }
         let cwd = "";
         if (scopeData.ensured.projectSection.root.startsWith(ftpPathSeparator)) {
             // absolute path

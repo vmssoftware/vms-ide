@@ -47,6 +47,7 @@ class COMMAND:
     RETURN = 'r'            # r [ident]     // step out
     STEP = 's'              # s [ident]     // step in
     THREADS = 't'
+    RADIX = 'x'             # x [10|16]     // default 10
     # server only commands
     QUIT = 'q'
     HELP = 'h'
@@ -61,12 +62,13 @@ _helpInfo = """\
     GOTO = 'g'              # g ident line
     GOTO_TARGETS = 'gt'     # gt file line  // test if we can go to target from current place
     INFO = 'i'
-    MODE = 'm'              # m [0|1]       // user | developer 
+    MODE = 'm'              # m [0|1]       // user | developer
     NEXT = 'n'              # n [ident]     // step over
     PAUSE = 'p'
     RETURN = 'r'            # r [ident]     // step out
     STEP = 's'              # s [ident]     // step in
     THREADS = 't'
+    RADIX = 'x'             # x [10|16]     // default 10
     # server only commands
     QUIT = 'q'
     HELP = 'h'
@@ -78,7 +80,7 @@ class Connection:
         self._recvBuffer = b''
         self._sendBuffer = b''
         self._type = None
-    
+
     def getType(self):
         return self._type
 
@@ -112,7 +114,7 @@ class Connection:
         """ One command per line. Add EOL at the and """
         self._sendBuffer += line.encode()
         self._sendBuffer += b'\n'
-    
+
     def write(self):
         self._write()
 
@@ -155,17 +157,17 @@ class DebugServer:
         self._thread = threading.Thread(target=self._run)
         self._stopped = False
         self._thread.start()
-    
+
     def stop(self):
         self._stopped = True
-    
+
     def join(self):
         if self._thread:
             self._thread.join()
 
     def isAlive(self):
         return self._thread != None and self._thread.is_alive()
-    
+
     def _run(self):
         self._listenSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # self._listenSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -236,7 +238,7 @@ class DebugServer:
         self._listenSocket = None
         self._thread = None
         self._selector = None
-    
+
     def _acceptWrapper(self):
         conn, _ = self._listenSocket.accept()
         # print("Connected %s" % repr(addr))

@@ -23,22 +23,22 @@ const localize = nls.loadMessageBundle();
 
 export type AsyncAction = (scope: string | undefined, logFn: LogFunction, param?: string) => Promise<boolean>;
 
-export type ActionType = 
-      "synchronize" 
+export type ActionType =
+      "synchronize"
     | "quicksync"
     | "upload"
-    | "build" 
-    | "rebuild" 
-    | "buildOnly" 
-    | "rebuildOnly" 
-    | "clean" 
-    | "crlf" 
-    | "edit settings" 
-    | "edit ssh settings" 
-    | "create mms" 
-    | "zip" 
+    | "build"
+    | "rebuild"
+    | "buildOnly"
+    | "rebuildOnly"
+    | "clean"
+    | "crlf"
+    | "edit settings"
+    | "edit ssh settings"
+    | "create mms"
+    | "zip"
     | "headers"
-    | "collect java";
+    | "prepare debug";
 
 export interface IPerform {
     actionFunc: AsyncAction;
@@ -142,7 +142,7 @@ export const actions: IPerform[] = [
                     const ensured = await ensureSettings(curScope, logFn);
                     if (ensured) {
                         if (ProjectState.acquire().sourceState(curScope) === SourceState.unknown) {
-                            logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", curScope));    
+                            logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", curScope));
                         }
                         const isBuilt = await builder.buildProject(ensured, buildName);
                         ProjectState.acquire().setBuilt(curScope, buildName, isBuilt);
@@ -170,7 +170,7 @@ export const actions: IPerform[] = [
             const ensured = await ensureSettings(scope, logFn);
             if (ensured && ensured.scope) {
                 if (ProjectState.acquire().sourceState(ensured.scope) === SourceState.unknown) {
-                    logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", ensured.scope));    
+                    logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", ensured.scope));
                 }
                 const isBuilt = await builder.buildProject(ensured, buildName);
                 ProjectState.acquire().setBuilt(ensured.scope, buildName, isBuilt);
@@ -203,7 +203,7 @@ export const actions: IPerform[] = [
                         // just do clean, ignore result
                         await builder.cleanProject(ensured, buildName);
                         if (ProjectState.acquire().sourceState(curScope) === SourceState.unknown) {
-                            logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", curScope));    
+                            logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", curScope));
                         }
                         const isBuilt = await builder.buildProject(ensured, buildName);
                         ProjectState.acquire().setBuilt(curScope, buildName, isBuilt);
@@ -233,7 +233,7 @@ export const actions: IPerform[] = [
                 // just do clean, ignore result
                 await builder.cleanProject(ensured, buildName);
                 if (ProjectState.acquire().sourceState(ensured.scope) === SourceState.unknown) {
-                    logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", ensured.scope));    
+                    logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", ensured.scope));
                 }
                 const isBuilt = await builder.buildProject(ensured, buildName);
                 ProjectState.acquire().setBuilt(ensured.scope, buildName, isBuilt);
@@ -282,9 +282,9 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "clean",
-        fail: localize("clean.fail", "Clean failed"),
-        status: localize("clean.status", "$(trashcan) Clean..."),
-        success: localize("clean.success", "Clean ok"),
+        fail: localize("clean.fail", "Cleaning failed"),
+        status: localize("clean.status", "$(trashcan) Cleaning..."),
+        success: localize("clean.success", "Cleaning ok"),
     },
     {
         // create MMS
@@ -315,9 +315,9 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "create mms",
-        fail: localize("mms.fail", "Create MMS failed"),
+        fail: localize("mms.fail", "Creating MMS failed"),
         status: localize("mms.status", "Creating MMS..."),
-        success: localize("mms.success", "Create MMS ok"),
+        success: localize("mms.success", "Creating MMS ok"),
     },
     {
         // change CR/LF
@@ -343,9 +343,9 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "crlf",
-        fail: localize("crlf.fail", "Change CrLf failed"),
+        fail: localize("crlf.fail", "Changing CrLf failed"),
         status: localize("crlf.status", "$(search) Changing..."),
-        success: localize("crlf.success", "Change CrLf done"),
+        success: localize("crlf.success", "Changing CrLf ok"),
     },
     {
         // ZIP
@@ -372,7 +372,7 @@ export const actions: IPerform[] = [
         actionName: "zip",
         fail: localize("zip.fail", "Uploading via Zip failed"),
         status: localize("zip.status", "$(file-zip) Uploading via Zip..."),
-        success: localize("zip.success", "Uploading via Zip done"),
+        success: localize("zip.success", "Uploading via Zip ok"),
     },
     {
         // edit settings
@@ -388,9 +388,9 @@ export const actions: IPerform[] = [
             return false;
         },
         actionName: "edit settings",
-        fail: localize("edit.fail", "Edit settings failed"),
-        status: localize("edit.status", "Edit settings..."),
-        success: localize("edit.success", "Edit settings done"),
+        fail: localize("edit.fail", "Editing settings failed"),
+        status: localize("edit.status", "Editing settings..."),
+        success: localize("edit.success", "Editing settings ok"),
     },
     {
         // edit ssh settings
@@ -403,9 +403,9 @@ export const actions: IPerform[] = [
             return false;
         },
         actionName: "edit ssh settings",
-        fail: localize("edit.fail", "Edit settings failed"),
+        fail: localize("edit.fail", "Editing settings failed"),
         status: localize("edit.status", "Edit settings..."),
-        success: localize("edit.success", "Edit settings done"),
+        success: localize("edit.success", "Editing settings ok"),
     },
     {
         // headers
@@ -415,7 +415,7 @@ export const actions: IPerform[] = [
         actionName: "headers",
         fail: localize("headers.fail", "Downloading headers failed"),
         status: localize("headers.status", "Downloading headers..."),
-        success: localize("headers.success", "Downloading headers done"),
+        success: localize("headers.success", "Downloading headers ok"),
     },
     {
         // upload
@@ -440,12 +440,12 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "upload",
-        fail: localize("upload.fail", "Upload failed"),
-        status: localize("upload.status", "Upload..."),
-        success: localize("upload.success", "Upload done"),
+        fail: localize("upload.fail", "Uploading failed"),
+        status: localize("upload.status", "Uploading..."),
+        success: localize("upload.success", "Uploading ok"),
     },
     {
-        // collect java classes
+        // preparing debug
         actionFunc: async (scope: string | undefined, logFn: LogFunction, buildName?: string) => {
             buildName = buildName || ProjectState.acquire().getDefBuildName();
             let scopes: string[] = [];
@@ -460,17 +460,17 @@ export const actions: IPerform[] = [
             for (const curScope of scopes) {
                 const ensured = await ensureSettings(curScope, logFn);
                 if (ensured) {
-                    wait.push(Builder.acquire().collectJavaClasses(ensured, buildName));
+                    wait.push(Builder.acquire().prepareDebug(ensured, buildName));
                 }
             }
             return Promise.all(wait).then((all) => {
                 return all.reduce((res, cur) => res && cur, true);
             });
         },
-        actionName: "collect java",
-        fail: localize("collect.fail", "Collect Java classes failed"),
-        status: localize("collect.status", "Collecting Java classes..."),
-        success: localize("collect.success", "Collecting Java classes is done"),
+        actionName: "prepare debug",
+        fail: localize("collect.fail", "Preparing DEBUG failed"),
+        status: localize("collect.status", "Preparing DEBUG..."),
+        success: localize("collect.success", "Preparing DEBUG ok"),
     },
 ];
 

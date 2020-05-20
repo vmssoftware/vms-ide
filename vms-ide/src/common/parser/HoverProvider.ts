@@ -11,7 +11,7 @@ export class HoverProviderImpl implements HoverProvider {
             let defStr = "";
             if (info.definition) {
                 if (info.definition.source) {
-                    defStr = workspace.asRelativePath(info.definition.source);
+                    defStr = workspace.asRelativePath(info.definition.source, true);
                 }
                 if (info.definition.text) {
                     defStr = `defined in ${defStr}`;
@@ -21,7 +21,7 @@ export class HoverProviderImpl implements HoverProvider {
                 } else {
                     defStr = `from ${defStr}`;
                 }
-            } 
+            }
             return new Hover([
                 `**${info.kindString}** ${defStr}`,
                 info.description

@@ -35,6 +35,7 @@ class MESSAGE:
     STEPPED = 'STEPPED'
     SYNTAX_ERROR = 'SYNTAX_ERROR'
     THREADS = 'THREADS'
+    RADIX = 'RADIX'
 
 # command to receive
 class COMMAND:
@@ -53,6 +54,7 @@ class COMMAND:
     RETURN = 'r'            # r [ident]     // step out
     STEP = 's'              # s [ident]     // step in
     THREADS = 't'
+    RADIX = 'x'             # x [10|16]     // default 10
 
 class Tracer:
     def __init__(self, port, insensitive=False, developerMode=False):
@@ -384,6 +386,9 @@ class Tracer:
                         self._doGoto(cmd)
                     elif cmd.startswith(self._commands.MODE):
                         self._doMode(cmd)
+                    # show threads
+                    elif cmd.startswith(self._commands.RADIX):
+                        self._setRadix(cmd)
                 # wait and read command again
                 self._sleep(0.3)
                 cmd = self._readDbgMessage()
@@ -418,6 +423,14 @@ class Tracer:
         except Exception as ex:
             self._sendDbgMessage('%s %s %s' % (self._messages.GOTO, 'failed', repr(ex)))
 
+    def _setRadix(self, cmd):
+        locals_args = cmd.split()
+        try:
+            self._showHex = (16 == int(locals_args[1]))
+            self._sendDbgMessage('%s %s' % (self._messages.RADIX, 'hex' if self._showHex else 'dec'))
+        except Exception as ex:
+            self._sendDbgMessage('%s %s %s' % (self._messages.RADIX, 'failed', repr(ex)))
+
     def _doGotoTargets(self, cmd, ident):
         locals_args = cmd.split()
         try:
@@ -441,18 +454,19 @@ class Tracer:
 
     def _doDisplay(self, cmd, ident):
         locals_args = cmd.split()
+        showHex = True if locals_args[0].endswith('h') else self._showHex
         if len(locals_args) == 1:
-            self._display(ident, 0, '.', None, None, locals_args[0].endswith('h'))
+            self._display(ident, 0, '.', None, None, showHex)
         elif len(locals_args) == 2:
-            self._display(int(locals_args[1]), 0, '.', None, None, locals_args[0].endswith('h'))
+            self._display(int(locals_args[1]), 0, '.', None, None, showHex)
         elif len(locals_args) == 3:
-            self._display(int(locals_args[1]), int(locals_args[2]), '.', None, None, locals_args[0].endswith('h'))
+            self._display(int(locals_args[1]), int(locals_args[2]), '.', None, None, showHex)
         elif len(locals_args) == 4:
-            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], None, None, locals_args[0].endswith('h'))
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], None, None, showHex)
         elif len(locals_args) == 5:
-            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), None, locals_args[0].endswith('h'))
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), None, showHex)
         elif len(locals_args) == 6:
-            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), int(locals_args[5]), locals_args[0].endswith('h'))
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), int(locals_args[5]), showHex)
 
     def _doFrames(self, cmd, ident):
         locals_args = cmd.split()
@@ -604,13 +618,13 @@ class Tracer:
                 return self._eval_variable(tail[1:], result.__dict__)
         return result
 
-    def _amend_impl(self, name, value, root):
+    def _amend_impl(self, name, value, frame):
         if not any((c in ".[]") for c in name):
-            root[name] = value
+            self._changeLocalVar(frame, name, value)
         else:
             if name.endswith(']'):
                 brkPos = name.rfind('[')
-                head = self._eval_variable(name[:brkPos], root)
+                head = self._eval_variable(name[:brkPos], frame.f_locals)
                 idx  = name[brkPos+1:-1]
                 if type(head) == dict:
                     try:
@@ -625,7 +639,7 @@ class Tracer:
                     head[int(idx)] = value
             else:
                 dotPos = name.rfind('.')
-                head = self._eval_variable(name[:dotPos], root)
+                head = self._eval_variable(name[:dotPos], frame.f_locals)
                 head.__dict__[name[dotPos+1:]] = value
         return
 
@@ -637,7 +651,7 @@ class Tracer:
         if frame != None:
             try:
                 value = eval(value, {}, {})
-                self._amend_impl(name, value, frame.f_locals)
+                self._amend_impl(name, value, frame)
                 result = self._eval_variable(name, frame.f_locals)
                 resultType = type(result)
                 if resultType in self._knownValueTypes:
@@ -665,7 +679,6 @@ class Tracer:
         self._sendDbgMessage('%s %s %s' % (self._messages.DISPLAY64, len(result), result))
 
     def _display(self, ident, frameNum, fullName, start, count, showHex):
-        self._showHex = showHex
         # self._sendDbgMessage('_display %s' % fullName)
         frame, isPostMortem = self._getFrame(ident, frameNum)
         isPostMortem = isPostMortem
@@ -684,7 +697,7 @@ class Tracer:
                     resultType = type(result)
                     if resultType in self._knownValueTypes:
                         # if we know that is valueType, display it
-                        if resultType == int and self._showHex:
+                        if resultType == int and showHex:
                             self._sendDisplayResult('"%s" %s value: %s' % (displayName, resultType, hex(result)))
                         else:
                             self._sendDisplayResult('"%s" %s value: %s' % (displayName, resultType, repr(result)))
@@ -701,11 +714,11 @@ class Tracer:
                                         count = length - start
                                     self._sendDisplayResult('"%s" %s length: %s' % (displayName, resultType, count))
                                     # enumerate through, cutting displayName
-                                    self._sendDbgMessage('_display fullName=%s' % fullName)
+                                    # self._sendDbgMessage('_display fullName=%s' % fullName)
                                     displayName = fullName.rpartition('.')[2]
-                                    self._sendDbgMessage('_display displayName=%s' % displayName)
+                                    # self._sendDbgMessage('_display displayName=%s' % displayName)
                                     enumerated = enumerate(iter(result))
-                                    self._sendDbgMessage('_display enumerated=%s' % repr(enumerated))
+                                    # self._sendDbgMessage('_display enumerated=%s' % repr(enumerated))
                                     for x in enumerated:
                                         if start > 0:
                                             # wait a start
@@ -719,7 +732,7 @@ class Tracer:
                                                 value = result[value]
                                             resultType = type(value)
                                             if resultType in self._knownValueTypes:
-                                                if resultType == int and self._showHex:
+                                                if resultType == int and showHex:
                                                     self._sendDisplayResult('"%s" %s value: %s' % (displayName + ('[%s]' % idx), resultType, hex(value)))
                                                 else:
                                                     self._sendDisplayResult('"%s" %s value: %s' % (displayName + ('[%s]' % idx), resultType, repr(value)))

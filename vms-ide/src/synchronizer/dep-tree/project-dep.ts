@@ -16,6 +16,7 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
 
     public static readonly cmdSelect = "vmssoftware.project-dep.projectDependencies.select";
     public static readonly cmdDescrSelect = "vmssoftware.project-dep.projectDescription.select";
+    public static readonly cmdPrepareDebug = "vmssoftware.synchronizer.prepareDebug";
     public static readonly cmdSyncProject = "vmssoftware.synchronizer.syncProject";
     public static readonly cmdUpload = "vmssoftware.synchronizer.upload";
     public static readonly cmdBuild = "vmssoftware.synchronizer.buildProject";
@@ -100,6 +101,10 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
 
     public syncProject(node: IProjectElement) {
         vscode.commands.executeCommand(ProjDepProvider.cmdSyncProject, this.selectedProject());
+    }
+
+    public prepareDebug(node: IProjectElement) {
+        vscode.commands.executeCommand(ProjDepProvider.cmdPrepareDebug, this.selectedProject());
     }
 
     public upload(node: IProjectElement) {

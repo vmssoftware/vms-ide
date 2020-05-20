@@ -25,20 +25,58 @@ export interface IModuleInfo
 // DECC$SHR                        V8.4-00             Lkg                   0  15-FEB-2016 11:06  Linker I02-37
 //                  SYS$COMMON:[SYSLIB]DECC$SHR.EXE;1
 
-export class HolderModuleInfo
+export class ModuleInfoCache
 {
-	public moduleInfo = new Map<string, IModuleInfo>();
-	public fileInfo = new Map<string, IModuleInfo>();
-	public moduleNamesFromMAP = new Map<string, string>();	// file base name -> first MODULE name
+	public moduleInfo = new Map<string, IModuleInfo>();     // by module name
+	public fileInfo = new Map<string, IModuleInfo>();       // by full file path
+    public moduleNamesFromMAP = new Map<string, string>();	// file base name -> first MODULE name
+
+    public depModuleInfoCache: ModuleInfoCache[] = [];
 
 	public static matcherLis = /^(\S+)?\s+Source (?:Code )?Listing\s+\d{1,2}-[A-Z]{3}-\d{4} \d{2}:\d{2}:\d{2}\s+(.*)(?:\s+Page \d+)?$/;				//MODULE_NAME  Source Listing  25-APR-2019 02:09:09  VSI LANGUAGE V3.1-0007
 	public static matcherHead = /^Module\/Image\s*File\s*Ident/;				//Module/Image     File    Ident
 	public static matcherModule = /^(\S+)\s*.*\s(\d*-\S+-\d+\s*\d+:\d+)\s+(.*)/;//BASIC_MENU    Fast   8235  19-JUN-2019 05:35   I64 BASIC V1.8-004
 	public static matcherFile = /^\s*\S+:\[\S+\](\S+)\.OBJ;/i;				// only OBJ, not OLB, like -> WORK:[project.OUT.DEBUG.OBJ]MODULE.OBJ;1
 
-	public constructor(public makeModulesUppercase: boolean) {
+	public constructor(public scope: string,  public makeModulesUppercase: boolean) {
 		//
-	}
+    }
+
+    public saveJSON() {
+        let strJson = JSON.stringify({
+            scope: this.scope,
+            uppercase: this.makeModulesUppercase,
+            moduleInfo: Array.from(this.moduleInfo.values()),
+        });
+        return strJson;
+    }
+
+    public static isModuleInfo(candidate: any): candidate is IModuleInfo {
+        return !!candidate &&
+            typeof(candidate.moduleName) == "string" &&
+            typeof(candidate.sourcePath) == "string" &&
+            typeof(candidate.listingPath) == "string" &&
+            typeof(candidate.language) == "string";
+    }
+
+    public static loadJSON(strJson: string) {
+        try {
+            let candidate = JSON.parse(strJson);
+            if (typeof(candidate.scope) == "string" && typeof(candidate.uppercase) == "boolean") {
+                let moduleInfoCache = new ModuleInfoCache(candidate.scope, candidate.uppercase);
+                if (Array.isArray(candidate.moduleInfo)) {
+                    for (let item of candidate.moduleInfo) {
+                        if (ModuleInfoCache.isModuleInfo(item)) {
+                            moduleInfoCache.setItem(item.moduleName, item.sourcePath, item.listingPath, item.language);
+                        }
+                    }
+                }
+                return moduleInfoCache;
+            }
+        } catch(ex) {
+        }
+        return undefined;
+    }
 
 	public async addMapFile(mapFile: string) {
 		return new Promise<Boolean>((resolve) => {
@@ -56,9 +94,9 @@ export class HolderModuleInfo
 				reader.on("line", (line: string) => {
 					if(block) {
 						if(line) {
-							let matchesFile = line.match(HolderModuleInfo.matcherFile);
+							let matchesFile = line.match(ModuleInfoCache.matcherFile);
 							if(matchesFile && matchesFile.length === 2) {
-								let matchesModule = lastLine.match(HolderModuleInfo.matcherModule);
+								let matchesModule = lastLine.match(ModuleInfoCache.matcherModule);
 								if (matchesModule && matchesModule.length === 4) {
 									let fileName = this.makeModulesUppercase? matchesFile[1].toUpperCase() : matchesFile[1];
 									let moduleName = this.makeModulesUppercase? matchesModule[1].toUpperCase() : matchesModule[1];
@@ -74,7 +112,7 @@ export class HolderModuleInfo
 							return;
 						}
 					} else {
-						let matches = line.match(HolderModuleInfo.matcherHead);
+						let matches = line.match(ModuleInfoCache.matcherHead);
 						if(matches) {
 							//find heaader line
 							block = true;
@@ -96,7 +134,7 @@ export class HolderModuleInfo
 		});
 	}
 
-	public async addLisFile(sourceFile: string, lisFile: string, logFn?: LogFunction) {
+	public async addLisFile(sourceFile: string, lisFile: string) {
 		let baseName = path.basename(sourceFile, path.extname(sourceFile));
 		if (this.makeModulesUppercase) {
 			baseName = baseName.toUpperCase();
@@ -117,7 +155,7 @@ export class HolderModuleInfo
                     if (found) {
                         return;
                     }
-					let matches = line.match(HolderModuleInfo.matcherLis);
+					let matches = line.match(ModuleInfoCache.matcherLis);
 					if(matches && matches.length === 3) {
 						let moduleName = matches[1];
 						let languageInfo = matches[2].toUpperCase();
@@ -165,16 +203,11 @@ export class HolderModuleInfo
 		return this.moduleInfo.size;
 	}
 
-	public getItems() : IModuleInfo[]
-	{
-		let infos: IModuleInfo[] = [];
-		for(let [moduleName, moduleInfo] of this.moduleInfo) {
-			infos.push(moduleInfo);
-		}
-		return infos;
+	public getItems() : IModuleInfo[] {
+        return Array.from(this.moduleInfo.values());
 	}
 
-	public getItem(moduleName : string) : IModuleInfo
+	public getItemByModule(moduleName : string, searchDep = true) : IModuleInfo
 	{
 		let info = this.moduleInfo.get(this.makeModulesUppercase? moduleName.toUpperCase() : moduleName);
 		if (info !== undefined) {
@@ -195,20 +228,36 @@ export class HolderModuleInfo
 			if (moduleNameI.toUpperCase() === moduleName) {
 				return infoI;
 			}
-		}
-		return <IModuleInfo> { moduleName: "", sourcePath: "", listingPath: "", language: "" };
+        }
+        if (searchDep) {
+            for (let moduleInfo of this.depModuleInfoCache) {
+                let item = moduleInfo.getItemByModule(moduleName);
+                if (item.sourcePath) {
+                    return item;
+                }
+            }
+        }
+		return <IModuleInfo> { moduleName, sourcePath: "", listingPath: "", language: "" };
 	}
 
-	public getItemByPath(sourcePath : string) : IModuleInfo
+	public getItemBySource(sourcePath : string, searchDep = true) : IModuleInfo
 	{
 		let info = this.fileInfo.get(sourcePath);
 		if (info !== undefined) {
 			return info;
 		}
-		return <IModuleInfo> { moduleName: "", sourcePath: "", listingPath: "", language: "" };
+        if (searchDep) {
+            for (let moduleInfo of this.depModuleInfoCache) {
+                let item = moduleInfo.getItemBySource(sourcePath);
+                if (item.moduleName) {
+                    return item;
+                }
+            }
+        }
+		return <IModuleInfo> { moduleName: "", sourcePath, listingPath: "", language: "" };
 	}
 
-	public setItem(moduleName: string, sourcePath: string, listingPath: string, language: string)
+	private setItem(moduleName: string, sourcePath: string, listingPath: string, language: string)
 	{
 		let item = <IModuleInfo> {
 			moduleName: this.makeModulesUppercase? moduleName.toUpperCase() : moduleName,

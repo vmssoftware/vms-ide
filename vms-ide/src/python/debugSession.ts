@@ -24,7 +24,7 @@ import { ListenerResponse } from "../vms_jvm_debug/communication";
 import { commands, workspace, WorkspaceFolder, extensions } from "vscode";
 import { ensureSettings } from "../synchronizer/ensure-settings";
 import { VmsPathConverter } from "../synchronizer/vms/vms-path-converter";
-import { 
+import {
     EPythonConst,
     IPythonFrame,
     IPythonVariable,
@@ -95,7 +95,7 @@ export class PythonDebugSession extends LoggingDebugSession {
     private _gotoHandles = new Handles<GotoTarget>();
 
     private _rootMap = new Map<string, string>();
-    
+
     constructor(logFn?: LogFunction) {
         super("vms-python-debugger.txt");
         this._logFn = logFn || (() => { });
@@ -110,9 +110,9 @@ export class PythonDebugSession extends LoggingDebugSession {
         this._tracerQueue.onUnexpectedLine((line) => this.userOutput(line));
 
         this._runtime = new PythonShellRuntime(this._serverQueue, this._logFn);
-        
+
         // setup event handlers
-        
+
         this._runtime.on(PythonRuntimeEvents.stopOnEntry, (threadId) => {
             for (let [file, bplines] of this._breakPoints) {
                 for (let [line, ibp] of bplines) {
@@ -125,35 +125,35 @@ export class PythonDebugSession extends LoggingDebugSession {
             }
             this.sendStoppedEvent('entry', threadId);
         });
-        
+
         this._runtime.on(PythonRuntimeEvents.stopOnStep, (threadId) => {
             this.sendStoppedEvent('step', threadId);
         });
-        
+
         this._runtime.on(PythonRuntimeEvents.stopOnBreakpoint, (threadId) => {
             this.sendStoppedEvent('breakpont', threadId);
         });
-        
+
         this._runtime.on(PythonRuntimeEvents.stopOnException, (threadId) => {
             this.sendStoppedEvent('exception', threadId);
         });
-        
+
         this._runtime.on(PythonRuntimeEvents.stopOnBreakpointError, (threadId) => {
             this.sendStoppedEvent('breakpoint error', threadId);
         });
-        
+
         this._runtime.on(PythonRuntimeEvents.stopOnPause, (threadId) => {
             this.sendStoppedEvent('pause', threadId);
         });
-        
+
         this._runtime.on(PythonRuntimeEvents.stopOnDataChange, (threadId) => {
             this.sendStoppedEvent('data change', threadId);
         });
-        
+
         this._runtime.on(PythonRuntimeEvents.stopOnDataAccess, (threadId) => {
             this.sendStoppedEvent('data access', threadId);
         });
-        
+
         this._runtime.on(PythonRuntimeEvents.breakpointValidated, (file: string, line: number, line_real?: number) => {
             let lines = this._breakPoints.get(file);
             if (lines === undefined) {
@@ -170,7 +170,7 @@ export class PythonDebugSession extends LoggingDebugSession {
                 if (breakpoint) {
                     breakpoint.verified = true;
                     breakpoint.real_line = line_real? line_real: line;
-                    this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{ 
+                    this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{
                         id: breakpoint.id,
                         verified: breakpoint.verified,
                         line: breakpoint.real_line
@@ -187,7 +187,7 @@ export class PythonDebugSession extends LoggingDebugSession {
             }
             this.sendEvent(e);
         });
-        
+
         this._runtime.on(PythonRuntimeEvents.end, () => {
             // give last messages from program a chance to be displayed
             setTimeout(() => {
@@ -201,7 +201,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         stop.body.allThreadsStopped = true;
         this.sendEvent(stop);
     }
-    
+
     private _capabilities: DebugProtocol.Capabilities = {
         /** The debug adapter supports the 'configurationDone' request. */
         supportsConfigurationDoneRequest: true,
@@ -353,7 +353,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         let tasks = [
             Promise.race([
                 Delay(1000).then(() => true),
-                this._configurationDone.acquire().then(() => { 
+                this._configurationDone.acquire().then(() => {
                     // reallyDone = true;
                     this._configurationDone.release();
                     return true;
@@ -399,7 +399,7 @@ export class PythonDebugSession extends LoggingDebugSession {
                             }
                             return ListenerResponse.needMoreLines;
                         }).then(async () => {
-                            let relPath = workspace.asRelativePath(args.script);
+                            let relPath = workspace.asRelativePath(args.script, false);
                             this.runTracer(listeningPort, relPath, args.arguments);
                         });
                         return this._runtime.start();
@@ -415,7 +415,7 @@ export class PythonDebugSession extends LoggingDebugSession {
             });
         }
     }
-    
+
     protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
         this._runtime.threadsRequest().then(async (threads) => {
             const respThreads: DebugProtocol.Thread[] = [];
@@ -595,7 +595,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         };
         // set and verify breakpoint locations
         if (args.breakpoints && args.source.path) {
-            let fileName = workspace.asRelativePath(args.source.path);
+            let fileName = workspace.asRelativePath(args.source.path, true);
             for (const [key, value] of this._rootMap) {
                 if (fileName.toLowerCase().startsWith(value.toLowerCase())) {
                     fileName = (key + fileName.substring(value.length)).replace(middleSepRg, ftpPathSeparator);
@@ -733,7 +733,7 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     protected async gotoTargetsRequest(response: DebugProtocol.GotoTargetsResponse, args: DebugProtocol.GotoTargetsArguments, request?: DebugProtocol.Request) {
         if (args.source.path) {
-            let localPath = workspace.asRelativePath(args.source.path)
+            let localPath = workspace.asRelativePath(args.source.path, true)
             for (const [key, value] of this._rootMap) {
                 if (localPath.toLowerCase().startsWith(value.toLowerCase())) {
                     localPath = (key + localPath.substring(value.length)).replace(middleSepRg, ftpPathSeparator);

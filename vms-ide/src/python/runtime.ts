@@ -153,7 +153,7 @@ const _rgxDisplay_Type          = 3;
 const _rgxDisplay_ValueDescr    = 4;
 const _rgxDisplay_Value         = 5;
 
-const _rgxDisplay64             = /DISPLAY64 (\d+) (.*)/; 
+const _rgxDisplay64             = /DISPLAY64 (\d+) (.*)/;
 const _rgxDisplay64_Len         = 1;
 const _rgxDisplay64_Result      = 2;
 
@@ -173,7 +173,7 @@ const _rgxGoto_Result           = 1;
 export const rgxEsc = /\x1B(?:[@-Z\\-_=>]|\[[0-?]*[ -/]*[@-~]|[)(][AB012])/g;
 
 export class PythonShellRuntime extends EventEmitter {
-    
+
     private logFn: LogFunction;
 
     private threads?: IPythonThread[];
@@ -196,7 +196,7 @@ export class PythonShellRuntime extends EventEmitter {
 
         this.started = false;
         this.running = false;
-        
+
         this.queue.onUnexpectedLine((line) => {
             this.onUnexpectedLine(line);
         });
@@ -246,8 +246,8 @@ export class PythonShellRuntime extends EventEmitter {
                 if (line.startsWith(PythonServerMessage.BP_CONFIRM)) {
                     const match = line.match(_rgxBpConfirm);
                     if (match) {
-                        this.sendEvent(PythonRuntimeEvents.breakpointValidated, 
-                            match[_rgxBpConfirm_File], 
+                        this.sendEvent(PythonRuntimeEvents.breakpointValidated,
+                            match[_rgxBpConfirm_File],
                             +match[_rgxBpConfirm_Line],
                             match[_rgxBpConfirm_Line_R]?+match[_rgxBpConfirm_Line_R]:undefined);
                     }
@@ -277,7 +277,7 @@ export class PythonShellRuntime extends EventEmitter {
     public threadsCollected() {
         return this.threads;
     }
-    
+
     public async threadsRequest() {
 
         await this.locker.acquire();
@@ -286,7 +286,7 @@ export class PythonShellRuntime extends EventEmitter {
             this.locker.release();
             return undefined;
         }
-        
+
         if (this.threads != undefined) {
             this.locker.release();
             return this.threads;
@@ -392,9 +392,9 @@ export class PythonShellRuntime extends EventEmitter {
     }
 
     /**
-     * 
-     * @param ident 
-     * @param frame 
+     *
+     * @param ident
+     * @param frame
      * @param variableFullName set to empty string to get locals
      */
     public async variableRequest(ident: number, frame: number, variableFullName: string, start?: number, count?: number, showHex?: boolean): Promise<IPythonVariable[]> {
@@ -527,7 +527,7 @@ export class PythonShellRuntime extends EventEmitter {
                                 lastVar.size = +match[_rgxDisplay_Value];
                             } else if (match[_rgxDisplay_ValueDescr] == EPythonConst.value) {
                                 lastVar.value = match[_rgxDisplay_Value];
-                            } 
+                            }
                             variables.push(lastVar);
                             // test if variable is long string
                             if (lastVar.value && (lastVar.value.startsWith('"') || lastVar.value.startsWith("'"))) {
@@ -541,7 +541,7 @@ export class PythonShellRuntime extends EventEmitter {
                                     return ListenerResponse.needMoreLines;
                                 }
                             }
-                        } else if (match[_rgxDisplay_Result] !== EPythonConst.aborted) {
+                        } else if (match[_rgxDisplay_Result] === EPythonConst.aborted) {
                             return ListenerResponse.stop;
                         }
                         ++parsedVars;
@@ -560,9 +560,9 @@ export class PythonShellRuntime extends EventEmitter {
     }
 
     public async requestSetVariable(ident: number, frame: number, fullName: string, value: string): Promise<IAmendResult> {
-        
+
         await this.locker.acquire();
-        
+
         let success = false;
         if (!this.started || this.running) {
             this.locker.release();
@@ -768,7 +768,7 @@ export class PythonShellRuntime extends EventEmitter {
 
     public async exceptionRequest(ident: number) {
         await this.locker.acquire();
-        
+
         let success = false;
         if (!this.started || this.running) {
             this.locker.release();
@@ -780,7 +780,7 @@ export class PythonShellRuntime extends EventEmitter {
     /******************************************************************************************/
     // private
     /******************************************************************************************/
-    
+
     private sendEvent(event: string, ... args: any[]) {
         setImmediate(_ => {
             this.emit(event, ...args);

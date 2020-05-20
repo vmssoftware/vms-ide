@@ -1,4 +1,4 @@
-import { IFileEntry, Lock } from "../../common/main";
+import { IFileEntry, Lock, ftpPathSeparator } from "../../common/main";
 import * as readline from "readline";
 import { GetSshHelperType } from "../../ext-api/ext-api";
 import { GetSyncApi } from "../../ext-api/ext-api";
@@ -24,7 +24,7 @@ export class ConfigManager
 	{
 		if (!this.localSource)
 		{
-			const sourceHelper = await GetSyncApi();
+			const sourceHelper = GetSyncApi();
 
 			if (sourceHelper)
 			{
@@ -35,11 +35,11 @@ export class ConfigManager
 		return this.localSource !== undefined;
 	}
 
-	private async ensureSshHelper() : Promise<boolean>
+	private ensureSshHelper() : boolean
 	{
 		if (!this.sshHelper)
 		{
-			const sshHelperType = await GetSshHelperType();
+			const sshHelperType = GetSshHelperType();
 
 			if (sshHelperType)
 			{
@@ -50,9 +50,9 @@ export class ConfigManager
 		return this.sshHelper !== undefined;
 	}
 
-	public async clearPasswordCache()
+	public clearPasswordCache()
 	{
-		if (await this.ensureSshHelper() && this.sshHelper)
+		if (this.ensureSshHelper() && this.sshHelper)
 		{
 			this.sshHelper.clearPasswordCache();
 		}
@@ -61,7 +61,7 @@ export class ConfigManager
 
 	public async getConnectionSection() : Promise<IConnectionSection | undefined>
 	{
-		if (!await this.ensureSshHelper())
+		if (!this.ensureSshHelper())
 		{
 			return undefined;
 		}
@@ -78,7 +78,7 @@ export class ConfigManager
 
 	public async getTerminalSection() : Promise<ITerminalSection | undefined>
 	{
-		if (!await this.ensureSshHelper())
+		if (!this.ensureSshHelper())
 		{
 			return undefined;
 		}
@@ -100,7 +100,7 @@ export class ConfigManager
 	{
 		if (!this.syncApi)
 		{
-			this.syncApi = await GetSyncApi();
+			this.syncApi = GetSyncApi();
 		}
 
 		if (this.syncApi)
@@ -119,12 +119,12 @@ export class ConfigManager
 	{
 		if (!this.syncApi)
 		{
-			this.syncApi = await GetSyncApi();
+			this.syncApi = GetSyncApi();
 		}
 
 		if (this.syncApi)
 		{
-			return await this.syncApi.getDepList(this.scope);
+			return this.syncApi.getDepList(this.scope);
 		}
 
 		return undefined;
@@ -138,64 +138,21 @@ export class ConfigManager
 		}
 
 		return this.localSource;
-	}
+    }
 
-	public async loadPathListFiles(pattern : string, exclude?: string) : Promise<string[]>
+    /**
+     * Find files by mask
+     * @param pattern
+     * @param exclude
+     * @returns list of full paths
+     */
+	public async findFiles(pattern : string, exclude?: string) : Promise<string[]>
 	{
-		if (!await this.ensureLocalSource())
-		{
+		if (!await this.ensureLocalSource() || !this.localSource) {
 			return [] as string[];
-		}
-
-		let list : string[] = [];
-		let entries : IFileEntry[] | undefined = await this.localSource!.findFiles(pattern, exclude);
-
-		if (entries) {
-			for(let item of entries)
-			{
-				list.push(item.filename);
-			}
-		}
-
-		return list;
+        }
+        let root = this.localSource.root ? this.localSource.root + ftpPathSeparator : "";
+        return (await this.localSource.findFiles(pattern, exclude))?.map(x => root + x.filename) || [];
 	}
 
-	public async loadContextFile(file: string) : Promise<string[]>
-	{
-		if(file !== "")
-		{
-			if (await this.ensureLocalSource())
-			{
-				const stream = await this.localSource!.createReadStream(file);
-
-				if (stream)
-				{
-					const ret: string[] = [];
-					const lock = new Lock(true);
-					const rl = readline.createInterface(stream);
-
-					rl.on("close", () =>
-					{
-						lock.release();
-					});
-
-					rl.on("line", (line) =>
-					{
-						ret.push(line);
-					});
-
-					stream.on("error", () =>
-					{
-						lock.release();
-					});
-
-					await lock.acquire();
-
-					return ret;
-				}
-			}
-		}
-
-		return [] as string[];
-	}
 }

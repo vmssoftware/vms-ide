@@ -7,7 +7,7 @@ import { Synchronizer } from '../../synchronizer/sync/synchronizer';
 import { LogFunction } from '../../common/main';
 import { CobolSourceContext } from './CobolSourceContext';
 import { GetCopyManager } from '../stream/CopyManagers';
-import { ReadAllStream } from '../../common/read_all_stream';
+import { readWholeStream } from '../../common/read_all_stream';
 import { CobolGlobals } from './CobolGlobals';
 import { ProjDepTree } from '../../synchronizer/dep-tree/proj-dep-tree';
 import { projectDependenciesChanged } from '../../synchronizer/projectDepend';
@@ -105,7 +105,7 @@ export class CobolBackground {
                                             return;
                                         }
                                         if (stream) {
-                                            docContent = await ReadAllStream(stream);
+                                            docContent = await readWholeStream(stream);
                                             if (myTask != this.cancellationToken.asyncValue) {
                                                 return;
                                             }

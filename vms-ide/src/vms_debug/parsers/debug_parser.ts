@@ -5,7 +5,7 @@ import { ShellSession, TypeDataMessage } from "../net/shell-session";
 import { Queue } from "../queue/queues";
 import { HolderDebugFileInfo } from "./debug_file_info";
 import { DebugVariable, HolderDebugVariableInfo, ReflectKind, VariableFileInfo } from "./debug_variable_info";
-import { HolderModuleInfo } from "./debug_module_info";
+import { ModuleInfoCache } from "./debug_module_info";
 
 
 export enum MessageDebuger
@@ -53,6 +53,12 @@ export enum MessagePrompt
 	prmtDATA = "DATA: ",
 }
 
+export interface IStackFrame {
+    index: number,
+    name: string,
+    file: string,
+    line: number,
+};
 
 export class DebugParser
 {
@@ -186,21 +192,21 @@ export class DebugParser
 						}
 					}
 				}
-		
+
 				for(let i = 0; i < this.displayDataString.length; i++)
 				{
 					if(this.displayDataString[i].includes("\x0E\x60\x0F"))
 					{
 						let pieces = this.displayDataString[i].split("\x0E\x60\x0F\n");
 						this.displayDataString[i] = "";
-		
+
 						for(let j = 0; j < pieces.length; j++)
 						{
 							this.displayDataString[i] += pieces[j];
 						}
 					}
 				}
-		
+
 				if(this.displayDataString[0] !== "")
 				{
 					this.queueMsgDebug.push(MessagePrompt.prmtDBG + this.displayDataString[0].trim());
@@ -245,11 +251,11 @@ export class DebugParser
 	// *HELLO          main             1648       0000000000000360 0000000000020360
 	// *HELLO          __main           1634       00000000000000E0 00000000000200E0
 	// 											   FFFFFFFF80A3CF10 FFFFFFFF80A3CF10
-	public parseCallStackMsg(data : string, moduleHolder: HolderModuleInfo, startFrame: number, endFrame: number) : any
+	public parseCallStackMsg(data : string, moduleInfoCache: ModuleInfoCache, startFrame: number, endFrame: number)
 	{
 		let numberLine : number = -1;
 		let columns : string[] = [];
-		let frames = new Array<any>();
+		let frames: IStackFrame[] = [];
 		let msgLines = data.split("\n");
 
 		for(let i = 1; i < msgLines.length; i++)
@@ -313,7 +319,7 @@ export class DebugParser
 					}
 				}
 
-				let moduleItem = moduleHolder.getItem(moduleName);
+				let moduleItem = moduleInfoCache.getItemByModule(moduleName);
 				let pathFile = moduleItem.sourcePath;
 				let pathLisFile = moduleItem.listingPath;
 
@@ -333,7 +339,7 @@ export class DebugParser
 						let foundLine = this.fileInfo.sourceLineFromListLineByInfo(debugInfo, +numberLineDebug);
 						numberLine = foundLine || numberLine;
 					}
-	
+
 					frames.push({
 						index: startFrame,
 						name: `${routineName}[${startFrame}]`,
@@ -375,7 +381,7 @@ export class DebugParser
 	// 	atomic type, quadword logical, size: 8 bytes
 	// record component HELLO\_iobuf._pad2
     //  atomic type, byte logical, size: 1 byte
-	public parseVariableMsg(modulesInfo: HolderModuleInfo, data: string) : void
+	public parseVariableMsg(modulesInfo: ModuleInfoCache, data: string) : void
 	{
 		let filePath : string = "";
 		let variableInfo = new Array<VariableFileInfo>();
@@ -443,7 +449,7 @@ export class DebugParser
 
 				if(filePath === "")
 				{
-					filePath = modulesInfo.getItem(moduleName).sourcePath;
+					filePath = modulesInfo.getItemByModule(moduleName).sourcePath;
 				}
 
 				if(variableName !== "__func__" &&
@@ -784,7 +790,7 @@ export class DebugParser
 	{
 		let result = true;
 		let addr = parseInt(address, 10);
-		
+
 		if(Number.isNaN(addr) || addr === 0)
 		{
 			addr = parseInt(address, 16);
@@ -810,7 +816,7 @@ export class DebugParser
 	{
 		let result = true;
 		let addr = parseInt(address, 16);
-		
+
 		if(Number.isNaN(addr))
 		{
 			result = true;
@@ -929,7 +935,7 @@ export class DebugParser
 							{
 								v += ": " + items[prm.counter];
 								matches = v.match(matcherA);
-								
+
 								kind = ReflectKind.Array;
 								goNextLevel = false;
 								prm.counter++;
@@ -965,7 +971,7 @@ export class DebugParser
 								do
 								{
 									kind = this.getKindVariable(items[prm.counter]);
-		
+
 									if(kind === ReflectKind.Invalid)
 									{
 										if(itemInfo === "")
@@ -978,8 +984,8 @@ export class DebugParser
 										}
 										prm.counter++;
 									}
-		
-								} while(kind === ReflectKind.Invalid && prm.counter < items.length);	
+
+								} while(kind === ReflectKind.Invalid && prm.counter < items.length);
 							}
 							else
 							{
@@ -1017,7 +1023,7 @@ export class DebugParser
 							{
 								v += ": " + items[prm.counter];
 								matches = v.match(matcherS);
-								
+
 								kind = ReflectKind.Struct;
 								goNextLevel = false;
 								prm.counter++;
@@ -1058,7 +1064,7 @@ export class DebugParser
 						{
 							dimensions = this.defineDimensionsArray(prm.counter, items, matches, matcherA);
 						}
-						
+
 						itemsArray = this.parseItemsArray(v, dimensions);
 					}
 
@@ -1537,12 +1543,12 @@ export class DebugParser
 	{
 		let debugInfo = this.fileInfo.infoByFile(filePath);
 
-		if (debugInfo === undefined) 
+		if (debugInfo === undefined)
 		{
 			this.fileInfo.pushEntry(filePath, listPath);
 			debugInfo = this.fileInfo.infoByFile(filePath);
 		}
-		if (debugInfo) 
+		if (debugInfo)
 		{
 			let foundLine = this.fileInfo.listLineFromSourceLineByInfo(debugInfo, currentNumberLine);
 			return foundLine || NaN;

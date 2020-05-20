@@ -31,10 +31,9 @@ export class ParseWelcome extends ShellParser implements IParseWelcome {
             if (chunk.includes(27)) {
                 this.push(SshShell.eol);
             } else {
-                const lines = this.content.split(SshShell.eol);
-                if (lines.length > 1) {
-                    if (lines[lines.length - 1] === lines[lines.length - 2]) {
-                        this.prompt = lines[lines.length - 1];
+                if (this.lines.length > 1) {
+                    if (this.lines[this.lines.length - 1].trim() === this.lastLine.trim()) {
+                        this.prompt = this.lastLine.trim();
                         this.logFn(LogType.debug, () => localize("debug.prompt", "parse: found prompt '{0}'", this.prompt));
                         this.setReady();
                     }

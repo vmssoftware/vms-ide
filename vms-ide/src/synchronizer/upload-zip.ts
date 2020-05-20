@@ -107,7 +107,7 @@ export class UploadZip {
                     if (!unzipCmd) {
                         unzipCmd = UploadZip.unzipCmd(zipFileName);
                     }
-                    const unzipResult = await shell.execCmd(unzipCmd, 3000);
+                    const unzipResult = await shell.execCmd(unzipCmd, undefined, 3000);
                     let retCode = true;
                     if (!unzipResult || shell.lastError) {
                         this.logFn(LogType.error, () => localize("zip.unzip.failed", "Unzip command failed: {0}", shell.lastError || "unknown error" ));
