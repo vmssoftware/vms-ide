@@ -338,6 +338,11 @@ import { CloseSpecContext } from "./FortranParser";
 import { ReadStatementContext } from "./FortranParser";
 import { WriteStatementContext } from "./FortranParser";
 import { PrintStatementContext } from "./FortranParser";
+import { EncodeDecodeStatementContext } from "./FortranParser";
+import { EncodeDecodeSpecListContext } from "./FortranParser";
+import { EncodeDecodeSpecContext } from "./FortranParser";
+import { FindStatementContext } from "./FortranParser";
+import { FindSpecListContext } from "./FortranParser";
 import { IoControlSpecContext } from "./FortranParser";
 import { IoControlSpecListContext } from "./FortranParser";
 import { RdCtlSpecContext } from "./FortranParser";
@@ -354,6 +359,9 @@ import { InputImpliedDoContext } from "./FortranParser";
 import { OutputImpliedDoContext } from "./FortranParser";
 import { BackspaceStatementContext } from "./FortranParser";
 import { EndfileStatementContext } from "./FortranParser";
+import { DefineFileStatementContext } from "./FortranParser";
+import { DefineFileListContext } from "./FortranParser";
+import { DefineFileSpecContext } from "./FortranParser";
 import { RewindStatementContext } from "./FortranParser";
 import { DeleteStatementContext } from "./FortranParser";
 import { AcceptStatementContext } from "./FortranParser";
@@ -2718,6 +2726,41 @@ export interface FortranParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitPrintStatement?: (ctx: PrintStatementContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `FortranParser.encodeDecodeStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEncodeDecodeStatement?: (ctx: EncodeDecodeStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.encodeDecodeSpecList`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEncodeDecodeSpecList?: (ctx: EncodeDecodeSpecListContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.encodeDecodeSpec`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEncodeDecodeSpec?: (ctx: EncodeDecodeSpecContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.findStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFindStatement?: (ctx: FindStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.findSpecList`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFindSpecList?: (ctx: FindSpecListContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `FortranParser.ioControlSpec`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -2828,6 +2871,27 @@ export interface FortranParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitEndfileStatement?: (ctx: EndfileStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.defineFileStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDefineFileStatement?: (ctx: DefineFileStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.defineFileList`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDefineFileList?: (ctx: DefineFileListContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `FortranParser.defineFileSpec`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDefineFileSpec?: (ctx: DefineFileSpecContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `FortranParser.rewindStatement`.

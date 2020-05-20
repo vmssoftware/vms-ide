@@ -194,6 +194,10 @@ DIMENSION
    : D I M E N S I O N
    ;
 
+VIRTUAL
+   : V I R T U A L
+   ;
+
 REAL
    : R E A L
    ;
@@ -406,6 +410,18 @@ PRINT
    : P R I N T
    ;
 
+ENCODE
+   : E N C O D E
+   ;
+
+DECODE
+   : D E C O D E
+   ;
+
+FIND
+   : F I N D
+   ;
+
 OPEN
    : O P E N
    ;
@@ -496,6 +512,10 @@ VAL
 
 LOC
    : '%'L O C
+   ;
+
+FILL
+   : '%'F I L L
    ;
 
 LNOT
@@ -734,6 +754,10 @@ DIRECT
 
 FILE
    : F I L E
+   ;
+
+DEFINE
+   : D E F I N E
    ;
 
 STATUS

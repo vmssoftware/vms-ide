@@ -338,6 +338,11 @@ import { CloseSpecContext } from "./FortranParser";
 import { ReadStatementContext } from "./FortranParser";
 import { WriteStatementContext } from "./FortranParser";
 import { PrintStatementContext } from "./FortranParser";
+import { EncodeDecodeStatementContext } from "./FortranParser";
+import { EncodeDecodeSpecListContext } from "./FortranParser";
+import { EncodeDecodeSpecContext } from "./FortranParser";
+import { FindStatementContext } from "./FortranParser";
+import { FindSpecListContext } from "./FortranParser";
 import { IoControlSpecContext } from "./FortranParser";
 import { IoControlSpecListContext } from "./FortranParser";
 import { RdCtlSpecContext } from "./FortranParser";
@@ -354,6 +359,9 @@ import { InputImpliedDoContext } from "./FortranParser";
 import { OutputImpliedDoContext } from "./FortranParser";
 import { BackspaceStatementContext } from "./FortranParser";
 import { EndfileStatementContext } from "./FortranParser";
+import { DefineFileStatementContext } from "./FortranParser";
+import { DefineFileListContext } from "./FortranParser";
+import { DefineFileSpecContext } from "./FortranParser";
 import { RewindStatementContext } from "./FortranParser";
 import { DeleteStatementContext } from "./FortranParser";
 import { AcceptStatementContext } from "./FortranParser";
@@ -4055,6 +4063,61 @@ export interface FortranParserListener extends ParseTreeListener {
 	exitPrintStatement?: (ctx: PrintStatementContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `FortranParser.encodeDecodeStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterEncodeDecodeStatement?: (ctx: EncodeDecodeStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.encodeDecodeStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitEncodeDecodeStatement?: (ctx: EncodeDecodeStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.encodeDecodeSpecList`.
+	 * @param ctx the parse tree
+	 */
+	enterEncodeDecodeSpecList?: (ctx: EncodeDecodeSpecListContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.encodeDecodeSpecList`.
+	 * @param ctx the parse tree
+	 */
+	exitEncodeDecodeSpecList?: (ctx: EncodeDecodeSpecListContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.encodeDecodeSpec`.
+	 * @param ctx the parse tree
+	 */
+	enterEncodeDecodeSpec?: (ctx: EncodeDecodeSpecContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.encodeDecodeSpec`.
+	 * @param ctx the parse tree
+	 */
+	exitEncodeDecodeSpec?: (ctx: EncodeDecodeSpecContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.findStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterFindStatement?: (ctx: FindStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.findStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitFindStatement?: (ctx: FindStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.findSpecList`.
+	 * @param ctx the parse tree
+	 */
+	enterFindSpecList?: (ctx: FindSpecListContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.findSpecList`.
+	 * @param ctx the parse tree
+	 */
+	exitFindSpecList?: (ctx: FindSpecListContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `FortranParser.ioControlSpec`.
 	 * @param ctx the parse tree
 	 */
@@ -4229,6 +4292,39 @@ export interface FortranParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitEndfileStatement?: (ctx: EndfileStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.defineFileStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterDefineFileStatement?: (ctx: DefineFileStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.defineFileStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitDefineFileStatement?: (ctx: DefineFileStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.defineFileList`.
+	 * @param ctx the parse tree
+	 */
+	enterDefineFileList?: (ctx: DefineFileListContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.defineFileList`.
+	 * @param ctx the parse tree
+	 */
+	exitDefineFileList?: (ctx: DefineFileListContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `FortranParser.defineFileSpec`.
+	 * @param ctx the parse tree
+	 */
+	enterDefineFileSpec?: (ctx: DefineFileSpecContext) => void;
+	/**
+	 * Exit a parse tree produced by `FortranParser.defineFileSpec`.
+	 * @param ctx the parse tree
+	 */
+	exitDefineFileSpec?: (ctx: DefineFileSpecContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `FortranParser.rewindStatement`.
