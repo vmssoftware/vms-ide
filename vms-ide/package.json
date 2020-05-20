@@ -149,7 +149,9 @@
                     ".f90",
                     ".for",
                     ".f",
-                    ".inc"
+                    ".inc",
+                    ".pfo",
+                    ".sfo"
                 ],
                 "configuration": "fortran.language-configuration.json"
             },

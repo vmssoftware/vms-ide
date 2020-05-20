@@ -133,7 +133,7 @@ export class VMSRuntime extends EventEmitter
     }
 
     private static async ensureModuleInfoCache(scope: string | ConfigManager) {
-        if (typeof scope == "string") {
+        if (typeof scope === "string") {
             scope = new ConfigManager(scope);
         }
         let jsonStr = await readWholeStream(await (await scope.getLocalSource())?.createReadStream(debugInfoFile));
@@ -232,7 +232,7 @@ export class VMSRuntime extends EventEmitter
 	}
 
 	public static async collectModuleInfo(scope: string | ConfigManager) {
-        if (typeof scope == "string") {
+        if (typeof scope === "string") {
             scope = new ConfigManager(scope);
         }
         let moduleInfoCache = new ModuleInfoCache(scope.scope, false);
@@ -243,7 +243,7 @@ export class VMSRuntime extends EventEmitter
             let sources = await scope.findFiles(sectionCur.source, project?.exclude);
             let listings = await scope.findFiles(sectionCur.listing);
             for(let listing of listings) {
-                if (path.extname(listing).toUpperCase() == ".MAP") {
+                if (path.extname(listing).toUpperCase() === ".MAP") {
                     await moduleInfoCache.addMapFile(listing);
                 }
             }

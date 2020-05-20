@@ -231,7 +231,9 @@ function checkExtension(file: string) : boolean
             ext === ".f77" ||
             ext === ".for" ||
             ext === ".f" ||
-            ext === ".inc")
+            ext === ".inc" ||
+            ext === ".pfo" ||
+            ext === ".sfo")
         {
             result = true;
         }

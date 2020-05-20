@@ -53,16 +53,16 @@ export class ModuleInfoCache
 
     public static isModuleInfo(candidate: any): candidate is IModuleInfo {
         return !!candidate &&
-            typeof(candidate.moduleName) == "string" &&
-            typeof(candidate.sourcePath) == "string" &&
-            typeof(candidate.listingPath) == "string" &&
-            typeof(candidate.language) == "string";
+            typeof(candidate.moduleName) === "string" &&
+            typeof(candidate.sourcePath) === "string" &&
+            typeof(candidate.listingPath) === "string" &&
+            typeof(candidate.language) === "string";
     }
 
     public static loadJSON(strJson: string) {
         try {
             let candidate = JSON.parse(strJson);
-            if (typeof(candidate.scope) == "string" && typeof(candidate.uppercase) == "boolean") {
+            if (typeof(candidate.scope) === "string" && typeof(candidate.uppercase) === "boolean") {
                 let moduleInfoCache = new ModuleInfoCache(candidate.scope, candidate.uppercase);
                 if (Array.isArray(candidate.moduleInfo)) {
                     for (let item of candidate.moduleInfo) {

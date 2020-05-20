@@ -100,6 +100,7 @@ executableConstruct
    | caseConstruct
    | whereConstruct
    | endDoStatement
+   | execSqlStatement
    ;
 
 actionStatement
@@ -118,6 +119,7 @@ actionStatement
    | closeStatement
    | continueStatement
    | endfileStatement
+   | defineFileStatement
    | gotoStatement
    | computedGotoStatement
    | assignedGotoStatement
@@ -133,6 +135,9 @@ actionStatement
    | stopStatement
    | writeStatement
    | deleteStatement
+   | acceptStatement
+   | encodeDecodeStatement
+   | findStatement
    ;
 
 definedOperator
@@ -239,7 +244,7 @@ identifier
    | ENTRY
    | TYPE
    // | STRUCTURE
-   // | RECORD
+   | RECORD
    | PRIVATE
    | PUBLIC
    | SEQUENCE
@@ -438,7 +443,7 @@ entryName
    ;
 
 externalName
-   : identifier
+   : (STAR)? identifier
    ;
 
 functionName
@@ -455,6 +460,7 @@ intrinsicProcedureName
 
 objectName
    : identifier
+   | FILL
    ;
 
 programName
@@ -938,6 +944,7 @@ typeSpec
    | LOGICAL kindSelector?
    | TYPE LPAREN typeName RPAREN
    | CHARACTER lengthSelector
+   | VARCHAR kindSelector?
    ;
 
 attrSpec
@@ -1108,8 +1115,8 @@ savedEntity
    ;
 
 dimensionStatement
-   : label? DIMENSION COLON COLON arrayDeclaratorList eos
-   | label? DIMENSION arrayDeclaratorList eos
+   : label? (DIMENSION | VIRTUAL) COLON COLON arrayDeclaratorList eos
+   | label? (DIMENSION | VIRTUAL) arrayDeclaratorList eos
    ;
 
 arrayDeclaratorList
@@ -1146,6 +1153,7 @@ pointerStatementObject
    : objectName
    | objectName LPAREN deferredShapeSpecList RPAREN
    | pointerAssignmentItem
+   | LPAREN objectName COMMA objectName RPAREN
    ;
 
 targetStatement
@@ -1209,7 +1217,7 @@ dataIDoObject
 
 parameterStatement
    : label? PARAMETER LPAREN namedConstantDefList RPAREN eos
-   | label? PARAMETER  namedConstantDefList eos
+   | label? PARAMETER namedConstantDefList eos
    ;
 
 namedConstantDefList
@@ -1767,6 +1775,10 @@ endDoStatement
    : label? (END DO | ENDDO) name? eos
    ;
 
+execSqlStatement
+   : label? SQL_STATEMENT eos
+   ;
+
 cycleStatement
    : label? CYCLE endName? eos
    ;
@@ -1908,6 +1920,28 @@ printStatement
    : label? (PRINT | TYPE) formatIdentifier ( COMMA outputItemList )? eos
    ;
 
+encodeDecodeStatement
+   : label? (ENCODE | DECODE) LPAREN encodeDecodeSpecList RPAREN outputItemList? eos
+   ;
+
+encodeDecodeSpecList
+   :  encodeDecodeSpec(COMMA encodeDecodeSpec)*
+   ;
+
+encodeDecodeSpec
+   : unitIdentifier
+   | IOSTAT TO_ASSIGN scalarVariable
+   | ERR TO_ASSIGN lblRef
+   ;
+
+findStatement
+   : label? FIND LPAREN findSpecList RPAREN eos
+   ;
+
+findSpecList
+   : (UNIT TO_ASSIGN)? unitIdentifier COMMA REC TO_ASSIGN expr (COMMA ERR TO_ASSIGN lblRef)? (COMMA IOSTAT TO_ASSIGN scalarVariable)?
+   ;
+
 ioControlSpec
    : UNIT TO_ASSIGN unitIdentifier
    | FMT TO_ASSIGN formatIdentifier
@@ -2008,6 +2042,18 @@ endfileStatement
    | label? (END FILE | ENDFILE | UNLOCK) LPAREN positionSpec (COMMA positionSpec)* RPAREN eos
    ;
 
+defineFileStatement
+   : label? DEFINE FILE defineFileSpec LPAREN defineFileList RPAREN (COMMA defineFileSpec LPAREN defineFileList RPAREN)* eos
+   ;
+
+defineFileList
+   : defineFileSpec COMMA defineFileSpec COMMA variableName COMMA defineFileSpec
+   ;
+
+defineFileSpec
+   : (intConst | variableName)
+   ;
+
 rewindStatement
    : label? REWIND unitIdentifier eos
    | label? REWIND LPAREN positionSpec (COMMA positionSpec)* RPAREN eos
@@ -2015,6 +2061,11 @@ rewindStatement
 
 deleteStatement
    : label? DELETE LPAREN deleteSpec (COMMA deleteSpec)* RPAREN eos
+   ;
+
+acceptStatement
+   : label? ACCEPT (label | STAR) (COMMA outputItemList)? eos
+   | label? ACCEPT outputItemList eos
    ;
 
 positionSpec

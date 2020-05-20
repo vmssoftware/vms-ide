@@ -194,6 +194,10 @@ DIMENSION
    : D I M E N S I O N
    ;
 
+VIRTUAL
+   : V I R T U A L
+   ;
+
 REAL
    : R E A L
    ;
@@ -252,6 +256,10 @@ NAMELIST
 
 CHARACTER
    : C H A R A C T E R
+   ;
+
+VARCHAR
+   : V A R C H A R
    ;
 
 PARAMETER
@@ -402,6 +410,18 @@ PRINT
    : P R I N T
    ;
 
+ENCODE
+   : E N C O D E
+   ;
+
+DECODE
+   : D E C O D E
+   ;
+
+FIND
+   : F I N D
+   ;
+
 OPEN
    : O P E N
    ;
@@ -466,6 +486,18 @@ UNLOCK
    : U N L O C K
    ;
 
+EXEC
+   : E X E C
+   ;
+
+SQL
+   : S Q L
+   ;
+
+ACCEPT
+   : A C C E P T
+   ;
+
 DESCR
    : '%'D E S C R
    ;
@@ -480,6 +512,10 @@ VAL
 
 LOC
    : '%'L O C
+   ;
+
+FILL
+   : '%'F I L L
    ;
 
 LNOT
@@ -718,6 +754,10 @@ DIRECT
 
 FILE
    : F I L E
+   ;
+
+DEFINE
+   : D E F I N E
    ;
 
 STATUS
@@ -1048,6 +1088,11 @@ COMMENT
 
 FIXED_COMMENT
    : ([\r\n] [*Cc!] (~ [\r\n])*)
+   ;
+
+SQL_STATEMENT
+   : EXEC ([ \t\r])+ SQL ~ ([\r\n])*
+   | EXEC ([ \t\r])+ SQL ~ ([\r\n])* ((CONT6|CONTN|CONTTAB) ~ ([\r\n])*)+
    ;
 
 SconSingle
