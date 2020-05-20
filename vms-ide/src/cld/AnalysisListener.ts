@@ -5,7 +5,7 @@ import { DiagnosticEntry, DiagnosticType, SymbolKind } from './Facade';
 import { Token, ParserRuleContext, RuleContext } from "antlr4ts";
 import { LogFunction, LogType } from "../common/main";
 import { TerminalNode } from "antlr4ts/tree";
-import { 
+import {
     AnyNameContext,
     DefineSyntaxContext,
     DefineTypeContext,
@@ -40,8 +40,8 @@ const localize = nls.loadMessageBundle();
 
 export class AnalysisListener implements cldListener {
 
-    public static cannotFindDefine = localize("cannotFindDefine", "Cannot find the DEFINE clause for this entity.");
-    public static cannotFindEntity = localize("cannotFindEntity", "Cannot find this entity or it is ambigous.");
+    public static cannotFindDefine = localize("cannotFindDefine", "Could not find the DEFINE clause for this entity.");
+    public static cannotFindEntity = localize("cannotFindEntity", "Could not find this entity or it is ambigous.");
     public static circularTypeRef = localize("circularTypeRef", "Circular type reference found.");
     public static emptyParameterName = localize("emptyParameterName", "The parameter name cannot be empty.");
     public static entityHasNoChildren = localize("entityHasNoChildren", "This entity has no children.");
@@ -394,9 +394,9 @@ export class AnalysisListener implements cldListener {
     /**
      * Test if DEFAULT and REQUIRED do not present in its parent at the same time.
      * Also test DEFINE string length.
-     * @param req 
-     * @param def 
-     * @param defStr 
+     * @param req
+     * @param def
+     * @param defStr
      */
     public testValueDefReq(req?: TerminalNode, def?: TerminalNode, defStr?: TerminalNode) {
         if (req) {
@@ -419,8 +419,8 @@ export class AnalysisListener implements cldListener {
 
     /**
      * Process DEFINE clause (VERB, SYNTAX or TYPE)
-     * @param symbol 
-     * @param typeStack 
+     * @param symbol
+     * @param typeStack
      */
     public collectUnambigousEntities(symbol: EntityCollection, typeStack?: Map<string, Symbol>) {
         const entities = new Map<string, INestedEntity | undefined>();
@@ -467,7 +467,7 @@ export class AnalysisListener implements cldListener {
             entityToSave = labels[0];
         } else if (labels.length > 1) {
             // if labels are more than one, mark second label
-            this.markToken((labels[1].context as ParserRuleContext).start, AnalysisListener.tooManyLabels);  
+            this.markToken((labels[1].context as ParserRuleContext).start, AnalysisListener.tooManyLabels);
         }
         if (entities.has(entityToSave.name.toUpperCase())) {
             // if name already exists, it is ambigous - set to undefined
@@ -516,8 +516,8 @@ export class AnalysisListener implements cldListener {
     }
 
     /**
-     * 
-     * @param ctx 
+     *
+     * @param ctx
      */
     public testAndLinkType(entityCtx: ParserRuleContext) {
         if (!this.symbolTable.symbolExists(entityCtx.text.toUpperCase(), SymbolKind.Type, false) &&
@@ -537,7 +537,7 @@ export class AnalysisListener implements cldListener {
     }
 
     /**
-     * 
+     *
      * @param entityCtx - anyName() context
      */
     public testAndLinkSyntax(entityCtx: ParserRuleContext) {
@@ -633,8 +633,8 @@ export class AnalysisListener implements cldListener {
         const error: DiagnosticEntry = {
             type,
             message,
-            range: { 
-                start: { column, row }, 
+            range: {
+                start: { column, row },
                 end:   { column: column + length, row }}
         };
         this.diagnostics.push(error);
@@ -642,14 +642,14 @@ export class AnalysisListener implements cldListener {
 }
 
 /**
- * 
- * @param ctx 
+ *
+ * @param ctx
  */
 export function findDefineNameForContext(ctx: ParserRuleContext) {
     let currentCtx: ParserRuleContext | undefined = ctx;
     while(  currentCtx &&
             !(currentCtx instanceof DefineSyntaxContext) &&
-            !(currentCtx instanceof DefineVerbContext) && 
+            !(currentCtx instanceof DefineVerbContext) &&
             !(currentCtx instanceof DefineTypeContext)) {
         currentCtx = currentCtx.parent;
     }

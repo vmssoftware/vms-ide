@@ -1,5 +1,9 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.11
+* Preparing to debug as a separate procedure.
+* Embedded SQL in FORTRAN
+
 ## 1.5.9
 * Allow the user to set additional compiler qualifiers and defines
 * New command for Python debugger to set radix
