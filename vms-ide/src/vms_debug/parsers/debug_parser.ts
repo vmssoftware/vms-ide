@@ -1,4 +1,4 @@
-import { ftpPathSeparator } from "../../common/main";
+import { ftpPathSeparator, LogFunction } from "../../common/main";
 import { readFileSync } from "fs";
 import { CommandMessage, DebugCmdVMS } from "../command/debug_commands";
 import { ShellSession, TypeDataMessage } from "../net/shell-session";
@@ -72,11 +72,14 @@ export class DebugParser
 	private commandButtonDone : boolean;
 	private typeBracketsSquare : boolean = false;
 	private displayDataString : string[] = ["", ""];
-	private framesOld = new Array<any>();
+    private framesOld: IStackFrame[] = [];
 
-	constructor(public makeModulesUppercase: boolean)
+    public logFn: LogFunction;
+
+	constructor(public makeModulesUppercase: boolean, logFn?: LogFunction)
 	{
-		this.fileInfo = new HolderDebugFileInfo();
+        this.logFn = logFn || (() => {});
+		this.fileInfo = new HolderDebugFileInfo(this.logFn);
 		this.varsInfo = new HolderDebugVariableInfo();
 		this.commandButtonDone = false;
 	}

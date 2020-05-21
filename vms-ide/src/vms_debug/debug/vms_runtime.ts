@@ -122,7 +122,7 @@ export class VMSRuntime extends EventEmitter
 		this.scope = folder ? folder.name : "";
 		this.osCmd = new OsCommands();
 		this.dbgCmd = new DebugCommands(false);
-		this.dbgParser = new DebugParser(false);
+		this.dbgParser = new DebugParser(false, this.logFn);
 		this.varsInfo = new HolderDebugVariableInfo();
 		this.stopOnEntry = false;
 		this.debugRun = false;

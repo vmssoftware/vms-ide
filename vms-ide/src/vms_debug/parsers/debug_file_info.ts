@@ -1,6 +1,7 @@
 import { IListMatch, findCorrespondingLines } from "../../common/correspondLines";
 import fs from 'fs';
 import { binarySearch } from "../../common/bsearch";
+import { LogFunction, LogType } from "../../common/main";
 
 export interface DebugFileInfo
 {
@@ -14,7 +15,13 @@ export class HolderDebugFileInfo
 	/**
 	 * filePath -> debug info
 	 */
-	private fileInfo = new Map<string, DebugFileInfo>();
+    private fileInfo = new Map<string, DebugFileInfo>();
+
+    public logFn: LogFunction;
+
+    public constructor(logFn?: LogFunction) {
+        this.logFn = logFn || (() => {});
+    }
 
 	public getSize() : number
 	{
@@ -90,13 +97,17 @@ export class HolderDebugFileInfo
 	}
 
 	public pushEntry(sourcePath: string, listingPath: string) {
-		let source = fs.readFileSync(sourcePath).toString('utf8');
-		let listing = fs.readFileSync(listingPath).toString('utf8');
-		this.fileInfo.set(sourcePath, {
-			correspondingLines: findCorrespondingLines(source, listing),
-			filePath: sourcePath,
-			moduleName: ""
-		});
+        try {
+            let source = fs.readFileSync(sourcePath).toString('utf8');
+            let listing = fs.readFileSync(listingPath).toString('utf8');
+            this.fileInfo.set(sourcePath, {
+                correspondingLines: findCorrespondingLines(source, listing),
+                filePath: sourcePath,
+                moduleName: ""
+            });
+        } catch(ex) {
+            this.logFn(LogType.error, () => String(ex));
+        }
 	}
 
 }
