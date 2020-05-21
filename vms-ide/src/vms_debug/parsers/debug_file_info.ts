@@ -107,6 +107,11 @@ export class HolderDebugFileInfo
             });
         } catch(ex) {
             this.logFn(LogType.error, () => String(ex));
+            this.fileInfo.set(sourcePath, {
+                correspondingLines: [],
+                filePath: sourcePath,
+                moduleName: ""
+            });
         }
 	}
 
