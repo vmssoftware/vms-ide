@@ -32,9 +32,9 @@
     "upload.fail": "Выгрузка неудачна",
     "upload.status": "Выгрузка...",
     "upload.success": "Выгрузка завершена",
-    "collect.fail": "Подготовка DEBUG неудачна",
-    "collect.status": "Подготовка DEBUG...",
-    "collect.success": "Подготовка DEBUG завершена",
+    "collect.fail": "Подготовка к отладке неудачна",
+    "collect.status": "Подготовка к отладке...",
+    "collect.success": "Подготовка к отладке завершена",
     "error.no_action": "Отсутсвует действие: {0}",
     "error.action_in_progress": "Невозможно выполнить, т.к. другое действие в процессе: {0}"
 }

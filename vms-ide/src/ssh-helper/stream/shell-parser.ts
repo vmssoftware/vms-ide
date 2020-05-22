@@ -55,6 +55,10 @@ export class ShellParser extends Transform implements IShellParser {
             this.lastLine += strData;
             let tLines = this.lastLine.split(/\r?\n/);
             this.lastLine = tLines.pop() || "";
+            if (this.lastLine.endsWith("\n")) {
+                tLines.push(this.lastLine);
+                this.lastLine = "";
+            }
             while(tLines.length) {
                 let line = tLines.shift()?.replace(/[\r\n]/g, "");
                 if (line) {
