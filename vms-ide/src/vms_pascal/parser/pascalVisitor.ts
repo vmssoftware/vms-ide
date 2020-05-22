@@ -128,6 +128,7 @@ import { ContinueStatementContext } from "./pascalParser";
 import { ReturnStatementContext } from "./pascalParser";
 import { StringExpressionContext } from "./pascalParser";
 import { EmptyStatementContext } from "./pascalParser";
+import { ExecSqlStatementContext } from "./pascalParser";
 import { StructuredStatementContext } from "./pascalParser";
 import { CompoundStatementContext } from "./pascalParser";
 import { OpenCompoundStatementContext } from "./pascalParser";
@@ -1037,6 +1038,13 @@ export interface pascalVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitEmptyStatement?: (ctx: EmptyStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `pascalParser.execSqlStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitExecSqlStatement?: (ctx: ExecSqlStatementContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `pascalParser.structuredStatement`.

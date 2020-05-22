@@ -542,6 +542,7 @@ simpleStatement
    | returnStatement
    | directives
    | emptyStatement
+   | execSqlStatement
    ;
 
 assignmentStatement
@@ -685,6 +686,10 @@ stringExpression
 
 emptyStatement
    :
+   ;
+
+execSqlStatement
+   : EXEC SQL ~ (SEMI | EXEC | SQL)*
    ;
 
 
@@ -2110,6 +2115,14 @@ TRUE
 //    ;
 ZERO
    :Z E R O
+   ;
+
+EXEC
+   : E X E C
+   ;
+
+SQL
+   : S Q L
    ;
 
 

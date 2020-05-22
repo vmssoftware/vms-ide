@@ -128,6 +128,7 @@ import { ContinueStatementContext } from "./pascalParser";
 import { ReturnStatementContext } from "./pascalParser";
 import { StringExpressionContext } from "./pascalParser";
 import { EmptyStatementContext } from "./pascalParser";
+import { ExecSqlStatementContext } from "./pascalParser";
 import { StructuredStatementContext } from "./pascalParser";
 import { CompoundStatementContext } from "./pascalParser";
 import { OpenCompoundStatementContext } from "./pascalParser";
@@ -1534,6 +1535,17 @@ export interface pascalListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitEmptyStatement?: (ctx: EmptyStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `pascalParser.execSqlStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterExecSqlStatement?: (ctx: ExecSqlStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `pascalParser.execSqlStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitExecSqlStatement?: (ctx: ExecSqlStatementContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `pascalParser.structuredStatement`.
