@@ -48,13 +48,15 @@ let typeRunConfig : TypeRunConfig = TypeRunConfig.TypeRunNone;
 let statusConnBar : StatusBarDebug = new StatusBarDebug();
 let statusShell : StatusConnection = StatusConnection.StatusDisconnected;
 let statusShellDbg : StatusConnection = StatusConnection.StatusDisconnected;
-let terminals : TerminalVMS = new TerminalVMS();
+let terminals : TerminalVMS;
 let configManager : ConfigManager = new ConfigManager("");
 
 
 export function activate(context: vscode.ExtensionContext)
 {
-	logFn = createLogFunction("VMS-IDE");
+    logFn = createLogFunction("VMS-IDE");
+
+    terminals = new TerminalVMS(logFn);
 
 	context.subscriptions.push(vscode.commands.registerCommand('extension.vms-debug.terminal', () =>
 	{

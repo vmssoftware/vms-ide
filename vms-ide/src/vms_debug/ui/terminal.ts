@@ -1,6 +1,7 @@
 const { Subject } = require("await-notify");
 import * as vscode from "vscode";
 import { OsCmdVMS } from "../command/os_commands";
+import { LogFunction, LogType } from "../../common/main";
 
 
 interface TerminalQuickPickItem extends vscode.QuickPickItem
@@ -11,7 +12,13 @@ interface TerminalQuickPickItem extends vscode.QuickPickItem
 export class TerminalVMS
 {
 	private prompt : string = "";
-	private passwd : string = "";
+    private passwd : string = "";
+
+    public logFn: LogFunction;
+
+    public constructor(logFn?: LogFunction) {
+        this.logFn = logFn || (() => {});
+    }
 
 	public async create(nameTerminal : string, pathToTerminal? : string): Promise<vscode.Terminal | undefined>
 	{
@@ -34,8 +41,9 @@ export class TerminalVMS
 
 	public async start(terminal : vscode.Terminal, host : string, userName : string, password? : string)
 	{
-		let setPassword = false;
-		let configurationDone = new Subject();
+		let passwordIsSet = false;
+        let configurationDone = new Subject();
+        let content = "";
 
 		this.prompt = userName + "@" + host + "'s password:";
 
@@ -43,14 +51,18 @@ export class TerminalVMS
 		{
 			(<any>terminal).onDidWriteData((data: any) =>
 			{
-				if(data.includes(this.prompt))
-				{
-					if(this.passwd !== "")
-					{
-						setPassword = true;
-						terminal.sendText(this.passwd);
-					}
-				}
+                if (passwordIsSet || !this.passwd) {
+                    return;
+                }
+                if (typeof data === "string") {
+                    content += data;
+                    if(content.includes(this.prompt))
+                    {
+                        passwordIsSet = true;
+                        terminal.sendText(this.passwd);
+                        this.logFn(LogType.debug, () => "password passed via onDidWriteData()");
+                    }
+                }
 			});
 		}
 
@@ -61,15 +73,18 @@ export class TerminalVMS
 			if(password)
 			{
 				this.passwd = password;
-			}
+			} else {
+                this.logFn(LogType.debug, () => "start by password but no password found");
+            }
 
 			terminal.show();
 
 			await configurationDone.wait(3000);
 
-			if(!setPassword)
+			if(!passwordIsSet)
 			{
 				terminal.sendText(this.passwd);
+                this.logFn(LogType.debug, () => "password passed via start()");
 			}
 		}
 	}
@@ -78,13 +93,14 @@ export class TerminalVMS
 	{
 		if (terminal)
 		{
-			if(keyFile !== "")
+			if(keyFile)
 			{
 				terminal.sendText("ssh -oHostKeyAlgorithms=+ssh-dss -i " + keyFile + " " + userName + "@" + host);
 			}
 			else
 			{
 				terminal.sendText("ssh -oHostKeyAlgorithms=+ssh-dss " + userName + "@" + host);
+                this.logFn(LogType.debug, () => "start by key file but no key file found");
 			}
 
 			terminal.show();
