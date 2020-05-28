@@ -7,6 +7,7 @@ import time
 import os.path
 import collections
 import base64
+import re
 
 # settings
 class SETTINGS:
@@ -36,6 +37,7 @@ class MESSAGE:
     SYNTAX_ERROR = 'SYNTAX_ERROR'
     THREADS = 'THREADS'
     RADIX = 'RADIX'
+    PATHFILTER = 'PATHFILTER'
 
 # command to receive
 class COMMAND:
@@ -55,12 +57,15 @@ class COMMAND:
     STEP = 's'              # s [ident]     // step in
     THREADS = 't'
     RADIX = 'x'             # x [10|16]     // default 10
+    PATHFILTER = 'y'        # y [path]      // always trace this path
 
 class Tracer:
     def __init__(self, port, insensitive=False, developerMode=False):
         self._insensitive = insensitive
         self._showHex = False
         self._developerMode = developerMode
+        self._pathFilter = ''
+        self._re_compile = re.compile
         self._co_lnotab_signed = sys.version_info.major >= 3 and sys.version_info.minor >= 6
         self._knownValueTypes = [int, str, float, bool, complex, type(None)]
         self._port = port
@@ -196,6 +201,28 @@ class Tracer:
                     return line
         return None
 
+    def _processFile(self, fileName):
+        if self._developerMode:
+            # tracer in developer mode
+            # self._sendDbgMessage('=== in developer mode')
+            return True
+        if self._pathFilter and fileName.startswith(self._pathFilter):
+            # file in filtered folder
+            # self._sendDbgMessage('=== in filtered folder')
+            return True
+        if fileName in self._breakpointsConfirmed.keys() and len(self._breakpointsConfirmed[fileName]) > 0:
+            # file has confirmed breakpoint
+            # self._sendDbgMessage('=== in _breakpointsConfirmed')
+            return True
+        if fileName in self._breakpointsWait.keys() and len(self._breakpointsWait[fileName]) > 0:
+            # file has waiting breakpoint
+            # self._sendDbgMessage('=== in _breakpointsWait')
+            return True
+        if fileName.startswith("/") or fileName.startswith('<'):
+            return False
+        # self._sendDbgMessage('=== in local folder')
+        return True
+
     def _traceFunc(self, frame, event, arg):
         """ Do not forget not sending any data without locking (but ENTRY) """
 
@@ -212,33 +239,19 @@ class Tracer:
         #     self._files.add(currentFile)
             # self._sendDbgMessage('NEW FILE: %s' % currentFile)
 
-        # skip this file
+        # skip this file tracer.py
         if currentFile == self._fileName:
             if not self._fileWaitingFor:
                 return None
             return self._traceFunc
 
-        # skip system files
-        # if self._os_path_abspath(currentFile) == currentFile:
-        #     if not self._fileWaitingFor:
-        #         return None
-        #     return self._traceFunc
-        if not self._developerMode and currentFile.startswith("/"):
+        # skip system files or strings
+        if not self._processFile(currentFile):
             if not self._fileWaitingFor:
                 return None
             return self._traceFunc
 
-        # skip no files
-        # if currentFile == '<string>':
-        #     if not self._fileWaitingFor:
-        #         return None
-        #     return self._traceFunc
-        if not self._developerMode and currentFile.startswith('<'):
-            if not self._fileWaitingFor:
-                return None
-            return self._traceFunc
-
-        # wait untin tracing file entered
+        # wait until tracing file entered
         if self._fileWaitingFor:
             if self._fileWaitingFor != currentFile:
                 return self._traceFunc
@@ -389,6 +402,8 @@ class Tracer:
                     # show threads
                     elif cmd.startswith(self._commands.RADIX):
                         self._setRadix(cmd)
+                    elif cmd.startswith(self._commands.PATHFILTER):
+                        self._setFilter(cmd)
                 # wait and read command again
                 self._sleep(0.3)
                 cmd = self._readDbgMessage()
@@ -430,6 +445,13 @@ class Tracer:
             self._sendDbgMessage('%s %s' % (self._messages.RADIX, 'hex' if self._showHex else 'dec'))
         except Exception as ex:
             self._sendDbgMessage('%s %s %s' % (self._messages.RADIX, 'failed', repr(ex)))
+
+    def _setFilter(self, cmd):
+        try:
+            self._pathFilter = cmd[2:].strip()
+            self._sendDbgMessage('%s %s %s' % (self._messages.PATHFILTER, 'set', repr(self._pathFilter)))
+        except Exception as ex:
+            self._sendDbgMessage('%s %s %s' % (self._messages.PATHFILTER, 'failed', repr(ex)))
 
     def _doGotoTargets(self, cmd, ident):
         locals_args = cmd.split()

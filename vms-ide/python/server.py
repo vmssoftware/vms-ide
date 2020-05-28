@@ -32,6 +32,8 @@ class MESSAGE:
     STEPPED = 'STEPPED'
     SYNTAX_ERROR = 'SYNTAX_ERROR'
     THREADS = 'THREADS'
+    RADIX = 'RADIX'
+    PATHFILTER = 'PATHFILTER'
 
 # commands
 class COMMAND:
@@ -48,6 +50,7 @@ class COMMAND:
     STEP = 's'              # s [ident]     // step in
     THREADS = 't'
     RADIX = 'x'             # x [10|16]     // default 10
+    PATHFILTER = 'y'        # y [path]      // always trace this path
     # server only commands
     QUIT = 'q'
     HELP = 'h'
@@ -69,6 +72,7 @@ _helpInfo = """\
     STEP = 's'              # s [ident]     // step in
     THREADS = 't'
     RADIX = 'x'             # x [10|16]     // default 10
+    PATHFILTER = 'y'        # y [path]      // always trace this path
     # server only commands
     QUIT = 'q'
     HELP = 'h'
