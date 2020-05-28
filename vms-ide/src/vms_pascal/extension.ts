@@ -227,7 +227,8 @@ function checkExtension(file: string) : boolean
     {
         let ext = file.substring(extPos).toLowerCase();
 
-        if(ext === ".pas")
+        if(ext === ".pas" ||
+            ext === ".spa")
         {
             result = true;
         }

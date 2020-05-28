@@ -138,7 +138,8 @@
             {
                 "id": "vms-pascal",
                 "extensions": [
-                    ".pas"
+                    ".pas",
+                    ".spa"
                 ],
                 "configuration": "pascal.language-configuration.json"
             },
