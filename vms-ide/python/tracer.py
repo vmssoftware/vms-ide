@@ -62,6 +62,7 @@ class COMMAND:
 class Tracer:
     def __init__(self, port, insensitive=False, developerMode=False):
         self._insensitive = insensitive
+        # self._postDebugMessage = None
         self._showHex = False
         self._developerMode = developerMode
         self._pathFilter = ''
@@ -650,7 +651,7 @@ class Tracer:
                 idx  = name[brkPos+1:-1]
                 if type(head) == dict:
                     try:
-                        idx = base64.b64decode(idx).decode('utf-8')
+                        idx = self._b64decode(idx).decode('utf-8')
                     except:
                         pass
                     for _, (k, _) in enumerate(head.items()):
@@ -661,8 +662,20 @@ class Tracer:
                     head[int(idx)] = value
             else:
                 dotPos = name.rfind('.')
-                head = self._eval_variable(name[:dotPos], frame.f_locals)
-                head.__dict__[name[dotPos+1:]] = value
+                if dotPos > 0:
+                    head = self._eval_variable(name[:dotPos], frame.f_locals)
+                    try:
+                        head.__dict__.update({
+                            name[dotPos+1:]: value,
+                        })
+                        # head.__dict__[name[dotPos+1:]] = value
+                        testValue = head.__dict__[name[dotPos+1:]]
+                        if value != testValue:
+                            self._sendDbgMessage('_amend_impl value != testValue')
+                    except Exception as ex:
+                        self._sendDbgMessage('_amend_impl head.__dict__ exception %s' % str(ex))
+                else:
+                    self._sendDbgMessage('_amend_impl has no dot')
         return
 
     def _amend(self, ident, frameNum, name, value):
@@ -677,7 +690,7 @@ class Tracer:
                 result = self._eval_variable(name, frame.f_locals)
                 resultType = type(result)
                 if resultType in self._knownValueTypes:
-                    # if we know that is valueType, display it
+                    # if we know that is valueType, return it
                     if resultType == int and self._showHex:
                         self._sendDbgMessage('%s ok %s = %s' % (self._messages.AMEND, resultType, hex(result)))
                     else:
