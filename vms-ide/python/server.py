@@ -42,6 +42,7 @@ class COMMAND:
     BP_SET = 'bps'          # bps file line
     CONTINUE = 'c'
     DISPLAY = 'd'           # d [frameNum [ident [fullName [start [count]]]]]   // frame is zero-based
+    EXEC = 'e'              # e expression                                      // execute expression in the current frame
     FRAME  = 'f'            # f [ident [frameStart [frameNum]]]                 // frame is zero-based
     INFO = 'i'
     NEXT = 'n'              # n [ident]     // step over
@@ -61,6 +62,7 @@ _helpInfo = """\
     BP_SET = 'bps'          # bps file line
     CONTINUE = 'c'
     DISPLAY = 'd'           # d [ident [frame [fullName [start [count]]]]]      // frame is zero-based
+    EXEC = 'e'              # e expression                                      // execute expression in the current frame
     FRAME  = 'f'            # f [ident [frameStart [frameNum]]]                 // frame is zero-based
     GOTO = 'g'              # g ident line
     GOTO_TARGETS = 'gt'     # gt file line  // test if we can go to target from current place

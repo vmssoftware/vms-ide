@@ -27,6 +27,7 @@ class MESSAGE:
     DISPLAY64 = 'DISPLAY64'
     ENTRY = 'ENTRY'
     EXCEPTION = 'EXCEPTION'
+    EXECUTE = 'EXECUTE'
     EXITED = 'EXITED'
     GOTO = 'GOTO'
     GOTO_TARGETS = 'GOTO_TARGETS'
@@ -46,6 +47,7 @@ class COMMAND:
     BP_SET = 'bps'          # bps file line
     CONTINUE = 'c'
     DISPLAY = 'd'           # d[h] [ident [frame [fullName [start [count]]]]]   // frame is zero-based
+    EXEC = 'e'              # e expression                                      // execute expression in the current frame
     FRAME  = 'f'            # f [ident [frameStart [frameNum]]]                 // frame is zero-based
     GOTO = 'g'              # g ident line
     GOTO_TARGETS = 'gt'     # gt file line  // test if we can go to target from current place
@@ -405,6 +407,8 @@ class Tracer:
                         self._setRadix(cmd)
                     elif cmd.startswith(self._commands.PATHFILTER):
                         self._setFilter(cmd)
+                    elif cmd.startswith(self._commands.EXEC):
+                        self._execExpression(cmd, ident)
                 # wait and read command again
                 self._sleep(0.3)
                 cmd = self._readDbgMessage()
@@ -453,6 +457,16 @@ class Tracer:
             self._sendDbgMessage('%s %s %s' % (self._messages.PATHFILTER, 'set', repr(self._pathFilter)))
         except Exception as ex:
             self._sendDbgMessage('%s %s %s' % (self._messages.PATHFILTER, 'failed', repr(ex)))
+
+    def _execExpression(self, cmd, ident):
+        try:
+            expression = cmd[2:].strip()
+            frame, isPostMortem = self._getFrame(ident, 0)
+            isPostMortem = isPostMortem
+            if frame != None:
+                exec(expression, globals(), frame.f_locals)
+        except Exception as ex:
+            self._sendDbgMessage('%s %s %s' % (self._messages.EXECUTE, 'failed', repr(ex)))
 
     def _doGotoTargets(self, cmd, ident):
         locals_args = cmd.split()
