@@ -1,5 +1,9 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.15
+* Update messages
+* Allow executing expression in Python debugger
+
 ## 1.5.14
 * Fix Python debugger
 
