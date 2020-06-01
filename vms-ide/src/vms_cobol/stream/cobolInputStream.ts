@@ -112,10 +112,10 @@ export class CobolInputStream implements CharStream {
     //------------------------------------------------------------
 
     /**
-     * 
+     *
      * @param errorListener zero-based coordinates
-     * @param source 
-     * @param conditionals 
+     * @param source
+     * @param conditionals
      */
     constructor(public file: string,
         public errorListener: IStreamErrorListener,
@@ -154,35 +154,35 @@ export class CobolInputStream implements CharStream {
     public get sourceName() {
         return IntStream.UNKNOWN_SOURCE_NAME;
     }
-    
+
     public reset() {
-        if (this.input) { 
+        if (this.input) {
             this.input.reset();
         }
     }
 
     public getText(interval: Interval): string {
         return this.input?this.input.getText(interval):"";
-    }    
-    
+    }
+
     public consume(): void {
         if (this.input) {
             this.input.consume();
         }
     }
-    
+
     public LA(i: number): number {
         return this.input?this.input.LA(i):0;
     }
-    
+
     public mark(): number {
         return -1;
     }
-    
+
     public release(marker: number): void {
         ;
     }
-    
+
     public seek(index: number): void {
         if (this.input) {
             this.input.seek(index);
@@ -194,7 +194,7 @@ export class CobolInputStream implements CharStream {
     /**
      * Returns zero-based position in result after applying all preceding replacings
      * If source position points to replaced text then starting of the FIRST replacing will be returned
-     * @param sourcePos 
+     * @param sourcePos
      */
     public resultPosFromSourcePos(sourcePos: number): IShiftResult {
         let result = this.shiftResultPos(this.replacings, sourcePos);
@@ -203,9 +203,9 @@ export class CobolInputStream implements CharStream {
 
     /**
      * Do not change position until target found (if exists)
-     * @param replacings 
-     * @param pos 
-     * @param targetR 
+     * @param replacings
+     * @param pos
+     * @param targetR
      */
     private shiftResultPos(replacings: IReplace[], pos: number): IShiftResult {
         let result: IShiftResult = {
@@ -280,8 +280,8 @@ export class CobolInputStream implements CharStream {
 
     /**
      * Convert row & col -> pos
-     * @param resultRow 
-     * @param resultCol 
+     * @param resultRow
+     * @param resultCol
      * @returns position in result content
      */
     public resultPosFromRowCol(resultRow: number, resultCol: number) {
@@ -295,7 +295,7 @@ export class CobolInputStream implements CharStream {
 
     /**
      * Convert pos -> row & col
-     * @param resultPos 
+     * @param resultPos
      * @returns zero-based row & col in result
      */
     public resultRowColFromPos(resultPos: number) {
@@ -309,8 +309,8 @@ export class CobolInputStream implements CharStream {
 
     /**
      * Convert row & col -> pos
-     * @param sourceRow 
-     * @param sourceCol 
+     * @param sourceRow
+     * @param sourceCol
      * @returns position in source content
      */
     public sourcePosFromRowCol(sourceRow: number, sourceCol: number) {
@@ -324,7 +324,7 @@ export class CobolInputStream implements CharStream {
 
     /**
      * Convert pos -> row & col
-     * @param sourcePos 
+     * @param sourcePos
      * @returns zero-based row & col in source
      */
     public sourceRowColFromPos(sourcePos: number) {
@@ -351,8 +351,8 @@ export class CobolInputStream implements CharStream {
     /**
      * Returns zero-based position in result after applying all preceding replacings
      * If source position points to replaced text then starting of the FIRST replacing will be returned
-     * @param sourceRow 
-     * @param sourceCol 
+     * @param sourceRow
+     * @param sourceCol
      */
     public resultRowColFromSourceRowCol(sourceRow: number, sourceCol: number) {
         let result = this.resultPosFromSourcePos(this.sourcePosFromRowCol(sourceRow, sourceCol));
@@ -369,7 +369,7 @@ export class CobolInputStream implements CharStream {
 
     /**
      * Note: add only in right order
-     * @param replacing 
+     * @param replacing
      */
     private addReplacing(replacing: IReplace) {
         let i = this.replacings.length - 1;
@@ -416,8 +416,8 @@ export class CobolInputStream implements CharStream {
 
     /**
      * Test only from NORMAL state
-     * @param content 
-     * @param pos 
+     * @param content
+     * @param pos
      */
     private testReplacingStart(content: string, pos: number): ITestReplace | undefined {
         // test any char
@@ -543,7 +543,7 @@ export class CobolInputStream implements CharStream {
     }
 
     /**
-     * 
+     *
      * @param replacing current replacing
      * @param source source string
      * @returns resulting string after applying
@@ -652,7 +652,7 @@ export class CobolInputStream implements CharStream {
      */
     private async preFilterSource() {
         this.replacings = [];
-        
+
         let lines = this.source.split("\n");
         this.sourceRowPositions = [0];
         let sourceLinePos = 0;
@@ -679,7 +679,7 @@ export class CobolInputStream implements CharStream {
         let delta = this.deltaTest;
 
         let tokenValue = this.cancelToken ? this.cancelToken.asyncValue : 0;
-        
+
         while(pos < this.result.length && errors.length === 0) {
             if (this.cancelToken) {
                 if (--delta <= 0) {
@@ -704,7 +704,7 @@ export class CobolInputStream implements CharStream {
             //      ({newResult: this.result, newPos: pos} = this.applyReplacing(testResult.newReplacing, this.result));
             //      continue;
             // }
-            
+
             // test empty lines
             if (this.testLineStarts(this.result, pos)) {
                 startEmptyLine = pos;
@@ -799,7 +799,7 @@ export class CobolInputStream implements CharStream {
                         if (pos - posT < 4) {
                             errors.push({
                                 pos: pos,
-                                msg: localize("string.continuation.improperly", "Continuation must start at B"),
+                                msg: localize("string.continuation.improperly", "Continuation must start in the B area."),
                             });
                             replacing = undefined;
                         }
@@ -807,13 +807,13 @@ export class CobolInputStream implements CharStream {
                             // test if string literal properly continues
                             if ( stringContinuationChar &&
                                 (
-                                    (stringOpened && this.result[pos] !== stringContinuationChar) 
+                                    (stringOpened && this.result[pos] !== stringContinuationChar)
                                         ||
                                     (!stringOpened && _quotas.includes(this.result[pos]) && this.result[pos] !== stringContinuationChar)
                                 )) {
                                 errors.push({
                                     pos: pos,
-                                    msg: localize("string.continuation.error", "Continuation error - string literal have to start with {0}", stringContinuationChar),
+                                    msg: localize("string.continuation.error", "Continuation error - string literal must begin with {0}.", stringContinuationChar),
                                 });
                                 replacing = undefined;
                             }
@@ -853,7 +853,7 @@ export class CobolInputStream implements CharStream {
                                 default:
                                     errors.push({
                                         pos: pos,
-                                        msg: localize("string.continuation.error.unpredictable", "Continuation unpredictable error"),
+                                        msg: localize("string.continuation.error.unpredictable", "Continuation unexpected error."),
                                     });
                                     break;
                             }

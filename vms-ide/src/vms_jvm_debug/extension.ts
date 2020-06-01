@@ -24,7 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
 			return vscode.window.showQuickPick(classNames);
 		}
 		return vscode.window.showInputBox({
-			placeHolder: localize("msg.class_name", "Enter class name to execute"),
+			placeHolder: localize("msg.class_name", "Enter the class name to run."),
 			value: "",
 		});
 	}));
@@ -65,7 +65,7 @@ class JvmConfigurationProvider implements vscode.DebugConfigurationProvider {
 			return config;
 		}
 
-		return vscode.window.showInformationMessage(localize("msg.config.invalid", "Configuration is invalid")).then(_ => {
+		return vscode.window.showInformationMessage(localize("msg.config.invalid", "Configuration is invalid.")).then(_ => {
 			return undefined;	// abort launch
 		});
 	}

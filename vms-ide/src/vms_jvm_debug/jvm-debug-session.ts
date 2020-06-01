@@ -137,7 +137,7 @@ export class JvmDebugSession extends LoggingDebugSession {
         stop.body.allThreadsStopped = true;
         this.sendEvent(stop);
     }
-    
+
     private _capabilities: DebugProtocol.Capabilities = {
         /** The debug adapter supports the 'configurationDone' request. */
         supportsConfigurationDoneRequest: true,
@@ -252,7 +252,7 @@ export class JvmDebugSession extends LoggingDebugSession {
         // let reallyDone = false;
         let result = await Promise.race([
                 Delay(1000).then(() => true),
-                this._configurationDone.acquire().then(() => { 
+                this._configurationDone.acquire().then(() => {
                     // reallyDone = true;
                     this._configurationDone.release();
                     return true;
@@ -317,7 +317,7 @@ export class JvmDebugSession extends LoggingDebugSession {
                     this._runtime.start(args);
                     break;
                 } else if (result === jvmStartResult.portIsBusy) {
-                    this._logFn(LogType.information, () => localize("jvm.port.busy", "Port {0} is busy.", String(listeningPort)));
+                    this._logFn(LogType.information, () => localize("jvm.port.busy", "Port {0} is already in use.", String(listeningPort)));
                     ++listeningPort;
                 } else {
                     break;
@@ -384,8 +384,8 @@ export class JvmDebugSession extends LoggingDebugSession {
 
     /**
      * Set DATA breakpoint
-     * @param response 
-     * @param args 
+     * @param response
+     * @param args
      */
     protected setDataBreakpointsRequest(response: DebugProtocol.SetDataBreakpointsResponse, args: DebugProtocol.SetDataBreakpointsArguments) {
         response.body = {
@@ -398,8 +398,8 @@ export class JvmDebugSession extends LoggingDebugSession {
 
     /**
      * Set FUNCTION breakpoint
-     * @param response 
-     * @param args 
+     * @param response
+     * @param args
      */
     protected async setFunctionBreakPointsRequest(response: DebugProtocol.SetFunctionBreakpointsResponse, args: DebugProtocol.SetFunctionBreakpointsArguments) {
         response.body = {
@@ -426,7 +426,7 @@ export class JvmDebugSession extends LoggingDebugSession {
                 const fieldInfos = await JvmProjectHelper.findMethods(bp.name);
                 if (fieldInfos.length) {
                     const chosen = await window.showQuickPick(fieldInfos.map(method => {
-                        return { 
+                        return {
                             label: method.class.name + "." + method.name + method.params,
                             method
                         };
@@ -442,7 +442,7 @@ export class JvmDebugSession extends LoggingDebugSession {
                                     message: "On the same place as one of the previous",
                                     id: runtimeBp.breakId,
                                     verified: runtimeBp.verified? true: false
-                                });    
+                                });
                             } else {
                                 response.body.breakpoints.push({
                                     id: runtimeBp.breakId,
@@ -499,7 +499,7 @@ export class JvmDebugSession extends LoggingDebugSession {
                                 id: runtimeBp.breakId,
                                 line: lineNumber,
                                 verified: runtimeBp.verified? true: false
-                            });    
+                            });
                         } else {
                             added = true;
                             response.body.breakpoints.push({
@@ -611,7 +611,7 @@ export class JvmDebugSession extends LoggingDebugSession {
                 }
             }
             response.success = true;
-            this.sendResponse(response);    
+            this.sendResponse(response);
         });
     }
 
@@ -644,7 +644,7 @@ export class JvmDebugSession extends LoggingDebugSession {
                 if (variable.type !== undefined) {
                     innerVar.type = JvmVarType[variable.type];
                 }
-                if (isJvmVarNeedReference(variable)) { 
+                if (isJvmVarNeedReference(variable)) {
                     innerVar.variablesReference = this._variableHandles.create(variable);
                     if (variable.arraySize !== undefined) {
                         innerVar.indexedVariables = variable.arraySize;

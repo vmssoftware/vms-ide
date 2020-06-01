@@ -40,32 +40,32 @@ const localize = nls.loadMessageBundle();
 
 export class AnalysisListener implements cldListener {
 
-    public static cannotFindDefine = localize("cannotFindDefine", "Could not find the DEFINE clause for this entity.");
-    public static cannotFindEntity = localize("cannotFindEntity", "Could not find this entity or it is ambigous.");
+    public static cannotFindDefine = localize("cannotFindDefine", "Could not find the DEFINE clause for the entity.");
+    public static cannotFindEntity = localize("cannotFindEntity", "Could not find the entity or it is ambiguous.");
     public static circularTypeRef = localize("circularTypeRef", "Circular type reference found.");
-    public static emptyParameterName = localize("emptyParameterName", "The parameter name cannot be empty.");
-    public static entityHasNoChildren = localize("entityHasNoChildren", "This entity has no children.");
-    public static entityNotUnique = localize("entityNotUnique", "The name must be unique.");
-    public static entityOutside = localize("entityOutside", "This entity is outside any DEFINE.");
-    public static entityStartNameNotUnique = localize("entityStartNameNotUnique", "The first four characters of the name must be unique.");
-    public static identStringTooLong = localize("identStringTooLong", "The ident string has a maximum length of 31 characters.");
-    public static imageStringTooLong = localize("imageStringTooLong", "The image-string is a maximum of 63 characters.");
-    public static invalidParameterName = localize("invalidParameterName", "The parameter name must be in the form Pn, where n is the position of the parameter.");
-    public static invalidParameterNumber = localize("invalidParameterNumber", "The parameter names must be numbered consecutively from P1 to P8.");
+    public static emptyParameterName = localize("emptyParameterName", "Parameter name cannot be empty.");
+    public static entityHasNoChildren = localize("entityHasNoChildren", "The entity has no children.");
+    public static entityNotUnique = localize("entityNotUnique", "The entity name must be unique.");
+    public static entityOutside = localize("entityOutside", "The entity is outside of any DEFINE clause.");
+    public static entityStartNameNotUnique = localize("entityStartNameNotUnique", "The first four characters of entity name must be unique.");
+    public static identStringTooLong = localize("identStringTooLong", "The maximum length of an ident-string is 31 characters.");
+    public static imageStringTooLong = localize("imageStringTooLong", "The maximum length of an image-string is 63 characters.");
+    public static invalidParameterName = localize("invalidParameterName", "Parameter name must be in the Pn format, where n is the parameter position.");
+    public static invalidParameterNumber = localize("invalidParameterNumber", "Parameters must be numbered consecutively from P1 to P8.");
     public static mutualDefaultOrRequired = localize("mutualDefaultOrRequired", "The DEFAULT clause and the REQUIRED clause are mutually exclusive.");
     public static mutualImageOrRoutine = localize("mutualImageOrRoutine", "Only one ROUTINE or IMAGE clause is allowed.");
     public static mutualQual = localize("mutualQual", "The NOQUALIFIERS clause and the QUALIFIER clause are mutually exclusive.");
     public static mutualDisallow = localize("mutualDisallow", "The NODISALLOWS clause and the DISALLOW clause are mutually exclusive.");
     public static mutualParameter = localize("mutualParameter", "The NOPARAMETERS clause and the PARAMETER clause are mutually exclusive.");
-    public static nameTooLong = localize("nameTooLong", "The name is a maximum of 31 characters.");
-    public static parameterPromptTooLong = localize("parameterPromptTooLong", "The parameter prompt is a maximum of 31 characters.");
-    public static parameterValueDefaultStringTooLong = localize("parameterValueDefaultStringTooLong", "The parameter default value is a maximum of 94 characters.");
-    public static syntaxNotExists = localize("syntaxNotExists", "There is no SYNTAX with this name.");
-    public static tooManyKeywords = localize("tooManyKeywords", "You can specify up to 255 keywords in a DEFINE TYPE statement.");
+    public static nameTooLong = localize("nameTooLong", "The maximum length of a name is 31 characters.");
+    public static parameterPromptTooLong = localize("parameterPromptTooLong", "The maximum length of a parameter prompt is 31 characters.");
+    public static parameterValueDefaultStringTooLong = localize("parameterValueDefaultStringTooLong", "The maximum length of a parameter default value is 94 characters.");
+    public static syntaxNotExists = localize("syntaxNotExists", "There is no SYNTAX with the specified name.");
+    public static tooManyKeywords = localize("tooManyKeywords", "The maximum number of keywords in a DEFINE TYPE statement is 255.");
     public static tooManyLabels = localize("tooManyLabels", "Too many labels.");
-    public static tooManyQualifiers = localize("tooManyQualifiers", "You can use the QUALIFIER clause up to 255 times in one DEFINE statement.");
+    public static tooManyQualifiers = localize("tooManyQualifiers", "The maximum number of QUALIFIER clauses in one DEFINE statement is 255.");
     public static tooManyTypes = localize("tooManyTypes", "Too many types.");
-    public static typeNotExists = localize("typeNotExists", "There is no TYPE with this name.");
+    public static typeNotExists = localize("typeNotExists", "There is no TYPE with the specified name.");
 
     public static rgParameterName = /^p(\d+)$/i;
 

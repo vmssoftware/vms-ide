@@ -162,7 +162,7 @@ export class VMSRuntime extends EventEmitter
 		this.programArgs = programArgs;
 
 		if (!section) {
-            this.logFn(LogType.error, () => localize("config_error", "Configuration error"), true);
+            this.logFn(LogType.error, () => localize("config_error", "Configuration error."), true);
 			this.sendEvent('end');//close debugger
 			return;
 		}
@@ -497,7 +497,7 @@ export class VMSRuntime extends EventEmitter
 					if(params !== "")
 					{
 						//error parameters!
-						const message = localize('runtime.watch_error', "Watch: Error parameter. Example: (when (x > 3)) or ().");
+						const message = localize('runtime.watch_error', "Watch: Invalid parameter. Example: (when (x > 3)) or ().");
 						vscode.debug.activeDebugConsole.append(message + "\n");
 					}
 				}
@@ -992,7 +992,7 @@ export class VMSRuntime extends EventEmitter
 
 			if(!allow)
 			{
-				const message = localize('runtime.command_ignore', "This command is not allowed!");
+				const message = localize('runtime.command_ignore', "Command is not allowed.");
 				vscode.debug.activeDebugConsole.append(message + "\n");
 			}
 		}

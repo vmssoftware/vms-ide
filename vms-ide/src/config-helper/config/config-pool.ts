@@ -110,7 +110,7 @@ export class ConfigPool implements IConfig {
                                         retCode |= r;
                                     }
                                 } catch (err) {
-                                    this.logFn(LogType.debug, () => localize("config.filldata.failed", "filling data('{0}') failed", sectionName));
+                                    this.logFn(LogType.debug, () => localize("config.filldata.failed", "Failed to read data ('{0}')", sectionName));
                                     this.logFn(LogType.error, () => String(err));
                                     // tslint:disable-next-line:no-bitwise
                                     retCode |= CSAResult.some_data_failed;
@@ -156,7 +156,7 @@ export class ConfigPool implements IConfig {
                                     // tslint:disable-next-line:no-bitwise
                                     retCode |= await storage.storeData(sectionName, data);
                                 } catch (err) {
-                                    this.logFn(LogType.debug, () => localize("config.storedata.failed", "storing data('{0}') failed", sectionName));
+                                    this.logFn(LogType.debug, () => localize("config.storedata.failed", "Failed to save data ('{0}')", sectionName));
                                     this.logFn(LogType.error, () => String(err));
                                     // tslint:disable-next-line:no-bitwise
                                     retCode |= CSAResult.some_data_failed;

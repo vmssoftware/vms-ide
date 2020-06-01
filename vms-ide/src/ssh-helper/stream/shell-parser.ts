@@ -67,7 +67,7 @@ export class ShellParser extends Transform implements IShellParser {
                 }
             }
         } else {
-            this.logFn(LogType.debug, () => localize("debug.nobuf", "ShellParser{0}: chunk is not Buffer", this.tag ? " " + this.tag : ""));
+            this.logFn(LogType.debug, () => localize("debug.nobuf", "ShellParser{0}: chunk is not a Buffer", this.tag ? " " + this.tag : ""));
         }
         this.setupTimer();
         callback();

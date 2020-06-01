@@ -24,7 +24,7 @@
     "must.have.column": "Также должно быть выражение COLUMN NUMBER",
     "for.detail.only": "Может быть только в группе отчётов DETAIL",
     "for.cf.only": "Может быть только в группе отчётов CONTROL FOOTING",
-    "mast.have.screen.name": "Каждый элемент уровня 01 должен иметь имя экрана",
+    "must.have.screen.name": "Each level 01 item must have a screen name.",
     "only.blank.screen": "Только BLANK SCREEN возможен в группе",
     "does.not.allowed.here": "Невозможно использовать здесь",
     "must.be.in.program": "Должно быть внутри программы",

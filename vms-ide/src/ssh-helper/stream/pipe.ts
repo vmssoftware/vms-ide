@@ -30,12 +30,12 @@ export async function PipeFile(
     let errPassed = false;
     srcStream = await source.createReadStream(file);
     if (!srcStream) {
-        logFn(LogType.debug, () => localize("debug.source_fail", "can't create source {0}", file));
+        logFn(LogType.debug, () => localize("debug.source_fail", "Could not create source {0}.", file));
         return false;
     }
     srcStream.once("error", (srcError) => {
         // catch source errors
-        logFn(LogType.debug, () => localize("debug.source_error", "source error {0}", srcError.message));
+        logFn(LogType.debug, () => localize("debug.source_error", "Source error {0}.", srcError.message));
         srcStream = undefined;
         errPassed = true;
         if (dstStream) {
@@ -45,7 +45,7 @@ export async function PipeFile(
     destFile = destFile || file;
     dstStream = await dest.createWriteStream(destFile);
     if (!dstStream) {
-        const errorStr = localize("debug.dest_fail", "can't create destination {0}", destFile);
+        const errorStr = localize("debug.dest_fail", "Could not create destination {0}.", destFile);
         logFn(LogType.debug, () => errorStr);
         if (srcStream) {
             srcStream.emit("error", new Error(errorStr));
@@ -55,7 +55,7 @@ export async function PipeFile(
     const done = new Lock(true);
     dstStream.once("error", (dstError) => {
         // catch destination errors
-        logFn(LogType.debug, () => localize("debug.dest_error", "dest error {0}", dstError.message));
+        logFn(LogType.debug, () => localize("debug.dest_error", "Destination error {0}.", dstError.message));
         dstStream = undefined;
         errPassed = true;
         if (srcStream) {
@@ -66,15 +66,15 @@ export async function PipeFile(
     if (srcStream) {
         srcStream.pipe(dstStream);
         dstStream.once("finish", () => {
-            logFn(LogType.debug, () => localize("debug.dest_finished", "dest finished"));
+            logFn(LogType.debug, () => localize("debug.dest_finished", "Destination finished."));
             done.release(); // release on dest finished
         });
         await done.acquire();
-        logFn(LogType.debug, () => localize("debug.done", "done {0}", !errPassed));
+        logFn(LogType.debug, () => localize("debug.done", "Done {0}.", !errPassed));
         return !errPassed;
     } else {
         // source disappeared suddenly (on error) while awaiting destination
-        const errorStr = localize("debug.source_lost", "source disappeared");
+        const errorStr = localize("debug.source_lost", "Source disappeared.");
         logFn(LogType.debug, () => errorStr);
         if (dstStream) {
             dstStream.emit("error", new Error(errorStr));

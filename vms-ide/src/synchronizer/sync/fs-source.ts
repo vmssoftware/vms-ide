@@ -71,7 +71,7 @@ export class FsSource implements ISource, IReadDirectory {
                 retList.push(entry);
             } else {
                 if (this.debugLog) {
-                    this.debugLog(LogType.debug, () => localize("debug.no_date", "No date for {0}", file));
+                    this.debugLog(LogType.debug, () => localize("debug.no_date", "Date information is not available for {0}.", file));
                 }
             }
         }

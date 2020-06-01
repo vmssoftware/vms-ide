@@ -74,7 +74,7 @@ async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelp
     const scopeWatchers: Disposable[] = [];
     const ensured = await ensureSettings(folder.name, logFn);
     if (ensured) {
-        // 1. Setup source file watcher 
+        // 1. Setup source file watcher
         // prepare micromatch
         const options: micromatch.Options = {
             basename: false,
@@ -88,12 +88,12 @@ async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelp
         let {expandedMask: builders , missed_curly_bracket: errBld} = expandMask(ensured.projectSection.builders);
         let {expandedMask: resource , missed_curly_bracket: errRsc} = expandMask(ensured.projectSection.resource);
         if (errBld || errHdr || errRsc || errSrc) {
-            logFn(LogType.warning, () => localize("check.inc.mask", "Please check include file masks for correct curly brackets"), true);
+            logFn(LogType.warning, () => localize("check.inc.mask", "Check include file masks for correct curly brackets."), true);
         }
         if (ensured.projectSection.exclude) {
             let {expandedMask: exclude , missed_curly_bracket: errExc} = expandMask(ensured.projectSection.exclude);
             if (errExc) {
-                logFn(LogType.warning, () => localize("check.exc.mask", "Please check exclude file masks for correct curly brackets"), true);
+                logFn(LogType.warning, () => localize("check.exc.mask", "Check exclude file masks for correct curly brackets."), true);
             }
             options.ignore = exclude;
         }
@@ -134,7 +134,7 @@ async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelp
         });
         scopeWatchers.push(fsWatcher);
 
-        // 2. Setup SSH settings watcher 
+        // 2. Setup SSH settings watcher
         if (sshHelper) {
             scopeWatchers.push(sshHelper.setConfigWatcher(folder.name, () => {
                 commands.executeCommand("vmssoftware.project-dep.projectDescription.refresh");
@@ -142,7 +142,7 @@ async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelp
             }));
         }
 
-        // 3. Setup Project settings watcher 
+        // 3. Setup Project settings watcher
         scopeWatchers.push(ensured.configHelper.getConfig().onDidLoad(() => {
             ProjectState.acquire().setSynchronized(folder.name, false);
             // recreate watchers for this folder

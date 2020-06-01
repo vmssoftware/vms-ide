@@ -28,9 +28,9 @@ const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })()
 export const Cobol = { language: 'vms-cobol', scheme: 'file' };
 
 export async function activate(context: ExtensionContext) {
-    
+
     const diagnosticCollection = languages.createDiagnosticCollection(Cobol.language);
-    
+
     let involveMap = new Map<string, Set<string>>();
 
     function clearDiagnostics(fileName: string) {
@@ -43,8 +43,8 @@ export async function activate(context: ExtensionContext) {
             diagnosticCollection.set(Uri.file(fileName), []);
         }
     }
-    
-    
+
+
     const DiagnosticTypeMap: Map<EDiagnosticType, DiagnosticSeverity> = new Map();
     DiagnosticTypeMap.set(EDiagnosticType.Hint, DiagnosticSeverity.Hint);
     DiagnosticTypeMap.set(EDiagnosticType.Info, DiagnosticSeverity.Information);
@@ -57,7 +57,7 @@ export async function activate(context: ExtensionContext) {
 
     const configApi = GetConfigHelperFromApi();
     if (!configApi) {
-        window.showErrorMessage(localize("config.notfound", "Cannot find vmssoftware.config-helper extension"));
+        window.showErrorMessage(localize("config.notfound", "Could not find vmssoftware.config-helper extension."));
         return;
     }
 
@@ -152,7 +152,7 @@ export async function activate(context: ExtensionContext) {
                     if (documentsInParsing == 0 &&
                         window.activeTextEditor &&
                         window.activeTextEditor.document.fileName !== fileName &&
-                        window.activeTextEditor.document.languageId === Cobol.language && 
+                        window.activeTextEditor.document.languageId === Cobol.language &&
                         window.activeTextEditor.document.uri.scheme === Cobol.scheme) {
                             // reparse without altering text, just to resolve globals
                             postParse(window.activeTextEditor.document.fileName);
@@ -163,7 +163,7 @@ export async function activate(context: ExtensionContext) {
 
     /**
      * All coordinates in diagnostic must be zero-based
-     * @param document 
+     * @param document
      */
     function processDiagnostic(fileName: string) {
         let localDiagnostics = new Map<string, Diagnostic[]>();

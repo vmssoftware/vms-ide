@@ -93,7 +93,7 @@ export class VMSRuntimeRun extends EventEmitter
 				if(this.shell.getStatusCommand() && this.statusProgram)
 				{
 					this.statusProgram = false;
-					const message = localize('runtime.program_end', "The program complete!");
+					const message = localize('runtime.program_end', "Program completed.");
 					vscode.window.showWarningMessage(message);
 					this.sendEvent('end');
 				}

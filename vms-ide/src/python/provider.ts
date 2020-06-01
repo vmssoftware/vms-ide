@@ -45,7 +45,7 @@ export class PythonConfigurationProvider implements DebugConfigurationProvider {
             config.workspace = folder;
             return config;
         }
-        return window.showInformationMessage(localize("msg.config.invalid", "Configuration is invalid")).then(_ => {
+        return window.showInformationMessage(localize("msg.config.invalid", "Configuration is invalid.")).then(_ => {
             return undefined;	// abort launch
         });
     }

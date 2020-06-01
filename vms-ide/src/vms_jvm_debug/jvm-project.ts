@@ -191,7 +191,7 @@ export class JvmProject {
 
     /**
      * Find file info by place = <class>.<method>
-     * @param stackPlace 
+     * @param stackPlace
      */
     public findFileByPlace(stackPlace: string) : IFileInfo | undefined {
         let {className, fieldName} = JvmProject.splitPlace(stackPlace);
@@ -247,7 +247,7 @@ export class JvmProject {
             for (const [, classInfo] of fileInfo.classes) {
                 if (!className || classInfo.name.endsWith(className)) {
                     for (const methodInfo of classInfo.fields) {
-                        if (methodInfo.isMethod === true && 
+                        if (methodInfo.isMethod === true &&
                             methodInfo.name.toLowerCase().includes(fieldName)) {
                             methodInfos.push(methodInfo);
                         }
@@ -350,7 +350,7 @@ export class JvmProject {
                     });
                 }
                 const content = JSON.stringify(jvmInfo, null, 2);
-                await fs.writeFile(storeFileName, content);    
+                await fs.writeFile(storeFileName, content);
                 return true;
             }
         }
@@ -380,7 +380,7 @@ export class JvmProject {
                         continue;
                     }
                     for (const classInfoData of fileInfoData.classes) {
-                        if (classInfoData === undefined || 
+                        if (classInfoData === undefined ||
                             typeof classInfoData.className !== "string" ||
                             typeof classInfoData.hasMain !== "boolean" ||
                             !(classInfoData.fields instanceof Array)) {
@@ -392,7 +392,7 @@ export class JvmProject {
                         }
                         classInfo.hasMain = classInfoData.hasMain;  // 'hasMain' is useful only if class has source lines
                         for (const fieldInfoData of classInfoData.fields) {
-                            if (fieldInfoData === undefined || 
+                            if (fieldInfoData === undefined ||
                                 typeof fieldInfoData.name !== "string" ||
                                 !(fieldInfoData.lines instanceof Array)) {
                                     continue;
@@ -449,8 +449,8 @@ export class JvmProject {
     private testIfLost() {
         if (this.mustBeLoaded && this.collection.size === 0) {
             this.mustBeLoaded = false;
-            this.logFn(LogType.warning, 
-                () => localize("javainfo.lost", "Java classes information is lost for [{0}]", String(this.scope))
+            this.logFn(LogType.warning,
+                () => localize("javainfo.lost", "Could not locate Java classes information for [{0}].", String(this.scope))
                 , true);
         }
     }

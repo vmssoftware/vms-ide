@@ -1,7 +1,7 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
 ## 1.5.14
-* Fix Python debuger
+* Fix Python debugger
 
 ## 1.5.11
 * Preparing to debug as a separate procedure.

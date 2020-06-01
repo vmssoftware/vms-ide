@@ -134,7 +134,7 @@ export class Builder {
      * Dispose all sources and watchers
      */
     public dispose() {
-        this.logFn(LogType.debug, () => localize("debug.disposing", "Disposing sources"));
+        this.logFn(LogType.debug, () => localize("debug.disposing", "Releasing sources."));
         for (const scopeData of Builder.buildScopes.values()) {
             this.disposeScopeData(scopeData);
         }
@@ -294,7 +294,7 @@ export class Builder {
                             classInfo = jvmProject.getClassInfo(className, fileInfo);
                             fieldInfo = undefined;
                         } else {
-                            logFn(LogType.error, () => localize("collect.no_class_for_file", "No class for this file match: {0}", line));
+                            logFn(LogType.error, () => localize("collect.no_class_for_file", "No class for the file match: {0}", line));
                             break;
                         }
                         continue;
@@ -304,7 +304,7 @@ export class Builder {
                         if (fieldInfo && fieldInfo.isMethod) {
                             fieldInfo.lines.add(+lineMatch[1]);
                         } else {
-                            logFn(LogType.error, () => localize("collect.no_method_for_line", "No method for this line match: {0}", line));
+                            logFn(LogType.error, () => localize("collect.no_method_for_line", "No method for the line match: {0}", line));
                         }
                         continue;
                     }
@@ -313,7 +313,7 @@ export class Builder {
                         if (classInfo) {
                             classInfo.hasMain = true;
                         } else {
-                            logFn(LogType.error, () => localize("collect.no_class_for_main", "No class for this main function match: {0}", line));
+                            logFn(LogType.error, () => localize("collect.no_class_for_main", "No class for the main function match: {0}", line));
                         }
                     }
                     const maskedTemplates = maskSpacesInTemplate(line, "*");
@@ -440,7 +440,7 @@ export class Builder {
                 // create zip file
                 let {expandedMask: expandedList, missed_curly_bracket} = expandMask(scopeData.ensured.projectSection.listing);
                 if (missed_curly_bracket) {
-                    this.logFn(LogType.warning, () => localize("check.inc.mask", "Please check listing file masks for correct curly brackets"), true);
+                    this.logFn(LogType.warning, () => localize("check.inc.mask", "Check include file masks for correct curly brackets."), true);
                 }
                 // delete zip file on OpenVMS side if it exists
                 answer = await scopeData.shell.execCmd(`delete ${Builder.zipName + Builder.zipExt};*`);
@@ -524,7 +524,7 @@ export class Builder {
         if (isCommandDefault(buildCfg.command)) {
             // test MMS is created for "default"
             if (!(await this.ensureMmsCreated(scopeData))) {
-                this.logFn(LogType.error, () => localize("create.mms.first", "Please first (re)create MMS."));
+                this.logFn(LogType.error, () => localize("create.mms.first", "Create or update an MMS file first."));
                 return false;
             }
             // smart clean
@@ -576,7 +576,7 @@ export class Builder {
             const command = "delete [." + objDir + vms.bareDirectory + "]" + vms.fileName + ".*;*";
             const out = await scopeData.shell.execCmd(command);
             if (!out) {
-                this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute > {0}", command));
+                this.logFn(LogType.error, () => localize("output.cannot_exec", "Could not execute {0}", command));
             }
         }
     }
@@ -626,7 +626,7 @@ export class Builder {
                 const localMmsPath = ensured.configHelper.workspaceFolder!.uri.fsPath + ftpPathSeparator + localMmsFile;
                 if (await fs.pathExists(localMmsPath)) {
                     await fs.move(localMmsPath, localMmsPath + ".back", {overwrite: true});
-                    this.logFn(LogType.warning, () => localize("mms_exist", "Previous MMS file is renamed to {0}", localMmsFile + ".back"));
+                    this.logFn(LogType.warning, () => localize("mms_exist", "Old MMS file was renamed to {0}.", localMmsFile + ".back"));
                 }
                 await fs.writeFile(localMmsPath, content.contentMMS);
                 if (content.contentOPT) {
@@ -634,7 +634,7 @@ export class Builder {
                     const localOptPath = ensured.configHelper.workspaceFolder!.uri.fsPath + ftpPathSeparator + localOptFile;
                     if (await fs.pathExists(localOptPath)) {
                         await fs.move(localOptPath, localOptPath + ".back", {overwrite: true});
-                        this.logFn(LogType.warning, () => localize("opt_exist", "Previous OPT file is renamed to {0}", localOptFile + ".back"));
+                        this.logFn(LogType.warning, () => localize("opt_exist", "Old OPT file was renamed to {0}.", localOptFile + ".back"));
                     }
                     await fs.writeFile(localOptPath, content.contentOPT);
                 }
@@ -643,7 +643,7 @@ export class Builder {
                     const localComPath = ensured.configHelper.workspaceFolder!.uri.fsPath + ftpPathSeparator + localComFile;
                     if (await fs.pathExists(localComPath)) {
                         await fs.move(localComPath, localComPath + ".back", {overwrite: true});
-                        this.logFn(LogType.warning, () => localize("com_exist", "Previous COM file is renamed to {0}", localComFile + ".back"));
+                        this.logFn(LogType.warning, () => localize("com_exist", "Old COM file was renamed to {0}.", localComFile + ".back"));
                     }
                     await fs.writeFile(localComPath, content.contentCOM);
                 }
@@ -1142,7 +1142,7 @@ export class Builder {
         } else if (isCommandMMS(command)) {
             command = Builder.mmsUserCmd(command) + " " + buildCfg.parameter + " " + Builder.cleanSuffix;
         } else {
-            this.logFn(LogType.error, () => localize("cannot.clean", "Have no idea how to clean configuration: {0}", buildCfg.label));
+            this.logFn(LogType.error, () => localize("cannot.clean", "Cannot clean configuration: {0}.", buildCfg.label));
             return false;
         }
         // run if decided
@@ -1175,7 +1175,7 @@ export class Builder {
         } else if (isCommandMMS(command)) {
             command = Builder.mmsUserCmd(command) + " " + buildCfg.parameter;
         } else {
-            this.logFn(LogType.error, () => localize("cannot.build", "Have no idea how to build configuration: {0}", buildCfg.label));
+            this.logFn(LogType.error, () => localize("cannot.build", "Cannot build configuration: {0}.", buildCfg.label));
             return false;
         }
         // run if decided
@@ -1186,7 +1186,7 @@ export class Builder {
             const retCode = await this.parseProblems(scopeData, output, buildCfg);
             return retCode;
         } else {
-            this.logFn(LogType.error, () => localize("output.cannot_exec", "Cannot execute: {0}", command));
+            this.logFn(LogType.error, () => localize("output.cannot_exec", "Could not execute {0}", command));
             return false;
         }
     }
@@ -1294,10 +1294,10 @@ export class Builder {
                         } else if (found && found.length > 1) {
                             fileNameCache.set(localFile, found[0].filename);
                             localFile = found[0].filename;
-                            this.logFn(LogType.warning, () => localize("too_many_files", "There are more than one file named {0}", localFile));
+                            this.logFn(LogType.warning, () => localize("too_many_files", "There is more than one file named {0}.", localFile));
                         } else {
                             fileNameCache.set(localFile, localFile);
-                            this.logFn(LogType.warning, () => localize("no_file", "Cannot find the file named {0}", localFile));
+                            this.logFn(LogType.warning, () => localize("no_file", "Cannot find the file named {0}.", localFile));
                         }
                     }
                     uri = Uri.file(path.join(scopeData.ensured.configHelper.workspaceFolder!.uri.fsPath, localFile));
@@ -1343,8 +1343,8 @@ export class Builder {
         if (!this.sshHelper) {
             const sshHelperType = await GetSshHelperType();
             if (!sshHelperType) {
-                this.logFn(LogType.debug, () => localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
-                this.logFn(LogType.error, () => localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
+                this.logFn(LogType.debug, () => localize("debug.cannot_get_ssh_helper", "Could not load ssh-helper API."));
+                this.logFn(LogType.error, () => localize("output.install_ssh", "Install 'vmssoftware.ssh-helper' first."));
                 return undefined;
             }
             this.sshHelper = new sshHelperType(this.logFn);
@@ -1352,7 +1352,7 @@ export class Builder {
         // check if all are ready to create sources
         if (ensured.configHelper.workspaceFolder) {
             const scope = ensured.configHelper.workspaceFolder.name;
-            this.logFn(LogType.debug, () => localize("debug.create_shell", "Creating builder shell"));
+            this.logFn(LogType.debug, () => localize("debug.create_shell", "Creating a builder shell."));
             const shell = await this.sshHelper.getDefaultVmsShell(scope);
             if (!shell) {
                 return undefined;

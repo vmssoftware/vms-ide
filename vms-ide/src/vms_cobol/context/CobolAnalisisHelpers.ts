@@ -24,19 +24,19 @@ export class CobolAnalisisHelper {
 
     /**
      * Mark source
-     * @param source 
-     * @param message 
-     * @param type 
+     * @param source
+     * @param message
+     * @param type
      */
     public mark(source: Token | ParserRuleContext | TerminalNode, message: string, type = EDiagnosticType.Error) {
         mark(this.diagnostics, source, message, type);
     }
-    
+
     /**
      * Mark source if text isn't appropriate length
-     * @param source 
-     * @param min 
-     * @param max 
+     * @param source
+     * @param min
+     * @param max
      * @param isLiteral remove quotas
      */
     public verifyTextLengthRange(source: ParserRuleContext | TerminalNode | Token | undefined, min: number, max: number): string | undefined {
@@ -49,13 +49,13 @@ export class CobolAnalisisHelper {
         }
         return text;
     }
-    
+
     /**
      * Mark source if presented integer value isn't in range
-     * @param source 
-     * @param min 
-     * @param max 
-     * @param radix 
+     * @param source
+     * @param min
+     * @param max
+     * @param radix
      */
     public verifyIntegerRange(source: ParserRuleContext | TerminalNode | Token | undefined, min: number, max: number, radix = 10) {
         if (source) {
@@ -66,23 +66,23 @@ export class CobolAnalisisHelper {
                     notInt = false;
                     let n = Number.parseInt(text, radix);
                     if (n < min || n > max) {
-                        mark(this.diagnostics, source, localize("number_in_range", "Must be from {0} to {1}", min, max));
+                        mark(this.diagnostics, source, localize("number_in_range", "Must be in the range {0} to {1}", min, max));
                     }
                 }
             }
             if (notInt) {
-                mark(this.diagnostics, source, localize("not_an_integer", "Not an integer"));
+                mark(this.diagnostics, source, localize("not_an_integer", "An integer is expected."));
             }
         }
     }
 
     /**
      * Verify qualified name
-     * @param identifierCtx 
-     * @param localOnly 
-     * @param filterAllowed 
-     * @param filterInclude 
-     * @param filterExclude 
+     * @param identifierCtx
+     * @param localOnly
+     * @param filterAllowed
+     * @param filterInclude
+     * @param filterExclude
      */
     public verifyQualifiedName(
             identifierCtx ?: Qualified_data_itemContext,
@@ -99,11 +99,11 @@ export class CobolAnalisisHelper {
 
     /**
      * Verify unqualified name
-     * @param identifierCtx 
-     * @param localOnly 
-     * @param filterAllowed 
-     * @param filterInclude 
-     * @param filterExclude 
+     * @param identifierCtx
+     * @param localOnly
+     * @param filterAllowed
+     * @param filterInclude
+     * @param filterExclude
      */
     public verifyName(
         identifierCtx ?: ParserRuleContext | TerminalNode,
@@ -122,11 +122,11 @@ export class CobolAnalisisHelper {
     /**
      * Verify identifier by its path
      * @param ctx used in resolving and marking
-     * @param namePath 
-     * @param localOnly 
-     * @param filterAllowed 
-     * @param filterInclude 
-     * @param filterExclude 
+     * @param namePath
+     * @param localOnly
+     * @param filterAllowed
+     * @param filterInclude
+     * @param filterExclude
      */
     public verifyNamePath(
             ctx: ParserRuleContext | TerminalNode,
@@ -160,10 +160,10 @@ export class CobolAnalisisHelper {
             symbols = filteredSymbols;
         }
         if (symbols.length == 0) {
-            this.mark(ctx, localize("undefined_name", "Undefined name"), warningUndefined ? EDiagnosticType.Warning : EDiagnosticType.Error);
+            this.mark(ctx, localize("undefined_name", "Undefined name."), warningUndefined ? EDiagnosticType.Warning : EDiagnosticType.Error);
             return undefined;
         } else if (symbols.length > 1) {
-            this.mark(ctx, localize("ambigous_name", "Ambigous name"));
+            this.mark(ctx, localize("ambigous_name", "Ambigous name."));
             return undefined;
         }
         let symbol = symbols[0];
@@ -177,7 +177,7 @@ export class CobolAnalisisHelper {
                 }
             }
             if (!allowed) {
-                this.mark(ctx, localize("illegal_type", "Illegal type"));
+                this.mark(ctx, localize("illegal_type", "Illegal type."));
             }
         }
         return symbol;
@@ -185,7 +185,7 @@ export class CobolAnalisisHelper {
 
     /**
      * Test if data is appropriate for cursor
-     * @param cursorDataDecord 
+     * @param cursorDataDecord
      */
     public testCursorData(cursorDataDecord: DataRecordSymbol) {
         return CobolAnalisisHelper.testCursorData(cursorDataDecord);
@@ -223,7 +223,7 @@ export class CobolAnalisisHelper {
 
     /**
      * Test if data is appropriate for CRT
-     * @param crtDataDecord 
+     * @param crtDataDecord
      */
     public testCRTData(crtDataDecord: DataRecordSymbol) {
         return CobolAnalisisHelper.testCRTData(crtDataDecord);
@@ -244,7 +244,7 @@ export class CobolAnalisisHelper {
 
     /**
      * Expand picture string
-     * @param picture 
+     * @param picture
      */
     public static expandPicture(picture: string) {
         let retStr = picture.replace(/(.)\((\d+)\)/g, (match, symbol, count) => {
@@ -255,7 +255,7 @@ export class CobolAnalisisHelper {
 
     /**
      * Remove quotas
-     * @param literal 
+     * @param literal
      */
     public static stringLiteralContent(literal?: string) {
         if (literal && literal.length > 1) {
@@ -306,7 +306,7 @@ export class CobolAnalisisHelper {
                     break;
                 }
                 if (childCtx.childCount > 0 && childCtx.getChild(0).constructor === firstChild.constructor) {
-                    this.mark(firstChild, localize("duplicated.clause", "Duplicated clause"));
+                    this.mark(firstChild, localize("duplicated.clause", "Duplicate clause."));
                 }
             }
         }

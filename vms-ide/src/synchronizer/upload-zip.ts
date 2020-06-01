@@ -31,7 +31,7 @@ export class UploadZip {
             const synchronizer = Synchronizer.acquire(this.logFn);
             const ZipApiType = await GetZipApi();
             if (!ZipApiType) {
-                this.logFn(LogType.error, () => localize("zip.missed", "The extension vmssoftware.zip-helper isn't found."));
+                this.logFn(LogType.error, () => localize("zip.missed", "Could not find vmssoftware.zip-helper extension."));
                 return false;
             }
             const zipApi = new ZipApiType(this.logFn);
@@ -40,7 +40,7 @@ export class UploadZip {
             const zipFilePath = path.join(localPath, zipFileName);
             const zipFinished = zipApi.start(zipFilePath, ensured.synchronizeSection.forceLocalTime);
             if (!zipFinished) {
-                this.logFn(LogType.error, () => localize("zip.cannot_start", "Cannot start Zip."));
+                this.logFn(LogType.error, () => localize("zip.cannot_start", "Could not start Zip."));
                 return false;
             }
             const localSource = new FsSource(localPath, this.logFn);
@@ -68,13 +68,13 @@ export class UploadZip {
                 const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
                 const sshHelperType = await GetSshHelperType();
                 if (!sshHelperType) {
-                    this.logFn(LogType.error, () => localize("zip.ssh.failed", "The extension vmssoftware.ssh-helper isn't found."));
+                    this.logFn(LogType.error, () => localize("zip.ssh.failed", "Could not find vmssoftware.ssh-helper extension."));
                     return false;
                 }
                 const sshHelper = new sshHelperType(this.logFn);
                 const shell = await sshHelper.getDefaultVmsShell(ensured.scope);
                 if (!shell) {
-                    this.logFn(LogType.error, () => localize("zip.shell.failed", "Cannot create remote shell."));
+                    this.logFn(LogType.error, () => localize("zip.shell.failed", "Could not create remote shell."));
                     return false;
                 }
                 if (typeof clear === "string") {
@@ -98,7 +98,7 @@ export class UploadZip {
                     const cd = `set default ${converter.directory}`;
                     const answer = await shell.execCmd(cd);
                     if (!answer) {
-                        this.logFn(LogType.error, () => localize("zip.cd.failed", "Cannot set default directory."));
+                        this.logFn(LogType.error, () => localize("zip.cd.failed", "Could not set default directory."));
                         shell.dispose();
                         return false;
                     }
@@ -121,7 +121,7 @@ export class UploadZip {
                         if (unzipResult && unzipResult.length) {
                             unzipResult.unshift(unzipCmd);
                             if (unzipResult.some((s) => s.startsWith("%DCL-W-IVVERB"))) {
-                                this.logFn(LogType.error, () => localize("zip.unzip.not.installed", "It seems 'unzip' isn't installed" ));
+                                this.logFn(LogType.error, () => localize("zip.unzip.not.installed", "Could not find 'unzip' utility." ));
                                 this.logFn(LogType.error, () => localize("zip.unzip.error_output", "Unzip command output:\n {0}", unzipResult.join("\n")));
                                 retCode = false;
                             } else if (unzipResult.some((s) => s.startsWith("%DCL-"))) {
@@ -134,7 +134,7 @@ export class UploadZip {
                     return retCode;
                 }
             } else {
-                this.logFn(LogType.error, () => localize("zip.cannot_finish", "Cannot finish Zip."));
+                this.logFn(LogType.error, () => localize("zip.cannot_finish", "Could not finish Zip."));
             }
         }
         return false;

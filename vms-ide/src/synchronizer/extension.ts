@@ -40,7 +40,7 @@ export async function activate(context: ExtensionContext) {
 
     setExtensionContext(context);
 
-    logFn(LogType.debug, () => localize("debug.activated", "VMS-IDE: Sync extension is activated"));
+    logFn(LogType.debug, () => localize("debug.activated", "VMS-IDE: Sync extension is activated."));
 
     context.subscriptions.push(Synchronizer.acquire(logFn));
     context.subscriptions.push(Builder.acquire(logFn));
@@ -269,7 +269,7 @@ export async function activate(context: ExtensionContext) {
         if (!scope) {
             const selectedScope = projectDependenciesProvider.selectedProject();
             if (!selectedScope) {
-                logFn(LogType.warning, () => localize("scope.undefined", "There is no selected scope in Project explorer"));
+                logFn(LogType.warning, () => localize("scope.undefined", "No project is selected in the Project explorer."));
             }
             return selectedScope;
         }
@@ -281,5 +281,5 @@ export async function activate(context: ExtensionContext) {
 // this method is called when your extension is deactivated
 export function deactivate() {
     disposeFsWatchers();
-    logFn(LogType.debug, () => localize("debug.deactivated", "VMS-IDE: Sync extension is deactivated"));
+    logFn(LogType.debug, () => localize("debug.deactivated", "VMS-IDE: Sync extension is deactivated."));
 }

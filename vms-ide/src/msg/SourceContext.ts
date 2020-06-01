@@ -113,10 +113,10 @@ export class SourceContext {
                 let token = this.tokenStream!.get(index);
                 if (token.type === Token.EOF) {
                     break;
-                }    
+                }
                 this.logFn(LogType.debug, () => `"${String(token.text)}": row=${token.line} col=${token.charPositionInLine} type=${token.type}`);
             }
-    
+
         }
     }
 
@@ -391,12 +391,12 @@ export class SourceContext {
                         this.symbolsForExpression.forEach((source, value) => {
                             if (source.visibleFrom < index) {
                                 result.push(
-                                    { 
-                                        kind: SymbolKind.Other, 
-                                        name: value, 
-                                        source: this.fileName, 
-                                        definition: undefined, 
-                                        description: undefined 
+                                    {
+                                        kind: SymbolKind.Other,
+                                        name: value,
+                                        source: this.fileName,
+                                        definition: undefined,
+                                        description: undefined
                                     }
                                 );
                             }
@@ -409,12 +409,12 @@ export class SourceContext {
                     // TODO: get all from fao definition
                     ["!!", "!_", "!^"].forEach(symbol => {
                         result.push(
-                            { 
-                                kind: SymbolKind.Other, 
-                                name: symbol, 
-                                source: this.fileName, 
-                                definition: undefined, 
-                                description: undefined 
+                            {
+                                kind: SymbolKind.Other,
+                                name: symbol,
+                                source: this.fileName,
+                                definition: undefined,
+                                description: undefined
                             }
                         );
                     });
@@ -439,7 +439,7 @@ export class SourceContext {
 
         let parent = (terminal.parent as RuleContext);
         switch (parent.ruleIndex) {
-            case msgParser.RULE_literalName: 
+            case msgParser.RULE_literalName:
             case msgParser.RULE_expressionVariable: {
                 const source = this.symbolsForExpression.get(terminal.text.toUpperCase());
                 if (source && source.literal) {
@@ -557,7 +557,7 @@ export class SourceContext {
         };
         info.definition = {
             text: token.text || "",
-            range: { 
+            range: {
                 start:  { row: token.line, column: token.charPositionInLine},
                 end:    { row: token.line, column: token.charPositionInLine + (token.text ? token.text.length : 0)}
             }

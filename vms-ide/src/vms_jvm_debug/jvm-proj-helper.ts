@@ -297,14 +297,14 @@ export class JvmProjectHelper {
                             }
                         }
                         if (nearestLine !== Number.MAX_SAFE_INTEGER) {
-                            this.logFn(LogType.information, 
-                                () => localize("breakpoint.no.line", "Cannot set breakpoint at {0}:{1} -> move to {2}", fileName, line, nearestLine));
+                            this.logFn(LogType.information,
+                                () => localize("breakpoint.no.line", "Unable to set breakpoint at {0}:{1}. Moved to {2}.", fileName, line, nearestLine));
                             return [nearestClass, nearestLine];
                         }
-                        this.logFn(LogType.information, 
-                            () => localize("breakpoint.no.line", "Cannot set breakpoint at {0}:{1} -> disabled", fileName, line));
+                        this.logFn(LogType.information,
+                            () => localize("breakpoint.no.line.disable", "Unable to set breakpoint at {0}:{1}. Breakpoint disabled.", fileName, line));
                     }
-                }    
+                }
             }
         }
         return [undefined, undefined];

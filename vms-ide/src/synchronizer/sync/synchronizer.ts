@@ -81,7 +81,7 @@ export class Synchronizer {
      * Dispose all sources and watchers
      */
     public dispose() {
-        this.logFn(LogType.debug, () => localize("debug.disposing", "Disposing sources"));
+        this.logFn(LogType.debug, () => localize("debug.disposing", "Releasing sources."));
         for (const scopeData of Synchronizer.syncScopes.values()) {
             this.disposeScopeData(scopeData);
         }
@@ -169,7 +169,7 @@ export class Synchronizer {
                     break;
                 case "skip":
                     for (const downloadFile of compareResult.download) {
-                        this.logFn(LogType.information, () => localize("output.download_manually", "Remote {0} is newer, please check and download it manually", downloadFile.filename));
+                        this.logFn(LogType.information, () => localize("output.download_manually", "Remote file {0} is newer than the local one, please verify and download it manually.", downloadFile.filename));
                     }
                     break;
                 case "edit":
@@ -177,7 +177,7 @@ export class Synchronizer {
                         waitAll.push(this.editFile(scopeData, downloadFile.filename));
                     }
                     if (compareResult.download.length > 0) {
-                        this.logFn(LogType.information, () => localize("output.edit_count", "Please edit and save {0} files manually", compareResult.download.length));
+                        this.logFn(LogType.information, () => localize("output.edit_count", "Please edit and save {0} files manually.", compareResult.download.length));
                     }
                     break;
             }
@@ -199,7 +199,7 @@ export class Synchronizer {
         }
         // end
         this.decideDispose(scopeData);
-        this.logFn(LogType.debug, () => localize("debug.retcode", "Synchronize retCode: {0}", retCode));
+        this.logFn(LogType.debug, () => localize("debug.retcode", "Synchronization finished with the return code {0}.", retCode));
         return retCode;
     }
 
@@ -216,18 +216,18 @@ export class Synchronizer {
         this.enableRemote();
 
         let retCode = true;
-        
+
         if (ensured.scope) {
-        
+
             // delete deleted files
             const deletedList = ProjectState.acquire().getDeletedList(ensured.scope);
             for (let fileToDelete of deletedList) {
                 fileToDelete = fileToDelete.replace(middleSepRg, ftpPathSeparator);
                 if (!(await scopeData.remoteSource.deleteFile(fileToDelete))) {
-                    this.logFn(LogType.error, () => localize("debug.quick.delete", "Delete remote file failed: {0}", fileToDelete));
+                    this.logFn(LogType.error, () => localize("debug.quick.delete", "Delete remote file failed: {0}.", fileToDelete));
                     retCode = false;
                 } else {
-                    this.logFn(LogType.information, () => localize("debug.quick.delete.ok", "Remote file deleted: {0}", fileToDelete));
+                    this.logFn(LogType.information, () => localize("debug.quick.delete.ok", "Remote file deleted: {0}.", fileToDelete));
                 }
             }
 
@@ -264,8 +264,8 @@ export class Synchronizer {
 
         // end
         this.decideDispose(scopeData);
-        this.logFn(LogType.debug, () => localize("debug.quick.retcode", "Quick uploading:  {0}", String(retCode)));
-     
+        this.logFn(LogType.debug, () => localize("debug.quick.retcode", "Quick uploading: {0}.", String(retCode)));
+
         return retCode;
     }
 
@@ -301,7 +301,7 @@ export class Synchronizer {
             const progressProcess = new Progress();
             retCode = await this.executeAction(scopeData, compareResult.upload, "upload", progressProcess)
                 .catch((err) => {
-                    this.logFn(LogType.debug, () => localize("debug.upload.error", "Error while uploading {0}", String(err)));
+                    this.logFn(LogType.debug, () => localize("debug.upload.error", "An error occurred while uploading {0}.", String(err)));
                     return false;
                 });
         } else {
@@ -314,7 +314,7 @@ export class Synchronizer {
         }
         // end
         this.decideDispose(scopeData);
-        this.logFn(LogType.debug, () => localize("debug.upload.retcode", "Upload source retCode: {0}", retCode));
+        this.logFn(LogType.debug, () => localize("debug.upload.retcode", "File upload finished with the return code {0}.", retCode));
         return retCode;
     }
 
@@ -341,7 +341,7 @@ export class Synchronizer {
             // do not add outdir to the files in list! because remoteSource already has root pointed to outdir
             retCode = await this.executeAction(scopeData, compareResult.download, "download")
                 .catch((err) => {
-                    this.logFn(LogType.debug, () => localize("debug.download_listing.error", "Error while download listings {0}", String(err)));
+                    this.logFn(LogType.debug, () => localize("debug.download_listing.error", "An error occurred while downloading listing {0}.", String(err)));
                     return false;
                 });
         } else {
@@ -369,7 +369,7 @@ export class Synchronizer {
         }
         return this.executeAction(scopeData, files, "download")
             .catch((err) => {
-                this.logFn(LogType.debug, () => localize("debug.download.error", "Error while download {0}", String(err)));
+                this.logFn(LogType.debug, () => localize("debug.download.error", "An error occurred while downloading {0}.", String(err)));
                 return false;
             })
             .then((done) => {
@@ -389,7 +389,7 @@ export class Synchronizer {
         }
         return this.executeAction(scopeData, files, "upload")
             .catch((err) => {
-                this.logFn(LogType.debug, () => localize("debug.upload.error", "Error while upload {0}", String(err)));
+                this.logFn(LogType.debug, () => localize("debug.upload.error", "An error occurred while uploading {0}.", String(err)));
                 return false;
             })
             .then((done) => {
@@ -430,7 +430,7 @@ export class Synchronizer {
             content = buffer.toString("utf8");
             const reBuffer = Buffer.from(content, "utf8");
             if (buffer.compare(reBuffer) !== 0) {
-                this.logFn(LogType.error, () => localize("file-like-bin", "The file seems like binary: {0}", file));
+                this.logFn(LogType.error, () => localize("file-like-bin", "The file is likely a binary file: {0}.", file));
                 return false;
             }
             localUri = vscode.Uri.file(path.join(scopeData.localSource.root, file));
@@ -447,7 +447,7 @@ export class Synchronizer {
             } catch (err) {
                 this.logFn(LogType.error, () => err);
             }
-        } 
+        }
         return false;
 
     }
@@ -471,19 +471,19 @@ export class Synchronizer {
             } else {
                 const diff = (remoteLeft[remoteFileIdx].date.valueOf() - localFile.date.valueOf()) / 1000;
                 if (diff < -1) {
-                    this.logFn(LogType.debug, () => localize("debug.local_is_newer", "Local {0} is newer by {1} => upload", localFile.filename, diff));
+                    this.logFn(LogType.debug, () => localize("debug.local_is_newer", "Local copy {0} is newer by {1} => uploading.", localFile.filename, diff));
                     upload.push(localFile);
                 } else if (diff > 1) {
-                    this.logFn(LogType.debug, () => localize("debug.remote_is_newer", "Remote {0} is newer by {1} => download", localFile.filename, diff));
+                    this.logFn(LogType.debug, () => localize("debug.remote_is_newer", "Remote copy {0} is newer by {1} => downloading.", localFile.filename, diff));
                     download.push(remoteLeft[remoteFileIdx]);
                 } else {
-                    this.logFn(LogType.debug, () => localize("debug.the_same", "{0} are the same", localFile.filename));
+                    this.logFn(LogType.debug, () => localize("debug.the_same", "Local and remote copies of {0} are the same.", localFile.filename));
                 }
                 remoteLeft.splice(remoteFileIdx, 1);
             }
         }
         for (const file of remoteLeft) {
-            this.logFn(LogType.debug, () => localize("debug.no_local", "No local {0} => download", file.filename));
+            this.logFn(LogType.debug, () => localize("debug.no_local", "Could not find a local copy of {0} => downloading.", file.filename));
         }
         download.push(...remoteLeft);
         return { upload, download };
@@ -497,8 +497,8 @@ export class Synchronizer {
             const sshHelperType = await GetSshHelperType();
             if (!sshHelperType) {
                 if (this.logFn) {
-                    this.logFn(LogType.debug, () => localize("debug.cannot_get_ssh_helper", "Cannot get ssh-helper api"));
-                    this.logFn(LogType.error, () => localize("output.install_ssh", "Please, install 'vmssoftware.ssh-helper' first"));
+                    this.logFn(LogType.debug, () => localize("debug.cannot_get_ssh_helper", "Could not load ssh-helper API."));
+                    this.logFn(LogType.error, () => localize("output.install_ssh", "Install 'vmssoftware.ssh-helper' first."));
                 }
                 return false;
             }
@@ -535,9 +535,9 @@ export class Synchronizer {
                         progress.addProgress(action, 1);
                     }
                     if (ok) {
-                        this.logFn(LogType.information, () => localize("message.action_success", "{0} success: {1}", action, filename));
+                        this.logFn(LogType.information, () => localize("message.action_success", "{0} succeeded: {1}", action, filename));
                     } else {
-                        this.logFn(LogType.error, () => localize("message.action_failed", "{0} is failed: {1}", action, filename));
+                        this.logFn(LogType.error, () => localize("message.action_failed", "{0} failed: {1}", action, filename));
                     }
                     return ok;
                 })
@@ -638,7 +638,7 @@ export class Synchronizer {
                 const rgxField = /\${(\w+?)}/g;
                 let matchField = rgxField.exec(commandT);
                 let amended = false;
-                while (matchField) 
+                while (matchField)
                 {
                     const field = matchField[1];
                     let value = "";
@@ -673,7 +673,7 @@ export class Synchronizer {
                 let matchField = rgxField.exec(commandT);
                 let amendedZ = false;
                 let amendedA = false;
-                while (matchField) 
+                while (matchField)
                 {
                     const field = matchField[1];
                     let value = "";
@@ -718,7 +718,7 @@ export class Synchronizer {
         // check if all are ready to create sources
         if (ensured.configHelper.workspaceFolder) {
             const scope = ensured.configHelper.workspaceFolder.name;
-            this.logFn(LogType.debug, () => localize("debug.create_remote", "Creating remote source"));
+            this.logFn(LogType.debug, () => localize("debug.create_remote", "Creating remote source."));
             const sftp = await this.sshHelper.getDefaultSftp(scope);
             if (!sftp) {
                 return undefined;
@@ -747,7 +747,7 @@ export class Synchronizer {
                 return undefined;
             }
 
-            this.logFn(LogType.debug, () => localize("debug.create_local", "Creating local source"));
+            this.logFn(LogType.debug, () => localize("debug.create_local", "Creating local source."));
             const localSource = new FsSource(ensured.configHelper.workspaceFolder.uri.fsPath, this.logFn);
 
             const watcher = ensured.configHelper.getConfig().onDidLoad(markInvalid);

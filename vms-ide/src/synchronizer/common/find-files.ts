@@ -84,12 +84,12 @@ export async function findFiles(canReadDir: IReadDirectory,
 };
     let {expandedMask: splitInclude , missed_curly_bracket} = expandMask(include);
     if (debugLog && missed_curly_bracket) {
-        debugLog(LogType.warning, () => localize("check.inc.mask", "Please check include file masks for correct curly brackets"), true);
+        debugLog(LogType.warning, () => localize("check.inc.mask", "Check include file masks for correct curly brackets."), true);
     }
     if (exclude) {
         let {expandedMask: splitExclude , missed_curly_bracket} = expandMask(exclude);
         if (debugLog && missed_curly_bracket) {
-            debugLog(LogType.warning, () => localize("check.exc.mask", "Please check exclude file masks for correct curly brackets"), true);
+            debugLog(LogType.warning, () => localize("check.exc.mask", "Check exclude file masks for correct curly brackets."), true);
         }
         options.ignore = splitExclude;
     }

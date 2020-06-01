@@ -30,31 +30,33 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
             return false;
         }
 
+        const cd_failed_str = localize("cd.failed", "Could not set default directory.")
+
         const synchronizer = Synchronizer.acquire(logFn);
         synchronizer.enableRemote();
 
         const currentFolder = ensured.configHelper.workspaceFolder;
         const sshHelperType = await GetSshHelperType();
         if (!sshHelperType) {
-            logFn(LogType.error, () => localize("ssh-helper.failed", "The extension vmssoftware.ssh-helper isn't found."));
+            logFn(LogType.error, () => localize("ssh-helper.failed", "Could not find vmssoftware.ssh-helper extension."));
             return false;
         }
         const sshHelper = new sshHelperType(logFn);
         sshHelper.clearPasswordCache();
         const shell = await sshHelper.getDefaultVmsShell(ensured.scope);
         if (!shell) {
-            logFn(LogType.error, () => localize("shell.failed", "Cannot create remote shell."));
+            logFn(LogType.error, () => localize("shell.failed", "Could not create remote shell."));
             return false;
         }
         let result = await shell.execCmd("dir sys$library:*.tlb/col=1");
         if (ParseExecResult(result).length > 0) {
-            logFn(LogType.information, () => localize("no-result", "Cannot execute command to get TLB files"));
+            logFn(LogType.information, () => localize("no-result", "Could not run command to get the list of TLB files."));
             shell.dispose();
             return false;
         }
         const allTlb = result!.filter((line) => line.toLowerCase().includes(".tlb;"));
         if (!allTlb || !allTlb.length) {
-            logFn(LogType.information, () => localize("no-tlb", "No *.TLB files found in SYS$LIBRARY"));
+            logFn(LogType.information, () => localize("no-tlb", "No *.TLB files were found in SYS$LIBRARY"));
         }
         const chosen = await window.showQuickPick(allTlb);
         if (!chosen) {
@@ -94,7 +96,7 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
         result = await shell.execCmd(cd);
         errors = ParseExecResult(result);
         if (errors.length > 0) {
-            logFn(LogType.error, () => localize("cd.failed", "Cannot set default directory."));
+            logFn(LogType.error, () => cd_failed_str);
             logFn(LogType.error, () => errors.join("\n"));
             shell.dispose();
             return false;
@@ -105,7 +107,7 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
         result = await shell.execCmd(createDir);
         errors = ParseExecResult(result);
         if (errors.length > 0) {
-            logFn(LogType.error, () => localize("create.failed", "Cannot create output directory."));
+            logFn(LogType.error, () => localize("create.failed", "Could not create output directory."));
             logFn(LogType.error, () => errors.join("\n"));
             shell.dispose();
             return false;
@@ -115,7 +117,7 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
         result = await shell.execCmd(cd);
         errors = ParseExecResult(result);
         if (errors.length > 0) {
-            logFn(LogType.error, () => localize("cd.failed", "Cannot set default directory."));
+            logFn(LogType.error, () => cd_failed_str);
             logFn(LogType.error, () => errors.join("\n"));
             shell.dispose();
             return false;
@@ -135,10 +137,10 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
             result = await shell.execCmd(`library/extract=${file}/output=${fileOut} sys$library:${chosen}`);
             errors = ParseExecResult(result);
             if (errors.length > 0) {
-                    logFn(LogType.error, () => localize("file.extracted", "Extract failed: {0}", file));
+                    logFn(LogType.error, () => localize("file.extract.failed", "{0} was failed to unpack", file));
                     logFn(LogType.error, () => errors.join("\n"));
             } else {
-                logFn(LogType.information, () => localize("file.extracted", "Extracted: {0}", file));
+                logFn(LogType.information, () => localize("file.extracted", "{0} was unpacked successfully", file));
                 // push to download list only good files, and with "." at the end if it needs
                 downloadList.push(outFolder + ftpPathSeparator + fileOut);
             }
@@ -177,23 +179,23 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
         result = await shell.execCmd(`set default sys$login`);
         errors = ParseExecResult(result);
         if (errors.length > 0) {
-            logFn(LogType.error, () => localize("cd.failed", "Cannot set default directory."));
+            logFn(LogType.error, () => cd_failed_str);
             logFn(LogType.error, () => errors.join("\n"));
         }
         result = await shell.execCmd(`set default ${converter.directory}`);
         errors = ParseExecResult(result);
         if (errors.length > 0) {
-            logFn(LogType.error, () => localize("cd.failed", "Cannot set default directory."));
+            logFn(LogType.error, () => cd_failed_str);
             logFn(LogType.error, () => errors.join("\n"));
         }
         const delTree = `delete/tree [.${ensured.projectSection.outdir}.${libName}...]*.*;*`;
         result = await shell.execCmd(delTree);
         errors = ParseExecResult(result);
         if (errors.length > 0) {
-            logFn(LogType.information, () => localize("del.failed", "Cannot delete intermediate files: {0}", `[${ensured.projectSection.outdir}.${libName}]`));
+            logFn(LogType.information, () => localize("del.failed", "Could not delete temporary files: {0}", `[${ensured.projectSection.outdir}.${libName}]`));
             logFn(LogType.error, () => errors.join("\n"));
         }
-        logFn(LogType.information, () => localize("done", "Done."));
+        logFn(LogType.information, () => localize("done", "Completed successfully."));
         // setContext(CommandContext.isHeaders, false); should be done by performer
         shell.dispose();
         return true;

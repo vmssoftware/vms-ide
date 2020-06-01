@@ -1,5 +1,6 @@
 {
-    "debug.clear": "clearCache: удаление {0}",
+    "debug.clearcache": "clearCache: delete {0}",
+    "debug.killcache": "killCache: delete {0}",
     "debug.feedback": "feedBack: элемент {0} принят={1}",
     "debug.feedback.lock": "feedback: свободен {0}",
     "debug.feedback.already": "feedback: уже принят={0} {1}",
@@ -10,9 +11,11 @@
     "debug.resolve.first": "resolveConnectConfig: первый запрос {0}",
     "debug.resolve.filled": "resolveConnectConfig: заполнен {0}",
     "debug.resolve.didnt": "resolveConnectConfig: не заполнен {0}",
-    "debug.resolve.unlock": "resolveConnectConfig: разблокирован (фидбэк не нужен) {0}",
+    "debug.resolve.unlock.nofeedback": "resolveConnectConfig: lock released (no feedback needed) {0}",
     "debug.resolve.timeout": "resolveConnectConfig: разблокирован по таймауту {0}",
     "debug.resolve.second": "resolveConnectConfig: второй и следующие запросы {0}",
     "debug.resolve.state": "resolveConnectConfig: принят={0} {1}",
-    "debug.resolve.ret": "resolveConnectConfig: завершён {0}"
+    "debug.resolve.unlock.already": "resolveConnectConfig: lock released {0}",
+    "debug.resolve.ret": "resolveConnectConfig: завершён {0}",
+    "debug.resolve.start.test": "resolveConnectConfig: try {0}"
 }

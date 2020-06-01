@@ -158,7 +158,7 @@ async function createTerminal() : Promise<void>
 			}
 			else
 			{
-				logFn(LogType.error, () => localize("setup.connection", "Cannot start terminal. Please set up connection"), true);
+				logFn(LogType.error, () => localize("setup.connection", "Could not start terminal. Please check connection settings."), true);
 				terminal.dispose();
 			}
 		}
@@ -225,7 +225,7 @@ let ExtensionReadyCb = function() : void
 {
 	statusShell = StatusConnection.StatusConnected;
 
-	const message = localize('extention.connected', "Connected to the server");
+	const message = localize('extention.connected', "Connected to the server.");
 	const messageBar = localize('extention.bar.connected', "Connected");
 	vscode.window.showInformationMessage(message);
 	statusConnBar.setMessage(messageBar);
@@ -237,7 +237,7 @@ let ExtensionCloseCb = function(reasonMessage: string) : void
 {
 	statusShell = StatusConnection.StatusDisconnected;
 
-	const message = localize('extention.closed', "Connection is closed");
+	const message = localize('extention.closed', "Connection is closed.");
 	const messageBar = localize('extention.bar.disconnected', "Disconnected");
 	vscode.window.showWarningMessage(message + reasonMessage);
 	statusConnBar.setMessage(messageBar);
@@ -273,7 +273,7 @@ let ExtensionDbgReadyCb = function() : void
 {
 	statusShellDbg = StatusConnection.StatusConnected;
 
-	const message = localize('extention.connected', "Connected to the server");
+	const message = localize('extention.connected', "Connected to the server.");
 	const messageBar = localize('extention.bar.connected', "Connected");
 	vscode.window.showInformationMessage(message);
 	statusConnBar.setMessage(messageBar);
@@ -285,7 +285,7 @@ let ExtensionDbgCloseCb = function(reasonMessage: string) : void
 {
 	statusShellDbg = StatusConnection.StatusDisconnected;
 
-	const message = localize('extention.closed', "Connection is closed");
+	const message = localize('extention.closed', "Connection is closed.");
 	const messageBar = localize('extention.bar.disconnected', "Disconnected");
 	vscode.window.showWarningMessage(message + reasonMessage);
 	statusConnBar.setMessage(messageBar);
@@ -334,7 +334,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 						}
 						else
 						{
-							const message = localize('extention.сustomize_configuration', "Customize configuration");
+							const message = localize('extention.сustomize_configuration', "Customize configuration.");
 							vscode.window.showWarningMessage(message);
 
 							resolve(null);
@@ -398,7 +398,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 					{
 						typeRunConfig = TypeRunConfig.TypeRunNone;
 
-						const message = localize('extention.сustomize_configuration', "Customize configuration");
+						const message = localize('extention.сustomize_configuration', "Customize configuration.");
 						vscode.window.showWarningMessage(message);
 
 						resolve(null);
@@ -415,7 +415,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 				}
 				else
 				{
-					const message = localize('extention.not_connected', "Do not connect to the server");
+					const message = localize('extention.not_connected', "No connection to the server.");
 					vscode.window.showWarningMessage(message);
 
 					resolve(undefined);
@@ -424,7 +424,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 			}
 			else
 			{
-				const message = localize('extention.сustomize_configuration', "Customize configuration");
+				const message = localize('extention.сustomize_configuration', "Customize configuration.");
 				vscode.window.showWarningMessage(message);
 
 				resolve(null);	//return null to open launch.json

@@ -86,12 +86,14 @@ export class ShellSession
 
                 if (!sshHelperType)
                 {
+                    let err_str = localize("ssh.hlp.api.fail", "Could not get ssh-helper API.");
+
                     if (this.logFn)
                     {
-                        this.logFn(LogType.error, () => `Cannot get ssh-helper api`);
+                        this.logFn(LogType.error, () => err_str);
                     }
 
-                    this.DisconectSession(true, ": Cannot get ssh-helper api");
+                    this.DisconectSession(true, ": " + err_str);
 
                     return false;
                 }
@@ -109,7 +111,7 @@ export class ShellSession
 
                     if (!attached)
                     {
-                        throw new Error(localize("output.cannot_attach", "Cannot connect"));
+                        throw new Error(localize("output.cannot_attach", "Connection failed."));
                     }
                     else
                     {
@@ -118,7 +120,7 @@ export class ShellSession
                 }
                 else
                 {
-                    this.extensionCloseCb("(Internal error: the session was interrupted.)");
+                    this.extensionCloseCb(localize("session.interrupted", "(Internal error: the session was interrupted.)"));
                 }
             }
         }
@@ -157,7 +159,7 @@ export class ShellSession
     private DataCb = (data: string) : void =>
     {
         //console.log(data);
-        
+
         if(this.promptCmd === "" || this.checkVersion !== 0)
         {
             if(this.checkVersion !== 0 && this.promptCmd !== "")
@@ -214,7 +216,7 @@ export class ShellSession
                     else
                     {
                         this.checkVersion = -1;
-                        this.DisconectSession(true, ": OS don't support");
+                        this.DisconectSession(true, localize("os.not.supported", ": OS is not supported."));
                     }
 
                     this.readyCmd = true;
@@ -244,7 +246,7 @@ export class ShellSession
         else if(data.includes("\x00") && (data.includes(this.promptCmd) || data.includes("DBG> ")))
         {
             if(this.receiveCmd || data.includes(this.currentCmd.getBody()))
-            { 
+            {
                 data = data.replace(/\x00/g, '');
 
                 if(data.includes("DBG> "))
@@ -262,7 +264,7 @@ export class ShellSession
 
                     if (this.disconnect)
                     {
-                        this.DisconectSession(true, ": The program complete");//close SSH session
+                        this.DisconectSession(true, localize("proram.completed", ": The program completed."));//close SSH session
                         this.readyCmd = true;
                         this.extensionDataCb(this.mode, TypeDataMessage.typeData, this.resultData);
                         this.resultData = "";
@@ -387,7 +389,7 @@ export class ShellSession
 
         if (this.logFn)
         {
-            this.logFn(LogType.debug, () => "Connection was closed");
+            this.logFn(LogType.debug, () => localize("conn.closed", "Connection closed."));
         }
 
         if(code)
@@ -467,7 +469,7 @@ export class ShellSession
         }
         else
         {
-            this.extensionCloseCb("(Internal error: the session was interrupted.)");
+            this.extensionCloseCb(localize("session.interrupted", "(Internal error: the session was interrupted.)"));
         }
 
         return result;
@@ -511,7 +513,7 @@ export class ShellSession
         }
         else
         {
-            this.extensionCloseCb("(Internal error: the session was interrupted.)");
+            this.extensionCloseCb(localize("session.interrupted", "(Internal error: the session was interrupted.)"));
         }
 
         return result;

@@ -34,33 +34,33 @@ export class AnalysisListener implements msgListener {
     public messageFaoProvided = 0;
 
     public static emptyBaseValue = localize("emptyBaseValue", "The base number cannot be empty.");
-    public static emptySeverity = localize("emptySeverity", "You attempt to define a message without specifying a severity level");
+    public static emptySeverity = localize("emptySeverity", "Message must have a severity level defined.");
     public static emptyFacilityName = localize("emptyFacilityName", "The facility name cannot be empty.");
     public static emptyTitleName = localize("emptyTitleName", "The title name cannot be empty.");
-    public static emptyFaoCount = localize("emptyFaoCount", "The fao count cannot be empty.");
+    public static emptyFaoCount = localize("emptyFaoCount", "The FAO count cannot be empty.");
     public static emptyLiteralName = localize("emptyLiteralName", "The literal definition cannot be empty.");
     public static emptyMessageIdentification = localize("emptyMessageIdentification", "The message identification cannot be empty.");
-    public static emptyMessageName = localize("emptyMessageName", "The message cannot be empty.");
+    public static emptyMessageName = localize("emptyMessageName", "Message cannot be empty.");
     public static emptyPrefixValue = localize("emptyPrefixValue", "The facility prefix cannot be empty.");
     public static emptyPrefixToken = localize("emptyPrefixToken", "Message must have a prefix defined.");
     public static emptyUserValue = localize("emptyUserValue", "The user value cannot be empty.");
-    public static messageAlreadyExists = localize("messageAlreadyExists", "This message already exists.");
-    public static messageSymbolAlreadyExists = localize("messageSymbolAlreadyExists", "This message symbol already exists.");
-    public static oneLine = localize("oneLine", "You cannot continue the delimited text onto another line.");
-    public static tooBigFaoCount = localize("tooBigFaoCount", "The number specified must be a decimal number in the range 0 to 255.");
-    public static tooBigMessageNumber = localize("tooBigMessageNumber", "The maximum number for any message cannot exceed 4095 and must be greater than zero.");
-    public static tooBigUserValue = localize("tooBigUserValue", "The number specified must be a decimal number in the range 0 to 255.");
-    public static tooLongFacilityName = localize("tooLongFacilityName", "The facility name can be up to 9 characters.");
+    public static messageAlreadyExists = localize("messageAlreadyExists", "The message already exists.");
+    public static messageSymbolAlreadyExists = localize("messageSymbolAlreadyExists", "The message symbol already exists.");
+    public static oneLine = localize("oneLine", "Text cannot be wrapped to the next line.");
+    public static tooBigFaoCount = localize("tooBigFaoCount", "The value must be a decimal number in the range 0 to 255.");
+    public static tooBigMessageNumber = localize("tooBigMessageNumber", "The number of messages must be in the range 0 to 4095.");
+    public static tooBigUserValue = localize("tooBigUserValue", "The value must be a decimal number in the range 0 to 255.");
+    public static tooLongFacilityName = localize("tooLongFacilityName", "The maximum length of a facility name is 9 characters.");
     public static tooLongFacilityPrefix = localize("tooLongFacilityPrefix", "The maximum length of an alternate symbol prefix created with the /PREFIX qualifier is 9 characters.");
-    public static tooLongIdentValue = localize("tooLongIdentValue", "The maximum length of an identification is 31 characters.");
-    public static tooLongIdentification = localize("tooLongIdentification", "The name can include up to nine characters.");
+    public static tooLongIdentValue = localize("tooLongIdentValue", "The maximum length of an identification value is 31 characters.");
+    public static tooLongIdentification = localize("tooLongIdentification", "The maximum lenght of an identification name is 9 characters.");
     public static tooLongMessageName = localize("tooLongMessageName", "The combined length of the prefix and the message symbol name cannot exceed 31 characters.");
-    public static tooLongMessageText = localize("tooLongMessageText", "The text can be up to 255 bytes long.");
-    public static tooLongTitleDescription = localize("tooLongTitleDescription", "The listing title has a maximum length of 28 characters.");
-    public static tooLongTitleName = localize("tooLongTitleName", "The title name has a maximum length of 31 characters.");
+    public static tooLongMessageText = localize("tooLongMessageText", "Text length cannot exceed 255 bytes.");
+    public static tooLongTitleDescription = localize("tooLongTitleDescription", "The maximum length of a listing title is 28 characters.");
+    public static tooLongTitleName = localize("tooLongTitleName", "The maximum length of a title name is 31 characters.");
     public static undefinedVariable = localize("undefinedVariable", "Undefined variable.");
-    public static messageFaoCountDiff = localize("messageFaoCountDiff", "Probably FAO count is invalid.");
-    
+    public static messageFaoCountDiff = localize("messageFaoCountDiff", "FAO count is invalid.");
+
     public logFn: LogFunction;
 
     constructor(public diagnostics: DiagnosticEntry[], logFn?: LogFunction) {
@@ -68,7 +68,7 @@ export class AnalysisListener implements msgListener {
         this.logFn = logFn || (() => {});
     }
 
-    enterEveryRule(ctx: ParserRuleContext) {        
+    enterEveryRule(ctx: ParserRuleContext) {
         this.logFn(LogType.debug, () => `${ctx.ruleIndex}: ${ctx.text}`);
     }
 
@@ -163,7 +163,7 @@ export class AnalysisListener implements msgListener {
                     }
                 }
             } else {
-                this.markToken(ctx.start, AnalysisListener.emptyPrefixToken);    
+                this.markToken(ctx.start, AnalysisListener.emptyPrefixToken);
             }
         } else {
             this.markToken(ctx.start, AnalysisListener.emptyMessageName);
@@ -366,11 +366,11 @@ export class AnalysisListener implements msgListener {
         }
 
         if (fao_width === '#') {
-            retValue++; 
+            retValue++;
         }
 
         if (fao_repeat === '#') {
-            retValue++; 
+            retValue++;
         }
 
         switch (fao_dir) {
@@ -420,7 +420,7 @@ export class AnalysisListener implements msgListener {
     }
 
     /**
-     * @param token 
+     * @param token
      * @returns true if message is unique
      */
     public testMessageIdent(token?: Token) {
@@ -471,8 +471,8 @@ export class AnalysisListener implements msgListener {
         const error: DiagnosticEntry = {
             type,
             message,
-            range: { 
-                start: { column, row }, 
+            range: {
+                start: { column, row },
                 end:   { column: column + length, row }}
         };
         this.diagnostics.push(error);

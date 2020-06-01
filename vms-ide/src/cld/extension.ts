@@ -18,7 +18,7 @@ export async function activate(context: ExtensionContext) {
 
     const configApi = await GetConfigHelperFromApi();
     if (!configApi) {
-        window.showErrorMessage(localize("config.notfound", "Cannot find vmssoftware.config-helper extension"));
+        window.showErrorMessage(localize("config.notfound", "Could not find vmssoftware.config-helper extension."));
         return;
     }
 
@@ -44,7 +44,7 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push(languages.registerHoverProvider(CLD, new CldHoverProvider(backend)));
     context.subscriptions.push(languages.registerDefinitionProvider(CLD, new CldDefinitionProvider(backend)));
-    
+
     context.subscriptions.push(languages.registerCompletionItemProvider(CLD, new CldCompletionItemProvider(backend),
         ".", " ", "<", ">", "=", "("));
     context.subscriptions.push(languages.registerRenameProvider(CLD, new CldRenameProvider(backend)));

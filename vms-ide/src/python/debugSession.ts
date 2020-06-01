@@ -404,7 +404,7 @@ export class PythonDebugSession extends LoggingDebugSession {
                         });
                         return this._runtime.start();
                     } else if (result === EStartResult.portIsBusy) {
-                        this._logFn(LogType.information, () => localize("port.busy", "Port {0} is busy.", String(listeningPort)));
+                        this._logFn(LogType.information, () => localize("port.busy", "Port {0} is already in use.", String(listeningPort)));
                         ++listeningPort;
                     } else {
                         break;

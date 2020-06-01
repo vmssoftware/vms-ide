@@ -88,9 +88,9 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "synchronize",
-        fail: localize("synchronizing.fail", "Synchronizing failed"),
+        fail: localize("synchronizing.fail", "Synchronization failed."),
         status: localize("synchronizing.status", "$(sync) Synchronizing..."),
-        success: localize("synchronizing.success", "Synchronizing ok"),
+        success: localize("synchronizing.success", "Synchronization completed successfully."),
     },
     {
         // quick synchronize (!) simultaneously
@@ -121,9 +121,9 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "quicksync",
-        fail: localize("quicksync.fail", "Quick uploading failed"),
+        fail: localize("quicksync.fail", "Quick upload failed."),
         status: localize("quicksync.status", "$(sync) Quick uploading..."),
-        success: localize("quicksync.success", "Quick uploading ok"),
+        success: localize("quicksync.success", "Quick upload completed successfully."),
     },
     {
         // build
@@ -137,12 +137,12 @@ export const actions: IPerform[] = [
             // execute using AWAIT, not simultaneously
             for (const curScope of scopes) {
                 if (!await onTheSameVms(curScope, logFn)) {
-                    logFn(LogType.error, () => localize("error.depend.vms", "All dependent projects must be on the same VMS host ({0})", curScope));
+                    logFn(LogType.error, () => localize("error.depend.vms", "All dependent projects must be on the same VMS host ({0}).", curScope));
                 } else {
                     const ensured = await ensureSettings(curScope, logFn);
                     if (ensured) {
                         if (ProjectState.acquire().sourceState(curScope) === SourceState.unknown) {
-                            logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", curScope));
+                            logFn(LogType.information, () => localize("do.upload.first", "You should execute UPLOAD or SYNCHRONIZE for {0} first.", curScope));
                         }
                         const isBuilt = await builder.buildProject(ensured, buildName);
                         ProjectState.acquire().setBuilt(curScope, buildName, isBuilt);
@@ -156,9 +156,9 @@ export const actions: IPerform[] = [
             return retCode;
         },
         actionName: "build",
-        fail: localize("building.fail", "Building failed"),
+        fail: localize("building.fail", "Build failed."),
         status: localize("building.status", "$(tools) Building..."),
-        success: localize("buiding.success", "Building ok"),
+        success: localize("buiding.success", "Build completed successfully."),
     },
     {
         // build only
@@ -170,7 +170,7 @@ export const actions: IPerform[] = [
             const ensured = await ensureSettings(scope, logFn);
             if (ensured && ensured.scope) {
                 if (ProjectState.acquire().sourceState(ensured.scope) === SourceState.unknown) {
-                    logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", ensured.scope));
+                    logFn(LogType.information, () => localize("do.upload.first", "You should execute UPLOAD or SYNCHRONIZE for {0} first.", ensured.scope));
                 }
                 const isBuilt = await builder.buildProject(ensured, buildName);
                 ProjectState.acquire().setBuilt(ensured.scope, buildName, isBuilt);
@@ -181,9 +181,9 @@ export const actions: IPerform[] = [
             }
         },
         actionName: "buildOnly",
-        fail: localize("building.fail", "Building failed"),
+        fail: localize("building.fail", "Build failed."),
         status: localize("building.status", "$(tools) Building..."),
-        success: localize("buiding.success", "Building ok"),
+        success: localize("buiding.success", "Build completed successfully."),
     },
     {
         // re-build, the same as build but execute clean before
@@ -196,14 +196,14 @@ export const actions: IPerform[] = [
             let retCode = scopes.length > 0;
             for (const curScope of scopes) {
                 if (!await onTheSameVms(curScope, logFn)) {
-                    logFn(LogType.error, () => localize("error.depend.vms", "All dependent projects must be on the same VMS host ({0})", curScope));
+                    logFn(LogType.error, () => localize("error.depend.vms", "All dependent projects must be on the same VMS host ({0}).", curScope));
                 } else {
                     const ensured = await ensureSettings(curScope, logFn);
                     if (ensured) {
                         // just do clean, ignore result
                         await builder.cleanProject(ensured, buildName);
                         if (ProjectState.acquire().sourceState(curScope) === SourceState.unknown) {
-                            logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", curScope));
+                            logFn(LogType.information, () => localize("do.upload.first", "You should execute UPLOAD or SYNCHRONIZE for {0} first.", curScope));
                         }
                         const isBuilt = await builder.buildProject(ensured, buildName);
                         ProjectState.acquire().setBuilt(curScope, buildName, isBuilt);
@@ -217,9 +217,9 @@ export const actions: IPerform[] = [
             return retCode;
         },
         actionName: "rebuild",
-        fail: localize("building.fail", "Building failed"),
+        fail: localize("building.fail", "Build failed."),
         status: localize("building.status", "$(tools) Building..."),
-        success: localize("buiding.success", "Building ok"),
+        success: localize("buiding.success", "Build completed successfully."),
     },
     {
         // re-build only, the same as build only but execute clean before
@@ -233,7 +233,7 @@ export const actions: IPerform[] = [
                 // just do clean, ignore result
                 await builder.cleanProject(ensured, buildName);
                 if (ProjectState.acquire().sourceState(ensured.scope) === SourceState.unknown) {
-                    logFn(LogType.information, () => localize("do.upload.first", "Probably first you should execute UPLOAD or SYNCHRONIZE for: {0}", ensured.scope));
+                    logFn(LogType.information, () => localize("do.upload.first", "You should execute UPLOAD or SYNCHRONIZE for {0} first.", ensured.scope));
                 }
                 const isBuilt = await builder.buildProject(ensured, buildName);
                 ProjectState.acquire().setBuilt(ensured.scope, buildName, isBuilt);
@@ -244,9 +244,9 @@ export const actions: IPerform[] = [
             }
         },
         actionName: "rebuildOnly",
-        fail: localize("building.fail", "Building failed"),
+        fail: localize("building.fail", "Build failed."),
         status: localize("building.status", "$(tools) Building..."),
-        success: localize("buiding.success", "Building ok"),
+        success: localize("buiding.success", "Build completed successfully."),
     },
     {
         // clean
@@ -282,9 +282,9 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "clean",
-        fail: localize("clean.fail", "Cleaning failed"),
+        fail: localize("clean.fail", "Clean failed"),
         status: localize("clean.status", "$(trashcan) Cleaning..."),
-        success: localize("clean.success", "Cleaning ok"),
+        success: localize("clean.success", "Clean completed successfully."),
     },
     {
         // create MMS
@@ -315,9 +315,9 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "create mms",
-        fail: localize("mms.fail", "Creating MMS failed"),
+        fail: localize("mms.fail", "Creating MMS failed."),
         status: localize("mms.status", "Creating MMS..."),
-        success: localize("mms.success", "Creating MMS ok"),
+        success: localize("mms.success", "Creating MMS completed successfully."),
     },
     {
         // change CR/LF
@@ -343,9 +343,9 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "crlf",
-        fail: localize("crlf.fail", "Changing CrLf failed"),
+        fail: localize("crlf.fail", "CRLF conversion failed."),
         status: localize("crlf.status", "$(search) Changing..."),
-        success: localize("crlf.success", "Changing CrLf ok"),
+        success: localize("crlf.success", "CRLF conversion completed successfully."),
     },
     {
         // ZIP
@@ -370,9 +370,9 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "zip",
-        fail: localize("zip.fail", "Uploading via Zip failed"),
-        status: localize("zip.status", "$(file-zip) Uploading via Zip..."),
-        success: localize("zip.success", "Uploading via Zip ok"),
+        fail: localize("zip.fail", "Upload using Zip failed."),
+        status: localize("zip.status", "$(file-zip) Uploading using Zip..."),
+        success: localize("zip.success", "Upload using Zip completed successfully."),
     },
     {
         // edit settings
@@ -388,9 +388,9 @@ export const actions: IPerform[] = [
             return false;
         },
         actionName: "edit settings",
-        fail: localize("edit.fail", "Editing settings failed"),
+        fail: localize("edit.fail", "Editing settings failed."),
         status: localize("edit.status", "Editing settings..."),
-        success: localize("edit.success", "Editing settings ok"),
+        success: localize("edit.success", "Editing settings completed successfully."),
     },
     {
         // edit ssh settings
@@ -403,9 +403,9 @@ export const actions: IPerform[] = [
             return false;
         },
         actionName: "edit ssh settings",
-        fail: localize("edit.fail", "Editing settings failed"),
+        fail: localize("edit.fail", "Editing settings failed."),
         status: localize("edit.status", "Edit settings..."),
-        success: localize("edit.success", "Editing settings ok"),
+        success: localize("edit.success", "Editing settings completed successfully."),
     },
     {
         // headers
@@ -413,9 +413,9 @@ export const actions: IPerform[] = [
             return DownloadHeaders(scope, logFn);
         },
         actionName: "headers",
-        fail: localize("headers.fail", "Downloading headers failed"),
+        fail: localize("headers.fail", "Headers download failed."),
         status: localize("headers.status", "Downloading headers..."),
-        success: localize("headers.success", "Downloading headers ok"),
+        success: localize("headers.success", "Headers download completed successfully."),
     },
     {
         // upload
@@ -440,9 +440,9 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "upload",
-        fail: localize("upload.fail", "Uploading failed"),
+        fail: localize("upload.fail", "Upload failed."),
         status: localize("upload.status", "Uploading..."),
-        success: localize("upload.success", "Uploading ok"),
+        success: localize("upload.success", "Upload completed successfully."),
     },
     {
         // preparing debug
@@ -470,18 +470,18 @@ export const actions: IPerform[] = [
         actionName: "prepare debug",
         fail: localize("collect.fail", "Preparing to debug failed"),
         status: localize("collect.status", "Preparing to debug..."),
-        success: localize("collect.success", "Preparing to debug ok"),
+        success: localize("collect.success", "Preparing to debug completed successfully"),
     },
 ];
 
 export async function Perform(actionName: ActionType, scope: string | undefined, logFn: LogFunction, param?: string) {
     const actionToDo = actions.find((action) => action.actionName === actionName);
     if (!actionToDo) {
-        logFn(LogType.error, () => localize("error.no_action", "Cannot find action: {0}", actionName));
+        logFn(LogType.error, () => localize("error.no_action", "Could not find action: {0}.", actionName));
         return false;
     }
     if (getContext(CommandContext.isInAction)) {
-        logFn(LogType.error, () => localize("error.action_in_progress", "Action already in progress: {0}", actionName));
+        logFn(LogType.error, () => localize("error.action_in_progress", "Could not run because another action is already in progress: {0}.", actionName));
         return false;
     }
     setContext(CommandContext.isInAction, true);

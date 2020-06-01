@@ -22,7 +22,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const configApi = await GetConfigHelperFromApi();
     if (!configApi) {
-        window.showErrorMessage(localize("config.notfound", "Cannot find vmssoftware.config-helper extension"));
+        window.showErrorMessage(localize("config.notfound", "Could not find vmssoftware.config-helper extension."));
         return;
     }
 
@@ -48,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(languages.registerHoverProvider(MSG, new MsgHoverProvider(backend)));
     context.subscriptions.push(languages.registerDefinitionProvider(MSG, new MsgDefinitionProvider(backend)));
-    
+
     // context.subscriptions.push(languages.registerDocumentSymbolProvider(MSG, new MsgSymbolProvider(backend)));
     // const codeLensProvider = new MsgCodeLensProvider(backend);
     // context.subscriptions.push(languages.registerCodeLensProvider(MSG, codeLensProvider));
