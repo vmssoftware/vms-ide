@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.16
+* Logo is changed
+
 ## 1.5.15
 * Update messages
 * Allow executing expression in Python debugger

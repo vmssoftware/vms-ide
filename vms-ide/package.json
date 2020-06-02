@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "1.5.15",
+    "version": "1.5.16",
     "publisher": "VMSSoftwareInc",
     "license": "SEE LICENSE IN LICENSE.md",
     "repository": {
@@ -17,7 +17,7 @@
         "Programming Languages",
         "Other"
     ],
-    "icon": "images/vms_128x128_v2.png",
+    "icon": "images/vms_logo.png",
     "main": "./out/index",
     "activationEvents": [
         "*",
