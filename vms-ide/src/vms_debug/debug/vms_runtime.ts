@@ -309,8 +309,8 @@ export class VMSRuntime extends EventEmitter
 			this.shellDbg.resetParameters();
 			this.shell.resetParameters();
 
-			this.shellDbg.DisconectSession(true, ": The program complete");
-			this.shell.DisconectSession(true, ": The program complete");
+			this.shellDbg.DisconectSession(true, localize("proram.completed", ": The program is completed."));
+			this.shell.DisconectSession(true, localize("proram.completed", ": The program is completed."));
 		}
 		else
 		{

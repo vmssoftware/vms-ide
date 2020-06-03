@@ -264,7 +264,7 @@ export class ShellSession
 
                     if (this.disconnect)
                     {
-                        this.DisconectSession(true, localize("proram.completed", ": The program completed."));//close SSH session
+                        this.DisconectSession(true, localize("proram.completed", ": The program is completed."));//close SSH session
                         this.readyCmd = true;
                         this.extensionDataCb(this.mode, TypeDataMessage.typeData, this.resultData);
                         this.resultData = "";
@@ -389,7 +389,7 @@ export class ShellSession
 
         if (this.logFn)
         {
-            this.logFn(LogType.debug, () => localize("conn.closed", "Connection closed."));
+            this.logFn(LogType.debug, () => localize("conn.closed", "Connection is closed."));
         }
 
         if(code)

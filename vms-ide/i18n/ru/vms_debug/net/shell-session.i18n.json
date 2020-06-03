@@ -1,7 +1,7 @@
 {
     "os.not.supported": ": OS is not supported.",
-    "proram.completed": ": The program completed.",
-    "conn.closed": "Connection closed.",
+    "proram.completed": ": The program is completed.",
+    "conn.closed": "Connection is closed.",
     "ssh.hlp.api.fail": "Could not get ssh-helper API.",
     "output.cannot_attach": "Невозможно присоединиться",
     "session.interrupted": "(Internal error: the session was interrupted.)"

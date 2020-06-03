@@ -1,5 +1,6 @@
 {
     "config_error": "Ошибка конфигурации",
+    "proram.completed": ": The program is completed.",
     "runtime.watch_error": "Watch: Ошибка параметра. Пример: (when (x > 3)) или ().",
     "runtime.command_ignore": "Команда запрещена!"
 }
