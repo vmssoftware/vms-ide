@@ -306,8 +306,9 @@ class Tracer:
                     lineno = frame.f_lineno
                     lines.append(lineno)
                     tail = frame.f_code.co_lnotab
-                    while tail:
-                        _, line_incr, *tail = tail
+                    while len(tail) > 1:
+                        line_incr = tail[1]
+                        tail = tail[2:]
                         if line_incr:
                             if isinstance(line_incr, str):
                                 line_incr = ord(line_incr)

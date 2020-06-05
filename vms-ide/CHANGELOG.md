@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.18
+* Fix python debugger (did not work on python 2.7)
+
 ## 1.5.17
 * Fix messages
 
