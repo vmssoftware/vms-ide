@@ -1,0 +1,7 @@
+out
+node_modules
+.vscode-test/
+.ropeproject/
+*.vsix
+*.zip
+package-lock.json

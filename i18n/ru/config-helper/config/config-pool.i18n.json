@@ -1,0 +1,4 @@
+{
+    "config.filldata.failed": "чтение данных ('{0}') неудачно",
+    "config.storedata.failed": "сохранение данных ('{0}') неудачно"
+}

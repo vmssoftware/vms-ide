@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+      "paths": { "*": ["types/*"] },
+    /* Basic Options */
+    "target": "es2018",
+    "module": "commonjs",
+    "lib": [ "es2018" ],
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "./out",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "baseUrl": "./src"
+  },
+  "exclude": [
+      "node_modules",
+      ".vscode-test",
+      "out"
+    ]  
+}

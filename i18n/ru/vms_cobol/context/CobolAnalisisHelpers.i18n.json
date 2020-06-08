@@ -1,0 +1,9 @@
+{
+    "text_length_range": "Должно содержать от {0} до {1} символ(-ов,а)",
+    "number_in_range": "Должно быть от {0} до {1}",
+    "not_an_integer": "Должно быть целым",
+    "undefined_name": "Неопределённое имя",
+    "ambigous_name": "Двузначное имя",
+    "illegal_type": "Неверный тип",
+    "duplicated.clause": "Двойное выражение"
+}

@@ -1,0 +1,1196 @@
+{
+    "name": "vms-ide",
+    "displayName": "VMS IDE",
+    "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
+    "version": "1.5.18",
+    "publisher": "VMSSoftwareInc",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "repository": {
+        "type": "git",
+        "url": "git:"
+    },
+    "engines": {
+        "vscode": "^1.33.1"
+    },
+    "categories": [
+        "Debuggers",
+        "Programming Languages",
+        "Other"
+    ],
+    "icon": "images/vms_logo.png",
+    "main": "./out/index",
+    "activationEvents": [
+        "*",
+        "onView:vmssoftware.project-dep.projectDependencies",
+        "onView:vmssoftware.project-dep.projectDescription",
+        "onCommand:vmssoftware.synchronizer.stopAction",
+        "onCommand:vmssoftware.ssh-helper.editSettings",
+        "onCommand:vmssoftware.synchronizer.editProject",
+        "onCommand:vmssoftware.synchronizer.changeCRLF",
+        "onCommand:vmssoftware.synchronizer.createMMS",
+        "onCommand:vmssoftware.synchronizer.buildProject",
+        "onCommand:vmssoftware.synchronizer.reBuildProject",
+        "onCommand:vmssoftware.synchronizer.cleanProject",
+        "onCommand:vmssoftware.synchronizer.syncProject",
+        "onCommand:vmssoftware.synchronizer.forceSynchronized",
+        "onCommand:vmssoftware.synchronizer.forceBuilt",
+        "onCommand:vmssoftware.synchronizer.uploadZip",
+        "onCommand:vmssoftware.synchronizer.upload",
+        "onCommand:vmssoftware.synchronizer.quickSync",
+        "onCommand:vmssoftware.synchronizer.downloadHeaders",
+        "onCommand:vmssoftware.synchronizer.buildOnlyProject",
+        "onCommand:vmssoftware.synchronizer.reBuildOnlyProject",
+        "onCommand:vmssoftware.synchronizer.prepareDebug",
+        "onCommand:extension.vms-debug.terminal",
+        "onDebug",
+        "onLanguage:cld",
+        "onLanguage:msg",
+        "onLanguage:mms",
+        "onLanguage:vms-cobol",
+        "onLanguage:vms-pascal",
+        "onLanguage:vms-fortran",
+        "onLanguage:bliss",
+        "onLanguage:vms-basic",
+        "onCommand:workbench.action.tasks.runTask"
+    ],
+    "contributes": {
+        "taskDefinitions": [
+            {
+                "type": "task2cmd",
+                "required": [
+                    "command"
+                ],
+                "properties": {
+                    "command": {
+                        "type": "string",
+                        "description": "Command to execute"
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "Label to display"
+                    },
+                    "extension": {
+                        "type": "string",
+                        "description": "Extension which executes command"
+                    },
+                    "parameter": {
+                        "type": "string",
+                        "description": "One string parameter"
+                    }
+                }
+            }
+        ],
+        "languages": [
+            {
+                "id": "c",
+                "extensions": [
+                    ".c"
+                ]
+            },
+            {
+                "id": "cpp",
+                "extensions": [
+                    ".cpp"
+                ]
+            },
+            {
+                "id": "mms",
+                "aliases": [
+                    "MMS",
+                    "mms"
+                ],
+                "extensions": [
+                    ".mms"
+                ],
+                "configuration": "mms.language-configuration.json"
+            },
+            {
+                "id": "cld",
+                "aliases": [
+                    "CLD",
+                    "cld"
+                ],
+                "extensions": [
+                    ".cld"
+                ],
+                "configuration": "cld.language-configuration.json"
+            },
+            {
+                "id": "msg",
+                "aliases": [
+                    "MSG",
+                    "msg"
+                ],
+                "extensions": [
+                    ".msg"
+                ],
+                "configuration": "msg.language-configuration.json"
+            },
+            {
+                "id": "vms-cobol",
+                "extensions": [
+                    ".cob",
+                    ".cbl",
+                    ".sco"
+                ],
+                "configuration": "cobol.language-configuration.json"
+            },
+            {
+                "id": "vms-pascal",
+                "extensions": [
+                    ".pas",
+                    ".spa"
+                ],
+                "configuration": "pascal.language-configuration.json"
+            },
+            {
+                "id": "vms-fortran",
+                "extensions": [
+                    ".f77",
+                    ".f90",
+                    ".for",
+                    ".f",
+                    ".inc",
+                    ".pfo",
+                    ".sfo"
+                ],
+                "configuration": "fortran.language-configuration.json"
+            },
+            {
+                "id": "bliss",
+                "extensions": [
+                    ".bli"
+                ],
+                "configuration": "bliss.language-configuration.json"
+            },
+            {
+                "id": "vms-basic",
+                "extensions": [
+                    ".bas"
+                ],
+                "configuration": "basic.language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "mms",
+                "scopeName": "source.mms",
+                "path": "syntaxes/mms.tmLanguage.json"
+            },
+            {
+                "language": "cld",
+                "scopeName": "source.cld",
+                "path": "syntaxes/cld.tmLanguage.json"
+            },
+            {
+                "language": "msg",
+                "scopeName": "source.msg",
+                "path": "syntaxes/msg.tmLanguage.json"
+            },
+            {
+                "language": "vms-cobol",
+                "scopeName": "source.vms-cobol",
+                "path": "syntaxes/vms-cobol.tmLanguage.json"
+            },
+            {
+                "language": "vms-pascal",
+                "scopeName": "source.vms-pascal",
+                "path": "syntaxes/pascal.tmLanguage.json"
+            },
+            {
+                "language": "vms-fortran",
+                "scopeName": "source.fortran",
+                "path": "syntaxes/fortran.tmLanguage.json"
+            },
+            {
+                "language": "bliss",
+                "scopeName": "source.bliss",
+                "path": "syntaxes/bliss.tmLanguage.json"
+            },
+            {
+                "language": "vms-basic",
+                "scopeName": "source.vms-basic",
+                "path": "syntaxes/basic.tmLanguage.json"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "extension.vms-debug.terminal",
+                "key": "Ctrl+F6"
+            },
+            {
+                "command": "vmssoftware.synchronizer.buildProject",
+                "key": "Ctrl+F7"
+            },
+            {
+                "command": "vmssoftware.synchronizer.buildOnlyProject",
+                "key": "Ctrl+Alt+F7"
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "project-explorer",
+                    "title": "Project Explorer",
+                    "icon": "media/dep.svg"
+                }
+            ]
+        },
+        "views": {
+            "project-explorer": [
+                {
+                    "id": "vmssoftware.project-dep.projectDependencies",
+                    "name": "Project Dependencies"
+                },
+                {
+                    "id": "vmssoftware.project-dep.projectDescription",
+                    "name": "Project description"
+                }
+            ]
+        },
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "vmssoftware.ssh-helper.editSettings"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.stopAction",
+                    "when": "vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.buildProject",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.reBuildProject",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.buildOnlyProject",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.reBuildOnlyProject",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.cleanProject",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.syncProject",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.quickSync",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.editProject",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.changeCRLF",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.uploadZip",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.upload",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.downloadHeaders",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.refresh",
+                    "when": "view == vmssoftware.project-dep.projectDependencies",
+                    "group": "navigation"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDescription.refresh",
+                    "when": "view == vmssoftware.project-dep.projectDescription",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.add",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.prepareDebug",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.syncProject",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.upload",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.build",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.rebuild",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.buildOnly",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.rebuildOnly",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.clean",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.remove",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == depends"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDescription.edit",
+                    "when": "view == vmssoftware.project-dep.projectDescription && viewItem == editable"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDescription.changeBuildName",
+                    "when": "view == vmssoftware.project-dep.projectDescription && viewItem == buildName"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "extension.vms-basic.reparse",
+                "title": "%vms_basic.extension.vms_reparse%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "extension.vms-fortran.reparse",
+                "title": "%vms_fortran.extension.vms_reparse%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "extension.vms-pascal.reparse",
+                "title": "%vms_pascal.extension.vms_reparse%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "extension.vms-debug.terminal",
+                "title": "%vms_debug.extension.vms_terminal%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.ssh-helper.editSettings",
+                "title": "%ssh-helper.command.edit.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.refresh",
+                "title": "%synchronizer.command.projectDependencies.refresh.title%",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.add",
+                "title": "%synchronizer.command.projectDependencies.add.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.prepareDebug",
+                "title": "%synchronizer.command.projectDependencies.prepareDebug.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.syncProject",
+                "title": "%synchronizer.command.projectDependencies.syncProject.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.upload",
+                "title": "%synchronizer.command.projectDependencies.upload.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.build",
+                "title": "%synchronizer.command.projectDependencies.build.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.rebuild",
+                "title": "%synchronizer.command.projectDependencies.rebuild.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.buildOnly",
+                "title": "%synchronizer.command.projectDependencies.buildOnly.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.rebuildOnly",
+                "title": "%synchronizer.command.projectDependencies.rebuildOnly.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.clean",
+                "title": "%synchronizer.command.projectDependencies.clean.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.remove",
+                "title": "%synchronizer.command.projectDependencies.remove.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDescription.refresh",
+                "title": "%synchronizer.command.projectDescription.refresh.title%",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDescription.select",
+                "title": "%synchronizer.command.projectDescription.select.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDescription.edit",
+                "title": "%synchronizer.command.projectDescription.edit.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDescription.changeBuildName",
+                "title": "%synchronizer.command.projectDescription.changeBuildName.title%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.stopAction",
+                "title": "%synchronizer.command.stopAction.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.createMMS",
+                "title": "%synchronizer.command.createMMS.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.buildProject",
+                "title": "%synchronizer.command.buildProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.reBuildProject",
+                "title": "%synchronizer.command.reBuildProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.buildOnlyProject",
+                "title": "%synchronizer.command.buildOnlyProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.reBuildOnlyProject",
+                "title": "%synchronizer.command.reBuildOnlyProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.cleanProject",
+                "title": "%synchronizer.command.cleanProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.syncProject",
+                "title": "%synchronizer.command.syncProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.quickSync",
+                "title": "%synchronizer.command.quickSync.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.editProject",
+                "title": "%synchronizer.command.editProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.changeCRLF",
+                "title": "%synchronizer.command.changeCRLF.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.forceSynchronized",
+                "title": "%synchronizer.command.forceSynchronized.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.forceBuilt",
+                "title": "%synchronizer.command.forceBuilt.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.uploadZip",
+                "title": "%synchronizer.command.uploadZip.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.upload",
+                "title": "%synchronizer.command.upload.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.downloadHeaders",
+                "title": "%synchronizer.command.downloadHeaders.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.prepareDebug",
+                "title": "%synchronizer.prepareDebug.title%",
+                "category": "%command.category%"
+            }
+        ],
+        "configuration": {
+            "title": "%configuration.title%",
+            "properties": {
+                "vmssoftware.config-helper.settings.using": {
+                    "scope": "resource",
+                    "type": "string",
+                    "enum": [
+                        "VSC",
+                        "FS",
+                        "VFS"
+                    ],
+                    "enumDescriptions": [
+                        "%config-helper.configuration.vsc.description%",
+                        "%config-helper.configuration.fs.description%",
+                        "%config-helper.configuration.vfs.description%"
+                    ],
+                    "default": "FS",
+                    "description": "%config-helper.configuration.type.description%"
+                },
+                "vmssoftware.config-helper.settings.debug": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%config-helper.configuration.debug.description%"
+                },
+                "vmssoftware.config-helper.settings.addCalleeInfo": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%config-helper.configuration.addCalleeInfo.description%"
+                },
+                "vmssoftware.ssh-helper.connection.host": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "host",
+                    "description": "%ssh-helper.configuration.host%"
+                },
+                "vmssoftware.ssh-helper.connection.port": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 22,
+                    "description": "%ssh-helper.configuration.port%"
+                },
+                "vmssoftware.ssh-helper.connection.username": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%ssh-helper.configuration.username%"
+                },
+                "vmssoftware.ssh-helper.connection.password": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%ssh-helper.configuration.password%"
+                },
+                "vmssoftware.ssh-helper.connection.keyFile": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%ssh-helper.configuration.keyFile%"
+                },
+                "vmssoftware.ssh-helper.connection.skipSignatureVerification": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%ssh-helper.configuration.skipSignatureVerification%"
+                },
+                "vmssoftware.ssh-helper.connection.supportSetFileTime": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%ssh-helper.configuration.supportSetFileTime%"
+                },
+                "vmssoftware.ssh-helper.connection.unzipCmd": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%ssh-helper.configuration.unzipCmd%"
+                },
+                "vmssoftware.ssh-helper.connection.zipCmd": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%ssh-helper.configuration.zipCmd%"
+                },
+                "vmssoftware.ssh-helper.connection.algorithms": {
+                    "scope": "resource",
+                    "type": "object",
+                    "default": {},
+                    "description": "%ssh-helper.configuration.algorithms%"
+                },
+                "vmssoftware.ssh-helper.timeouts.cmdTimeout": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 0,
+                    "description": "%ssh-helper.configuration.timeouts.command%"
+                },
+                "vmssoftware.ssh-helper.timeouts.feedbackTimeout": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 0,
+                    "description": "%ssh-helper.configuration.timeouts.feedback%"
+                },
+                "vmssoftware.ssh-helper.timeouts.welcomeTimeout": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 0,
+                    "description": "%ssh-helper.configuration.timeouts.welcome%"
+                },
+                "vmssoftware.ssh-helper.terminal.command": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%ssh-helper.configuration.terminal.command%"
+                },
+                "vmssoftware.ssh-helper.host-collection.hosts": {
+                    "scope": "resource",
+                    "type": "array",
+                    "default": [
+                        {
+                            "label": "",
+                            "host": "",
+                            "port": 22,
+                            "username": "",
+                            "password": "",
+                            "keyFile": "",
+                            "skipSignatureVerification": false,
+                            "algorithms": {},
+                            "supportSetFileTime": true,
+                            "unzipCmd": ""
+                        }
+                    ],
+                    "description": "%ssh-helper.configuration.hosts-collection%"
+                },
+                "vmssoftware.project-dep.buildName": {
+                    "scope": "resource",
+                    "type": "string"
+                },
+                "vmssoftware.project-dep.dependencies": {
+                    "scope": "resource",
+                    "type": "array",
+                    "default": [
+                        {
+                            "folder": "",
+                            "depends": [
+                                ""
+                            ]
+                        }
+                    ],
+                    "description": "Project dependencies"
+                },
+                "vmssoftware.synchronizer.project.break": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "C",
+                    "description": "%synchronizer.properties.project.break.description%"
+                },
+                "vmssoftware.synchronizer.project.builders": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "*.{mms,com,opt}",
+                    "description": "%synchronizer.properties.project.builders.description%"
+                },
+                "vmssoftware.synchronizer.project.exclude": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "**/{.vscode,node-modules,out}",
+                    "description": "%synchronizer.properties.project.exclude.description%"
+                },
+                "vmssoftware.synchronizer.project.headers": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "*.{h,hpp}",
+                    "description": "%synchronizer.properties.project.headers.description%"
+                },
+                "vmssoftware.synchronizer.project.listing": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "*.lis",
+                    "description": "%synchronizer.properties.project.listing.description%"
+                },
+                "vmssoftware.synchronizer.project.outdir": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "out",
+                    "description": "%synchronizer.properties.project.outdir.description%"
+                },
+                "vmssoftware.synchronizer.project.projectName": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "project",
+                    "description": "%synchronizer.properties.project.projectName.description%"
+                },
+                "vmssoftware.synchronizer.project.projectType": {
+                    "scope": "resource",
+                    "type": "string",
+                    "enum": [
+                        "executable",
+                        "library",
+                        "shareable",
+                        "java",
+                        "kotlin",
+                        "scala"
+                    ],
+                    "enumDescriptions": [
+                        "Executable",
+                        "Static library",
+                        "Shareable image",
+                        "Java project",
+                        "Kotlin project",
+                        "Scala project"
+                    ],
+                    "default": "executable",
+                    "description": "%synchronizer.properties.project.projectType.description%"
+                },
+                "vmssoftware.synchronizer.project.resource": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "**/resource/**/*.*",
+                    "description": "%synchronizer.properties.project.resource.description%"
+                },
+                "vmssoftware.synchronizer.project.root": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "project",
+                    "description": "%synchronizer.properties.project.root.description%"
+                },
+                "vmssoftware.synchronizer.project.source": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "*.{c,cpp}",
+                    "description": "%synchronizer.properties.project.source.description%"
+                },
+                "vmssoftware.synchronizer.project.addCompQual": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%synchronizer.properties.project.addCompQual.description%"
+                },
+                "vmssoftware.synchronizer.project.addCompDef": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%synchronizer.properties.project.addCompDef.description%"
+                },
+                "vmssoftware.synchronizer.project.addLibraries": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%synchronizer.properties.project.addLibraries.description%"
+                },
+                "vmssoftware.synchronizer.project.addIncludes": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "%synchronizer.properties.project.addIncludes.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.downloadNewFiles": {
+                    "scope": "resource",
+                    "type": "string",
+                    "enum": [
+                        "overwrite",
+                        "skip",
+                        "edit"
+                    ],
+                    "enumDescriptions": [
+                        "%synchronizer.properties.synchronize.downloadNewFiles.overwrite.description%",
+                        "%synchronizer.properties.synchronize.downloadNewFiles.skip.description%",
+                        "%synchronizer.properties.synchronize.downloadNewFiles.edit.description%"
+                    ],
+                    "default": "edit",
+                    "description": "%synchronizer.properties.synchronize.downloadNewFiles.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.keepAlive": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%synchronizer.properties.synchronize.keepAlive.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.setTimeAttempts": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 3,
+                    "description": "%synchronizer.properties.synchronize.setTimeAttempts.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.preferZip": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%synchronizer.properties.synchronize.preferZip.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.forceLocalTime": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%synchronizer.properties.synchronize.forceLocalTime.description%"
+                },
+                "vmssoftware.synchronizer.synchronize.purge": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%synchronizer.properties.synchronize.purge.description%"
+                },
+                "vmssoftware.synchronizer.builds.configurations": {
+                    "scope": "resource",
+                    "type": "array",
+                    "default": [
+                        {
+                            "label": "DEBUG",
+                            "description": "debug",
+                            "command": "",
+                            "parameter": "DEBUG"
+                        },
+                        {
+                            "label": "RELEASE",
+                            "description": "release",
+                            "command": "",
+                            "parameter": "RELEASE"
+                        }
+                    ],
+                    "description": "%synchronizer.properties.builds.configurations.description%"
+                },
+                "vmssoftware.vms_python_debug.roots": {
+                    "scope": "resource",
+                    "type": "object",
+                    "default": {},
+                    "description": "%vms_python_debug.root.description%"
+                },
+                "vmssoftware.vms_python_debug.insensitive": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%vms_python_debug.insensitive.description%"
+                },
+                "vmssoftware.vms_python_debug.developer": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%vms_python_debug.developer.description%"
+                }
+            }
+        },
+        "breakpoints": [
+            {
+                "language": "c"
+            },
+            {
+                "language": "cpp"
+            },
+            {
+                "language": "bliss"
+            },
+            {
+                "language": "vms-basic"
+            },
+            {
+                "language": "vms-cobol"
+            },
+            {
+                "language": "vms-pascal"
+            },
+            {
+                "language": "vms-fortran"
+            },
+            {
+                "language": "kotlin"
+            },
+            {
+                "language": "scala"
+            },
+            {
+                "language": "java"
+            },
+            {
+                "language": "python"
+            }
+        ],
+        "debuggers": [
+            {
+                "type": "vms_dbg",
+                "label": "%vms_debug.extension.vms_c_debug%",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "program"
+                        ],
+                        "properties": {
+                            "program": {
+                                "type": "string",
+                                "description": "Path from home directory to EXE file.",
+                                "default": ""
+                            },
+                            "arguments": {
+                                "type": "string",
+                                "description": "Arguments of program.",
+                                "default": ""
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "description": "Automatically stop after launch.",
+                                "default": true
+                            },
+                            "trace": {
+                                "type": "boolean",
+                                "description": "Enable logging of the Debug Adapter Protocol.",
+                                "default": true
+                            },
+                            "typeRun": {
+                                "type": "string",
+                                "enum": [
+                                    "DEBUG",
+                                    "RUN"
+                                ],
+                                "enumDescriptions": [
+                                    "Use for run Debuger",
+                                    "Use for run Program"
+                                ],
+                                "default": "DEBUG",
+                                "description": "Type of runing"
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "vms_dbg",
+                        "request": "launch",
+                        "name": "Settings Debug",
+                        "program": "",
+                        "arguments": "",
+                        "stopOnEntry": true,
+                        "typeRun": "DEBUG"
+                    },
+                    {
+                        "type": "vms_dbg",
+                        "request": "launch",
+                        "name": "Settings Run",
+                        "program": "",
+                        "arguments": "",
+                        "typeRun": "RUN"
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "VMS IDE: Launch",
+                        "description": "A new configuration for 'debugging'",
+                        "body": {
+                            "type": "vms_dbg",
+                            "request": "launch",
+                            "name": "Settings Name",
+                            "program": "[.path]name",
+                            "arguments": "arg1 arg2 arg3",
+                            "stopOnEntry": true,
+                            "typeRun": "DEBUG"
+                        }
+                    }
+                ]
+            },
+            {
+                "type": "vms jvm debugger",
+                "label": "%vms_jvm_debug.label.description%",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "classpath",
+                            "class"
+                        ],
+                        "properties": {
+                            "classpath": {
+                                "type": "string",
+                                "description": "%vms_jvm_debug.classpath.description%",
+                                "default": "${command:FillClassPath}"
+                            },
+                            "class": {
+                                "type": "string",
+                                "description": "%vms_jvm_debug.class.description%",
+                                "default": "${command:FillClassName}"
+                            },
+                            "port": {
+                                "type": "string",
+                                "description": "%vms_jvm_debug.port.description%",
+                                "default": "5005-5105"
+                            },
+                            "arguments": {
+                                "type": "string",
+                                "description": "%vms_jvm_debug.arguments.description%",
+                                "default": ""
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "description": "%vms_jvm_debug.stopOnEntry.description%",
+                                "default": true
+                            },
+                            "trace": {
+                                "type": "boolean",
+                                "description": "%vms_jvm_debug.trace.description%",
+                                "default": true
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "vms jvm debugger",
+                        "request": "launch",
+                        "name": "Launch JVM",
+                        "classpath": "${command:FillClassPath}",
+                        "class": "${command:FillClassName}",
+                        "port": "5005-5105",
+                        "arguments": "",
+                        "stopOnEntry": true
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "VMS IDE: Launch JVM",
+                        "description": "A new configuration for 'debugging' JVM",
+                        "body": {
+                            "type": "vms jvm debugger",
+                            "request": "launch",
+                            "name": "Launch JVM",
+                            "classpath": "^\"\\${command:FillClassPath}\"",
+                            "class": "^\"\\${command:FillClassName}\"",
+                            "port": "5005-5105",
+                            "arguments": "",
+                            "stopOnEntry": true
+                        }
+                    }
+                ],
+                "variables": {
+                    "FillClassName": "vms_jvm_debugger.fillClassName",
+                    "FillClassPath": "vms_jvm_debugger.fillClassPath"
+                }
+            },
+            {
+                "type": "vms python debugger",
+                "label": "%vms_python_debug.label.description%",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "script"
+                        ],
+                        "properties": {
+                            "script": {
+                                "type": "string",
+                                "description": "%vms_python_debug.script.description%",
+                                "default": "${file}"
+                            },
+                            "port": {
+                                "type": "string",
+                                "description": "%vms_python_debug.port.description%",
+                                "default": "55005-55105"
+                            },
+                            "arguments": {
+                                "type": "string",
+                                "description": "%vms_python_debug.arguments.description%",
+                                "default": ""
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "vms python debugger",
+                        "request": "launch",
+                        "name": "Launch Python Script",
+                        "script": "${file}",
+                        "port": "55005-55105",
+                        "arguments": ""
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "VMS IDE: Launch Python Script",
+                        "description": "A new configuration for 'debugging' Python",
+                        "body": {
+                            "type": "vms python debugger",
+                            "request": "launch",
+                            "name": "Launch Python Script",
+                            "script": "^\"\\${file}\"",
+                            "port": "55005-55105",
+                            "arguments": ""
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    "scripts": {
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "CLD.antlr4ts": "antlr4ts -o src/cld -visitor src/cld/cld.g4",
+        "MSG.antlr4ts": "antlr4ts -o src/msg -visitor src/msg/msg.g4",
+        "MSGLex.antlr4ts": "antlr4ts -o src/msg src/msg/msgLex.g4",
+        "Pascal.antlr4ts": "antlr4ts -o src/vms_pascal/parser -visitor src/vms_pascal/parser/pascal.g4",
+        "Cobol.antlr4ts": "antlr4ts -o src/vms_cobol/parser -visitor src/vms_cobol/parser/cobol.g4",
+        "CobolLex.antlr4ts": "antlr4ts -o src/vms_cobol/parser src/vms_cobol/parser/cobolLexer.g4",
+        "CobolCopy.antlr4ts": "antlr4ts -o src/vms_cobol/parser -visitor src/vms_cobol/parser/cobolCopy.g4",
+        "cobol-make-async": "gulp make-async --file cobolParser.ts",
+        "cobol-g4-post-modified": "run-s CobolLex.antlr4ts  Cobol.antlr4ts CobolCopy.antlr4ts cobol-make-async",
+        "Fortran.antlr4ts": "antlr4ts -o src/vms_fortran/parser -visitor src/vms_fortran/parser/FortranParser.g4",
+        "Fortran.antlr4tsLex": "antlr4ts -o src/vms_fortran/parser src/vms_fortran/parser/FortranLexer.g4",
+        "Basic.antlr4ts": "antlr4ts -o src/vms_basic/parser -visitor src/vms_basic/parser/BasicParser.g4",
+        "Basic.antlr4tsLex": "antlr4ts -o src/vms_basic/parser src/vms_basic/parser/BasicLexer.g4",
+        "vscode:prepublish": "webpack --mode production",
+        "vscode:prepublish_dev": "webpack --mode development",
+        "VSCE": "vsce package"
+    },
+    "devDependencies": {
+        "@types/archiver": "^2.1.2",
+        "@types/micromatch": "^3.1.1",
+        "@types/mocha": "^5.2.7",
+        "@types/node": "^8.10.50",
+        "antlr4ts-cli": "^0.5.0-alpha.1",
+        "del": "^3.0.0",
+        "event-stream": "^4.0.1",
+        "gulp": "^4.0.2",
+        "gulp-sourcemaps": "^2.6.4",
+        "gulp-typescript": "^5.0.0-alpha.3",
+        "npm-run-all": "^4.1.5",
+        "ts-loader": "^5.4.5",
+        "tslint": "^5.18.0",
+        "typescript": "^3.7.4",
+        "vsce": "^1.65.0",
+        "vscode": "^1.1.35",
+        "vscode-nls-dev": "github:vorfol/vscode-nls-dev",
+        "webpack": "^4.35.3",
+        "webpack-cli": "^3.3.6",
+        "yargs": "^14.2.0"
+    },
+    "dependencies": {
+        "@types/ssh2": "^0.5.38",
+        "antlr4-c3": "^1.1.12",
+        "antlr4ts": "^0.5.0-alpha.1",
+        "archiver": "^3.0.0",
+        "await-notify": "^1.0.1",
+        "fs-extra": "^7.0.1",
+        "micromatch": "^4.0.2",
+        "net": "^1.0.2",
+        "ssh2": "github:vorfol/ssh2",
+        "unzipt": "0.0.4",
+        "vscode-debugadapter": "^1.35.0",
+        "vscode-debugadapter-testsupport": "1.27.0",
+        "vscode-nls": "github:vorfol/vscode-nls"
+    }
+}

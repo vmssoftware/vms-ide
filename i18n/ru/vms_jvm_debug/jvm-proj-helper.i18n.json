@@ -1,0 +1,4 @@
+{
+    "breakpoint.no.line": "Невозможно установить точку останова {0}:{1} -> отключена",
+    "breakpoint.no.line.disable": "Unable to set breakpoint at {0}:{1}. Breakpoint disabled."
+}
