@@ -481,7 +481,7 @@ export async function Perform(actionName: ActionType, scope: string | undefined,
         return false;
     }
     if (getContext(CommandContext.isInAction)) {
-        logFn(LogType.error, () => localize("error.action_in_progress", "Could not run because another action is already in progress: {0}.", actionName));
+        logFn(LogType.error, () => localize("error.action_in_progress", "Could not run '{0}' because another action is already in progress.", actionName));
         return false;
     }
     setContext(CommandContext.isInAction, true);
