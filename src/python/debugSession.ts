@@ -390,6 +390,17 @@ export class PythonDebugSession extends LoggingDebugSession {
                 }
                 return ListenerResponse.needMoreLines;
             }).then(async () => {
+                if (args.pre_launch) {
+                    let cmd = args.pre_launch;
+                    return this._serverQueue.postCommand(cmd, (cmd, line) => {
+                        if (line === undefined || line.includes("\0")) {
+                            return ListenerResponse.stop;
+                        }
+                        this.userOutput(line);
+                        return ListenerResponse.needMoreLines;
+                    });
+                }
+            }).then(async () => {
                 while (listeningPort <= listeningPortMax) {
                     let result = await this.tryRunServer(listeningPort);
                     if (result === EStartResult.started) {

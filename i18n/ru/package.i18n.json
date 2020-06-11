@@ -101,6 +101,7 @@
     "vms_python_debug.developer.description": "Режим разработчика (позволяет трассировать системные файлы)",
     "vms_python_debug.label.description": "VMS Python отладчик",
     "vms_python_debug.script.description": "Имя скрипта",
+	"vms_python_debug.pre_launch.description": "Команда VMS перед запуском",
     "vms_python_debug.port.description": "Диапазон портов",
     "vms_python_debug.arguments.description": "Аргументы скрипта"
 }
