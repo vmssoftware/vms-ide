@@ -11,6 +11,8 @@ import { DebugConfiguration, WorkspaceFolder } from "vscode";
 export interface IPythonLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     /** a script to execute. */
     script: string;
+    /** a VMS command to execute before. */
+    pre_launch?: string;
     /** a port to debug. */
     port?: string;
     /** command line arguments */
@@ -22,6 +24,8 @@ export interface IPythonLaunchRequestArguments extends DebugProtocol.LaunchReque
 export interface IPythonDebugConfiguration extends DebugConfiguration {
     /** a script to execute. */
     script: string;
+    /** a VMS command to execute before. */
+    pre_launch?: string;
     /** a port to debug. */
     port?: string;
     /** command line arguments */
@@ -35,5 +39,8 @@ export function isPythonDebugConfiguration(candidate: any): candidate is IPython
         typeof candidate.type === "string" &&
         typeof candidate.name === "string" &&
         typeof candidate.request === "string" &&
+        (typeof candidate.arguments === undefined || typeof candidate.arguments === "string") &&
+        (typeof candidate.pre_launch === undefined || typeof candidate.pre_launch === "string") &&
+        (typeof candidate.port === undefined || typeof candidate.port === "number") &&
         typeof candidate.script === "string";
 }
