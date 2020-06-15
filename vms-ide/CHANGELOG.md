@@ -1,7 +1,10 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
-## 1.5.19
+## 1.5.20
 * Add pre-launch python debugger command
+
+## 1.5.19
+* Add python command line options
 
 ## 1.5.18
 * Fix python debugger (did not work on python 2.7)

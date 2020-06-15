@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "1.5.19",
+    "version": "1.5.20",
     "publisher": "VMSSoftwareInc",
     "license": "SEE LICENSE IN LICENSE.md",
     "repository": {
@@ -1111,6 +1111,11 @@
                                 "type": "string",
                                 "description": "%vms_python_debug.arguments.description%",
                                 "default": ""
+                            },
+                            "python_args": {
+                                "type": "string",
+                                "description": "%vms_python_debug.python_args.description%",
+                                "default": ""
                             }
                         }
                     }
@@ -1122,6 +1127,7 @@
                         "name": "Launch Python Script",
                         "script": "${file}",
                         "pre_launch": "",
+                        "python_args": "",
                         "port": "55005-55105",
                         "arguments": ""
                     }
@@ -1136,6 +1142,7 @@
                             "name": "Launch Python Script",
                             "script": "^\"\\${file}\"",
                             "pre_launch": "",
+                            "python_args": "",
                             "port": "55005-55105",
                             "arguments": ""
                         }
