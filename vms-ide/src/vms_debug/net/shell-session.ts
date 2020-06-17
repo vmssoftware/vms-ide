@@ -166,49 +166,9 @@ export class ShellSession
             {
                 if(this.checkVersion === 2)
                 {
-                    let check = false;
-                    let matcher = /^[V](\d+).(\d+)-?(\w+)?\s*/;
                     this.resultData += data;
-                    let matches = this.resultData.trim().match(matcher);
-                    this.resultData = "";
 
-                    if(matches && matches.length === 3)//Vx.y
-                    {
-                        let number1 = parseInt(matches[1], 10);
-                        let number2 = parseInt(matches[2], 10);
-
-                        if(number1 > 8)
-                        {
-                            check = true;
-                        }
-                        else if(number1 === 8 && number2 > 4)
-                        {
-                            check = true;
-                        }
-                    }
-                    else if(matches && matches.length === 4)//Vx.y-z
-                    {
-                        let number1 = parseInt(matches[1], 10);
-                        let number2 = parseInt(matches[2], 10);
-
-                        if(number1 > 8)
-                        {
-                            check = true;
-                        }
-                        else if(number1 === 8)
-                        {
-                            if(number2 > 4)
-                            {
-                                check = true;
-                            }
-                            else if(number2 === 4 && matches[3] !== "")
-                            {
-                                check = true;
-                            }
-                        }
-                    }
-
-                    if(check)
+                    if(this.checkVersionOs(this.resultData))
                     {
                         this.checkVersion = 0;
                         this.extensionReadyCb();
@@ -221,12 +181,23 @@ export class ShellSession
 
                     this.readyCmd = true;
                     this.completeCmd = true;
+                    this.resultData = "";
                 }
 
                 if(data.includes(this.currentCmd.getBody()))
                 {
                     this.checkVersion = 2;
                     this.resultData = data.replace(this.currentCmd.getBody(), "");
+
+                    if (this.checkVersionOs(this.resultData))
+                    {
+                        this.checkVersion = 0;
+                        this.extensionReadyCb();
+
+                        this.readyCmd = true;
+                        this.completeCmd = true;
+                        this.resultData = "";
+                    }
                 }
             }
             else
@@ -410,6 +381,51 @@ export class ShellSession
         }
 
         this.extensionCloseCb(": " + String(err));
+    }
+
+    private checkVersionOs(data: string): boolean
+    {
+        let check = false;
+        let matcher = /^[V](\d+).(\d+)-?(\w+)?\s*/;
+        let matches = data.trim().match(matcher);
+
+        if(matches && matches.length === 3)//Vx.y
+        {
+            let number1 = parseInt(matches[1], 10);
+            let number2 = parseInt(matches[2], 10);
+
+            if(number1 > 8)
+            {
+                check = true;
+            }
+            else if(number1 === 8 && number2 > 4)
+            {
+                check = true;
+            }
+        }
+        else if(matches && matches.length === 4)//Vx.y-z
+        {
+            let number1 = parseInt(matches[1], 10);
+            let number2 = parseInt(matches[2], 10);
+
+            if(number1 > 8)
+            {
+                check = true;
+            }
+            else if(number1 === 8)
+            {
+                if(number2 > 4)
+                {
+                    check = true;
+                }
+                else if(number2 === 4 && matches[3] !== "")
+                {
+                    check = true;
+                }
+            }
+        }
+
+        return check;
     }
 
 
