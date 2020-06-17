@@ -399,8 +399,19 @@ export class PythonDebugSession extends LoggingDebugSession {
                             }
                             return ListenerResponse.needMoreLines;
                         }).then(async () => {
+                            if (args.pre_launch) {
+                                let cmd = args.pre_launch;
+                                return this._tracerQueue.postCommand(cmd, (cmd, line) => {
+                                    if (line === undefined || line.includes("\0")) {
+                                        return ListenerResponse.stop;
+                                    }
+                                    this.userOutput(line);
+                                    return ListenerResponse.needMoreLines;
+                                });
+                            }
+                        }).then(async () => {
                             let relPath = workspace.asRelativePath(args.script, false);
-                            this.runTracer(listeningPort, relPath, args.arguments);
+                            this.runTracer(listeningPort, relPath, args.arguments, args.python_args);
                         });
                         return this._runtime.start();
                     } else if (result === EStartResult.portIsBusy) {
@@ -865,7 +876,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         });
     }
 
-    private async runTracer(port: number, script: string, args?: string) {
+    private async runTracer(port: number, script: string, args?: string, python_args?: string) {
         let result = EStartResult.unknown;
         let scriptPath = '';
         const ensured = await ensureSettings(this._workspace?.name);
@@ -876,7 +887,8 @@ export class PythonDebugSession extends LoggingDebugSession {
         const config = workspace.getConfiguration("vmssoftware.vms_python_debug", null);
         const insensitive = config.get<boolean>("insensitive");
         const developerMode = config.get<boolean>("developer");
-        let runCommand = `python ${scriptPath}tracer.py -p ${port}${insensitive?' -i':''}${developerMode?' -d':''} ${script}${args?' '+args:''}`;
+        python_args = python_args? python_args + " " : "";
+        let runCommand = `python ${python_args}${scriptPath}tracer.py -p ${port}${insensitive?' -i':''}${developerMode?' -d':''} ${script}${args?' '+args:''}`;
         return this._tracerQueue.postCommand(runCommand, (cmd, line) => {
             if (!line) {
                 result = EStartResult.error;

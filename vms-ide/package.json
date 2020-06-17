@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "1.5.16",
+    "version": "1.5.20",
     "publisher": "VMSSoftwareInc",
     "license": "SEE LICENSE IN LICENSE.md",
     "repository": {
@@ -1097,6 +1097,11 @@
                                 "description": "%vms_python_debug.script.description%",
                                 "default": "${file}"
                             },
+                            "pre_launch": {
+                                "type": "string",
+                                "description": "%vms_python_debug.pre_launch.description%",
+                                "default": ""
+                            },
                             "port": {
                                 "type": "string",
                                 "description": "%vms_python_debug.port.description%",
@@ -1105,6 +1110,11 @@
                             "arguments": {
                                 "type": "string",
                                 "description": "%vms_python_debug.arguments.description%",
+                                "default": ""
+                            },
+                            "python_args": {
+                                "type": "string",
+                                "description": "%vms_python_debug.python_args.description%",
                                 "default": ""
                             }
                         }
@@ -1116,6 +1126,8 @@
                         "request": "launch",
                         "name": "Launch Python Script",
                         "script": "${file}",
+                        "pre_launch": "",
+                        "python_args": "",
                         "port": "55005-55105",
                         "arguments": ""
                     }
@@ -1129,6 +1141,8 @@
                             "request": "launch",
                             "name": "Launch Python Script",
                             "script": "^\"\\${file}\"",
+                            "pre_launch": "",
+                            "python_args": "",
                             "port": "55005-55105",
                             "arguments": ""
                         }
