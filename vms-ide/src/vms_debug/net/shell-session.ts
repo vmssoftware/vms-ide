@@ -472,6 +472,11 @@ export class ShellSession
         return this.dbgModeOn;
     }
 
+    public setDebugModeOn()
+    {
+        this.dbgModeOn = true;
+    }
+
     public SendData(data : string) : boolean
     {
         let result = false;

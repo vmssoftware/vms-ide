@@ -152,6 +152,7 @@ export class DebugParser
 					break;
 
 				default:
+					this.queueMsgUser.push(this.displayDataString[1]);
 					break;
 			}
 		}
