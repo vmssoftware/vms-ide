@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.21
+* Fix VMS debugger
+
 ## 1.5.20
 * Add pre-launch python debugger command
 
