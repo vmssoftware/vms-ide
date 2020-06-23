@@ -1439,7 +1439,7 @@ export class VMSRuntime extends EventEmitter
 					{
 						let header = data.split("\x1B");
 
-						vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(header[0].trim(), 92) + "\r\n");
+						vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(header[0].trim(), 93) + "\r\n");
 					}
 				}
 			}
@@ -1541,7 +1541,11 @@ export class VMSRuntime extends EventEmitter
 					{
 						this.programEnd = true;
 						this.shellDbg.cleanQueueCommands();
-						this.sendEvent('end');//close debugger
+
+						setTimeout(() => 
+						{
+							this.sendEvent('end');//close debugger
+						}, 1500);
 					}
 					else if(messageDebug.includes(MessageDebuger.msgNoSccess))
 					{
@@ -1661,7 +1665,7 @@ export class VMSRuntime extends EventEmitter
 				}
 
 
-				if(this.dbgParser.getCommandButtonStatus())
+				if(this.dbgParser.getCommandButtonStatus() && this.programEnd === false)
 				{
 					switch(this.buttonPressd)
 					{
