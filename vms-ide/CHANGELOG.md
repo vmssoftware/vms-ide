@@ -1,6 +1,6 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
-## 1.5.21
+## 1.5.22
 * Fix VMS debugger
 
 ## 1.5.20
