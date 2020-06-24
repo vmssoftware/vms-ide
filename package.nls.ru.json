@@ -102,6 +102,7 @@
 	"vms_python_debug.label.description": "VMS Python отладчик",
 	"vms_python_debug.script.description": "Имя скрипта",
 	"vms_python_debug.pre_launch.description": "Команда VMS перед запуском",
+	"vms_python_debug.python_args.description": "Аргументы Python",
 	"vms_python_debug.port.description": "Диапазон портов",
 	"vms_python_debug.arguments.description": "Аргументы скрипта"
 }

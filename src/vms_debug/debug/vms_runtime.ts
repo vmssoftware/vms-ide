@@ -1342,8 +1342,7 @@ export class VMSRuntime extends EventEmitter
 				{
 					this.startUser = true;
 
-					this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(""));
-					this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(""));
+					this.shellDbg.setDebugModeOn();
 					this.shellDbg.SendCommandToQueue(this.dbgCmd.customCommand(""));
 				}
 			}
@@ -1413,11 +1412,6 @@ export class VMSRuntime extends EventEmitter
 						{
 							this.logFn(LogType.information, () => messageCommand);
 						}
-
-						if (data.includes("OpenVMS"))
-						{
-							vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(data.trim(), 92) + "\r\n");
-						}
 					}
 				}
 				else
@@ -1439,6 +1433,13 @@ export class VMSRuntime extends EventEmitter
 						}
 
 						vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(messageDebug, 91));
+					}
+
+					if (data.includes("OpenVMS"))
+					{
+						let header = data.split("\x1B");
+
+						vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(header[0].trim(), 93) + "\r\n");
 					}
 				}
 			}
@@ -1540,7 +1541,11 @@ export class VMSRuntime extends EventEmitter
 					{
 						this.programEnd = true;
 						this.shellDbg.cleanQueueCommands();
-						this.sendEvent('end');//close debugger
+
+						setTimeout(() => 
+						{
+							this.sendEvent('end');//close debugger
+						}, 1500);
 					}
 					else if(messageDebug.includes(MessageDebuger.msgNoSccess))
 					{
@@ -1660,7 +1665,7 @@ export class VMSRuntime extends EventEmitter
 				}
 
 
-				if(this.dbgParser.getCommandButtonStatus())
+				if(this.dbgParser.getCommandButtonStatus() && this.programEnd === false)
 				{
 					switch(this.buttonPressd)
 					{

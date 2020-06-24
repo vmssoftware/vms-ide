@@ -102,6 +102,7 @@
     "vms_python_debug.label.description": "VMS Python Debugger",
     "vms_python_debug.script.description": "Script name",
     "vms_python_debug.pre_launch.description": "Pre-launch VMS command",
+    "vms_python_debug.python_args.description": "Python arguments",
     "vms_python_debug.port.description": "Port range",
     "vms_python_debug.arguments.description": "Script arguments"
 }
