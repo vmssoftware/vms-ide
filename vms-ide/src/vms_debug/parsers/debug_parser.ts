@@ -24,6 +24,9 @@ export enum MessageDebuger
 	msgMisplaced = "%DEBUG-E-MISOPEMIS, misplaced operator",
 	msgNoProcess = "%DEBUG-E-NOPROCESSES, the current command is targetted at an empty process set",
 	msgEnd = "%DEBUG-I-EXITSTATUS, is",
+	msgNoPrivileges = "%SYSTEM-W-NOTALLPRIV, not all requested privileges authorized",
+	msgUnableOpen = "%DEBUG-I-UNAOPEDBGI, unable to open DBG$INPUT, SYS$INPUT",
+	msgUnableCreate = "%DEBUG-I-UNACREDBGO, unable to create DBG$OUTPUT, SYS$OUTPUT",
 
 	msgNoAccessr = "%DEBUG-E-NOACCESSR, no read access to address",
 	msgOpNotAllow = "%DEBUG-E-OPNOTALLOW, operator 'DEPOSIT' not allowed",
@@ -54,11 +57,11 @@ export enum MessagePrompt
 }
 
 export interface IStackFrame {
-    index: number,
-    name: string,
-    file: string,
-    line: number,
-};
+    index: number;
+    name: string;
+    file: string;
+    line: number;
+}
 
 export class DebugParser
 {
