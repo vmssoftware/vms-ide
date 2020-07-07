@@ -320,6 +320,7 @@ export class VMSRuntime extends EventEmitter
 			}
 			else
 			{
+				this.shell.SetDisconnectInShellSession();
 				this.shellDbg.SetDisconnectInShellSession();
 				this.shellDbg.SendCommandToQueue(this.dbgCmd.exit());
 			}

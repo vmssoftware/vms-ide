@@ -297,8 +297,6 @@ let ExtensionDbgCloseCb = function(reasonMessage: string) : void
 		session.closeDebugSession();
 		session = undefined;
 	}
-	//close user terminal after debugger terminal has closed
-	shell.DisconectSession(true, reasonMessage);
 };
 
 
