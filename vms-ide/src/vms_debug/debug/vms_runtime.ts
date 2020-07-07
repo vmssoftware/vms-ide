@@ -312,15 +312,17 @@ export class VMSRuntime extends EventEmitter
 			this.shellDbg.resetParameters();
 			this.shell.resetParameters();
 
-			let message: string = localize("program.completed", ": The program is completed.");
-
 			if (this.programEnd === 2)
 			{
-				message = localize("program.end", ": You have no rights: log_io, oper, share.");
+				let message = localize("program.end", ": You have no rights: log_io, oper, share.");
+				this.shellDbg.DisconectSession(true, message);
+				this.shell.DisconectSession(true, message);
 			}
-
-			this.shellDbg.DisconectSession(true, message);
-			this.shell.DisconectSession(true, message);
+			else
+			{
+				this.shellDbg.SetDisconnectInShellSession();
+				this.shellDbg.SendCommandToQueue(this.dbgCmd.exit());
+			}
 		}
 		else
 		{

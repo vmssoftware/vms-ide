@@ -1,6 +1,5 @@
 {
     "config_error": "Ошибка конфигурации",
-    "program.completed": ": Программа завершена.",
     "program.end": ": У вас нет прав: log_io, oper, share.",
     "runtime.watch_error": "Watch: Ошибка параметра. Пример: (when (x > 3)) или ().",
     "runtime.command_ignore": "Команда запрещена!"
