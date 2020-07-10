@@ -1,7 +1,7 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
 ## 1.5.24
-* Fix VMS debugger, fix Python debugger, add port to the terminal command
+* Fix VMS debugger, Python debugger, default terminal command
 
 ## 1.5.20
 * Add pre-launch python debugger command

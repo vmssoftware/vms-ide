@@ -81,7 +81,7 @@ export class TerminalVMS
 
 			await configurationDone.wait(3000);
 
-			if(!passwordIsSet)
+			if(!passwordIsSet && this.passwd)
 			{
 				terminal.sendText(this.passwd);
                 this.logFn(LogType.debug, () => "password passed via start()");
