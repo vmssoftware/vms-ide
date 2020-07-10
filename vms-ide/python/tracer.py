@@ -41,31 +41,51 @@ class MESSAGE:
     PATHFILTER = 'PATHFILTER'
 
 # command to receive
-class COMMAND:
-    AMEND = 'a'             # a ident frame name value
-    BP_RESET = 'bpr'        # bpr [file [line]]
-    BP_SET = 'bps'          # bps file line
-    CONTINUE = 'c'
-    DISPLAY = 'd'           # d[h] [ident [frame [fullName [start [count]]]]]   // frame is zero-based
-    EXEC = 'e'              # e expression                                      // execute expression in the current frame
-    FRAME  = 'f'            # f [ident [frameStart [frameNum]]]                 // frame is zero-based
-    GOTO = 'g'              # g ident line
-    GOTO_TARGETS = 'gt'     # gt file line  // test if we can go to target from current place
-    INFO = 'i'
-    MODE = 'm'              # m [0|1]       // user | developer
-    NEXT = 'n'              # n [ident]     // step over
-    PAUSE = 'p'
-    RETURN = 'r'            # r [ident]     // step out
-    STEP = 's'              # s [ident]     // step in
-    THREADS = 't'
-    RADIX = 'x'             # x [10|16]     // default 10
-    PATHFILTER = 'y'        # y [path]      // always trace this path
+# class COMMAND:
+#     AMEND = 'a'             # a ident frame name value
+#     BP_RESET = 'bpr'        # bpr [file [line]]
+#     BP_SET = 'bps'          # bps file line
+#     CONTINUE = 'c'
+#     DISPLAY = 'd'           # d[h] [ident [frame [fullName [start [count]]]]]   // frame is zero-based
+#     EXEC = 'e'              # e expression                                      // execute expression in the current frame
+#     FRAME  = 'f'            # f [ident [frameStart [frameNum]]]                 // frame is zero-based
+#     GOTO = 'g'              # g ident line
+#     GOTO_TARGETS = 'gt'     # gt file line  // test if we can go to target from current place
+#     INFO = 'i'
+#     MODE = 'm'              # m [0|1]       // user | developer
+#     NEXT = 'n'              # n [ident]     // step over
+#     PAUSE = 'p'
+#     RETURN = 'r'            # r [ident]     // step out
+#     STEP = 's'              # s [ident]     // step in
+#     THREADS = 't'
+#     RADIX = 'x'             # x [10|16]     // default 10
+#     PATHFILTER = 'y'        # y [path]      // always trace this path
+
+class COMMAND_REGEXP:
+    AMEND =         re.compile('^a (\\d+) (\\d+) (\\S+) (.+)$')
+    BP_RESET =      re.compile('^bpr (?:(\\S)+(?: (\\S+))?)?$')
+    BP_SET =        re.compile('^bps (\\S+) (\\d+)$')
+    CONTINUE =      re.compile('^c$')
+    DISPLAY =       re.compile('^d(h|o)?(?: (\\d+)(?: (\\d+)(?: (\\S+)(?: (\\d+)(?: (\\d+)))?)?)?)?$')
+    EXEC =          re.compile('^e (.+)$')
+    FRAME  =        re.compile('^f(?: (\\d+)(?: (\\d+)(?: (\\d+))?)?)?$')
+    GOTO =          re.compile('^g (\\d+) (\\d+)$')
+    GOTO_TARGETS =  re.compile('^gt (\\S+) (\\d+)$')
+    INFO =          re.compile('^i$')
+    MODE =          re.compile('^m(?: ([0|1]))?$')
+    NEXT =          re.compile('^n(?: (\\d+))?$')
+    PAUSE =         re.compile('^p$')
+    RETURN =        re.compile('^r(?: (\\d+))?$')
+    STEP =          re.compile('^s(?: (\\d+))?$')
+    THREADS =       re.compile('^t$')
+    RADIX =         re.compile('^x (8|10|16)$')
+    PATHFILTER =    re.compile('^y(?: \\S+)?$')
 
 class Tracer:
     def __init__(self, port, insensitive=False, developerMode=False):
         self._insensitive = insensitive
         # self._postDebugMessage = None
-        self._showHex = False
+        self._radix = 10
         self._developerMode = developerMode
         self._pathFilter = ''
         self._re_compile = re.compile
@@ -104,7 +124,8 @@ class Tracer:
         self._os_path_abspath = os.path.abspath
         self._setSignal = signal.signal
         self._messages = MESSAGE
-        self._commands = COMMAND
+        # self._commands = COMMAND
+        self._commands_regexp = COMMAND_REGEXP
         self._sig_int = signal.SIGINT
         # self._sig_break = signal.SIGBREAK
         self._sig_def = signal.SIG_DFL
@@ -270,7 +291,16 @@ class Tracer:
             self._mainThread = ident
 
         # create current entry
-        entry = {'ident': ident, 'frame': frame, 'event': event, 'arg': arg, 'paused': True, 'level': 0, 'exception': None, 'traceback': None }
+        entry = {
+            'ident': ident,
+            'frame': frame,
+            'event': event,
+            'arg': arg,
+            'paused': True,
+            'level': 0,
+            'exception': None,
+            'traceback': None
+        }
         if ident in self._threads:
             # get previous entry information from dictionary
             entry['level'] = self._threads[ident]['level']
@@ -344,22 +374,24 @@ class Tracer:
             # tests runtime commands
             cmd = self._readDbgMessage()
             while cmd:
-                if cmd == self._commands.PAUSE:
+                if self._commands_regexp.PAUSE.match(cmd):
                     if not self._paused:
                         self._sendDbgMessage(self._messages.PAUSED)
                         # self._sendDbgMessage('_COUNTER_ ' + repr(self._enter_counter) + '\n')
                     self._paused = True
-                elif cmd == self._commands.INFO:
+                elif self._commands_regexp.INFO.match(cmd):
                     self._showInfo(ident)
                 # breakpoints
-                elif cmd.startswith(self._commands.BP_SET):
+                elif self._commands_regexp.BP_SET.match(cmd):
                     self._doSetBreakPoint(cmd)
-                elif cmd.startswith(self._commands.BP_RESET):
+                elif self._commands_regexp.BP_RESET.match(cmd):
                     self._doResetBreakPoint(cmd)
                 cmd = self._readDbgMessage()
 
             # test stepping
-            if not self._paused and self._steppingThread == ident and (self._steppingLevel == None or self._steppingLevel >= entry['level'] and event != 'return'):
+            if not self._paused and \
+               self._steppingThread == ident and \
+               (self._steppingLevel == None or self._steppingLevel >= entry['level'] and event != 'return'):
                 self._steppingThread = None
                 self._steppingLevel = None
                 self._paused = True
@@ -370,46 +402,50 @@ class Tracer:
             while self._paused and self._isConnected():
                 if cmd:
                     # continue
-                    if cmd == self._commands.CONTINUE:
+                    if self._commands_regexp.CONTINUE.match(cmd):
                         self._doContinue()
                         break   # break pause loop
                     # step
-                    elif cmd.startswith(self._commands.STEP) or cmd.startswith(self._commands.NEXT) or cmd.startswith(self._commands.RETURN):
+                    elif self._commands_regexp.STEP.match(cmd) or \
+                         self._commands_regexp.NEXT.match(cmd) or \
+                         self._commands_regexp.RETURN.match(cmd):
                         self._doStepping(cmd, ident, entry)
                         break   # break pause loop
                     # show threads
-                    elif cmd == self._commands.THREADS:
+                    elif self._commands_regexp.THREADS.match(cmd):
                         self._showThreads(ident)
                     # change variable
-                    elif cmd.startswith(self._commands.AMEND):
+                    elif self._commands_regexp.AMEND.match(cmd):
                         self._doAmend(cmd)
                     # show frames
-                    elif cmd.startswith(self._commands.FRAME):
+                    elif self._commands_regexp.FRAME.match(cmd):
                         self._doFrames(cmd, ident)
                     # display variable
-                    elif cmd.startswith(self._commands.DISPLAY):
+                    elif self._commands_regexp.DISPLAY.match(cmd):
                         self._doDisplay(cmd, ident)
                     # information (unused)
-                    elif cmd == self._commands.INFO:
+                    elif self._commands_regexp.INFO.match(cmd):
                         self._showInfo(ident)
                     # breakpoints
-                    elif cmd.startswith(self._commands.BP_SET):
+                    elif self._commands_regexp.BP_SET.match(cmd):
                         self._doSetBreakPoint(cmd)
-                    elif cmd.startswith(self._commands.BP_RESET):
+                    elif self._commands_regexp.BP_RESET.match(cmd):
                         self._doResetBreakPoint(cmd)
-                    elif cmd.startswith(self._commands.GOTO_TARGETS):
+                    elif self._commands_regexp.GOTO_TARGETS.match(cmd):
                         self._doGotoTargets(cmd, ident)
-                    elif cmd.startswith(self._commands.GOTO):
+                    elif self._commands_regexp.GOTO.match(cmd):
                         self._doGoto(cmd)
-                    elif cmd.startswith(self._commands.MODE):
+                    elif self._commands_regexp.MODE.match(cmd):
                         self._doMode(cmd)
                     # show threads
-                    elif cmd.startswith(self._commands.RADIX):
+                    elif self._commands_regexp.RADIX.match(cmd):
                         self._setRadix(cmd)
-                    elif cmd.startswith(self._commands.PATHFILTER):
+                    elif self._commands_regexp.PATHFILTER.match(cmd):
                         self._setFilter(cmd)
-                    elif cmd.startswith(self._commands.EXEC):
+                    elif self._commands_regexp.EXEC.match(cmd):
                         self._execExpression(cmd, ident)
+                    else:
+                        self._sendDbgMessage('%s' % self._messages.SYNTAX_ERROR)
                 # wait and read command again
                 self._sleep(0.3)
                 cmd = self._readDbgMessage()
@@ -447,8 +483,10 @@ class Tracer:
     def _setRadix(self, cmd):
         locals_args = cmd.split()
         try:
-            self._showHex = (16 == int(locals_args[1]))
-            self._sendDbgMessage('%s %s' % (self._messages.RADIX, 'hex' if self._showHex else 'dec'))
+            self._radix = int(locals_args[1])
+            if self._radix not in (8, 10, 16):
+                self._radix = 10
+            self._sendDbgMessage('%s %i' % (self._messages.RADIX, self._radix))
         except Exception as ex:
             self._sendDbgMessage('%s %s %s' % (self._messages.RADIX, 'failed', repr(ex)))
 
@@ -492,19 +530,23 @@ class Tracer:
 
     def _doDisplay(self, cmd, ident):
         locals_args = cmd.split()
-        showHex = True if locals_args[0].endswith('h') else self._showHex
+        radix = self._radix
+        if locals_args[0].endswith('h'):
+            radix = 16
+        elif locals_args[0].endswith('o'):
+            radix = 8
         if len(locals_args) == 1:
-            self._display(ident, 0, '.', None, None, showHex)
+            self._display(ident, 0, '.', None, None, radix)
         elif len(locals_args) == 2:
-            self._display(int(locals_args[1]), 0, '.', None, None, showHex)
+            self._display(int(locals_args[1]), 0, '.', None, None, radix)
         elif len(locals_args) == 3:
-            self._display(int(locals_args[1]), int(locals_args[2]), '.', None, None, showHex)
+            self._display(int(locals_args[1]), int(locals_args[2]), '.', None, None, radix)
         elif len(locals_args) == 4:
-            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], None, None, showHex)
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], None, None, radix)
         elif len(locals_args) == 5:
-            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), None, showHex)
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), None, radix)
         elif len(locals_args) == 6:
-            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), int(locals_args[5]), showHex)
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), int(locals_args[5]), radix)
 
     def _doFrames(self, cmd, ident):
         locals_args = cmd.split()
@@ -539,9 +581,9 @@ class Tracer:
         elif len(locals_args) == 2:
             self._steppingThread = int(locals_args[1])
         self._steppingLevel = None
-        if cmd.startswith(self._commands.NEXT):
+        if self._commands_regexp.NEXT.match(cmd):
             self._steppingLevel = entry['level']
-        elif cmd.startswith(self._commands.RETURN):
+        elif self._commands_regexp.RETURN.match(cmd):
             self._steppingLevel = entry['level'] - 1
         self._paused = False
         self._sendDbgMessage(self._messages.CONTINUED)
@@ -706,10 +748,13 @@ class Tracer:
                 resultType = type(result)
                 if resultType in self._knownValueTypes:
                     # if we know that is valueType, return it
-                    if resultType == int and self._showHex:
-                        self._sendDbgMessage('%s ok %s = %s' % (self._messages.AMEND, resultType, hex(result)))
-                    else:
-                        self._sendDbgMessage('%s ok %s = %s' % (self._messages.AMEND, resultType, repr(result)))
+                    fn = repr
+                    if resultType == int:
+                        if self._radix == 16:
+                            fn = hex
+                        elif self._radix == 8:
+                            fn = oct
+                    self._sendDbgMessage('%s ok %s = %s' % (self._messages.AMEND, resultType, fn(result)))
                     return
                 else:
                     try:
@@ -728,7 +773,7 @@ class Tracer:
         result = self._b64encode(result.encode()).decode()
         self._sendDbgMessage('%s %s %s' % (self._messages.DISPLAY64, len(result), result))
 
-    def _display(self, ident, frameNum, fullName, start, count, showHex):
+    def _display(self, ident, frameNum, fullName, start, count, radix):
         # self._sendDbgMessage('_display %s' % fullName)
         frame, isPostMortem = self._getFrame(ident, frameNum)
         isPostMortem = isPostMortem
@@ -747,10 +792,13 @@ class Tracer:
                     resultType = type(result)
                     if resultType in self._knownValueTypes:
                         # if we know that is valueType, display it
-                        if resultType == int and showHex:
-                            self._sendDisplayResult('"%s" %s value: %s' % (displayName, resultType, hex(result)))
-                        else:
-                            self._sendDisplayResult('"%s" %s value: %s' % (displayName, resultType, repr(result)))
+                        fn = repr
+                        if resultType == int:
+                            if self._radix == 16:
+                                fn = hex
+                            elif self._radix == 8:
+                                fn = oct
+                        self._sendDisplayResult('"%s" %s value: %s' % (displayName, resultType, fn(result)))
                         return
                     else:
                         try:
@@ -819,7 +867,7 @@ class Tracer:
                 self._sendDisplayResult('"%s" %s children: %s' % (displayName, resultType, len(children)))
                 if displayChildren:
                     for childName in children:
-                        self._display(ident, frameNum, (fullName + '.' if fullName else '') + childName, None, None, showHex)
+                        self._display(ident, frameNum, (fullName + '.' if fullName else '') + childName, None, None, radix)
             except Exception as ex:
                 self._sendDisplayResult('"%s" failed: %s' % (displayName, repr(ex)))
 

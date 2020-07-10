@@ -148,11 +148,11 @@ async function createTerminal() : Promise<void>
 				{
 					if(connection.keyFile)
 					{
-						terminals.startByKey(terminal, connection.host, connection.username, connection.keyFile);
+						terminals.startByKey(terminal, connection.host, connection.port || 22, connection.username, connection.keyFile);
 					}
 					else
 					{
-						terminals.start(terminal, connection.host, connection.username, connection.password);
+						terminals.start(terminal, connection.host, connection.port || 22, connection.username, connection.password);
 					}
 				}
 			}

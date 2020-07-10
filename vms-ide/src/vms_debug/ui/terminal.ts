@@ -39,7 +39,7 @@ export class TerminalVMS
 		return terminal;
 	}
 
-	public async start(terminal : vscode.Terminal, host : string, userName : string, password? : string)
+	public async start(terminal : vscode.Terminal, host : string, port: number, userName : string, password? : string)
 	{
 		let passwordIsSet = false;
         let configurationDone = new Subject();
@@ -68,7 +68,7 @@ export class TerminalVMS
 
 		if (terminal)
 		{
-			terminal.sendText("ssh -oHostKeyAlgorithms=+ssh-dss " + userName + "@" + host);
+			terminal.sendText(`ssh -oHostKeyAlgorithms=+ssh-dss -p ${port} ${userName}@${host}`);
 
 			if(password)
 			{
@@ -89,17 +89,17 @@ export class TerminalVMS
 		}
 	}
 
-	public startByKey(terminal : vscode.Terminal, host : string, userName : string, keyFile? : string)
+	public startByKey(terminal : vscode.Terminal, host : string, port: number, userName : string, keyFile? : string)
 	{
 		if (terminal)
 		{
 			if(keyFile)
 			{
-				terminal.sendText("ssh -oHostKeyAlgorithms=+ssh-dss -i " + keyFile + " " + userName + "@" + host);
+				terminal.sendText(`ssh -oHostKeyAlgorithms=+ssh-dss -i ${keyFile} -p ${port} ${userName}@${host}`);
 			}
 			else
 			{
-				terminal.sendText("ssh -oHostKeyAlgorithms=+ssh-dss " + userName + "@" + host);
+				terminal.sendText(`ssh -oHostKeyAlgorithms=+ssh-dss -p ${port} ${userName}@${host}`);
                 this.logFn(LogType.debug, () => "start by key file but no key file found");
 			}
 
