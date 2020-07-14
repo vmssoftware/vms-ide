@@ -794,9 +794,9 @@ class Tracer:
                         # if we know that is valueType, display it
                         fn = repr
                         if resultType == int:
-                            if self._radix == 16:
+                            if radix == 16:
                                 fn = hex
-                            elif self._radix == 8:
+                            elif radix == 8:
                                 fn = oct
                         self._sendDisplayResult('"%s" %s value: %s' % (displayName, resultType, fn(result)))
                         return
@@ -830,10 +830,14 @@ class Tracer:
                                                 value = result[value]
                                             resultType = type(value)
                                             if resultType in self._knownValueTypes:
-                                                if resultType == int and showHex:
-                                                    self._sendDisplayResult('"%s" %s value: %s' % (displayName + ('[%s]' % idx), resultType, hex(value)))
-                                                else:
-                                                    self._sendDisplayResult('"%s" %s value: %s' % (displayName + ('[%s]' % idx), resultType, repr(value)))
+                                                # if we know that is valueType, display it
+                                                fn = repr
+                                                if resultType == int:
+                                                    if radix == 16:
+                                                        fn = hex
+                                                    elif radix == 8:
+                                                        fn = oct
+                                                self._sendDisplayResult('"%s" %s value: %s' % (displayName + ('[%s]' % idx), resultType, fn(value)))
                                             else:
                                                 try:
                                                     length = len(value)

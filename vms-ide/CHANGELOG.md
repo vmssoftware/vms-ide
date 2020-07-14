@@ -1,5 +1,11 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.26
+* Fix Python debugger (issue with displaying list of integers).
+
+## 1.5.25
+* VMS debugger issue with long C++ function names is fixed.
+
 ## 1.5.24
 * Fix VMS debugger, Python debugger, default terminal command
 

@@ -263,101 +263,74 @@ export class DebugParser
 		let numberLine : number = -1;
 		let columns : string[] = [];
 		let frames: IStackFrame[] = [];
-		let msgLines = data.split("\n");
+        let msgLines = data.split("\n");
 
-		for(let i = 1; i < msgLines.length; i++)
-		{
-			msgLines[i] = msgLines[i].trim();
-			columns = msgLines[i].split(/\s+/);
+        // consolidate records
+        let rgxRecord32End = /(.*?) [A-F0-9]{8} [A-F0-9]{8}$/;
+        let rgxRecord64End = /(.*?) [A-F0-9]{16} [A-F0-9]{16}$/;
+        let records: string[] = [];
+        let record = "";
+        for(let n = 1; n < msgLines.length; ++n) {
+            let line = msgLines[n];
+            if (line) {
+                if (record) {
+                    record += line;
+                } else {
+                    // record must start with '*'
+                    if (line.startsWith('*')) {
+                        record = line;
+                    }
+                }
+                // record must end with pair of addresses
+                if (record.match(rgxRecord64End) || record.match(rgxRecord32End)) {
+                    records.push(record);
+                    record = "";
+                }
+            } else {
+                break;
+            }
+        }
 
-			if(columns[0].includes("*"))
-			{
-				let routineName = "";
-				let numberLineDebug = "-1";
-				let moduleName = columns[0].substring(1);//remove symbol '*'
+        let rgxRecord32 = /^\*(\S+)\s+(.*?)\s+(\d+)\s+[A-F0-9]{8}\s[A-F0-9]{8}$/;
+        let rgxRecord64 = /^\*(\S+)\s+(.*?)\s+(\d+)\s+[A-F0-9]{16}\s[A-F0-9]{16}$/;
+        for (let n = 0; n < records.length; ++n) {
+            let matched = records[n].match(rgxRecord64);
+            if (!matched) {
+                matched = records[n].match(rgxRecord32);
+            }
+            if (matched) {
+                let moduleName = matched[1];
+                let routineName = matched[2];
+                let numberLineDebug = matched[3];
 
-				if(columns.length === 1)//module name is long
-				{
-					i += 1;
-					msgLines[i] = msgLines[i].trim();
-					columns = msgLines[i].split(/\s+/);
-					routineName = columns[0];
+                let moduleItem = moduleInfoCache.getItemByModule(moduleName);
+                let pathFile = moduleItem.sourcePath;
+                let pathLisFile = moduleItem.listingPath;
 
-					if(columns.length === 1)//routine name is long
-					{
-						i += 1;
-						msgLines[i] = msgLines[i].trim();
-						columns = msgLines[i].split(/\s+/);
+                if(pathFile !== "" && pathLisFile !== "") {
+                    let debugInfo = this.fileInfo.infoByFile(pathFile);
+                    if (debugInfo === undefined) {
+                        this.fileInfo.pushEntry(pathFile, pathLisFile);
+                        debugInfo = this.fileInfo.infoByFile(pathFile);
+                    }
+                    if (debugInfo) {
+                        // update module info
+                        debugInfo.moduleName = moduleName.toLowerCase();
+                        let foundLine = this.fileInfo.sourceLineFromListLineByInfo(debugInfo, +numberLineDebug);
+                        numberLine = foundLine || numberLine;
+                    }
 
-						if(columns.length === 3)
-						{
-							numberLineDebug = columns[0];
-						}
-					}
-					else
-					{
-						if(columns.length === 4)
-						{
-							numberLineDebug = columns[1];
-						}
-					}
-				}
-				else
-				{
-					routineName = columns[1];
+                    frames.push({
+                        index: startFrame,
+                        name: `${routineName}[${startFrame}]`,
+                        file: pathFile,
+                        line: numberLine
+                    });
 
-					if(columns.length === 2)//routine name is long
-					{
-						i += 1;
-						msgLines[i] = msgLines[i].trim();
-						columns = msgLines[i].split(/\s+/);
-
-						if(columns.length === 3)
-						{
-							numberLineDebug = columns[0];
-						}
-					}
-					else
-					{
-						if(columns.length === 5)
-						{
-							numberLineDebug = columns[2];
-						}
-					}
-				}
-
-				let moduleItem = moduleInfoCache.getItemByModule(moduleName);
-				let pathFile = moduleItem.sourcePath;
-				let pathLisFile = moduleItem.listingPath;
-
-				if(pathFile !== "" && pathLisFile !== "")
-				{
-					let debugInfo = this.fileInfo.infoByFile(pathFile);
-
-					if (debugInfo === undefined)
-					{
-						this.fileInfo.pushEntry(pathFile, pathLisFile);
-						debugInfo = this.fileInfo.infoByFile(pathFile);
-					}
-					if (debugInfo)
-					{
-						// update module info
-						debugInfo.moduleName = moduleName.toLowerCase();
-						let foundLine = this.fileInfo.sourceLineFromListLineByInfo(debugInfo, +numberLineDebug);
-						numberLine = foundLine || numberLine;
-					}
-
-					frames.push({
-						index: startFrame,
-						name: `${routineName}[${startFrame}]`,
-						file: pathFile,
-						line: numberLine
-					});
-
-					startFrame++;
-				}
-			}
-		}
+                    startFrame++;
+                }
+            }
+        }
 
 		if(frames.length === 0)
 		{
