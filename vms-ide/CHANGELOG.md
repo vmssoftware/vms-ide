@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.27
+* Fix downloading system headers.
+
 ## 1.5.26
 * Fix Python debugger (issue with displaying list of integers).
 
