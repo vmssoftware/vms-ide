@@ -92,6 +92,7 @@ class Tracer:
         self._insensitive = insensitive
         # self._postDebugMessage = None
         self._radix = 10
+        self._maxSendStrLen = 512
         self._developerMode = developerMode
         self._pathFilter = ''
         self._re_compile = re.compile
@@ -786,6 +787,18 @@ class Tracer:
         else:
             self._sendDbgMessage('%s %s' % (self._messages.DISPLAY, result))
 
+    def _sendKnownType(self, displayName, valueType, value, radix, do_encode):
+        fn = repr
+        if valueType == int:
+            if radix == 16:
+                fn = hex
+            elif radix == 8:
+                fn = oct
+        elif valueType == str:
+            if len(value) > self._maxSendStrLen:
+                value = value[:self._maxSendStrLen]
+        self._sendDisplayResult('"%s" %s value: %s' % (displayName, valueType, fn(value)), do_encode)
+
     def _display(self, ident, frameNum, fullName, start, count, radix, do_encode):
         # self._sendDbgMessage('_display %s' % fullName)
         frame, isPostMortem = self._getFrame(ident, frameNum)
@@ -801,34 +814,28 @@ class Tracer:
                     displayName = fullName.rpartition('.')[2]
                 if fullName:
                     # we have a name - get its value
-                    result = self._eval_variable(fullName, frame.f_locals)
-                    resultType = type(result)
-                    if resultType in self._knownValueTypes:
+                    value = self._eval_variable(fullName, frame.f_locals)
+                    valueType = type(value)
+                    if valueType in self._knownValueTypes:
                         # if we know that is valueType, display it
-                        fn = repr
-                        if resultType == int:
-                            if radix == 16:
-                                fn = hex
-                            elif radix == 8:
-                                fn = oct
-                        self._sendDisplayResult('"%s" %s value: %s' % (displayName, resultType, fn(result)), do_encode)
+                        self._sendKnownType(displayName, valueType, value, radix, do_encode)
                         return
                     else:
                         try:
                             # in first try to get length of value (test if it is enumerable)
-                            length = len(result)
+                            length = len(value)
                             # we have a length, so test given start and count
                             if start != None:
                                 # go through indexed children
                                 if start < length:
                                     if count == None or start + count > length:
                                         count = length - start
-                                    self._sendDisplayResult('"%s" %s length: %s' % (displayName, resultType, count), do_encode)
+                                    self._sendDisplayResult('"%s" %s length: %s' % (displayName, valueType, count), do_encode)
                                     # enumerate through, cutting displayName
                                     # self._sendDbgMessage('_display fullName=%s' % fullName)
                                     displayName = fullName.rpartition('.')[2]
                                     # self._sendDbgMessage('_display displayName=%s' % displayName)
-                                    enumerated = enumerate(iter(result))
+                                    enumerated = enumerate(iter(value))
                                     # self._sendDbgMessage('_display enumerated=%s' % repr(enumerated))
                                     for x in enumerated:
                                         if start > 0:
@@ -838,26 +845,20 @@ class Tracer:
                                         if count > 0:
                                             # until count
                                             idx, value = x
-                                            if type(result) == dict:
+                                            if type(value) == dict:
                                                 idx = repr(value)
-                                                value = result[value]
-                                            resultType = type(value)
-                                            if resultType in self._knownValueTypes:
+                                                value = value[value]
+                                            valueType = type(value)
+                                            if valueType in self._knownValueTypes:
                                                 # if we know that is valueType, display it
-                                                fn = repr
-                                                if resultType == int:
-                                                    if radix == 16:
-                                                        fn = hex
-                                                    elif radix == 8:
-                                                        fn = oct
-                                                self._sendDisplayResult('"%s" %s value: %s' % (displayName + ('[%s]' % idx), resultType, fn(value)), do_encode)
+                                                self._sendKnownType(displayName + ('[%s]' % idx), valueType, value, radix, do_encode)
                                             else:
                                                 try:
                                                     length = len(value)
-                                                    self._sendDisplayResult('"%s" %s length: %s' % (displayName + ('[%s]' % idx), resultType, length), do_encode)
+                                                    self._sendDisplayResult('"%s" %s length: %s' % (displayName + ('[%s]' % idx), valueType, length), do_encode)
                                                 except:
                                                     children = dir(value)
-                                                    self._sendDisplayResult('"%s" %s children: %s' % (displayName + ('[%s]' % idx), resultType, len(children)), do_encode)
+                                                    self._sendDisplayResult('"%s" %s children: %s' % (displayName + ('[%s]' % idx), valueType, len(children)), do_encode)
                                             count = count - 1
                                         else:
                                             break
@@ -867,21 +868,21 @@ class Tracer:
                                     return
                                 else:
                                     # have no corresponding children
-                                    self._sendDisplayResult('"%s" %s length: 0' % (displayName, resultType), do_encode)
+                                    self._sendDisplayResult('"%s" %s length: 0' % (displayName, valueType), do_encode)
                                     return
                             else:
                                 # no start, just return length of children
-                                self._sendDisplayResult('"%s" %s length: %s' % (displayName, resultType, length), do_encode)
+                                self._sendDisplayResult('"%s" %s length: %s' % (displayName, valueType, length), do_encode)
                                 return
                         except:
-                            children = dir(result)
+                            children = dir(value)
                 else:
                     # localc
-                    resultType = "<type '-locals-'>"
+                    valueType = "<type '-locals-'>"
                     children = frame.f_locals
                     displayChildren = True
                 # test if variable has at least children
-                self._sendDisplayResult('"%s" %s children: %s' % (displayName, resultType, len(children)), do_encode)
+                self._sendDisplayResult('"%s" %s children: %s' % (displayName, valueType, len(children)), do_encode)
                 if displayChildren:
                     for childName in children:
                         self._display(ident, frameNum, (fullName + '.' if fullName else '') + childName, None, None, radix, do_encode)
