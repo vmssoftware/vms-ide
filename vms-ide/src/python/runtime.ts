@@ -29,9 +29,12 @@ export enum PythonServerMessage {
     CONTINUED = 'CONTINUED',
     DEBUG = 'DEBUG',
     DISPLAY = 'DISPLAY',
+    DISPLAY64 = 'DISPLAY64',
     ENTRY = 'ENTRY',
     EXCEPTION = 'EXCEPTION',
     EXITED = 'EXITED',
+    FRAME = 'FRAME',
+    FRAME64 = 'FRAME64',
     GOTO = 'GOTO',
     GOTO_TARGETS = 'GOTO_TARGETS',
     INFO = 'INFO',
@@ -49,7 +52,9 @@ export enum PythonServerCommand {
     BP_SET = 'bps',
     CONTINUE = 'c',
     DISPLAY = 'd',
+    DISPLAY64 = 'd64',
     FRAME  = 'f',
+    FRAME64  = 'f64',
     GOTO = 'g',
     GOTO_TARGETS = 'gt',
     HELP = 'h',
@@ -141,10 +146,14 @@ const _rgxFrames_Thread     = 1;
 const _rgxFrames_Frames     = 2;
 const _rgxFrames_State      = 3;
 
-const _rgxFrame             = /file: "(.*?)" line: (\d+) function: "(.*?)"/;
+const _rgxFrame             = /FRAME file: "(.*?)" line: (\d+) function: "(.*?)" (dead|alive)/;
 const _rgxFrame_File        = 1;
 const _rgxFrame_Line        = 2;
 const _rgxFrame_Function    = 3;
+
+const _rgxFrame64             = /FRAME64 (\d+) (.*)/;
+const _rgxFrame64_Len         = 1;
+const _rgxFrame64_Result      = 2;
 
 const _rgxDisplay               = /DISPLAY "(.*?)" (failed|aborted|<(?:type|class|enum) '(.*?)'> (?:(value|children|length): (.*)))/;
 const _rgxDisplay_Name          = 1;
@@ -353,17 +362,44 @@ export class PythonShellRuntime extends EventEmitter {
             endFrame = Math.max(endFrame, startFrame);
             let numFrames = endFrame - startFrame;
             if (numFrames > 0) {
-                let command = `${PythonServerCommand.FRAME} ${ident} ${startFrame} ${numFrames}`;
+                let command = `${PythonServerCommand.FRAME64} ${ident} ${startFrame} ${numFrames}`;
                 let parsedFrame = 0;
+                let frame64line: string | undefined;
+                let frame64length: number | undefined;
                 await this.queue.postCommand(command, (cmd, line) => {
                     if (line === undefined) {
                         this.logFn(LogType.debug, () => `frames: aborted`);
                         return ListenerResponse.stop;
                     }
+                    // test frame64
+                    if (frame64line !== undefined && frame64length !== undefined) {
+                        frame64line += line.trim();
+                        if (frame64line.length >= frame64length) {
+                            frame64line = Buffer.from(frame64line, 'base64').toString('utf-8');
+                            line = PythonServerMessage.FRAME + ' ' + frame64line;
+                            frame64line = undefined;
+                            frame64length = undefined;
+                        } else {
+                            return ListenerResponse.needMoreLines;
+                        }
+                    }
                     line = line.trim();
                     if (line) {
                         if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
                             return ListenerResponse.stop;
+                        }
+                        const match64 = line.match(_rgxFrame64);
+                        if (match64) {
+                            frame64length = +match64[_rgxFrame64_Len];
+                            frame64line = match64[_rgxFrame64_Result];
+                            if (frame64line.length >= frame64length) {
+                                frame64line = Buffer.from(frame64line, 'base64').toString('utf-8');
+                                line = PythonServerMessage.FRAME + ' ' + frame64line;
+                                frame64line = undefined;
+                                frame64length = undefined;
+                            } else {
+                                return ListenerResponse.needMoreLines;
+                            }
                         }
                         const match = line.match(_rgxFrame);
                         if (match) {
@@ -414,7 +450,7 @@ export class PythonShellRuntime extends EventEmitter {
             varPath = variableFullName + '.';
         }
 
-        let command = `${PythonServerCommand.DISPLAY}${showHex?'h':''} ${ident} ${frame} ${varPath}`;
+        let command = `${PythonServerCommand.DISPLAY64}${showHex?'h':''} ${ident} ${frame} ${varPath}`;
         if (start !== undefined) {
             command += ` ${start}`;
             if (count !== undefined) {
@@ -464,9 +500,11 @@ export class PythonShellRuntime extends EventEmitter {
                 display64line += line.trim();
                 if (display64line.length >= display64length) {
                     display64line = Buffer.from(display64line, 'base64').toString('utf-8');
-                    line = 'DISPLAY ' + display64line;
+                    line = PythonServerMessage.DISPLAY + ' ' + display64line;
                     display64line = undefined;
                     display64length = undefined;
+                } else {
+                    return ListenerResponse.needMoreLines;
                 }
             }
             line = line.trim();
@@ -481,7 +519,7 @@ export class PythonShellRuntime extends EventEmitter {
                     display64line = match64[_rgxDisplay64_Result];
                     if (display64line.length >= display64length) {
                         display64line = Buffer.from(display64line, 'base64').toString('utf-8');
-                        line = 'DISPLAY ' + display64line;
+                        line = PythonServerMessage.DISPLAY + ' ' + display64line;
                         display64line = undefined;
                         display64length = undefined;
                     } else {

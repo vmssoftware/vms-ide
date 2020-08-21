@@ -29,6 +29,8 @@ class MESSAGE:
     EXCEPTION = 'EXCEPTION'
     EXECUTE = 'EXECUTE'
     EXITED = 'EXITED'
+    FRAME = 'FRAME'
+    FRAME64 = 'FRAME64'
     GOTO = 'GOTO'
     GOTO_TARGETS = 'GOTO_TARGETS'
     INFO = 'INFO'
@@ -47,8 +49,10 @@ class MESSAGE:
 #     BP_SET = 'bps'          # bps file line
 #     CONTINUE = 'c'
 #     DISPLAY = 'd'           # d[h] [ident [frame [fullName [start [count]]]]]   // frame is zero-based
+#     DISPLAY64 = 'd64'       # d64[h] [ident [frame [fullName [start [count]]]]] // base64 coded
 #     EXEC = 'e'              # e expression                                      // execute expression in the current frame
-#     FRAME  = 'f'            # f [ident [frameStart [frameNum]]]                 // frame is zero-based
+#     FRAME = 'f'             # f [ident [frameStart [frameNum]]]                 // frame is zero-based
+#     FRAME64 = 'f64'         # f64 [ident [frameStart [frameNum]]]               // base64 coded
 #     GOTO = 'g'              # g ident line
 #     GOTO_TARGETS = 'gt'     # gt file line  // test if we can go to target from current place
 #     INFO = 'i'
@@ -67,8 +71,10 @@ class COMMAND_REGEXP:
     BP_SET =        re.compile('^bps (\\S+) (\\d+)$')
     CONTINUE =      re.compile('^c$')
     DISPLAY =       re.compile('^d(h|o)?(?: (\\d+)(?: (\\d+)(?: (\\S+)(?: (\\d+)(?: (\\d+)))?)?)?)?$')
+    DISPLAY64 =     re.compile('^d64(h|o)?(?: (\\d+)(?: (\\d+)(?: (\\S+)(?: (\\d+)(?: (\\d+)))?)?)?)?$')
     EXEC =          re.compile('^e (.+)$')
-    FRAME  =        re.compile('^f(?: (\\d+)(?: (\\d+)(?: (\\d+))?)?)?$')
+    FRAME =         re.compile('^f(?: (\\d+)(?: (\\d+)(?: (\\d+))?)?)?$')
+    FRAME64 =       re.compile('^f64(?: (\\d+)(?: (\\d+)(?: (\\d+))?)?)?$')
     GOTO =          re.compile('^g (\\d+) (\\d+)$')
     GOTO_TARGETS =  re.compile('^gt (\\S+) (\\d+)$')
     INFO =          re.compile('^i$')
@@ -418,11 +424,15 @@ class Tracer:
                     elif self._commands_regexp.AMEND.match(cmd):
                         self._doAmend(cmd)
                     # show frames
+                    elif self._commands_regexp.FRAME64.match(cmd):
+                        self._doFrames(cmd, ident, True)
                     elif self._commands_regexp.FRAME.match(cmd):
-                        self._doFrames(cmd, ident)
+                        self._doFrames(cmd, ident, False)
                     # display variable
+                    elif self._commands_regexp.DISPLAY64.match(cmd):
+                        self._doDisplay(cmd, ident, True)
                     elif self._commands_regexp.DISPLAY.match(cmd):
-                        self._doDisplay(cmd, ident)
+                        self._doDisplay(cmd, ident, False)
                     # information (unused)
                     elif self._commands_regexp.INFO.match(cmd):
                         self._showInfo(ident)
@@ -528,7 +538,7 @@ class Tracer:
             return
         self._sendDbgMessage('%s failed' % self._messages.GOTO_TARGETS)
 
-    def _doDisplay(self, cmd, ident):
+    def _doDisplay(self, cmd, ident, do_encode):
         locals_args = cmd.split()
         radix = self._radix
         if locals_args[0].endswith('h'):
@@ -536,28 +546,28 @@ class Tracer:
         elif locals_args[0].endswith('o'):
             radix = 8
         if len(locals_args) == 1:
-            self._display(ident, 0, '.', None, None, radix)
+            self._display(ident, 0, '.', None, None, radix, do_encode)
         elif len(locals_args) == 2:
-            self._display(int(locals_args[1]), 0, '.', None, None, radix)
+            self._display(int(locals_args[1]), 0, '.', None, None, radix, do_encode)
         elif len(locals_args) == 3:
-            self._display(int(locals_args[1]), int(locals_args[2]), '.', None, None, radix)
+            self._display(int(locals_args[1]), int(locals_args[2]), '.', None, None, radix, do_encode)
         elif len(locals_args) == 4:
-            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], None, None, radix)
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], None, None, radix, do_encode)
         elif len(locals_args) == 5:
-            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), None, radix)
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), None, radix, do_encode)
         elif len(locals_args) == 6:
-            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), int(locals_args[5]), radix)
+            self._display(int(locals_args[1]), int(locals_args[2]), locals_args[3], int(locals_args[4]), int(locals_args[5]), radix, do_encode)
 
-    def _doFrames(self, cmd, ident):
+    def _doFrames(self, cmd, ident, do_encode):
         locals_args = cmd.split()
         if len(locals_args) == 1:
-            self._showFrame(ident, None, None)                          # all frames in current ident
+            self._showFrames(ident, None, None, do_encode)                          # all frames in current ident
         elif len(locals_args) == 2:
-            self._showFrame(int(locals_args[1]), None, None)            # all frames in given ident
+            self._showFrames(int(locals_args[1]), None, None, do_encode)            # all frames in given ident
         elif len(locals_args) == 3:
-            self._showFrame(int(locals_args[1]), int(locals_args[2]), 1) # one given frame in given ident
+            self._showFrames(int(locals_args[1]), int(locals_args[2]), 1, do_encode) # one given frame in given ident
         elif len(locals_args) == 4:
-            self._showFrame(int(locals_args[1]), int(locals_args[2]), int(locals_args[3])) # given amount of frames starting given frame in given ident
+            self._showFrames(int(locals_args[1]), int(locals_args[2]), int(locals_args[3]), do_encode) # given amount of frames starting given frame in given ident
 
     def _doAmend(self, cmd):
         sep = ' '
@@ -769,11 +779,14 @@ class Tracer:
                 return
         self._sendDbgMessage('%s failed Invalid frame' % self._messages.AMEND)
 
-    def _sendDisplayResult(self, result):
-        result = self._b64encode(result.encode()).decode()
-        self._sendDbgMessage('%s %s %s' % (self._messages.DISPLAY64, len(result), result))
+    def _sendDisplayResult(self, result, do_encode):
+        if do_encode:
+            result = self._b64encode(result.encode()).decode()
+            self._sendDbgMessage('%s %s %s' % (self._messages.DISPLAY64, len(result), result))
+        else:
+            self._sendDbgMessage('%s %s' % (self._messages.DISPLAY, result))
 
-    def _display(self, ident, frameNum, fullName, start, count, radix):
+    def _display(self, ident, frameNum, fullName, start, count, radix, do_encode):
         # self._sendDbgMessage('_display %s' % fullName)
         frame, isPostMortem = self._getFrame(ident, frameNum)
         isPostMortem = isPostMortem
@@ -798,7 +811,7 @@ class Tracer:
                                 fn = hex
                             elif radix == 8:
                                 fn = oct
-                        self._sendDisplayResult('"%s" %s value: %s' % (displayName, resultType, fn(result)))
+                        self._sendDisplayResult('"%s" %s value: %s' % (displayName, resultType, fn(result)), do_encode)
                         return
                     else:
                         try:
@@ -810,7 +823,7 @@ class Tracer:
                                 if start < length:
                                     if count == None or start + count > length:
                                         count = length - start
-                                    self._sendDisplayResult('"%s" %s length: %s' % (displayName, resultType, count))
+                                    self._sendDisplayResult('"%s" %s length: %s' % (displayName, resultType, count), do_encode)
                                     # enumerate through, cutting displayName
                                     # self._sendDbgMessage('_display fullName=%s' % fullName)
                                     displayName = fullName.rpartition('.')[2]
@@ -837,28 +850,28 @@ class Tracer:
                                                         fn = hex
                                                     elif radix == 8:
                                                         fn = oct
-                                                self._sendDisplayResult('"%s" %s value: %s' % (displayName + ('[%s]' % idx), resultType, fn(value)))
+                                                self._sendDisplayResult('"%s" %s value: %s' % (displayName + ('[%s]' % idx), resultType, fn(value)), do_encode)
                                             else:
                                                 try:
                                                     length = len(value)
-                                                    self._sendDisplayResult('"%s" %s length: %s' % (displayName + ('[%s]' % idx), resultType, length))
+                                                    self._sendDisplayResult('"%s" %s length: %s' % (displayName + ('[%s]' % idx), resultType, length), do_encode)
                                                 except:
                                                     children = dir(value)
-                                                    self._sendDisplayResult('"%s" %s children: %s' % (displayName + ('[%s]' % idx), resultType, len(children)))
+                                                    self._sendDisplayResult('"%s" %s children: %s' % (displayName + ('[%s]' % idx), resultType, len(children)), do_encode)
                                             count = count - 1
                                         else:
                                             break
                                     # enumerated all
                                     if count:
-                                        self._sendDisplayResult('"%s" aborted There are %s elements missed' % (displayName, repr(count)))
+                                        self._sendDisplayResult('"%s" aborted There are %s elements missed' % (displayName, repr(count)), do_encode)
                                     return
                                 else:
                                     # have no corresponding children
-                                    self._sendDisplayResult('"%s" %s length: 0' % (displayName, resultType))
+                                    self._sendDisplayResult('"%s" %s length: 0' % (displayName, resultType), do_encode)
                                     return
                             else:
                                 # no start, just return length of children
-                                self._sendDisplayResult('"%s" %s length: %s' % (displayName, resultType, length))
+                                self._sendDisplayResult('"%s" %s length: %s' % (displayName, resultType, length), do_encode)
                                 return
                         except:
                             children = dir(result)
@@ -868,12 +881,12 @@ class Tracer:
                     children = frame.f_locals
                     displayChildren = True
                 # test if variable has at least children
-                self._sendDisplayResult('"%s" %s children: %s' % (displayName, resultType, len(children)))
+                self._sendDisplayResult('"%s" %s children: %s' % (displayName, resultType, len(children)), do_encode)
                 if displayChildren:
                     for childName in children:
-                        self._display(ident, frameNum, (fullName + '.' if fullName else '') + childName, None, None, radix)
+                        self._display(ident, frameNum, (fullName + '.' if fullName else '') + childName, None, None, radix, do_encode)
             except Exception as ex:
-                self._sendDisplayResult('"%s" failed: %s' % (displayName, repr(ex)))
+                self._sendDisplayResult('"%s" failed: %s' % (displayName, repr(ex)), do_encode)
 
     def _isDebuggerFrame(self, frame):
         return frame and self.canonizeFile(frame.f_code.co_filename) == self._fileName and frame.f_code.co_name == "_runscript"
@@ -886,15 +899,30 @@ class Tracer:
                     self._numFrames(threadEntry),
                     'paused' if threadEntry['paused'] else 'running' ))
 
-    def _showFrame(self, ident, frameStart, numFrames):
+    def _sendFrame(self, file, line, function, dead_or_alive, do_encode):
+        message = \
+            'file: "%s" line: %d function: "%s" %s' % \
+                (   file,
+                    line,
+                    function,
+                    dead_or_alive )
+        if do_encode:
+            message = self._b64encode(message.encode()).decode()
+            self._sendDbgMessage('%s %s %s' % (self._messages.FRAME64, len(message), message))
+        else:
+            self._sendDbgMessage('%s %s' % (self._messages.FRAME, message))
+
+    def _showFrames(self, ident, frameStart, numFrames, do_encode):
         if frameStart == None:
             frameStart = 0
         frame, isPostMortem = self._getFrame(ident, frameStart)
         frameNum = 0
+        dead_or_alive = 'dead' if isPostMortem else 'alive'
         while frame != None and frameNum != numFrames:
             if self._isDebuggerFrame(frame):
-                break
-            self._sendDbgMessage('file: "%s" line: %i function: "%s" %s' % (self.canonizeFile(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name, 'dead' if isPostMortem else 'alive' ))
+                self._sendFrame('<debugger>', 0, 'none', dead_or_alive, do_encode)
+            else:
+                self._sendFrame(self.canonizeFile(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name, dead_or_alive, do_encode)
             frameNum = frameNum + 1
             frame = frame.f_back
 

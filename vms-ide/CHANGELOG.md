@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.28
+* Fix Python debugger (hangs on long file paths).
+
 ## 1.5.27
 * Fix downloading system headers.
 
