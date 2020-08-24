@@ -3,6 +3,7 @@ import * as nls from "vscode-nls";
 
 import { LogFunction, LogType, Lock } from "../common/main";
 import { ICmdQueue, ListenerResponse } from "../vms_jvm_debug/communication";
+import { test_enclosing_quotes } from "../common/quotes";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -103,6 +104,7 @@ export interface IPythonVariable {
     size?: number;
     value?: string;
     parent?: IPythonVariable;
+    is_long_string?: boolean;
 };
 
 export enum EPythonConst {
@@ -475,9 +477,13 @@ export class PythonShellRuntime extends EventEmitter {
                 } else {
                     lastVar.value = line;
                 }
-                if (lastVar.value.trim().endsWith(waitQuota)) {
-                    let pos = lastVar.value.lastIndexOf(waitQuota);
-                    lastVar.value = lastVar.value.substr(0, pos + 1);   // include last quota
+                let enc = test_enclosing_quotes(lastVar.value.trim());
+                if (enc.enclosed) {
+                    lastVar.value = lastVar.value.trim();
+                    if (lastVar.value.length > enc.quote_pos + 1) {
+                        lastVar.is_long_string = true;
+                    }
+                    lastVar.value = lastVar.value.slice(0, enc.quote_pos + 1);
                     waitQuota = undefined;
                     lastVar = undefined;
                     if (numVars === undefined) {
@@ -570,8 +576,14 @@ export class PythonShellRuntime extends EventEmitter {
                             // test if variable is long string
                             if (lastVar.value && (lastVar.value.startsWith('"') || lastVar.value.startsWith("'"))) {
                                 waitQuota = lastVar.value[0];
-                                if (lastVar.value.trim().endsWith(waitQuota)) {
+                                let enc = test_enclosing_quotes(lastVar.value.trim());
+                                if (enc.enclosed) {
                                     // does not split
+                                    lastVar.value = lastVar.value.trim();
+                                    if (lastVar.value.length > enc.quote_pos + 1) {
+                                        lastVar.is_long_string = true;
+                                    }
+                                    lastVar.value = lastVar.value.slice(0, enc.quote_pos + 1);
                                     waitQuota = undefined;
                                     lastVar = undefined;
                                 } else {

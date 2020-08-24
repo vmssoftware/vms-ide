@@ -511,6 +511,10 @@ export class PythonDebugSession extends LoggingDebugSession {
                 let encoded = buf.toString('base64');
                 return encodedName + '[' + encoded + ']';
             }
+            if (variable.parent.is_long_string) {
+                // do not request brackets
+                return encodedName;
+            }
             return this.buildFullName(encodedName, variable.name);
         }
         return variable.name;
@@ -523,6 +527,16 @@ export class PythonDebugSession extends LoggingDebugSession {
         if (parentVar !== undefined) {
             // build full name like <path.name> or <path[name]> or just <name>
             let encodedName = PythonDebugSession.encodeNames(parentVar);
+            if (parentVar.is_long_string) {
+                // get next part
+                let long_str_parent = parentVar;
+                args.start = 0;
+                args.count = 1;
+                while (long_str_parent.parent && long_str_parent.parent.is_long_string) {
+                    ++args.start;
+                    long_str_parent = long_str_parent.parent;
+                }
+            }
             let vars = await this._runtime.variableRequest(
                 parentVar.ident,
                 parentVar.frame,
@@ -541,6 +555,10 @@ export class PythonDebugSession extends LoggingDebugSession {
                     };
                     if (localVar.value !== undefined) {
                         innerVar.value = localVar.value;
+                        if (localVar.is_long_string) {
+                            innerVar.variablesReference = this._variableHandles.create(localVar);
+                            innerVar.indexedVariables = 1;
+                        }
                     } else {
                         innerVar.variablesReference = this._variableHandles.create(localVar);
                         if (localVar.size !== undefined) {

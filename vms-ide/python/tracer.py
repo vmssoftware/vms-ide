@@ -92,7 +92,7 @@ class Tracer:
         self._insensitive = insensitive
         # self._postDebugMessage = None
         self._radix = 10
-        self._maxSendStrLen = 512
+        self._maxSendStrLen = 128
         self._developerMode = developerMode
         self._pathFilter = ''
         self._re_compile = re.compile
@@ -787,17 +787,28 @@ class Tracer:
         else:
             self._sendDbgMessage('%s %s' % (self._messages.DISPLAY, result))
 
-    def _sendKnownType(self, displayName, valueType, value, radix, do_encode):
-        fn = repr
+    def _sendKnownType(self, displayName, valueType, value, radix, do_encode, start):
         if valueType == int:
+            fn = repr
             if radix == 16:
                 fn = hex
             elif radix == 8:
                 fn = oct
+            self._sendDisplayResult('"%s" %s value: %s' % (displayName, valueType, fn(value)), do_encode)
         elif valueType == str:
+            long_str_flag = ''
+            if start != None:
+                start = (start + 1) * self._maxSendStrLen
+                value = value[start:]
+                self._sendDisplayResult('"%s" %s length: 1' % (displayName, valueType), do_encode)
             if len(value) > self._maxSendStrLen:
                 value = value[:self._maxSendStrLen]
-        self._sendDisplayResult('"%s" %s value: %s' % (displayName, valueType, fn(value)), do_encode)
+                long_str_flag = '*'
+            if start != None:
+                displayName = '[' + str(start) + '-' + str(start + len(value)) + ']'
+            self._sendDisplayResult('"%s" %s value: %s%s' % (displayName, valueType, repr(value), long_str_flag), do_encode)
+        else:
+            self._sendDisplayResult('"%s" %s value: %s' % (displayName, valueType, repr(value)), do_encode)
 
     def _display(self, ident, frameNum, fullName, start, count, radix, do_encode):
         # self._sendDbgMessage('_display %s' % fullName)
@@ -818,7 +829,7 @@ class Tracer:
                     valueType = type(value)
                     if valueType in self._knownValueTypes:
                         # if we know that is valueType, display it
-                        self._sendKnownType(displayName, valueType, value, radix, do_encode)
+                        self._sendKnownType(displayName, valueType, value, radix, do_encode, start)
                         return
                     else:
                         try:
@@ -851,7 +862,7 @@ class Tracer:
                                             valueType = type(value)
                                             if valueType in self._knownValueTypes:
                                                 # if we know that is valueType, display it
-                                                self._sendKnownType(displayName + ('[%s]' % idx), valueType, value, radix, do_encode)
+                                                self._sendKnownType(displayName + ('[%s]' % idx), valueType, value, radix, do_encode, None)
                                             else:
                                                 try:
                                                     length = len(value)
