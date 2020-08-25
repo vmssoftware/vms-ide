@@ -17,8 +17,11 @@ class SETTINGS:
 class MESSAGE:
     AMEND = 'AMEND'
     BP_CONFIRM = 'BP_CONFIRM'
+    BP_CONFIRM64 = 'BP_CONFIRM64'
     BP_RESET = 'BP_RESET'
+    BP_RESET64 = 'BP_RESET64'
     BP_WAIT = 'BP_WAIT'
+    BP_WAIT64 = 'BP_WAIT64'
     BREAK = 'BREAK'
     CONTINUED = 'CONTINUED'
     DEBUG = 'DEBUG'
@@ -964,15 +967,22 @@ class Tracer:
     def _confirmBreakpoint(self, bp_file, bp_line, bp_line_real):
         """ add to confirmed """
         if bp_line_real != None:
-            self._sendDbgMessage(self._messages.BP_CONFIRM + (' "%s" %i %i' % (bp_file, bp_line, bp_line_real)))
+            result = '"%s" %i %i' % (bp_file, bp_line, bp_line_real)
+            # self._sendDbgMessage(self._messages.BP_CONFIRM + (' "%s" %i %i' % (bp_file, bp_line, bp_line_real)))
             self._breakpointsConfirmed[bp_file].add(bp_line_real)
         else:
-            self._sendDbgMessage(self._messages.BP_CONFIRM + (' "%s" %i' % (bp_file, bp_line)))
+            result = '"%s" %i' % (bp_file, bp_line)
+            # self._sendDbgMessage(self._messages.BP_CONFIRM + (' "%s" %i' % (bp_file, bp_line)))
             self._breakpointsConfirmed[bp_file].add(bp_line)
+        result = self._b64encode(result.encode()).decode()
+        self._sendDbgMessage('%s %s %s' % (self._messages.BP_CONFIRM64, len(result), result))
 
     def _waitBreakpoint(self, bp_file, bp_line):
         """ add for waiting """
-        self._sendDbgMessage(self._messages.BP_WAIT + (' "%s" %i' % (bp_file, bp_line)))
+        result = '"%s" %i' % (bp_file, bp_line)
+        result = self._b64encode(result.encode()).decode()
+        self._sendDbgMessage('%s %s %s' % (self._messages.BP_WAIT64, len(result), result))
+        # self._sendDbgMessage(self._messages.BP_WAIT + (' "%s" %i' % (bp_file, bp_line)))
         self._breakpointsWait[bp_file].add(bp_line)
 
     def _doSetBreakPoint(self, cmd):
@@ -1009,11 +1019,15 @@ class Tracer:
             if bp_line != None:
                 self._breakpointsWait[bp_file].discard(bp_line)
                 self._breakpointsConfirmed[bp_file].discard(bp_line)
-                self._sendDbgMessage(self._messages.BP_RESET + (' "%s" %i' % (bp_file, bp_line)))
+                result = '"%s" %i' % (bp_file, bp_line)
+                # self._sendDbgMessage(self._messages.BP_RESET + (' "%s" %i' % (bp_file, bp_line)))
             else:
                 del self._breakpointsWait[bp_file]
                 del self._breakpointsConfirmed[bp_file]
-                self._sendDbgMessage(self._messages.BP_RESET + (' "%s"' % bp_file))
+                result = '"%s"' % bp_file
+                # self._sendDbgMessage(self._messages.BP_RESET + (' "%s"' % bp_file))
+            result = self._b64encode(result.encode()).decode()
+            self._sendDbgMessage('%s %s %s' % (self._messages.BP_RESET64, len(result), result))
         else:
             self._breakpointsWait.clear()
             self._breakpointsConfirmed.clear()

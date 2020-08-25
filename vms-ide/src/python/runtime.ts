@@ -24,8 +24,11 @@ export enum PythonRuntimeEvents {
 
 export enum PythonServerMessage {
     BP_CONFIRM = 'BP_CONFIRM',
+    BP_CONFIRM64 = 'BP_CONFIRM64',
     BP_RESET = 'BP_RESET',
+    BP_RESET64 = 'BP_RESET64',
     BP_WAIT = 'BP_WAIT',
+    BP_WAIT64 = 'BP_WAIT64',
     BREAK = 'BREAK',
     CONTINUED = 'CONTINUED',
     DEBUG = 'DEBUG',
@@ -139,6 +142,10 @@ const _rgxBpConfirm_File    = 1;
 const _rgxBpConfirm_Line    = 2;
 const _rgxBpConfirm_Line_R  = 3;
 
+const _rgxBpConfirm64         = /BP_CONFIRM64 (\d+) (.*)/;
+const _rgxBpConfirm64_Len     = 1;
+const _rgxBpConfirm64_Result  = 2;
+
 const _rgxThreads           = /THREADS (\d+) current (\d+)/;
 const _rgxThreads_Thread    = 1;
 const _rgxThreads_Current   = 2;
@@ -199,6 +206,9 @@ export class PythonShellRuntime extends EventEmitter {
 
     private ident: number | undefined;
 
+    private _confirm64line: string | undefined;
+    private _confirm64length: number | undefined;
+
     constructor(private queue: ICmdQueue, _logFn?: LogFunction) {
         super();
 
@@ -217,7 +227,6 @@ export class PythonShellRuntime extends EventEmitter {
         if (line) {
             line = line.trim().replace(rgxEsc, '');
             if (line) {
-                this.sendEvent(PythonRuntimeEvents.output, line);
                 let stopReason: PythonRuntimeEvents | undefined;
                 switch(line) {
                     case  PythonServerMessage.PAUSED:
@@ -254,16 +263,41 @@ export class PythonShellRuntime extends EventEmitter {
                     //this.sendEvent(PythonRuntimeEvents.);
                     return;
                 }
-                if (line.startsWith(PythonServerMessage.BP_CONFIRM)) {
-                    const match = line.match(_rgxBpConfirm);
-                    if (match) {
-                        this.sendEvent(PythonRuntimeEvents.breakpointValidated,
-                            match[_rgxBpConfirm_File],
-                            +match[_rgxBpConfirm_Line],
-                            match[_rgxBpConfirm_Line_R]?+match[_rgxBpConfirm_Line_R]:undefined);
+                // test confirm64 and convert inplace
+                if (this._confirm64line !== undefined && this._confirm64length !== undefined ) {
+                    // TODO: test if line is suitable for base64
+                    this._confirm64line += line.trim();
+                    if (this._confirm64line.length >= this._confirm64length) {
+                        line = PythonServerMessage.BP_CONFIRM + ' ' + Buffer.from(this._confirm64line, 'base64').toString('utf-8');
+                        this._confirm64line = undefined;
+                        this._confirm64length = undefined;
+                    } else {
+                        // wait for tail
+                        return;
                     }
+                }
+                const matchConfirm64 = line.match(_rgxBpConfirm64);
+                if (matchConfirm64) {
+                    this._confirm64length = +matchConfirm64[_rgxBpConfirm64_Len];
+                    this._confirm64line = matchConfirm64[_rgxBpConfirm64_Result];
+                    if (this._confirm64line.length >= this._confirm64length) {
+                        line = PythonServerMessage.BP_CONFIRM + ' ' + Buffer.from(this._confirm64line, 'base64').toString('utf-8');
+                        this._confirm64length = undefined;
+                        this._confirm64line = undefined;
+                    } else {
+                        // wait for tail
+                        return;
+                    }
+                }
+                const matchConfirm = line.match(_rgxBpConfirm);
+                if (matchConfirm) {
+                    this.sendEvent(PythonRuntimeEvents.breakpointValidated,
+                        matchConfirm[_rgxBpConfirm_File],
+                        +matchConfirm[_rgxBpConfirm_Line],
+                        matchConfirm[_rgxBpConfirm_Line_R]?+matchConfirm[_rgxBpConfirm_Line_R]:undefined);
                     return;
                 }
+                this.sendEvent(PythonRuntimeEvents.output, line);
             }
         }
     }
