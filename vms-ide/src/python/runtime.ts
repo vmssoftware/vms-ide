@@ -272,7 +272,7 @@ export class PythonShellRuntime extends EventEmitter {
     // public
     /******************************************************************************************/
 
-    public async start() {
+    public start() {
         this.started = true;
         this.running = true;
     }

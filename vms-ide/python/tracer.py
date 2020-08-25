@@ -116,7 +116,7 @@ class Tracer:
         self._breakpointsConfirmed = collections.defaultdict(set)   # confirmed break line list by [file name]
         self._breakpointsWait = collections.defaultdict(set)        # wait break line list by [file name]
         self._lines = collections.defaultdict(dict)                 # all usable line list by [file name [ function name ]]
-        # self._files = set()
+        self._files = set()
         # incapsulate functions from other classes
         self._lockTrace = threading.Lock()
         self._currentThread = threading.current_thread
@@ -235,24 +235,20 @@ class Tracer:
     def _processFile(self, fileName):
         if self._developerMode:
             # tracer in developer mode
-            # self._sendDbgMessage('=== in developer mode')
+            return True
+        if fileName.startswith(self._cwd):
+            # file is local file
             return True
         if self._pathFilter and fileName.startswith(self._pathFilter):
             # file in filtered folder
-            # self._sendDbgMessage('=== in filtered folder')
             return True
         if fileName in self._breakpointsConfirmed.keys() and len(self._breakpointsConfirmed[fileName]) > 0:
             # file has confirmed breakpoint
-            # self._sendDbgMessage('=== in _breakpointsConfirmed')
             return True
         if fileName in self._breakpointsWait.keys() and len(self._breakpointsWait[fileName]) > 0:
             # file has waiting breakpoint
-            # self._sendDbgMessage('=== in _breakpointsWait')
             return True
-        if fileName.startswith("/") or fileName.startswith('<'):
-            return False
-        # self._sendDbgMessage('=== in local folder')
-        return True
+        return False
 
     def _traceFunc(self, frame, event, arg):
         """ Do not forget not sending any data without locking (but ENTRY) """
@@ -265,9 +261,9 @@ class Tracer:
                 return None
             return self._traceFunc
 
-        currentFile = self.canonizeFile(frame.f_code.co_filename)
-        # if not currentFile in self._files:
-        #     self._files.add(currentFile)
+        currentFile = self._canonizeFile(frame.f_code.co_filename)
+        if not currentFile in self._files:
+            self._files.add(currentFile)
             # self._sendDbgMessage('NEW FILE: %s' % currentFile)
 
         # skip this file tracer.py
@@ -329,15 +325,11 @@ class Tracer:
 
         with self._lockTrace:
             # point of tracing
-            # if event != 'line':
-            #     self._sendDbgMessage('EVENT: %s' % event)
             if event == 'call':
                 # test if that function not in list
                 code_name = frame.f_code.co_name + ":" + str(frame.f_lineno)
                 code_lines = self._linesByFile(currentFile)
-                # self._sendDbgMessage('CALLED: %s %s' % (currentFile, code_name))
                 if code_name not in code_lines:
-                    # self._sendDbgMessage('not in lines')
                     # collect usable code lines
                     lines = []
                     lineno = frame.f_lineno
@@ -362,9 +354,6 @@ class Tracer:
             if event == 'exception':
                 entry['exception'] = arg[1]
                 entry['traceback'] = arg[2]
-                # for testing purpose => always stop
-                # self._sendDbgMessage(self._messages.EXCEPTION + ' ' + repr(entry['exception']))
-                # self._paused = True
 
             # pause on unhandled exception
             if entry['exception'] != None and entry['level'] <= 0:
@@ -372,10 +361,8 @@ class Tracer:
                 self._paused = True
 
             # examine breakpoint
-            bp_file = currentFile.lower() if self._insensitive else currentFile
-            if not self._paused and frame.f_lineno in self._breakpointsConfirmed[bp_file]:
+            if not self._paused and frame.f_lineno in self._breakpointsConfirmed[currentFile]:
                 self._sendDbgMessage(self._messages.BREAK)
-                # self._sendDbgMessage('_COUNTER_ ' + repr(self._enter_counter) + '\n')
                 self._paused = True
 
             # tests runtime commands
@@ -384,7 +371,6 @@ class Tracer:
                 if self._commands_regexp.PAUSE.match(cmd):
                     if not self._paused:
                         self._sendDbgMessage(self._messages.PAUSED)
-                        # self._sendDbgMessage('_COUNTER_ ' + repr(self._enter_counter) + '\n')
                     self._paused = True
                 elif self._commands_regexp.INFO.match(cmd):
                     self._showInfo(ident)
@@ -403,7 +389,6 @@ class Tracer:
                 self._steppingLevel = None
                 self._paused = True
                 self._sendDbgMessage(self._messages.STEPPED)
-                # self._sendDbgMessage('_COUNTER_ ' + repr(self._enter_counter) + '\n')
 
             # pause loop
             while self._paused and self._isConnected():
@@ -472,9 +457,13 @@ class Tracer:
                 raise SystemExit()
         return self._traceFunc
 
-    def canonizeFile(self, fileName):
+    def _canonizeFile(self, fileName):
         if fileName.startswith('./'):
-            return fileName[2:]
+            fileName = self._cwd + '/' + fileName[2:]
+        elif not fileName.startswith(('/', '<')):
+            fileName = self._cwd + '/' + fileName
+        if self._insensitive:
+            return fileName.lower()
         return fileName
 
     def _doGoto(self, cmd):
@@ -504,6 +493,8 @@ class Tracer:
     def _setFilter(self, cmd):
         try:
             self._pathFilter = cmd[2:].strip()
+            if self._insensitive:
+                self._pathFilter = self._pathFilter.lower()
             self._sendDbgMessage('%s %s %s' % (self._messages.PATHFILTER, 'set', repr(self._pathFilter)))
         except Exception as ex:
             self._sendDbgMessage('%s %s %s' % (self._messages.PATHFILTER, 'failed', repr(ex)))
@@ -522,7 +513,7 @@ class Tracer:
         locals_args = cmd.split()
         try:
             frame = self._threads[ident]['frame']
-            code_file = self.canonizeFile(frame.f_code.co_filename)
+            code_file = self._canonizeFile(frame.f_code.co_filename)
             gotoFile = locals_args[1]
             if self._insensitive:
                 gotoFile = gotoFile.lower()
@@ -639,7 +630,7 @@ class Tracer:
                         threadEntry['ident'],
                         self._numFrames(threadEntry),
                         'paused' if threadEntry['paused'] else 'running' ))
-                self._sendDbgMessage('    file: "%s"' % self.canonizeFile(threadEntry['frame'].f_code.co_filename))
+                self._sendDbgMessage('    file: "%s"' % self._canonizeFile(threadEntry['frame'].f_code.co_filename))
                 self._sendDbgMessage('    line: %i' % threadEntry['frame'].f_lineno)
                 self._sendDbgMessage('    function: "%s"' % threadEntry['frame'].f_code.co_name)
 
@@ -811,7 +802,6 @@ class Tracer:
             self._sendDisplayResult('"%s" %s value: %s' % (displayName, valueType, repr(value)), do_encode)
 
     def _display(self, ident, frameNum, fullName, start, count, radix, do_encode):
-        # self._sendDbgMessage('_display %s' % fullName)
         frame, isPostMortem = self._getFrame(ident, frameNum)
         isPostMortem = isPostMortem
         if frame != None:
@@ -843,11 +833,8 @@ class Tracer:
                                         count = length - start
                                     self._sendDisplayResult('"%s" %s length: %s' % (displayName, valueType, count), do_encode)
                                     # enumerate through, cutting displayName
-                                    # self._sendDbgMessage('_display fullName=%s' % fullName)
                                     displayName = fullName.rpartition('.')[2]
-                                    # self._sendDbgMessage('_display displayName=%s' % displayName)
                                     enumerated = enumerate(iter(value))
-                                    # self._sendDbgMessage('_display enumerated=%s' % repr(enumerated))
                                     for x in enumerated:
                                         if start > 0:
                                             # wait a start
@@ -901,7 +888,7 @@ class Tracer:
                 self._sendDisplayResult('"%s" failed: %s' % (displayName, repr(ex)), do_encode)
 
     def _isDebuggerFrame(self, frame):
-        return frame and self.canonizeFile(frame.f_code.co_filename) == self._fileName and frame.f_code.co_name == "_runscript"
+        return frame and self._canonizeFile(frame.f_code.co_filename) == self._fileName and frame.f_code.co_name == "_runscript"
 
     def _showThreads(self, ident):
         self._sendDbgMessage(self._messages.THREADS + (' %i current %i' % (len(self._threads), ident)))
@@ -934,7 +921,7 @@ class Tracer:
             if self._isDebuggerFrame(frame):
                 self._sendFrame('<debugger>', 0, 'none', dead_or_alive, do_encode)
             else:
-                self._sendFrame(self.canonizeFile(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name, dead_or_alive, do_encode)
+                self._sendFrame(self._canonizeFile(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name, dead_or_alive, do_encode)
             frameNum = frameNum + 1
             frame = frame.f_back
 
@@ -1040,6 +1027,10 @@ class Tracer:
 
     def _runscript(self, filename):
         sys.path.insert(0, '.')      # add cwd
+        self._cwd = os.getcwd()
+        if self._insensitive:
+            self._cwd = self._cwd.lower()
+        self._fileName = self._canonizeFile(__file__)
         # === Given from PDB.PY ===
         import __main__
         builtinsT = __builtins__
@@ -1048,10 +1039,9 @@ class Tracer:
                                   '__file__'    : filename,
                                   '__builtins__': builtinsT,
                                  })
-        self._fileWaitingFor = filename
+        self._fileWaitingFor = self._canonizeFile(filename)
         globalsT = __main__.__dict__
         try:
-            # self._sendDbgMessage('PATH: %s' % repr(sys.path))
             with open(filename, 'rb') as fp:
                 statement = "exec(compile(%r, %r, 'exec'))" % (fp.read(), filename)
             self._startTracing = True
