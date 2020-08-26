@@ -275,11 +275,13 @@ class Tracer:
                 return None
             return self._traceFunc
 
-        # skip system files or strings
-        if not self._processFile(currentFile):
-            if not self._fileWaitingFor:
-                return None
-            return self._traceFunc
+        ident = self._currentThread().ident
+        if not (ident in self._threads and self._threads[ident]['file'] == currentFile):
+            # skip system files or strings if we did not be in this file on the previous step
+            if not self._processFile(currentFile):
+                if not self._fileWaitingFor:
+                    return None
+                return self._traceFunc
 
         # wait until tracing file entered
         if self._fileWaitingFor:
@@ -292,7 +294,6 @@ class Tracer:
             self._paused = True
 
         # take an ident
-        ident = self._currentThread().ident
         if self._mainThread == None:
             self._mainThread = ident
 
@@ -300,6 +301,7 @@ class Tracer:
         entry = {
             'ident': ident,
             'frame': frame,
+            'file': currentFile,
             'event': event,
             'arg': arg,
             'paused': True,
