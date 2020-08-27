@@ -36,7 +36,7 @@ import { GetSshHelperType } from '../ext-api/ext-api';
 import { FsSource } from '../synchronizer/sync/fs-source';
 import { SftpSource } from '../synchronizer/sync/sftp-source';
 import { Synchronizer } from '../synchronizer/sync/synchronizer';
-import { middleSepRg } from '../synchronizer/common/find-files';
+import { middleSepRg, middleSepWinRg } from '../synchronizer/common/find-files';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -77,6 +77,11 @@ interface IBreakPointFile {
     break_points: Map<number, IBreakPoint>;
 };
 
+interface IRootFolder {
+    vms: string;
+    pc: string;
+};
+
 export class PythonDebugSession extends LoggingDebugSession {
 
     private _logFn: LogFunction;
@@ -99,7 +104,7 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     private _gotoHandles = new Handles<GotoTarget>();
 
-    private _rootMap = new Map<string, string>();
+    private _rootMap: IRootFolder[] = [];
 
     private _vmsRoot: VmsPathConverter | undefined;
 
@@ -124,12 +129,7 @@ export class PythonDebugSession extends LoggingDebugSession {
             for (let [file, bpfile] of this._breakPoints) {
                 // resolve vms_file
                 if (!bpfile.vms_file) {
-                    for (const [key, value] of this._rootMap) {
-                        if (file.toLowerCase().startsWith(value.toLowerCase())) {
-                            bpfile.vms_file = (key + file.substring(value.length)).replace(middleSepRg, ftpPathSeparator);
-                            break;
-                        }
-                    }
+                    bpfile.vms_file = this.getVMSFile(file);
                 }
                 // send
                 if (bpfile.vms_file) {
@@ -348,16 +348,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         logger.setup(Logger.LogLevel.Stop, false);
         //logger.setup(Logger.LogLevel.Verbose, false);
 
-        this._rootMap = new Map<string, string>();
-        const config = workspace.getConfiguration("vmssoftware.vms_python_debug", null);
-        const root = config.get<object>("roots");
-        if (root) {
-            for(const [key, value] of Object.entries(root)) {
-                if (typeof(key) === "string" && typeof(value) === "string") {
-                    this._rootMap.set(key, value);
-                }
-            }
-        }
+        this._rootMap = [];
 
         this._workspace = args.workspace;
 
@@ -453,7 +444,12 @@ export class PythonDebugSession extends LoggingDebugSession {
                             }).then(async (ok) => {
                                 // add local vms directory to the _rootMap
                                 if (ok && this._vmsRoot?.initial && this._workspace) {
-                                    this._rootMap.set(this._vmsRoot.initial.slice(0, -1), this._workspace.uri.fsPath);
+                                    this._rootMap.push({
+                                        vms: this._vmsRoot.initial.slice(0, -1),
+                                        pc: this._workspace.uri.fsPath,
+                                    });
+                                    // add configured roots only after local folder
+                                    this.populateRoots();
                                     return true;
                                 }
                                 return false;
@@ -507,13 +503,7 @@ export class PythonDebugSession extends LoggingDebugSession {
     }
 
     protected frameSource(frame: IPythonFrame) {
-        let framePath = frame.file;
-        for (const [key, value] of this._rootMap) {
-            if (framePath.toLowerCase().startsWith(key.toLowerCase())) {
-                framePath = value + framePath.substring(key.length);
-                break;
-            }
-        }
+        let framePath = this.getPCFile(frame.file);
         return new Source(frame.file, framePath);
     }
 
@@ -710,12 +700,7 @@ export class PythonDebugSession extends LoggingDebugSession {
 
             // test if vms_file is resolved
             if (!newBPFile.vms_file) {
-                for (const [key, value] of this._rootMap) {
-                    if (args.source.path.toLowerCase().startsWith(value.toLowerCase())) {
-                        newBPFile.vms_file = (key + args.source.path.substring(value.length)).replace(middleSepRg, ftpPathSeparator);
-                        break;
-                    }
-                }
+                newBPFile.vms_file = this.getVMSFile(args.source.path);
             }
             // set added breakpoints
             if (newBPFile.vms_file) {
@@ -832,13 +817,7 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     protected async gotoTargetsRequest(response: DebugProtocol.GotoTargetsResponse, args: DebugProtocol.GotoTargetsArguments, request?: DebugProtocol.Request) {
         if (args.source.path) {
-            let localPath = '';
-            for (const [key, value] of this._rootMap) {
-                if (args.source.path.toLowerCase().startsWith(value.toLowerCase())) {
-                    localPath = (key + args.source.path.substring(value.length)).replace(middleSepRg, ftpPathSeparator);
-                    break;
-                }
-            }
+            let localPath = this.getVMSFile(args.source.path);
             if (localPath) {
                 response.success = await this._runtime.requestGotoTargets(localPath, args.line);
                 const gtt: GotoTarget = {
@@ -1012,4 +991,38 @@ export class PythonDebugSession extends LoggingDebugSession {
         }
         return "";
     }
+
+    public getVMSFile(pcFile: string) : string | undefined {
+        for (const rootFolder of this._rootMap) {
+            if (pcFile.toLowerCase().startsWith(rootFolder.pc.toLowerCase())) {
+                return (rootFolder.vms + pcFile.substring(rootFolder.pc.length)).replace(middleSepRg, ftpPathSeparator);
+            }
+        }
+        return undefined;
+    }
+
+    public getPCFile(vmsFile: string) : string | undefined {
+        for (const rootFolder of this._rootMap) {
+            if (vmsFile.toLowerCase().startsWith(rootFolder.vms.toLowerCase())) {
+                return (rootFolder.pc + vmsFile.substring(rootFolder.vms.length)).replace(middleSepWinRg, path.sep);
+            }
+        }
+        return undefined;
+    }
+
+    public populateRoots() {
+        const config = workspace.getConfiguration("vmssoftware.vms_python_debug", this._workspace?.uri);
+        const root = config.get<object>("roots");
+        if (root) {
+            for(const [key, value] of Object.entries(root)) {
+                if (typeof(key) === "string" && typeof(value) === "string") {
+                    this._rootMap.push({
+                        vms: key,
+                        pc: value,
+                    });
+                }
+            }
+        }
+    }
+
 }
