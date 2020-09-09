@@ -553,10 +553,14 @@ export class PythonDebugSession extends LoggingDebugSession {
         if (variable.parent) {
             let encodedName = this.encodeNames(variable.parent);
             if (variable.parent.type == 'dict') {
-                let idx = variable.name.substring(1, variable.name.length - 1);
-                let buf = Buffer.from(idx, 'utf-8');
-                let encoded = buf.toString('base64');
-                return encodedName + '[' + encoded + ']';
+                if (variable.dict_order) {
+                    return encodedName + '[' + variable.dict_order + ']';
+                } else {
+                    let idx = variable.name.substring(1, variable.name.length - 1);
+                    let buf = Buffer.from(idx, 'utf-8');
+                    let encoded = buf.toString('base64');
+                    return encodedName + '[' + encoded + ']';
+                }
             }
             if (variable.parent.is_long_string) {
                 // do not request brackets

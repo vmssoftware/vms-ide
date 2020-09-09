@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.34
+* Python debugger: fix displaying 'dict' object.
+
 ## 1.5.31
 * Refine Python debugger output.
 

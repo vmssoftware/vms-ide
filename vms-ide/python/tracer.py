@@ -96,6 +96,7 @@ class Tracer:
         # self._postDebugMessage = None
         self._radix = 10
         self._maxSendStrLen = 128
+        self._maxKeyStrLen = 32
         self._developerMode = developerMode
         self._pathFilter = ''
         self._re_compile = re.compile
@@ -691,11 +692,32 @@ class Tracer:
         # find a value by idx
         result = None
         if type(head) == dict:
-            idx = self._b64decode(idx).decode('utf-8')
-            for _, (k, v) in enumerate(head.items()):
-                if repr(k) == idx:
+            # idx is an base64 encoded string or an integer value
+            try:
+                # if decoding is success get value by key
+                idx = self._b64decode(idx, validate=True).decode('utf-8')
+                for k, v in head.items():
+                    if repr(k) == idx:
+                        result = v
+                        break
+            except:
+                # if decoding fails get value by index
+                try:
+                    idx = int(idx)
+                    for k, v in head.items():
+                        if idx == 0:
+                            result = v
+                            break
+                        idx = idx - 1
+                except:
+                    pass
+        elif type(head) == set:
+            idx = int(idx)
+            for v in iter(head):
+                if idx == 0:
                     result = v
                     break
+                idx = idx - 1
         else:
             result = head[int(idx)]
         if tail and result != None:
@@ -716,12 +738,20 @@ class Tracer:
                 if type(head) == dict:
                     try:
                         idx = self._b64decode(idx).decode('utf-8')
+                        for k, _ in head.items():
+                            if repr(k) == idx:
+                                head[k] = value
+                                break
                     except:
-                        pass
-                    for _, (k, _) in enumerate(head.items()):
-                        if repr(k) == idx:
-                            head[k] = value
-                            break
+                        try:
+                            idx = int(idx)
+                            for k, _ in head.items():
+                                if idx == 0:
+                                    head[k] = value
+                                    break
+                                idx = idx - 1
+                        except:
+                            pass
                 else:
                     head[int(idx)] = value
             else:
@@ -847,21 +877,24 @@ class Tracer:
                                             continue
                                         if count > 0:
                                             # until count
-                                            idx, value = x
-                                            if type(value) == dict:
-                                                idx = repr(value)
-                                                value = value[value]
-                                            valueType = type(value)
-                                            if valueType in self._knownValueTypes:
+                                            idx, subValue = x
+                                            if valueType == dict:
+                                                idx_s = repr(subValue)
+                                                if len(idx_s) > self._maxKeyStrLen:
+                                                    idx_s = idx_s[:self._maxKeyStrLen-3] + '...'
+                                                idx = self._b64encode(idx_s.encode()).decode()
+                                                subValue = value[subValue]
+                                            subValueType = type(subValue)
+                                            if subValueType in self._knownValueTypes:
                                                 # if we know that is valueType, display it
-                                                self._sendKnownType(displayName + ('[%s]' % idx), valueType, value, radix, do_encode, None)
+                                                self._sendKnownType(displayName + ('[%s]' % idx), subValueType, subValue, radix, do_encode, None)
                                             else:
                                                 try:
-                                                    length = len(value)
-                                                    self._sendDisplayResult('"%s" %s length: %s' % (displayName + ('[%s]' % idx), valueType, length), do_encode)
+                                                    length = len(subValue)
+                                                    self._sendDisplayResult('"%s" %s length: %s' % (displayName + ('[%s]' % idx), subValueType, length), do_encode)
                                                 except:
-                                                    children = dir(value)
-                                                    self._sendDisplayResult('"%s" %s children: %s' % (displayName + ('[%s]' % idx), valueType, len(children)), do_encode)
+                                                    children = dir(subValue)
+                                                    self._sendDisplayResult('"%s" %s children: %s' % (displayName + ('[%s]' % idx), subValueType, len(children)), do_encode)
                                             count = count - 1
                                         else:
                                             break

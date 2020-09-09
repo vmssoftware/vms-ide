@@ -109,6 +109,7 @@ export interface IPythonVariable {
     value?: string;
     parent?: IPythonVariable;
     is_long_string?: boolean;
+    dict_order?: number;
 };
 
 export enum EPythonConst {
@@ -204,6 +205,9 @@ const _rgxGotoTargtes_Result    = 1;
 
 const _rgxGoto                  = /GOTO (failed|ok)/;
 const _rgxGoto_Result           = 1;
+
+const _rgxNonBase64idx          = /\[[0-9]+(-[0-9]+)\]/;
+const _rgxBase64idx             = /\[[A-Za-z0-9]+=*\]/;
 
 const _rgxCommands = {
     AMEND:          /^a (\d+) (\d+) (\S+) (.+)$/,
@@ -735,6 +739,14 @@ export class PythonShellRuntime extends EventEmitter {
                                 let pos = lastVar.name.lastIndexOf("[");
                                 if (pos >= 0) {
                                     lastVar.name = lastVar.name.substr(pos);
+                                    if (!lastVar.name.match(_rgxNonBase64idx) && lastVar.name.match(_rgxBase64idx)) {
+                                        let dictKey = Buffer.from(lastVar.name, 'base64').toString('utf-8');
+                                        if (dictKey) {
+                                            lastVar.name = '[' + dictKey + ']';
+                                            // suppose we have only dict values in this request
+                                            lastVar.dict_order = variables.length + (start?start:0);
+                                        }
+                                    }
                                 }
                             }
                             // do not handle children length, not necessary at this point
