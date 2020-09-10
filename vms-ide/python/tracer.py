@@ -278,11 +278,14 @@ class Tracer:
 
         ident = self._currentThread().ident
         if not (ident in self._threads and self._threads[ident]['file'] == currentFile):
-            # skip system files or strings if we did not be in this file on the previous step
-            if not self._processFile(currentFile):
-                if not self._fileWaitingFor:
-                    return None
-                return self._traceFunc
+            # we are not in the same file as we did on the previous step
+            if not (self._steppingThread == ident and self._steppingLevel == None):
+                # we are not in step into mode
+                # so test if we may skip this file
+                if not self._processFile(currentFile):
+                    if not self._fileWaitingFor:
+                        return None
+                    return self._traceFunc
 
         # wait until tracing file entered
         if self._fileWaitingFor:
