@@ -17,7 +17,7 @@ import { ensureSettings, IEnsured, ensureConfigSection } from "../ensure-setting
 import { FsSource } from "../sync/fs-source";
 import { ISource } from "../sync/source";
 import { Synchronizer } from "../sync/synchronizer";
-import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
+import { VmsPathConverter, VmsPathPart, vmsPathRgx, dotReplace } from "../vms/vms-path-converter";
 import { ProjectState } from "../dep-tree/proj-state";
 import { IBuildConfigSection } from "../../synchronizer/sync/sync-api";
 import { ParseExecResult } from "../../synchronizer/common/TestExecResult";
@@ -723,37 +723,38 @@ export class Builder {
                         if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library] ||
                             depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
                             const vmsRoot = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
-                            const projName = depEnsured.projectSection.projectName.toUpperCase();
+                            const projName = depEnsured.projectSection.projectName.toUpperCase().replace(dotReplace, '^.');
+                            const projNameSymb = depEnsured.projectSection.projectName.toUpperCase().replace(dotReplace, '_');
                             const outDir = depEnsured.projectSection.outdir;
                             if (vmsRoot.disk) {
-                                contentFirst.push(`    ${projName}_INC_SYMB = "${vmsRoot.directory}"`);
-                                contentFirst.push(`    DEFINE ${projName}_INC_DIR '${projName}_INC_SYMB'`);
-                                contentFirst.push(`    ${projName}_LIB_SYMB = "${vmsRoot.directory}"-"]"+".${outDir}.$(CONFIG)]"`);
-                                contentFirst.push(`    DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
+                                contentFirst.push(`    ${projNameSymb}_INC_SYMB = "${vmsRoot.directory}"`);
+                                contentFirst.push(`    DEFINE ${projNameSymb}_INC_DIR '${projNameSymb}_INC_SYMB'`);
+                                contentFirst.push(`    ${projNameSymb}_LIB_SYMB = "${vmsRoot.directory}"-"]"+".${outDir}.$(CONFIG)]"`);
+                                contentFirst.push(`    DEFINE ${projNameSymb}_LIB_DIR '${projNameSymb}_LIB_SYMB'`);
                             } else {
-                                contentFirst.push(`    ${projName}_INC_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}]"`);
-                                contentFirst.push(`    DEFINE ${projName}_INC_DIR '${projName}_INC_SYMB'`);
-                                contentFirst.push(`    ${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.$(CONFIG)]"`);
-                                contentFirst.push(`    DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
+                                contentFirst.push(`    ${projNameSymb}_INC_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}]"`);
+                                contentFirst.push(`    DEFINE ${projNameSymb}_INC_DIR '${projNameSymb}_INC_SYMB'`);
+                                contentFirst.push(`    ${projNameSymb}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.$(CONFIG)]"`);
+                                contentFirst.push(`    DEFINE ${projNameSymb}_LIB_DIR '${projNameSymb}_LIB_SYMB'`);
                             }
-                            cxxIncludes.push(`${projName}_INC_DIR`);
+                            cxxIncludes.push(`${projNameSymb}_INC_DIR`);
                             if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library]) {
-                                optLines.push(`${projName}_LIB_DIR:${projName}/LIBRARY`);
+                                optLines.push(`${projNameSymb}_LIB_DIR:${projNameSymb}/LIBRARY`);
                             }
                             if (depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
-                                optLines.push(`${projName}_LIB_DIR:${projName}/SHAREABLE`);
+                                optLines.push(`${projNameSymb}_LIB_DIR:${projNameSymb}/SHAREABLE`);
                                 // com file
                                 if (comLines.length === 0) {
                                     comLines.push(`CONFIG:=DEBUG`);
                                     comLines.push(`if P1 .NES. "" THEN CONFIG:='P1'`);
                                 }
                                 if (vmsRoot.disk) {
-                                    comLines.push(`${projName}_LIB_SYMB = "${vmsRoot.directory}"-"]"+".${outDir}.'CONFIG']"`);
+                                    comLines.push(`${projNameSymb}_LIB_SYMB = "${vmsRoot.directory}"-"]"+".${outDir}.'CONFIG']"`);
                                 } else {
-                                    comLines.push(`${projName}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.'CONFIG']"`);
+                                    comLines.push(`${projNameSymb}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.'CONFIG']"`);
                                 }
-                                comLines.push(`DEFINE ${projName}_LIB_DIR '${projName}_LIB_SYMB'`);
-                                comLines.push(`DEFINE ${projName} ${projName}_LIB_DIR:${projName}.exe`);
+                                comLines.push(`DEFINE ${projNameSymb}_LIB_DIR '${projNameSymb}_LIB_SYMB'`);
+                                comLines.push(`DEFINE ${projName} ${projNameSymb}_LIB_DIR:${projName}.exe`);
                             }
                         }
                     }
@@ -930,7 +931,7 @@ export class Builder {
                             case ProjectType[ProjectType.kotlin]: {
                                     const vmsRoot = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
                                     const projName = depEnsured.projectSection.projectName;
-                                    const projNameUpper = projName.toUpperCase();
+                                    const projNameSymb = projName.toUpperCase().replace(dotReplace, '_');
                                     const outDir = depEnsured.projectSection.outdir;
                                     // com file
                                     if (comLines.length === 0) {
@@ -938,19 +939,19 @@ export class Builder {
                                         comLines.push(`if P1 .NES. "" THEN CONFIG:='P1'`);
                                     }
                                     if (vmsRoot.disk) {
-                                        contentFirst.push(`    ${projNameUpper}_LIB_SYMB = "${vmsRoot.directory}"-"]"+".${outDir}.$(CONFIG)]"`);
-                                        contentFirst.push(`    DEFINE ${projNameUpper}_LIB_DIR '${projNameUpper}_LIB_SYMB'`);
-                                        comLines.push(`${projNameUpper}_LIB_SYMB = "${vmsRoot.directory}"-"]"+".${outDir}.'CONFIG']"`);
+                                        contentFirst.push(`    ${projNameSymb}_LIB_SYMB = "${vmsRoot.directory}"-"]"+".${outDir}.$(CONFIG)]"`);
+                                        contentFirst.push(`    DEFINE ${projNameSymb}_LIB_DIR '${projNameSymb}_LIB_SYMB'`);
+                                        comLines.push(`${projNameSymb}_LIB_SYMB = "${vmsRoot.directory}"-"]"+".${outDir}.'CONFIG']"`);
                                     } else {
-                                        contentFirst.push(`    ${projNameUpper}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.$(CONFIG)]"`);
-                                        contentFirst.push(`    DEFINE ${projNameUpper}_LIB_DIR '${projNameUpper}_LIB_SYMB'`);
-                                        comLines.push(`${projNameUpper}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.'CONFIG']"`);
+                                        contentFirst.push(`    ${projNameSymb}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.$(CONFIG)]"`);
+                                        contentFirst.push(`    DEFINE ${projNameSymb}_LIB_DIR '${projNameSymb}_LIB_SYMB'`);
+                                        comLines.push(`${projNameSymb}_LIB_SYMB = F$TRNLNM("SYS$LOGIN")-"]"+"${vmsRoot.bareDirectory}.${outDir}.'CONFIG']"`);
                                     }
-                                    comLines.push(`DEFINE ${projNameUpper}_LIB_DIR '${projNameUpper}_LIB_SYMB'`);
+                                    comLines.push(`DEFINE ${projNameSymb}_LIB_DIR '${projNameSymb}_LIB_SYMB'`);
                                     if (depClassPath) {
                                         depClassPath += ":";
                                     }
-                                    depClassPath += `/${projNameUpper}_LIB_DIR/${projName}.jar`;
+                                    depClassPath += `/${projNameSymb}_LIB_DIR/${projName}.jar`;
                                 }
                                 break;
                         }

@@ -739,8 +739,8 @@ export class PythonShellRuntime extends EventEmitter {
                                 let pos = lastVar.name.lastIndexOf("[");
                                 if (pos >= 0) {
                                     lastVar.name = lastVar.name.substr(pos);
-                                    if (!lastVar.name.match(_rgxNonBase64idx) && lastVar.name.match(_rgxBase64idx)) {
-                                        let dictKey = Buffer.from(lastVar.name, 'base64').toString('utf-8');
+                                    if (lastVar.name.startsWith("[=")) {
+                                        let dictKey = Buffer.from(lastVar.name.substr(2), 'base64').toString('utf-8');
                                         if (dictKey) {
                                             lastVar.name = '[' + dictKey + ']';
                                             // suppose we have only dict values in this request

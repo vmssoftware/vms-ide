@@ -1,6 +1,7 @@
 import { ftpPathSeparator } from "../../common/main";
 
 export const splitter = new RegExp(ftpPathSeparator, "g");
+export const dotReplace = /\./g;
 export const vmsPathRgx = /(([\w_$\-]+):)?(\[((\.)?([\w_$\-]+)(\.([\w_$\-]+))*)\])?((([\w_$\-]+)(\.([\w_$\-]+)?)?)?(;(\d+))?)?/;
 export enum VmsPathPart {
     disk = 2,
@@ -83,6 +84,7 @@ export class VmsPathConverter {
             } else {
                 this.vmsFileName = fsPath.slice(dirEnd + 1);
                 this.vmsBareDir = fsPath.slice(0, dirEnd);
+                this.vmsBareDir = this.vmsBareDir.replace(dotReplace, "^.");
                 this.vmsBareDir = this.vmsBareDir.replace(splitter, ".");
                 if (this.vmsBareDir[0] === ".") {
                     // if starts with "/" then path is absolute and has a disk

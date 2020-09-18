@@ -885,7 +885,7 @@ class Tracer:
                                                 idx_s = repr(subValue)
                                                 if len(idx_s) > self._maxKeyStrLen:
                                                     idx_s = idx_s[:self._maxKeyStrLen-3] + '...'
-                                                idx = self._b64encode(idx_s.encode()).decode()
+                                                idx = '=' + self._b64encode(idx_s.encode()).decode()
                                                 subValue = value[subValue]
                                             subValueType = type(subValue)
                                             if subValueType in self._knownValueTypes:

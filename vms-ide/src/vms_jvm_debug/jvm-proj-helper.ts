@@ -10,7 +10,7 @@ import { LogFunction, ftpPathSeparator, LogType } from "../common/main";
 import { workspace, Uri, commands } from "vscode";
 import { Synchronizer } from "../synchronizer/sync/synchronizer";
 import { ISource } from "../synchronizer/sync/source";
-import { VmsPathConverter } from "../synchronizer/vms/vms-path-converter";
+import { VmsPathConverter, dotReplace } from "../synchronizer/vms/vms-path-converter";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -241,7 +241,7 @@ export class JvmProjectHelper {
         if (scope && typeof scope === "string") {
             const scopedata = await this.chooseScope(scope);
             if (scopedata) {
-                return `@${scopedata.ensured.projectSection.projectName}.com`;
+                return `@${scopedata.ensured.projectSection.projectName.replace(dotReplace, '^.')}.com`;
             }
         }
         return "";

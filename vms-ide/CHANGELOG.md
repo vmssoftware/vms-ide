@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.35
+* Python debugger: fix displaying collections when index > 9.
+
 ## 1.5.34
 * Python debugger: fix displaying 'dict' object.
 
