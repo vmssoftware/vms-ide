@@ -29,6 +29,7 @@ class MESSAGE:
     DISPLAY = 'DISPLAY'
     DISPLAY64 = 'DISPLAY64'
     ENTRY = 'ENTRY'
+    EVAL = 'EVALUATE'
     EXCEPTION = 'EXCEPTION'
     EXECUTE = 'EXECUTE'
     EXITED = 'EXITED'
@@ -53,6 +54,7 @@ class MESSAGE:
 #     CONTINUE = 'c'
 #     DISPLAY = 'd'           # d[h] [ident [frame [fullName [start [count]]]]]   // frame is zero-based
 #     DISPLAY64 = 'd64'       # d64[h] [ident [frame [fullName [start [count]]]]] // base64 coded
+#     EVAL = 'v'              # v expression                                      // evaluate expression in the current frame
 #     EXEC = 'e'              # e expression                                      // execute expression in the current frame
 #     FRAME = 'f'             # f [ident [frameStart [frameNum]]]                 // frame is zero-based
 #     FRAME64 = 'f64'         # f64 [ident [frameStart [frameNum]]]               // base64 coded
@@ -75,6 +77,7 @@ class COMMAND_REGEXP:
     CONTINUE =      re.compile('^c$')
     DISPLAY =       re.compile('^d(h|o)?(?: (\\d+)(?: (\\d+)(?: (\\S+)(?: (\\d+)(?: (\\d+)))?)?)?)?$')
     DISPLAY64 =     re.compile('^d64(h|o)?(?: (\\d+)(?: (\\d+)(?: (\\S+)(?: (\\d+)(?: (\\d+)))?)?)?)?$')
+    EVAL =          re.compile('^v (.+)$')
     EXEC =          re.compile('^e (.+)$')
     FRAME =         re.compile('^f(?: (\\d+)(?: (\\d+)(?: (\\d+))?)?)?$')
     FRAME64 =       re.compile('^f64(?: (\\d+)(?: (\\d+)(?: (\\d+))?)?)?$')
@@ -449,6 +452,8 @@ class Tracer:
                         self._setFilter(cmd)
                     elif self._commands_regexp.EXEC.match(cmd):
                         self._execExpression(cmd, ident)
+                    elif self._commands_regexp.EVAL.match(cmd):
+                        self._evalExpression(cmd, ident)
                     else:
                         self._sendDbgMessage('%s' % self._messages.SYNTAX_ERROR)
                 # wait and read command again
@@ -515,6 +520,17 @@ class Tracer:
             isPostMortem = isPostMortem
             if frame != None:
                 exec(expression, globals(), frame.f_locals)
+        except Exception as ex:
+            self._sendDbgMessage('%s %s %s' % (self._messages.EXECUTE, 'failed', repr(ex)))
+
+    def _evalExpression(self, cmd, ident):
+        try:
+            expression = cmd[2:].strip()
+            frame, isPostMortem = self._getFrame(ident, 0)
+            isPostMortem = isPostMortem
+            if frame != None:
+                result = eval(expression, globals(), frame.f_locals)
+                self._sendDbgMessage(repr(result))
         except Exception as ex:
             self._sendDbgMessage('%s %s %s' % (self._messages.EXECUTE, 'failed', repr(ex)))
 
