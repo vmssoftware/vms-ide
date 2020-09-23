@@ -1,6 +1,7 @@
 import { ftpPathSeparator, LogFunction, LogType, printLike } from "../common/main";
 
 import * as path from "path";
+import * as fs from 'fs';
 import { GetSshHelperType } from "../ext-api/ext-api";
 import { ProjectState } from "./dep-tree/proj-state";
 import { IEnsured } from "./ensure-settings";
@@ -10,6 +11,7 @@ import { Synchronizer } from "./sync/synchronizer";
 import { VmsPathConverter } from "./vms/vms-path-converter";
 
 import * as nls from "vscode-nls";
+import { fstat } from "fs";
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
@@ -25,22 +27,35 @@ export class UploadZip {
         this.logFn = log || (() => {});
     }
 
+    private async cleanup(zipFilePath: string) {
+        fs.unlink(zipFilePath, err => {
+            // skip all errors
+        });
+    }
+
     public async perform(ensured: IEnsured, clear?: string) {
         if (ensured.scope &&
             ensured.configHelper.workspaceFolder) {
             const synchronizer = Synchronizer.acquire(this.logFn);
-            const ZipApiType = await GetZipApi();
+            const ZipApiType = GetZipApi();
             if (!ZipApiType) {
                 this.logFn(LogType.error, () => localize("zip.missed", "Could not find vmssoftware.zip-helper extension."));
                 return false;
             }
             const zipApi = new ZipApiType(this.logFn);
             const localPath = ensured.configHelper.workspaceFolder.uri.fsPath;
-            const zipFileName = ensured.projectSection.projectName + ".zip";
-            const zipFilePath = path.join(localPath, zipFileName);
+            let   zipFileName = ensured.projectSection.projectName + ".zip";
+            let   zipFilePath = path.join(localPath, zipFileName);
+            let   tries = 100;
+            while(tries > 0 && fs.existsSync(zipFilePath)) {
+                zipFileName = ensured.projectSection.projectName + "_" + String(Math.floor(Math.random()*10000)) + ".zip";
+                zipFilePath = path.join(localPath, zipFileName);
+                --tries;
+            }
             const zipFinished = zipApi.start(zipFilePath, ensured.synchronizeSection.forceLocalTime);
             if (!zipFinished) {
                 this.logFn(LogType.error, () => localize("zip.cannot_start", "Could not start Zip."));
+                this.cleanup(zipFilePath);
                 return false;
             }
             const localSource = new FsSource(localPath, this.logFn);
@@ -52,6 +67,7 @@ export class UploadZip {
             const fileEntries = await localSource.findFiles(fileNames, ensured.projectSection.exclude);
             if (!fileEntries) {
                 this.logFn(LogType.error, () => localize("zip.nothing", "Nothing to Zip."), true);
+                this.cleanup(zipFilePath);
                 return false;
             }
             for (const fileEntry of fileEntries) {
@@ -59,6 +75,7 @@ export class UploadZip {
                 zipApi.addFile(fileName, fileEntry.filename);
                 if (synchronizer.stopIssued) {
                     this.logFn(LogType.error, () => localize("zip.ssh.stopped", "Stopped."));
+                    this.cleanup(zipFilePath);
                     return false;
                 }
             }
@@ -66,15 +83,17 @@ export class UploadZip {
             if (await zipFinished) {
                 // clear
                 const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
-                const sshHelperType = await GetSshHelperType();
+                const sshHelperType = GetSshHelperType();
                 if (!sshHelperType) {
                     this.logFn(LogType.error, () => localize("zip.ssh.failed", "Could not find vmssoftware.ssh-helper extension."));
+                    this.cleanup(zipFilePath);
                     return false;
                 }
                 const sshHelper = new sshHelperType(this.logFn);
                 const shell = await sshHelper.getDefaultVmsShell(ensured.scope);
                 if (!shell) {
                     this.logFn(LogType.error, () => localize("zip.shell.failed", "Could not create remote shell."));
+                    this.cleanup(zipFilePath);
                     return false;
                 }
                 if (typeof clear === "string") {
@@ -91,15 +110,17 @@ export class UploadZip {
                 if (await Synchronizer.acquire(this.logFn).uploadFiles(ensured, [zipFileName])) {
                     if (synchronizer.stopIssued) {
                         this.logFn(LogType.error, () => localize("zip.ssh.stopped", "Stopped."));
+                        this.cleanup(zipFilePath);
                         return false;
                     }
                         // 2. unzip
                     // set default directory for shell - project root
                     const cd = `set default ${converter.directory}`;
-                    const answer = await shell.execCmd(cd);
+                    let answer = await shell.execCmd(cd);
                     if (!answer) {
                         this.logFn(LogType.error, () => localize("zip.cd.failed", "Could not set default directory."));
                         shell.dispose();
+                        this.cleanup(zipFilePath);
                         return false;
                     }
                     // overwrite always, use current time for timestamping, wait 3sec before rejecting
@@ -130,11 +151,14 @@ export class UploadZip {
                             }
                         }
                     }
+                    answer = await shell.execCmd('DELETE ' + zipFileName + ";*", undefined, 3000);
                     shell.dispose();
+                    this.cleanup(zipFilePath);
                     return retCode;
                 }
             } else {
                 this.logFn(LogType.error, () => localize("zip.cannot_finish", "Could not finish Zip."));
+                this.cleanup(zipFilePath);
             }
         }
         return false;

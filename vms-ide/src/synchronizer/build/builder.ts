@@ -17,7 +17,7 @@ import { ensureSettings, IEnsured, ensureConfigSection } from "../ensure-setting
 import { FsSource } from "../sync/fs-source";
 import { ISource } from "../sync/source";
 import { Synchronizer } from "../sync/synchronizer";
-import { VmsPathConverter, VmsPathPart, vmsPathRgx, dotReplace } from "../vms/vms-path-converter";
+import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
 import { ProjectState } from "../dep-tree/proj-state";
 import { IBuildConfigSection } from "../../synchronizer/sync/sync-api";
 import { ParseExecResult } from "../../synchronizer/common/TestExecResult";
@@ -723,8 +723,8 @@ export class Builder {
                         if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library] ||
                             depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
                             const vmsRoot = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
-                            const projName = depEnsured.projectSection.projectName.toUpperCase().replace(dotReplace, '^.');
-                            const projNameSymb = depEnsured.projectSection.projectName.toUpperCase().replace(dotReplace, '_');
+                            const projName = VmsPathConverter.replaceSpecSymbols(depEnsured.projectSection.projectName.toUpperCase());
+                            const projNameSymb = VmsPathConverter.replaceSpecSymbols(depEnsured.projectSection.projectName.toUpperCase());
                             const outDir = depEnsured.projectSection.outdir;
                             if (vmsRoot.disk) {
                                 contentFirst.push(`    ${projNameSymb}_INC_SYMB = "${vmsRoot.directory}"`);
@@ -931,7 +931,7 @@ export class Builder {
                             case ProjectType[ProjectType.kotlin]: {
                                     const vmsRoot = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
                                     const projName = depEnsured.projectSection.projectName;
-                                    const projNameSymb = projName.toUpperCase().replace(dotReplace, '_');
+                                    const projNameSymb = VmsPathConverter.replaceSpecSymbols(projName.toUpperCase());
                                     const outDir = depEnsured.projectSection.outdir;
                                     // com file
                                     if (comLines.length === 0) {

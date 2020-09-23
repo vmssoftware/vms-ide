@@ -1,7 +1,6 @@
 import { ftpPathSeparator } from "../../common/main";
 
 export const splitter = new RegExp(ftpPathSeparator, "g");
-export const dotReplace = /\./g;
 export const vmsPathRgx = /(([\w_$\-]+):)?(\[((\.)?([\w_$\-]+)(\.([\w_$\-]+))*)\])?((([\w_$\-]+)(\.([\w_$\-]+)?)?)?(;(\d+))?)?/;
 export enum VmsPathPart {
     disk = 2,
@@ -48,6 +47,11 @@ export class VmsPathConverter {
         return this.fsPath || "";
     }
 
+    private static readonly rgxReplaceSymbols = /([. ^])/g;
+    public static replaceSpecSymbols(path: string): string {
+        return path.replace(VmsPathConverter.rgxReplaceSymbols, '^$1');
+    }
+
     public static fromVms(relPath: string): VmsPathConverter {
         const converter = new VmsPathConverter();
         const match = relPath.match(vmsPathRgx);
@@ -84,7 +88,7 @@ export class VmsPathConverter {
             } else {
                 this.vmsFileName = fsPath.slice(dirEnd + 1);
                 this.vmsBareDir = fsPath.slice(0, dirEnd);
-                this.vmsBareDir = this.vmsBareDir.replace(dotReplace, "^.");
+                this.vmsBareDir = VmsPathConverter.replaceSpecSymbols(this.vmsBareDir);
                 this.vmsBareDir = this.vmsBareDir.replace(splitter, ".");
                 if (this.vmsBareDir[0] === ".") {
                     // if starts with "/" then path is absolute and has a disk
