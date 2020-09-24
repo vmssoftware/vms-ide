@@ -1,5 +1,9 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.36
+* Uploading via ZIP uses random name for zip file and deletes it at the end.
+* Spaces, dots and carets are allowed in project names and root folders.
+
 ## 1.5.35
 * Python debugger: fix displaying collections when index > 9.
 

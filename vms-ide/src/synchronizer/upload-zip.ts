@@ -44,11 +44,11 @@ export class UploadZip {
             }
             const zipApi = new ZipApiType(this.logFn);
             const localPath = ensured.configHelper.workspaceFolder.uri.fsPath;
-            let   zipFileName = ensured.projectSection.projectName + ".zip";
+            let   zipFileName = "_" + String(Math.floor(Math.random()*10000)) + ".zip";
             let   zipFilePath = path.join(localPath, zipFileName);
             let   tries = 100;
             while(tries > 0 && fs.existsSync(zipFilePath)) {
-                zipFileName = ensured.projectSection.projectName + "_" + String(Math.floor(Math.random()*10000)) + ".zip";
+                zipFileName = "_" + String(Math.floor(Math.random()*10000)) + ".zip";
                 zipFilePath = path.join(localPath, zipFileName);
                 --tries;
             }
