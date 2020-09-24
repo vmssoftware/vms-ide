@@ -206,7 +206,7 @@ export class VMSRuntime extends EventEmitter
 			this.shell.resetParameters();
 			this.shellDbg.resetParameters();
 
-            const preRunFile = VmsPathConverter.replaceSpecSymbols(section.projectName) + ".com";
+            const preRunFile = section.projectName + ".com";
             const localSource = await configManager.getLocalSource();
 			const found = await localSource?.findFiles(preRunFile, section.exclude);
 			// run appropriate COM file, if it exists
@@ -214,7 +214,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				const converter = new VmsPathConverter(
 					[	section.root,
-						preRunFile,
+						VmsPathConverter.replaceSpecSymbols(section.projectName) + ".com",
 					].join(ftpPathSeparator));
 				const pathToPreRunFile = `${converter.fullPath} DEBUG`;
 				this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
