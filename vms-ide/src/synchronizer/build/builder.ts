@@ -90,7 +90,7 @@ export class Builder {
     }
 
     private static readonly mmsUserCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}`;
-    private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}","CONFIG=${"buildName"}")`;
+    private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}","UNIXNAME=${"unixname"}","CONFIG=${"buildName"}")`;
 
     private static readonly cleanCmd = printLike`delete /tree [.${"outdir"}.${"buildName"}...]*.*;*`;
 
@@ -971,9 +971,9 @@ export class Builder {
             }
             if (ensured.projectSection.projectType === ProjectType[ProjectType.java]) {
                 mainModuleLines.push(`    ${compiler} ${depClassPath} -g -d $(OUTDIR)/tmp $(OUTDIR)/src/*${extension}`);
-                mainModuleLines.push(`    jar cf $(OUTDIR)/$(CONFIG)/$(NAME).jar -C $(OUTDIR)/tmp .`);
+                mainModuleLines.push(`    jar cf "$(OUTDIR)/$(CONFIG)/$(UNIXNAME).jar" -C $(OUTDIR)/tmp .`);
             } else {
-                mainModuleLines.push(`    ${compiler} ${depClassPath} -d $(OUTDIR)/$(CONFIG)/$(NAME).jar $(OUTDIR)/src/*${extension}`);
+                mainModuleLines.push(`    ${compiler} ${depClassPath} -d "$(OUTDIR)/$(CONFIG)/$(UNIXNAME).jar" $(OUTDIR)/src/*${extension}`);
             }
             mainModuleLines.push(``);
 
@@ -1158,18 +1158,21 @@ export class Builder {
     private async runRemoteBuild(scopeData: IScopeBuildData, buildCfg: IBuildConfigSection) {
         let command = buildCfg.command;
         if (isCommandDefault(command)) {
-            let fixedName = VmsPathConverter.replaceSpecSymbols(scopeData.ensured.projectSection.projectName);
+            let unixName = scopeData.ensured.projectSection.projectName;
+            let vmsName = VmsPathConverter.replaceSpecSymbols(unixName);
             if (isParameterDebug(buildCfg.parameter)) {
-                command = Builder.mmsCmd(fixedName + Builder.mmsExt,
+                command = Builder.mmsCmd(vmsName + Builder.mmsExt,
                     "1",
                     scopeData.ensured.projectSection.outdir,
-                    fixedName,
+                    vmsName,
+                    unixName,
                     buildCfg.label);
             } else {
-                command = Builder.mmsCmd(fixedName + Builder.mmsExt,
+                command = Builder.mmsCmd(vmsName + Builder.mmsExt,
                     "0",
                     scopeData.ensured.projectSection.outdir,
-                    fixedName,
+                    vmsName,
+                    unixName,
                     buildCfg.label);
             }
         } else if (isCommandCOM(command)) {
