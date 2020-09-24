@@ -47,9 +47,15 @@ export class VmsPathConverter {
         return this.fsPath || "";
     }
 
-    private static readonly rgxReplaceSymbols = /([. ^])/g;
+    public static readonly rgxReplaceSymbols = /([. ^])/g;
+    public static replacer(match: string) {
+        if (match == ' ') {
+            match = '_';
+        }
+        return '^' + match;
+      }
     public static replaceSpecSymbols(path: string): string {
-        return path.replace(VmsPathConverter.rgxReplaceSymbols, '^$1');
+        return path.replace(VmsPathConverter.rgxReplaceSymbols, VmsPathConverter.replacer);
     }
 
     public static fromVms(relPath: string): VmsPathConverter {

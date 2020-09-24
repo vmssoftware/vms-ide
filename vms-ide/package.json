@@ -18,7 +18,7 @@
         "Other"
     ],
     "icon": "images/vms_logo.png",
-    "main": "./out/index",
+    "main": "./out/extension",
     "activationEvents": [
         "*",
         "onView:vmssoftware.project-dep.projectDependencies",

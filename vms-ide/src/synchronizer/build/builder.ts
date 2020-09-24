@@ -724,7 +724,7 @@ export class Builder {
                             depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
                             const vmsRoot = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
                             const projName = VmsPathConverter.replaceSpecSymbols(depEnsured.projectSection.projectName.toUpperCase());
-                            const projNameSymb = VmsPathConverter.replaceSpecSymbols(depEnsured.projectSection.projectName.toUpperCase());
+                            const projNameSymb = depEnsured.projectSection.projectName.toUpperCase().replace(VmsPathConverter.rgxReplaceSymbols, '_');
                             const outDir = depEnsured.projectSection.outdir;
                             if (vmsRoot.disk) {
                                 contentFirst.push(`    ${projNameSymb}_INC_SYMB = "${vmsRoot.directory}"`);
@@ -739,10 +739,10 @@ export class Builder {
                             }
                             cxxIncludes.push(`${projNameSymb}_INC_DIR`);
                             if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library]) {
-                                optLines.push(`${projNameSymb}_LIB_DIR:${projNameSymb}/LIBRARY`);
+                                optLines.push(`${projNameSymb}_LIB_DIR:${projName}/LIBRARY`);
                             }
                             if (depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
-                                optLines.push(`${projNameSymb}_LIB_DIR:${projNameSymb}/SHAREABLE`);
+                                optLines.push(`${projNameSymb}_LIB_DIR:${projName}/SHAREABLE`);
                                 // com file
                                 if (comLines.length === 0) {
                                     comLines.push(`CONFIG:=DEBUG`);
@@ -931,7 +931,7 @@ export class Builder {
                             case ProjectType[ProjectType.kotlin]: {
                                     const vmsRoot = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
                                     const projName = depEnsured.projectSection.projectName;
-                                    const projNameSymb = VmsPathConverter.replaceSpecSymbols(projName.toUpperCase());
+                                    const projNameSymb = projName.toUpperCase().replace(VmsPathConverter.rgxReplaceSymbols, '_');
                                     const outDir = depEnsured.projectSection.outdir;
                                     // com file
                                     if (comLines.length === 0) {
@@ -1158,17 +1158,18 @@ export class Builder {
     private async runRemoteBuild(scopeData: IScopeBuildData, buildCfg: IBuildConfigSection) {
         let command = buildCfg.command;
         if (isCommandDefault(command)) {
+            let fixedName = VmsPathConverter.replaceSpecSymbols(scopeData.ensured.projectSection.projectName);
             if (isParameterDebug(buildCfg.parameter)) {
-                command = Builder.mmsCmd(scopeData.ensured.projectSection.projectName + Builder.mmsExt,
+                command = Builder.mmsCmd(fixedName + Builder.mmsExt,
                     "1",
                     scopeData.ensured.projectSection.outdir,
-                    scopeData.ensured.projectSection.projectName,
+                    fixedName,
                     buildCfg.label);
             } else {
-                command = Builder.mmsCmd(scopeData.ensured.projectSection.projectName + Builder.mmsExt,
+                command = Builder.mmsCmd(fixedName + Builder.mmsExt,
                     "0",
                     scopeData.ensured.projectSection.outdir,
-                    scopeData.ensured.projectSection.projectName,
+                    fixedName,
                     buildCfg.label);
             }
         } else if (isCommandCOM(command)) {

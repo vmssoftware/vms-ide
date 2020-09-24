@@ -206,7 +206,7 @@ export class VMSRuntime extends EventEmitter
 			this.shell.resetParameters();
 			this.shellDbg.resetParameters();
 
-            const preRunFile = section.projectName + ".com";
+            const preRunFile = VmsPathConverter.replaceSpecSymbols(section.projectName) + ".com";
             const localSource = await configManager.getLocalSource();
 			const found = await localSource?.findFiles(preRunFile, section.exclude);
 			// run appropriate COM file, if it exists
@@ -1563,7 +1563,7 @@ export class VMSRuntime extends EventEmitter
 						this.programEnd = 1;
 						this.shellDbg.cleanQueueCommands();
 
-						setTimeout(() => 
+						setTimeout(() =>
 						{
 							this.sendEvent('end');//close debugger
 						}, 1500);
