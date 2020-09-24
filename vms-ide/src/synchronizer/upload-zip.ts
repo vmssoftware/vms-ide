@@ -44,14 +44,13 @@ export class UploadZip {
             }
             const zipApi = new ZipApiType(this.logFn);
             const localPath = ensured.configHelper.workspaceFolder.uri.fsPath;
-            let   zipFileName = "_" + String(Math.floor(Math.random()*10000)) + ".zip";
+            let   zipFileName = 'kill_me.zip';
             let   zipFilePath = path.join(localPath, zipFileName);
             let   tries = 100;
-            while(tries > 0 && fs.existsSync(zipFilePath)) {
+            do {
                 zipFileName = "_" + String(Math.floor(Math.random()*10000)) + ".zip";
                 zipFilePath = path.join(localPath, zipFileName);
-                --tries;
-            }
+            } while(--tries && fs.existsSync(zipFilePath));
             const zipFinished = zipApi.start(zipFilePath, ensured.synchronizeSection.forceLocalTime);
             if (!zipFinished) {
                 this.logFn(LogType.error, () => localize("zip.cannot_start", "Could not start Zip."));
