@@ -40,7 +40,7 @@ attributeConst
    ;
 
 attributeDef
-   : attribute (LPAREN (constant | identifier) (COMMA (constant | identifier))* RPAREN)?
+   : attribute (LPAREN (constant | expression) (COMMA (constant | expression))* RPAREN)?
    ;
 
 preReservedWords
