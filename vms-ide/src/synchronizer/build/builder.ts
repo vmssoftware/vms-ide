@@ -17,7 +17,7 @@ import { ensureSettings, IEnsured, ensureConfigSection } from "../ensure-setting
 import { FsSource } from "../sync/fs-source";
 import { ISource } from "../sync/source";
 import { Synchronizer } from "../sync/synchronizer";
-import { VmsPathConverter, VmsPathPart, vmsPathRgx, dotReplace } from "../vms/vms-path-converter";
+import { VmsPathConverter, VmsPathPart, vmsPathRgx } from "../vms/vms-path-converter";
 import { ProjectState } from "../dep-tree/proj-state";
 import { IBuildConfigSection } from "../../synchronizer/sync/sync-api";
 import { ParseExecResult } from "../../synchronizer/common/TestExecResult";
@@ -90,7 +90,7 @@ export class Builder {
     }
 
     private static readonly mmsUserCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}`;
-    private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}","CONFIG=${"buildName"}")`;
+    private static readonly mmsCmd = printLike`MMS/EXTENDED_SYNTAX/DESCR=${"_.mms"}/MACRO=("DEBUG=${"_1_"}","OUTDIR=${"outdir"}","NAME=${"name"}","UNIXNAME=${"unixname"}","CONFIG=${"buildName"}")`;
 
     private static readonly cleanCmd = printLike`delete /tree [.${"outdir"}.${"buildName"}...]*.*;*`;
 
@@ -723,8 +723,8 @@ export class Builder {
                         if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library] ||
                             depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
                             const vmsRoot = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
-                            const projName = depEnsured.projectSection.projectName.toUpperCase().replace(dotReplace, '^.');
-                            const projNameSymb = depEnsured.projectSection.projectName.toUpperCase().replace(dotReplace, '_');
+                            const projName = VmsPathConverter.replaceSpecSymbols(depEnsured.projectSection.projectName.toUpperCase());
+                            const projNameSymb = depEnsured.projectSection.projectName.toUpperCase().replace(VmsPathConverter.rgxReplaceSymbols, '_');
                             const outDir = depEnsured.projectSection.outdir;
                             if (vmsRoot.disk) {
                                 contentFirst.push(`    ${projNameSymb}_INC_SYMB = "${vmsRoot.directory}"`);
@@ -739,10 +739,10 @@ export class Builder {
                             }
                             cxxIncludes.push(`${projNameSymb}_INC_DIR`);
                             if (depEnsured.projectSection.projectType === ProjectType[ProjectType.library]) {
-                                optLines.push(`${projNameSymb}_LIB_DIR:${projNameSymb}/LIBRARY`);
+                                optLines.push(`${projNameSymb}_LIB_DIR:${projName}/LIBRARY`);
                             }
                             if (depEnsured.projectSection.projectType === ProjectType[ProjectType.shareable]) {
-                                optLines.push(`${projNameSymb}_LIB_DIR:${projNameSymb}/SHAREABLE`);
+                                optLines.push(`${projNameSymb}_LIB_DIR:${projName}/SHAREABLE`);
                                 // com file
                                 if (comLines.length === 0) {
                                     comLines.push(`CONFIG:=DEBUG`);
@@ -931,7 +931,7 @@ export class Builder {
                             case ProjectType[ProjectType.kotlin]: {
                                     const vmsRoot = new VmsPathConverter(depEnsured.projectSection.root + ftpPathSeparator);
                                     const projName = depEnsured.projectSection.projectName;
-                                    const projNameSymb = projName.toUpperCase().replace(dotReplace, '_');
+                                    const projNameSymb = projName.toUpperCase().replace(VmsPathConverter.rgxReplaceSymbols, '_');
                                     const outDir = depEnsured.projectSection.outdir;
                                     // com file
                                     if (comLines.length === 0) {
@@ -971,9 +971,9 @@ export class Builder {
             }
             if (ensured.projectSection.projectType === ProjectType[ProjectType.java]) {
                 mainModuleLines.push(`    ${compiler} ${depClassPath} -g -d $(OUTDIR)/tmp $(OUTDIR)/src/*${extension}`);
-                mainModuleLines.push(`    jar cf $(OUTDIR)/$(CONFIG)/$(NAME).jar -C $(OUTDIR)/tmp .`);
+                mainModuleLines.push(`    jar cf "$(OUTDIR)/$(CONFIG)/$(UNIXNAME).jar" -C $(OUTDIR)/tmp .`);
             } else {
-                mainModuleLines.push(`    ${compiler} ${depClassPath} -d $(OUTDIR)/$(CONFIG)/$(NAME).jar $(OUTDIR)/src/*${extension}`);
+                mainModuleLines.push(`    ${compiler} ${depClassPath} -d "$(OUTDIR)/$(CONFIG)/$(UNIXNAME).jar" $(OUTDIR)/src/*${extension}`);
             }
             mainModuleLines.push(``);
 
@@ -1158,17 +1158,21 @@ export class Builder {
     private async runRemoteBuild(scopeData: IScopeBuildData, buildCfg: IBuildConfigSection) {
         let command = buildCfg.command;
         if (isCommandDefault(command)) {
+            let unixName = scopeData.ensured.projectSection.projectName;
+            let vmsName = VmsPathConverter.replaceSpecSymbols(unixName);
             if (isParameterDebug(buildCfg.parameter)) {
-                command = Builder.mmsCmd(scopeData.ensured.projectSection.projectName + Builder.mmsExt,
+                command = Builder.mmsCmd(vmsName + Builder.mmsExt,
                     "1",
                     scopeData.ensured.projectSection.outdir,
-                    scopeData.ensured.projectSection.projectName,
+                    vmsName,
+                    unixName,
                     buildCfg.label);
             } else {
-                command = Builder.mmsCmd(scopeData.ensured.projectSection.projectName + Builder.mmsExt,
+                command = Builder.mmsCmd(vmsName + Builder.mmsExt,
                     "0",
                     scopeData.ensured.projectSection.outdir,
-                    scopeData.ensured.projectSection.projectName,
+                    vmsName,
+                    unixName,
                     buildCfg.label);
             }
         } else if (isCommandCOM(command)) {

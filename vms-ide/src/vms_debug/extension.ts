@@ -328,7 +328,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 								[	projectSection.root,
 									projectSection.outdir,
 									config.typeRun === "DEBUG" ? "debug" : "release",
-									projectSection.projectName + ".exe"
+									VmsPathConverter.replaceSpecSymbols(projectSection.projectName) + ".exe"
 								].join(ftpPathSeparator));
 							config.program = converter.fullPath;
 						}

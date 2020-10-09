@@ -214,7 +214,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				const converter = new VmsPathConverter(
 					[	section.root,
-						preRunFile,
+						VmsPathConverter.replaceSpecSymbols(section.projectName) + ".com",
 					].join(ftpPathSeparator));
 				const pathToPreRunFile = `${converter.fullPath} DEBUG`;
 				this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
@@ -1563,7 +1563,7 @@ export class VMSRuntime extends EventEmitter
 						this.programEnd = 1;
 						this.shellDbg.cleanQueueCommands();
 
-						setTimeout(() => 
+						setTimeout(() =>
 						{
 							this.sendEvent('end');//close debugger
 						}, 1500);
