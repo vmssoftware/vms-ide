@@ -386,7 +386,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 						// start listening on a random port
 						this.serverNoDbg = Net.createServer(socket =>
 						{
-							sessionRun = new VMSNoDebugSession(shell, logFn);
+							sessionRun = new VMSNoDebugSession(folder, shell, logFn);
 							sessionRun.setRunAsServer(true);
 							sessionRun.start(<NodeJS.ReadableStream>socket, socket);
 						}).listen(0);
