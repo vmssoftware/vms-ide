@@ -57,6 +57,7 @@ export class VMSRuntimeRun extends EventEmitter
                     ].join(ftpPathSeparator));
                 const pathToPreRunFile = `${converter.fullPath} RELEASE`;
                 this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
+                this.shell.AddExpectedPrompt();
             }
         }
         this.shell.SendCommandToQueue(this.osCmd.runProgram(programName, programArgs));

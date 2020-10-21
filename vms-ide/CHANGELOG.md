@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.37
+* Run the project COM file before the program in the release (as in the debug) passing 'RELEASE' as a parameter.
+
 ## 1.5.36
 * Uploading via ZIP uses random name for zip file and deletes it at the end.
 * Spaces, dots and carets are allowed in project names and root folders.
