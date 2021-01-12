@@ -1,5 +1,5 @@
 import { SFTPWrapper } from "ssh2";
-import { FileEntry } from "ssh2-streams";
+import { FileEntry, ReadStreamOptions, WriteStreamOptions } from "ssh2-streams";
 import stream = require("stream");
 
 import { Lock, LogFunction } from "../../common/main";
@@ -39,7 +39,9 @@ export class SftpClient extends SshClient {
         let readStream: stream.Readable | undefined;
         if (await this.ensureSftp()) {
             if (this.sftp) {
-                readStream = this.sftp.createReadStream(file);
+                let opt: ReadStreamOptions = {};
+                opt.encoding = 'binary';
+                readStream = this.sftp.createReadStream(file, opt);
             }
         }
         this.waitOperation.release();
@@ -59,7 +61,9 @@ export class SftpClient extends SshClient {
         let writeStream: stream.Writable | undefined;
         if (await this.ensureSftp()) {
             if (this.sftp) {
-                writeStream = this.sftp.createWriteStream(file);
+                let opt: WriteStreamOptions = {};
+                opt.encoding = 'binary';
+                writeStream = this.sftp.createWriteStream(file, opt);
             }
         }
         this.waitOperation.release();

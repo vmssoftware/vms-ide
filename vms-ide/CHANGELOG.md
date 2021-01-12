@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.38
+* Create read/write streams with 'binary' encoding.
+
 ## 1.5.37
 * Run the project COM file before the program in the release (as in the debug) passing 'RELEASE' as a parameter.
 

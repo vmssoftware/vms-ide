@@ -124,7 +124,9 @@ export class FsSource implements ISource, IReadDirectory {
      */
     public async createReadStream(filename: string) {
         filename = this.root + ftpPathSeparator + filename;
-        return fs.createReadStream(filename);
+        return fs.createReadStream(filename, {
+            encoding: 'binary'
+        });
     }
 
     /**
@@ -133,7 +135,9 @@ export class FsSource implements ISource, IReadDirectory {
      */
     public async createWriteStream(filename: string) {
         filename = this.root + ftpPathSeparator + filename;
-        return fs.createWriteStream(filename);
+        return fs.createWriteStream(filename, {
+            encoding: 'binary'
+        });
     }
 
     public async deleteFile(filename: string) {
