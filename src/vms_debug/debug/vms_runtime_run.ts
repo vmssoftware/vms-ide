@@ -2,13 +2,15 @@
  * Copyright (C) VMS Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import { LogFunction, LogType } from "../../common/main";
+import { ftpPathSeparator, LogFunction, LogType } from "../../common/main";
 import { EventEmitter } from "events";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { OsCmdVMS, OsCommands } from "../command/os_commands";
 import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
 import { MessagePrompt } from "../parsers/debug_parser";
+import { ConfigManager } from "../ext-api/config_manager";
+import { VmsPathConverter } from "../../synchronizer/vms/vms-path-converter";
 
 nls.config({ messageFormat: nls.MessageFormat.both });
 const localize = nls.loadMessageBundle();
@@ -22,22 +24,43 @@ export class VMSRuntimeRun extends EventEmitter
 	private osCmd : OsCommands;
 	private statusProgram : boolean;
 
+    private scope: string = "";
 
-	constructor(shell : ShellSession, public logFn?: LogFunction)
+	constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, public logFn?: LogFunction)
 	{
 		super();
 
 		this.shell = shell;
 		this.osCmd = new OsCommands();
-		this.statusProgram = false;
+        this.statusProgram = false;
+
+        this.scope = folder ? folder.name : "";
 	}
 
 	// Start executing the given program.
-	public start(programName: string, programArgs : string)
+	public async start(programName: string, programArgs : string)
 	{
 		this.shell.resetParameters();
-		this.shell.SetDisconnectInShellSession();
-		this.shell.SendCommandToQueue(this.osCmd.runProgram(programName, programArgs));
+        this.shell.SetDisconnectInShellSession();
+
+        let configManager = new ConfigManager(this.scope);
+        let section = await configManager.getProjectSection();
+        if (section) {
+            const preRunFile = section.projectName + ".com";
+            const localSource = await configManager.getLocalSource();
+            const found = await localSource?.findFiles(preRunFile, section.exclude);
+            // run appropriate COM file, if it exists
+            if (found && found.length === 1) {
+                const converter = new VmsPathConverter(
+                    [	section.root,
+                        VmsPathConverter.replaceSpecSymbols(section.projectName) + ".com",
+                    ].join(ftpPathSeparator));
+                const pathToPreRunFile = `${converter.fullPath} RELEASE`;
+                this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
+                this.shell.AddExpectedPrompt();
+            }
+        }
+        this.shell.SendCommandToQueue(this.osCmd.runProgram(programName, programArgs));
 		this.statusProgram = true;
 	}
 

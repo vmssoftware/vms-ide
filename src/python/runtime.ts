@@ -1,8 +1,10 @@
 import { EventEmitter } from "events";
 import * as nls from "vscode-nls";
+import path from 'path';
 
 import { LogFunction, LogType, Lock } from "../common/main";
 import { ICmdQueue, ListenerResponse } from "../vms_jvm_debug/communication";
+import { test_enclosing_quotes } from "../common/quotes";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -23,15 +25,21 @@ export enum PythonRuntimeEvents {
 
 export enum PythonServerMessage {
     BP_CONFIRM = 'BP_CONFIRM',
+    BP_CONFIRM64 = 'BP_CONFIRM64',
     BP_RESET = 'BP_RESET',
+    BP_RESET64 = 'BP_RESET64',
     BP_WAIT = 'BP_WAIT',
+    BP_WAIT64 = 'BP_WAIT64',
     BREAK = 'BREAK',
     CONTINUED = 'CONTINUED',
     DEBUG = 'DEBUG',
     DISPLAY = 'DISPLAY',
+    DISPLAY64 = 'DISPLAY64',
     ENTRY = 'ENTRY',
     EXCEPTION = 'EXCEPTION',
     EXITED = 'EXITED',
+    FRAME = 'FRAME',
+    FRAME64 = 'FRAME64',
     GOTO = 'GOTO',
     GOTO_TARGETS = 'GOTO_TARGETS',
     INFO = 'INFO',
@@ -49,7 +57,9 @@ export enum PythonServerCommand {
     BP_SET = 'bps',
     CONTINUE = 'c',
     DISPLAY = 'd',
+    DISPLAY64 = 'd64',
     FRAME  = 'f',
+    FRAME64  = 'f64',
     GOTO = 'g',
     GOTO_TARGETS = 'gt',
     HELP = 'h',
@@ -98,6 +108,8 @@ export interface IPythonVariable {
     size?: number;
     value?: string;
     parent?: IPythonVariable;
+    is_long_string?: boolean;
+    dict_order?: number;
 };
 
 export enum EPythonConst {
@@ -132,6 +144,26 @@ const _rgxBpConfirm_File    = 1;
 const _rgxBpConfirm_Line    = 2;
 const _rgxBpConfirm_Line_R  = 3;
 
+const _rgxBpConfirm64         = /BP_CONFIRM64 (\d+) (.*)/;
+const _rgxBpConfirm64_Len     = 1;
+const _rgxBpConfirm64_Result  = 2;
+
+const _rgxBpWait         =  /BP_WAIT "(.*?)" (\d+)?/;
+const _rgxBpWait_File    = 1;
+const _rgxBpWait_Line    = 2;
+
+const _rgxBpWait64         = /BP_WAIT64 (\d+) (.*)/;
+const _rgxBpWait64_Len     = 1;
+const _rgxBpWait64_Result  = 2;
+
+const _rgxBpReset         =  /BP_RESET "(.*?)" (\d+)?/;
+const _rgxBpReset_File    = 1;
+const _rgxBpReset_Line    = 2;
+
+const _rgxBpReset64         = /BP_RESET64 (\d+) (.*)/;
+const _rgxBpReset64_Len     = 1;
+const _rgxBpReset64_Result  = 2;
+
 const _rgxThreads           = /THREADS (\d+) current (\d+)/;
 const _rgxThreads_Thread    = 1;
 const _rgxThreads_Current   = 2;
@@ -141,10 +173,14 @@ const _rgxFrames_Thread     = 1;
 const _rgxFrames_Frames     = 2;
 const _rgxFrames_State      = 3;
 
-const _rgxFrame             = /file: "(.*?)" line: (\d+) function: "(.*?)"/;
+const _rgxFrame             = /FRAME file: "(.*?)" line: (\d+) function: "(.*?)" (dead|alive)/;
 const _rgxFrame_File        = 1;
 const _rgxFrame_Line        = 2;
 const _rgxFrame_Function    = 3;
+
+const _rgxFrame64             = /FRAME64 (\d+) (.*)/;
+const _rgxFrame64_Len         = 1;
+const _rgxFrame64_Result      = 2;
 
 const _rgxDisplay               = /DISPLAY "(.*?)" (failed|aborted|<(?:type|class|enum) '(.*?)'> (?:(value|children|length): (.*)))/;
 const _rgxDisplay_Name          = 1;
@@ -170,6 +206,32 @@ const _rgxGotoTargtes_Result    = 1;
 const _rgxGoto                  = /GOTO (failed|ok)/;
 const _rgxGoto_Result           = 1;
 
+const _rgxNonBase64idx          = /\[[0-9]+(-[0-9]+)\]/;
+const _rgxBase64idx             = /\[[A-Za-z0-9]+=*\]/;
+
+const _rgxCommands = {
+    AMEND:          /^a (\d+) (\d+) (\S+) (.+)$/,
+    BP_RESET :      /^bpr (?:(\S)+(?: (\S+))?)?$/,
+    BP_SET :        /^bps (\S+) (\d+)$/,
+    CONTINUE :      /^c$/,
+    DISPLAY :       /^d(h|o)?(?: (\d+)(?: (\d+)(?: (\S+)(?: (\d+)(?: (\d+)))?)?)?)?$/,
+    DISPLAY64 :     /^d64(h|o)?(?: (\d+)(?: (\d+)(?: (\S+)(?: (\d+)(?: (\d+)))?)?)?)?$/,
+    EXEC :          /^e (.+)$/,
+    FRAME :         /^f(?: (\d+)(?: (\d+)(?: (\d+))?)?)?$/,
+    FRAME64 :       /^f64(?: (\d+)(?: (\d+)(?: (\d+))?)?)?$/,
+    GOTO :          /^g (\d+) (\d+)$/,
+    GOTO_TARGETS :  /^gt (\S+) (\d+)$/,
+    INFO :          /^i$/,
+    MODE :          /^m(?: ([0|1]))?$/,
+    NEXT :          /^n(?: (\d+))?$/,
+    PAUSE :         /^p$/,
+    RETURN :        /^r(?: (\d+))?$/,
+    STEP :          /^s(?: (\d+))?$/,
+    THREADS :       /^t$/,
+    RADIX :         /^x (8|10|16)$/,
+    PATHFILTER :    /^y(?: \S+)?$/,
+};
+
 export const rgxEsc = /\x1B(?:[@-Z\\-_=>]|\[[0-?]*[ -/]*[@-~]|[)(][AB012])/g;
 
 export class PythonShellRuntime extends EventEmitter {
@@ -188,6 +250,15 @@ export class PythonShellRuntime extends EventEmitter {
 
     private ident: number | undefined;
 
+    private _confirm64line: string | undefined;
+    private _confirm64length: number | undefined;
+
+    private _wait64line: string | undefined;
+    private _wait64length: number | undefined;
+
+    private _reset64line: string | undefined;
+    private _reset64length: number | undefined;
+
     constructor(private queue: ICmdQueue, _logFn?: LogFunction) {
         super();
 
@@ -204,26 +275,29 @@ export class PythonShellRuntime extends EventEmitter {
 
     private onUnexpectedLine(line: string | undefined): void {
         if (line) {
-            line = line.trim().replace(rgxEsc, '');
+            line = line.replace(rgxEsc, '').replace(/\0/g, '').trim();
             if (line) {
-                this.sendEvent(PythonRuntimeEvents.output, line);
                 let stopReason: PythonRuntimeEvents | undefined;
                 switch(line) {
                     case  PythonServerMessage.PAUSED:
                         stopReason = PythonRuntimeEvents.stopOnPause;
+                        this.sendEvent(PythonRuntimeEvents.output, 'paused');
                         break;
                     case  PythonServerMessage.ENTRY:
                         stopReason = PythonRuntimeEvents.stopOnEntry;
                         break;
                     case PythonServerMessage.BREAK:
                         stopReason = PythonRuntimeEvents.stopOnBreakpoint;
+                        this.sendEvent(PythonRuntimeEvents.output, 'breakpoint');
                         break;
                     case PythonServerMessage.STEPPED:
                         stopReason = PythonRuntimeEvents.stopOnStep;
+                        this.sendEvent(PythonRuntimeEvents.output, 'step');
                         break;
                 }
                 if (stopReason === undefined && line.startsWith(PythonServerMessage.EXCEPTION)) {
                     stopReason = PythonRuntimeEvents.stopOnException;
+                    this.sendEvent(PythonRuntimeEvents.output, line);
                 }
                 if (stopReason !== undefined) {
                     this.running = false;
@@ -236,22 +310,134 @@ export class PythonShellRuntime extends EventEmitter {
                 if (line.startsWith(PythonServerMessage.EXITED)) {
                     this.running = false;
                     this.queue.postCommand(PythonServerCommand.QUIT);
+                    this.sendEvent(PythonRuntimeEvents.output, 'exit');
                     this.sendEvent(PythonRuntimeEvents.end);
                     return;
                 }
                 if (line.startsWith(PythonServerMessage.CONTINUED)) {
                     //this.sendEvent(PythonRuntimeEvents.);
+                    this.sendEvent(PythonRuntimeEvents.output, 'continue');
                     return;
                 }
-                if (line.startsWith(PythonServerMessage.BP_CONFIRM)) {
-                    const match = line.match(_rgxBpConfirm);
-                    if (match) {
-                        this.sendEvent(PythonRuntimeEvents.breakpointValidated,
-                            match[_rgxBpConfirm_File],
-                            +match[_rgxBpConfirm_Line],
-                            match[_rgxBpConfirm_Line_R]?+match[_rgxBpConfirm_Line_R]:undefined);
+
+                // test confirm64 and convert inplace
+                if (this._confirm64line !== undefined && this._confirm64length !== undefined ) {
+                    // TODO: test if line is suitable for base64
+                    this._confirm64line += line.trim();
+                    if (this._confirm64line.length >= this._confirm64length) {
+                        line = PythonServerMessage.BP_CONFIRM + ' ' + Buffer.from(this._confirm64line, 'base64').toString('utf-8');
+                        this._confirm64line = undefined;
+                        this._confirm64length = undefined;
+                    } else {
+                        // wait for a tail
+                        return;
                     }
+                }
+                const matchConfirm64 = line.match(_rgxBpConfirm64);
+                if (matchConfirm64) {
+                    this._confirm64length = +matchConfirm64[_rgxBpConfirm64_Len];
+                    this._confirm64line = matchConfirm64[_rgxBpConfirm64_Result];
+                    if (this._confirm64line.length >= this._confirm64length) {
+                        line = PythonServerMessage.BP_CONFIRM + ' ' + Buffer.from(this._confirm64line, 'base64').toString('utf-8');
+                        this._confirm64length = undefined;
+                        this._confirm64line = undefined;
+                    } else {
+                        // wait for a tail
+                        return;
+                    }
+                }
+                const matchConfirm = line.match(_rgxBpConfirm);
+                if (matchConfirm) {
+                    this.sendEvent(PythonRuntimeEvents.breakpointValidated,
+                        matchConfirm[_rgxBpConfirm_File],
+                        +matchConfirm[_rgxBpConfirm_Line],
+                        matchConfirm[_rgxBpConfirm_Line_R]?+matchConfirm[_rgxBpConfirm_Line_R]:undefined);
+                    let file = matchConfirm[_rgxBpConfirm_File];
+                    let line = matchConfirm[_rgxBpConfirm_Line_R]?+matchConfirm[_rgxBpConfirm_Line_R]:+matchConfirm[_rgxBpConfirm_Line];
+                    this.sendEvent(PythonRuntimeEvents.output, 'bp confirmed for ' + path.basename(file) + ':' + String(line));
                     return;
+                }
+
+                // test wait64 and convert inplace
+                if (this._wait64line !== undefined && this._wait64length !== undefined ) {
+                    // TODO: test if line is suitable for base64
+                    this._wait64line += line.trim();
+                    if (this._wait64line.length >= this._wait64length) {
+                        line = PythonServerMessage.BP_WAIT + ' ' + Buffer.from(this._wait64line, 'base64').toString('utf-8');
+                        this._wait64line = undefined;
+                        this._wait64length = undefined;
+                    } else {
+                        // wait for a tail
+                        return;
+                    }
+                }
+
+                const matchWait64 = line.match(_rgxBpWait64);
+                if (matchWait64) {
+                    this._wait64length = +matchWait64[_rgxBpWait64_Len];
+                    this._wait64line = matchWait64[_rgxBpWait64_Result];
+                    if (this._wait64line.length >= this._wait64length) {
+                        line = PythonServerMessage.BP_WAIT + ' ' + Buffer.from(this._wait64line, 'base64').toString('utf-8');
+                        this._wait64length = undefined;
+                        this._wait64line = undefined;
+                    } else {
+                        // wait for a tail
+                        return;
+                    }
+                }
+                const matchWait = line.match(_rgxBpWait);
+                if (matchWait) {
+                    let file = matchWait[_rgxBpWait_File];
+                    let line = +matchWait[_rgxBpWait_Line];
+                    this.sendEvent(PythonRuntimeEvents.output, 'bp waited for ' + path.basename(file) + ':' + String(line));
+                    return;
+                }
+
+                // test reset64 and convert inplace
+                if (this._reset64line !== undefined && this._reset64length !== undefined ) {
+                    // TODO: test if line is suitable for base64
+                    this._reset64line += line.trim();
+                    if (this._reset64line.length >= this._reset64length) {
+                        line = PythonServerMessage.BP_RESET + ' ' + Buffer.from(this._reset64line, 'base64').toString('utf-8');
+                        this._reset64line = undefined;
+                        this._reset64length = undefined;
+                    } else {
+                        // wait for a tail
+                        return;
+                    }
+                }
+
+                const matchReset64 = line.match(_rgxBpReset64);
+                if (matchReset64) {
+                    this._reset64length = +matchReset64[_rgxBpReset64_Len];
+                    this._reset64line = matchReset64[_rgxBpReset64_Result];
+                    if (this._reset64line.length >= this._reset64length) {
+                        line = PythonServerMessage.BP_RESET + ' ' + Buffer.from(this._reset64line, 'base64').toString('utf-8');
+                        this._reset64length = undefined;
+                        this._reset64line = undefined;
+                    } else {
+                        // wait for a tail
+                        return;
+                    }
+                }
+                const matchReset = line.match(_rgxBpReset);
+                if (matchReset) {
+                    let file = matchReset[_rgxBpReset_File];
+                    let line = +matchReset[_rgxBpReset_Line];
+                    this.sendEvent(PythonRuntimeEvents.output, 'bp reset for ' + path.basename(file) + ':' + String(line));
+                    return;
+                }
+
+                let is_a_command = false;
+                for (let rgxName in _rgxCommands) {
+                    let rgx = (_rgxCommands as any)[rgxName] as RegExp;
+                    if (line.match(rgx)) {
+                        is_a_command = true;
+                        break;
+                    }
+                }
+                if (!is_a_command) {
+                    this.sendEvent(PythonRuntimeEvents.output, line);
                 }
             }
         }
@@ -261,7 +447,7 @@ export class PythonShellRuntime extends EventEmitter {
     // public
     /******************************************************************************************/
 
-    public async start() {
+    public start() {
         this.started = true;
         this.running = true;
     }
@@ -353,17 +539,44 @@ export class PythonShellRuntime extends EventEmitter {
             endFrame = Math.max(endFrame, startFrame);
             let numFrames = endFrame - startFrame;
             if (numFrames > 0) {
-                let command = `${PythonServerCommand.FRAME} ${ident} ${startFrame} ${numFrames}`;
+                let command = `${PythonServerCommand.FRAME64} ${ident} ${startFrame} ${numFrames}`;
                 let parsedFrame = 0;
+                let frame64line: string | undefined;
+                let frame64length: number | undefined;
                 await this.queue.postCommand(command, (cmd, line) => {
                     if (line === undefined) {
                         this.logFn(LogType.debug, () => `frames: aborted`);
                         return ListenerResponse.stop;
                     }
+                    // test frame64
+                    if (frame64line !== undefined && frame64length !== undefined) {
+                        frame64line += line.trim();
+                        if (frame64line.length >= frame64length) {
+                            frame64line = Buffer.from(frame64line, 'base64').toString('utf-8');
+                            line = PythonServerMessage.FRAME + ' ' + frame64line;
+                            frame64line = undefined;
+                            frame64length = undefined;
+                        } else {
+                            return ListenerResponse.needMoreLines;
+                        }
+                    }
                     line = line.trim();
                     if (line) {
                         if (line.startsWith(PythonServerMessage.SYNTAX_ERROR)) {
                             return ListenerResponse.stop;
+                        }
+                        const match64 = line.match(_rgxFrame64);
+                        if (match64) {
+                            frame64length = +match64[_rgxFrame64_Len];
+                            frame64line = match64[_rgxFrame64_Result];
+                            if (frame64line.length >= frame64length) {
+                                frame64line = Buffer.from(frame64line, 'base64').toString('utf-8');
+                                line = PythonServerMessage.FRAME + ' ' + frame64line;
+                                frame64line = undefined;
+                                frame64length = undefined;
+                            } else {
+                                return ListenerResponse.needMoreLines;
+                            }
                         }
                         const match = line.match(_rgxFrame);
                         if (match) {
@@ -414,7 +627,7 @@ export class PythonShellRuntime extends EventEmitter {
             varPath = variableFullName + '.';
         }
 
-        let command = `${PythonServerCommand.DISPLAY}${showHex?'h':''} ${ident} ${frame} ${varPath}`;
+        let command = `${PythonServerCommand.DISPLAY64}${showHex?'h':''} ${ident} ${frame} ${varPath}`;
         if (start !== undefined) {
             command += ` ${start}`;
             if (count !== undefined) {
@@ -439,9 +652,13 @@ export class PythonShellRuntime extends EventEmitter {
                 } else {
                     lastVar.value = line;
                 }
-                if (lastVar.value.trim().endsWith(waitQuota)) {
-                    let pos = lastVar.value.lastIndexOf(waitQuota);
-                    lastVar.value = lastVar.value.substr(0, pos + 1);   // include last quota
+                let enc = test_enclosing_quotes(lastVar.value.trim());
+                if (enc.enclosed) {
+                    lastVar.value = lastVar.value.trim();
+                    if (lastVar.value.length > enc.quote_pos + 1) {
+                        lastVar.is_long_string = true;
+                    }
+                    lastVar.value = lastVar.value.slice(0, enc.quote_pos + 1);
                     waitQuota = undefined;
                     lastVar = undefined;
                     if (numVars === undefined) {
@@ -464,9 +681,11 @@ export class PythonShellRuntime extends EventEmitter {
                 display64line += line.trim();
                 if (display64line.length >= display64length) {
                     display64line = Buffer.from(display64line, 'base64').toString('utf-8');
-                    line = 'DISPLAY ' + display64line;
+                    line = PythonServerMessage.DISPLAY + ' ' + display64line;
                     display64line = undefined;
                     display64length = undefined;
+                } else {
+                    return ListenerResponse.needMoreLines;
                 }
             }
             line = line.trim();
@@ -481,7 +700,7 @@ export class PythonShellRuntime extends EventEmitter {
                     display64line = match64[_rgxDisplay64_Result];
                     if (display64line.length >= display64length) {
                         display64line = Buffer.from(display64line, 'base64').toString('utf-8');
-                        line = 'DISPLAY ' + display64line;
+                        line = PythonServerMessage.DISPLAY + ' ' + display64line;
                         display64line = undefined;
                         display64length = undefined;
                     } else {
@@ -520,6 +739,14 @@ export class PythonShellRuntime extends EventEmitter {
                                 let pos = lastVar.name.lastIndexOf("[");
                                 if (pos >= 0) {
                                     lastVar.name = lastVar.name.substr(pos);
+                                    if (lastVar.name.startsWith("[=")) {
+                                        let dictKey = Buffer.from(lastVar.name.substr(2), 'base64').toString('utf-8');
+                                        if (dictKey) {
+                                            lastVar.name = '[' + dictKey + ']';
+                                            // suppose we have only dict values in this request
+                                            lastVar.dict_order = variables.length + (start?start:0);
+                                        }
+                                    }
                                 }
                             }
                             // do not handle children length, not necessary at this point
@@ -532,8 +759,14 @@ export class PythonShellRuntime extends EventEmitter {
                             // test if variable is long string
                             if (lastVar.value && (lastVar.value.startsWith('"') || lastVar.value.startsWith("'"))) {
                                 waitQuota = lastVar.value[0];
-                                if (lastVar.value.trim().endsWith(waitQuota)) {
+                                let enc = test_enclosing_quotes(lastVar.value.trim());
+                                if (enc.enclosed) {
                                     // does not split
+                                    lastVar.value = lastVar.value.trim();
+                                    if (lastVar.value.length > enc.quote_pos + 1) {
+                                        lastVar.is_long_string = true;
+                                    }
+                                    lastVar.value = lastVar.value.slice(0, enc.quote_pos + 1);
                                     waitQuota = undefined;
                                     lastVar = undefined;
                                 } else {

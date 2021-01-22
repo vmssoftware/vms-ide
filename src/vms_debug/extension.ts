@@ -148,11 +148,11 @@ async function createTerminal() : Promise<void>
 				{
 					if(connection.keyFile)
 					{
-						terminals.startByKey(terminal, connection.host, connection.username, connection.keyFile);
+						terminals.startByKey(terminal, connection.host, connection.port || 22, connection.username, connection.keyFile);
 					}
 					else
 					{
-						terminals.start(terminal, connection.host, connection.username, connection.password);
+						terminals.start(terminal, connection.host, connection.port || 22, connection.username, connection.password);
 					}
 				}
 			}
@@ -328,7 +328,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 								[	projectSection.root,
 									projectSection.outdir,
 									config.typeRun === "DEBUG" ? "debug" : "release",
-									projectSection.projectName + ".exe"
+									VmsPathConverter.replaceSpecSymbols(projectSection.projectName) + ".exe"
 								].join(ftpPathSeparator));
 							config.program = converter.fullPath;
 						}
@@ -386,7 +386,7 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 						// start listening on a random port
 						this.serverNoDbg = Net.createServer(socket =>
 						{
-							sessionRun = new VMSNoDebugSession(shell, logFn);
+							sessionRun = new VMSNoDebugSession(folder, shell, logFn);
 							sessionRun.setRunAsServer(true);
 							sessionRun.start(<NodeJS.ReadableStream>socket, socket);
 						}).listen(0);

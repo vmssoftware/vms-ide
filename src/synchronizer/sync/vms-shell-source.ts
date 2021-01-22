@@ -12,7 +12,7 @@ import { SftpSource } from "./sftp-source";
 // const cmdGetTimeOffset = `WRITE SYS$OUTPUT F$TRNLNM("SYS$TIMEZONE_DIFFERENTIAL")`;
 const setFileErrorResponse = `%SET-`;
 // const setFileFormatSTM = "set file/attribute=RFM:STM ";
-const setFileDates = printLike`set file ${"_file_"} /attributes=(mod="${"_date_"}",att="${"_date_"}")`;
+const setFileDates = printLike`set file ${"_file_"} /attribute=(moddate="${"_date_"}",attdate="${"_date_"}")`;
 
 export class VmsShellSource extends SftpSource {
 

@@ -36,7 +36,7 @@ import { GetSshHelperType } from '../ext-api/ext-api';
 import { FsSource } from '../synchronizer/sync/fs-source';
 import { SftpSource } from '../synchronizer/sync/sftp-source';
 import { Synchronizer } from '../synchronizer/sync/synchronizer';
-import { middleSepRg } from '../synchronizer/common/find-files';
+import { middleSepRg, middleSepWinRg } from '../synchronizer/common/find-files';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -72,6 +72,16 @@ interface IBreakPoint {
     real_line: number;
 };
 
+interface IBreakPointFile {
+    vms_file?: string;
+    break_points: Map<number, IBreakPoint>;
+};
+
+interface IRootFolder {
+    vms: string;
+    pc: string;
+};
+
 export class PythonDebugSession extends LoggingDebugSession {
 
     private _logFn: LogFunction;
@@ -89,12 +99,14 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     private _variableHandles = new Handles<IPythonVariable>();
     private _frameHandles = new Handles<IPythonFrame>();
-    private _breakPoints = new Map<string, Map<number, IBreakPoint>>();  // file->line->BP
+    private _breakPoints = new Map<string, IBreakPointFile>();  // by local file
     private _nextBp = 0;
 
     private _gotoHandles = new Handles<GotoTarget>();
 
-    private _rootMap = new Map<string, string>();
+    private _rootMap: IRootFolder[] = [];
+
+    private _vmsRoot: VmsPathConverter | undefined;
 
     constructor(logFn?: LogFunction) {
         super("vms-python-debugger.txt");
@@ -114,12 +126,19 @@ export class PythonDebugSession extends LoggingDebugSession {
         // setup event handlers
 
         this._runtime.on(PythonRuntimeEvents.stopOnEntry, (threadId) => {
-            for (let [file, bplines] of this._breakPoints) {
-                for (let [line, ibp] of bplines) {
-                    if (!ibp.sent) {
-                        this._runtime.setBreakPoint(file, ibp.real_line).then((ok) => {
-                            ibp.sent = ok;
-                        });
+            for (let [file, bpfile] of this._breakPoints) {
+                // resolve vms_file
+                if (!bpfile.vms_file) {
+                    bpfile.vms_file = this.getVMSFile(file);
+                }
+                // send
+                if (bpfile.vms_file) {
+                    for (const [line, ibp] of bpfile.break_points) {
+                        if (!ibp.sent) {
+                            this._runtime.setBreakPoint(bpfile.vms_file, ibp.real_line).then((ok) => {
+                                ibp.sent = ok;
+                            });
+                        }
                     }
                 }
             }
@@ -154,15 +173,12 @@ export class PythonDebugSession extends LoggingDebugSession {
             this.sendStoppedEvent('data access', threadId);
         });
 
-        this._runtime.on(PythonRuntimeEvents.breakpointValidated, (file: string, line: number, line_real?: number) => {
-            let lines = this._breakPoints.get(file);
-            if (lines === undefined) {
-                file = file.toLowerCase();
-                for (let [key, value] of this._breakPoints.entries()) {
-                    if (key.toLowerCase() == file) {
-                        lines = value;
-                        break;
-                    }
+        this._runtime.on(PythonRuntimeEvents.breakpointValidated, (vms_file: string, line: number, line_real?: number) => {
+            let lines: Map<number, IBreakPoint> | undefined;
+            for (const bpfile of this._breakPoints.values()) {
+                if (bpfile.vms_file && bpfile.vms_file.toLowerCase() == vms_file.toLowerCase()) {
+                    lines = bpfile.break_points;
+                    break;
                 }
             }
             if (lines) {
@@ -332,19 +348,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         logger.setup(Logger.LogLevel.Stop, false);
         //logger.setup(Logger.LogLevel.Verbose, false);
 
-        this._rootMap = new Map<string, string>();
-        const config = workspace.getConfiguration("vmssoftware.vms_python_debug", null);
-        const root = config.get<object>("roots");
-        if (root) {
-            for(const [key, value] of Object.entries(root)) {
-                if (typeof(key) === "string" && typeof(value) === "string") {
-                    this._rootMap.set(key, value);
-                }
-            }
-        }
-
-        response.success = true;
-        this.sendResponse(response);
+        this._rootMap = [];
 
         this._workspace = args.workspace;
 
@@ -367,7 +371,9 @@ export class PythonDebugSession extends LoggingDebugSession {
         let result = (await Promise.all(tasks)).reduce((acc, x) => acc && x, true );
 
         if (!result) {
-            this.sendEvent(new TerminatedEvent());
+            response.success = false;
+            this.sendResponse(response);
+            return false;
         } else {
             let listeningPort = 5005;
             let listeningPortMax = 5105;
@@ -384,45 +390,98 @@ export class PythonDebugSession extends LoggingDebugSession {
                 }
             }
             let cdCommand = await this.changeDirCmd(this._workspace.name);
-            this._serverQueue.postCommand(cdCommand, (cmd, line) => {
+            return this._serverQueue.postCommand(cdCommand, (cmd, line) => {
                 if (line === undefined || line.includes("\0")) {
                     return ListenerResponse.stop;
                 }
                 return ListenerResponse.needMoreLines;
-            }).then(async () => {
-                while (listeningPort <= listeningPortMax) {
-                    let result = await this.tryRunServer(listeningPort);
-                    if (result === EStartResult.started) {
-                        this._tracerQueue.postCommand(cdCommand, (cmd, line) => {
-                            if (line === undefined || line.includes("\0")) {
-                                return ListenerResponse.stop;
-                            }
-                            return ListenerResponse.needMoreLines;
-                        }).then(async () => {
-                            if (args.pre_launch) {
-                                let cmd = args.pre_launch;
-                                return this._tracerQueue.postCommand(cmd, (cmd, line) => {
-                                    if (line === undefined || line.includes("\0")) {
-                                        return ListenerResponse.stop;
-                                    }
-                                    this.userOutput(line);
-                                    return ListenerResponse.needMoreLines;
-                                });
-                            }
-                        }).then(async () => {
-                            let relPath = workspace.asRelativePath(args.script, false);
-                            this.runTracer(listeningPort, relPath, args.arguments, args.python_args);
-                        });
-                        return this._runtime.start();
-                    } else if (result === EStartResult.portIsBusy) {
-                        this._logFn(LogType.information, () => localize("port.busy", "Port {0} is already in use.", String(listeningPort)));
-                        ++listeningPort;
-                    } else {
-                        break;
+            }).then(async (ok) => {
+                if (ok) {
+                    while (listeningPort <= listeningPortMax) {
+                        let result = await this.tryRunServer(listeningPort);
+                        if (result === EStartResult.started) {
+                            // return from while-loop to the next .then
+                            return this._tracerQueue.postCommand(cdCommand, (cmd, line) => {
+                                if (line === undefined || line.includes("\0")) {
+                                    // command is done
+                                    return ListenerResponse.stop;
+                                }
+                                return ListenerResponse.needMoreLines;
+                            }).then(async (ok) => {
+                                if (ok && args.pre_launch) {
+                                    let cmd = args.pre_launch;
+                                    // return command result if pre_launch is present
+                                    return this._tracerQueue.postCommand(cmd, (cmd, line) => {
+                                        if (line === undefined || line.includes("\0")) {
+                                            // command is done
+                                            return ListenerResponse.stop;
+                                        }
+                                        this.userOutput(line);
+                                        return ListenerResponse.needMoreLines;
+                                    });
+                                }
+                                // pass previous result
+                                return ok;
+                            }).then(async (ok) => {
+                                if (ok) {
+                                    let cmd = 'show default';
+                                    // return command result
+                                    return this._tracerQueue.postCommand(cmd, (cmd, line) => {
+                                        let trimmed_line = line? line.trim() : '';
+                                        if (trimmed_line && trimmed_line !== cmd) {
+                                            this._vmsRoot = VmsPathConverter.fromVms(trimmed_line.trim());
+                                            // command is done
+                                            return ListenerResponse.stop;
+                                        }
+                                        if (line === undefined || line.includes("\0")) {
+                                            // command is failed
+                                            return ListenerResponse.stop;
+                                        }
+                                        return ListenerResponse.needMoreLines;
+                                    });
+                                }
+                                return false;
+                            }).then(async (ok) => {
+                                // add local vms directory to the _rootMap
+                                if (ok && this._vmsRoot?.initial && this._workspace) {
+                                    this._rootMap.push({
+                                        vms: this._vmsRoot.initial.slice(0, -1),
+                                        pc: this._workspace.uri.fsPath,
+                                    });
+                                    // add configured roots only after local folder
+                                    this.populateRoots();
+                                    return true;
+                                }
+                                return false;
+                            }).then(async (ok) => {
+                                if (ok) {
+                                    let relPath = workspace.asRelativePath(args.script, false);
+                                    return this.runTracer(listeningPort, relPath, args.arguments, args.python_args);
+                                }
+                                return EStartResult.unknown;
+                            }).then(async (started) => {
+                                if (started == EStartResult.started) {
+                                    this._runtime.start();
+                                    // well done
+                                    return true;
+                                }
+                                // all sequence failed
+                                return false;
+                            });
+                        } else if (result === EStartResult.portIsBusy) {
+                            this._logFn(LogType.information, () => localize("port.busy", "Port {0} is already in use.", String(listeningPort)));
+                            ++listeningPort;
+                        } else {
+                            break;
+                        }
                     }
                 }
-                this.sendEvent(new TerminatedEvent());
+                // not 'ok' or no available port
                 return false;
+            }).then(async (ok) => {
+                response.success = ok;
+                this.sendResponse(response);
+                return ok;
             });
         }
     }
@@ -444,19 +503,7 @@ export class PythonDebugSession extends LoggingDebugSession {
     }
 
     protected frameSource(frame: IPythonFrame) {
-        let framePath = frame.file;
-        if (framePath.startsWith('/')) {
-            for (const [key, value] of this._rootMap) {
-                if (framePath.toLowerCase().startsWith(key.toLowerCase())) {
-                    framePath = value + framePath.substring(key.length);
-                    break;
-                }
-            }
-        } else {
-            if (this._workspace) {
-                framePath = path.join(this._workspace.uri.fsPath, framePath);
-            }
-        }
+        let framePath = this.getPCFile(frame.file);
         return new Source(frame.file, framePath);
     }
 
@@ -506,10 +553,18 @@ export class PythonDebugSession extends LoggingDebugSession {
         if (variable.parent) {
             let encodedName = this.encodeNames(variable.parent);
             if (variable.parent.type == 'dict') {
-                let idx = variable.name.substring(1, variable.name.length - 1);
-                let buf = Buffer.from(idx, 'utf-8');
-                let encoded = buf.toString('base64');
-                return encodedName + '[' + encoded + ']';
+                if (variable.dict_order) {
+                    return encodedName + '[' + variable.dict_order + ']';
+                } else {
+                    let idx = variable.name.substring(1, variable.name.length - 1);
+                    let buf = Buffer.from(idx, 'utf-8');
+                    let encoded = buf.toString('base64');
+                    return encodedName + '[' + encoded + ']';
+                }
+            }
+            if (variable.parent.is_long_string) {
+                // do not request brackets
+                return encodedName;
             }
             return this.buildFullName(encodedName, variable.name);
         }
@@ -523,6 +578,16 @@ export class PythonDebugSession extends LoggingDebugSession {
         if (parentVar !== undefined) {
             // build full name like <path.name> or <path[name]> or just <name>
             let encodedName = PythonDebugSession.encodeNames(parentVar);
+            if (parentVar.is_long_string) {
+                // get next part
+                let long_str_parent = parentVar;
+                args.start = 0;
+                args.count = 1;
+                while (long_str_parent.parent && long_str_parent.parent.is_long_string) {
+                    ++args.start;
+                    long_str_parent = long_str_parent.parent;
+                }
+            }
             let vars = await this._runtime.variableRequest(
                 parentVar.ident,
                 parentVar.frame,
@@ -541,6 +606,10 @@ export class PythonDebugSession extends LoggingDebugSession {
                     };
                     if (localVar.value !== undefined) {
                         innerVar.value = localVar.value;
+                        if (localVar.is_long_string) {
+                            innerVar.variablesReference = this._variableHandles.create(localVar);
+                            innerVar.indexedVariables = 1;
+                        }
                     } else {
                         innerVar.variablesReference = this._variableHandles.create(localVar);
                         if (localVar.size !== undefined) {
@@ -604,53 +673,61 @@ export class PythonDebugSession extends LoggingDebugSession {
         response.body = {
             breakpoints: []
         };
+
         // set and verify breakpoint locations
         if (args.breakpoints && args.source.path) {
-            let fileName = workspace.asRelativePath(args.source.path, false);
-            for (const [key, value] of this._rootMap) {
-                if (fileName.toLowerCase().startsWith(value.toLowerCase())) {
-                    fileName = (key + fileName.substring(value.length)).replace(middleSepRg, ftpPathSeparator);
-                    break;
-                }
-            }
-            let lines = this._breakPoints.get(fileName);
-            if (lines === undefined) {
-                fileName = fileName.toLowerCase();
-                for (let [key, value] of this._breakPoints.entries()) {
-                    if (key.toLowerCase() == fileName) {
-                        lines = value;
-                        break;
-                    }
-                }
-            }
-            const newLines = new Map<number, IBreakPoint>();
+
+            // get previous bpfile if it exists
+            let oldBPFile = this._breakPoints.get(args.source.path);
+
+            // create new IBreakPointFile with the list of new breakpoints
+            const newBPFile: IBreakPointFile = {
+                break_points: new Map<number, IBreakPoint>(),
+                vms_file: oldBPFile?.vms_file,
+            };
             for (const sourceBp of args.breakpoints) {
-                const oldBp = lines?.get(sourceBp.line);
-                if (oldBp === undefined) {
-                    const ibp: IBreakPoint = {
+                let breakpoint = oldBPFile?.break_points.get(sourceBp.line);
+                if (breakpoint === undefined) {
+                    // create new breakpoint
+                    breakpoint = {
                         id: ++this._nextBp,
                         verified: false,
                         sent: false,
                         real_line: sourceBp.line
                     };
-                    newLines.set(sourceBp.line, ibp);
-                    if (await this._runtime.setBreakPoint(fileName, sourceBp.line)) {
-                        ibp.sent = true;
+                }
+                newBPFile.break_points.set(sourceBp.line, breakpoint);
+            }
+
+            // set new list
+            this._breakPoints.set(args.source.path, newBPFile);
+
+            // test if vms_file is resolved
+            if (!newBPFile.vms_file) {
+                newBPFile.vms_file = this.getVMSFile(args.source.path);
+            }
+            // set added breakpoints
+            if (newBPFile.vms_file) {
+                for (const [line, breakpoint] of newBPFile.break_points) {
+                    if (!breakpoint.sent) {
+                        if (await this._runtime.setBreakPoint(newBPFile.vms_file, line)) {
+                            breakpoint.sent = true;
+                        }
                     }
-                } else {
-                    newLines.set(sourceBp.line, oldBp);
                 }
             }
-            if (lines) {
-                for(let [line, bp] of lines) {
-                    if (!newLines.has(line)) {
-                        await this._runtime.resetBreakPoint(fileName, bp.real_line);
+
+            // reset removed breakpoints
+            if (oldBPFile && oldBPFile.vms_file) {
+                for (const [line, breakpoint] of oldBPFile.break_points) {
+                    if (breakpoint.sent && !newBPFile.break_points.has(line)) {
+                        await this._runtime.resetBreakPoint(oldBPFile.vms_file, line);
                     }
                 }
             }
-            // always replace
-            this._breakPoints.set(fileName, newLines);
-            for (let [line, bp] of newLines) {
+
+            // build response
+            for (let [line, bp] of newBPFile.break_points) {
                 response.body.breakpoints.push({
                     id: bp.id,
                     line: bp.real_line,
@@ -744,22 +821,23 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     protected async gotoTargetsRequest(response: DebugProtocol.GotoTargetsResponse, args: DebugProtocol.GotoTargetsArguments, request?: DebugProtocol.Request) {
         if (args.source.path) {
-            let localPath = workspace.asRelativePath(args.source.path, false)
-            for (const [key, value] of this._rootMap) {
-                if (localPath.toLowerCase().startsWith(value.toLowerCase())) {
-                    localPath = (key + localPath.substring(value.length)).replace(middleSepRg, ftpPathSeparator);
-                    break;
+            let localPath = this.getVMSFile(args.source.path);
+            if (localPath) {
+                response.success = await this._runtime.requestGotoTargets(localPath, args.line);
+                const gtt: GotoTarget = {
+                    id: 0,
+                    label: `go to line ${args.line}`,
+                    line: args.line,
+                };
+                gtt.id = this._gotoHandles.create(gtt);
+                response.body = {
+                    targets: [gtt]
                 }
-            }
-            response.success = await this._runtime.requestGotoTargets(localPath, args.line);
-            const gtt: GotoTarget = {
-                id: 0,
-                label: `go to line ${args.line}`,
-                line: args.line,
-            };
-            gtt.id = this._gotoHandles.create(gtt);
-            response.body = {
-                targets: [gtt]
+            } else {
+                response.success = false;
+                response.body = {
+                    targets: []
+                }
             }
             this.sendResponse(response);
         }
@@ -912,8 +990,43 @@ export class PythonDebugSession extends LoggingDebugSession {
             if (ensured) {
                 const vmsPath = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
                 return `set default ${vmsPath.directory}`;
+                // write sys$output F$ENVIRONMENT("DEFAULT")
             }
         }
         return "";
     }
+
+    public getVMSFile(pcFile: string) : string | undefined {
+        for (const rootFolder of this._rootMap) {
+            if (pcFile.toLowerCase().startsWith(rootFolder.pc.toLowerCase())) {
+                return (rootFolder.vms + pcFile.substring(rootFolder.pc.length)).replace(middleSepRg, ftpPathSeparator);
+            }
+        }
+        return undefined;
+    }
+
+    public getPCFile(vmsFile: string) : string | undefined {
+        for (const rootFolder of this._rootMap) {
+            if (vmsFile.toLowerCase().startsWith(rootFolder.vms.toLowerCase())) {
+                return (rootFolder.pc + vmsFile.substring(rootFolder.vms.length)).replace(middleSepWinRg, path.sep);
+            }
+        }
+        return undefined;
+    }
+
+    public populateRoots() {
+        const config = workspace.getConfiguration("vmssoftware.vms_python_debug", this._workspace?.uri);
+        const root = config.get<object>("roots");
+        if (root) {
+            for(const [key, value] of Object.entries(root)) {
+                if (typeof(key) === "string" && typeof(value) === "string") {
+                    this._rootMap.push({
+                        vms: key,
+                        pc: value,
+                    });
+                }
+            }
+        }
+    }
+
 }

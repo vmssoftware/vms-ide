@@ -14,6 +14,8 @@ export const leadingSepRg = /^[/\\]+/g;
 export const middleSepRg = /[/\\]+/g;
 export const trailingSepRg = /[/\\]+$/g;
 
+export const middleSepWinRg = /[/\/]+/g;
+
 export function expandMask(mask: string) {
         // 1. split by commas which are not in curly bracket
         let depth = 0;

@@ -1,5 +1,42 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.38
+* Create read/write streams with 'binary' encoding.
+
+## 1.5.37
+* Run the project COM file before the program in the release (as in the debug) passing 'RELEASE' as a parameter.
+
+## 1.5.36
+* Uploading via ZIP uses random name for zip file and deletes it at the end.
+* Spaces, dots and carets are allowed in project names and root folders.
+
+## 1.5.35
+* Python debugger: fix displaying collections when index > 9.
+
+## 1.5.34
+* Python debugger: fix displaying 'dict' object.
+
+## 1.5.31
+* Refine Python debugger output.
+
+## 1.5.30
+* Fix Python debugger (splitting long strings).
+
+## 1.5.28
+* Fix Python debugger (hangs on long file paths).
+
+## 1.5.27
+* Fix downloading system headers.
+
+## 1.5.26
+* Fix Python debugger (issue with displaying list of integers).
+
+## 1.5.25
+* VMS debugger issue with long C++ function names is fixed.
+
+## 1.5.24
+* Fix VMS debugger, Python debugger, default terminal command
+
 ## 1.5.22
 * Fix VMS debugger
 

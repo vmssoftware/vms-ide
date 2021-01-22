@@ -76,7 +76,10 @@ export async function DownloadHeaders(scope: string | undefined, logFn: LogFunct
             shell.dispose();
             return false;
         }
-        const allHeaders = result!.slice(8).filter((line) => !!line);
+        let rgxWord = /^\S+$/;
+        const allHeaders = result.filter((line) => {
+            return line.match(rgxWord);
+        });
         // const information = allHeaders.join("\n");
         // logFn(LogType.information, () => information);
 

@@ -48,6 +48,7 @@ export class ShellSession
     private completeCmd : boolean = false;
     private receiveCmd : boolean = false;
     private disconnect : boolean = false;
+    private expectedPrompt : number = 0;
     private dbgModeOn : boolean = false;
     private dbgLastCmd : boolean = false;
     private checkVersion : number;
@@ -233,11 +234,21 @@ export class ShellSession
                     this.resultData += data;// + "> ";
                     this.mode = ModeWork.shell;
 
-                    if (this.disconnect)
+                    if (this.disconnect && !this.expectedPrompt)
                     {
                         this.DisconectSession(true, localize("proram.completed", ": The program is completed."));//close SSH session
                         this.readyCmd = true;
                         this.extensionDataCb(this.mode, TypeDataMessage.typeData, this.resultData);
+                        this.resultData = "";
+                    }
+
+                    if (this.expectedPrompt) {
+                        --this.expectedPrompt;
+                        this.readyCmd = true;
+                        // set type as TypeDataMessage.typeCmd to
+                        // 1. prevent closing the shell
+                        // 2. we are waiting a program to run
+                        this.extensionDataCb(this.mode, TypeDataMessage.typeCmd, this.resultData);
                         this.resultData = "";
                     }
 
@@ -436,6 +447,7 @@ export class ShellSession
         this.completeCmd = true;
         this.receiveCmd = false;
         this.disconnect = false;
+        this.expectedPrompt = 0;
         this.dbgLastCmd = false;
         this.currentCmd = new CommandMessage("", "");
         this.previousCmd = new CommandMessage("", "");
@@ -607,5 +619,11 @@ export class ShellSession
     public SetDisconnectInShellSession()
     {
         this.disconnect = true;
+    }
+
+    public AddExpectedPrompt()
+    {
+        ++this.expectedPrompt;
+        return this.expectedPrompt;
     }
 }

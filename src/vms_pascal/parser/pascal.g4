@@ -40,7 +40,7 @@ attributeConst
    ;
 
 attributeDef
-   : attribute (LPAREN (constant | identifier) (COMMA (constant | identifier))* RPAREN)?
+   : attribute (LPAREN (constant | expression) (COMMA (constant | expression))* RPAREN)?
    ;
 
 preReservedWords
@@ -2147,6 +2147,10 @@ COMMENT_1
 
 COMMENT_2
    : '{' .*? '}' -> skip
+   ;
+
+COMMENT_3
+   : '!' .*? '\n' -> skip
    ;
 
 

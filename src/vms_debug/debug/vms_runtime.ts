@@ -65,7 +65,7 @@ export class VMSRuntime extends EventEmitter
 	private varsInfo : HolderDebugVariableInfo;
 	private stopOnEntry : boolean;
 	private debugRun : boolean;
-	private programEnd : boolean;
+	private programEnd : number;
 	private waitSymbols = new Subject();
 	private waitScope = new Subject();
 	private waitDeposit = new Subject();
@@ -107,6 +107,7 @@ export class VMSRuntime extends EventEmitter
 	private startDbgCmd = true;
 	private startUser = false;
 	private startUserDebugCmd = false;
+	private colorMessage: number;
 
     public logFn: LogFunction;
 
@@ -126,10 +127,11 @@ export class VMSRuntime extends EventEmitter
 		this.varsInfo = new HolderDebugVariableInfo();
 		this.stopOnEntry = false;
 		this.debugRun = false;
-		this.programEnd = false;
+		this.programEnd = 0;
 		this.currentFilePath = "";
 		this.currentRoutine = "";
 		this.currentScope = "";
+		this.colorMessage = 92;
     }
 
     private static async ensureModuleInfoCache(scope: string | ConfigManager) {
@@ -148,7 +150,8 @@ export class VMSRuntime extends EventEmitter
 	public async start(programName : string, programArgs : string, stopOnEntry : boolean) : Promise<void>
 	{
 		this.stopOnEntry = stopOnEntry;
-		this.programEnd = false;
+		this.programEnd = 0;
+		this.colorMessage = 92;
 		this.debugRun = false;
 		let configManager = new ConfigManager(this.scope);
 		let section = await configManager.getProjectSection();
@@ -211,7 +214,7 @@ export class VMSRuntime extends EventEmitter
 			{
 				const converter = new VmsPathConverter(
 					[	section.root,
-						preRunFile,
+						VmsPathConverter.replaceSpecSymbols(section.projectName) + ".com",
 					].join(ftpPathSeparator));
 				const pathToPreRunFile = `${converter.fullPath} DEBUG`;
 				this.shell.SendCommandToQueue(this.osCmd.runCOM(pathToPreRunFile));
@@ -297,7 +300,7 @@ export class VMSRuntime extends EventEmitter
 	{
 		this.buttonPressd = DebugButtonEvent.btnStop;
 		//if the programm is running
-		if(this.programEnd === false && this.shellDbg.getCurrentCommand().getBody() !== "")
+		if(this.programEnd === 0 && this.shellDbg.getCurrentCommand().getBody() !== "")
 		{
 			let symbol = this.dbgCmd.getCtrlPlusSymbol(this.abortKey);
 			this.shellDbg.SendData(this.dbgCmd.customCommand(symbol).getCommand());//interrupt program execution
@@ -309,8 +312,18 @@ export class VMSRuntime extends EventEmitter
 			this.shellDbg.resetParameters();
 			this.shell.resetParameters();
 
-			this.shellDbg.DisconectSession(true, localize("proram.completed", ": The program is completed."));
-			this.shell.DisconectSession(true, localize("proram.completed", ": The program is completed."));
+			if (this.programEnd === 2)
+			{
+				let message = localize("program.end", ": You have no rights: log_io, oper, share.");
+				this.shellDbg.DisconectSession(true, message);
+				this.shell.DisconectSession(true, message);
+			}
+			else
+			{
+				this.shell.SetDisconnectInShellSession();
+				this.shellDbg.SetDisconnectInShellSession();
+				this.shellDbg.SendCommandToQueue(this.dbgCmd.exit());
+			}
 		}
 		else
 		{
@@ -1329,14 +1342,22 @@ export class VMSRuntime extends EventEmitter
 						this.logFn(LogType.information, () => data);
 					}
 
-					vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(data, 92));
-
 					if(data.includes(MessageDebuger.msgNoImage))
 					{
-						this.programEnd = true;
+						this.colorMessage = 91;//red
+						this.programEnd = 1;
 						this.shellDbg.cleanQueueCommands();
 						this.sendEvent('end');//close debugger
 					}
+					else if(data.includes(MessageDebuger.msgUnableOpen) || data.includes(MessageDebuger.msgUnableCreate))
+					{
+						this.colorMessage = 91;//red
+						this.programEnd = 2;//no rights
+						this.shellDbg.cleanQueueCommands();
+						this.sendEvent('end');//close debugger
+					}
+
+					vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(data, this.colorMessage));
 				}
 				else
 				{
@@ -1357,7 +1378,7 @@ export class VMSRuntime extends EventEmitter
 
 				if(data.includes(MessageDebuger.msgNoImage))
 				{
-					this.programEnd = true;
+					this.programEnd = 1;
 					this.shellDbg.cleanQueueCommands();
 					this.sendEvent('end');//close debugger
 				}
@@ -1539,10 +1560,10 @@ export class VMSRuntime extends EventEmitter
 
 					if(messageDebug.includes(MessageDebuger.msgEnd))
 					{
-						this.programEnd = true;
+						this.programEnd = 1;
 						this.shellDbg.cleanQueueCommands();
 
-						setTimeout(() => 
+						setTimeout(() =>
 						{
 							this.sendEvent('end');//close debugger
 						}, 1500);
@@ -1665,7 +1686,7 @@ export class VMSRuntime extends EventEmitter
 				}
 
 
-				if(this.dbgParser.getCommandButtonStatus() && this.programEnd === false)
+				if(this.dbgParser.getCommandButtonStatus() && this.programEnd === 0)
 				{
 					switch(this.buttonPressd)
 					{

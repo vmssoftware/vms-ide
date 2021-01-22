@@ -241,7 +241,7 @@ export class JvmProjectHelper {
         if (scope && typeof scope === "string") {
             const scopedata = await this.chooseScope(scope);
             if (scopedata) {
-                return `@${scopedata.ensured.projectSection.projectName}.com`;
+                return `@${VmsPathConverter.replaceSpecSymbols(scopedata.ensured.projectSection.projectName)}.com`;
             }
         }
         return "";
