@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.39
+* Shortening path for task2cmd socket.
+
 ## 1.5.38
 * Create read/write streams with 'binary' encoding.
 
