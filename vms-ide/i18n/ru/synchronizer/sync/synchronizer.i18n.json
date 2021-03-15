@@ -11,6 +11,7 @@
     "debug.quick.retcode": "Quick uploading:  {0}",
     "debug.upload.error": "Ошибка при выгрузке {0}",
     "debug.upload.retcode": "Выгрузка исходников retCode: {0}",
+    "build.cfg": "There is no build configuration named {0}.",
     "debug.download_listing.error": "Ошибка при загрузке листинга {0}",
     "debug.download.error": "Ошибка при загрузке {0}",
     "file-like-bin": "Файл скорее всего бинарный: {0}",

@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.40
+* Prepare to debug downloads only from current build configuration output folder.
+
 ## 1.5.39
 * Shortening path for task2cmd socket.
 

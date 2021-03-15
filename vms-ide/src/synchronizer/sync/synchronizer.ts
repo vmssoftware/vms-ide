@@ -321,15 +321,28 @@ export class Synchronizer {
     /**
      * Download listing files, all (without "exculde")
      */
-    public async downloadListings(ensured: IEnsured) {
+    public async downloadListings(ensured: IEnsured, buildName: string) {
         const scopeData = await this.prepareScopeData(ensured);
         if (!scopeData) {
             return false;
         }
+        const buildCfg = ensured.buildsSection.configurations.find((cfg) => cfg.label === buildName);
+        if (!buildCfg) {
+            this.logFn(LogType.error, () => localize("build.cfg", "There is no build configuration named {0}.", buildName));
+            return false;
+        }
         const outdir = ensured.projectSection.outdir;
-        scopeData.remoteSource.root += ftpPathSeparator + outdir;    // find only in output directory
+        scopeData.remoteSource.root = [
+            scopeData.remoteSource.root,
+            outdir,
+            buildCfg.label,
+        ].join(ftpPathSeparator);
         const localRoot = scopeData.localSource.root;
-        scopeData.localSource.root += ftpPathSeparator + outdir;     // download exactly in output directory
+        scopeData.localSource.root = [
+            scopeData.localSource.root,
+            outdir,
+            buildCfg.label,
+        ].join(ftpPathSeparator);
         const progressRemote = new Progress();
         const [remoteList, localList] = await Promise.all(
                 [scopeData.remoteSource.findFiles(ensured.projectSection.listing, undefined, progressRemote),

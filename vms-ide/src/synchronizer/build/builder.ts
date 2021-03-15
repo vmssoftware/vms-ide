@@ -482,7 +482,7 @@ export class Builder {
                 }
             }
             if (!downloadedByZip) {
-                await synchronizer.downloadListings(scopeData.ensured);
+                await synchronizer.downloadListings(scopeData.ensured, buildName);
             }
 
             let moduleInfoCache = await VMSRuntime.collectModuleInfo(ensured.scope || "");
@@ -1249,6 +1249,8 @@ export class Builder {
                             entry.file = scopeData.ensured.projectSection.projectName + Builder.mmsExt;
                         } else if (isCommandMMS(buildCfg.command)) {
                             entry.file = buildCfg.command;
+                            const converter = VmsPathConverter.fromVms(entry.file);
+                            entry.file = converter.initial;
                         }
                     }
                 }
