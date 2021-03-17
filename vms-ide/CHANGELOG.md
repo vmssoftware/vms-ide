@@ -2,6 +2,7 @@ For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Ch
 
 ## 1.5.40
 * Prepare to debug downloads only from current build configuration output folder.
+* The behaviour of 'edit' download option has changed: diff edit window is opened only if the file exists on PC side. Otherwise, the file will be downloaded.
 
 ## 1.5.39
 * Shortening path for task2cmd socket.
