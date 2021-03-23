@@ -1,6 +1,8 @@
 import path from "path";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
+import fs from "fs";
+import os from "os";
 
 import { GetSshHelperType } from "../../ext-api/ext-api";
 import { Barrier, Delay, printLike } from "../../common/main";
@@ -159,6 +161,8 @@ export class Synchronizer {
             // compare them
             const compareResult = this.compareLists(localList, remoteList);
             const waitAll = [];
+            const editFiles: string[] = [];
+            const downloadFiles: IFileEntry[] = [];
 
             const progressProcess = new Progress();
             // upload
@@ -174,10 +178,19 @@ export class Synchronizer {
                     break;
                 case "edit":
                     for (const downloadFile of compareResult.download) {
-                        waitAll.push(this.editFile(scopeData, downloadFile.filename));
+                        const found = await scopeData.localSource.findFiles(downloadFile.filename);
+                        if (found && found.length === 1) {
+                            editFiles.push(downloadFile.filename);
+                        } else {
+                            downloadFiles.push(downloadFile);
+                        }
                     }
-                    if (compareResult.download.length > 0) {
-                        this.logFn(LogType.information, () => localize("output.edit_count", "Please edit and save {0} files manually.", compareResult.download.length));
+                    for (const filename of editFiles) {
+                        waitAll.push(this.editFile(scopeData, filename));
+                    }
+                    waitAll.push(this.executeAction(scopeData, downloadFiles, "download", progressProcess));
+                    if (editFiles.length > 0) {
+                        this.logFn(LogType.information, () => localize("output.edit_count", "Please edit and save {0} files manually.", editFiles.length));
                     }
                     break;
             }
@@ -321,15 +334,28 @@ export class Synchronizer {
     /**
      * Download listing files, all (without "exculde")
      */
-    public async downloadListings(ensured: IEnsured) {
+    public async downloadListings(ensured: IEnsured, buildName: string) {
         const scopeData = await this.prepareScopeData(ensured);
         if (!scopeData) {
             return false;
         }
+        const buildCfg = ensured.buildsSection.configurations.find((cfg) => cfg.label === buildName);
+        if (!buildCfg) {
+            this.logFn(LogType.error, () => localize("build.cfg", "There is no build configuration named {0}.", buildName));
+            return false;
+        }
         const outdir = ensured.projectSection.outdir;
-        scopeData.remoteSource.root += ftpPathSeparator + outdir;    // find only in output directory
+        scopeData.remoteSource.root = [
+            scopeData.remoteSource.root,
+            outdir,
+            buildCfg.label,
+        ].join(ftpPathSeparator);
         const localRoot = scopeData.localSource.root;
-        scopeData.localSource.root += ftpPathSeparator + outdir;     // download exactly in output directory
+        scopeData.localSource.root = [
+            scopeData.localSource.root,
+            outdir,
+            buildCfg.label,
+        ].join(ftpPathSeparator);
         const progressRemote = new Progress();
         const [remoteList, localList] = await Promise.all(
                 [scopeData.remoteSource.findFiles(ensured.projectSection.listing, undefined, progressRemote),
@@ -416,9 +442,12 @@ export class Synchronizer {
         if (!this.sshHelper || !scopeData.localSource.root) {
             return false;
         }
+        const localUri = vscode.Uri.file(path.join(scopeData.localSource.root, file));
+        const found = await vscode.workspace.findFiles(new vscode.RelativePattern(scopeData.localSource.root, file));
+        if (found.length === 0) {
+            return false;
+        }
         const memoryStream = this.sshHelper.memStream();
-        let content: string | undefined;
-        let localUri: vscode.Uri | undefined;
         let piped = false;
         try {
             piped = await this.sshHelper.pipeFile(scopeData.remoteSource, memoryStream, file, "", this.logFn);
@@ -427,26 +456,18 @@ export class Synchronizer {
         }
         if (piped && memoryStream.writeStream) {
             const buffer = Buffer.concat(memoryStream.writeStream.chunks);
-            content = buffer.toString("utf8");
+            const content = buffer.toString("utf8");
             const reBuffer = Buffer.from(content, "utf8");
             if (buffer.compare(reBuffer) !== 0) {
                 this.logFn(LogType.error, () => localize("file-like-bin", "The file is likely a binary file: {0}.", file));
                 return false;
             }
-            localUri = vscode.Uri.file(path.join(scopeData.localSource.root, file));
-            const found = await vscode.workspace.findFiles(new vscode.RelativePattern(scopeData.localSource.root, file));
-            if (found.length === 0) {
-                localUri = localUri.with({scheme: "untitled"});
-            }
-            try {
-                const localDoc = await vscode.workspace.openTextDocument(localUri);
-                const remoteDoc = await vscode.workspace.openTextDocument({content});
-                const title = localize("title.rem_loc", "Remote {0} <-> Local", file);
-                const result = await vscode.commands.executeCommand("vscode.diff", remoteDoc.uri, localDoc.uri, title, { preview: false });
-                return true;
-            } catch (err) {
-                this.logFn(LogType.error, () => err);
-            }
+            const tempFile = path.join(fs.mkdtempSync(os.tmpdir()+path.sep), path.basename(file));
+            fs.writeFileSync(tempFile, content);
+            let remoteUri = vscode.Uri.file(tempFile).with({scheme: "readonly"});
+            const title = localize("title.rem_loc", "Remote {0} <-> Local", file);
+            vscode.commands.executeCommand("vscode.diff", remoteUri, localUri, title, { preview: false });
+            return true;
         }
         return false;
 

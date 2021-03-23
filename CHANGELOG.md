@@ -1,5 +1,12 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.40
+* Prepare to debug downloads only from current build configuration output folder.
+* The behaviour of 'edit' download option has changed: diff edit window is opened only if the file exists on PC side. Otherwise, the file will be downloaded.
+
+## 1.5.39
+* Shortening path for task2cmd socket.
+
 ## 1.5.38
 * Create read/write streams with 'binary' encoding.
 
@@ -36,9 +43,6 @@ For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Ch
 
 ## 1.5.24
 * Fix VMS debugger, Python debugger, default terminal command
-
-## 1.5.22
-* Fix VMS debugger
 
 ## 1.5.20
 * Add pre-launch python debugger command

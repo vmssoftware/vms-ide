@@ -23,6 +23,18 @@ export class Task2CmdProvider implements vscode.TaskProvider {
 
     public logFn: LogFunction;
 
+    private hashCode(str: string) {
+        let hash = 0;
+        if (str.length === 0)
+            return hash;
+        for (let i = 0; i < str.length; i++) {
+            let chr = str.charCodeAt(i);
+            hash  = ((hash << 5) - hash) + chr;
+            hash |= 0; // Convert to 32bit integer
+        }
+        return hash;
+    }
+
     constructor(logFn?: LogFunction) {
 
         this.logFn = logFn || (() => {});
@@ -31,6 +43,7 @@ export class Task2CmdProvider implements vscode.TaskProvider {
             this.listenPath = 'vmssoftware.socket';
             if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length) {
                 this.listenPath = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, this.listenPath);
+                this.listenPath = String(this.hashCode(this.listenPath));
             }
             this.listenPath = "\\\\.\\pipe\\" + this.listenPath;
             this.logFn(LogType.debug, () => `Built listen path: "${this.listenPath}"`);
@@ -58,11 +71,11 @@ export class Task2CmdProvider implements vscode.TaskProvider {
                                 thenable.then((ret) => {
                                     if (!ret) {
                                         this.logFn(LogType.error, () => `Command fails "${params.command}"`);
-                                    } 
+                                    }
                                 });
                             } else {
                                 this.logFn(LogType.error, () => `Command returns nothing "${params.command}"`);
-                            }        
+                            }
                         } else {
                             this.logFn(LogType.error, () => `No such command "${params.command}"`);
                         }
@@ -148,8 +161,8 @@ export class Task2CmdProvider implements vscode.TaskProvider {
             }
         }
         return retTasks;
-    }    
-    
+    }
+
     public resolveTask(task: vscode.Task, token?: vscode.CancellationToken | undefined): vscode.ProviderResult<vscode.Task> {
         return undefined;
     }

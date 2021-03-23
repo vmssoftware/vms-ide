@@ -5,7 +5,13 @@ import {
     env,
     window,
     workspace,
+    TextDocumentContentProvider,
+    EventEmitter,
+    Uri,
 } from "vscode";
+
+import fs from "fs";
+import path from "path";
 
 import * as nls from "vscode-nls";
 
@@ -51,6 +57,28 @@ export async function activate(context: ExtensionContext) {
     //         logFn(LogType.debug, () => `query: ${uri.query}`);
     //         logFn(LogType.debug, () => `fragment: ${uri.fragment}`);
     //     }}));
+
+    const readonlyScheme = 'readonly';
+	const readonlyProvider = new class implements TextDocumentContentProvider {
+
+		// emitter and its event
+		onDidChangeEmitter = new EventEmitter<Uri>();
+		onDidChange = this.onDidChangeEmitter.event;
+
+		provideTextDocumentContent(uri: Uri): string {
+			// simply invoke cowsay, use uri-path as text
+            let source = ""
+            try {
+                source = fs.readFileSync(uri.fsPath, 'utf8');
+                fs.unlinkSync(uri.fsPath);
+                fs.rmdirSync(path.dirname(uri.fsPath));
+            } catch (e) {
+                source = "";
+            }
+			return source;
+		}
+	};
+	context.subscriptions.push(workspace.registerTextDocumentContentProvider(readonlyScheme, readonlyProvider));
 
     const projectDependenciesProvider = new ProjDepProvider();
     setProjectDependenciesChanged(projectDependenciesProvider.didChangeDependencies as Event<void>);

@@ -8,7 +8,7 @@
 * **Debugger** for OpenVMS and JVM projects. Also experimental debugger for Python is added.
 * **Highlighting** for *MMS*, *CLD*, *MSG*, *Pascal*, *Basic*, *Fortran* and *Cobol* files.
 * **Light-weight IntelliSense** for *CLD*, *MSG*, *Pascal*, *Basic*, *Fortran* and *Cobol* source.
-* Supported languages: **C**, **C++**, **Fortran**, **Cobol**, **Pascal**, **Basic**, **Bliss**, **Java**, **Kotlin**, **Scala**.
+* Supported languages: **C**, **C++**, **Fortran**, **Cobol**, **Pascal**, **Basic**, **Bliss**, **Java**, **Kotlin**, **Scala**, **Python**.
 
 ## Getting started
 
@@ -40,7 +40,7 @@
 | `VMS-IDE: Synchronize project file with VMS` | Synchronize project files with VMS |
 | `VMS-IDE: Force synchronized status` | Force synchronized status |
 | `VMS-IDE: Force built status` | Force built status |
-| `VMS-IDE: Upload all via Zip` | Upload project files using Zip |
+| `VMS-IDE: Upload via Zip` | Upload project files using Zip |
 | `VMS-IDE: Download system headers` | Download system headers from VMS |
 | `VMS-IDE: Terminal` | Open VMS terminal (`Ctrl+F6`)|
 | `VMS-IDE: Upload` | Upload project files |
