@@ -7,7 +7,7 @@
     "license": "SEE LICENSE IN LICENSE.md",
     "repository": {
         "type": "git",
-        "url": "git:"
+        "url": "https://github.com/vorfol/vms-ide"
     },
     "engines": {
         "vscode": "^1.33.1"
