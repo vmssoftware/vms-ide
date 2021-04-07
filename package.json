@@ -4,7 +4,7 @@
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
     "version": "1.5.40",
     "publisher": "VMSSoftwareInc",
-    "license": "SEE LICENSE IN LICENSE.md",
+    "license": "MIT",
     "repository": {
         "type": "git",
         "url": "https://github.com/vorfol/vms-ide"
