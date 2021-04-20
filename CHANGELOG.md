@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.41
+* Correct readme file
+
 ## 1.5.40
 * Prepare to debug downloads only from current build configuration output folder.
 * The behaviour of 'edit' download option has changed: diff edit window is opened only if the file exists on PC side. Otherwise, the file will be downloaded.

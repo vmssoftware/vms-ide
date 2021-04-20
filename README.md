@@ -12,9 +12,7 @@
 
 ## Getting started
 
-* [Installation](https://wiki.vmssoftware.com/VMS_IDE_Installation)
-* [Setting Up a VMS Project](https://wiki.vmssoftware.com/VMS_IDE_Project_Configuration)
-* [Working On a VMS Project](https://wiki.vmssoftware.com/VMS_IDE_Developing)
+* [How to](https://wiki.vmssoftware.com/VMS_IDE_how_to)
 
 ## Configuration Storage Options
 
@@ -28,30 +26,34 @@
 
 | Command name | Description |
 | --- | --- |
-| `VMS-IDE: Edit ssh-helper settings` | Edit SSH connection settings |
-| `VMS-IDE: Edit OpenVMS project settings` | Edit project settings |
-| `VMS-IDE: Change CR/LF for all source files` | Change CR/LF to LF for all source files |
-| `VMS-IDE: Create MMS` | Create default MMS |
 | `VMS-IDE: Build on VMS` | Build project on OpenVMS with its dependencies |
-| `VMS-IDE: Re-build on VMS` | Rebuild project on OpenVMS with its dependencies |
-| `VMS-IDE: Build this project` | Build the selected project on OpenVMS (`Ctrl+Alt+F7`)|
-| `VMS-IDE: Re-build this project` | Rebuild the selected project on OpenVMS |
-| `VMS-IDE: Clean this project` | Clean the project, delete files from output folder |
-| `VMS-IDE: Synchronize project file with VMS` | Synchronize project files with VMS |
-| `VMS-IDE: Force synchronized status` | Force synchronized status |
-| `VMS-IDE: Force built status` | Force built status |
-| `VMS-IDE: Upload via Zip` | Upload project files using Zip |
+| `VMS-IDE: Build project` | Build the selected project on OpenVMS (`Ctrl+Alt+F7`)|
+| `VMS-IDE: Change CR/LF for all source files` | Change CR/LF to LF for all source files |
+| `VMS-IDE: Clean project` | Clean the project, delete files from output folder |
+| `VMS-IDE: Create/Update MMS` | Create default MMS |
 | `VMS-IDE: Download system headers` | Download system headers from VMS |
+| `VMS-IDE: Edit VMS project settings` | Edit project settings |
+| `VMS-IDE: Edit ssh-helper settings` | Edit SSH connection settings |
+| `VMS-IDE: Force built status` | Force built status |
+| `VMS-IDE: Force synchronized status` | Force synchronized status |
+| `VMS-IDE: Prepare to debug` | Prepare project for debugging |
+| `VMS-IDE: Quick upload` | Execute quick uploading |
+| `VMS-IDE: Rebuild on VMS` | Rebuild project on OpenVMS with its dependencies |
+| `VMS-IDE: Rebuild project` | Rebuild the selected project on OpenVMS |
+| `VMS-IDE: Reparse Basic project` | Reparse Basic project |
+| `VMS-IDE: Reparse Fortran project` | Reparse Fortran project |
+| `VMS-IDE: Reparse Pascal project` | Reparse Pascal project |
+| `VMS-IDE: Synchronize project files with VMS` | Synchronize project files with VMS |
 | `VMS-IDE: Terminal` | Open VMS terminal (`Ctrl+F6`)|
-| `VMS-IDE: Upload` | Upload project files |
-| `VMS-IDE: Quick uploading` | Execute quick uploading |
+| `VMS-IDE: Upload files via Zip` | Upload project files using Zip |
+| `VMS-IDE: Upload files` | Upload project files |
+
 
 ## Settings
 
 | Section name | Name | Type | Description |
 | --- | --- | --- | --- |
 | `vmssoftware.config-helper.settings.using` | Config-helper › Settings: Using	| `FS`, `VFS` or `VCS` | [Place](#configuration-storage-options) where extension settings will be kept |
-| `vmssoftware.config-helper.settings.test` | Test | string | For testing purposes, do not change |
 | `vmssoftware.config-helper.settings.debug` | Config-helper › Settings: Debug | string |  Debug output to, 'console' or folder |
 | `vmssoftware.config-helper.settings.addCalleeInfo` | Config-helper › Settings: Add Callee Info| boolean | Whether or not to add callee info to debug output |
 
