@@ -29,7 +29,9 @@ export class UploadZip {
 
     private async cleanup(zipFilePath: string) {
         fs.unlink(zipFilePath, err => {
-            // skip all errors
+            if (err) {
+                this.logFn(LogType.error, () => localize("zip.cannot_clean", "Could not delete local zip file."));
+            }
         });
     }
 
@@ -106,20 +108,21 @@ export class UploadZip {
                     }
                 }
                 // 1. upload zipFileName
-                if (await Synchronizer.acquire(this.logFn).uploadFiles(ensured, [zipFileName])) {
+                const uploaded = await Synchronizer.acquire(this.logFn).uploadFiles(ensured, [zipFileName]);
+                // upload is finished - delete local file in any case
+                this.cleanup(zipFilePath);
+                if (uploaded) {
                     if (synchronizer.stopIssued) {
                         this.logFn(LogType.error, () => localize("zip.ssh.stopped", "Stopped."));
-                        this.cleanup(zipFilePath);
                         return false;
                     }
-                        // 2. unzip
+                    // 2. unzip
                     // set default directory for shell - project root
                     const cd = `set default ${converter.directory}`;
                     let answer = await shell.execCmd(cd);
                     if (!answer) {
                         this.logFn(LogType.error, () => localize("zip.cd.failed", "Could not set default directory."));
                         shell.dispose();
-                        this.cleanup(zipFilePath);
                         return false;
                     }
                     // overwrite always, use current time for timestamping, wait 3sec before rejecting
@@ -152,7 +155,6 @@ export class UploadZip {
                     }
                     answer = await shell.execCmd('DELETE ' + zipFileName + ";*", undefined, 3000);
                     shell.dispose();
-                    this.cleanup(zipFilePath);
                     return retCode;
                 }
             } else {

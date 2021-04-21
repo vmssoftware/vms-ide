@@ -48,7 +48,7 @@ export async function PipeFile(
         const errorStr = localize("debug.dest_fail", "Could not create destination {0}.", destFile);
         logFn(LogType.debug, () => errorStr);
         if (srcStream) {
-            srcStream.emit("error", new Error(errorStr));
+            srcStream.destroy(new Error(errorStr));
         }
         return false;
     }
@@ -77,7 +77,7 @@ export async function PipeFile(
         const errorStr = localize("debug.source_lost", "Source disappeared.");
         logFn(LogType.debug, () => errorStr);
         if (dstStream) {
-            dstStream.emit("error", new Error(errorStr));
+            dstStream.destroy(new Error(errorStr));
         }
         return false;
     }
