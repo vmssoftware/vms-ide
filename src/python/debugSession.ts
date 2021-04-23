@@ -553,7 +553,7 @@ export class PythonDebugSession extends LoggingDebugSession {
         if (variable.parent) {
             let encodedName = this.encodeNames(variable.parent);
             if (variable.parent.type == 'dict') {
-                if (variable.dict_order) {
+                if (variable.dict_order !== undefined) {
                     return encodedName + '[' + variable.dict_order + ']';
                 } else {
                     let idx = variable.name.substring(1, variable.name.length - 1);
@@ -616,6 +616,26 @@ export class PythonDebugSession extends LoggingDebugSession {
                             innerVar.indexedVariables = localVar.size;
                             innerVar.value = `${innerVar.type}[${innerVar.indexedVariables}]`;
                         }
+                    }
+                    let testNamePos: number | undefined;
+                    let passed = false;
+                    while(!passed) {
+                        let testName = innerVar.name + (testNamePos ? String(testNamePos) : "");
+                        passed = true;
+                        for(let existVar of variables) {
+                            if (existVar.name == testName) {
+                                if (testNamePos == undefined) {
+                                    testNamePos = 1;
+                                } else {
+                                    testNamePos += 1;
+                                }
+                                passed = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (testNamePos !== undefined) {
+                        innerVar.name += String(testNamePos);
                     }
                     variables.push(innerVar);
                 }

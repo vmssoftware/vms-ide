@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.43
+* Fixed showing value of dict with very long key if it is at the first position.
+
 ## 1.5.42
 * Fix deleting local ZIP on uploading error.
 
