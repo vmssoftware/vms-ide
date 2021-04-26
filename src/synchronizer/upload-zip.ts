@@ -38,7 +38,19 @@ export class UploadZip {
     public async perform(ensured: IEnsured, clear?: string) {
         if (ensured.scope &&
             ensured.configHelper.workspaceFolder) {
+            // clear password cache
+            const sshHelperType = GetSshHelperType();
+            if (!sshHelperType) {
+                this.logFn(LogType.error, () => localize("ssh-helper.failed", "Could not find vmssoftware.ssh-helper extension."));
+                return false;
+            }
+            const sshHelper = new sshHelperType(this.logFn);
+            if (sshHelper) {
+                sshHelper.clearPasswordCache();
+            }
+            // enable
             const synchronizer = Synchronizer.acquire(this.logFn);
+            synchronizer.enableRemote();
             const ZipApiType = GetZipApi();
             if (!ZipApiType) {
                 this.logFn(LogType.error, () => localize("zip.missed", "Could not find vmssoftware.zip-helper extension."));
