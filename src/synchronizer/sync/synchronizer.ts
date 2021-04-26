@@ -238,7 +238,7 @@ export class Synchronizer {
                 fileToDelete = fileToDelete.replace(middleSepRg, ftpPathSeparator);
                 if (!(await scopeData.remoteSource.deleteFile(fileToDelete))) {
                     this.logFn(LogType.error, () => localize("debug.quick.delete", "Delete remote file failed: {0}.", fileToDelete));
-                    retCode = false;
+                    // retCode = false;
                 } else {
                     this.logFn(LogType.information, () => localize("debug.quick.delete.ok", "Remote file deleted: {0}.", fileToDelete));
                 }
@@ -267,8 +267,10 @@ export class Synchronizer {
                 }
             }
 
-            // clean list in any case
-            ProjectState.acquire().clearList(ensured.scope);
+            // clean list on ok
+            if (retCode === true) {
+                ProjectState.acquire().clearList(ensured.scope);
+            }
         }
 
         if (!retCode) {
