@@ -1,5 +1,6 @@
 {
     "zip.cannot_clean": "Не удалось удалить локальный zip файл.",
+    "ssh-helper.failed": "Не нашлось расширение vmssoftware.ssh-helper",
     "zip.missed": "Расширение vmssoftware.zip-helper не найдено.",
     "zip.cannot_start": "Не удалось запустить Zip.",
     "zip.nothing": "Нечего паковать.",
