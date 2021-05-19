@@ -136,6 +136,7 @@ class Tracer:
         self._Int = ctypes.c_int
         self._os_path_basename = os.path.basename
         self._os_path_abspath = os.path.abspath
+        self._os_path_splitext = os.path.splitext
         self._setSignal = signal.signal
         self._messages = MESSAGE
         # self._commands = COMMAND
@@ -1099,6 +1100,9 @@ class Tracer:
         if self._insensitive:
             self._cwd = self._cwd.lower()
         self._fileName = self._canonizeFile(__file__)
+        class _Empty: pass
+        __spec__ = _Empty()
+        __spec__.name = self._os_path_splitext(self._os_path_basename(filename))[0]
         # === Given from PDB.PY ===
         import __main__
         builtinsT = __builtins__
@@ -1106,6 +1110,7 @@ class Tracer:
         __main__.__dict__.update({'__name__'    : '__main__',
                                   '__file__'    : filename,
                                   '__builtins__': builtinsT,
+                                  '__spec__'    : __spec__,
                                  })
         self._fileWaitingFor = self._canonizeFile(filename)
         globalsT = __main__.__dict__
