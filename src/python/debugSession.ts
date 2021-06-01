@@ -173,6 +173,10 @@ export class PythonDebugSession extends LoggingDebugSession {
             this.sendStoppedEvent('data access', threadId);
         });
 
+        this._runtime.on(PythonRuntimeEvents.stopOnSignal, (threadId) => {
+            this.sendStoppedEvent('unhandled signal', threadId);
+        });
+
         this._runtime.on(PythonRuntimeEvents.breakpointValidated, (vms_file: string, line: number, line_real?: number) => {
             let lines: Map<number, IBreakPoint> | undefined;
             for (const bpfile of this._breakPoints.values()) {

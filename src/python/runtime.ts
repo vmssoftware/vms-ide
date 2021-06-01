@@ -18,6 +18,7 @@ export enum PythonRuntimeEvents {
     stopOnPause = 'stopOnPause',
     stopOnDataChange = 'stopOnDataChange',
     stopOnDataAccess = 'stopOnDataAccess',
+    stopOnSignal = 'stopOnSignal',
     breakpointValidated = 'breakpointValidated',
     output = 'output',
     end = 'end',
@@ -232,6 +233,42 @@ const _rgxCommands = {
     PATHFILTER :    /^y(?: \S+)?$/,
 };
 
+const _rgxSignal = /SIGNAL:(\d+)/;
+const _signalNames = [
+    '0',
+    'SIGHUP',
+    'SIGINT',
+    'SIGQUIT',
+    'SIGILL',
+    'SIGTRAP',
+    'SIGABRT',
+    '7',
+    'SIGFPE',
+    'SIGKILL',
+    'SIGBUS',
+    'SIGSEGV',
+    'SIGSYS',
+    'SIGPIPE',
+    'SIGALRM',
+    'SIGTERM',
+    'SIGUSR1',
+    'SIGUSR2',
+    'SIGCHLD',
+    '19',
+    'SIGTSTP',
+    'SIGURG',
+    'SIGPOLL',
+    'SIGSTOP',
+    '24',
+    'SIGCONT',
+    'SIGTTIN',
+    'SIGTTOU',
+    'SIGVTALRM',
+    'SIGPROF',
+    'SIGXCPU',
+    'SIGXFSZ',
+]
+
 export const rgxEsc = /\x1B(?:[@-Z\\-_=>]|\[[0-?]*[ -/]*[@-~]|[)(][AB012])/g;
 
 export class PythonShellRuntime extends EventEmitter {
@@ -298,6 +335,18 @@ export class PythonShellRuntime extends EventEmitter {
                 if (stopReason === undefined && line.startsWith(PythonServerMessage.EXCEPTION)) {
                     stopReason = PythonRuntimeEvents.stopOnException;
                     this.sendEvent(PythonRuntimeEvents.output, line);
+                }
+                if (stopReason === undefined && line.startsWith(PythonServerMessage.SIGNAL)) {
+                    stopReason = PythonRuntimeEvents.stopOnSignal;
+                    let strOut = 'Unhandled ' + line;
+                    const matchSignal = line.match(_rgxSignal);
+                    if (matchSignal) {
+                        const id = +matchSignal[1];
+                        if (id < _signalNames.length) {
+                            strOut = 'Unhandled ' + _signalNames[id];
+                        }
+                    }
+                    this.sendEvent(PythonRuntimeEvents.output, strOut);
                 }
                 if (stopReason !== undefined) {
                     this.running = false;

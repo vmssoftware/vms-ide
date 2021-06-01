@@ -456,7 +456,7 @@ class Tracer:
                     elif self._commands_regexp.EVAL.match(cmd):
                         self._evalExpression(cmd, ident)
                     else:
-                        self._sendDbgMessage('%s' % self._messages.SYNTAX_ERROR)
+                        self._sendDbgMessage('%s: %s' % (self._messages.SYNTAX_ERROR, cmd))
                 # wait and read command again
                 self._sleep(0.3)
                 cmd = self._readDbgMessage()
