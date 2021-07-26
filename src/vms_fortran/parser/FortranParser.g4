@@ -958,6 +958,7 @@ attrSpec
    | OPTIONAL
    | POINTER
    | SAVE
+   | STATIC
    | TARGET
    ;
 
