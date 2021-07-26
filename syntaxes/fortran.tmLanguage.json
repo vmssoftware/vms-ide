@@ -811,6 +811,15 @@
 				}
 			}
 		},
+		"static-attribute": {
+			"comment": "IDE-194",
+			"match": "(?i)\\s*\\b(static)\\b",
+			"captures": {
+				"1": {
+					"name": "storage.modifier.static.fortran"
+				}
+			}
+		},
 		"sequence-attribute": {
 			"comment": "Introduced in the Fortran 20?? standard.",
 			"match": "(?i)\\s*\\b(sequence)\\b",
@@ -4142,7 +4151,7 @@
 		},
 		"attribute-specification-statement": {
 			"name": "meta.statement.attribute-specification.fortran",
-			"begin": "(?ix)(?=\\b(?:allocatable|asynchronous|contiguous |external|intrinsic|optional|parameter|pointer|private|protected|public|save|target|value|volatile)\\b |(bind|dimension|intent)\\s*\\( |(codimension)\\s*\\[)",
+			"begin": "(?ix)(?=\\b(?:allocatable|asynchronous|contiguous |external|intrinsic|optional|parameter|pointer|private|protected|public|save|static|target|value|volatile)\\b |(bind|dimension|intent)\\s*\\( |(codimension)\\s*\\[)",
 			"end": "(?=[;!\\n])",
 			"patterns": [
 				{
@@ -4189,6 +4198,9 @@
 				},
 				{
 					"include": "#save-attribute"
+				},
+				{
+					"include": "#static-attribute"
 				},
 				{
 					"include": "#target-attribute"
