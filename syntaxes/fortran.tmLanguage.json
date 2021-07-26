@@ -4045,6 +4045,9 @@
 									"include": "#save-attribute"
 								},
 								{
+									"include": "#static-attribute"
+								},
+								{
 									"include": "#target-attribute"
 								},
 								{

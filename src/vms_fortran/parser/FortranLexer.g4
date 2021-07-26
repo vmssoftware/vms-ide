@@ -146,6 +146,14 @@ STRUCTURE
    : S T R U C T U R E
    ;
 
+RECORDTYPE
+   : R E C O R D T Y P E
+   ;
+
+RECORDSIZE
+   : R E C O R D S I Z E
+   ;
+
 RECORD
    : R E C O R D
    ;
@@ -174,6 +182,10 @@ FUNCTION
    : F U N C T I O N
    ;
 
+BLOCKSIZE
+   : B L O C K S I Z E
+   ;
+
 BLOCK
    : B L O C K
    ;
@@ -184,6 +196,18 @@ SUBROUTINE
 
 PROCEDURE
    : P R O C E D U R E
+   ;
+
+ENDIF
+   : E N D I F
+   ;
+
+ENDDO
+   : E N D D O
+   ;
+
+ENDFILE
+   : E N D F I L E
    ;
 
 END
@@ -212,6 +236,10 @@ OPERATOR
 
 ASSIGNMENT
    : A S S I G N M E N T
+   ;
+
+ASSIGN
+   : A S S I G N
    ;
 
 ALLOCATE
@@ -302,8 +330,8 @@ DATA
    : D A T A
    ;
 
-ASSIGN
-   : A S S I G N
+GOTO
+   : G O T O
    ;
 
 GO
@@ -314,16 +342,16 @@ TO
    : T O
    ;
 
-GOTO
-   : G O T O
-   ;
-
 WHERE
    : W H E R E
    ;
 
 ELSEWHERE
    : E L S E W H E R E
+   ;
+
+SELECTCASE
+   : S E L E C T C A S E
    ;
 
 SELECT
@@ -334,8 +362,8 @@ CASE
    : C A S E
    ;
 
-SELECTCASE
-   : S E L E C T C A S E
+DEFAULTFILE
+   : D E F A U L T F I L E
    ;
 
 DEFAULT
@@ -350,16 +378,16 @@ THEN
    : T H E N
    ;
 
+ELSEIF
+   : E L S E I F
+   ;
+
 ELSE
    : E L S E
    ;
 
-ENDIF
-   : E N D I F
-   ;
-
-ELSEIF
-   : E L S E I F
+DOUBLE
+   : D O U B L E
    ;
 
 DO
@@ -386,10 +414,6 @@ STOP
    : S T O P
    ;
 
-ENDDO
-   : E N D D O
-   ;
-
 PAUSE
    : P A U S E
    ;
@@ -400,6 +424,10 @@ WRITE
 
 REWRITE
    : R E W R I T E
+   ;
+
+READWRITE
+   : R E A D W R I T E
    ;
 
 READ
@@ -422,8 +450,16 @@ FIND
    : F I N D
    ;
 
+OPENED
+   : O P E N E D
+   ;
+
 OPEN
    : O P E N
+   ;
+
+FORMATTED
+   : F O R M A T T E D
    ;
 
 FORMAT
@@ -454,10 +490,6 @@ CLOSE
    : C L O S E
    ;
 
-DOUBLE
-   : D O U B L E
-   ;
-
 COMPLEX
    : C O M P L E X
    ;
@@ -468,10 +500,6 @@ INQUIRE
 
 BACKSPACE
    : B A C K S P A C E
-   ;
-
-ENDFILE
-   : E N D F I L E
    ;
 
 REWIND
@@ -610,10 +638,6 @@ ARROW
    : '=>'
    ;
 
-TO_ASSIGN
-   : '='
-   ;
-
 MINUS
    : '-'
    ;
@@ -670,7 +694,9 @@ LESS_EQUAL
    : '<='
    ;
 
-
+TO_ASSIGN
+   : '='
+   ;
 
 IN
    : I N
@@ -678,6 +704,14 @@ IN
 
 OUT
    : O U T
+   ;
+
+STATIC
+   : S T A T I C
+   ;
+
+STATUS
+   : S T A T U S
    ;
 
 STAT
@@ -760,10 +794,6 @@ DEFINE
    : D E F I N E
    ;
 
-STATUS
-   : S T A T U S
-   ;
-
 ACCESS
    : A C C E S S
    ;
@@ -792,20 +822,12 @@ RECL
    : R E C L
    ;
 
-RECORDSIZE
-   : R E C O R D S I Z E
-   ;   
-
 BLANK
    : B L A N K
    ;
 
 EXIST
    : E X I S T
-   ;
-
-OPENED
-   : O P E N E D
    ;
 
 NUMBER
@@ -824,10 +846,6 @@ TITLE
    : T I T L E
    ;   
 
-FORMATTED
-   : F O R M A T T E D
-   ;
-
 UNFORMATTED
    : U N F O R M A T T E D
    ;
@@ -836,20 +854,12 @@ NEXTREC
    : N E X T R E C
    ;
 
-READWRITE
-   : R E A D W R I T E
-   ;
-
 IOLENGTH
    : I O L E N G T H
    ;
 
 ASSOCIATEVARIABLE
    : A S S O C I A T E V A R I A B L E
-   ;
-
-BLOCKSIZE
-   : B L O C K S I Z E
    ;
 
 BUFFERCOUNT
@@ -866,10 +876,6 @@ CARRIAGECONTROL
 
 CONVERT
    : C O N V E R T
-   ;
-
-DEFAULTFILE
-   : D E F A U L T F I L E
    ;
 
 DISPOSE
@@ -946,10 +952,6 @@ NOSPANBLOCKS
 
 ORGANIZATION
    : O R G A N I Z A T I O N
-   ;
-
-RECORDTYPE
-   : R E C O R D T Y P E
    ;
 
 SHARED
@@ -1103,8 +1105,4 @@ SconSingle
 SconDouble
    : '"' (~'"' | '""')*  '"'
    | '"' ~ (["\r\n])* '"'
-   ;
-
-STATIC
-   : S T A T I C
    ;
