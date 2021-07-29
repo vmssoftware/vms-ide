@@ -90,7 +90,7 @@ export class ConfigStorageImpl implements IConfigStorage {
                     resolve(CSAResult.ok);
                 } catch (err) {
                     this.logFn(LogType.debug, () => "storeEnd => failed");
-                    resolve(CSAResult.fail);
+                    resolve(CSAResult.end_failed);
                 }
         });
     }

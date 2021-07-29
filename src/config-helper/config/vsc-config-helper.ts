@@ -2,7 +2,7 @@ import { Disposable, Uri, workspace, WorkspaceFolder } from "vscode";
 
 import { Debouncer, LogFunction, LogType } from "../../common/main";
 
-import { IConfig, IConfigEditor, IConfigHelper, IConfigStorage } from "./config";
+import { CSAResult, IConfig, IConfigEditor, IConfigHelper, IConfigStorage } from "./config";
 import { ConfigPool } from "./config-pool";
 import { VSCWorkspaceConfigEditor } from "./vsc-editor";
 import { VSCConfigStorage } from "./vsc-storage";
@@ -35,7 +35,7 @@ export class VSCConfigHelper implements IConfigHelper {
                 this.config.freeze();
                 this.logFn(LogType.debug, () => "onDidChangeConfiguration");
                 this.debouncer.debounce().then(async () => {
-                    await this.config.load();
+                    await this.config.load().then(load_result => this.config.logResult(load_result));
                     this.config.unfreeze();
                 });
             }

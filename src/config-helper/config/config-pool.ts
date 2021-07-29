@@ -32,7 +32,7 @@ export class ConfigPool implements IConfig {
     public setStorage(storage: IConfigStorage) {
         this.logFn(LogType.debug, () => "setStorage");
         this.storage = storage;
-        this.load();
+        this.load().then(load_result => this.logResult(load_result));
     }
 
     /**
@@ -41,7 +41,7 @@ export class ConfigPool implements IConfig {
     public add(cfg: IConfigSection): boolean {
         this.logFn(LogType.debug, () => "add " + cfg.name());
         this.pool.set(cfg.name(), cfg);
-        this.load();
+        this.load().then(load_result => this.logResult(load_result));
         return true;
     }
 
@@ -87,6 +87,21 @@ export class ConfigPool implements IConfig {
             this.logFn(LogType.debug, () => "get => ok " + section);
         });
     }
+
+    public logResult(result: CSAResult) {
+        if (result & CSAResult.fail) {
+            this.logFn(LogType.error, () => localize("config.logResult.fail", "Operation failed"), true);
+        }
+        if (result & CSAResult.prepare_failed) {
+            this.logFn(LogType.error, () => localize("config.logResult.prepare_failed", "Failed to prapare"), true);
+        }
+        if (result & CSAResult.some_data_failed) {
+            this.logFn(LogType.warning, () => localize("config.logResult.some_data_failed", "Failed to fill some data"), true);
+        }
+        if (result & CSAResult.end_failed) {
+            this.logFn(LogType.warning, () => localize("config.logResult.end_failed", "Failed to store"), true);
+        }
+}
 
     public load(storageT?: IConfigStorage): Promise<CSAResult> {
         const storage = storageT || this.storage;

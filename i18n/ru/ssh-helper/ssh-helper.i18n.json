@@ -1,0 +1,4 @@
+{
+    "ssh_helper.case_host": "Cannot find a host in list: {0}, did you mean {1}?",
+    "ssh_helper.no_host": "Cannot find a host in list: {0}"
+}

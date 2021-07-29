@@ -5,7 +5,7 @@ export let configApi: IConfigApi | undefined;
 
 export async function ensureConfigHelperApi(): Promise<boolean> {
     if (!configApi) {
-        configApi = await GetConfigHelperFromApi();
+        configApi = GetConfigHelperFromApi();
     }
     return configApi !== undefined;
 }

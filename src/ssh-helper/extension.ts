@@ -36,6 +36,7 @@ function setupWatchers(sshHelper: SshHelper) {
         for (const wf of vscode.workspace.workspaceFolders) {
             watchers.push(sshHelper.setConfigWatcher(wf.name, () => {
                 sshHelper.killPasswordCache();
+                sshHelper.testSettings(wf.name);
             }));
         }
     }

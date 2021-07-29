@@ -43,6 +43,11 @@ export class SynchronizeSection implements ISynchronizeSection, IConfigSection {
 
     public fillFrom(data: IConfigData): boolean {
         if (SynchronizeSection.is(data)) {
+            this.keepAlive = data.keepAlive;
+            this.setTimeAttempts = data.setTimeAttempts;
+            this.preferZip = data.preferZip;
+            this.forceLocalTime = data.forceLocalTime;
+            this.purge = data.purge;
             switch (data.downloadNewFiles) {
                 case "overwrite":
                 case "skip":
@@ -50,14 +55,9 @@ export class SynchronizeSection implements ISynchronizeSection, IConfigSection {
                     this.downloadNewFiles = data.downloadNewFiles;
                     break;
                 default:
-                    this.downloadNewFiles = "edit";
+                    throw "Unknown option (downloadNewFiles): " + data.downloadNewFiles;
                     break;
             }
-            this.keepAlive = data.keepAlive;
-            this.setTimeAttempts = data.setTimeAttempts;
-            this.preferZip = data.preferZip;
-            this.forceLocalTime = data.forceLocalTime;
-            this.purge = data.purge;
             return true;
         }
         return false;

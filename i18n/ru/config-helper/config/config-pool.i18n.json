@@ -1,4 +1,8 @@
 {
+    "config.logResult.fail": "Operation failed",
+    "config.logResult.prepare_failed": "Failed to prapare",
+    "config.logResult.some_data_failed": "Failed to fill some data",
+    "config.logResult.end_failed": "Failed to store",
     "config.filldata.failed": "чтение данных ('{0}') неудачно",
     "config.storedata.failed": "сохранение данных ('{0}') неудачно"
 }

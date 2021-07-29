@@ -5,7 +5,7 @@ import { ISettingsFiller } from "./settings-filler";
 
 export class HostFiller implements ISettingsFiller {
 
-    private static rg = /^<(.*)>$/;
+    public static rg = /^<(.*)>$/;
 
     public logFn: LogFunction;
 

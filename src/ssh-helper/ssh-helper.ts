@@ -1,8 +1,8 @@
-// import * as nls from "vscode-nls";
-// nls.config({messageFormat: nls.MessageFormat.both});
-// const localize = nls.loadMessageBundle();
+import * as nls from "vscode-nls";
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
 
-import { LogFunction } from "../common/main";
+import { LogFunction, LogType } from "../common/main";
 import { IConfigHelper } from "../config-helper/config/config";
 import { configApi } from "./config-api";
 import { ConnectConfigResolverImpl } from "./config-resolve/connect-config-resolver-impl";
@@ -76,6 +76,34 @@ export class SshHelper {
         }
         const editor = ensured.configHelper.getEditor();
         return editor.invoke();
+    }
+
+    public async testSettings(scope?: string) {
+        const ensured = await ensureSettings(this.logFn, scope);
+        if (!ensured) {
+            this.logFn(LogType.error, () => "no settings");
+            return false;
+        }
+        const matched = ensured.connectionSection.host.match(HostFiller.rg);
+        if (!matched) {
+            // the host is not a label in hosts
+            return true;
+        }
+        let host_to_find = matched[1];
+        for (const host of ensured.hostsSection.hosts) {
+            if (host.label === host_to_find) {
+                return true;
+            }
+        }
+        host_to_find = host_to_find.toLowerCase()
+        for (const host of ensured.hostsSection.hosts) {
+            if (host.label.toLowerCase() === host_to_find) {
+                this.logFn(LogType.error, () => localize("ssh_helper.case_host", "Cannot find a host in list: {0}, did you mean {1}?", matched[1], host.label), true);
+                return false;
+            }
+        }
+        this.logFn(LogType.error, () => localize("ssh_helper.no_host", "Cannot find a host in list: {0}", matched[1]), true);
+        return false;
     }
 
     public async getDefaultSftp(scope?: string) {
