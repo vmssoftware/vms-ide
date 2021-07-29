@@ -10,7 +10,7 @@
         "url": "https://github.com/vmssoftware/vms-ide"
     },
     "engines": {
-        "vscode": "^1.33.1"
+        "vscode": "^1.58.2"
     },
     "categories": [
         "Debuggers",
@@ -18,7 +18,7 @@
         "Other"
     ],
     "icon": "images/vms_logo.png",
-    "main": "./out/index",
+    "main": "./out/extension",
     "activationEvents": [
         "*",
         "onView:vmssoftware.project-dep.projectDependencies",
@@ -1185,10 +1185,10 @@
         "ts-loader": "^5.4.5",
         "tslint": "^5.18.0",
         "typescript": "^3.7.4",
-        "vsce": "^1.65.0",
-        "vscode": "^1.1.35",
+        "vsce": "^1.96.1",
+        "vscode": "^1.1.37",
         "vscode-nls-dev": "github:vorfol/vscode-nls-dev",
-        "webpack": "^4.35.3",
+        "webpack": "^5.46.0",
         "webpack-cli": "^3.3.6",
         "yargs": "^14.2.0"
     },

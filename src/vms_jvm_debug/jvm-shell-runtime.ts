@@ -987,14 +987,65 @@ export class JvmShellRuntime extends EventEmitter {
     }
 
     private onUnexpectedLine(line: string | undefined): void {
-        if (line) {
-            this._logFn(LogType.debug, () => `unexpected: ${line.trimRight()}`);
+        if (line === undefined) {
+            return;
+        }
 
-            if (this._dataBpLines) {
-                this._dataBpLines.push(line);
-                if (this._dataBpTimer) {
-                    clearTimeout(this._dataBpTimer);
+        this._logFn(LogType.debug, () => `unexpected: ${line.trimRight()}`);
+
+        if (this._dataBpLines) {
+            this._dataBpLines.push(line);
+            if (this._dataBpTimer) {
+                clearTimeout(this._dataBpTimer);
+            }
+            this._dataBpTimer = setTimeout(() => {
+                this._dataBpTimer = undefined;
+                // do not await 
+                this.parseDataBp();
+            }, this.waitFetch);
+            return;
+        }
+
+        for (const exitEvent of _exitEvents) {
+            const matchedEvent = line.match(exitEvent.rgx);
+            if (matchedEvent) {
+                this.sendEvent(exitEvent.reason);
+                const tail = line.replace(matchedEvent[0], "");
+                return this.onUnexpectedLine(tail);
+            }
+        }
+
+        for (const stopEvent of _stopEvents) {
+            const matchedEvent = line.match(stopEvent.rgx);
+            if (matchedEvent) {
+                this.setRunning(false);
+                this._isPausePressed = false;
+                const matchedStoppedThread = line.match(_rgxStoppedThread.rgx);
+                if (matchedStoppedThread) {
+                    const threadName = matchedStoppedThread[_rgxStoppedThread.threadName];
+                    this._stoppedThreads.push({
+                        name: threadName,
+                        reason: stopEvent.reason,
+                    });
+                } else {
+                    // wait for stopped thread name
+                    this._stoppedThreads.push({
+                        name: "",
+                        reason: stopEvent.reason,
+                    });
                 }
+                const tail = line.replace(matchedEvent[0], "");
+                return this.onUnexpectedLine(tail);
+            }
+        }
+
+        [_stopOnDataChange, _stopOnDataAccess].forEach(_stop => {
+            const dataBpMatch = line.match(_stop.rgx);
+            if (dataBpMatch) {
+                // we cannot be sure the data will be parsed correctly, so fetch all
+                this._dataBpLines = [];
+                this._dataBpReason = _stop.reason;
+                this._dataBpLines.push(line);
                 this._dataBpTimer = setTimeout(() => {
                     this._dataBpTimer = undefined;
                     // do not await 
@@ -1002,136 +1053,87 @@ export class JvmShellRuntime extends EventEmitter {
                 }, this.waitFetch);
                 return;
             }
+        });
 
-            for (const exitEvent of _exitEvents) {
-                const matchedEvent = line.match(exitEvent.rgx);
-                if (matchedEvent) {
-                    this.sendEvent(exitEvent.reason);
-                    const tail = line.replace(matchedEvent[0], "");
-                    return this.onUnexpectedLine(tail);
-                }
-            }
+        const pausedMatch = line.match(_pauseEvent.rgx);
+        if (pausedMatch) {
+            this._isPausePressed = true;
+            const tail = line.replace(pausedMatch[0], "");
+            return this.onUnexpectedLine(tail);
+        }
 
-            for (const stopEvent of _stopEvents) {
-                const matchedEvent = line.match(stopEvent.rgx);
-                if (matchedEvent) {
-                    this.setRunning(false);
-                    this._isPausePressed = false;
-                    const matchedStoppedThread = line.match(_rgxStoppedThread.rgx);
-                    if (matchedStoppedThread) {
-                        const threadName = matchedStoppedThread[_rgxStoppedThread.threadName];
-                        this._stoppedThreads.push({
-                            name: threadName,
-                            reason: stopEvent.reason,
-                        });
-                    } else {
-                        // wait for stopped thread name
-                        this._stoppedThreads.push({
-                            name: "",
-                            reason: stopEvent.reason,
-                        });
-                    }
-                    const tail = line.replace(matchedEvent[0], "");
-                    return this.onUnexpectedLine(tail);
-                }
-            }
-
-            [_stopOnDataChange, _stopOnDataAccess].forEach(_stop => {
-                const dataBpMatch = line.match(_stop.rgx);
-                if (dataBpMatch) {
-                    // we cannot be sure the data will be parsed correctly, so fetch all
-                    this._dataBpLines = [];
-                    this._dataBpReason = _stop.reason;
-                    this._dataBpLines.push(line);
-                    this._dataBpTimer = setTimeout(() => {
-                        this._dataBpTimer = undefined;
-                        // do not await 
-                        this.parseDataBp();
-                    }, this.waitFetch);
-                    return;
-                }
-            });
-
-            const pausedMatch = line.match(_pauseEvent.rgx);
-            if (pausedMatch) {
-                this._isPausePressed = true;
-                const tail = line.replace(pausedMatch[0], "");
+        const waitThreadName = this._stoppedThreads.find(th => th.name === "");
+        if (waitThreadName) {
+            const matchedStoppedThread = line.match(_rgxStoppedThread.rgx);
+            if (matchedStoppedThread) {
+                waitThreadName.name = matchedStoppedThread[_rgxStoppedThread.threadName];
+                const tail = line.replace(matchedStoppedThread[0], "");
                 return this.onUnexpectedLine(tail);
             }
+        }
 
-            const waitThreadName = this._stoppedThreads.find(th => th.name === "");
-            if (waitThreadName) {
-                const matchedStoppedThread = line.match(_rgxStoppedThread.rgx);
-                if (matchedStoppedThread) {
-                    waitThreadName.name = matchedStoppedThread[_rgxStoppedThread.threadName];
-                    const tail = line.replace(matchedStoppedThread[0], "");
-                    return this.onUnexpectedLine(tail);
+        [_rgxBreakPoint.rgxSetDef, _rgxBreakPoint.rgxSet].forEach(rgx => {
+            const matchedEvent = line.match(rgx);
+            if (matchedEvent) {
+                const bpkey = matchedEvent[1];
+                const bp = this._breakpoints.get(bpkey);
+                if (bp) {
+                    bp.verified = true;
+                    this.sendEvent(JvmRuntimeEvents.breakpointValidated, bp.breakId, true);
                 }
+                const tail = line.replace(matchedEvent[0], "");
+                return this.onUnexpectedLine(tail);
             }
+        });
 
-            [_rgxBreakPoint.rgxSetDef, _rgxBreakPoint.rgxSet].forEach(rgx => {
-                const matchedEvent = line.match(rgx);
-                if (matchedEvent) {
-                    const bpkey = matchedEvent[1];
-                    const bp = this._breakpoints.get(bpkey);
-                    if (bp) {
-                        bp.verified = true;
-                        this.sendEvent(JvmRuntimeEvents.breakpointValidated, bp.breakId, true);
+        const matchDeferErr = line.match(_rgxBreakPoint.rgxSetDeferError);
+        if (matchDeferErr) {
+            this.sendEvent(JvmRuntimeEvents.output, matchDeferErr[1]);
+            return;
+        }
+
+        const promptId = this.testIfThreadPrompt(line);
+        if ( promptId === JvmPrompt.promptIsStoppedThread) {
+            this.setRunning(false);
+            this.populateThreadsInfo().
+                then((isOk) => {
+                    if (isOk) {
+                        for(const stopped of this._stoppedThreads) {
+                            const id = this.findThreadId(stopped.name);
+                            if (id) {
+                                // send message for each stopped thread
+                                this.setThread(id).then(() => {
+                                    this.sendEvent(stopped.reason, id);
+                                    this._stoppedThreadId = id;
+                                });
+                            }
+                        }
+                        this._stoppedThreads = [];  // info is sent, clear this
                     }
-                    const tail = line.replace(matchedEvent[0], "");
-                    return this.onUnexpectedLine(tail);
-                }
-            });
-
-            const matchDeferErr = line.match(_rgxBreakPoint.rgxSetDeferError);
-            if (matchDeferErr) {
-                this.sendEvent(JvmRuntimeEvents.output, matchDeferErr[1]);
-                return;
-            }
-
-            const promptId = this.testIfThreadPrompt(line);
-            if ( promptId === JvmPrompt.promptIsStoppedThread) {
+                });
+        } else if (promptId === JvmPrompt.promptIsDefault) {
+            if (this._isPausePressed) {
+                this._isPausePressed = false;
                 this.setRunning(false);
                 this.populateThreadsInfo().
                     then((isOk) => {
                         if (isOk) {
-                            for(const stopped of this._stoppedThreads) {
-                                const id = this.findThreadId(stopped.name);
-                                if (id) {
-                                    // send message for each stopped thread
-                                    this.setThread(id).then(() => {
-                                        this.sendEvent(stopped.reason, id);
-                                        this._stoppedThreadId = id;
+                            const mainThreads = this.mainThreads();
+                            if (mainThreads) {
+                                for(const thread of mainThreads) {
+                                    this.setThread(thread.id).then(() => {
+                                        this.sendEvent(JvmRuntimeEvents.stopOnPause, thread.id);
                                     });
+                                    break;
                                 }
                             }
-                            this._stoppedThreads = [];  // info is sent, clear this
                         }
                     });
-            } else if (promptId === JvmPrompt.promptIsDefault) {
-                if (this._isPausePressed) {
-                    this._isPausePressed = false;
-                    this.setRunning(false);
-                    this.populateThreadsInfo().
-                        then((isOk) => {
-                            if (isOk) {
-                                const mainThreads = this.mainThreads();
-                                if (mainThreads) {
-                                    for(const thread of mainThreads) {
-                                        this.setThread(thread.id).then(() => {
-                                            this.sendEvent(JvmRuntimeEvents.stopOnPause, thread.id);
-                                        });
-                                        break;
-                                    }
-                                }
-                            }
-                        });
-                }
-            } else if (promptId > 0) {
-                if (this._lastThreadId !== promptId) {
-                    this._lastThreadId = promptId;
-                    this.adjustLastFrame();
-                }
+            }
+        } else if (promptId > 0) {
+            if (this._lastThreadId !== promptId) {
+                this._lastThreadId = promptId;
+                this.adjustLastFrame();
             }
         }
     }

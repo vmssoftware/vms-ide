@@ -95,7 +95,7 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
     public add(node: IProjectElement) {
         if (this.selected && !this.selected.parent && this.selected !== node) {
             this.projects.add(node.name, this.selected.name);
-            this.didChangeTreeEmitter.fire();
+            this.didChangeTreeEmitter.fire(undefined);
         }
     }
 
@@ -134,13 +134,13 @@ export class ProjDepProvider implements vscode.TreeDataProvider<IProjectElement>
     public remove(node: IProjectElement) {
         if (node.parent) {
             this.projects.remove(node.name, node.parent);
-            this.didChangeTreeEmitter.fire();
+            this.didChangeTreeEmitter.fire(undefined);
         }
     }
 
     public refresh() {
         this.projects.create();
-        this.didChangeTreeEmitter.fire();
+        this.didChangeTreeEmitter.fire(undefined);
     }
 
 }

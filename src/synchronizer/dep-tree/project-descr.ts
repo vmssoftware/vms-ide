@@ -181,11 +181,11 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
 
     public select(project: string) {
         this.selectedProject = project;
-        this.didChangeTreeEmitter.fire();
+        this.didChangeTreeEmitter.fire(undefined);
     }
 
     public refresh() {
-        this.didChangeTreeEmitter.fire();
+        this.didChangeTreeEmitter.fire(undefined);
     }
 
     public edit(element: string) {
@@ -228,7 +228,7 @@ export class ProjDescrProvider implements vscode.TreeDataProvider<string> {
             const newBuildName = await vscode.window.showQuickPick([...buildNames], opt);
             if (newBuildName) {
                 ProjectState.acquire().setDefBuildName(newBuildName).then(() => {
-                    this.didChangeTreeEmitter.fire();
+                    this.didChangeTreeEmitter.fire(undefined);
                 });
             }
         }

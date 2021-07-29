@@ -13,6 +13,11 @@ export interface ICmdClient {
      */
     onCommand(cmdListener: (line: string) => void ): { dispose: () => void};
     /**
+     * Used to subscribe on clients raw data
+     * @param dataListener 
+     */
+     onData(dataListener: (data: string) => void ): { dispose: () => void};
+     /**
      * Used to send line to the client. Undefined line means server is closed 
      * @param line 
      */
@@ -36,6 +41,11 @@ export interface ICmdServer {
      * @param line 
      */
     sendCommand(line: string): Promise<boolean>;
+    /**
+     * Used to send raw data to the server
+     * @param data 
+     */
+    sendData(data: string): Promise<boolean>;
 }
 
 export interface IDropCommand {
@@ -52,6 +62,12 @@ export interface ICmdQueue {
                 listener?: (cmd: string, line: string | undefined) => ListenerResponse,
                 action?: LockQueueAction,
                 dropCommand?: IDropCommand): Promise<boolean>;
+
+    /**
+     * 
+     * @param data raw data
+     */
+    sendData(data: string): Promise<boolean>;
 
     /**
      * To receive lines when no command is sent

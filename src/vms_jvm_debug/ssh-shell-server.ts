@@ -10,6 +10,7 @@ import { EventEmitter } from "vscode";
 export class SshShellServer implements ICmdServer, ICmdClient {
 
     private _cmdListener: ((line: string) => void ) | undefined;
+    private _dataListener: ((line: string) => void ) | undefined;
     private _lineListener: ((line: string | undefined) => void ) | undefined;
     private _stderrLineListener: ((line: string | undefined) => void ) | undefined;
     private _shell: ISshShell | undefined;
@@ -42,6 +43,15 @@ export class SshShellServer implements ICmdServer, ICmdClient {
         return false;
     }
 
+    public async sendData(data: string) {
+        if (this._dataListener) {
+            this._dataListener(data);
+            return true;
+        }
+        // this.logFn(LogType.error, () => "COMMAND WILL BE LOST: " + String(line));
+        return false;
+    }
+
     onLineReceived(lineListener: (line: string | undefined) => void): { dispose: () => void; } {
         this._lineListener = lineListener;
         return {
@@ -64,6 +74,13 @@ export class SshShellServer implements ICmdServer, ICmdClient {
         }
     }
 
+    onData(dataListener: (data: string) => void): { dispose: () => void; } {
+        this._dataListener = dataListener;
+        return {
+            dispose: () => { this._dataListener = undefined }
+        }
+    }
+
     lineReceived(line: string | undefined): boolean {
         if (this._lineListener) {
             this._lineListener(line);
@@ -79,19 +96,19 @@ export class SshShellServer implements ICmdServer, ICmdClient {
         }
         this._lineListener = undefined;
         this._cmdListener = undefined;
+        this._dataListener = undefined;
         const shellToDispose = this._shell;
         this._shell = undefined;
         if (shellToDispose) {
             shellToDispose.dispose();
         }
-        
     }
 
     public async create(scope?: string) {
         if (this._shell) {
             return true;
         }
-        const sshHelperType = await GetSshHelperType();
+        const sshHelperType = GetSshHelperType();
         if (sshHelperType) {
             const sshHelper = new sshHelperType(this.logFn);
             sshHelper.clearPasswordCache();
@@ -111,5 +128,5 @@ export class SshShellServer implements ICmdServer, ICmdClient {
         }
         this.dispose();
         return false;
-    }   
+    }
 }

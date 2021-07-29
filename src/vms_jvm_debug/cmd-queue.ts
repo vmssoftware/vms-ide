@@ -24,6 +24,12 @@ export class CmdQueue implements ICmdQueue {
         }
     }
 
+    public async sendData(data: string) {
+        if (this._server)
+            return this._server.sendData(data);
+        return false;
+    }
+
     /**
      * Posts command to the server, wait lines and send them to the listener
      * @param cmd command

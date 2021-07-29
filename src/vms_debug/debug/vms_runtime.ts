@@ -107,7 +107,6 @@ export class VMSRuntime extends EventEmitter
 	private startDbgCmd = true;
 	private startUser = false;
 	private startUserDebugCmd = false;
-	private colorMessage: number;
 
     public logFn: LogFunction;
 
@@ -131,7 +130,6 @@ export class VMSRuntime extends EventEmitter
 		this.currentFilePath = "";
 		this.currentRoutine = "";
 		this.currentScope = "";
-		this.colorMessage = 92;
     }
 
     private static async ensureModuleInfoCache(scope: string | ConfigManager) {
@@ -151,7 +149,6 @@ export class VMSRuntime extends EventEmitter
 	{
 		this.stopOnEntry = stopOnEntry;
 		this.programEnd = 0;
-		this.colorMessage = 92;
 		this.debugRun = false;
 		let configManager = new ConfigManager(this.scope);
 		let section = await configManager.getProjectSection();
@@ -948,6 +945,10 @@ export class VMSRuntime extends EventEmitter
 		return result;
 	}
 
+    public sendRawDataToProgram(data: string) {
+        this.shell.SendRawData(data);
+    }
+
 	public sendDataToProgram(data : string) : boolean
 	{
 		let result = false;
@@ -1326,13 +1327,13 @@ export class VMSRuntime extends EventEmitter
 	}
 
 
-	public receiveData(typeTerminal: TypeTerminal, mode: ModeWork, type: TypeDataMessage, data: string) : void
+	public receiveData(typeTerminal: TypeTerminal, mode: ModeWork, type: TypeDataMessage, rawdata: string) : void
 	{
-		data = data.replace(/\r/g, '');
+		let data = rawdata.replace(/\r/g, '');
 
 		if(typeTerminal === TypeTerminal.user)//user output
 		{
-			//if current cmd debud => run program and e.t.c
+            //if current cmd debud => run program and e.t.c
 			if(this.shell.getCurrentCommand().getBody() === OsCmdVMS.osRunDbg)
 			{
 				if (this.startUser)
@@ -1342,22 +1343,22 @@ export class VMSRuntime extends EventEmitter
 						this.logFn(LogType.information, () => data);
 					}
 
-					if(data.includes(MessageDebuger.msgNoImage))
+                    this.sendEvent('data', rawdata);
+
+                    if(data.includes(MessageDebuger.msgNoImage))
 					{
-						this.colorMessage = 91;//red
+                        vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(data, 91));
 						this.programEnd = 1;
 						this.shellDbg.cleanQueueCommands();
 						this.sendEvent('end');//close debugger
 					}
 					else if(data.includes(MessageDebuger.msgUnableOpen) || data.includes(MessageDebuger.msgUnableCreate))
 					{
-						this.colorMessage = 91;//red
+						vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(data, 91));
 						this.programEnd = 2;//no rights
 						this.shellDbg.cleanQueueCommands();
 						this.sendEvent('end');//close debugger
 					}
-
-					vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(data, this.colorMessage));
 				}
 				else
 				{
@@ -1374,7 +1375,7 @@ export class VMSRuntime extends EventEmitter
 					this.logFn(LogType.information, () => data);
 				}
 
-				vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(data, 92));
+                this.sendEvent('data', rawdata);
 
 				if(data.includes(MessageDebuger.msgNoImage))
 				{

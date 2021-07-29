@@ -23,7 +23,11 @@ export class ShellSplitter extends Transform {
         });
 
         this._client.onCommand((line: string) => {
-            this.push(line.trim() + "\r\n");
+            this.push(line.trim() + '\r');
+        })
+
+        this._client.onData((data: string) => {
+            this.push(data);
         })
     }
 

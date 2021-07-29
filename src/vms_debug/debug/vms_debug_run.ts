@@ -14,6 +14,7 @@ import { LogFunction } from "../../common/main";
 import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
 import { VMSRuntimeRun } from "./vms_runtime_run";
 import * as vscode from "vscode";
+import { EventEmitter, Pseudoterminal, Terminal, window } from "vscode";
 
 
 //This interface describes the vms-nodebug specific launch attributes
@@ -36,6 +37,10 @@ export class VMSNoDebugSession extends LoggingDebugSession
 	private runtime: VMSRuntimeRun;
 	private configurationDone = new Subject();
 
+    private _writeEmitter = new EventEmitter<string>();
+    private _pty?: Pseudoterminal;
+    private _terminal?: Terminal;
+
 	// Creates a new debug adapter that is used for one debug session.
 	// We configure the default implementation of a debug adapter here.
 	public constructor(public folder: vscode.WorkspaceFolder | undefined, shell : ShellSession, public logFn?: LogFunction)
@@ -53,6 +58,9 @@ export class VMSNoDebugSession extends LoggingDebugSession
 		{
 			this.sendEvent(new StoppedEvent('exception', VMSNoDebugSession.THREAD_ID));
 		});
+        this.runtime.on('data', (data) => {
+            this._writeEmitter.fire(data);
+        });
 		this.runtime.on('end', () =>
 		{
 			this.sendEvent(new TerminatedEvent());
@@ -87,6 +95,25 @@ export class VMSNoDebugSession extends LoggingDebugSession
 		super.configurationDoneRequest(response, args);
 	}
 
+    private createTerminal(name: string) {
+        this._pty = {
+            onDidWrite: this._writeEmitter.event,
+            open: () => {},
+            close: () => {
+                this.sendEvent(new TerminatedEvent());
+            },
+            handleInput: data => {
+                this.runtime.sendRawDataToProgram(data);
+            },
+        };
+        this._terminal = window.createTerminal(
+            {
+                name: name,
+                pty: this._pty
+            });
+        this._terminal.show(true);
+    }
+
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments)
 	{
 		// make sure to 'Stop' the buffered logging if 'trace' is not set
@@ -96,7 +123,9 @@ export class VMSNoDebugSession extends LoggingDebugSession
 		await this.configurationDone.wait(1000);
 		this.sendResponse(response);
 
-		// start the program in the runtime
+        this.createTerminal(args.program);
+
+        // start the program in the runtime
 		this.runtime.start(args.program, args.arguments);
 	}
 

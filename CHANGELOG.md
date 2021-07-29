@@ -1,7 +1,10 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
 ## 1.5.45
-* Catching unhandled signals in Python debugger.
+* Catching unhandled signals in the Python debugger.
+* Compatibility with a minimum VS Code version of 1.58.2.
+* The STATIC keyword has been added to the FORTRAN syntax.
+* A separate terminal window opens for debugging the program.
 
 ## 1.5.43
 * Fixed showing value of dict with very long key if it is at the first position.

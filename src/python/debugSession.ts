@@ -21,7 +21,7 @@ import { SshShellServer } from "../vms_jvm_debug/ssh-shell-server";
 import { CmdQueue } from "../vms_jvm_debug/cmd-queue";
 import { IPythonLaunchRequestArguments } from "./debugConfig";
 import { ListenerResponse } from "../vms_jvm_debug/communication";
-import { commands, workspace, WorkspaceFolder, extensions } from "vscode";
+import { commands, workspace, WorkspaceFolder, extensions, EventEmitter, Pseudoterminal, window, Terminal } from "vscode";
 import { ensureSettings } from "../synchronizer/ensure-settings";
 import { VmsPathConverter } from "../synchronizer/vms/vms-path-converter";
 import {
@@ -30,11 +30,9 @@ import {
     IPythonVariable,
     PythonRuntimeEvents,
     PythonShellRuntime,
-    rgxEsc,
 } from "./runtime";
 import { GetSshHelperType } from '../ext-api/ext-api';
 import { FsSource } from '../synchronizer/sync/fs-source';
-import { SftpSource } from '../synchronizer/sync/sftp-source';
 import { Synchronizer } from '../synchronizer/sync/synchronizer';
 import { middleSepRg, middleSepWinRg } from '../synchronizer/common/find-files';
 
@@ -108,6 +106,10 @@ export class PythonDebugSession extends LoggingDebugSession {
 
     private _vmsRoot: VmsPathConverter | undefined;
 
+    private _writeEmitter = new EventEmitter<string>();
+    private _pty?: Pseudoterminal;
+    private _terminal?: Terminal;
+
     constructor(logFn?: LogFunction) {
         super("vms-python-debugger.txt");
         this._logFn = logFn || (() => { });
@@ -119,7 +121,11 @@ export class PythonDebugSession extends LoggingDebugSession {
 
         this._tracerShellServer = new SshShellServer(this._logFn);
         this._tracerQueue = new CmdQueue(this._tracerShellServer);
-        this._tracerQueue.onUnexpectedLine((line) => this.userOutput(line));
+        this._tracerQueue.onUnexpectedLine((line) => {
+            if (line === undefined)
+                return;
+            this.userOutput(line);
+        });
 
         this._runtime = new PythonShellRuntime(this._serverQueue, this._logFn);
 
@@ -313,21 +319,8 @@ export class PythonDebugSession extends LoggingDebugSession {
         this._configurationDone.release();
     }
 
-    private userOutput(line?: string) {
-        if (line) {
-            line = line.replace(rgxEsc, '');
-            if (line) {
-                const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stdout');
-                this.sendEvent(e);
-            }
-        }
-    }
-
-    private userErrorOutput(line?: string) {
-        if (line) {
-            const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stderr');
-            this.sendEvent(e);
-        }
+    private userOutput(line: string) {
+        this._writeEmitter.fire(line);
     }
 
     protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void {
@@ -344,6 +337,29 @@ export class PythonDebugSession extends LoggingDebugSession {
         response.success = true;
         this.sendResponse(response);
         this.sendEvent(new TerminatedEvent());
+    }
+
+    private createTerminal(name: string) {
+        this._pty = {
+            onDidWrite: this._writeEmitter.event,
+            open: () => {},
+            close: () => {
+                this._serverShellServer.dispose();
+                this._tracerShellServer.dispose();
+                this.sendEvent(new TerminatedEvent());
+            },
+            handleInput: data => {
+                if (this._runtime.isRunning()) {
+                    this._tracerQueue.sendData(data)
+                }
+            },
+        };
+        this._terminal = window.createTerminal(
+            {
+                name: name,
+                pty: this._pty
+            });
+        this._terminal.show(true);
     }
 
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: IPythonLaunchRequestArguments) {
@@ -379,6 +395,9 @@ export class PythonDebugSession extends LoggingDebugSession {
             this.sendResponse(response);
             return false;
         } else {
+
+            this.createTerminal(workspace.asRelativePath(args.script, false));
+
             let listeningPort = 5005;
             let listeningPortMax = 5105;
             const portRange = args.port ? args.port : "5005-5105";

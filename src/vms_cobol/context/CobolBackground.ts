@@ -133,7 +133,7 @@ export class CobolBackground {
                     }
                 }
             }
-            this.refreshed.fire();
+            this.refreshed.fire(null);
         }
     }
 }

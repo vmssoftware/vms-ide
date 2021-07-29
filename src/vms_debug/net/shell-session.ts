@@ -116,7 +116,7 @@ export class ShellSession
                     }
                     else
                     {
-                        this.shellParser.push("\r\n");
+                        this.shellParser.push('\r');
                     }
                 }
                 else
@@ -498,7 +498,7 @@ export class ShellSession
             this.readyCmd = false;
             this.completeCmd = false;
 
-            result = this.shellParser.push(data + '\r\n');
+            result = this.shellParser.push(data + '\r');
         }
         else
         {
@@ -506,6 +506,10 @@ export class ShellSession
         }
 
         return result;
+    }
+
+    public SendRawData(data : string) {
+        this.shellParser.push(data);
     }
 
     public SendCommand(command : CommandMessage) : boolean
@@ -529,11 +533,11 @@ export class ShellSession
                     this.currentCmd = command;
                     this.receiveCmd = false;
 
-                    result = this.shellParser.push(command.getCommand() + '\r\n');
+                    result = this.shellParser.push(command.getCommand() + '\r');
                 }
                 else
                 {
-                    this.shellParser.push('\r\n');
+                    this.shellParser.push('\r');
                 }
             }
             else
@@ -541,7 +545,7 @@ export class ShellSession
                 this.currentCmd = command;
                 this.receiveCmd = false;
 
-                result = this.shellParser.push(command.getCommand() + '\r\n');
+                result = this.shellParser.push(command.getCommand() + '\r');
             }
         }
         else
@@ -585,7 +589,7 @@ export class ShellSession
                     this.readyCmd = false;
                     this.completeCmd = false;
                     this.dbgLastCmd = false;
-                    this.shellParser.push('\r\n');
+                    this.shellParser.push('\r');
                 }
             }
         }

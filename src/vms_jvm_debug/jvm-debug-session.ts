@@ -19,7 +19,7 @@ import { CmdQueue } from './cmd-queue';
 import { JvmProjectHelper } from './jvm-proj-helper';
 import { ListenerResponse } from "./communication";
 import { minOf } from "../common/iterators";
-import { window, QuickPickItem } from "vscode";
+import { window, QuickPickItem, EventEmitter, Pseudoterminal, Terminal } from "vscode";
 import { JvmProject } from "./jvm-project";
 
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -57,6 +57,10 @@ export class JvmDebugSession extends LoggingDebugSession {
     private _breakPoints = new Map<string, Map<number, number>>();  // [file -> id -> line ]
     private _functionBreakPoints = new Map<string, number>();       // [name as is -> id ]
     private _stopOnEntryBp = 0;
+
+    private _writeEmitter = new EventEmitter<string>();
+    private _pty?: Pseudoterminal;
+    private _terminal?: Terminal;
 
 	/**
 	 * Creates a new debug adapter that is used for one debug session.
@@ -229,13 +233,34 @@ export class JvmDebugSession extends LoggingDebugSession {
     }
 
     private userOutput(line: string) {
-        const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stdout');
-        this.sendEvent(e);
+        this._writeEmitter.fire(line);
     }
 
     private userErrorOutput(line: string) {
-        const e: DebugProtocol.OutputEvent = new OutputEvent(line, 'stderr');
-        this.sendEvent(e);
+        this._writeEmitter.fire(line);
+    }
+
+    private createTerminal(name: string) {
+        this._pty = {
+            onDidWrite: this._writeEmitter.event,
+            open: () => {},
+            close: () => {
+                this._jdbShellServer.dispose();
+                this._jvmShellServer.dispose();
+                this.sendEvent(new TerminatedEvent());
+            },
+            handleInput: data => {
+                if (this._runtime.isRunning()) {
+                    this._jvmQueue.sendData(data)
+                }
+            },
+        };
+        this._terminal = window.createTerminal(
+            {
+                name: name,
+                pty: this._pty
+            });
+        this._terminal.show(true);
     }
 
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: IJvmLaunchRequestArguments) {
@@ -247,6 +272,8 @@ export class JvmDebugSession extends LoggingDebugSession {
         this.sendResponse(response);
 
         this._scope = args.scope;
+
+        this.createTerminal(args.class);
 
         // wait until configuration has finished (and configurationDoneRequest has been called)
         // let reallyDone = false;
@@ -305,12 +332,12 @@ export class JvmDebugSession extends LoggingDebugSession {
                     }
                     args.port = String(listeningPort);
                     this._jvmQueue.onUnexpectedLine((line) => {
-                        if (line) { // && !line.includes('\0')) {
+                        if (line !== undefined) {
                             this.userOutput(line);
                         }
                     });
                     this._jvmQueue.onErrorLine((line) => {
-                        if (line) { // && !line.includes('\0')) {
+                        if (line !== undefined) {
                             this.userErrorOutput(line);
                         }
                     });

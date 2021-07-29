@@ -5,7 +5,7 @@
 import { LogFunction } from "../../common/main";
 import { basename } from "path";
 const { Subject } = require("await-notify");
-import { WorkspaceFolder } from "vscode";
+import { EventEmitter, Pseudoterminal, Terminal, window, workspace, WorkspaceFolder } from "vscode";
 import {
     Breakpoint, BreakpointEvent,
     Handles,
@@ -55,7 +55,11 @@ export class VMSDebugSession extends LoggingDebugSession
 
 	private responseStackTrace =  new Queue<DebugProtocol.StackTraceResponse>();
 
-	/**
+    private _writeEmitter = new EventEmitter<string>();
+    private _pty?: Pseudoterminal;
+    private _terminal?: Terminal;
+
+    /**
 	 * Creates a new debug adapter that is used for one debug session.
 	 * We configure the default implementation of a debug adapter here.
 	 */
@@ -106,6 +110,9 @@ export class VMSDebugSession extends LoggingDebugSession
 			e.body.column = this.convertDebuggerColumnToClient(column);
 			this.sendEvent(e);
 		});
+        this.runtime.on('data', (data) => {
+            this._writeEmitter.fire(data);
+        });
 		this.runtime.on('end', () =>
 		{
 			this.sendEvent(new TerminatedEvent());
@@ -176,6 +183,25 @@ export class VMSDebugSession extends LoggingDebugSession
 		this.configurationDone.notify();
 	}
 
+    private createTerminal(name: string) {
+        this._pty = {
+            onDidWrite: this._writeEmitter.event,
+            open: () => {},
+            close: () => {
+                this.sendEvent(new TerminatedEvent());
+            },
+            handleInput: data => {
+                this.runtime.sendRawDataToProgram(data);
+            },
+        };
+        this._terminal = window.createTerminal(
+            {
+                name: name,
+                pty: this._pty
+            });
+        this._terminal.show(true);
+    }
+
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments)
 	{
 		if (this.launchProgram === false)
@@ -188,10 +214,12 @@ export class VMSDebugSession extends LoggingDebugSession
 
 			this.sendResponse(response);
 
+            this.createTerminal(args.program);
+
 			// start the program in the runtime
 			await this.runtime.start(args.program, args.arguments, !!args.stopOnEntry);
 
-			setTimeout(() => 
+            setTimeout(() => 
 			{
 				this.launchProgram = false;
 			}, 3000);

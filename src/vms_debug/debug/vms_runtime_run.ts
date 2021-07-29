@@ -79,6 +79,9 @@ export class VMSRuntimeRun extends EventEmitter
 		}
 	}
 
+    public sendRawDataToProgram(data: string) {
+        this.shell.SendRawData(data);
+    }
 
 	public sendDataToProgram(data : string) : boolean
 	{
@@ -106,7 +109,7 @@ export class VMSRuntimeRun extends EventEmitter
 			}
 			else
 			{
-				vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(data, 92));
+                this.sendEvent('data', data);
 
 				if (this.logFn)
 				{

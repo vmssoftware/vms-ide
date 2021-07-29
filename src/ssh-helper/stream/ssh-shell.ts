@@ -35,7 +35,7 @@ export class SshShell extends SshClient implements ISshShell {
         }
     }
 
-    public static eol = "\r\n";
+    public static eol = "\r";
     public lastError?: string;
 
     private promptGiven?: string;             // given prompt from other side

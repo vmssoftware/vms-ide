@@ -182,7 +182,7 @@ export class ConfigPool implements IConfig {
     }
 
     protected fireChangeSoon(): void {
-        this.changeEmitter.fire();
+        this.changeEmitter.fire(null);
     }
 
 }
