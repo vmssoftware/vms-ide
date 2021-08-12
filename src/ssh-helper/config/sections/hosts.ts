@@ -33,15 +33,18 @@ export class HostsSection implements IConfigSection {
     }
 
     public fillFrom(data: IConfigData): boolean {
+        let retcode = true;
         this.hosts = [];
         if (data.hosts instanceof Array) {
             for (const host of data.hosts) {
                 const tmp =  new LabeledConnection();
                 if (tmp.fillFrom(host as IConfigData)) {
                     this.hosts.push(tmp);
+                } else {
+                    retcode = false;
                 }
             }
         }
-        return true;
+        return retcode;
     }
 }

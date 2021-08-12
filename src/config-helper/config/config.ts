@@ -87,6 +87,8 @@ export interface IConfig {
      */
     save(storageT?: IConfigStorage): Promise<CSAResult>;
 
+    lastResult: CSAResult;
+
 }
 
 /**

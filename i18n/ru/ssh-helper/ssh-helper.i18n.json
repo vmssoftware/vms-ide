@@ -1,4 +1,7 @@
 {
     "ssh_helper.case_host": "Cannot find a host in list: {0}, did you mean {1}?",
-    "ssh_helper.no_host": "Cannot find a host in list: {0}"
+    "ssh_helper.no_host": "Cannot find a host in list: {0}",
+    "config.logResult.fail": "Settings: load operation failed",
+    "config.logResult.prepare_failed": "Settings: cannot load data from storage",
+    "config.logResult.some_data_failed": "Settings: failed to fill some data while loading"
 }

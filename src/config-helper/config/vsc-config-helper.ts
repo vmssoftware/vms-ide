@@ -35,7 +35,7 @@ export class VSCConfigHelper implements IConfigHelper {
                 this.config.freeze();
                 this.logFn(LogType.debug, () => "onDidChangeConfiguration");
                 this.debouncer.debounce().then(async () => {
-                    await this.config.load().then(load_result => this.config.logResult(load_result));
+                    await this.config.load().then(result => this.config.lastResult |= result);
                     this.config.unfreeze();
                 });
             }

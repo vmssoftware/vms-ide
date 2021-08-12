@@ -1,1 +1,5 @@
-{}
+{
+    "config.logResult.fail": "Settings: load operation failed",
+    "config.logResult.prepare_failed": "Settings: cannot load data from storage",
+    "config.logResult.some_data_failed": "Settings: failed to fill some data while loading"
+}

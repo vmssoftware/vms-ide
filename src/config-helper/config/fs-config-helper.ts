@@ -115,7 +115,7 @@ export class FSConfigHelper implements IConfigHelper {
             this.logFn(LogType.debug, () => "onDidCreate: " + uri.toString());
             this.debouncer.debounce().then(async () => {
                 this.logFn(LogType.debug, () => "load on create");
-                await this.config.load().then(load_result => this.config.logResult(load_result));
+                await this.config.load().then(result => this.config.lastResult |= result);
                 this.config.unfreeze();
             });
         });
@@ -124,7 +124,7 @@ export class FSConfigHelper implements IConfigHelper {
             this.logFn(LogType.debug, () => "onDidChange: " + uri.toString());
             this.debouncer.debounce().then(async () => {
                 this.logFn(LogType.debug, () => "load on change");
-                await this.config.load().then(load_result => this.config.logResult(load_result));
+                await this.config.load().then(result => this.config.lastResult |= result);
                 this.config.unfreeze();
             });
         });

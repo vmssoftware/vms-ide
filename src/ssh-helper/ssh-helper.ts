@@ -3,7 +3,7 @@ nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
 
 import { LogFunction, LogType } from "../common/main";
-import { IConfigHelper } from "../config-helper/config/config";
+import { CSAResult, IConfigHelper } from "../config-helper/config/config";
 import { configApi } from "./config-api";
 import { ConnectConfigResolverImpl } from "./config-resolve/connect-config-resolver-impl";
 import { HostFiller } from "./config-resolve/host-filler";
@@ -176,6 +176,7 @@ async function ensureSettings(logFn: LogFunction, scope?: string): Promise<IEnsu
     }
     const configHelper = configApi.getConfigHelper(extensionName, scope);
     const config = configHelper.getConfig();
+    config.lastResult = CSAResult.ok;
     // first try
     let [connectionSection, hostsSection, timeoutSection, terminalSection] =
         await Promise.all(
@@ -213,6 +214,17 @@ async function ensureSettings(logFn: LogFunction, scope?: string): Promise<IEnsu
     // wait
     if (wait.length > 0) {
         await Promise.all(wait);
+    }
+    if (config.lastResult !== CSAResult.ok) {
+        if (config.lastResult & CSAResult.fail) {
+            logFn(LogType.error, () => localize("config.logResult.fail", "Settings: load operation failed"), true);
+        }
+        if (config.lastResult & CSAResult.prepare_failed) {
+            logFn(LogType.error, () => localize("config.logResult.prepare_failed", "Settings: cannot load data from storage"), true);
+        }
+        if (config.lastResult & CSAResult.some_data_failed) {
+            logFn(LogType.warning, () => localize("config.logResult.some_data_failed", "Settings: failed to fill some data while loading"), true);
+        }
     }
     // then ensure all are loaded
     if (ConnectionSection.is(connectionSection) &&

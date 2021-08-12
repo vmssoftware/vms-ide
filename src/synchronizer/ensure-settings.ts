@@ -1,7 +1,7 @@
 import * as nls from "vscode-nls";
-import { LogFunction } from "../common/main";
+import { LogFunction, LogType } from "../common/main";
 
-import { IConfigApi, IConfigHelper, IConfigSection } from "../config-helper/config/config";
+import { CSAResult, IConfigApi, IConfigHelper, IConfigSection } from "../config-helper/config/config";
 import { GetConfigHelperFromApi } from "../ext-api/ext-api";
 import { ProjectSection } from "./config/sections/project";
 import { SynchronizeSection } from "./config/sections/synchronize";
@@ -45,6 +45,7 @@ export async function ensureSettings(scope?: string, log?: LogFunction): Promise
     }
 
     const config = configHelper.getConfig();
+    config.lastResult = CSAResult.ok;
     // first try
     let [projectSection, synchronizeSection, buildsSection] =
         await Promise.all(
@@ -75,6 +76,17 @@ export async function ensureSettings(scope?: string, log?: LogFunction): Promise
     // wait
     if (wait.length > 0) {
         await Promise.all(wait);
+    }
+    if (config.lastResult !== CSAResult.ok) {
+        if (config.lastResult & CSAResult.fail) {
+            logFn(LogType.error, () => localize("config.logResult.fail", "Settings: load operation failed"), true);
+        }
+        if (config.lastResult & CSAResult.prepare_failed) {
+            logFn(LogType.error, () => localize("config.logResult.prepare_failed", "Settings: cannot load data from storage"), true);
+        }
+        if (config.lastResult & CSAResult.some_data_failed) {
+            logFn(LogType.warning, () => localize("config.logResult.some_data_failed", "Settings: failed to fill some data while loading"), true);
+        }
     }
     // then ensure all are loaded
     if (ProjectSection.is(projectSection) && 
