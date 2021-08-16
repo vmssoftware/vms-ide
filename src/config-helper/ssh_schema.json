@@ -1,0 +1,128 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "connection": {
+            "$ref": "#/$defs/host_props"
+        },
+        "host-collection": {
+            "type": "object",
+            "description": "Predefined hosts collection",
+            "properties": {
+                "hosts": {
+                    "type": "array",
+                    "description": "Predefined hosts",
+                    "items": {
+                        "allOf": [
+                            {
+                                "$ref": "#/$defs/host_props"
+                            },
+                            {
+                                "properties": {
+                                    "label": {
+                                        "type": "string",
+                                        "description": "Connection name"
+                                    }
+                                }
+                            }
+                        ],
+                        "required": [
+                            "label"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "hosts"
+            ]
+        },
+        "timeouts": {
+            "type": "object",
+            "description": "Timeouts",
+            "properties": {
+                "cmdTimeout": {
+                    "type": "number",
+                    "description": "Timeout for command",
+                    "default": 0
+                },
+                "feedbackTimeout": {
+                    "type": "number",
+                    "description": "Timeout for feedback",
+                    "default": 0
+                },
+                "welcomeTimeout": {
+                    "type": "number",
+                    "description": "Timeout for welcome",
+                    "default": 0
+                }
+            }
+        },
+        "terminal": {
+            "type": "object",
+            "description": "Terminal settings",
+            "properties": {
+                "command": {
+                    "type": "string",
+                    "description": "Command to invoke terminal"
+                }
+            }
+        }
+    },
+    "required": [
+        "connection"
+    ],
+    "$defs": {
+        "host_props": {
+            "type": "object",
+            "description": "Connection settings",
+            "properties": {
+                "host": {
+                    "type": "string",
+                    "default": "<hostname>",
+                    "description": "Name of the OpenVMS host or IP address"
+                },
+                "keyFile": {
+                    "type": "string",
+                    "default": "",
+                    "description": "SSH key file"
+                },
+                "password": {
+                    "type": "string",
+                    "default": "",
+                    "description": "User password"
+                },
+                "port": {
+                    "type": "number",
+                    "default": 22,
+                    "description": "Port"
+                },
+                "username": {
+                    "type": "string",
+                    "default": "",
+                    "description": "User name"
+                },
+                "skipSignatureVerification": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip signature verification"
+                },
+                "supportSetFileTime": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Does server support setting file time"
+                },
+                "unzipCmd": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Command to unzip archive"
+                },
+                "zipCmd": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "",
+                    "description": "Command to create zip archive"
+                }
+            }
+        }
+    }
+}

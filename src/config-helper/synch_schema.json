@@ -1,0 +1,204 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "project": {
+            "type": "object",
+            "description": "Project settings",
+            "properties": {
+                "break": {
+                    "type": "string",
+                    "default": "C",
+                    "description": "Keyboard key to break the process"
+                },
+                "builders": {
+                    "type": "string",
+                    "default": "*.{mms,com,opt}",
+                    "description": "File mask for files that invoke the build"
+                },
+                "exclude": {
+                    "type": "string",
+                    "default": "**/{.vscode,out}",
+                    "description": "File mask for files that are excluded from the build"
+                },
+                "headers": {
+                    "type": "string",
+                    "default": "*.{h,hpp}",
+                    "description": "File mask for files that are used as header files"
+                },
+                "listing": {
+                    "type": "string",
+                    "default": "*.{lis,map}",
+                    "description": "File mask for files that are produced by the build"
+                },
+                "outdir": {
+                    "type": "string",
+                    "default": "out",
+                    "description": "Directory for output"
+                },
+                "projectName": {
+                    "type": "string",
+                    "default": "project",
+                    "description": "Name of the project"
+                },
+                "projectType": {
+                    "type": "string",
+                    "description": "Type of the project",
+                    "enum": [
+                        "executable",
+                        "library",
+                        "shareable",
+                        "java",
+                        "kotlin",
+                        "scala"
+                    ],
+                    "enumDescriptions": [
+                        "Produces executable image",
+                        "Creates static library",
+                        "Produces shareable image",
+                        "Java project",
+                        "Kotlin project",
+                        "Scala project"
+                    ],
+                    "default": "executable"
+                },
+                "resource": {
+                    "type": "string",
+                    "description": "Resource files for the project",
+                    "default": "**/resource/**/*.*"
+                },
+                "root": {
+                    "type": "string",
+                    "description": "Root folder for the project",
+                    "default": "project"
+                },
+                "source": {
+                    "type": "string",
+                    "description": "Source files",
+                    "default": "*.{c,cpp}"
+                },
+                "addCompQual": {
+                    "type": "string",
+                    "description": "Additional compiler qualifiers",
+                    "default": ""
+                },
+                "addCompDef": {
+                    "type": "string",
+                    "description": "Additional compiler definitions",
+                    "default": ""
+                },
+                "addLibraries": {
+                    "type": "string",
+                    "description": "Additional linker libraries",
+                    "default": ""
+                },
+                "addIncludes": {
+                    "type": "string",
+                    "description": "Additional include folders for the compiler",
+                    "default": ""
+                }
+            },
+            "required": [
+                "root",
+                "projectName",
+                "projectType"
+            ]
+        },
+        "synchronize": {
+            "type": "object",
+            "description": "Synchronization settings",
+            "properties": {
+                "downloadNewFiles": {
+                    "type": "string",
+                    "enum": [
+                        "overwrite",
+                        "skip",
+                        "edit"
+                    ],
+                    "enumDescriptions": [
+                        "Overwrite files on PC",
+                        "Skip new files from OpenVMS",
+                        "Opens the edit window for files with differences"
+                    ],
+                    "default": "edit",
+                    "description": "Download strategy"
+                },
+                "keepAlive": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Do not close connection"
+                },
+                "preferZip": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Use ZIP to upload files"
+                },
+                "forceLocalTime": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Force local time for ZIPped files"
+                },
+                "purge": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Execute PURGE command after uploading"
+                },
+                "setTimeAttempts": {
+                    "type": "number",
+                    "default": 3,
+                    "description": "Amount of tries to set file time"
+                }
+            }
+        },
+        "builds": {
+            "type": "object",
+            "description": "Build settings",
+            "properties": {
+                "configurations": {
+                    "type": "array",
+                    "description": "Build configurations",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "label": {
+                                "type": "string",
+                                "description": "Configuration name"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Description"
+                            },
+                            "command": {
+                                "type": "string",
+                                "description": "Command to invoke the build"
+                            },
+                            "parameter": {
+                                "type": "string",
+                                "description": "Parameter to pass to the build command"
+                            }
+                        }
+                    },
+                    "default": [
+                        {
+                            "label": "DEBUG",
+                            "description": "debug",
+                            "command": "",
+                            "parameter": "DEBUG"
+                        },
+                        {
+                            "label": "RELEASE",
+                            "description": "release",
+                            "command": "",
+                            "parameter": "RELEASE"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "required": [
+        "project",
+        "synchronize",
+        "builds"
+    ]
+}
