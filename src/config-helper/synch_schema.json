@@ -9,41 +9,41 @@
                 "break": {
                     "type": "string",
                     "default": "C",
-                    "description": "Keyboard key to break the process"
+                    "description": "Debugger break key"
                 },
                 "builders": {
                     "type": "string",
                     "default": "*.{mms,com,opt}",
-                    "description": "File mask for files that invoke the build"
+                    "description": "Builders"
                 },
                 "exclude": {
                     "type": "string",
                     "default": "**/{.vscode,out}",
-                    "description": "File mask for files that are excluded from the build"
+                    "description": "Exclude pattern"
                 },
                 "headers": {
                     "type": "string",
                     "default": "*.{h,hpp}",
-                    "description": "File mask for files that are used as header files"
+                    "description": "Headers pattern"
                 },
                 "listing": {
                     "type": "string",
                     "default": "*.{lis,map}",
-                    "description": "File mask for files that are produced by the build"
+                    "description": "Listing pattern"
                 },
                 "outdir": {
                     "type": "string",
                     "default": "out",
-                    "description": "Directory for output"
+                    "description": "Output directory"
                 },
                 "projectName": {
                     "type": "string",
                     "default": "project",
-                    "description": "Name of the project"
+                    "description": "Name of target"
                 },
                 "projectType": {
                     "type": "string",
-                    "description": "Type of the project",
+                    "description": "Type of target",
                     "enum": [
                         "executable",
                         "library",
@@ -64,17 +64,17 @@
                 },
                 "resource": {
                     "type": "string",
-                    "description": "Resource files for the project",
+                    "description": "Resource pattern",
                     "default": "**/resource/**/*.*"
                 },
                 "root": {
                     "type": "string",
-                    "description": "Root folder for the project",
+                    "description": "VMS root",
                     "default": "project"
                 },
                 "source": {
                     "type": "string",
-                    "description": "Source files",
+                    "description": "Source pattern",
                     "default": "*.{c,cpp}"
                 },
                 "addCompQual": {
@@ -116,9 +116,9 @@
                         "edit"
                     ],
                     "enumDescriptions": [
-                        "Overwrite files on PC",
-                        "Skip new files from OpenVMS",
-                        "Opens the edit window for files with differences"
+                        "Overwrite older files on PC",
+                        "Skip files with newer version from OpenVMS",
+                        "Download and edit"
                     ],
                     "default": "edit",
                     "description": "Download strategy"

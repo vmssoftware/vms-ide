@@ -42,17 +42,17 @@
             "properties": {
                 "cmdTimeout": {
                     "type": "number",
-                    "description": "Timeout for command",
+                    "description": "Timeout for command response",
                     "default": 0
                 },
                 "feedbackTimeout": {
                     "type": "number",
-                    "description": "Timeout for feedback",
+                    "description": "Feedback timeout",
                     "default": 0
                 },
                 "welcomeTimeout": {
                     "type": "number",
-                    "description": "Timeout for welcome",
+                    "description": "Timeout for welcome parser",
                     "default": 0
                 }
             }
@@ -63,7 +63,7 @@
             "properties": {
                 "command": {
                     "type": "string",
-                    "description": "Command to invoke terminal"
+                    "description": "Command to invoke SSH client"
                 }
             }
         }
@@ -79,17 +79,17 @@
                 "host": {
                     "type": "string",
                     "default": "<hostname>",
-                    "description": "Name of the OpenVMS host or IP address"
+                    "description": "Host"
                 },
                 "keyFile": {
                     "type": "string",
                     "default": "",
-                    "description": "SSH key file"
+                    "description": "SSH key file. Leave empty to use password authentication."
                 },
                 "password": {
                     "type": "string",
                     "default": "",
-                    "description": "User password"
+                    "description": "Password, may be omitted"
                 },
                 "port": {
                     "type": "number",
@@ -99,7 +99,7 @@
                 "username": {
                     "type": "string",
                     "default": "",
-                    "description": "User name"
+                    "description": "Username"
                 },
                 "skipSignatureVerification": {
                     "type": "boolean",
@@ -109,18 +109,65 @@
                 "supportSetFileTime": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Does server support setting file time"
+                    "description": "Server supports setting file time. Shell will be used as a fallback."
                 },
                 "unzipCmd": {
                     "type": "string",
                     "default": "",
-                    "description": "Command to unzip archive"
+                    "description": "Command to unzip archive on VMS side"
                 },
                 "zipCmd": {
                     "scope": "resource",
                     "type": "string",
                     "default": "",
-                    "description": "Command to create zip archive"
+                    "description": "Command to zip archive on VMS side"
+                },
+                "algorithms" : {
+                    "type": "object",
+                    "properties": {
+                        "kex": {
+                            "type" : "array",
+                            "description": "Key exchange methods",
+                            "items": {
+                                "type": "string",
+                                "description": "Key exchange method"
+                            }
+                        },
+                        "cipher": {
+                            "type" : "array",
+                            "description": "Algorithms for performing encryption",
+                            "items": {
+                                "type": "string",
+                                "description": "An algorithm for performing encryption"
+                            }
+                        },
+                        "serverHostKey": {
+                            "type" : "array",
+                            "description": "Configures SSH to use a set of host key algorithms in the specified priority order.",
+                            "items": {
+                                "type": "string",
+                                "description": "Host key algorithm"
+                            }
+                        },
+                        "hmac": {
+                            "type" : "array",
+                            "description": "Hash-based message authentication codes",
+                            "items": {
+                                "type": "string",
+                                "description": "Hash-based message authentication code"
+                            }
+                        },
+                        "compress": {
+                            "type" : "array",
+                            "description": "SSH compression",
+                            "items": {
+                                "type": "string",
+                                "description": "SSH compression"
+                            }
+                        }
+                    },
+                    "default": {},
+                    "description": "Additional algorithms passed to SSH connection"
                 }
             }
         }

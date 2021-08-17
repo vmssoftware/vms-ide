@@ -68,7 +68,7 @@
     "synchronizer.properties.project.root.description": "VMS root",
     "synchronizer.properties.project.source.description": "Source pattern",
     "synchronizer.properties.project.addCompQual.description": "Additional compiler qualifiers",
-    "synchronizer.properties.project.addCompDef.description": "Additional compiler defines",
+    "synchronizer.properties.project.addCompDef.description": "Additional compiler definitions",
     "synchronizer.properties.project.addLibraries.description": "Additional libraries",
     "synchronizer.properties.project.addIncludes.description": "Additional include directories",
     "synchronizer.properties.synchronize.downloadNewFiles.description": "Download action",
