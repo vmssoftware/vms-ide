@@ -57,11 +57,11 @@
         "jsonValidation": [
             {
                 "fileMatch": "vmssoftware.synchronizer-settings.json",
-                "url": "./src/config-helper/synch_schema.json"
+                "url": "./resources/synch_schema.json"
             },
             {
                 "fileMatch": "vmssoftware.ssh-helper-settings.json",
-                "url": "./src/config-helper/ssh_schema.json"
+                "url": "./resources/ssh_schema.json"
             }
         ],
         "taskDefinitions": [
