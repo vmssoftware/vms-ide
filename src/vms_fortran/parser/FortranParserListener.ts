@@ -118,7 +118,6 @@ import { EndFunctionStatementContext } from "./FortranParser";
 import { SubroutineSubprogramContext } from "./FortranParser";
 import { SubroutineDeclarationContext } from "./FortranParser";
 import { SubroutineBodyContext } from "./FortranParser";
-import { SubroutineStatementContext } from "./FortranParser";
 import { SubroutineParListContext } from "./FortranParser";
 import { SubroutineParContext } from "./FortranParser";
 import { FunctionParListContext } from "./FortranParser";
@@ -1641,17 +1640,6 @@ export interface FortranParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitSubroutineBody?: (ctx: SubroutineBodyContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `FortranParser.subroutineStatement`.
-	 * @param ctx the parse tree
-	 */
-	enterSubroutineStatement?: (ctx: SubroutineStatementContext) => void;
-	/**
-	 * Exit a parse tree produced by `FortranParser.subroutineStatement`.
-	 * @param ctx the parse tree
-	 */
-	exitSubroutineStatement?: (ctx: SubroutineStatementContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `FortranParser.subroutineParList`.

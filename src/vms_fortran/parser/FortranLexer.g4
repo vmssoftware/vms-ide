@@ -958,6 +958,87 @@ SHARED
    : S H A R E D
    ;
 
+ENDPROGRAM
+   : E N D P R O G R A M
+   ;
+
+ENDMODULE
+   : E N D M O D U L E
+   ;
+
+BLOCKDATA
+   : B L  O C K D A T A
+   ;
+
+ENDBLOCKDATA
+   : E N D B L O C K D A T A
+   ;
+
+ENDINTERFACE
+   : E N D I N T E R F A C E
+   ;
+
+ENDSTRUCTURE
+   : E N D S T R U C T U R E
+   ;
+
+ENDUNION
+   : E N D U N I O N
+   ;
+
+ENDMAP
+   : E N D M A P
+   ;
+
+MODULEPROCEDURE
+   : M O D U L E P R O C E D U R E
+   ;
+
+RECURSIVEFUNCTION
+   : R E C U R S I V E F U N C T I O N
+   ;
+
+ENDFUNCTION
+   : E N D F U N C T I O N
+   ;
+
+RECURSIVESUBROUTINE
+   : R E C U R S I V E S U B R O U T I N E
+   ;
+
+ENDSUBROUTINE
+   : E N D S U B R O U T I N E
+   ;
+
+ENDTYPE
+   : E N D T Y P E
+   ;
+
+INOUT
+   : I N O U T
+   ;
+
+IMPLICITNONE
+   : I M P L I C I T N O N E
+   ;
+
+ENDWHERE
+   : E N D W H E R E
+   ;
+
+ENDSELECT
+   : E N D S E L E C T
+   ;
+
+DOWHILE
+   : D O W H I L E
+   ;
+
+DEFINEFILE
+   : D E F I N E F I L E
+   ;
+
+
 SIGN
    : ('+' | '-')
    ;
@@ -1081,7 +1162,8 @@ R_CONST
 
 
 COMMENT
-   : '!' (~ [\r\n])* ([\n][*Cc!] (~ [\r\n])*)?
+   : [\n]?'!' (~ [\r\n])* ([\n]([\t ])*[!] (~ [\r\n])*)*
+   | [\n]?'!' (~ [\r\n])* ([\n][Cc*] (~ [\r\n])*)*
    ;
 
 // FIXED_COMMENT
