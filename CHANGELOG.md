@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.46
+* Some Fortran syntax highlighting are fixed.
+
 ## 1.5.45
 * A separate terminal window opens for debugging the program.
 * Catching unhandled signals in the Python debugger.
