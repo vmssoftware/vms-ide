@@ -306,14 +306,14 @@ identifier
    // | REWRITE
    // | READ
    // | PRINT
-   // | OPEN
+   | OPEN
    | FORMAT
    //| CALL
    | CONTAINS
    | RESULT
    | RECURSIVE
    //| RETURN
-   //| CLOSE
+   | CLOSE
    // | DOUBLE
    // | COMPLEX
    | INQUIRE
@@ -379,7 +379,7 @@ programStatement
 
 endProgramStatement
    : label? END eos 
-   | label? END PROGRAM endName? eos
+   | label? (END PROGRAM | ENDPROGRAM) endName? eos
    ;
 
 moduleBlock
@@ -513,7 +513,7 @@ ifConstructName
 
 endModuleStatement
    : label? END eos
-   | label? END MODULE endName? eos
+   | label? (END MODULE | ENDMODULE) endName? eos
    ;
 
 includeStatement
@@ -560,11 +560,11 @@ blockDataBodyConstruct
    ;
 
 blockDataStatement
-   : label? BLOCK DATA blockDataName? eos
+   : label? (BLOCK DATA | BLOCKDATA) blockDataName? eos
    ;
 
 endBlockDataStatement
-   : label? END BLOCK DATA endName? eos
+   : label? (END BLOCK DATA | END BLOCKDATA | ENDBLOCKDATA) endName? eos
    | label? END eos
    ;
 
@@ -585,7 +585,7 @@ interfaceStatement
    ;
 
 endInterfaceStatement
-   : label? END INTERFACE eos
+   : label? (END INTERFACE | ENDINTERFACE) eos
    ;
 
 interfaceBody
@@ -626,7 +626,7 @@ typeStatementName
    ;
 
 endStructureStatement
-   : label? END STRUCTURE eos
+   : label? (END STRUCTURE | ENDSTRUCTURE) eos
    ;
 
 structureBody
@@ -654,7 +654,7 @@ unionBlockPart
    ;
 
 endUnionStatement
-   : label? END UNION eos
+   : label? (END UNION | ENDUNION) eos
    ;
 
 mapBlock
@@ -672,15 +672,16 @@ mapBlockPart
    | interfaceBlock
    | structureBlock
    | recordBlock
+   | unionBlock
    ;
 
 endMapStatement
-   : label? END MAP eos
+   : label? (END MAP | ENDMAP) eos
    ;
 
 
 moduleProcedureStatement
-   : label? MODULE PROCEDURE procedureNameList eos
+   : label? (MODULE PROCEDURE | MODULEPROCEDURE) procedureNameList eos
    ;
 
 procedureNameList
@@ -738,15 +739,15 @@ functionBody
    ;
 
 functionPrefix
-   : RECURSIVE FUNCTION
+   : (RECURSIVE FUNCTION | RECURSIVEFUNCTION)
    | RECURSIVE typeSpec FUNCTION
-   | typeSpec RECURSIVE FUNCTION
+   | typeSpec (RECURSIVE FUNCTION | RECURSIVEFUNCTION)
    | typeSpec? FUNCTION
    ;
 
 endFunctionStatement
    : label? END eos
-   | label? END FUNCTION endName? eos
+   | label? (END FUNCTION | ENDFUNCTION) endName? eos
    ;
 
 subroutineSubprogram
@@ -754,15 +755,11 @@ subroutineSubprogram
    ;
 
 subroutineDeclaration
-   : RECURSIVE? SUBROUTINE subroutineName subroutineParList?
+   : (RECURSIVE? SUBROUTINE | RECURSIVESUBROUTINE) subroutineName subroutineParList?
    ;
 
 subroutineBody
    : body? endSubroutineStatement
-   ;
-
-subroutineStatement
-   : label? SUBROUTINE name subroutineParList? eos
    ;
 
 subroutineParList
@@ -784,7 +781,7 @@ functionPar
    ;
 
 endSubroutineStatement
-   : label? END SUBROUTINE endName? eos
+   : label? (END SUBROUTINE | ENDSUBROUTINE) endName? eos
    | label? END eos
    ;
 
@@ -872,7 +869,7 @@ derivedTypeStatement
    ;
 
 endTypeStatement
-   : label? END TYPE typeName? eos
+   : label? (END TYPE | ENDTYPE) typeName? eos
    ;
 
 componentDefStatement
@@ -1011,6 +1008,7 @@ intentSpec
    : IN
    | OUT
    | IN OUT
+   | INOUT
    ;
 
 arraySpec
@@ -1234,7 +1232,7 @@ implicitStatement
    ;
 
 implicitBody
-   : IMPLICIT NONE
+   : (IMPLICIT NONE | IMPLICITNONE)
    | IMPLICIT implicitSpec (COMMA implicitSpec)*
    ;
 
@@ -1657,11 +1655,11 @@ maskExpr
    ;
 
 elsewhereStatement
-   : label? ELSEWHERE eos
+   : label? (ELSEWHERE | ELSE WHERE) eos
    ;
 
 endWhereStatement
-   : label? END WHERE eos
+   : label? (END WHERE | ENDWHERE) eos
    ;
 
 
@@ -1721,7 +1719,7 @@ caseStatement
    ;
 
 endSelectStatement
-   : label? END SELECT endName? eos
+   : label? (END SELECT | ENDSELECT) endName? eos
    ;
 
 caseSelector
@@ -1752,10 +1750,12 @@ doConstruct
 blockDoConstruct
    : label? DO lblRef eos
    | label? DO loopControl eos
+   | label? DOWHILE LPAREN expr RPAREN eos
    | label? DO eos
    | label? name COLON DO lblRef loopControl eos
    | label? name COLON DO lblRef eos
    | label? name COLON DO loopControl eos
+   | label? name COLON DOWHILE LPAREN expr RPAREN eos
    | label? name COLON DO eos
    ;
 
@@ -2044,7 +2044,7 @@ endfileStatement
    ;
 
 defineFileStatement
-   : label? DEFINE FILE defineFileSpec LPAREN defineFileList RPAREN (COMMA defineFileSpec LPAREN defineFileList RPAREN)* eos
+   : label? (DEFINE FILE | DEFINEFILE) defineFileSpec LPAREN defineFileList RPAREN (COMMA defineFileSpec LPAREN defineFileList RPAREN)* eos
    ;
 
 defineFileList

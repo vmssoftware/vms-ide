@@ -118,7 +118,6 @@ import { EndFunctionStatementContext } from "./FortranParser";
 import { SubroutineSubprogramContext } from "./FortranParser";
 import { SubroutineDeclarationContext } from "./FortranParser";
 import { SubroutineBodyContext } from "./FortranParser";
-import { SubroutineStatementContext } from "./FortranParser";
 import { SubroutineParListContext } from "./FortranParser";
 import { SubroutineParContext } from "./FortranParser";
 import { FunctionParListContext } from "./FortranParser";
@@ -1184,13 +1183,6 @@ export interface FortranParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitSubroutineBody?: (ctx: SubroutineBodyContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `FortranParser.subroutineStatement`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitSubroutineStatement?: (ctx: SubroutineStatementContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `FortranParser.subroutineParList`.

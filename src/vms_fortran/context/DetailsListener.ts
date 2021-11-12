@@ -1045,6 +1045,14 @@ function getIdentifier(ident: IdentifierContext | undefined): TerminalNode | und
         {
             item = ident.LOC();
         }
+        else if(ident.OPEN())
+        {
+            item = ident.OPEN();
+        }
+        else if(ident.CLOSE())
+        {
+            item = ident.CLOSE();
+        }
     }
 
     return item;
