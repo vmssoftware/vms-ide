@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.47
+* Fix terminal requests.
+
 ## 1.5.46
 * Some Fortran syntax highlighting are fixed.
 

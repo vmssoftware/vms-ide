@@ -24,14 +24,67 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
 
     public prompt?: string;
 
+    // see vt100.net
     protected readonly ttCmd = [
+        // 0
         {
-            if:     Buffer.from([27, 91, 99]),
-            then:   "\x1B[?62;1c",
+            if:     Buffer.from("\x1B[c"),
+            then:   "\x1B[?1;0c",       // terminal type vt101
         },
+        // 1
         {
-            if:     Buffer.from([27, 91, 50, 53, 53, 59, 50, 53, 53, 72]),
-            then:   "\x1B[24;132R",
+            if:     Buffer.from("\x1B[0c"),
+            then:   "\x1B[?1;0c",
+        },
+        // 2
+        {
+            if:     Buffer.from("\x1B[>c"),
+            then:   "\x1B[>1;1;0c",     // terminal type vt220
+        },
+        // 3
+        {
+            if:     Buffer.from("\x1B[>0c"),
+            then:   "\x1B[>1;1;0c",
+        },
+        // 4
+        {
+            if:     Buffer.from("\x1B[5n"),
+            then:   "\x1B[0n",      // no malfunctions
+        },
+        // 5
+        {
+            if:     Buffer.from("\x1B[6n"),
+            then:   "\x1B[0;0R",    // cursor at 0;0
+        },
+        // 6
+        {
+            if:     Buffer.from("\x1B[15n"),
+            then:   "\x1B[13n",     // no printer
+        },
+        // 7
+        {
+            if:     Buffer.from("\x1B[16n"),
+            then:   "\x1B[20n",     // user-defined keys are unlocked
+        },
+        // 8
+        {
+            if:     Buffer.from("\x1B[26n"),
+            then:   "\x1B[27;0n",     // user-defined keys are unlocked
+        },
+        // 9
+        {
+            if:     Buffer.from("\x1BZ"),
+            then:   "\x1B/Z",       // ok
+        },
+        // 10
+        {
+            if:     Buffer.from("\x1B[x"),
+            then:   "\x1B/Z",       // ?
+        },
+        // 11
+        {
+            if:     Buffer.from("\x1B[255;255H"),
+            then:   "\x1B[24;132R", // screen dimension H;W
         },
     ];
 
@@ -69,7 +122,7 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
                     this.logFn(LogType.debug, () => localize("debug.tt", "vms parse: found tt {0}", idx));
                     this.typeSet = true;
                     this.push(tt.then);
-                    return true;
+                    // return true; - check all tt
                 }
                 return false;
             });
