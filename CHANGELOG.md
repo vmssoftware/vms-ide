@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.48
+* SSH2 package is updated (1.5.0)
+
 ## 1.5.47
 * Fix terminal requests.
 

@@ -48,7 +48,7 @@ export async function WaitableOperation(operationName: string,
 
     failEmitter.on(failEvent, onFailed);
 
-    do {
+    // do { // do not do operation again, just wait for 'continue'
         shouldWait = operation(operationDone);
         if (shouldWait) {
             // tslint:disable-next-line:no-unused-expression
@@ -59,7 +59,7 @@ export async function WaitableOperation(operationName: string,
             await mayContinue.acquire();   // wait until "continue" or failed
             continueEmitter.removeListener(continueEvent, onContinue);
         }
-    } while (shouldWait);
+    // } while (shouldWait);
 
     await operationDone.acquire();  // wait until completed or failed
 

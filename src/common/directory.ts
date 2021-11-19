@@ -4,6 +4,7 @@ export interface IFileEntry {
     isFile: boolean;
     isDirectory: boolean;
     date: Date;         // modification date
+    vers: number;       // version
 }
 
 export const ftpPathSeparator = "/";

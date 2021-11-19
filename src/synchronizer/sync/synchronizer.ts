@@ -202,6 +202,17 @@ export class Synchronizer {
                 acc = acc && result;
                 return acc;
             }, true);
+
+            // this part is optional so do not return error if it occurs
+            if (ensured.synchronizeSection.purge && this.sshHelper) {
+                const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
+                const shell = await this.sshHelper.getDefaultVmsShell(ensured.scope);
+                if (shell) {
+                    await shell.execCmd(purgeCmd(converter.disk, converter.bareDirectory));
+                    shell.dispose();
+                }
+            }
+
         } else {
             if (!remoteList) {
                 this.logFn(LogType.error, () => localize("cannot.find.remote", "Cannot find files on remote source"), true);
@@ -210,6 +221,7 @@ export class Synchronizer {
                 this.logFn(LogType.error, () => localize("cannot.find.local", "Cannot find files on local source"), true);
             }
         }
+
         // end
         this.decideDispose(scopeData);
         this.logFn(LogType.debug, () => localize("debug.retcode", "Synchronization finished with the return code {0}.", retCode));

@@ -67,6 +67,7 @@ export class FsSource implements ISource, IReadDirectory {
                     filename: file,
                     isDirectory: stat.isDirectory(),
                     isFile: stat.isFile(),
+                    vers: 0,
                 };
                 retList.push(entry);
             } else {

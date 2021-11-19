@@ -103,6 +103,8 @@ export class SshClient extends EventEmitter {
                             [
                                 "ssh-rsa",
                                 "ssh-dss",
+                                "ecdsa-sha2-nistp256",
+                                "ssh-ed25519",
                             ],
                         kex: 
                             [

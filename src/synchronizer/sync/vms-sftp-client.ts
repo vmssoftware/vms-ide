@@ -92,14 +92,15 @@ export class VmsSftpClient extends EventEmitter implements ISftpClient {
                 } else {
                     const verSemicolon = entry.filename.lastIndexOf(";");
                     if (verSemicolon >= 0) {
+                        entry.vers = Number(entry.filename.slice(verSemicolon+1));
                         entry.filename = entry.filename.slice(0, verSemicolon);
                     }
                 }
                 entry.filename = this.fixremoteName(entry.filename);
                 return entry;
             });
-            // remain only those entries, for which there are no entries with the same filename and newer date
-            list = list.filter((value, idx, array) => !array.some((same) => same.filename === value.filename && same.date.valueOf() > value.date.valueOf()));
+            // remain only those entries, for which there are no entries with the same filename and newer version
+            list = list.filter((value, idx, array) => !array.some((same) => same.filename === value.filename && same.vers > value.vers));
         }
         return list;
     }

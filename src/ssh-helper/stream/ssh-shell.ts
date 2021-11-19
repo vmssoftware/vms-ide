@@ -262,7 +262,7 @@ export class SshShell extends SshClient implements ISshShell {
                 if (!this.client) {
                     return false;
                 }
-                return !this.client.shell((clientError, channelGot) => {
+                let should_wait = !this.client.shell((clientError, channelGot) => {
                     if (clientError) {
                         this.logFn(LogType.error, () => localize("debug.operation.error", "{0} error: {1}", opName, String(clientError)));
                     } else {
@@ -282,7 +282,11 @@ export class SshShell extends SshClient implements ISshShell {
                         });
                     }
                     complete.release();
+                    if (should_wait) {
+                        this.client?.emit("continue");
+                    }
                 });
+                return should_wait;
             }, this.logFn);
         }
         return this.channel !== undefined;
