@@ -257,23 +257,31 @@ export class SshShell extends SshClient implements ISshShell {
     private async shellConnect() {
         if (this.client) {
             const opName = localize("operation.connect", "create shell{0}", this.tag ? " " + this.tag : "");
-            this.client.shell((clientError, channelGot) => {
-                if (clientError) {
-                    this.logFn(LogType.error, () => localize("debug.operation.error", "{0} error: {1}", opName, String(clientError)));
+            await new Promise<boolean>((resolve) => {
+                if (!this.client) {
+                    resolve(false);
                 } else {
-                    this.logFn(LogType.debug, () => localize("debug.ready", "shell{0} ready", this.tag ? " " + this.tag : ""));
-                    this.channel = channelGot;
-                    this.shellClose = Subscribe(this.channel, "close", () => {
-                        this.logFn(LogType.debug, () => localize("debug.close", "shell{0} close", this.tag ? " " + this.tag : ""));
-                        setImmediate(() => this.cleanChannel());
-                    });
-                    this.shellExit = Subscribe(this.channel, "exit", (exitCode) => {
-                        this.logFn(LogType.debug, () => localize("debug.exit", "shell{1} exit {0}", String(exitCode), this.tag ? " " + this.tag : ""));
-                        setImmediate(() => this.cleanChannel());
-                    });
-                    this.shellExit = Subscribe(this.channel, "error", (error) => {
-                        this.logFn(LogType.debug, () => localize("debug.exit", "shell{1} error {0}", String(error), this.tag ? " " + this.tag : ""));
-                        setImmediate(() => this.cleanChannel());
+                    this.client.shell((clientError, channelGot) => {
+                        if (clientError) {
+                            this.logFn(LogType.error, () => localize("debug.operation.error", "{0} error: {1}", opName, String(clientError)));
+                            resolve(false);
+                        } else {
+                            this.logFn(LogType.debug, () => localize("debug.ready", "shell{0} ready", this.tag ? " " + this.tag : ""));
+                            this.channel = channelGot;
+                            this.shellClose = Subscribe(this.channel, "close", () => {
+                                this.logFn(LogType.debug, () => localize("debug.close", "shell{0} close", this.tag ? " " + this.tag : ""));
+                                setImmediate(() => this.cleanChannel());
+                            });
+                            this.shellExit = Subscribe(this.channel, "exit", (exitCode) => {
+                                this.logFn(LogType.debug, () => localize("debug.exit", "shell{1} exit {0}", String(exitCode), this.tag ? " " + this.tag : ""));
+                                setImmediate(() => this.cleanChannel());
+                            });
+                            this.shellExit = Subscribe(this.channel, "error", (error) => {
+                                this.logFn(LogType.debug, () => localize("debug.exit", "shell{1} error {0}", String(error), this.tag ? " " + this.tag : ""));
+                                setImmediate(() => this.cleanChannel());
+                            });
+                            resolve(true);
+                        }
                     });
                 }
             });
