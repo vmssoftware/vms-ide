@@ -5,7 +5,6 @@ import stream = require("stream");
 import { Lock, LogFunction } from "../../common/main";
 import { LogType } from "../../common/main";
 import { IUnSubscribe, Subscribe } from "../../common/main";
-import { WaitableOperation } from "../../common/main";
 import { ftpPathSeparator } from "../../common/main";
 import { IFileEntry } from "../../common/main";
 
@@ -84,23 +83,13 @@ export class SftpClient extends SshClient {
         if (await this.ensureSftp()) {
             if (this.client && this.sftp) {
                 const opName = localize("operation.getstat", "get stat {0} via sftp{1}", file, this.tag ? " " + this.tag : "");
-                await WaitableOperation(opName, this.client, "continue", this.sftp, "error", (complete) => {
-                    if (!this.sftp) {
-                        return false;
+                this.sftp.stat(file, (err, stat) => {
+                    if (err) {
+                        this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
+                    } else {
+                        statRet = stat;
                     }
-                    let should_wait = !this.sftp.stat(file, (err, stat) => {
-                        if (err) {
-                            this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
-                        } else {
-                            statRet = stat;
-                        }
-                        complete.release();
-                        if (should_wait) {
-                            this.client?.emit("continue");
-                        }
-                    });
-                    return should_wait;
-                }, this.logFn);
+                });
             }
         }
         this.waitOperation.release();
@@ -113,23 +102,13 @@ export class SftpClient extends SshClient {
         if (await this.ensureSftp()) {
             if (this.client && this.sftp) {
                 const opName = localize("operation.delete", "delete {0} via sftp{1}", file, this.tag ? " " + this.tag : "");
-                await WaitableOperation(opName, this.client, "continue", this.sftp, "error", (complete) => {
-                    if (!this.sftp) {
-                        return false;
+                this.sftp.unlink(file, (err) => {
+                    if (err) {
+                        this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
+                    } else {
+                        fileDeleted = true;
                     }
-                    let should_wait = !this.sftp.unlink(file, (err) => {
-                        if (err) {
-                            this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
-                        } else {
-                            fileDeleted = true;
-                        }
-                        complete.release();
-                        if (should_wait) {
-                            this.client?.emit("continue");
-                        }
-                    });
-                    return should_wait;
-                }, this.logFn);
+                });
             }
         }
         this.waitOperation.release();
@@ -141,21 +120,11 @@ export class SftpClient extends SshClient {
         if (await this.ensureSftp()) {
             if (this.client && this.sftp) {
                 const opName = localize("operation.setstat", "set stat {0} via sftp{1}", file, this.tag ? " " + this.tag : "");
-                await WaitableOperation(opName, this.client, "continue", this.sftp, "error", (complete) => {
-                    if (!this.sftp) {
-                        return false;
+                this.sftp.setstat(file, stat, (err) => {
+                    if (err) {
+                        this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
                     }
-                    let should_wait = !this.sftp.setstat(file, stat, (err) => {
-                        if (err) {
-                            this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
-                        }
-                        complete.release();
-                        if (should_wait) {
-                            this.client?.emit("continue");
-                        }
-                    });
-                    return should_wait;
-                }, this.logFn);
+                });
             }
         }
         this.waitOperation.release();
@@ -169,23 +138,13 @@ export class SftpClient extends SshClient {
             // set empty list => return 'undefined' only if stfp fails, but not if directory doesn't exist
             files = [];
             const opName = localize("operation.readdir", "read directory {0} via sftp{1}", directory, this.tag ? " " + this.tag : "");
-            await WaitableOperation(opName, this.client, "continue", this.sftp, "error", (complete) => {
-                if (!this.sftp) {
-                    return false;
+            this.sftp.readdir(directory, (err, list) => {
+                if (err) {
+                    this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
+                } else {
+                    files = list;
                 }
-                let should_wait = !this.sftp.readdir(directory, (err, list) => {
-                    if (err) {
-                        this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
-                    } else {
-                        files = list;
-                    }
-                    complete.release();
-                    if (should_wait) {
-                        this.client?.emit("continue");
-                    }
-                });
-                return should_wait;
-            }, this.logFn);
+            });
         }
         this.waitOperation.release();
         if (files) {
@@ -215,23 +174,13 @@ export class SftpClient extends SshClient {
                 await this.waitOperation.acquire();
                 if (!stat && this.client && this.enabled) {
                     const opName = localize("operation.createdir", "create directory {0} via sftp{1}", directory, this.tag ? " " + this.tag : "");
-                    await WaitableOperation(opName, this.client, "continue", this.sftp, "error", (complete) => {
-                        if (!this.sftp) {
-                            return false;
+                    this.sftp.mkdir(directory, (err) => {
+                        if (err) {
+                            this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
+                        } else {
+                            retCode = true;
                         }
-                        let should_wait = !this.sftp.mkdir(directory, (err) => {
-                            if (err) {
-                                this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
-                            } else {
-                                retCode = true;
-                            }
-                            complete.release();
-                            if (should_wait) {
-                                this.client?.emit("continue");
-                            }
-                        });
-                        return should_wait;
-                    }, this.logFn);
+                    });
                 }
             }
         }
@@ -268,36 +217,26 @@ export class SftpClient extends SshClient {
     private async sftpConnect() {
         if (this.client) {
             const opName = localize("operation.sftp", "create sftp{0}", this.tag ? " " + this.tag : "");
-            await WaitableOperation(opName, this.client, "continue", this.client, "error", (complete) => {
-                if (!this.client) {
-                    return false;
+            this.client.sftp((err, sftpGot) => {
+                if (err) {
+                    this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
+                } else {
+                    this.logFn(LogType.debug, () => localize("debug.sftp.ready", "sftp{0} ready", this.tag ? " " + this.tag : ""));
+                    this.sftp = sftpGot;
+                    this.sftpEnd = Subscribe(this.sftp, "end", () => {
+                        this.logFn(LogType.debug, () => localize("debug.sftp.end", "sftp{0} end", this.tag ? " " + this.tag : ""));
+                        this.cleanSftp();
+                    });
+                    this.sftpError = Subscribe(this.sftp, "error", (sftpError) => {
+                        this.logFn(LogType.error, () => localize("debug.sftp.error", "sftp{0} error: {1}", this.tag ? " " + this.tag : "", String(sftpError)));
+                        this.cleanSftp();
+                    });
+                    this.sftpClose = Subscribe(this.sftp, "close", () => {
+                        this.logFn(LogType.debug, () => localize("debug.sftp.close", "sftp{0} close", this.tag ? " " + this.tag : ""));
+                        this.cleanSftp();
+                    });
                 }
-                let should_wait = !this.client.sftp((err, sftpGot) => {
-                    if (err) {
-                        this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
-                    } else {
-                        this.logFn(LogType.debug, () => localize("debug.sftp.ready", "sftp{0} ready", this.tag ? " " + this.tag : ""));
-                        this.sftp = sftpGot;
-                        this.sftpEnd = Subscribe(this.sftp, "end", () => {
-                            this.logFn(LogType.debug, () => localize("debug.sftp.end", "sftp{0} end", this.tag ? " " + this.tag : ""));
-                            this.cleanSftp();
-                        });
-                        this.sftpError = Subscribe(this.sftp, "error", (sftpError) => {
-                            this.logFn(LogType.error, () => localize("debug.sftp.error", "sftp{0} error: {1}", this.tag ? " " + this.tag : "", String(sftpError)));
-                            this.cleanSftp();
-                        });
-                        this.sftpClose = Subscribe(this.sftp, "close", () => {
-                            this.logFn(LogType.debug, () => localize("debug.sftp.close", "sftp{0} close", this.tag ? " " + this.tag : ""));
-                            this.cleanSftp();
-                        });
-                    }
-                    complete.release();
-                    if (should_wait) {
-                        this.client?.emit("continue");
-                    }
-                });
-                return should_wait;
-            }, this.logFn);
+            });
         }
         return this.sftp !== undefined;
     }

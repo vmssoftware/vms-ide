@@ -18,7 +18,7 @@
         "Other"
     ],
     "icon": "images/vms_logo.png",
-    "main": "./out/index",
+    "main": "./out/extension",
     "activationEvents": [
         "*",
         "onView:vmssoftware.project-dep.projectDependencies",
@@ -1185,6 +1185,7 @@
         "@types/micromatch": "^3.1.1",
         "@types/mocha": "^5.2.7",
         "@types/node": "^8.10.50",
+        "@types/ssh2": "^0.5.48",
         "antlr4ts-cli": "^0.5.0-alpha.1",
         "del": "^3.0.0",
         "event-stream": "^4.0.1",
@@ -1192,6 +1193,7 @@
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^5.0.0-alpha.3",
         "npm-run-all": "^4.1.5",
+        "raw-loader": "^4.0.2",
         "ts-loader": "^5.4.5",
         "tslint": "^5.18.0",
         "typescript": "^3.7.4",
@@ -1203,7 +1205,6 @@
         "yargs": "^14.2.0"
     },
     "dependencies": {
-        "@types/ssh2": "^0.5.38",
         "antlr4-c3": "^1.1.12",
         "antlr4ts": "^0.5.0-alpha.1",
         "archiver": "^3.0.0",

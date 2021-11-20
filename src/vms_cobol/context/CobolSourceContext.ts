@@ -414,8 +414,8 @@ export class CobolSourceContext implements ISourceContext {
                     }
                     break;
                 case cobolParser.RULE_program_name:
-                    if (callStack.length > 0) {
-                        switch (callStack[callStack.length - 1]) {
+                    if (callStack.ruleList.length > 0) {
+                        switch (callStack.ruleList[callStack.ruleList.length - 1]) {
                             case cobolParser.RULE_end_program:
                                 let currentProgramSymbol = this.enclosingProgramSymbol(currentParseTree);
                                 if (currentProgramSymbol) {
@@ -426,8 +426,8 @@ export class CobolSourceContext implements ISourceContext {
                     }
                     break;
                 case cobolParser.RULE_prog_name:
-                    if (callStack.length > 0) {
-                        switch (callStack[callStack.length - 1]) {
+                    if (callStack.ruleList.length > 0) {
+                        switch (callStack.ruleList[callStack.ruleList.length - 1]) {
                             case cobolParser.RULE_cancel_statement:
                             case cobolParser.RULE_call_statement:
                                 let symbols = this.symbolTable.resolveIdentifier(["*"], currentParseTree);

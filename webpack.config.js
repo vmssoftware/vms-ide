@@ -38,6 +38,10 @@ const config = {
             loader: 'ts-loader'
           }
         ]
+      },
+      { 
+        test: /\.node$/,
+        use: 'raw-loader'
       }
     ]
   }

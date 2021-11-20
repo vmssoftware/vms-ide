@@ -272,8 +272,8 @@ export class SourceContext {
             switch (key) {
                 case cldParser.RULE_anyName: {
                     let rule = cldParser.RULE_cldContent;
-                    if (callStack.length > 0) {
-                        rule = callStack[callStack.length-1];
+                    if (callStack.ruleList.length > 0) {
+                        rule = callStack.ruleList[callStack.ruleList.length-1];
                     }
                     let symbols: Symbol[] = [];
                     if (rule === cldParser.RULE_keywordSyntax ||

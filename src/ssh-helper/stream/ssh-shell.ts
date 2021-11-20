@@ -6,7 +6,6 @@ import { Transform } from "stream";
 import { Lock } from "../../common/main";
 import { LogFunction, LogType } from "../../common/main";
 import { IUnSubscribe, Subscribe } from "../../common/main";
-import { WaitableOperation } from "../../common/main";
 
 import { IConnectConfig, IConnectConfigResolver } from "../api";
 import { IParseWelcome, IPromptCatcher, ISshShell } from "../api";
@@ -258,36 +257,26 @@ export class SshShell extends SshClient implements ISshShell {
     private async shellConnect() {
         if (this.client) {
             const opName = localize("operation.connect", "create shell{0}", this.tag ? " " + this.tag : "");
-            await WaitableOperation(opName, this.client, "continue", this.client, "error", (complete) => {
-                if (!this.client) {
-                    return false;
+            this.client.shell((clientError, channelGot) => {
+                if (clientError) {
+                    this.logFn(LogType.error, () => localize("debug.operation.error", "{0} error: {1}", opName, String(clientError)));
+                } else {
+                    this.logFn(LogType.debug, () => localize("debug.ready", "shell{0} ready", this.tag ? " " + this.tag : ""));
+                    this.channel = channelGot;
+                    this.shellClose = Subscribe(this.channel, "close", () => {
+                        this.logFn(LogType.debug, () => localize("debug.close", "shell{0} close", this.tag ? " " + this.tag : ""));
+                        setImmediate(() => this.cleanChannel());
+                    });
+                    this.shellExit = Subscribe(this.channel, "exit", (exitCode) => {
+                        this.logFn(LogType.debug, () => localize("debug.exit", "shell{1} exit {0}", String(exitCode), this.tag ? " " + this.tag : ""));
+                        setImmediate(() => this.cleanChannel());
+                    });
+                    this.shellExit = Subscribe(this.channel, "error", (error) => {
+                        this.logFn(LogType.debug, () => localize("debug.exit", "shell{1} error {0}", String(error), this.tag ? " " + this.tag : ""));
+                        setImmediate(() => this.cleanChannel());
+                    });
                 }
-                let should_wait = !this.client.shell((clientError, channelGot) => {
-                    if (clientError) {
-                        this.logFn(LogType.error, () => localize("debug.operation.error", "{0} error: {1}", opName, String(clientError)));
-                    } else {
-                        this.logFn(LogType.debug, () => localize("debug.ready", "shell{0} ready", this.tag ? " " + this.tag : ""));
-                        this.channel = channelGot;
-                        this.shellClose = Subscribe(this.channel, "close", () => {
-                            this.logFn(LogType.debug, () => localize("debug.close", "shell{0} close", this.tag ? " " + this.tag : ""));
-                            setImmediate(() => this.cleanChannel());
-                        });
-                        this.shellExit = Subscribe(this.channel, "exit", (exitCode) => {
-                            this.logFn(LogType.debug, () => localize("debug.exit", "shell{1} exit {0}", String(exitCode), this.tag ? " " + this.tag : ""));
-                            setImmediate(() => this.cleanChannel());
-                        });
-                        this.shellExit = Subscribe(this.channel, "error", (error) => {
-                            this.logFn(LogType.debug, () => localize("debug.exit", "shell{1} error {0}", String(error), this.tag ? " " + this.tag : ""));
-                            setImmediate(() => this.cleanChannel());
-                        });
-                    }
-                    complete.release();
-                    if (should_wait) {
-                        this.client?.emit("continue");
-                    }
-                });
-                return should_wait;
-            }, this.logFn);
+            });
         }
         return this.channel !== undefined;
     }
