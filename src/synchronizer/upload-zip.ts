@@ -84,6 +84,9 @@ export class UploadZip {
                 return false;
             }
             for (const fileEntry of fileEntries) {
+                if (fileEntry.filename.toLowerCase() == zipFileName.toLowerCase()) {
+                    continue;
+                }
                 const fileName = path.join(localPath, fileEntry.filename);
                 zipApi.addFile(fileName, fileEntry.filename);
                 if (synchronizer.stopIssued) {
