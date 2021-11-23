@@ -15,7 +15,7 @@
     "ssh-helper.configuration.username": "Имя пользователя",
     "ssh-helper.configuration.password": "Пароль, можно пропустить",
     "ssh-helper.configuration.keyFile": "Файл ключа SSH или оставьте пустым для запрооса пароля.",
-    "ssh-helper.configuration.skipSignatureVerification": "Пропустить проверку сигнатуры",
+    "ssh-helper.configuration.debug": "Трассировка SSH",
     "ssh-helper.configuration.supportSetFileTime": "Сервер поддерживает установку времени файла. Иначе будет использована оболочка.",
     "ssh-helper.configuration.unzipCmd": "Команда распаковки на строне VMS",
     "ssh-helper.configuration.zipCmd": "Команда успаковки на строне VMS",

@@ -13,7 +13,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             (typeof candidate.username === "string" || candidate.username === undefined) &&
             (typeof candidate.keyFile === "string" || candidate.keyFile === undefined) &&
             (typeof candidate.password === "string" || candidate.password === undefined) &&
-            (typeof candidate.skipSignatureVerification === "boolean" || candidate.skipSignatureVerification === undefined) &&
+            (typeof candidate.debug === "boolean" || candidate.debug === undefined) &&
             (typeof candidate.unzipCmd === "string" || candidate.unzipCmd === undefined) &&
             (typeof candidate.zipCmd === "string" || candidate.zipCmd === undefined) &&
             (typeof candidate.supportSetFileTime === "boolean" || candidate.supportSetFileTime === undefined);
@@ -24,7 +24,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
     public password?: string;
     public port?: number = 22;
     public username?: string = "";
-    public skipSignatureVerification?: boolean = false;
+    public debug?: boolean | ((s: string) => void) = false;
     public algorithms?: IAlgorithms;
     public supportSetFileTime?: boolean = true;
     public unzipCmd?: string;
@@ -48,7 +48,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             password: this.password || "",
             port: this.port || 0,
             username: this.username || "",
-            skipSignatureVerification: this.skipSignatureVerification || false,
+            debug: this.debug? true : false,
             algorithms: this.algorithms as ValueData,
             supportSetFileTime: this.supportSetFileTime === undefined ? true : this.supportSetFileTime,
             unzipCmd: this.unzipCmd || "",
@@ -63,7 +63,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             this.password = data.password;
             this.port = data.port;
             this.username = data.username;
-            this.skipSignatureVerification = data.skipSignatureVerification;
+            this.debug = data.debug;
             this.algorithms = data.algorithms;
             this.supportSetFileTime = data.supportSetFileTime;
             this.unzipCmd = data.unzipCmd;

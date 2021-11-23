@@ -133,10 +133,12 @@ export class SshClient extends EventEmitter {
                 } else {
                     configResolved.algorithms = defaultAlgorithms;
                 }
-                //(configResolved as ConnectConfig).debug = (s: string) => this.debugLine(s);
+                if (configResolved.debug) {
+                    configResolved.debug = (s: string) => this.debugLine(s);
+                }
                 try {
                     doWait = true;
-                    client.connect(configResolved);
+                    client.connect(configResolved as ConnectConfig);
                 } catch(e) {
                     doWait = false;
                     this.logFn(LogType.error, () => localize("connect.exception", "Exception: {0}", String(e)), true);
@@ -147,7 +149,7 @@ export class SshClient extends EventEmitter {
         } else {
             try {
                 doWait = true;
-                client.connect(this.config);
+                client.connect(this.config as ConnectConfig);
             } catch(e) {
                 doWait = false;
                 this.logFn(LogType.error, () => localize("connect.exception", "Exception: {0}", String(e)), true);

@@ -15,7 +15,7 @@
     "ssh-helper.configuration.username": "Username",
     "ssh-helper.configuration.password": "Password, may be omitted",
     "ssh-helper.configuration.keyFile": "SSH key file. Leave empty to use password authentication.",
-    "ssh-helper.configuration.skipSignatureVerification": "Skip signature verification",
+    "ssh-helper.configuration.debug": "Trace SSH",
     "ssh-helper.configuration.supportSetFileTime": "Server supports setting file time. Shell will be used as a fallback.",
     "ssh-helper.configuration.unzipCmd": "Command to unzip archive on VMS side",
     "ssh-helper.configuration.zipCmd": "Command to zip archive on VMS side",

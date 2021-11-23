@@ -107,7 +107,7 @@ export interface IConnectionSection {
     username?: string;
     password?: string;
     keyFile?: string;
-    skipSignatureVerification?: boolean;
+    debug?: boolean | ((s: string) => void);
     algorithms?: IAlgorithms;
     supportSetFileTime?: boolean;
     unzipCmd?: string;

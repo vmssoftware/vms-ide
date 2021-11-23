@@ -101,10 +101,10 @@
                     "default": "",
                     "description": "Username"
                 },
-                "skipSignatureVerification": {
+                "debug": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Skip signature verification"
+                    "description": "debug ssh protocol"
                 },
                 "supportSetFileTime": {
                     "type": "boolean",

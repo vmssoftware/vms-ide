@@ -1,5 +1,10 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.49
+* SSH settings changes:
+*    'skipSignatureVerification' is no longer used
+*    'debug' is added for detailed tracing of SSH protocol
+
 ## 1.5.48
 * SSH2 package is updated (1.5.0)
 
