@@ -2,7 +2,7 @@
     "name": "vms-ide",
     "displayName": "VMS IDE",
     "description": "VMS IDE is an extension that enables you to develop applications for OpenVMS.",
-    "version": "1.5.49",
+    "version": "1.5.50",
     "publisher": "VMSSoftwareInc",
     "license": "MIT",
     "repository": {
@@ -1212,7 +1212,7 @@
         "fs-extra": "^7.0.1",
         "micromatch": "^4.0.2",
         "net": "^1.0.2",
-        "ssh2": "^1.5.0",
+        "ssh2": "github:vmssoftware/ssh2#allow_skip_signature_verification",
         "unzipt": "0.0.4",
         "vscode-debugadapter": "^1.35.0",
         "vscode-debugadapter-testsupport": "1.27.0",

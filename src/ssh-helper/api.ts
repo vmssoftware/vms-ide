@@ -112,6 +112,7 @@ export interface IConnectionSection {
     supportSetFileTime?: boolean;
     unzipCmd?: string;
     zipCmd?: string;
+    skipSignatureVerification?: boolean;
 }
 
 export interface IHost extends IConnectionSection {

@@ -25,6 +25,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
     public port?: number = 22;
     public username?: string = "";
     public debug?: boolean | ((s: string) => void) = false;
+    public skipSignatureVerification?: boolean = false;
     public algorithms?: IAlgorithms;
     public supportSetFileTime?: boolean = true;
     public unzipCmd?: string;
@@ -49,6 +50,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             port: this.port || 0,
             username: this.username || "",
             debug: this.debug? true : false,
+            skipSignatureVerification: this.skipSignatureVerification? true : false,
             algorithms: this.algorithms as ValueData,
             supportSetFileTime: this.supportSetFileTime === undefined ? true : this.supportSetFileTime,
             unzipCmd: this.unzipCmd || "",
@@ -64,6 +66,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             this.port = data.port;
             this.username = data.username;
             this.debug = data.debug;
+            this.skipSignatureVerification = data.skipSignatureVerification?true:false;
             this.algorithms = data.algorithms;
             this.supportSetFileTime = data.supportSetFileTime;
             this.unzipCmd = data.unzipCmd;

@@ -30,6 +30,7 @@ export class HostFiller implements ISettingsFiller {
                         settings.keyFile = host.keyFile;
                         settings.password = host.password;
                         settings.debug = host.debug;
+                        settings.skipSignatureVerification = host.skipSignatureVerification?true:false;
                         settings.algorithms = Object.assign({}, host.algorithms);
                         settings.supportSetFileTime = host.supportSetFileTime;
                         settings.unzipCmd = host.unzipCmd;
