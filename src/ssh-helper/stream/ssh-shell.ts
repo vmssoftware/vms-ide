@@ -102,6 +102,11 @@ export class SshShell extends SshClient implements ISshShell {
         this.logFn(LogType.debug, () => "waitOperation.release() on detachUser()");
     }
 
+    public static packString(line: string) : string {
+        const regexpt = /[\x13\x10 ]/g;
+        return line.replace(regexpt, "").toUpperCase();
+    }
+
     /**
      * Exec one command and continue. No "\r" or "\n" allowed inside command.
      * @param command command to execute
@@ -140,28 +145,18 @@ export class SshShell extends SshClient implements ISshShell {
                     } else {
                         if (lines.length) {
                             this.logFn(LogType.debug, () => localize("debug.cmd.raw", "shell{1} command raw output: {0}", lines.join('\n'), this.tag ? " " + this.tag : ""));
-                            // skip empty lines (as in previous version of code)
-                            lines = lines.filter(x => !!x);
-                            // find written command in content and remove it
-                            let garbage = false;
-                            let contentPos = 0;
                             let contentLine = 0;
-                            let commandPos = 0;
-                            while (commandPos < trimmedCommand.length) {
-                                while (contentPos >= lines[contentLine].length) {
-                                    ++contentLine;
-                                    contentPos = 0;
-                                }
-                                if (lines[contentLine][contentPos] !== trimmedCommand[commandPos]) {
-                                    garbage = true;
+                            let fullStr = "";
+                            let packedCommand = SshShell.packString(trimmedCommand);
+                            while(contentLine < lines.length) {
+                                fullStr = fullStr + SshShell.packString(lines[contentLine]);
+                                if (fullStr.includes(packedCommand)) {
                                     break;
                                 }
-                                commandPos++;
-                                contentPos++;
+                                ++contentLine;
                             }
-                            // go to line after
-                            ++contentLine;
-                            if (!garbage) {
+                            if (contentLine < lines.length) {
+                                // found
                                 this.logFn(LogType.debug, () => localize("debug.cmd.out", "shell{0} command output found", this.tag ? " " + this.tag : ""));
                                 contentRet = lines.slice(contentLine);
                                 commandEnded.call(this);

@@ -119,7 +119,7 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
                     if (this.chunk_buff?.includes(tt.if)) {
                         this.logFn(LogType.debug, () => localize("debug.tt", "vms parse: found tt {0}", idx));
                         if (idx == this.set_width_idx) {
-                            this.typeSet = true;
+                            // this.typeSet = true;
                         }
                         let tt_if_pos = this.chunk_buff.indexOf(tt.if);
                         this.chunk_buff = Buffer.concat(

@@ -1,7 +1,11 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.51
+* The spaces in the mask were breaking the synchronization.
+
 ## 1.5.50
 * Python debugger is fixed.
+* SSH settings changes: 'skipSignatureVerification' is back
 
 ## 1.5.49
 * SSH settings changes:

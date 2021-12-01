@@ -24,7 +24,7 @@ export function expandMask(mask: string) {
         for(let char of mask) {
             if (depth === 0 && char === ',') {
                 if (str_part) {
-                    str_arr.push(str_part);
+                    str_arr.push(str_part.trim());
                     str_part = "";
                 }
                 continue;
@@ -38,7 +38,7 @@ export function expandMask(mask: string) {
             str_part += char;
         }
         if (str_part) {
-            str_arr.push(str_part);
+            str_arr.push(str_part.trim());
         }
         // 2. unbrace each part
         const expandedMask = str_arr.reduce((acc: string[], pattern) => {
@@ -83,7 +83,7 @@ export async function findFiles(canReadDir: IReadDirectory,
         nocase: true,
         nodupes: true,
         unixify: false,
-};
+    };
     let {expandedMask: splitInclude , missed_curly_bracket} = expandMask(include);
     if (debugLog && missed_curly_bracket) {
         debugLog(LogType.warning, () => localize("check.inc.mask", "Check include file masks for correct curly brackets."), true);
