@@ -148,17 +148,19 @@ export class SshShell extends SshClient implements ISshShell {
                             let contentLine = 0;
                             let fullStr = "";
                             let packedCommand = SshShell.packString(trimmedCommand);
+                            let commandFound = false;
                             while(contentLine < lines.length) {
                                 fullStr = fullStr + SshShell.packString(lines[contentLine]);
                                 if (fullStr.includes(packedCommand)) {
+                                    commandFound = true;
                                     break;
                                 }
                                 ++contentLine;
                             }
-                            if (contentLine < lines.length) {
+                            if (commandFound) {
                                 // found
                                 this.logFn(LogType.debug, () => localize("debug.cmd.out", "shell{0} command output found", this.tag ? " " + this.tag : ""));
-                                contentRet = lines.slice(contentLine);
+                                contentRet = lines.slice(contentLine + 1);  // we should remove command from output
                                 commandEnded.call(this);
                             } else {
                                 this.logFn(LogType.debug, () => localize("debug.garbage", "shell{0} garbage output found", this.tag ? " " + this.tag : ""));

@@ -414,6 +414,7 @@ export class Builder {
 
         if (scopeData.ensured.projectSection.listing) {
             const synchronizer = Synchronizer.acquire(this.logFn);
+            await synchronizer.ensureSshHelper();
             // always try to download listing, for all configurations
             let downloadedByZip = false;
             if (scopeData.ensured.synchronizeSection.preferZip) {

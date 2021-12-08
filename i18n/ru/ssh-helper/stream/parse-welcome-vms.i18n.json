@@ -1,5 +1,5 @@
 {
-    "debug.prompt": "vms парсер: найден промпт '{0}'",
+    "debug.tt": "vms парсер: найдена команда TTY {0}",
     "debug.terminal": "vms parse: setup terminal and wait next prompt",
-    "debug.tt": "vms парсер: найдена команда TTY {0}"
+    "debug.prompt": "vms парсер: найден промпт '{0}'"
 }

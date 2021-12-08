@@ -23,7 +23,7 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
         }
     }
 
-    public static setType = printLike`SET TERM/DEV=VT101/WIDTH=${80}`;
+    public static setType = printLike`SET TERMINAL/DEVICE=VT101/WIDTH=${80}`;
 
     public prompt?: string;
 
@@ -94,6 +94,7 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
     private widthValue = 132;
     private setWidth = printLike`\x1B[24;${80}R`;
     private typeSet = false;
+    private typeSetCmd?: string;
 
     constructor(timeout?: number, logFn?: LogFunction, tag?: string, width?: number) {
         super(timeout, logFn, tag);
@@ -136,15 +137,22 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
             // prompt just after the zero-byte
             const promptIdx = this.chunk_buff.lastIndexOf(0);
             if (promptIdx >= 0) {
-                this.prompt = this.chunk_buff.slice(promptIdx + 1).toString("utf8");
-                this.chunk_buff = undefined;
-                this.logFn(LogType.debug, () => localize("debug.prompt", "vms parse: found prompt '{0}'", this.prompt));
-                if (!this.typeSet) {
-                    this.push(ParseWelcomeVms.setType(this.widthValue) + SshShell.eol);
-                    this.logFn(LogType.debug, () => localize("debug.terminal", "vms parse: setup terminal and wait next prompt"));
-                    this.typeSet = true;
-                } else {
-                    this.setReady();
+                if (promptIdx + 1 < this.chunk_buff.length) {   // test if prompt non empty
+                    if (!this.typeSet) {
+                        this.typeSetCmd = ParseWelcomeVms.setType(this.widthValue);
+                        this.push(this.typeSetCmd + SshShell.eol);
+                        this.logFn(LogType.debug, () => localize("debug.terminal", "vms parse: setup terminal and wait next prompt"));
+                        this.typeSet = true;
+                    } else {
+                        if (this.typeSetCmd == undefined || this.chunk_buff.toString().includes(this.typeSetCmd)) {
+                            this.setReady();
+                        }
+                    }
+                }
+                this.chunk_buff = this.chunk_buff.slice(promptIdx + 1);
+                this.prompt = this.chunk_buff.toString("utf8");
+                if (this.prompt) {
+                    this.logFn(LogType.debug, () => localize("debug.prompt", "vms parse: found prompt '{0}'", this.prompt));
                 }
             }
         }

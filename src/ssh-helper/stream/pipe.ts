@@ -28,6 +28,7 @@ export async function PipeFile(
     let srcStream: Readable | undefined;
     let dstStream: Writable | undefined;
     let errPassed = false;
+    const done = new Lock(true);
     srcStream = await source.createReadStream(file);
     if (!srcStream) {
         logFn(LogType.error, () => localize("debug.source_fail", "Could not create source {0}.", file));
@@ -41,6 +42,7 @@ export async function PipeFile(
         if (dstStream) {
             dstStream.destroy();
         }
+        done.release(); // release on source error
     });
     destFile = destFile || file;
     dstStream = await dest.createWriteStream(destFile);
@@ -52,7 +54,6 @@ export async function PipeFile(
         }
         return false;
     }
-    const done = new Lock(true);
     dstStream.once("error", (dstError) => {
         // catch destination errors
         logFn(LogType.error, () => localize("debug.dest_error", "Destination error {0}.", dstError.message));

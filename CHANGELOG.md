@@ -2,6 +2,8 @@ For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Ch
 
 ## 1.5.51
 * The spaces in the mask were breaking the synchronization.
+* Fix 'Prepare to debug' when there are no *.LIS, no *.MAP files in folder.
+* Fix synchronization with some x86 hosts.
 
 ## 1.5.50
 * Python debugger is fixed.

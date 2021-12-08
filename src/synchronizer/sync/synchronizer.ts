@@ -527,7 +527,7 @@ export class Synchronizer {
     /**
      * Ensure that ssh-helper loaded
      */
-    private async ensureSshHelper() {
+    public async ensureSshHelper() {
         if (!this.sshHelper) {
             const sshHelperType = await GetSshHelperType();
             if (!sshHelperType) {
