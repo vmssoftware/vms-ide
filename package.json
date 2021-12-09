@@ -939,6 +939,15 @@
         "debuggers": [
             {
                 "type": "vms_dbg",
+                "languages": [
+                    "c",
+                    "cpp",
+                    "bliss",
+                    "vms-basic",
+                    "vms-cobol",
+                    "vms-pascal",
+                    "vms-fortran"
+                ],
                 "label": "%vms_debug.extension.vms_c_debug%",
                 "configurationAttributes": {
                     "launch": {
@@ -1019,6 +1028,11 @@
             },
             {
                 "type": "vms jvm debugger",
+                "languages": [
+                    "kotlin",
+                    "scala",
+                    "java"
+                ],
                 "label": "%vms_jvm_debug.label.description%",
                 "configurationAttributes": {
                     "launch": {
@@ -1095,6 +1109,9 @@
             },
             {
                 "type": "vms python debugger",
+                "languages": [
+                    "python"
+                ],
                 "label": "%vms_python_debug.label.description%",
                 "configurationAttributes": {
                     "launch": {
@@ -1202,7 +1219,9 @@
         "vscode-nls-dev": "github:vmssoftware/vscode-nls-dev",
         "webpack": "^5.46.0",
         "webpack-cli": "^3.3.6",
-        "yargs": "^14.2.0"
+        "yargs": "^14.2.0",
+        "vscode-debugadapter": "^1.51.0",
+        "vscode-debugadapter-testsupport": "^1.51.0"
     },
     "dependencies": {
         "antlr4-c3": "^1.1.12",
@@ -1214,8 +1233,6 @@
         "net": "^1.0.2",
         "ssh2": "github:vmssoftware/ssh2#allow_skip_signature_verification",
         "unzipt": "0.0.4",
-        "vscode-debugadapter": "^1.35.0",
-        "vscode-debugadapter-testsupport": "1.27.0",
         "vscode-nls": "github:vmssoftware/vscode-nls"
     }
 }
