@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.52
+* Add commands to synchronize, upload project with dependencies.
+
 ## 1.5.51
 * The spaces in the mask were breaking the synchronization.
 * Fix 'Prepare to debug' when there are no *.LIS, no *.MAP files in folder.
