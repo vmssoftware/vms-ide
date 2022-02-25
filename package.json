@@ -36,7 +36,9 @@
         "onCommand:vmssoftware.synchronizer.forceSynchronized",
         "onCommand:vmssoftware.synchronizer.forceBuilt",
         "onCommand:vmssoftware.synchronizer.uploadZip",
+        "onCommand:vmssoftware.synchronizer.uploadDepZip",
         "onCommand:vmssoftware.synchronizer.upload",
+        "onCommand:vmssoftware.synchronizer.uploadDep",
         "onCommand:vmssoftware.synchronizer.quickSync",
         "onCommand:vmssoftware.synchronizer.downloadHeaders",
         "onCommand:vmssoftware.synchronizer.buildOnlyProject",
@@ -313,7 +315,15 @@
                     "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
+                    "command": "vmssoftware.synchronizer.uploadDepZip",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
                     "command": "vmssoftware.synchronizer.upload",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
+                    "command": "vmssoftware.synchronizer.uploadDep",
                     "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
@@ -352,6 +362,10 @@
                 },
                 {
                     "command": "vmssoftware.project-dep.projectDependencies.upload",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.uploadDep",
                     "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
                 },
                 {
@@ -441,6 +455,10 @@
             {
                 "command": "vmssoftware.project-dep.projectDependencies.upload",
                 "title": "%synchronizer.command.projectDependencies.upload.title%"
+            },
+            {
+                "command": "vmssoftware.project-dep.projectDependencies.uploadDep",
+                "title": "%synchronizer.command.projectDependencies.uploadDep.title%"
             },
             {
                 "command": "vmssoftware.project-dep.projectDependencies.build",
@@ -562,8 +580,18 @@
                 "category": "%command.category%"
             },
             {
+                "command": "vmssoftware.synchronizer.uploadDepZip",
+                "title": "%synchronizer.command.uploadDepZip.title%",
+                "category": "%command.category%"
+            },
+            {
                 "command": "vmssoftware.synchronizer.upload",
                 "title": "%synchronizer.command.upload.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.uploadDep",
+                "title": "%synchronizer.command.uploadDep.title%",
                 "category": "%command.category%"
             },
             {

@@ -44,9 +44,12 @@
 | `VMS-IDE: Reparse Fortran project` | Reparse Fortran project |
 | `VMS-IDE: Reparse Pascal project` | Reparse Pascal project |
 | `VMS-IDE: Synchronize project files with VMS` | Synchronize project files with VMS |
+| `VMS-IDE: Synchronize project with dependencies with VMS` | Synchronize project with dependencies with VMS |
 | `VMS-IDE: Terminal` | Open VMS terminal (`Ctrl+F6`)|
 | `VMS-IDE: Upload files via Zip` | Upload project files using Zip |
+| `VMS-IDE: Upload project with dependencies via Zip` | Upload project with dependencies using Zip |
 | `VMS-IDE: Upload files` | Upload project files |
+| `VMS-IDE: Upload project with dependencies` | Upload project with dependencies |
 
 
 ## Settings

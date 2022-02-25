@@ -243,6 +243,18 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.uploadDepZip", async (scope?: string, clear?: string) => {
+        scope = checkScope(scope);
+        return workspace.saveAll(true)
+            .then(async (saved) => {
+                if (saved) {
+                    await Delay(500);
+                    return Perform("zip all", scope, logFn, clear);
+                }
+                return saved;
+            });
+    }));
+
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.upload", async (scope?: string) => {
         scope = checkScope(scope);
         return workspace.saveAll(true)
@@ -250,6 +262,18 @@ export async function activate(context: ExtensionContext) {
                 if (saved) {
                     await Delay(500);
                     return Perform("upload", scope, logFn);
+                }
+                return saved;
+            });
+    }));
+
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.uploadDep", async (scope?: string) => {
+        scope = checkScope(scope);
+        return workspace.saveAll(true)
+            .then(async (saved) => {
+                if (saved) {
+                    await Delay(500);
+                    return Perform("upload all", scope, logFn);
                 }
                 return saved;
             });
@@ -272,6 +296,8 @@ export async function activate(context: ExtensionContext) {
         (element) => projectDependenciesProvider.syncDepProject(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.upload",
         (element) => projectDependenciesProvider.upload(element)) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.uploadDep",
+        (element) => projectDependenciesProvider.uploadDep(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.build",
         (element) => projectDependenciesProvider.build(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.rebuild",

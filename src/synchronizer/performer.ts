@@ -28,6 +28,7 @@ export type ActionType =
     | "synch all"
     | "quicksync"
     | "upload"
+    | "upload all"
     | "build"
     | "rebuild"
     | "buildOnly"
@@ -38,6 +39,7 @@ export type ActionType =
     | "edit ssh settings"
     | "create mms"
     | "zip"
+    | "zip all"
     | "headers"
     | "prepare debug";
 
@@ -91,9 +93,9 @@ export const actions: IPerform[] = [
             });
         },
         actionName: "synch all",
-        fail: localize("synchronizing.fail", "Synchronization failed."),
-        status: localize("synchronizing.status", "$(sync) Synchronizing..."),
-        success: localize("synchronizing.success", "Synchronization completed successfully."),
+        fail: localize("synch_all.fail", "Synchronization with dependencies failed."),
+        status: localize("synch_all.status", "$(sync) Synchronizing..."),
+        success: localize("synch_all.success", "Synchronization with dependencies completed successfully."),
     },
     {
         // synchronize (!) simultaneously
@@ -421,6 +423,39 @@ export const actions: IPerform[] = [
         success: localize("zip.success", "Upload using Zip completed successfully."),
     },
     {
+        // ZIP all
+        actionFunc: async (scope: string | undefined, logFn: LogFunction, clear?: string) => {
+            let scopes: string[] = [];
+            if (!scope) {
+                if (workspace.workspaceFolders) {
+                    scopes = workspace.workspaceFolders.map((wf) => wf.name);
+                }
+            } else {
+                scopes = [scope];
+            }
+            let depend_scopes = new Set<string>();
+            for (const curScope of scopes) {
+                for (const curDep of new ProjDepTree().getDepList(curScope).reverse()) {
+                    depend_scopes.add(curDep);
+                }
+            }
+            const wait: Array<Promise<boolean>> = [];
+            for (const curScope of depend_scopes) {
+                const ensured = await ensureSettings(curScope, logFn);
+                if (ensured) {
+                    wait.push(doUpload(ensured, logFn, true, clear));
+                }
+            }
+            return Promise.all(wait).then((all) => {
+                return all.reduce((res, cur) => res && cur, true);
+            });
+        },
+        actionName: "zip all",
+        fail: localize("zip_all.fail", "Upload with dependencies using Zip failed."),
+        status: localize("zip_all.status", "$(file-zip) Uploading using Zip..."),
+        success: localize("zip_all.success", "Upload with dependencies using Zip completed successfully."),
+    },
+    {
         // edit settings
         actionFunc: async (scope: string | undefined, logFn: LogFunction) => {
             const ensured = await ensureSettings(scope, logFn);
@@ -489,6 +524,39 @@ export const actions: IPerform[] = [
         fail: localize("upload.fail", "Upload failed."),
         status: localize("upload.status", "Uploading..."),
         success: localize("upload.success", "Upload completed successfully."),
+    },
+    {
+        // upload all
+        actionFunc: async (scope: string | undefined, logFn: LogFunction) => {
+            let scopes: string[] = [];
+            if (!scope) {
+                if (workspace.workspaceFolders) {
+                    scopes = workspace.workspaceFolders.map((wf) => wf.name);
+                }
+            } else {
+                scopes = [scope];
+            }
+            let depend_scopes = new Set<string>();
+            for (const curScope of scopes) {
+                for (const curDep of new ProjDepTree().getDepList(curScope).reverse()) {
+                    depend_scopes.add(curDep);
+                }
+            }
+            const wait: Array<Promise<boolean>> = [];
+            for (const curScope of depend_scopes) {
+                const ensured = await ensureSettings(curScope, logFn);
+                if (ensured) {
+                    wait.push(doUpload(ensured, logFn));
+                }
+            }
+            return Promise.all(wait).then((all) => {
+                return all.reduce((res, cur) => res && cur, true);
+            });
+        },
+        actionName: "upload all",
+        fail: localize("upload_all.fail", "Upload with dependencies failed."),
+        status: localize("upload_all.status", "Uploading..."),
+        success: localize("upload_all.success", "Upload with dependencies completed successfully."),
     },
     {
         // preparing debug
