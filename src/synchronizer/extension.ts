@@ -119,6 +119,18 @@ export async function activate(context: ExtensionContext) {
             });
     }));
 
+    context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncDepProject", async (scope?: string) => {
+        scope = checkScope(scope);
+        return workspace.saveAll(true)
+            .then(async (saved) => {
+                if (saved) {
+                    await Delay(500);
+                    return Perform("synch all", scope, logFn);
+                }
+                return saved;
+            });
+    }));
+
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async (scope?: string, buildName?: string) => {
         scope = checkScope(scope);
         return workspace.saveAll(true)
@@ -256,6 +268,8 @@ export async function activate(context: ExtensionContext) {
         (element) => projectDependenciesProvider.prepareDebug(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.syncProject",
         (element) => projectDependenciesProvider.syncProject(element)) );
+    context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.syncDepProject",
+        (element) => projectDependenciesProvider.syncDepProject(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.upload",
         (element) => projectDependenciesProvider.upload(element)) );
     context.subscriptions.push( commands.registerCommand("vmssoftware.project-dep.projectDependencies.build",

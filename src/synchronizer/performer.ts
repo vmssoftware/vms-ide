@@ -25,6 +25,7 @@ export type AsyncAction = (scope: string | undefined, logFn: LogFunction, param?
 
 export type ActionType =
       "synchronize"
+    | "synch all"
     | "quicksync"
     | "upload"
     | "build"
@@ -49,6 +50,51 @@ export interface IPerform {
 }
 
 export const actions: IPerform[] = [
+    {
+        // synchronize with dependensies (!) simultaneously
+        actionFunc: async (scope: string | undefined, logFn: LogFunction) => {
+            let scopes: string[] = [];
+            if (!scope) {
+                if (workspace.workspaceFolders) {
+                    scopes = workspace.workspaceFolders.map((wf) => wf.name);
+                }
+            } else {
+                scopes = [scope];
+            }
+            let depend_scopes = new Set<string>();
+            for (const curScope of scopes) {
+                for (const curDep of new ProjDepTree().getDepList(curScope).reverse()) {
+                    depend_scopes.add(curDep);
+                }
+            }
+            const wait: Array<Promise<boolean>> = [];
+            for (const curScope of depend_scopes) {
+                wait.push( (async () => {
+                    const ensured = await ensureSettings(curScope, logFn);
+                    if (ensured) {
+                        const syncronizer = Synchronizer.acquire(logFn);
+                        return syncronizer.syncronizeProject(ensured)
+                            .then(async (result) => {
+                                if (result) {
+                                    ProjectState.acquire().setSynchronized(curScope, true);
+                                }
+                                return result;
+                            });
+                    } else {
+                        logFn(LogType.error, () => localize("ensure.settings", "Cannot get settings for: {0}", curScope));
+                        return false;
+                    }
+                })() );
+            }
+            return Promise.all(wait).then((all) => {
+                return all.reduce((res, cur) => res && cur, true);
+            });
+        },
+        actionName: "synch all",
+        fail: localize("synchronizing.fail", "Synchronization failed."),
+        status: localize("synchronizing.status", "$(sync) Synchronizing..."),
+        success: localize("synchronizing.success", "Synchronization completed successfully."),
+    },
     {
         // synchronize (!) simultaneously
         actionFunc: async (scope: string | undefined, logFn: LogFunction) => {

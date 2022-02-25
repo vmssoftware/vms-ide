@@ -32,6 +32,7 @@
         "onCommand:vmssoftware.synchronizer.reBuildProject",
         "onCommand:vmssoftware.synchronizer.cleanProject",
         "onCommand:vmssoftware.synchronizer.syncProject",
+        "onCommand:vmssoftware.synchronizer.syncDepProject",
         "onCommand:vmssoftware.synchronizer.forceSynchronized",
         "onCommand:vmssoftware.synchronizer.forceBuilt",
         "onCommand:vmssoftware.synchronizer.uploadZip",
@@ -292,6 +293,10 @@
                     "when": "!vmssoftware.synchronizer.isInAction"
                 },
                 {
+                    "command": "vmssoftware.synchronizer.syncDepProject",
+                    "when": "!vmssoftware.synchronizer.isInAction"
+                },
+                {
                     "command": "vmssoftware.synchronizer.quickSync",
                     "when": "!vmssoftware.synchronizer.isInAction"
                 },
@@ -339,6 +344,10 @@
                 },
                 {
                     "command": "vmssoftware.project-dep.projectDependencies.syncProject",
+                    "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
+                },
+                {
+                    "command": "vmssoftware.project-dep.projectDependencies.syncDepProject",
                     "when": "view == vmssoftware.project-dep.projectDependencies && viewItem == folder"
                 },
                 {
@@ -426,6 +435,10 @@
                 "title": "%synchronizer.command.projectDependencies.syncProject.title%"
             },
             {
+                "command": "vmssoftware.project-dep.projectDependencies.syncDepProject",
+                "title": "%synchronizer.command.projectDependencies.syncDepProject.title%"
+            },
+            {
                 "command": "vmssoftware.project-dep.projectDependencies.upload",
                 "title": "%synchronizer.command.projectDependencies.upload.title%"
             },
@@ -511,6 +524,11 @@
             {
                 "command": "vmssoftware.synchronizer.syncProject",
                 "title": "%synchronizer.command.syncProject.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "vmssoftware.synchronizer.syncDepProject",
+                "title": "%synchronizer.command.syncDepProject.title%",
                 "category": "%command.category%"
             },
             {
