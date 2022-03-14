@@ -392,7 +392,10 @@ class Tracer:
 
             # pause on unhandled exception
             if entry['exception'] != None and entry['level'] <= 0:
-                self._sendDbgMessage(self._messages.EXCEPTION + ' ' + self._repr(entry['exception']))
+                if isinstance(entry['exception'], SystemExit):
+                    self._sendDbgMessage(self._messages.EXITED + ' ' + self._repr(entry['exception']))
+                else:
+                    self._sendDbgMessage(self._messages.EXCEPTION + ' ' + self._repr(entry['exception']))
                 self._paused = True
 
             # examine breakpoint
@@ -1147,6 +1150,11 @@ class Tracer:
         except Exception as ex:
             if self._isConnected():
                 self._sendDbgMessage(self._messages.EXCEPTION + ' ' + self._repr(ex))
+            else:
+                self._print(self._repr(ex))
+        except SystemExit as ex:
+            if self._isConnected():
+                self._sendDbgMessage(self._messages.EXITED + ' ' + self._repr(ex))
             else:
                 self._print(self._repr(ex))
 

@@ -357,10 +357,12 @@ export class PythonShellRuntime extends EventEmitter {
                     return;
                 }
                 if (line.startsWith(PythonServerMessage.EXITED)) {
-                    this.running = false;
-                    this.queue.postCommand(PythonServerCommand.QUIT);
-                    this.sendEvent(PythonRuntimeEvents.output, 'exit');
-                    this.sendEvent(PythonRuntimeEvents.end);
+                    if (this.running) {
+                        this.running = false;
+                        this.queue.postCommand(PythonServerCommand.QUIT);
+                        this.sendEvent(PythonRuntimeEvents.output, line);
+                        this.sendEvent(PythonRuntimeEvents.end);
+                    }
                     return;
                 }
                 if (line.startsWith(PythonServerMessage.CONTINUED)) {
