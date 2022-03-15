@@ -354,7 +354,7 @@ class Tracer:
             entry['level'] = entry['level'] - 1
 
         # clear exception info if it is already handled
-        if event not in ['exception', 'return']:
+        if event not in ['exception', 'return'] and entry['level'] > 1:
             entry['exception'] = None
             entry['traceback'] = None
 
@@ -394,6 +394,8 @@ class Tracer:
             if entry['exception'] != None and entry['level'] <= 0:
                 if isinstance(entry['exception'], SystemExit):
                     self._sendDbgMessage(self._messages.EXITED + ' ' + self._repr(entry['exception']))
+                    if isinstance(entry['exception'].code, str):
+                        self._print(entry['exception'].code)
                 else:
                     self._sendDbgMessage(self._messages.EXCEPTION + ' ' + self._repr(entry['exception']))
                 self._paused = True
@@ -1149,14 +1151,13 @@ class Tracer:
             self._exec(statement, globalsT, globalsT)
         except Exception as ex:
             if self._isConnected():
-                self._sendDbgMessage(self._messages.EXCEPTION + ' ' + self._repr(ex))
-            else:
-                self._print(self._repr(ex))
+                self._sendDbgMessage(self._messages.EXITED + ' ' + self._repr(ex))
+            self._print(self._repr(ex))
         except SystemExit as ex:
             if self._isConnected():
                 self._sendDbgMessage(self._messages.EXITED + ' ' + self._repr(ex))
-            else:
-                self._print(self._repr(ex))
+            if isinstance(ex.code, str):
+                self._print(ex.code)
 
     def run(self, filename):
         self._setupTrace()
