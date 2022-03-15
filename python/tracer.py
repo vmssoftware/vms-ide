@@ -8,6 +8,7 @@ import socket
 import sys
 import threading
 import time
+import traceback
 
 # settings
 class SETTINGS:
@@ -168,6 +169,7 @@ class Tracer:
         self._sig_def = signal.SIG_DFL
         self._b64decode = base64.b64decode
         self._b64encode = base64.b64encode
+        # self._format_tb = traceback.format_tb
         # DEBUG
         # self._enter_counter = 0
 
@@ -294,7 +296,6 @@ class Tracer:
         currentFile = self._canonizeFile(frame.f_code.co_filename)
         if not currentFile in self._files:
             self._files.add(currentFile)
-            # self._sendDbgMessage('NEW FILE: %s' % currentFile)
 
         # skip this file tracer.py
         if currentFile == self._fileName:
@@ -302,26 +303,8 @@ class Tracer:
                 return None
             return self._traceFunc
 
+        # get ident
         ident = self._currentThread().ident
-        if not (ident in self._threads and self._threads[ident]['file'] == currentFile):
-            # we are not in the same file as we did on the previous step
-            if not (self._steppingThread == ident and self._steppingLevel == None):
-                # we are not in step into mode
-                # so test if we may skip this file
-                if not self._processFile(currentFile):
-                    if not self._fileWaitingFor:
-                        return None
-                    return self._traceFunc
-
-        # wait until tracing file entered
-        if self._fileWaitingFor:
-            if self._fileWaitingFor != currentFile:
-                return self._traceFunc
-            # now we are ready to trace
-            self._fileWaitingFor = None
-            # autopause
-            self._sendDbgMessage(self._messages.ENTRY)
-            self._paused = True
 
         # take an ident
         if self._mainThread == None:
@@ -353,10 +336,37 @@ class Tracer:
         if event == 'return':
             entry['level'] = entry['level'] - 1
 
-        # clear exception info if it is already handled
-        if event not in ['exception', 'return'] and entry['level'] > 1:
+        # examine exception
+        if event == 'exception':
+            entry['exception'] = arg[1]
+            entry['traceback'] = arg[2]
+        elif event == 'return':
+            # do not clear previous exception info on return
+            pass
+        else:
+            # clear previous exception info
             entry['exception'] = None
             entry['traceback'] = None
+
+        if not (ident in self._threads and self._threads[ident]['file'] == currentFile):
+            # we are not in the same file as we did on the previous step
+            if not (self._steppingThread == ident and self._steppingLevel == None):
+                # we are not in step into mode
+                # so test if we may skip this file
+                if not self._processFile(currentFile):
+                    if not self._fileWaitingFor:
+                        return None
+                    return self._traceFunc
+
+        # wait until tracing file entered
+        if self._fileWaitingFor:
+            if self._fileWaitingFor != currentFile:
+                return self._traceFunc
+            # now we are ready to trace
+            self._fileWaitingFor = None
+            # autopause
+            self._sendDbgMessage(self._messages.ENTRY)
+            self._paused = True
 
         with self._lockTrace:
             # point of tracing
@@ -384,11 +394,6 @@ class Tracer:
                     code_lines[code_name] = self._sorted(lines)
                     self._checkFileBreakpoints(currentFile, lines)
                     # self._sendDbgMessage('NEW FRAME: %s %s %s' % (currentFile, frame.f_code.co_name, self._repr(lines)))
-
-            # examine exception and save it
-            if event == 'exception':
-                entry['exception'] = arg[1]
-                entry['traceback'] = arg[2]
 
             # pause on unhandled exception
             if entry['exception'] != None and entry['level'] <= 0:
@@ -424,7 +429,8 @@ class Tracer:
             # test stepping
             if not self._paused and \
                self._steppingThread == ident and \
-               (self._steppingLevel == None or self._steppingLevel >= entry['level'] and event != 'return'):
+               (self._steppingLevel == None or self._steppingLevel >= entry['level'] and event != 'return') and \
+               currentFile != '<string>':
                 self._steppingThread = None
                 self._steppingLevel = None
                 self._paused = True
@@ -513,8 +519,7 @@ class Tracer:
         try:
             ident = self._int(locals_args[1])
             nextLine = self._int(locals_args[2])
-            currFrame, isPostMortem = self._getFrame(ident, 0)
-            isPostMortem = isPostMortem
+            currFrame, _ = self._getFrame(ident, 0)
             if currFrame != None:
                 currFrame.f_lineno = nextLine
                 self._sendDbgMessage('%s %s' % (self._messages.GOTO, 'ok'))
@@ -544,8 +549,7 @@ class Tracer:
     def _execExpression(self, cmd, ident):
         try:
             expression = cmd[2:].strip()
-            frame, isPostMortem = self._getFrame(ident, 0)
-            isPostMortem = isPostMortem
+            frame, _ = self._getFrame(ident, 0)
             if frame != None:
                 self._exec(expression, self._globals(), frame.f_locals)
         except Exception as ex:
@@ -554,8 +558,7 @@ class Tracer:
     def _evalExpression(self, cmd, ident):
         try:
             expression = cmd[2:].strip()
-            frame, isPostMortem = self._getFrame(ident, 0)
-            isPostMortem = isPostMortem
+            frame, _ = self._getFrame(ident, 0)
             if frame != None:
                 result = self._eval(expression, self._globals(), frame.f_locals)
                 self._sendDbgMessage(self._repr(result))
@@ -657,14 +660,14 @@ class Tracer:
             frame = entry['frame']
             while frame:
                 if self._isDebuggerFrame(frame):
-                    frame = None
                     break
                 numFrames = numFrames + 1
                 frame = frame.f_back
         else:
             trace = entry['traceback']
             while trace:
-                numFrames = numFrames + 1
+                if not self._isDebuggerFrame(trace.tb_frame):
+                    numFrames = numFrames + 1
                 trace = trace.tb_next
         return numFrames
 
@@ -705,21 +708,24 @@ class Tracer:
                     currentFrame = None
                 if currentFrame == None:
                     self._sendDbgMessage('%s: %s has no frame %s' % (self._messages.SYNTAX_ERROR, ident, frameNum))
-                    return (None, False)
+                    return (None, -1)
                 else:
-                    return (currentFrame, False)
+                    return (currentFrame, -1)
                 break
             else:
                 frames = []
+                tb_lines = []
                 trace = entry['traceback']
                 while trace:
+                    tb_lines.append(trace.tb_lineno)
                     frames.append(trace.tb_frame)
                     trace = trace.tb_next
                 if self._len(frames) > frameNum:
-                    return (frames[self._len(frames) - frameNum - 1], True)
+                    pos = self._len(frames) - frameNum - 1
+                    return (frames[pos], tb_lines[pos])
         else:
             self._sendDbgMessage('%s: invalid ident %s' % (self._messages.SYNTAX_ERROR, ident))
-        return (None, False)
+        return (None, -1)
 
     def _eval_variable(self, name, root):
         idxStart = name.find('[')
@@ -822,8 +828,8 @@ class Tracer:
         return
 
     def _amend(self, ident, frameNum, name, value):
-        frame, isPostMortem = self._getFrame(ident, frameNum)
-        if isPostMortem:
+        frame, tb_lineno = self._getFrame(ident, frameNum)
+        if tb_lineno > 0:
             self._sendDbgMessage('%s failed Cannot amend post-mortem frames' % self._messages.AMEND)
             return
         if frame != None:
@@ -886,8 +892,7 @@ class Tracer:
             self._sendDisplayResult('"%s" %s value: %s' % (displayName, valueType, self._repr(value)), do_encode)
 
     def _display(self, ident, frameNum, fullName, start, count, radix, do_encode):
-        frame, isPostMortem = self._getFrame(ident, frameNum)
-        isPostMortem = isPostMortem
+        frame, _ = self._getFrame(ident, frameNum)
         if frame != None:
             try:
                 if fullName.endswith('.'):
@@ -976,7 +981,14 @@ class Tracer:
                 self._sendDisplayResult('"%s" failed: "%s", [%i]' % (displayName, self._repr(ex), tb.tb_lineno), do_encode)
 
     def _isDebuggerFrame(self, frame):
-        return frame and self._canonizeFile(frame.f_code.co_filename) == self._fileName and frame.f_code.co_name == "_runscript"
+        if frame == None:
+            return True
+        frameFile = self._canonizeFile(frame.f_code.co_filename)
+        if frameFile == '<string>':
+            return True
+        if frameFile == self._fileName and frame.f_code.co_name == "_runscript":
+            return True
+        return False
 
     def _showThreads(self, ident):
         self._sendDbgMessage(self._messages.THREADS + (' %i current %i' % (self._len(self._threads), ident)))
@@ -1002,16 +1014,21 @@ class Tracer:
     def _showFrames(self, ident, frameStart, numFrames, do_encode):
         if frameStart == None:
             frameStart = 0
-        frame, isPostMortem = self._getFrame(ident, frameStart)
+        frame, tb_lineno = self._getFrame(ident, frameStart)
         frameNum = 0
-        dead_or_alive = 'dead' if isPostMortem else 'alive'
+        dead_or_alive = 'dead' if tb_lineno > 0 else 'alive'
         while frame != None and frameNum != numFrames:
             if self._isDebuggerFrame(frame):
                 self._sendFrame('<debugger>', 0, 'none', dead_or_alive, do_encode)
             else:
-                self._sendFrame(self._canonizeFile(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name, dead_or_alive, do_encode)
+                self._sendFrame(self._canonizeFile(frame.f_code.co_filename), 
+                    tb_lineno if tb_lineno > 0 else frame.f_lineno, 
+                    frame.f_code.co_name, 
+                    dead_or_alive, 
+                    do_encode)
             frameNum = frameNum + 1
             frame = frame.f_back
+            tb_lineno = -1
 
     def _checkFileBreakpoints(self, bp_file, lines):
         """ test all waiting breakpoints for file """
@@ -1149,15 +1166,13 @@ class Tracer:
                 statement = "exec(compile(%r, %r, 'exec'))" % (fp.read(), filename)
             self._startTracing = True
             self._exec(statement, globalsT, globalsT)
-        except Exception as ex:
+        except BaseException as ex:
             if self._isConnected():
                 self._sendDbgMessage(self._messages.EXITED + ' ' + self._repr(ex))
-            self._print(self._repr(ex))
-        except SystemExit as ex:
-            if self._isConnected():
-                self._sendDbgMessage(self._messages.EXITED + ' ' + self._repr(ex))
-            if isinstance(ex.code, str):
-                self._print(ex.code)
+            if isinstance(ex, SystemExit) and isinstance(ex.code, str):
+                self._print(self._repr(ex.code))
+            # else:
+            #     self._print(self._repr(ex))
 
     def run(self, filename):
         self._setupTrace()

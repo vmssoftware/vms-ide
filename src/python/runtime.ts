@@ -91,6 +91,7 @@ export interface IPythonFrame {
     file: string;
     line: number;
     function: string;
+    is_dead: boolean;
 };
 
 export interface IAmendResult {
@@ -178,6 +179,7 @@ const _rgxFrame             = /FRAME file: "(.*?)" line: (\d+) function: "(.*?)"
 const _rgxFrame_File        = 1;
 const _rgxFrame_Line        = 2;
 const _rgxFrame_Function    = 3;
+const _rgxFrame_Dead        = 4;
 
 const _rgxFrame64             = /FRAME64 (\d+) (.*)/;
 const _rgxFrame64_Len         = 1;
@@ -637,6 +639,7 @@ export class PythonShellRuntime extends EventEmitter {
                                 file: match[_rgxFrame_File],
                                 line: +match[_rgxFrame_Line],
                                 function: match[_rgxFrame_Function],
+                                is_dead: match[_rgxFrame_Dead] == 'dead',
                             };
                             ++parsedFrame;
                             frames.push(frame);
