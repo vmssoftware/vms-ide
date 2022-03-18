@@ -189,11 +189,13 @@ class DebugServer:
             return False
         try:
             status, result = vms.lib.getjpi(vms.jpidef.JPI__IMAGNAME, pid)
+            if status == vms.ssdef.SS__SUSPENDED:
+                return False
             if status == vms.ssdef.SS__NONEXPR:
                 # print('=== SS__NONEXPR')
                 return True
-            if result == '':
-                # print('=== result is empty')
+            if status == vms.ssdef.SS__NORMAL and result == '':
+                # print('=== result is empty ' + repr(status))
                 return  True
         except:
             return False
