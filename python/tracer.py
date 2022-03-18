@@ -40,6 +40,7 @@ class MESSAGE:
     GOTO_TARGETS = 'GOTO_TARGETS'
     INFO = 'INFO'
     PAUSED = 'PAUSED'
+    PID = 'PID'
     SIGNAL = 'SIGNAL'
     STEPPED = 'STEPPED'
     SYNTAX_ERROR = 'SYNTAX_ERROR'
@@ -159,6 +160,7 @@ class Tracer:
         self._os_path_basename = os.path.basename
         self._os_path_abspath = os.path.abspath
         self._os_path_splitext = os.path.splitext
+        self._os_getpid = os.getpid
         self._setSignal = signal.signal
         self._messages = MESSAGE
         self._sys_exc_info = sys.exc_info
@@ -184,6 +186,7 @@ class Tracer:
     def _connect(self):
         self._open()
         self._sendDbgMessage(self._messages.DEBUG)
+        self._sendDbgMessage(self._messages.PID + ' ' + self._hex(self._os_getpid()))
 
     def _disconnect(self):
         self._sendDbgMessage(self._messages.EXITED)

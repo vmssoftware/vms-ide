@@ -3,6 +3,10 @@ import socket
 import select
 import threading
 import time
+import re
+import vms.lib
+import vms.ssdef
+import vms.jpidef
 
 # settings
 class SETTINGS:
@@ -86,6 +90,8 @@ class Connection:
         self._recvBuffer = b''
         self._sendBuffer = b''
         self._type = None
+        self._pid = None
+        self._rg_pid = re.compile('^PID (0x[0-9A-Fa-f]+)$')
 
     def getType(self):
         return self._type
@@ -111,6 +117,10 @@ class Connection:
             if not self._type:
                 self._type = line
             elif line:
+                if not self._pid and self._type == TYPE.DEBUG:
+                    m = self._rg_pid.match(line)
+                    if m:
+                        self._pid = int(m.group(1), 16)
                 lines.append(line)
             start = idx + 1
         self._recvBuffer = self._recvBuffer[start:]
@@ -147,6 +157,12 @@ class Connection:
                 self._sendBuffer = self._sendBuffer[sent:]
             except:
                 pass
+
+def check_pid(pid):
+    status, result = vms.lib.getjpi(vms.jpidef.JPI__IMAGNAME, pid)
+    if status == vms.ssdef.SS__NONEXPR:
+        return False
+    return  not not result
 
 class DebugServer:
     def __init__(self, port):
@@ -192,43 +208,49 @@ class DebugServer:
                 inputs = [self._listenSocket]
                 outputs = []
                 for conn in self._connections.values():
-                    inp = conn.wantRead()
-                    if inp:
-                        inputs.append(inp)
-                    outp = conn.wantWrite()
-                    if outp:
-                        outputs.append(outp)
-                readable, writable, exceptional = select.select(inputs, outputs, inputs)
-                for s in readable:
-                    if s == self._listenSocket:
-                        self._acceptWrapper()
-                    else:
-                        connection = self._connections[s]
-                        lines = connection.read()
-                        if len(lines) > 0:
-                            if connection.getType() == TYPE.DEBUG:
-                                # print lines
-                                for line in lines:
-                                    print(line)
-                                    # if line == MESSAGE.EXITED:
-                                    #     # exit loop
-                                    #     self._stopped = True
-                            elif connection.getType() == TYPE.CONSOLE:
-                                # test if "pause"
-                                if line == COMMAND.PAUSE:
-                                    pass
-                                # pass lines to debuggers
-                                for conn in self._connections.values():
-                                    if conn.getType() == TYPE.DEBUG:
-                                        for line in lines:
-                                            conn.post(line)
-                for s in writable:
-                    if s != self._listenSocket:
-                        self._connections[s].write()
-                for s in exceptional:
-                    if s != self._listenSocket:
-                        self._connections[s].close()
-                        del self._connections[s]
+                    if isinstance(conn, Connection):
+                        if conn._pid != None and not check_pid(conn._pid):
+                            print(MESSAGE.EXITED + ' terminated pid ' + hex(conn._pid))
+                            self._stopped = True
+                            break
+                        inp = conn.wantRead()
+                        if inp:
+                            inputs.append(inp)
+                        outp = conn.wantWrite()
+                        if outp:
+                            outputs.append(outp)
+                else:   # for loop didn't break
+                    readable, writable, exceptional = select.select(inputs, outputs, inputs, 1)
+                    for s in readable:
+                        if s == self._listenSocket:
+                            self._acceptWrapper()
+                        else:
+                            connection = self._connections[s]
+                            lines = connection.read()
+                            if len(lines) > 0:
+                                if connection.getType() == TYPE.DEBUG:
+                                    # print lines
+                                    for line in lines:
+                                        print(line)
+                                        # if line == MESSAGE.EXITED:
+                                        #     # exit loop
+                                        #     self._stopped = True
+                                elif connection.getType() == TYPE.CONSOLE:
+                                    # test if "pause"
+                                    if line == COMMAND.PAUSE:
+                                        pass
+                                    # pass lines to debuggers
+                                    for conn in self._connections.values():
+                                        if conn.getType() == TYPE.DEBUG:
+                                            for line in lines:
+                                                conn.post(line)
+                    for s in writable:
+                        if s != self._listenSocket:
+                            self._connections[s].write()
+                    for s in exceptional:
+                        if s != self._listenSocket:
+                            self._connections[s].close()
+                            del self._connections[s]
         except:
             pass
         for connection in self._connections.values():
@@ -271,6 +293,9 @@ Start debug server."""
             SETTINGS.PORT = int(optarg)
         else:
             print("Unknown option %s" % opt)
+    # if sys.version_info.major < 3 or (sys.version_info.major == 3 and sys.version_info.minor < 8):
+    #     print('Unsupported Python version ' + repr(sys.version_info))
+    #     sys.exit()
 
     server = DebugServer(SETTINGS.PORT)
     server.start()
