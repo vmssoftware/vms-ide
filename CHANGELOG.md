@@ -2,6 +2,7 @@ For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Ch
 
 ## 1.5.53
 * Handle SystemExit exception in Python debugger.
+* Terminate Python debug session on unexpected termination of the program.
 
 ## 1.5.52
 * Add commands to synchronize, upload project with dependencies.

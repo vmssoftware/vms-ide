@@ -158,12 +158,6 @@ class Connection:
             except:
                 pass
 
-def check_pid(pid):
-    status, result = vms.lib.getjpi(vms.jpidef.JPI__IMAGNAME, pid)
-    if status == vms.ssdef.SS__NONEXPR:
-        return False
-    return  not not result
-
 class DebugServer:
     def __init__(self, port):
         self._port = port
@@ -190,6 +184,21 @@ class DebugServer:
     def isAlive(self):
         return self._thread != None and self._thread.is_alive()
 
+    def check_terminated(self, pid):
+        if not pid:
+            return False
+        try:
+            status, result = vms.lib.getjpi(vms.jpidef.JPI__IMAGNAME, pid)
+            if status == vms.ssdef.SS__NONEXPR:
+                # print('=== SS__NONEXPR')
+                return True
+            if result == '':
+                # print('=== result is empty')
+                return  True
+        except:
+            return False
+        return False
+
     def _run(self):
         self._listenSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # self._listenSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -209,7 +218,7 @@ class DebugServer:
                 outputs = []
                 for conn in self._connections.values():
                     if isinstance(conn, Connection):
-                        if conn._pid != None and not check_pid(conn._pid):
+                        if self.check_terminated(conn._pid):
                             print(MESSAGE.EXITED + ' terminated pid ' + hex(conn._pid))
                             self._stopped = True
                             break
@@ -252,7 +261,7 @@ class DebugServer:
                             self._connections[s].close()
                             del self._connections[s]
         except:
-            pass
+            print(MESSAGE.EXITED + ' unknown exception')
         for connection in self._connections.values():
             try:
                 connection.close()

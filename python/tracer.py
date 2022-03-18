@@ -126,7 +126,7 @@ class Tracer:
         self._developerMode = developerMode
         self._pathFilter = ''
         self._re_compile = re.compile
-        self._co_lnotab_signed = sys.version_info.major >= 3 and sys.version_info.minor >= 6
+        self._co_lnotab_signed = sys.version_info.major > 3 or (sys.version_info.major == 3 and sys.version_info.minor >= 6)
         self._knownValueTypes = [int, str, float, bool, complex, type(None)]
         self._port = port
         self._fileName = __file__
