@@ -27,6 +27,7 @@ import { Synchronizer } from "./sync/synchronizer";
 import { LogFunction, LogType, Delay } from "../common/main";
 import { createFsWatchers, disposeFsWatchers, ProjectFilesWatchEmitter } from "./scopeWatchers";
 import { setProjectDependenciesChanged } from "./projectDepend";
+import { ShellParser } from "../ssh-helper/stream/shell-parser";
 
 const locale = env.language ;
 const localize = nls.config({ locale, messageFormat: nls.MessageFormat.both })();
@@ -204,6 +205,7 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopAction", async () => {
         Synchronizer.acquire().disableRemote();
         Builder.acquire().disableRemote();
+        ShellParser.terminate_parser = true;
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async (scope?: string) => {

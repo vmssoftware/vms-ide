@@ -20,7 +20,7 @@
     "ssh-helper.configuration.unzipCmd": "Команда распаковки на строне VMS",
     "ssh-helper.configuration.zipCmd": "Команда успаковки на строне VMS",
     "ssh-helper.configuration.algorithms": "Дополнительные алгоритмы SSH соединения",
-    "ssh-helper.configuration.timeouts.command": "Таймаут команды",
+    "ssh-helper.configuration.timeouts.command": "Таймаут команды (мсек)",
     "ssh-helper.configuration.timeouts.feedback": "Таймаут ответа сервера",
     "ssh-helper.configuration.timeouts.welcome": "Таймаут парсера приветствия",
     "ssh-helper.configuration.hosts-collection": "Список узлов",

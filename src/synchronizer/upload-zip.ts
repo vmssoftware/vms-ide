@@ -97,6 +97,7 @@ export class UploadZip {
             }
             zipApi.stop();
             if (await zipFinished) {
+                this.logFn(LogType.information, () => localize("zip.prepare_to_uploading", "ZIP file is created. Prepare to uploading."));
                 // clear
                 const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
                 const sshHelperType = GetSshHelperType();
@@ -117,16 +118,19 @@ export class UploadZip {
                         case "yes":
                         case "true":
                         case "clear":
+                            this.logFn(LogType.information, () => localize("zip.cleaning_folder", "Cleaning folder.") );
                             await shell.execCmd(UploadZip.freeAllCmd(converter.disk, converter.bareDirectory));
                             await shell.execCmd(UploadZip.delAllCmd(converter.disk, converter.bareDirectory));
                             break;
                     }
                 }
                 // 1. upload zipFileName
+                this.logFn(LogType.information, () => localize("zip.start_uploading", "Start uploading ZIP file.") );
                 const uploaded = await Synchronizer.acquire(this.logFn).uploadFiles(ensured, [zipFileName]);
                 // upload is finished - delete local file in any case
                 this.cleanup(zipFilePath);
                 if (uploaded) {
+                    this.logFn(LogType.information, () => localize("zip.prepare_to_unzippping", "ZIP file is uploaded. Prepare to unzipping.") );
                     if (synchronizer.stopIssued) {
                         this.logFn(LogType.error, () => localize("zip.ssh.stopped", "Stopped."));
                         return false;
@@ -145,14 +149,13 @@ export class UploadZip {
                     if (!unzipCmd) {
                         unzipCmd = UploadZip.unzipCmd(zipFileName);
                     }
-                    const unzipResult = await shell.execCmd(unzipCmd, undefined, 3000);
+                    this.logFn(LogType.information, () => localize("zip.start_unzipping", "Start unzipping.") );
+                    const unzipResult = await shell.execCmd(unzipCmd, (line: string) => {
+                        this.logFn(LogType.information, () => line );
+                    });
                     let retCode = true;
                     if (!unzipResult || shell.lastError) {
                         this.logFn(LogType.error, () => localize("zip.unzip.failed", "Unzip command failed: {0}", shell.lastError || "unknown error" ));
-                        if (unzipResult && unzipResult.length) {
-                            unzipResult.unshift(unzipCmd);
-                            this.logFn(LogType.error, () => localize("zip.unzip.error_output", "Unzip command output:\n {0}", unzipResult.join("\n")));
-                        }
                         retCode = false;
                     } else {
                         // parse unzip result
@@ -168,7 +171,8 @@ export class UploadZip {
                             }
                         }
                     }
-                    answer = await shell.execCmd('DELETE ' + zipFileName + ";*", undefined, 3000);
+                    this.logFn(LogType.information, () => localize("zip.deleting_zip", "Deleting ZIP file on VMS side.") );
+                    answer = await shell.execCmd('DELETE ' + zipFileName + ";*");
                     shell.dispose();
                     return retCode;
                 }

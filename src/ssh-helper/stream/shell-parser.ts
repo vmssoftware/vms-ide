@@ -19,6 +19,8 @@ export class ShellParser extends Transform implements IShellParser {
 
     protected timer?: NodeJS.Timer;
 
+    public static terminate_parser = false;
+
     constructor(public timeout?: number, logFn?: LogFunction, public tag?: string) {
         super();
         // tslint:disable-next-line:no-empty
@@ -32,6 +34,7 @@ export class ShellParser extends Transform implements IShellParser {
             this.logFn(LogType.debug, () => localize("debug.error", "ShellParser{1}: error {0}", err.message, this.tag ? " " + this.tag : ""));
             this.setReady();
         });
+        ShellParser.terminate_parser = false;
         // this.setupTimer();
     }
 
@@ -39,6 +42,7 @@ export class ShellParser extends Transform implements IShellParser {
         this.lines = [];
         this.lastLine = "";
         this.lastError = undefined;
+        ShellParser.terminate_parser = false;
     }
 
     /**
@@ -69,6 +73,7 @@ export class ShellParser extends Transform implements IShellParser {
         } else {
             this.logFn(LogType.debug, () => localize("debug.nobuf", "ShellParser{0}: chunk is not a Buffer", this.tag ? " " + this.tag : ""));
         }
+        this.testTerminated();
         this.setupTimer();
         callback();
     }
@@ -90,18 +95,25 @@ export class ShellParser extends Transform implements IShellParser {
         this.logFn(LogType.debug, () => localize("debug.ready", "ShellParser{0}: set ready", this.tag ? " " + this.tag : ""));
     }
 
+    protected testTerminated() {
+        if (ShellParser.terminate_parser) {
+            ShellParser.terminate_parser = false;
+            this.logFn(LogType.debug, () => localize("debug.terminated", "ShellParser{0}: terminated", this.tag ? " " + this.tag : ""));
+            this.lastError = new Error("terminated");
+            this.setReady();
+        }
+    }
+
     protected setupTimer() {
         if (this.timer) {
             clearTimeout(this.timer);
             this.timer = undefined;
         }
-        if (this.timeout) {
-            this.timer = setTimeout(() => {
-                this.logFn(LogType.debug, () => localize("debug.timeout", "ShellParser{0}: timeout", this.tag ? " " + this.tag : ""));
-                this.timer = undefined;
-                this.lastError = new Error("timeout");
-                this.setReady();
-            }, this.timeout);
-        }
+        this.timer = setTimeout(() => {
+            this.testTerminated();
+            if (!this.lastError) {
+                this.setupTimer();
+            }
+        }, 1000);
     }
 }

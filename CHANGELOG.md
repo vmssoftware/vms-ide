@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.54
+* Improve uploading via ZIP. User can stop the action with "Stop action" command.
+
 ## 1.5.53
 * Handle SystemExit exception in Python debugger.
 * Terminate Python debug session on unexpected termination of the program.

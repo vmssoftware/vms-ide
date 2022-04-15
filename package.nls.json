@@ -20,7 +20,7 @@
     "ssh-helper.configuration.unzipCmd": "Command to unzip archive on VMS side",
     "ssh-helper.configuration.zipCmd": "Command to zip archive on VMS side",
     "ssh-helper.configuration.algorithms": "Additional algorithms passed to SSH connection",
-    "ssh-helper.configuration.timeouts.command": "Timeout for command response",
+    "ssh-helper.configuration.timeouts.command": "Timeout for command response (in msec)",
     "ssh-helper.configuration.timeouts.feedback": "Feedback timeout",
     "ssh-helper.configuration.timeouts.welcome": "Timeout for welcome parser",
     "ssh-helper.configuration.hosts-collection": "Host collection",
