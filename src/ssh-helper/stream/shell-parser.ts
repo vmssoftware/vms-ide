@@ -18,21 +18,25 @@ export class ShellParser extends Transform implements IShellParser {
     public logFn: LogFunction;
 
     protected timer?: NodeJS.Timer;
+    protected is_closed = false;
 
     public static terminate_parser = false;
 
     constructor(public timeout?: number, logFn?: LogFunction, public tag?: string) {
         super();
+        this.is_closed = false;
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
         this.on("close", () => {
             this.logFn(LogType.debug, () => localize("debug.closed", "ShellParser{0}: closed", this.tag ? " " + this.tag : ""));
             this.setReady();
+            this.is_closed = true;
         });
         this.on("error", (err) => {
             this.lastError = err;
             this.logFn(LogType.debug, () => localize("debug.error", "ShellParser{1}: error {0}", err.message, this.tag ? " " + this.tag : ""));
             this.setReady();
+            this.is_closed = true;
         });
         ShellParser.terminate_parser = false;
         // this.setupTimer();
@@ -111,7 +115,7 @@ export class ShellParser extends Transform implements IShellParser {
         }
         this.timer = setTimeout(() => {
             this.testTerminated();
-            if (!this.lastError) {
+            if (!this.lastError && !this.is_closed) {
                 this.setupTimer();
             }
         }, 1000);
