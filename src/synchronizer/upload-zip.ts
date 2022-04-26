@@ -90,6 +90,8 @@ export class UploadZip {
                 const fileName = path.join(localPath, fileEntry.filename);
                 zipApi.addFile(fileName, fileEntry.filename);
                 if (synchronizer.stopIssued) {
+                    zipApi.stop();
+                    await zipFinished;
                     this.logFn(LogType.error, () => localize("zip.ssh.stopped", "Stopped."));
                     this.cleanup(zipFilePath);
                     return false;
