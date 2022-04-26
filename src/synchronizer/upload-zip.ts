@@ -179,7 +179,11 @@ export class UploadZip {
                     return retCode;
                 }
             } else {
-                this.logFn(LogType.error, () => localize("zip.cannot_finish", "Could not finish Zip."));
+                if (synchronizer.stopIssued) {
+                    this.logFn(LogType.error, () => localize("zip.ssh.stopped", "Stopped."));
+                } else {
+                    this.logFn(LogType.error, () => localize("zip.cannot_finish", "Could not finish Zip."));
+                }
                 this.cleanup(zipFilePath);
             }
         }

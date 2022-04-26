@@ -136,10 +136,14 @@ export class ZipApi {
 
     private testFinish() {
         if (Synchronizer.acquire().stopIssued) {
-            this.archive?.abort();
+            if (this.archive) {
+                this.archive.abort();
+            }
+            if (this.output) {
+                this.output.close();
+            }
             this.clear(false);
-        }
-        if (this.stopped && this.entries === 0) {
+        } else if (this.stopped && this.entries === 0) {
             if (this.archive) {
                 this.archive.finalize();
             }
