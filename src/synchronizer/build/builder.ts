@@ -1051,6 +1051,9 @@ export class Builder {
         let lineType: MmsLineType = MmsLineType.nothing;
         let blocksFound = 0;
         for (const line of content.split("\n")) {
+            if (!line) {
+                continue;
+            }
             if (line.startsWith(Builder.includesLine)) {
                 lineType = MmsLineType.includes;
                 blocksFound = blocksFound + 1;
@@ -1255,7 +1258,12 @@ export class Builder {
                         }
                     }
                 }
-                const file = String(entry.file);
+                let file = String(entry.file);
+                if (file.startsWith('[')) {
+                    // looks like VMS path
+                    const converter = VmsPathConverter.fromVms(file);
+                    file = converter.initial;
+                }
                 let uri = Uri.file(file);
                 if (!entry.external &&
                     entry.file !== undefined &&
