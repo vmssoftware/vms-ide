@@ -1,4 +1,4 @@
-// Generated from src/cld/cld.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from src/cld/cld.g4 by ANTLR 4.9.0-SNAPSHOT
 
 
 import { ATN } from "antlr4ts/atn/ATN";
@@ -158,6 +158,10 @@ export class cldParser extends Parser {
 
 	// @Override
 	public get serializedATN(): string { return cldParser._serializedATN; }
+
+	protected createFailedPredicateException(predicate?: string, message?: string): FailedPredicateException {
+		return new FailedPredicateException(this, predicate, message);
+	}
 
 	constructor(input: TokenStream) {
 		super(input);
@@ -1967,7 +1971,7 @@ export class cldParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, cldParser.RULE_expression);
 						this.state = 376;
 						if (!(this.precpred(this._ctx, 6))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 6)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 6)");
 						}
 						this.state = 377;
 						this.match(cldParser.AND);
@@ -1982,7 +1986,7 @@ export class cldParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, cldParser.RULE_expression);
 						this.state = 379;
 						if (!(this.precpred(this._ctx, 5))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 5)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 5)");
 						}
 						this.state = 380;
 						this.match(cldParser.OR);
@@ -3814,7 +3818,7 @@ export class ExpressionContext extends ParserRuleContext {
 
 
 export class EntityContext extends ParserRuleContext {
-	public _defRoot?: AnyNameContext;
+	public _defRoot!: AnyNameContext;
 	public anyName(): AnyNameContext[];
 	public anyName(i: number): AnyNameContext;
 	public anyName(i?: number): AnyNameContext | AnyNameContext[] {

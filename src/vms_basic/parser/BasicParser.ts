@@ -1,4 +1,4 @@
-// Generated from src/vms_basic/parser/BasicParser.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from src/vms_basic/parser/BasicParser.g4 by ANTLR 4.9.0-SNAPSHOT
 
 
 import { ATN } from "antlr4ts/atn/ATN";
@@ -889,6 +889,10 @@ export class BasicParser extends Parser {
 
 	// @Override
 	public get serializedATN(): string { return BasicParser._serializedATN; }
+
+	protected createFailedPredicateException(predicate?: string, message?: string): FailedPredicateException {
+		return new FailedPredicateException(this, predicate, message);
+	}
 
 	constructor(input: TokenStream) {
 		super(input);
@@ -9826,7 +9830,7 @@ export class BasicParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, BasicParser.RULE_statement);
 						this.state = 2038;
 						if (!(this.precpred(this._ctx, 6))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 6)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 6)");
 						}
 						this.state = 2039;
 						this.ifCondition();
@@ -9839,7 +9843,7 @@ export class BasicParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, BasicParser.RULE_statement);
 						this.state = 2040;
 						if (!(this.precpred(this._ctx, 5))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 5)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 5)");
 						}
 						this.state = 2041;
 						this.forUnconditionalHeader();
@@ -9852,7 +9856,7 @@ export class BasicParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, BasicParser.RULE_statement);
 						this.state = 2042;
 						if (!(this.precpred(this._ctx, 4))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 4)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 4)");
 						}
 						this.state = 2043;
 						this.forConditionalStatementHeader();
@@ -9865,7 +9869,7 @@ export class BasicParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, BasicParser.RULE_statement);
 						this.state = 2044;
 						if (!(this.precpred(this._ctx, 3))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 3)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 3)");
 						}
 						this.state = 2045;
 						this.match(BasicParser.UNLESS);
@@ -9880,7 +9884,7 @@ export class BasicParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, BasicParser.RULE_statement);
 						this.state = 2047;
 						if (!(this.precpred(this._ctx, 2))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 2)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 2)");
 						}
 						this.state = 2048;
 						this.match(BasicParser.UNTIL);
@@ -9895,7 +9899,7 @@ export class BasicParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, BasicParser.RULE_statement);
 						this.state = 2050;
 						if (!(this.precpred(this._ctx, 1))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 						}
 						this.state = 2051;
 						this.match(BasicParser.WHILE);

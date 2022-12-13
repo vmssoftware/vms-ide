@@ -1,4 +1,4 @@
-// Generated from src/vms_fortran/parser/FortranParser.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from src/vms_fortran/parser/FortranParser.g4 by ANTLR 4.9.0-SNAPSHOT
 
 
 import { ATN } from "antlr4ts/atn/ATN";
@@ -816,6 +816,10 @@ export class FortranParser extends Parser {
 
 	// @Override
 	public get serializedATN(): string { return FortranParser._serializedATN; }
+
+	protected createFailedPredicateException(predicate?: string, message?: string): FailedPredicateException {
+		return new FailedPredicateException(this, predicate, message);
+	}
 
 	constructor(input: TokenStream) {
 		super(input);
@@ -2401,7 +2405,7 @@ export class FortranParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_formatItem);
 						this.state = 934;
 						if (!(this.precpred(this._ctx, 3))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 3)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 3)");
 						}
 						this.state = 935;
 						this.formatsep();
@@ -2414,7 +2418,7 @@ export class FortranParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_formatItem);
 						this.state = 936;
 						if (!(this.precpred(this._ctx, 2))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 2)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 2)");
 						}
 						this.state = 937;
 						this.formatsep();
@@ -3037,7 +3041,7 @@ export class FortranParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_moduleBody);
 						this.state = 1018;
 						if (!(this.precpred(this._ctx, 2))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 2)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 2)");
 						}
 						this.state = 1019;
 						this.specificationPartConstruct();
@@ -3050,7 +3054,7 @@ export class FortranParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_moduleBody);
 						this.state = 1020;
 						if (!(this.precpred(this._ctx, 1))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 						}
 						this.state = 1021;
 						this.internalSubprogramPart();
@@ -5090,7 +5094,7 @@ export class FortranParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_subprogramInterfaceBody);
 					this.state = 1312;
 					if (!(this.precpred(this._ctx, 1))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 					}
 					this.state = 1313;
 					this.specificationPartConstruct();
@@ -6374,7 +6378,7 @@ export class FortranParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_functionArgList);
 					this.state = 1553;
 					if (!(this.precpred(this._ctx, 2))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 2)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 2)");
 					}
 					this.state = 1554;
 					this.match(FortranParser.COMMA);
@@ -10666,7 +10670,7 @@ export class FortranParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_assumedShapeSpecList);
 					this.state = 2309;
 					if (!(this.precpred(this._ctx, 1))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 					}
 					this.state = 2310;
 					this.match(FortranParser.COMMA);
@@ -13876,7 +13880,7 @@ export class FortranParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_dataRef);
 						this.state = 2906;
 						if (!(this.precpred(this._ctx, 3))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 3)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 3)");
 						}
 						this.state = 2907;
 						_la = this._input.LA(1);
@@ -13901,7 +13905,7 @@ export class FortranParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_dataRef);
 						this.state = 2909;
 						if (!(this.precpred(this._ctx, 1))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 						}
 						this.state = 2910;
 						this.match(FortranParser.LPAREN);
@@ -14104,7 +14108,7 @@ export class FortranParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_structureComponent);
 					this.state = 2943;
 					if (!(this.precpred(this._ctx, 1))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 					}
 					this.state = 2944;
 					this.fieldSelector();
@@ -14588,7 +14592,7 @@ export class FortranParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_allocateObject);
 					this.state = 3034;
 					if (!(this.precpred(this._ctx, 1))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 					}
 					this.state = 3035;
 					this.fieldSelector();
@@ -14894,7 +14898,7 @@ export class FortranParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_pointerField);
 					this.state = 3090;
 					if (!(this.precpred(this._ctx, 1))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 					}
 					this.state = 3091;
 					this.fieldSelector();
@@ -15182,7 +15186,7 @@ export class FortranParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_uFExpr);
 					this.state = 3128;
 					if (!(this.precpred(this._ctx, 1))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 					}
 					this.state = 3129;
 					this.addOp();
@@ -15254,7 +15258,7 @@ export class FortranParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_uFTerm);
 						this.state = 3140;
 						if (!(this.precpred(this._ctx, 2))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 2)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 2)");
 						}
 						this.state = 3141;
 						this.multOp();
@@ -15269,7 +15273,7 @@ export class FortranParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_uFTerm);
 						this.state = 3144;
 						if (!(this.precpred(this._ctx, 1))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 						}
 						this.state = 3145;
 						this.concatOp();
@@ -17147,7 +17151,7 @@ export class FortranParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_sFExprList);
 					this.state = 3474;
 					if (!(this.precpred(this._ctx, 5))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 5)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 5)");
 					}
 					this.state = 3475;
 					this.match(FortranParser.COMMA);
@@ -17351,7 +17355,7 @@ export class FortranParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_sFExpr);
 					this.state = 3489;
 					if (!(this.precpred(this._ctx, 1))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 					}
 					this.state = 3490;
 					this.addOp();
@@ -17419,7 +17423,7 @@ export class FortranParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_sFTerm);
 					this.state = 3501;
 					if (!(this.precpred(this._ctx, 1))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 					}
 					this.state = 3502;
 					this.multOp();
@@ -22314,7 +22318,7 @@ export class FortranParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_ioControlSpecList);
 					this.state = 4479;
 					if (!(this.precpred(this._ctx, 1))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 					}
 					this.state = 4480;
 					this.match(FortranParser.COMMA);
@@ -22500,7 +22504,7 @@ export class FortranParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, FortranParser.RULE_rdIoCtlSpecList);
 					this.state = 4515;
 					if (!(this.precpred(this._ctx, 1))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 1)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
 					}
 					this.state = 4516;
 					this.match(FortranParser.COMMA);

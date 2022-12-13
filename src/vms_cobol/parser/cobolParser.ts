@@ -1,4 +1,4 @@
-// Generated from src/vms_cobol/parser/cobol.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from src/vms_cobol/parser/cobol.g4 by ANTLR 4.9.0-SNAPSHOT
 
 
 import { ATN } from "antlr4ts/atn/ATN";
@@ -1262,6 +1262,10 @@ export class cobolParser extends Parser {
 	// @Override
 	public get serializedATN(): string { return cobolParser._serializedATN; }
 
+	protected createFailedPredicateException(predicate?: string, message?: string): FailedPredicateException {
+		return new FailedPredicateException(this, predicate, message);
+	}
+
 	constructor(input: TokenStream) {
 		super(input);
 		this._interp = new ParserATNSimulator(cobolParser._ATN, this);
@@ -1831,7 +1835,7 @@ export class cobolParser extends Parser {
 			{
 			this.state = 1119;
 			if (!( (this as any).testCurrentWordInAreaB ? (this as any).testCurrentWordInAreaB() as boolean : false )) {
-				throw new FailedPredicateException(this, " (this as any).testCurrentWordInAreaB ? (this as any).testCurrentWordInAreaB() as boolean : false ");
+				throw this.createFailedPredicateException(" (this as any).testCurrentWordInAreaB ? (this as any).testCurrentWordInAreaB() as boolean : false ");
 			}
 			this.state = 1120;
 			await this.matchWildcard();
@@ -28777,7 +28781,7 @@ export class cobolParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, cobolParser.RULE_arithmetic_expression);
 					this.state = 5279;
 					if (!(this.precpred(this._ctx, 4))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 4)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 4)");
 					}
 					this.state = 5280;
 					await this.binary_arithmetic_operator();
@@ -29043,7 +29047,7 @@ export class cobolParser extends Parser {
 					this.pushNewRecursionContext(_localctx, _startState, cobolParser.RULE_logic_expression);
 					this.state = 5313;
 					if (!(this.precpred(this._ctx, 3))) {
-						throw new FailedPredicateException(this, "this.precpred(this._ctx, 3)");
+						throw this.createFailedPredicateException("this.precpred(this._ctx, 3)");
 					}
 					this.state = 5314;
 					await this.logic_operation();

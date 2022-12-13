@@ -1,4 +1,4 @@
-// Generated from src/msg/msg.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from src/msg/msg.g4 by ANTLR 4.9.0-SNAPSHOT
 
 
 import { ATN } from "antlr4ts/atn/ATN";
@@ -188,6 +188,10 @@ export class msgParser extends Parser {
 
 	// @Override
 	public get serializedATN(): string { return msgParser._serializedATN; }
+
+	protected createFailedPredicateException(predicate?: string, message?: string): FailedPredicateException {
+		return new FailedPredicateException(this, predicate, message);
+	}
 
 	constructor(input: TokenStream) {
 		super(input);
@@ -1618,7 +1622,7 @@ export class msgParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, msgParser.RULE_expression);
 						this.state = 350;
 						if (!(this.precpred(this._ctx, 4))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 4)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 4)");
 						}
 						this.state = 352;
 						this._errHandler.sync(this);
@@ -1655,7 +1659,7 @@ export class msgParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, msgParser.RULE_expression);
 						this.state = 359;
 						if (!(this.precpred(this._ctx, 3))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 3)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 3)");
 						}
 						this.state = 361;
 						this._errHandler.sync(this);
@@ -1700,7 +1704,7 @@ export class msgParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, msgParser.RULE_expression);
 						this.state = 368;
 						if (!(this.precpred(this._ctx, 2))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 2)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 2)");
 						}
 						this.state = 370;
 						this._errHandler.sync(this);
