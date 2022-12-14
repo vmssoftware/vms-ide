@@ -94,62 +94,61 @@ export class SshClient extends EventEmitter {
             }
         });
         // resolve config now and there
+        let configResolved : IConnectConfig|undefined = this.config;
         if (this.resolver) {
-            let configResolved = await this.resolver.resolveConnectConfig(this.config);
-            if (configResolved) {
-                const defaultAlgorithms : IAlgorithms =
-                    {
-                        serverHostKey:
-                            [
-                                "ssh-rsa",
-                                "ssh-dss",
-                                "ecdsa-sha2-nistp256",
-                                "ssh-ed25519",
-                            ],
-                        kex: 
-                            [
-                                "diffie-hellman-group1-sha1"
-                            ]
-                    };
-                if (configResolved.algorithms) {
-                    if (configResolved.algorithms.serverHostKey instanceof Array) {
-                        for (const serverHostKey of defaultAlgorithms.serverHostKey!) {
-                            if (!configResolved.algorithms.serverHostKey.includes(serverHostKey)) {
-                                configResolved.algorithms.serverHostKey.push(serverHostKey);
-                            }
+            configResolved = await this.resolver.resolveConnectConfig(this.config);
+        }
+        if (!configResolved) {
+            this.logFn(LogType.debug, () => localize("debug.resolver", "no config resolved {0}", this.tag ? " " + this.tag : ""));
+        } else {
+            let newConfig = Object.assign({}, configResolved);
+            const defaultAlgorithms : IAlgorithms =
+                {
+                    serverHostKey:
+                        [
+                            "ssh-rsa",
+                            "ssh-dss",
+                            "ecdsa-sha2-nistp256",
+                            "ssh-ed25519",
+                        ],
+                    kex: 
+                        [
+                            "diffie-hellman-group1-sha1"
+                        ]
+                };
+            if (newConfig.algorithms) {
+                if (newConfig.algorithms.serverHostKey instanceof Array) {
+                    for (const serverHostKey of defaultAlgorithms.serverHostKey!) {
+                        if (!newConfig.algorithms.serverHostKey.includes(serverHostKey)) {
+                            newConfig.algorithms.serverHostKey.push(serverHostKey);
                         }
-                    } else {
-                        configResolved.algorithms.serverHostKey = defaultAlgorithms.serverHostKey;
-                    }
-                    if (configResolved.algorithms.kex instanceof Array) {
-                        for (const kex of defaultAlgorithms.kex!) {
-                            if (!configResolved.algorithms.kex.includes(kex)) {
-                                configResolved.algorithms.kex.push(kex);
-                            }
-                        }
-                    } else {
-                        configResolved.algorithms.kex = defaultAlgorithms.kex;
                     }
                 } else {
-                    configResolved.algorithms = defaultAlgorithms;
+                    newConfig.algorithms.serverHostKey = defaultAlgorithms.serverHostKey;
                 }
-                if (configResolved.debug) {
-                    configResolved.debug = (s: string) => this.debugLine(s);
-                }
-                try {
-                    doWait = true;
-                    client.connect(configResolved as ConnectConfig);
-                } catch(e) {
-                    doWait = false;
-                    this.logFn(LogType.error, () => localize("connect.exception", "Exception: {0}", String(e)), true);
+                if (newConfig.algorithms.kex instanceof Array) {
+                    for (const kex of defaultAlgorithms.kex!) {
+                        if (!newConfig.algorithms.kex.includes(kex)) {
+                            newConfig.algorithms.kex.push(kex);
+                        }
+                    }
+                } else {
+                    newConfig.algorithms.kex = defaultAlgorithms.kex;
                 }
             } else {
-                this.logFn(LogType.debug, () => localize("debug.resolver", "no config resolved {0}", this.tag ? " " + this.tag : ""));
+                newConfig.algorithms = defaultAlgorithms;
             }
-        } else {
+            if (newConfig.debug) {
+                newConfig.debug = (s: string) => this.debugLine(s);
+            }
             try {
                 doWait = true;
-                client.connect(this.config as ConnectConfig);
+                if (newConfig.addConnectConfig !== undefined) {
+                    let addConnectConfig = newConfig.addConnectConfig;
+                    delete newConfig.addConnectConfig;
+                    newConfig = Object.assign(newConfig, addConnectConfig);
+                }
+                client.connect(newConfig as ConnectConfig);
             } catch(e) {
                 doWait = false;
                 this.logFn(LogType.error, () => localize("connect.exception", "Exception: {0}", String(e)), true);

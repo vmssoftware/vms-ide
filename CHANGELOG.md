@@ -1,5 +1,9 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.55
+* Add addConnectConfig field to the host configuration. All the values of this field are 
+  copied to the connection configuration as is.
+
 ## 1.5.54
 * Improve uploading via ZIP. User can stop the action with "Stop action" command.
 

@@ -127,6 +127,18 @@
                     "default": "",
                     "description": "Command to zip archive on VMS side"
                 },
+                "addConnectConfig" : {
+                    "type": "object",
+                    "properties": {
+                        "readyTimeout": {
+                            "type" : "number",
+                            "default": 20000,
+                            "description": "Timeout for handshake"
+                        }
+                    },
+                    "default": null,
+                    "description": "Values of customizing ConnectConfig"
+                },
                 "algorithms" : {
                     "type": "object",
                     "properties": {

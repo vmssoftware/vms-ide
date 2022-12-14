@@ -35,6 +35,7 @@ export class HostFiller implements ISettingsFiller {
                         settings.supportSetFileTime = host.supportSetFileTime;
                         settings.unzipCmd = host.unzipCmd;
                         settings.zipCmd = host.zipCmd;
+                        settings.addConnectConfig = host.addConnectConfig;
                         break;
                     }
                 }

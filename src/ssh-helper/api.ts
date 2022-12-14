@@ -113,6 +113,7 @@ export interface IConnectionSection {
     unzipCmd?: string;
     zipCmd?: string;
     skipSignatureVerification?: boolean;
+    addConnectConfig?: any;
 }
 
 export interface IHost extends IConnectionSection {

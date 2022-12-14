@@ -17,6 +17,7 @@
 	"ssh-helper.configuration.keyFile": "Файл ключа SSH или оставьте пустым для запрооса пароля.",
 	"ssh-helper.configuration.debug": "Трассировка SSH",
 	"ssh-helper.configuration.supportSetFileTime": "Сервер поддерживает установку времени файла. Иначе будет использована оболочка.",
+	"ssh-helper.configuration.addConnectConfig": "Поля для настройки ConnectConfig.",
 	"ssh-helper.configuration.unzipCmd": "Команда распаковки на строне VMS",
 	"ssh-helper.configuration.zipCmd": "Команда успаковки на строне VMS",
 	"ssh-helper.configuration.algorithms": "Дополнительные алгоритмы SSH соединения",

@@ -1,6 +1,5 @@
 import { IConfigData, IConfigSection, ValueData } from "../../../config-helper/config/config";
 import { IConnectionSection, IAlgorithms } from "../../api";
-import { Algorithms } from "ssh2-streams";
 
 export class ConnectionSection implements IConnectionSection, IConfigSection {
 
@@ -30,6 +29,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
     public supportSetFileTime?: boolean = true;
     public unzipCmd?: string;
     public zipCmd?: string;
+    public addConnectConfig?: any;
 
     public name(): string {
         return ConnectionSection.section;
@@ -55,6 +55,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             supportSetFileTime: this.supportSetFileTime === undefined ? true : this.supportSetFileTime,
             unzipCmd: this.unzipCmd || "",
             zipCmd: this.zipCmd || "",
+            addConnectConfig: this.addConnectConfig || null,
         };
     }
 
@@ -71,6 +72,7 @@ export class ConnectionSection implements IConnectionSection, IConfigSection {
             this.supportSetFileTime = data.supportSetFileTime;
             this.unzipCmd = data.unzipCmd;
             this.zipCmd = data.zipCmd;
+            this.addConnectConfig = data.addConnectConfig;
             return true;
         }
         return false;
