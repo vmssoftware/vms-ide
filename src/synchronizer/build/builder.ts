@@ -1381,7 +1381,7 @@ export class Builder {
             });
             // get root of shell (home folder)
             let answer = await shell.execCmd(Builder.getShellRootCmd);
-            if (!answer) {
+            if (!answer || answer.length == 0) {
                 return undefined;
             }
             const shellRootConverter = VmsPathConverter.fromVms(answer[0]);

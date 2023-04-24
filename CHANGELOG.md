@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.56
+* Improve 'prompt finder', the extension could hang when connecting to some hosts.
+
 ## 1.5.55
 * Add addConnectConfig field to the host configuration. All the values of this field are 
   copied to the connection configuration as is.

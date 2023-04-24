@@ -137,7 +137,8 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
             // prompt just after the zero-byte
             const promptIdx = this.chunk_buff.lastIndexOf(0);
             if (promptIdx >= 0) {
-                if (promptIdx + 1 < this.chunk_buff.length) {   // test if prompt non empty
+                if (promptIdx + 1 < this.chunk_buff.length &&
+                    this.chunk_buff.slice(promptIdx + 1).toString("utf8").trim()) {   // test if prompt non empty
                     if (!this.typeSet) {
                         this.typeSetCmd = ParseWelcomeVms.setType(this.widthValue);
                         this.push(this.typeSetCmd + SshShell.eol);
@@ -146,6 +147,8 @@ export class ParseWelcomeVms extends ShellParser implements IParseWelcome {
                     } else {
                         if (this.typeSetCmd == undefined || this.chunk_buff.toString().includes(this.typeSetCmd)) {
                             this.setReady();
+                        } else {
+                            this.logFn(LogType.debug, () => localize("debug.prompt", "vms parse: ready to set ready, but type is not set"));
                         }
                     }
                 }
