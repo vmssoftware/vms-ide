@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.57
+* Make extension commands 'vmssoftware.synchronizer...' return string values.
+
 ## 1.5.56
 * Improve 'prompt finder', the extension could hang when connecting to some hosts.
 
