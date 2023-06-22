@@ -105,7 +105,7 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.prepareDebug", async (scope?: string) => {
         scope = checkScope(scope);
-        return Perform("prepare debug", scope, logFn);
+        return Perform("prepare debug", scope, logFn).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncProject", async (scope?: string) => {
@@ -117,7 +117,7 @@ export async function activate(context: ExtensionContext) {
                     return Perform("synchronize", scope, logFn);
                 }
                 return saved;
-            });
+            }).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.syncDepProject", async (scope?: string) => {
@@ -129,7 +129,7 @@ export async function activate(context: ExtensionContext) {
                     return Perform("synch all", scope, logFn);
                 }
                 return saved;
-            });
+            }).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildProject", async (scope?: string, buildName?: string) => {
@@ -141,7 +141,7 @@ export async function activate(context: ExtensionContext) {
                     return Perform("build", scope, logFn, buildName);
                 }
                 return saved;
-            });
+            }).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildProject", async (scope?: string, buildName?: string) => {
@@ -153,7 +153,7 @@ export async function activate(context: ExtensionContext) {
                     return Perform("rebuild", scope, logFn, buildName);
                 }
                 return saved;
-            });
+            }).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.buildOnlyProject", async (scope?: string, buildName?: string) => {
@@ -165,7 +165,7 @@ export async function activate(context: ExtensionContext) {
                     return Perform("buildOnly", scope, logFn, buildName);
                 }
                 return saved;
-            });
+            }).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.reBuildOnlyProject", async (scope?: string, buildName?: string) => {
@@ -177,7 +177,7 @@ export async function activate(context: ExtensionContext) {
                     return Perform("rebuildOnly", scope, logFn, buildName);
                 }
                 return saved;
-            });
+            }).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.quickSync", async (scope?: string) => {
@@ -189,48 +189,51 @@ export async function activate(context: ExtensionContext) {
                     return Perform("quicksync", scope, logFn);
                 }
                 return saved;
-            });
+            }).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.cleanProject", async (scope?: string, buildName?: string) => {
         scope = checkScope(scope);
-        return Perform("clean", scope, logFn, buildName);
+        return Perform("clean", scope, logFn, buildName).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.createMMS", async (scope?: string) => {
         scope = checkScope(scope);
-        return Perform("create mms", scope, logFn);
+        return Perform("create mms", scope, logFn).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.stopAction", async () => {
         Synchronizer.acquire().disableRemote();
         Builder.acquire().disableRemote();
         ShellParser.terminate_parser = true;
+        return String();
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.editProject", async (scope?: string) => {
         scope = checkScope(scope);
-        return Perform("edit settings", scope, logFn);
+        return Perform("edit settings", scope, logFn).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.ssh-helper.editSettings", (scope?: string) => {
         scope = checkScope(scope);
-        return Perform("edit ssh settings", scope, logFn);
+        return Perform("edit ssh settings", scope, logFn).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.changeCRLF", async (scope?: string) => {
-        return Perform("crlf", scope, logFn);
+        return Perform("crlf", scope, logFn).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.forceSynchronized", async (scope?: string) => {
         scope = checkScope(scope);
-        return ProjectState.acquire().setSynchronized(scope, true);
+        ProjectState.acquire().setSynchronized(scope, true);
+        return String(true);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.forceBuilt", async (scope?: string, buildName?: string) => {
         scope = checkScope(scope);
         buildName = buildName || ProjectState.acquire().getDefBuildName();
-        return ProjectState.acquire().setBuilt(scope, buildName, true);
+        ProjectState.acquire().setBuilt(scope, buildName, true);
+        return String(true);
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.uploadZip", async (scope?: string, clear?: string) => {
@@ -242,7 +245,7 @@ export async function activate(context: ExtensionContext) {
                     return Perform("zip", scope, logFn, clear);
                 }
                 return saved;
-            });
+            }).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.uploadDepZip", async (scope?: string, clear?: string) => {
@@ -254,7 +257,7 @@ export async function activate(context: ExtensionContext) {
                     return Perform("zip all", scope, logFn, clear);
                 }
                 return saved;
-            });
+            }).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.upload", async (scope?: string) => {
@@ -266,7 +269,7 @@ export async function activate(context: ExtensionContext) {
                     return Perform("upload", scope, logFn);
                 }
                 return saved;
-            });
+            }).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.uploadDep", async (scope?: string) => {
@@ -278,11 +281,11 @@ export async function activate(context: ExtensionContext) {
                     return Perform("upload all", scope, logFn);
                 }
                 return saved;
-            });
+            }).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( commands.registerCommand("vmssoftware.synchronizer.downloadHeaders", async (scope?: string, params?: string) => {
-        return Perform("headers", scope, logFn, params);
+        return Perform("headers", scope, logFn, params).then(async (ret) => { return String(ret); });
     }));
 
     context.subscriptions.push( window.registerTreeDataProvider("vmssoftware.project-dep.projectDependencies", projectDependenciesProvider) );
