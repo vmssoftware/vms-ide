@@ -867,9 +867,9 @@ export class Builder {
                     mainModuleLines.push(objectLine);
                 }
                 if (optLines.length) {
-                    mainModuleLines.push(`    CXXLINK $(LINKFLAGS) $(MMS$SOURCE_LIST),[]$(NAME)/OPT`);
+                    mainModuleLines.push(`    LINK $(LINKFLAGS) $(MMS$SOURCE_LIST),[]$(NAME)/OPT`);
                 } else {
-                    mainModuleLines.push(`    CXXLINK $(LINKFLAGS) $(MMS$SOURCE_LIST)`);
+                    mainModuleLines.push(`    LINK $(LINKFLAGS) $(MMS$SOURCE_LIST)`);
                 }
                 mainModuleLines.push(``);
             }
