@@ -8,8 +8,8 @@ import {
     logger,
     LoggingDebugSession, StoppedEvent, TerminatedEvent,
     Thread,
-} from "vscode-debugadapter";
-import { DebugProtocol } from "vscode-debugprotocol";
+} from "@vscode/debugadapter";
+import { DebugProtocol } from "@vscode/debugprotocol";
 import { LogFunction } from "../../common/main";
 import { ModeWork, ShellSession, TypeDataMessage } from "../net/shell-session";
 import { VMSRuntimeRun } from "./vms_runtime_run";

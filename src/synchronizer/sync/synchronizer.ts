@@ -466,7 +466,7 @@ export class Synchronizer {
         try {
             piped = await this.sshHelper.pipeFile(scopeData.remoteSource, memoryStream, file, "", this.logFn);
         } catch(err) {
-            this.logFn(LogType.error, () => err);
+            this.logFn(LogType.error, () => String(err));
         }
         if (piped && memoryStream.writeStream) {
             const buffer = Buffer.concat(memoryStream.writeStream.chunks);

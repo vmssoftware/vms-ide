@@ -1,6 +1,6 @@
 "use strict";
 import { ParserRuleContext } from 'antlr4ts';
-import { SymbolTable, Symbol, ScopedSymbol, SymbolTableOptions, NamespaceSymbol } from "antlr4-c3";
+import { SymbolTable, BaseSymbol, ScopedSymbol, SymbolTableOptions, NamespaceSymbol } from "antlr4-c3";
 import { SymbolKind, SymbolInfo, Definition } from './Facade';
 import { SourceContext } from './SourceContext';
 import { Interval } from 'antlr4ts/misc';
@@ -12,7 +12,7 @@ export class ContextSymbolTable extends SymbolTable
 {
     public tree?: ParserRuleContext; // Set by the owning source context after each parse run.
 
-    public references: Map<Symbol, Set<Symbol>> = new Map<Symbol, Set<Symbol>>();
+    public references: Map<BaseSymbol, Set<BaseSymbol>> = new Map<BaseSymbol, Set<BaseSymbol>>();
 
     constructor(name: string, options: SymbolTableOptions, public owner?: SourceContext) 
     {
@@ -60,16 +60,16 @@ export class ContextSymbolTable extends SymbolTable
         return symbol.context;
     }
 
-    public getSymbolDefinition(symbol: string | Symbol | undefined): SymbolInfo | undefined
+    public getSymbolDefinition(symbol: string | BaseSymbol | undefined): SymbolInfo | undefined
     {
         if (!symbol) 
         {
             return undefined;
         }
 
-        if (!(symbol instanceof Symbol)) 
+        if (!(symbol instanceof BaseSymbol)) 
         {
-            let temp = this.resolve(symbol);
+            let temp = this.resolveSync(symbol);
 
             if (!temp) 
             {
@@ -80,8 +80,8 @@ export class ContextSymbolTable extends SymbolTable
         }
 
         //search variables in current file + include 
-        let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, true);
-        let innerBlocks = this.getAllSymbols(VariableInnerBlockDclSymbol, true);
+        let blocks = this.getAllSymbolsSync(VariableLocalBlockDclSymbol, true);
+        let innerBlocks = this.getAllSymbolsSync(VariableInnerBlockDclSymbol, true);
         let definition = this.definitionFromSymbol(symbol);
 
         if(definition)
@@ -129,8 +129,8 @@ export class ContextSymbolTable extends SymbolTable
             {
                 if(this.checkSymbolLocationBlock(symbol, block))
                 {                            
-                    let inclides = this.getAllSymbols(IncludeDclSymbol, true);
-                    let VariableDcls = this.getAllSymbols(VariableLocalBlockDclSymbol, false);
+                    let inclides = this.getAllSymbolsSync(IncludeDclSymbol, true);
+                    let VariableDcls = this.getAllSymbolsSync(VariableLocalBlockDclSymbol, false);
 
                     for (let inclide of inclides)
                     {
@@ -166,7 +166,7 @@ export class ContextSymbolTable extends SymbolTable
                                 {
                                     if(symbolOwner.fileName.includes(includeFileName) && variable.symbolTable)
                                     {
-                                        //let symbolBlock : Symbol | undefined;
+                                        //let symbolBlock : BaseSymbol | undefined;
                                         //search symbol
                                         for(let item of variable.symbolTable.children)
                                         {
@@ -205,7 +205,7 @@ export class ContextSymbolTable extends SymbolTable
         }
 
         let showRoutine = false;
-        let defRoutines = this.getAllSymbols(RoutineDclSymbol, false);
+        let defRoutines = this.getAllSymbolsSync(RoutineDclSymbol, false);
 
         for(let item of defRoutines)
         {
@@ -218,14 +218,14 @@ export class ContextSymbolTable extends SymbolTable
         
         if(showRoutine)
         {            
-            let decRoutineBlocks = this.getAllSymbols(RoutineHeaderSymbol, false);
+            let decRoutineBlocks = this.getAllSymbolsSync(RoutineHeaderSymbol, false);
 
             return this.findSimbolInfoDedlaration(symbol, defRoutines, decRoutineBlocks);
         }
         else
         {
             let showType = false;
-            let types = this.getAllSymbols(TypeDclSymbol, false);
+            let types = this.getAllSymbolsSync(TypeDclSymbol, false);
     
             for(let item of types)
             {
@@ -238,8 +238,8 @@ export class ContextSymbolTable extends SymbolTable
 
             if(showType)
             {
-                let decTypes = this.getAllSymbols(TypeDclSymbol, false);
-                let decTypeBlocks = this.getAllSymbols(TypeBlockDclSymbol, false);
+                let decTypes = this.getAllSymbolsSync(TypeDclSymbol, false);
+                let decTypeBlocks = this.getAllSymbolsSync(TypeBlockDclSymbol, false);
 
                 return this.findSimbolInfoDedlaration(symbol, decTypes, decTypeBlocks);
             }
@@ -327,7 +327,7 @@ export class ContextSymbolTable extends SymbolTable
         }
         
         let showConst = false;
-        let consts = this.getAllSymbols(ConstantDclSymbol, false);
+        let consts = this.getAllSymbolsSync(ConstantDclSymbol, false);
 
         for(let item of consts)
         {
@@ -340,8 +340,8 @@ export class ContextSymbolTable extends SymbolTable
 
         if(showConst)
         {
-            let decConsts = this.getAllSymbols(ConstantDclSymbol, false);
-            let decConstBlocks = this.getAllSymbols(ConstBlockDclSymbol, false);
+            let decConsts = this.getAllSymbolsSync(ConstantDclSymbol, false);
+            let decConstBlocks = this.getAllSymbolsSync(ConstBlockDclSymbol, false);
 
             return this.findSimbolInfoDedlaration(symbol, decConsts, decConstBlocks);
         }
@@ -349,7 +349,7 @@ export class ContextSymbolTable extends SymbolTable
         return undefined;
     }
 
-    private findSymbolImplicitBlock(symbol: Symbol, block: Symbol, local: boolean): Symbol | undefined
+    private findSymbolImplicitBlock(symbol: BaseSymbol, block: BaseSymbol, local: boolean): BaseSymbol | undefined
     {
         let definition = this.definitionFromSymbol(symbol);
 
@@ -362,7 +362,7 @@ export class ContextSymbolTable extends SymbolTable
 
                 if(definition.range.start.row >= startLine && definition.range.start.row <= stopLine)
                 {
-                    let implicitBlocks = this.getAllSymbols(ImplicitBlockDclSymbol, local);
+                    let implicitBlocks = this.getAllSymbolsSync(ImplicitBlockDclSymbol, local);
 
                     for(let item of implicitBlocks)
                     {
@@ -383,7 +383,7 @@ export class ContextSymbolTable extends SymbolTable
         return undefined;
     }
 
-    private checkSymbolLocationBlock(symbol: Symbol, block: Symbol): boolean
+    private checkSymbolLocationBlock(symbol: BaseSymbol, block: BaseSymbol): boolean
     {
         let definition = this.definitionFromSymbol(symbol);
 
@@ -404,7 +404,7 @@ export class ContextSymbolTable extends SymbolTable
         return false;
     }
 
-    private findSimbolDedlarationInBlock(symbol: Symbol, block: Symbol, local: boolean): Symbol | undefined
+    private findSimbolDedlarationInBlock(symbol: BaseSymbol, block: BaseSymbol, local: boolean): BaseSymbol | undefined
     {
         let definition = this.definitionFromSymbol(symbol);
 
@@ -414,7 +414,7 @@ export class ContextSymbolTable extends SymbolTable
             {
                 let startLine = block.context.start.line;
                 let stopLine = block.context.stop.line;
-                let varDefs = this.getAllSymbols(VariableDclSymbol, local);
+                let varDefs = this.getAllSymbolsSync(VariableDclSymbol, local);
 
                 if(definition.range.start.row >= startLine && definition.range.start.row <= stopLine)
                 {
@@ -440,15 +440,15 @@ export class ContextSymbolTable extends SymbolTable
         return undefined;
     }
 
-    private findSimbolBlockDedlaration(symbol: Symbol): Symbol | undefined
+    private findSimbolBlockDedlaration(symbol: BaseSymbol): BaseSymbol | undefined
     {
         let definition = this.definitionFromSymbol(symbol);
-        let symbolBlock : Symbol | undefined;
+        let symbolBlock : BaseSymbol | undefined;
                 
         if (definition) 
         {
             let position = definition.range.start.row;
-            let blockDefs = this.getAllSymbols(VariableBlockDclSymbol, true);
+            let blockDefs = this.getAllSymbolsSync(VariableBlockDclSymbol, true);
 
             for(let item of blockDefs)
             {
@@ -469,7 +469,7 @@ export class ContextSymbolTable extends SymbolTable
         return symbolBlock;
     }
 
-    private findSimbolInfoDedlaration(symbol: Symbol, definitionSymbols: Set<Symbol>, blocks: Set<Symbol>): SymbolInfo | undefined
+    private findSimbolInfoDedlaration(symbol: BaseSymbol, definitionSymbols: BaseSymbol[], blocks: BaseSymbol[]): SymbolInfo | undefined
     {
         for(let item of definitionSymbols)
         {
@@ -510,16 +510,16 @@ export class ContextSymbolTable extends SymbolTable
         return undefined;
     }
 
-    public getSymbolInfo(symbol: string | Symbol | undefined): SymbolInfo | undefined 
+    public getSymbolInfo(symbol: string | BaseSymbol | undefined): SymbolInfo | undefined 
     {
         if (!symbol) 
         {
             return undefined;
         }
 
-        if (!(symbol instanceof Symbol)) 
+        if (!(symbol instanceof BaseSymbol)) 
         {
-            let temp = this.resolve(symbol);
+            let temp = this.resolveSync(symbol);
 
             if (!temp) 
             {
@@ -530,7 +530,7 @@ export class ContextSymbolTable extends SymbolTable
         }
 
         let kind = ContextSymbolTable.getKindFromSymbol(symbol);
-        let name = (symbol as Symbol).name;
+        let name = (symbol as BaseSymbol).name;
 
         let definitionSymbol = this.definitionSymbolForContext(symbol.context);
 
@@ -558,7 +558,7 @@ export class ContextSymbolTable extends SymbolTable
         return this.definitionFromSymbol(this.definitionSymbolForContext(ctx));
     }
 
-    public definitionFromSymbol(definition?: Symbol): Definition | undefined 
+    public definitionFromSymbol(definition?: BaseSymbol): Definition | undefined 
     {
         if (definition && definition.context && definition.context instanceof ParserRuleContext) 
         {
@@ -598,14 +598,14 @@ export class ContextSymbolTable extends SymbolTable
     /**
      * Returns the definition info for the given rule context.
      */
-    public definitionSymbolForContext(ctx: ParseTree | undefined): Symbol | undefined 
+    public definitionSymbolForContext(ctx: ParseTree | undefined): BaseSymbol | undefined 
     {
         if (!ctx) 
         {
             return undefined;
         }
 
-        const symbol = this.symbolWithContext(ctx);
+        const symbol = this.symbolWithContextSync(ctx);
 
         if (symbol) 
         {
@@ -615,13 +615,13 @@ export class ContextSymbolTable extends SymbolTable
         return undefined;
     }
 
-    public linkSymbols(master: Symbol, slave: Symbol) 
+    public linkSymbols(master: BaseSymbol, slave: BaseSymbol) 
     {
         let slaves = this.references.get(master);
 
         if (!slaves) 
         {
-            slaves = new Set<Symbol>();
+            slaves = new Set<BaseSymbol>();
             this.references.set(master, slaves);
         }
     }
@@ -630,7 +630,7 @@ export class ContextSymbolTable extends SymbolTable
      * Only for master definition
      * @param master 
      */
-    public getReferenceCount(master: Symbol): number 
+    public getReferenceCount(master: BaseSymbol): number 
     {
         let slaves = this.references.get(master);
 
@@ -642,14 +642,14 @@ export class ContextSymbolTable extends SymbolTable
         return 0;
     }
 
-    public getSymbolOccurences(symbol: Symbol, column: number, row: number, localOnly: boolean): SymbolInfo[] 
+    public getSymbolOccurences(symbol: BaseSymbol, column: number, row: number, localOnly: boolean): SymbolInfo[] 
     {
         let result: SymbolInfo[] = [];
-        let localBlock: Symbol | undefined;
+        let localBlock: BaseSymbol | undefined;
         
         //search variables
-        let blocks = this.getAllSymbols(VariableLocalBlockDclSymbol, true);
-        let innerBlocks = this.getAllSymbols(VariableInnerBlockDclSymbol, true);
+        let blocks = this.getAllSymbolsSync(VariableLocalBlockDclSymbol, true);
+        let innerBlocks = this.getAllSymbolsSync(VariableInnerBlockDclSymbol, true);
 
         for (let block of innerBlocks)//search block witch contain symbol
         {
@@ -681,7 +681,7 @@ export class ContextSymbolTable extends SymbolTable
 
                 if (localBlock instanceof ScopedSymbol) 
                 {
-                    let references = this.getAllNestedSymbols(symbol.name);
+                    let references = this.getAllNestedSymbolsSync(symbol.name);
 
                     for(let item of references)
                     {
@@ -701,8 +701,8 @@ export class ContextSymbolTable extends SymbolTable
             //search in include files
             if(this.checkSymbolLocationBlock(symbol, localBlock))
             {                            
-                let inclides = this.getAllSymbols(IncludeDclSymbol, true);
-                let VariableDcls = this.getAllSymbols(VariableLocalBlockDclSymbol, false);
+                let inclides = this.getAllSymbolsSync(IncludeDclSymbol, true);
+                let VariableDcls = this.getAllSymbolsSync(VariableLocalBlockDclSymbol, false);
 
                 for (let inclide of inclides)
                 {
@@ -764,7 +764,7 @@ export class ContextSymbolTable extends SymbolTable
         else
         {
             let searchRoutine = false;
-            let defRoutines = this.getAllSymbols(RoutineDclSymbol, false);
+            let defRoutines = this.getAllSymbolsSync(RoutineDclSymbol, false);
 
             for(let item of defRoutines)
             {
@@ -777,7 +777,7 @@ export class ContextSymbolTable extends SymbolTable
             
             if(searchRoutine)
             {            
-                let references = this.getAllSymbols(LabelSymbol, false);
+                let references = this.getAllSymbolsSync(LabelSymbol, false);
 
                 for(let item of references)
                 {
@@ -797,9 +797,9 @@ export class ContextSymbolTable extends SymbolTable
         return result;
     }
 
-    public getSymbolOfType(name: string, kind: SymbolKind, localOnly: boolean): Symbol | undefined 
+    public getSymbolOfType(name: string, kind: SymbolKind, localOnly: boolean): BaseSymbol | undefined 
     {
-        const resolved = this.resolve(name, localOnly);
+        const resolved = this.resolveSync(name, localOnly);
 
         if (resolved && ContextSymbolTable.getKindFromSymbol(resolved) === kind) 
         {
@@ -845,10 +845,10 @@ export class ContextSymbolTable extends SymbolTable
                 return TypeBlockDclSymbol;    
         }
 
-        return Symbol;
+        return BaseSymbol;
     }
 
-    public static getKindFromSymbol(symbol: Symbol): SymbolKind 
+    public static getKindFromSymbol(symbol: BaseSymbol): SymbolKind 
     {
         if (symbol instanceof SyntaxSymbol) 
         {
@@ -974,7 +974,7 @@ export class ContextSymbolTable extends SymbolTable
 
 export interface INestedEntity 
 { 
-    entity: Symbol; 
+    entity: BaseSymbol; 
     nestedLevel: number; 
 }
 export class EntityCollection extends NamespaceSymbol 
@@ -988,13 +988,13 @@ export class WithTypeReference extends ScopedSymbol
 
 export class SyntaxSymbol extends EntityCollection { }
 export class TypeSymbol extends EntityCollection { }
-export class BuiltInTypeSymbol extends Symbol { }
-export class TypeRefSymbol extends Symbol { }
-export class EntitySymbol extends Symbol { }
+export class BuiltInTypeSymbol extends BaseSymbol { }
+export class TypeRefSymbol extends BaseSymbol { }
+export class EntitySymbol extends BaseSymbol { }
 export class ParameterSymbol extends WithTypeReference { }
 export class QualifierSymbol extends WithTypeReference { }
 export class KeywordSymbol extends WithTypeReference { }
-export class LabelSymbol extends Symbol { }
+export class LabelSymbol extends BaseSymbol { }
 
 export class CompoundSymbol extends EntityCollection { }
 export class BlockSymbol extends EntityCollection { }

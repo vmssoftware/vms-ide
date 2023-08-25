@@ -9,9 +9,8 @@ const path = require('path');
 const ts = require('gulp-typescript');
 const typescript = require('typescript');
 const sourcemaps = require('gulp-sourcemaps');
-const del = require('del');
+const deletefile = require('gulp-delete-file');
 const es = require('event-stream');
-const vsce = require('vsce');
 const nls = require('vscode-nls-dev');
 
 const tsProject = ts.createProject('tsconfig.json', { typescript });
@@ -52,7 +51,8 @@ function compile(buildNls) {
 }
 
 gulp.task('clean', function() {
-	return del(['out/**', 'package.nls.*.json', 'i18n-sample*.vsix']);
+	return gulp.src(['out/**', 'package.nls.*.json', 'i18n-sample*.vsix'])
+		.pipe(deletefile());
 })
 
 gulp.task('internal-compile', function() {

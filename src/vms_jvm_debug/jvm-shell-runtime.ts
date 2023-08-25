@@ -516,7 +516,7 @@ export class JvmShellRuntime extends EventEmitter {
     private _stoppedThreadId?: number;
 
     private _dataBpLines: string[] | undefined;
-    private _dataBpTimer: NodeJS.Timer | undefined;
+    private _dataBpTimer: NodeJS.Timeout | undefined;
     private _dataBpReason: string | undefined;
 
     private _lastThreadId = 0;
@@ -1640,7 +1640,7 @@ export class JvmShellRuntime extends EventEmitter {
             return false;
         }
         const buffer: string[] = [];
-        let timer: NodeJS.Timer | undefined;
+        let timer: NodeJS.Timeout | undefined;
         const dropCommand = new DropCommand();
         let command = 'locals';
         if (data.currentVar.type !== JvmVarType.scope) {
@@ -1982,7 +1982,7 @@ export class JvmShellRuntime extends EventEmitter {
         if (!this.isDataCommandAllowed()) {
             return false;
         }
-        let timer: NodeJS.Timer | undefined;
+        let timer: NodeJS.Timeout | undefined;
         const dropCommand = new DropCommand();
         this._logFn(LogType.debug, () => `POSTING ${command}`);
         return await this._queue.postCommand(command, (cmd, line) => {

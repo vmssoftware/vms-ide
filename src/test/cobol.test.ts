@@ -14,7 +14,7 @@ import { cobolCopyParser, CopyStatementContext } from "../vms_cobol/parser/cobol
 import { LexerErrorListener, ParserErrorListener } from "../common/parser/ErrorListeners";
 import { CopyManagerImpl } from "../vms_cobol/stream/CopyManagerImpl";
 import { CobolSourceContext } from "../vms_cobol/context/CobolSourceContext";
-import { unifyCobolName } from "../common/parser/Helpers";
+import { unifyCobolName } from "../common/parser/helpers";
 import { cobolParserImpl } from "../vms_cobol/parser/cobolParserImpl";
 
 suite("COBOL tests", function(this: Mocha.Suite) {

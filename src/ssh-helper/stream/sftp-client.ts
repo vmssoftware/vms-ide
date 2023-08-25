@@ -1,5 +1,5 @@
 import { SFTPWrapper } from "ssh2";
-import { FileEntry, ReadStreamOptions, WriteStreamOptions } from "ssh2-streams";
+import { FileEntry } from "ssh2-streams";
 import stream = require("stream");
 
 import { Lock, LogFunction } from "../../common/main";
@@ -11,7 +11,7 @@ import { IFileEntry } from "../../common/main";
 import { IConnectConfigResolver, IInputAttributes, IStats } from "../api";
 import { IConnectConfig } from "../api";
 import { SshClient } from "./ssh-client";
-import { leadingSepRg, trailingSepRg, middleSepRg } from "../../synchronizer/common/find-files";
+import { trailingSepRg, middleSepRg } from "../../synchronizer/common/find-files";
 
 import * as nls from "vscode-nls";
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -38,9 +38,7 @@ export class SftpClient extends SshClient {
         let readStream: stream.Readable | undefined;
         if (await this.ensureSftp()) {
             if (this.sftp) {
-                let opt: ReadStreamOptions = {};
-                opt.encoding = 'binary';
-                readStream = this.sftp.createReadStream(file, opt);
+                readStream = this.sftp.createReadStream(file);
             }
         }
         this.waitOperation.release();
@@ -60,9 +58,7 @@ export class SftpClient extends SshClient {
         let writeStream: stream.Writable | undefined;
         if (await this.ensureSftp()) {
             if (this.sftp) {
-                let opt: WriteStreamOptions = {};
-                opt.encoding = 'binary';
-                writeStream = this.sftp.createWriteStream(file, opt);
+                writeStream = this.sftp.createWriteStream(file);
             }
         }
         this.waitOperation.release();

@@ -23,7 +23,7 @@ import {
 
 import { 
     ScopedSymbol,
-    Symbol,
+    BaseSymbol,
 } from "antlr4-c3";
 
 import { 
@@ -49,8 +49,8 @@ import {
 export class DetailsListener implements pascalListener 
 {
     private recordName: string = "";
-    private recordBlock: Symbol | undefined;
-    private currentSymbol: Symbol | undefined;
+    private recordBlock: BaseSymbol | undefined;
+    private currentSymbol: BaseSymbol | undefined;
 
     constructor(private symbolTable: ContextSymbolTable, private imports: string[]) 
     {    }

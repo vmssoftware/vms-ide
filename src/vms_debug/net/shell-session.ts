@@ -133,7 +133,7 @@ export class ShellSession
             {
                 if (this.logFn)
                 {
-                    this.logFn(LogType.error, () => error.message);
+                    this.logFn(LogType.error, () => String(error));
                 }
                 if(this.sshShell)
                 {
@@ -150,7 +150,7 @@ export class ShellSession
                     this.logFn(LogType.debug, () => String(error));
                 }
 
-                messageErr = error;
+                messageErr = String(error);
             }
 
             this.extensionCloseCb(": " + messageErr);

@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { SourceContext } from "./SourceContext";
-import { Symbol } from "antlr4-c3";
+import { BaseSymbol } from "antlr4-c3";
 
 export enum SymbolKind 
 {

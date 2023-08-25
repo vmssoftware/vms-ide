@@ -26,7 +26,7 @@ import {
 
 import { 
     ScopedSymbol,
-    Symbol,
+    BaseSymbol,
 } from "antlr4-c3";
 
 import { 
@@ -65,7 +65,7 @@ import {
 export class DetailsListener implements BasicParserListener 
 {
     private typeSymbol: String = "";    
-    private currentSymbol: Symbol | undefined;
+    private currentSymbol: BaseSymbol | undefined;
 
     constructor(private symbolTable: ContextSymbolTable, private imports: string[]) 
     {    }
@@ -523,7 +523,7 @@ export class DetailsListener implements BasicParserListener
         }
     }
 
-    recordComponentIterate(key: String, masterSymbol: Symbol, recComponent: RecComponentContext[])
+    recordComponentIterate(key: String, masterSymbol: BaseSymbol, recComponent: RecComponentContext[])
     {
         let blocks = recComponent;
 

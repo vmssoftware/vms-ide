@@ -85,7 +85,7 @@ import {
     findChildInA,
     unifyCobolName,
     mostContainingContext
-} from "../../common/parser/Helpers";
+} from "../../common/parser/helpers";
 
 import {
     ALPHABET_Symbol,
@@ -118,7 +118,7 @@ import {
 } from "./CobolSymbol";
 
 import {
-    Symbol,
+    BaseSymbol,
 } from 'antlr4-c3';
 
 import { ParserRuleContext } from "antlr4ts";
@@ -252,7 +252,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
                 } else {
                     symbol.endProgramCtx = ctx.program_name();
                 }
-                let innerPrograms = symbol.getNestedSymbolsOfType(ProgramSymbol);
+                let innerPrograms = symbol.getNestedSymbolsOfTypeSync(ProgramSymbol);
                 for(let inner of innerPrograms) {
                     if (!inner.endProgramCtx) {
                         // end program now
@@ -1176,7 +1176,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         this.analyzeIdentifier(ctx);
     }
 
-    public analyzeIdentifier(ctx: IdentifierContext): Symbol | undefined {
+    public analyzeIdentifier(ctx: IdentifierContext): BaseSymbol | undefined {
         let returnType: (EDataUsage | undefined) = undefined;
         let identifierCtx = ctx.identifier_result();
         if (identifierCtx) {
@@ -1186,7 +1186,7 @@ export class CobolAnalysisVisitor extends AbstractParseTreeVisitor<void> impleme
         return returnType;
     }
 
-    public analyzeIdentifierResult(identifierCtx: Identifier_resultContext): Symbol | undefined {
+    public analyzeIdentifierResult(identifierCtx: Identifier_resultContext): BaseSymbol | undefined {
         let returnType: (EDataUsage | undefined);
         let identifierSymbol = this.helper.verifyQualifiedName(identifierCtx.qualified_data_item(), false, undefined, undefined, [IntrinsicFunctionSymbol, ProgramSymbol]);
         if (identifierSymbol instanceof DataRecordSymbol) {

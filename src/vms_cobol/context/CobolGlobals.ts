@@ -1,7 +1,7 @@
 import { Uri, workspace } from 'vscode';
 import { CobolSymbolTable } from "./CobolSymbolTable";
 import { ProjDepTree } from "../../synchronizer/dep-tree/proj-dep-tree";
-import { Symbol } from 'antlr4-c3';
+import { BaseSymbol } from 'antlr4-c3';
 import { IdentifierSymbol, ProgramSymbol, getKindFromSymbol, getSymbolFromKind, DataRecordSymbol, FileSymbol } from './CobolSymbol';
 import { CobolSourceContext } from './CobolSourceContext';
 import { IDefinition } from '../../common/parser/Facade';
@@ -9,8 +9,8 @@ import { TaskDivider } from '../../common/task-divider';
 
 interface IGlobalEntry {
     symbolTable: CobolSymbolTable,
-    definitions: Map<Symbol, IDefinition[]>,
-    using: Map<Symbol, IDefinition[]>,
+    definitions: Map<BaseSymbol, IDefinition[]>,
+    using: Map<BaseSymbol, IDefinition[]>,
 }
 
 export class CobolGlobals {
@@ -30,11 +30,11 @@ export class CobolGlobals {
         let symbolTable = context.getSymbolTable();
         let localSymbolTable = new CobolSymbolTable(context.fileName, { allowDuplicateSymbols: true } );
         // collect only first-level programs defined here (with context)
-        let identifiers = symbolTable.getNestedSymbolsOfType(IdentifierSymbol);
-        let globalDefinitions = new Map<Symbol, IDefinition[]>();
+        let identifiers = symbolTable.getNestedSymbolsOfTypeSync(IdentifierSymbol);
+        let globalDefinitions = new Map<BaseSymbol, IDefinition[]>();
         for(let identifier of identifiers) {
             if (identifier.context) {
-                let localCopy: Symbol | undefined;
+                let localCopy: BaseSymbol | undefined;
                 // test if it is a program on the highest level
                 if (identifier.parent === symbolTable && identifier instanceof ProgramSymbol ) {
                     let identifierKind = getKindFromSymbol(identifier);
@@ -73,7 +73,7 @@ export class CobolGlobals {
             await taskDivider.testValue();
         }
         // collect symbols having master in other source
-        let globalUsing = new Map<Symbol, IDefinition[]>();
+        let globalUsing = new Map<BaseSymbol, IDefinition[]>();
         for (let [name, links] of symbolTable.occurence) {
             for(let link of links) {
                 if (link.master.symbolTable !== symbolTable) {
@@ -126,8 +126,8 @@ export class CobolGlobals {
      * Collect all reachable globals for given file
      * @param fileName full name
      */
-    public static collectGlobalsForSource(fileName: string): Symbol[] {
-        let retSymbols: Symbol[] = [];
+    public static collectGlobalsForSource(fileName: string): BaseSymbol[] {
+        let retSymbols: BaseSymbol[] = [];
         // 1. build source list, which is reachable from this source (using Proj)
         let wsFolder =  workspace.getWorkspaceFolder(Uri.file(fileName));
         if (wsFolder) {
@@ -136,7 +136,7 @@ export class CobolGlobals {
             for(let [filePath, entry] of this.globalMap) {
                 let wsEntryFolder =  workspace.getWorkspaceFolder(Uri.file(filePath));
                 if (wsEntryFolder && deps.includes(wsEntryFolder.name)) {
-                    retSymbols.push(...entry.symbolTable.getAllNestedSymbols());
+                    retSymbols.push(...entry.symbolTable.getAllNestedSymbolsSync());
                 }
             }
         }
@@ -148,8 +148,8 @@ export class CobolGlobals {
      * @param fileName where we are
      * @param identifier what we want
      */
-    public static findGlobalForSource(fileName: string, identifier: string): Symbol[] {
-        let retSymbols: Symbol[] = [];
+    public static findGlobalForSource(fileName: string, identifier: string): BaseSymbol[] {
+        let retSymbols: BaseSymbol[] = [];
         // 1. build source list, which is reachable from this source (using Proj)
         let wsFolder =  workspace.getWorkspaceFolder(Uri.file(fileName));
         if (wsFolder) {
@@ -158,7 +158,7 @@ export class CobolGlobals {
             for(let [filePath, entry] of this.globalMap) {
                 let wsEntryFolder =  workspace.getWorkspaceFolder(Uri.file(filePath));
                 if (wsEntryFolder && deps.includes(wsEntryFolder.name)) {
-                    retSymbols.push(...entry.symbolTable.getAllNestedSymbols(identifier));
+                    retSymbols.push(...entry.symbolTable.getAllNestedSymbolsSync(identifier));
                 }
             }
         }
@@ -170,7 +170,7 @@ export class CobolGlobals {
      * @param identifier what we want to find
      * @param fileName if we know the file where this symbol is
      */
-    public static definition(identifier: Symbol, fileName?: string): IDefinition[] | undefined {
+    public static definition(identifier: BaseSymbol, fileName?: string): IDefinition[] | undefined {
         if (fileName) {
             let entry = this.globalMap.get(fileName);
             if (entry) {
@@ -191,7 +191,7 @@ export class CobolGlobals {
      * Returns links to that symbol from other sources
      * @param identifier 
      */
-    public static links(identifier: Symbol) {
+    public static links(identifier: BaseSymbol) {
         let usedDefinitions: IDefinition[] = [];
         for(let [file, entry] of this.globalMap) {
             for(let [usedSymbol, definitions] of entry.using) {

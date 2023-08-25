@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as nls from "vscode-nls";
 
-import { Symbol, CodeCompletionCore, ScopedSymbol } from "antlr4-c3";
+import { BaseSymbol, CodeCompletionCore, ScopedSymbol } from "antlr4-c3";
 import { ParseCancellationException, IntervalSet, Interval } from 'antlr4ts/misc';
 import { ParseTreeWalker, TerminalNode, ParseTree, ParseTreeListener } from 'antlr4ts/tree';
 import { FortranParser, ProgramContext } from "../parser/FortranParser";
@@ -45,7 +45,7 @@ export class SourceContext
 
         if (!SourceContext.globalSymbols.resolve("EOF")) 
         {
-            SourceContext.globalSymbols.addNewSymbolOfType(Symbol, undefined, "EOF");
+            SourceContext.globalSymbols.addNewSymbolOfType(BaseSymbol, undefined, "EOF");
 
             for (const builtintype of BuiltInValueTypes) 
             {
@@ -206,7 +206,7 @@ export class SourceContext
         this.symbolTable.removeDependency(context.symbolTable);
     }
 
-    public getReferenceCount(symbol: Symbol): number 
+    public getReferenceCount(symbol: BaseSymbol): number 
     {
         let result = this.symbolTable.getReferenceCount(symbol);
 
@@ -218,16 +218,16 @@ export class SourceContext
         return result;
     }
 
-    public getAllSymbols(recursive: boolean): Set<Symbol> 
+    public getAllSymbols(recursive: boolean): BaseSymbol[]
     {
         // The symbol table returns symbols of itself and those it depends on (if recursive is true).
-        let result = this.symbolTable.getAllSymbols(Symbol, !recursive);
+        let result = this.symbolTable.getAllSymbolsSync(BaseSymbol, !recursive);
 
         // Add also symbols from contexts referencing us, this time not recursive
         // as we have added our content already.
         for (let reference of this.references) 
         {
-            reference.symbolTable.getAllSymbols(Symbol, true).forEach(result.add, result);
+            result = result.concat(reference.symbolTable.getAllSymbolsSync(BaseSymbol, true));
         }
 
         return result;
@@ -403,7 +403,7 @@ export class SourceContext
                 //     {
                 //         variableNames.push(vari.name);
                 //     }
-                //     let symbols: Symbol[] = [];
+                //     let symbols: BaseSymbol[] = [];
                 //     for(const symbol of symbols) 
                 //     {
                 //         const info: SymbolInfo = {
@@ -438,7 +438,7 @@ export class SourceContext
         return this.symbolTable.getSymbolDefinition(this.symbolAtPosition(column, row));
     }
 
-    public symbolAtPosition(column: number, row: number): Symbol | undefined 
+    public symbolAtPosition(column: number, row: number): BaseSymbol | undefined 
     {
         if (this.tree) 
         {
@@ -446,7 +446,7 @@ export class SourceContext
             // we found a terminal rule, so get its parent to find symbol (because context of symbols is always ParserRule not TerminalNode)
             if (context && context.parent) 
             {
-                return this.symbolTable.symbolWithContext(context);
+                return this.symbolTable.symbolWithContextSync(context);
             }
         }
 

@@ -44,7 +44,7 @@ export class ZipApi {
         return false;
     }
 
-    public start(file: string, forceLocalTime?: boolean, logFn?: LogFunction): Promise<boolean> | undefined {
+    public start(file: string, forceLocalTime?: boolean, logFn?: LogFunction): Promise<boolean | undefined> | undefined {
         if (this.output || this.archiveResolver) {
             return undefined;
         }
@@ -111,7 +111,7 @@ export class ZipApi {
         // pipe archive data to the file
         this.archive.pipe(this.output);
 
-        return new Promise<boolean>((resolve) => {
+        return new Promise<boolean | undefined>((resolve) => {
             this.archiveResolver = resolve;
         });
     }

@@ -2,7 +2,7 @@
 import { ParserRuleContext } from 'antlr4ts';
 import { 
     SymbolTable,
-    Symbol,
+    BaseSymbol,
     ScopedSymbol,
     SymbolTableOptions
  } from "antlr4-c3";
@@ -16,7 +16,7 @@ import {
     definitionForContext,
     isNodeIncludes,
     unifyCobolName
-} from '../../common/parser/Helpers';
+} from '../../common/parser/helpers';
 
 import { CobolSourceContext } from './CobolSourceContext';
 
@@ -42,7 +42,7 @@ import micromatch from 'micromatch';
  * First element in ParseTree[] is name definition context
  */
 export interface ILink {
-    master: Symbol;
+    master: BaseSymbol;
     references: Set<ParseTree|undefined>;
 }
 
@@ -54,7 +54,7 @@ interface ISplitSymbols {
 }
 
 interface ISymbolChain {
-    symbol: Symbol,
+    symbol: BaseSymbol,
     child?: ISymbolChain,
 }
 
@@ -73,7 +73,7 @@ export class CobolSymbolTable extends SymbolTable {
         this.occurence.clear();
     }
 
-    public createOccurence(symbol: Symbol, ctx?: ParseTree) {
+    public createOccurence(symbol: BaseSymbol, ctx?: ParseTree) {
         let link: ILink = {
             master: symbol,
             references: new Set<ParseTree|undefined>(),
@@ -94,10 +94,10 @@ export class CobolSymbolTable extends SymbolTable {
      * @param namePath 
      * @param origin 
      */
-    public addOccurence(namePath: ParseTree[], origin: Symbol): boolean {
+    public addOccurence(namePath: ParseTree[], origin: BaseSymbol): boolean {
         let retCode = false;
         if (namePath.length > 0) {
-            let passSymbol: Symbol | undefined = origin;
+            let passSymbol: BaseSymbol | undefined = origin;
             let idxName = 0;
             let unifiedName = unifyCobolName(CobolAnalisisHelper.stringLiteralContent(namePath[idxName].text));
             while (passSymbol) {
@@ -135,26 +135,26 @@ export class CobolSymbolTable extends SymbolTable {
      * @param ctx if undefined, the current scope is symbolTable root
      * @param localOnly please, set to true for sections & paragraphs
      */
-    public resolveIdentifier(namePath: string[], ctx?: ParseTree, localOnly?: boolean): Symbol[] {
+    public resolveIdentifier(namePath: string[], ctx?: ParseTree, localOnly?: boolean): BaseSymbol[] {
         let matched = this.matchCandidates(namePath).map(x => {
             while(x.child) {
                 x = x.child;
             }
             return x.symbol;
         });
-        let retSymbols: Symbol[] = [];
+        let retSymbols: BaseSymbol[] = [];
         if (matched.length > 0) {
-            let retSymbolMap = new Map<string, Symbol[]>();
+            let retSymbolMap = new Map<string, BaseSymbol[]>();
             let currentScopeSymbol = this.getEnclosingSymbolForContext(ctx);
             let requireGlobal = false;
             // in first try to add candidates from the nearest scope
             while (currentScopeSymbol) {
                 // for each matched candidate find if they are in the same scope
-                let levelSymbols = new Map<string, Symbol[]>();
+                let levelSymbols = new Map<string, BaseSymbol[]>();
                 for (let candidate of matched) {
                     // most global candidates will be added later
                     if (!(candidate.parent instanceof SymbolTable)) {
-                        let current: Symbol | undefined = candidate;
+                        let current: BaseSymbol | undefined = candidate;
                         while(current) {
                             if (current === currentScopeSymbol) {
                                 if (!requireGlobal || 
@@ -216,8 +216,8 @@ export class CobolSymbolTable extends SymbolTable {
      * collect all matched candidates
      * @param namePath unified names
      */
-    private collectCandidates(namePath: string[]): Symbol[] {
-        let matched: Symbol[] = [];
+    private collectCandidates(namePath: string[]): BaseSymbol[] {
+        let matched: BaseSymbol[] = [];
         if (namePath.length > 0) {
             // 1. collect all candidates
             let name = namePath[0];
@@ -227,7 +227,7 @@ export class CobolSymbolTable extends SymbolTable {
                 for (let candidate of links.map(x => x.master)) {
                     let idxName = 1;
                     // go through from origin to program and collect info
-                    let current: Symbol | undefined = candidate;
+                    let current: BaseSymbol | undefined = candidate;
                     while (current) {
                         // only data symbols may occur in path
                         if (current instanceof ProgramSymbol) {
@@ -341,14 +341,14 @@ export class CobolSymbolTable extends SymbolTable {
      * Get first enclosing symbol for given context
      * @param ctx 
      */
-    public getEnclosingSymbolForContext(ctx: ParseTree | undefined) : Symbol | undefined {
+    public getEnclosingSymbolForContext(ctx: ParseTree | undefined) : BaseSymbol | undefined {
         if (ctx) {
             return this.getEnclosingSymbolForContextReccurent(this, ctx);
         }
         return this;
     }
 
-    private getEnclosingSymbolForContextReccurent(root: ScopedSymbol, ctx: ParseTree) : Symbol {
+    private getEnclosingSymbolForContextReccurent(root: ScopedSymbol, ctx: ParseTree) : BaseSymbol {
         let ctxInterval = ctx.sourceInterval;
         for (let child of root.children) {
             if (child.context) {
@@ -368,7 +368,7 @@ export class CobolSymbolTable extends SymbolTable {
      * Get information of given symbol (symbol is the place where it is defined)
      * @param symbol 
      */
-    public getSymbolInfo(symbol: string | Symbol | undefined): ISymbolInfo | undefined {
+    public getSymbolInfo(symbol: string | BaseSymbol | undefined): ISymbolInfo | undefined {
         symbol = this.ensureSymbol(symbol);
         if (!symbol) {
             return undefined;
@@ -409,7 +409,7 @@ export class CobolSymbolTable extends SymbolTable {
         return result;
     }
 
-    public getSymbolPath<T extends Symbol>(symbolParam: string | Symbol | undefined, stopType?: new (...args: any[]) => T): string {
+    public getSymbolPath<T extends BaseSymbol>(symbolParam: string | BaseSymbol | undefined, stopType?: new (...args: any[]) => T): string {
         let symbol = this.ensureSymbol(symbolParam);
         if (!symbol) {
             return "<anonymous>";
@@ -429,7 +429,7 @@ export class CobolSymbolTable extends SymbolTable {
      * Get where this symbol appears
      * @param symbol 
      */
-    public getSymbolNameDefinition(symbol: Symbol): IDefinition | undefined {
+    public getSymbolNameDefinition(symbol: BaseSymbol): IDefinition | undefined {
         if (symbol.getParentOfType(CobolSymbolTable) !== this) {
             // from globals
             let globalDefs = CobolGlobals.definition(symbol);
@@ -457,7 +457,7 @@ export class CobolSymbolTable extends SymbolTable {
      * Get where this symbol appears
      * @param symbol 
      */
-    public getSymbolOccurences(symbol: Symbol): IDefinition[] {
+    public getSymbolOccurences(symbol: BaseSymbol): IDefinition[] {
         let result: IDefinition[] = [];
         let links = this.occurence.get(symbol.name);
             if (links) {
@@ -504,13 +504,13 @@ export class CobolSymbolTable extends SymbolTable {
     }
 
     /**
-     * If symbol is Symbol, returns it. If symbol is string, resolves it.
+     * If symbol is BaseSymbol, returns it. If symbol is string, resolves it.
      * @param symbol 
-     * @returns Symbol or undefined
+     * @returns BaseSymbol or undefined
      */
-    private ensureSymbol(symbol: string | Symbol | undefined): Symbol | undefined {
+    private ensureSymbol(symbol: string | BaseSymbol | undefined): BaseSymbol | undefined {
         if (typeof symbol === "string") {
-            return this.resolve(symbol);
+            return this.resolveSync(symbol);
         }
         return symbol;
     }

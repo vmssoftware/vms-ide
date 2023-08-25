@@ -41,7 +41,7 @@ export class FSConfigStorage extends ConfigStorageImpl {
                             return fsMkDir(dir);
                         }
                     }).then(() => {
-                        return fsWriteFile(this.fileName, this.content)
+                        return fsWriteFile(this.fileName, this.content ? this.content : "")
                             .then(() => {
                                 this.logFn(LogType.debug, () => "fsWriteFile => ok");
                                 return CSAResult.ok;

@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { SourceContext } from "./SourceContext";
-import { Symbol } from "antlr4-c3";
+import { BaseSymbol } from "antlr4-c3";
 
 export enum SymbolKind 
 {
@@ -341,7 +341,7 @@ export class Facade
     /**
     * Count how many times a symbol has been referenced. The given file must contain the definition of this symbol.
     */
-    public countReferences(fileName: string, symbol: Symbol): number 
+    public countReferences(fileName: string, symbol: BaseSymbol): number 
     {
         let context = this.getContext(fileName);
         return context.getReferenceCount(symbol);

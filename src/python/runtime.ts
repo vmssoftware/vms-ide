@@ -780,7 +780,7 @@ export class PythonShellRuntime extends EventEmitter {
                         return ListenerResponse.needMoreLines;
                     } else {
                         // parse other lines - children
-                        if (match[_rgxDisplay_Result] !== EPythonConst.failed) {
+                        if (!(match[_rgxDisplay_Result] in [EPythonConst.failed, EPythonConst.aborted])) {
                             lastVar = {
                                 ident,
                                 frame,

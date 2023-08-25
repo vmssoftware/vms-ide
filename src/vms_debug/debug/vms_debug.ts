@@ -11,8 +11,8 @@ import {
     Handles,
     InitializedEvent, logger, Logger, LoggingDebugSession, OutputEvent,
     Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread,
-} from "vscode-debugadapter";
-import { DebugProtocol } from "vscode-debugprotocol";
+} from "@vscode/debugadapter";
+import { DebugProtocol } from "@vscode/debugprotocol";
 import { DebugCmdVMS } from "../command/debug_commands";
 import { ModeWork, ShellSession, TypeDataMessage, TypeTerminal } from "../net/shell-session";
 import { DebugVariable, ReflectKind } from "../parsers/debug_variable_info";

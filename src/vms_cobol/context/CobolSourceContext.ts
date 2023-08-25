@@ -1,7 +1,7 @@
 import * as nls from "vscode-nls";
 
 import {
-    Symbol,
+    BaseSymbol,
     CodeCompletionCore,
     ScopedSymbol
 } from "antlr4-c3";
@@ -75,7 +75,7 @@ import {
 
 import {
     parseTreeFromPosition, unifyCobolName, firstContainingContext
-} from '../../common/parser/Helpers';
+} from '../../common/parser/helpers';
 
 
 import {
@@ -699,7 +699,7 @@ export class CobolSourceContext implements ISourceContext {
      * @param column 
      * @param row 
      */
-    private masterSymbolAtPosition(column: number, row: number): Symbol | undefined {
+    private masterSymbolAtPosition(column: number, row: number): BaseSymbol | undefined {
         if (this.tree) {
             let node = parseTreeFromPosition(this.tree, column, row);
             if (node instanceof TerminalNode) {
@@ -741,10 +741,10 @@ export class CobolSourceContext implements ISourceContext {
         }
         for (let predefinedNode of predefinedData) {
             // by default, add new symbols into symbolTable root
-            let symbols: Symbol[] = [this.symbolTable];
+            let symbols: BaseSymbol[] = [this.symbolTable];
             if (predefinedNode.parentKind) {
                 let symbolType = getSymbolFromKind(predefinedNode.parentKind);
-                symbols = this.symbolTable.getNestedSymbolsOfType(symbolType);
+                symbols = this.symbolTable.getNestedSymbolsOfTypeSync(symbolType);
             }
             for (let symbol of symbols) {
                 if (symbol instanceof ScopedSymbol) {

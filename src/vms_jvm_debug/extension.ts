@@ -89,7 +89,11 @@ class JvmDebugAdapterDescriptorFactory implements vscode.DebugAdapterDescriptorF
 		}
 
 		// make VS Code connect to debug server
-		const port = this.server.address().port;
+		let port = 1234;
+		const address = this.server.address();
+		if (address && typeof address === 'object' && 'port' in address) {
+			port = address.port;
+		}
 		return new vscode.DebugAdapterServer(port);
 	}
 

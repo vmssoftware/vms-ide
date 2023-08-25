@@ -13,7 +13,7 @@ const localize = nls.loadMessageBundle();
 class SettingsCacheNode {
 
     public lock: Lock = new Lock();         // locked until feedback
-    public timer?: NodeJS.Timer;
+    public timer?: NodeJS.Timeout;
 
     public settings?: IConnectConfig;
     public accepted?: boolean;

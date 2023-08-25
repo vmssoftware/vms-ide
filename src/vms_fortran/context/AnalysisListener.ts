@@ -9,7 +9,7 @@ import {
     LetterNameContext
 } from "../parser/FortranParser";
 import { ContextSymbolTable } from "./ContextSymbolTable";
-//import { Symbol, ScopedSymbol } from "antlr4-c3";
+//import { BaseSymbol, ScopedSymbol } from "antlr4-c3";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 //const localize = nls.loadMessageBundle();

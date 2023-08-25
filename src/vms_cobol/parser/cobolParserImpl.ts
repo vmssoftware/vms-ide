@@ -1,7 +1,7 @@
 import { cobolParser } from "../parser/cobolParser";
 import { TaskDivider } from "../../common/task-divider";
 import { TokenStream } from "antlr4ts";
-import { testTokenInAreaB } from "../../common/parser/Helpers";
+import { testTokenInAreaB } from "../../common/parser/helpers";
 
 export class cobolParserImpl extends cobolParser {
 

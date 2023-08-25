@@ -72,7 +72,11 @@ export class PythonDebugAdapterDescriptorFactory implements DebugAdapterDescript
         }
 
         // make VS Code connect to debug server
-        const port = this.server.address().port;
+        const address = this.server.address();
+        let port = 5263;
+        if (address && typeof address === 'object' && 'port' in address) {
+            port = address.port;
+        }
         return new DebugAdapterServer(port);
     }
 

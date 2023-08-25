@@ -21,8 +21,6 @@ suite("MM tests", function(this: Mocha.Suite) {
             basename: false,
             dot: true,
             nocase: true,
-            nodupes: true,
-            unixify: false,
         };
 
         let list = [

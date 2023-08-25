@@ -20,7 +20,7 @@ export class ConfigPool implements IConfig {
     protected savePromise: Promise<CSAResult> | undefined = undefined;
     protected fireImmediate: any = undefined;
     protected changeEmitter = new EventEmitter<null>();
-    protected freezePromise: Promise<boolean> | undefined = undefined;
+    protected freezePromise: Promise<boolean | undefined> | undefined = undefined;
     protected freezeResolve: ((value?: boolean | PromiseLike<boolean> | undefined) => void) | undefined = undefined;
 
     public lastResult: CSAResult = CSAResult.ok;
@@ -54,7 +54,7 @@ export class ConfigPool implements IConfig {
     public freeze(): void {
         this.logFn(LogType.debug, () => "freeze");
         if (!this.freezePromise) {
-            this.freezePromise = new Promise<boolean>((resolve) => {
+            this.freezePromise = new Promise<boolean | undefined>((resolve) => {
                 this.freezeResolve = resolve;
             });
         }
@@ -74,7 +74,7 @@ export class ConfigPool implements IConfig {
      */
     public get(section: string): Promise<IConfigSection|undefined> {
         this.logFn(LogType.debug, () => "get = " + section);
-        return new Promise<IConfigSection>(async (resolve) => {
+        return new Promise<IConfigSection|undefined>(async (resolve) => {
             const promises: any[] = [];
             if (this.loadPromise) {
                 promises.push(this.loadPromise);

@@ -371,7 +371,12 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 						}).listen(0);
 
 						// make VS Code connect to debug server instead of launching debug adapter
-						config.debugServer = this.serverDbg.address().port;
+						const address = this.serverDbg.address();
+						if (address && typeof address === 'object' && 'port' in address) {
+							config.debugServer = address.port;
+						} else {
+							config.debugServer = 1234;
+						}
 					}
 					else if(config.typeRun === "RUN")
 					{
@@ -392,7 +397,12 @@ class VMSConfigurationProvider implements vscode.DebugConfigurationProvider
 						}).listen(0);
 
 						// make VS Code connect to debug server instead of launching debug adapter
-						config.debugServer = this.serverNoDbg.address().port;
+						const address = this.serverNoDbg.address();
+						if (address && typeof address === 'object' && 'port' in address) {
+							config.debugServer = address.port;
+						} else {
+							config.debugServer = 1234;
+						}
 					}
 					else
 					{

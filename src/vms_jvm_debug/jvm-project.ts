@@ -53,7 +53,7 @@ export class JvmProject {
     /** name => IFileInfo */
     private collection = new Map<string, IFileInfo>();
     private watcher?: vscode.FileSystemWatcher;
-    private timer?: NodeJS.Timer;
+    private timer?: NodeJS.Timeout;
 
     public logFn: LogFunction;
 

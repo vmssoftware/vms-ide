@@ -7,7 +7,7 @@ import { LogFunction, LogType } from "./log-type";
 
 export class Debouncer {
 
-    protected timer: NodeJS.Timer | undefined = undefined;
+    protected timer: NodeJS.Timeout | undefined = undefined;
 
     constructor(protected msec: number, public debugLog?: LogFunction) {
 
@@ -26,7 +26,7 @@ export class Debouncer {
         if (this.debugLog) {
             this.debugLog(LogType.debug, () => "debounce: creating promise");
         }
-        return new Promise((resolve) => {
+        return new Promise<void>((resolve) => {
             if (this.debugLog) {
                 this.debugLog(LogType.debug, () => "debounce: creating timer");
             }

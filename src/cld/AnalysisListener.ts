@@ -33,7 +33,7 @@ import {
     KeywordValueContext,
 } from "./cldParser";
 import { ContextSymbolTable, QualifierSymbol, VerbSymbol, SyntaxSymbol, TypeSymbol, KeywordSymbol, ParameterSymbol, TypeRefSymbol, EntityCollection, LabelSymbol, INestedEntity, EntitySymbol, WithTypeReference } from "./ContextSymbolTable";
-import { Symbol, ScopedSymbol } from "antlr4-c3";
+import { BaseSymbol, ScopedSymbol } from "antlr4-c3";
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -307,16 +307,16 @@ export class AnalysisListener implements cldListener {
             this.markToken(ctx.start, AnalysisListener.entityOutside);
         } else {
             // currentSymbol: the EntityCollection where the current name have to be defined
-            let currentSymbol: EntityCollection = this.symbolTable.symbolWithContext(defineCtx) as EntityCollection;
+            let currentSymbol: EntityCollection = this.symbolTable.symbolWithContextSync(defineCtx) as EntityCollection;
             let contextToMark: ParserRuleContext = defineCtx;
             let index = 0;
             if (ctx._defRoot) {
                 ++index;
                 // set scope to defRoot
-                currentSymbol = this.symbolTable.resolve(ctx._defRoot.text.toUpperCase(), false) as EntityCollection;
+                currentSymbol = this.symbolTable.resolveSync(ctx._defRoot.text.toUpperCase(), false) as EntityCollection;
                 contextToMark = ctx._defRoot;
                 // save definition symbol for root
-                let entitySymbol = this.symbolTable.symbolWithContext(ctx._defRoot);
+                let entitySymbol = this.symbolTable.symbolWithContextSync(ctx._defRoot);
                 if (entitySymbol && entitySymbol instanceof EntitySymbol) {
                     this.symbolTable.linkSymbols(currentSymbol, entitySymbol);
                 }
@@ -422,7 +422,7 @@ export class AnalysisListener implements cldListener {
      * @param symbol
      * @param typeStack
      */
-    public collectUnambigousEntities(symbol: EntityCollection, typeStack?: Map<string, Symbol>) {
+    public collectUnambigousEntities(symbol: EntityCollection, typeStack?: Map<string, BaseSymbol>) {
         const entities = new Map<string, INestedEntity | undefined>();
         if (typeStack) {
             // test on circular reference
@@ -435,17 +435,17 @@ export class AnalysisListener implements cldListener {
             }
         }
         // inspect parameters
-        const parameters = symbol.getSymbolsOfType(ParameterSymbol);
+        const parameters = symbol.getAllSymbolsSync(ParameterSymbol);
         for(const entity of parameters) {
             this.processEntity(entity, entities, typeStack);
         }
         // inspect qualifiers
-        const qualifiers = symbol.getSymbolsOfType(QualifierSymbol);
+        const qualifiers = symbol.getAllSymbolsSync(QualifierSymbol);
         for(const entity of qualifiers) {
             this.processEntity(entity, entities, typeStack);
         }
         // inspect keywords
-        const keywords = symbol.getSymbolsOfType(KeywordSymbol);
+        const keywords = symbol.getAllSymbolsSync(KeywordSymbol);
         for(const entity of keywords) {
             this.processEntity(entity, entities, typeStack);
         }
@@ -458,10 +458,10 @@ export class AnalysisListener implements cldListener {
      * @param entities unambigous entities to update
      * @param typeStack stack to prevent circular references
      */
-    public processEntity(currentEntity: WithTypeReference, entities: Map<string, INestedEntity | undefined>, typeStack?: Map<string, Symbol> ) {
+    public processEntity(currentEntity: WithTypeReference, entities: Map<string, INestedEntity | undefined>, typeStack?: Map<string, BaseSymbol> ) {
         // set entity as parameter
-        let entityToSave: Symbol = currentEntity;
-        const labels = currentEntity.getSymbolsOfType(LabelSymbol);
+        let entityToSave: BaseSymbol = currentEntity;
+        const labels = currentEntity.getAllSymbolsSync(LabelSymbol);
         if (labels.length === 1) {
             // if label only one, replace entity
             entityToSave = labels[0];
@@ -476,14 +476,14 @@ export class AnalysisListener implements cldListener {
             // save entity
             entities.set(entityToSave.name.toUpperCase(), { entity: entityToSave, nestedLevel: 0 });
             // find types in parameter, not entity
-            const typeRefs = currentEntity.getSymbolsOfType(TypeRefSymbol);
+            const typeRefs = currentEntity.getAllSymbolsSync(TypeRefSymbol);
             if (typeRefs.length === 1) {
                 const typeName = typeRefs[0].name;
                 const typeSymbol = this.symbolTable.getSymbolOfType(typeName, SymbolKind.Type, false) as EntityCollection;
                 if (typeSymbol) {
                     if (!typeSymbol.unambigousEntities) {
                         // collect inner unamigous entities, do not forget to update stack
-                        typeStack = typeStack || new Map<string, Symbol>();
+                        typeStack = typeStack || new Map<string, BaseSymbol>();
                         if (currentEntity.parent) {
                             // add parent name to stack, but use current typeRef to show error
                             typeStack.set(currentEntity.parent.name.toUpperCase(), typeRefs[0]);
@@ -562,14 +562,14 @@ export class AnalysisListener implements cldListener {
      * @param ctx   current context
      * @param name  token to test
      */
-    public testFourLetters<T extends Symbol>(t: new (...args: any[]) => T, ctx: ParserRuleContext, name: Token) {
+    public testFourLetters<T extends BaseSymbol>(t: new (...args: any[]) => T, ctx: ParserRuleContext, name: Token) {
         if (!name.text) {
             return;
         }
-        let symbolfromContext = this.symbolTable.symbolWithContext(ctx);
+        let symbolfromContext = this.symbolTable.symbolWithContextSync(ctx);
         if (symbolfromContext && symbolfromContext.parent) {
             const parent = symbolfromContext.parent as ScopedSymbol;
-            for (const child of parent.getAllSymbols(t, true)) {
+            for (const child of parent.getAllSymbolsSync(t, true)) {
                 if (child.context !== ctx &&
                     child.name.slice(0, 4) === name.text.slice(0, 4).toUpperCase()) {
                         this.markToken(name, AnalysisListener.entityStartNameNotUnique);
@@ -584,15 +584,15 @@ export class AnalysisListener implements cldListener {
      * @param ctx   current context
      * @param name  token to test
      */
-    public testFullNameIsUnique<T extends Symbol>(t: new (...args: any[]) => T, ctx: ParserRuleContext, name: Token) {
+    public testFullNameIsUnique<T extends BaseSymbol>(t: new (...args: any[]) => T, ctx: ParserRuleContext, name: Token) {
         if (!name.text) {
             return true;
         }
         const testName = name.text.toUpperCase();
-        let symbolfromContext = this.symbolTable.symbolWithContext(ctx);
+        let symbolfromContext = this.symbolTable.symbolWithContextSync(ctx);
         if (symbolfromContext && symbolfromContext.parent) {
             const parent = symbolfromContext.parent as ScopedSymbol;
-            for (const child of parent.getAllSymbols(t, true)) {
+            for (const child of parent.getAllSymbolsSync(t, true)) {
                 if (child.context !== ctx &&
                     child.name.toUpperCase() === testName) {
                         this.markToken(name, AnalysisListener.entityNotUnique);

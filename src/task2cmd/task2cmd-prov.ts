@@ -94,7 +94,11 @@ export class Task2CmdProvider implements vscode.TaskProvider {
         switch(os.platform()) {
             default:
                 this.server.listen(() => {
-                    this.listenPort = this.server!.address().port;
+                    this.listenPort = 0;
+                    const addr = this.server!.address();
+                    if (addr && typeof addr == 'object' && 'port' in addr) {
+                        this.listenPort = addr.port;
+                    }
                     this.logFn(LogType.debug, () => `Listen port: "${this.listenPort}"`);
                 });
                 break;

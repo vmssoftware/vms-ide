@@ -23,7 +23,7 @@ import {
 
 import { 
     ScopedSymbol,
-    Symbol,
+    BaseSymbol,
 } from "antlr4-c3";
 
 import { 
@@ -552,7 +552,7 @@ export class DetailsListener implements FortranParserListener
         }
     }
 
-    private currentSymbol: Symbol | undefined;
+    private currentSymbol: BaseSymbol | undefined;
 }
 
 function unquote(input: string, quoteChar?: string) 

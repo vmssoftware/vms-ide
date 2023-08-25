@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 import {
     ScopedSymbol,
-    Symbol,
+    BaseSymbol,
 } from 'antlr4-c3';
 import { ParseTree } from 'antlr4ts/tree';
 
@@ -223,7 +223,7 @@ export function translateCompletionKind(kind: ECobolSymbolKind): vscode.Completi
  * 
  * @param kind 
  */
-export function getSymbolFromKind(kind: ECobolSymbolKind): typeof Symbol {
+export function getSymbolFromKind(kind: ECobolSymbolKind): typeof BaseSymbol {
     switch (kind) {
         case ECobolSymbolKind.Program:
             return ProgramSymbol;
@@ -293,7 +293,7 @@ export function getSymbolFromKind(kind: ECobolSymbolKind): typeof Symbol {
             return IntrinsicFunctionSymbol;
         case ECobolSymbolKind.Unknown:
         default:
-            return Symbol;
+            return BaseSymbol;
     }
 }
 
@@ -301,7 +301,7 @@ export function getSymbolFromKind(kind: ECobolSymbolKind): typeof Symbol {
  * 
  * @param symbol 
  */
-export function getKindFromSymbol(symbol: Symbol): ECobolSymbolKind {
+export function getKindFromSymbol(symbol: BaseSymbol): ECobolSymbolKind {
     if (symbol instanceof IntrinsicFunctionSymbol) {
         return ECobolSymbolKind.IntrinsicFunction;
     }
@@ -401,7 +401,7 @@ export function getKindFromSymbol(symbol: Symbol): ECobolSymbolKind {
     if (symbol instanceof IndexedBySymbol) {
         return ECobolSymbolKind.IndexedBy;
     }
-    if (symbol instanceof Symbol) {
+    if (symbol instanceof BaseSymbol) {
         return ECobolSymbolKind.Unknown;
     }
     return ECobolSymbolKind.Unknown;
@@ -473,7 +473,7 @@ export class ReportRecordSymbol extends DataRecordSymbol {
 export class ScreenRecordSymbol extends DataRecordSymbol {
     public screenType?: EScreenType;
 }
-export class SegKeySymbol extends Symbol { }
+export class SegKeySymbol extends BaseSymbol { }
 export class SectionSymbol extends IdentifierSymbol {
     public segment?: number;
 }
@@ -482,13 +482,13 @@ export class ParagraphSymbol extends IdentifierSymbol { }
 export class IndexedBySymbol extends IdentifierSymbol { }
 export class SpecialRegisterSymbol extends DataRecordSymbol { }
 export class FigurativeConstantSymbol extends DataRecordSymbol { }
-export class SIGN_Symbol extends Symbol { }
-export class BOOL_Symbol extends Symbol { }
+export class SIGN_Symbol extends BaseSymbol { }
+export class BOOL_Symbol extends BaseSymbol { }
 
 //**************************************************/
 //**************************************************/
 //**************************************************/
-export function firstContainingSymbol<T extends Symbol>(symbol: Symbol | undefined, t: new (...args: any[]) => T) {
+export function firstContainingSymbol<T extends BaseSymbol>(symbol: BaseSymbol | undefined, t: new (...args: any[]) => T) {
     let retSymbol = symbol;
     while(retSymbol !== undefined) {
         if (retSymbol instanceof t) {
@@ -1093,7 +1093,7 @@ export interface IPreDefinition {
     picture?: string;
     usage?: EDataUsage;
     global?: EGlobalType;
-    type: new (...args: any[]) => Symbol;
+    type: new (...args: any[]) => BaseSymbol;
     requireQualification?: boolean;
 }
 

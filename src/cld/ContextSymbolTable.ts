@@ -8,7 +8,7 @@
 "use strict";
 
 import { ParserRuleContext } from 'antlr4ts';
-import { SymbolTable, Symbol, ScopedSymbol, SymbolTableOptions, NamespaceSymbol } from "antlr4-c3";
+import { SymbolTable, BaseSymbol, ScopedSymbol, SymbolTableOptions, NamespaceSymbol } from "antlr4-c3";
 
 import { SymbolKind, SymbolInfo, Definition } from './Facade';
 import { SourceContext } from './SourceContext';
@@ -19,7 +19,7 @@ export class ContextSymbolTable extends SymbolTable {
 
     public tree?: ParserRuleContext; // Set by the owning source context after each parse run.
 
-    public references: Map<Symbol, Set<Symbol>> = new Map<Symbol, Set<Symbol>>();
+    public references: Map<BaseSymbol, Set<BaseSymbol>> = new Map<BaseSymbol, Set<BaseSymbol>>();
 
     constructor(name: string, options: SymbolTableOptions, public owner?: SourceContext) {
         super(name, options);
@@ -47,12 +47,12 @@ export class ContextSymbolTable extends SymbolTable {
         return symbol.context;
     }
 
-    public getSymbolInfo(symbol: string | Symbol | undefined): SymbolInfo | undefined {
+    public getSymbolInfo(symbol: string | BaseSymbol | undefined): SymbolInfo | undefined {
         if (!symbol) {
             return undefined;
         }
-        if (!(symbol instanceof Symbol)) {
-            let temp = this.resolve(symbol);
+        if (!(symbol instanceof BaseSymbol)) {
+            let temp = this.resolveSync(symbol);
             if (!temp) {
                 return undefined;
             }
@@ -60,7 +60,7 @@ export class ContextSymbolTable extends SymbolTable {
         }
 
         let kind = ContextSymbolTable.getKindFromSymbol(symbol);
-        let name = (symbol as Symbol).name;
+        let name = (symbol as BaseSymbol).name;
 
         let definitionSymbol = this.definitionSymbolForContext(symbol.context);
 
@@ -85,7 +85,7 @@ export class ContextSymbolTable extends SymbolTable {
         return this.definitionFromSymbol(this.definitionSymbolForContext(ctx));
     }
 
-    public definitionFromSymbol(definition?: Symbol): Definition | undefined {
+    public definitionFromSymbol(definition?: BaseSymbol): Definition | undefined {
         if (definition && definition.context && definition.context instanceof ParserRuleContext) {
             const rule = definition.context;
             const result: Definition = {
@@ -103,7 +103,7 @@ export class ContextSymbolTable extends SymbolTable {
     /**
      * Returns the definition info for the given rule context.
      */
-    public definitionSymbolForContext(ctx: ParseTree | undefined): Symbol | undefined {
+    public definitionSymbolForContext(ctx: ParseTree | undefined): BaseSymbol | undefined {
         if (!ctx) {
             return undefined;
         }
@@ -116,10 +116,10 @@ export class ContextSymbolTable extends SymbolTable {
         return undefined;
     }
 
-    public linkSymbols(master: Symbol, slave: EntitySymbol) {
+    public linkSymbols(master: BaseSymbol, slave: EntitySymbol) {
         let slaves = this.references.get(master);
         if (!slaves) {
-            slaves = new Set<Symbol>();
+            slaves = new Set<BaseSymbol>();
             this.references.set(master, slaves);
         }
         slaves.add(slave);
@@ -130,7 +130,7 @@ export class ContextSymbolTable extends SymbolTable {
      * Only for master definition
      * @param master 
      */
-    public getReferenceCount(master: Symbol): number {
+    public getReferenceCount(master: BaseSymbol): number {
         let slaves = this.references.get(master);
         if (slaves) {
             return slaves.size;
@@ -143,7 +143,7 @@ export class ContextSymbolTable extends SymbolTable {
      * @param symbol 
      * @param localOnly 
      */
-    public getSymbolOccurences(symbol: Symbol, localOnly: boolean): SymbolInfo[] {
+    public getSymbolOccurences(symbol: BaseSymbol, localOnly: boolean): SymbolInfo[] {
         let result: SymbolInfo[] = [];
         let master = symbol;
         
@@ -171,8 +171,8 @@ export class ContextSymbolTable extends SymbolTable {
         return result;
     }
 
-    public getSymbolOfType(name: string, kind: SymbolKind, localOnly: boolean): Symbol | undefined {
-        const resolved = this.resolve(name, localOnly);
+    public getSymbolOfType(name: string, kind: SymbolKind, localOnly: boolean): BaseSymbol | undefined {
+        const resolved = this.resolveSync(name, localOnly);
         if (resolved && ContextSymbolTable.getKindFromSymbol(resolved) === kind) {
             return resolved;
         }
@@ -204,10 +204,10 @@ export class ContextSymbolTable extends SymbolTable {
             case SymbolKind.Routine:
                 return RoutineSymbol;
         }
-        return Symbol;
+        return BaseSymbol;
     }
 
-    public static getKindFromSymbol(symbol: Symbol): SymbolKind {
+    public static getKindFromSymbol(symbol: BaseSymbol): SymbolKind {
         if (symbol instanceof VerbSymbol) {
             return SymbolKind.Verb;
         }
@@ -248,7 +248,7 @@ export class ContextSymbolTable extends SymbolTable {
 }
 
 export interface INestedEntity { 
-    entity: Symbol; 
+    entity: BaseSymbol; 
     nestedLevel: number; 
 }
 export class EntityCollection extends NamespaceSymbol { 
@@ -257,16 +257,16 @@ export class EntityCollection extends NamespaceSymbol {
 export class WithTypeReference extends ScopedSymbol { 
     public typeReference?: EntityCollection;
 }
-export class EntitySymbol extends Symbol { 
-    public masterSymbol?: Symbol;
+export class EntitySymbol extends BaseSymbol { 
+    public masterSymbol?: BaseSymbol;
 }
 export class VerbSymbol extends EntityCollection { }
 export class SyntaxSymbol extends EntityCollection { }
 export class TypeSymbol extends EntityCollection { }
-export class BuiltInTypeSymbol extends Symbol { }
+export class BuiltInTypeSymbol extends BaseSymbol { }
 export class TypeRefSymbol extends EntitySymbol { }
 export class ParameterSymbol extends WithTypeReference { }
 export class QualifierSymbol extends WithTypeReference { }
 export class KeywordSymbol extends WithTypeReference { }
-export class LabelSymbol extends Symbol { }
-export class RoutineSymbol extends Symbol { }
+export class LabelSymbol extends BaseSymbol { }
+export class RoutineSymbol extends BaseSymbol { }

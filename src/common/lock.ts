@@ -81,8 +81,8 @@ export class LockQueue {
         return this.locked;
     }
 
-    public acquire(action?: LockQueueAction): Promise<boolean> {
-        return new Promise<boolean>((resolve) => {
+    public acquire(action?: LockQueueAction): Promise<boolean | undefined> {
+        return new Promise<boolean | undefined>((resolve) => {
             if (!this.locked && this.queue.length === 0) {
                 this.locked = true;
                 resolve(true);

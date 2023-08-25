@@ -9,7 +9,7 @@ import {
 
 import {
     ScopedSymbol,
-    Symbol,
+    BaseSymbol,
 } from "antlr4-c3";
 
 import {
@@ -98,7 +98,7 @@ import {
 
 import {
     unifyCobolName
-} from '../../common/parser/Helpers';
+} from '../../common/parser/helpers';
 
 import {
     CobolAnalisisHelper
@@ -107,9 +107,9 @@ import {
 
 export class CobolDetailsListener implements cobolListener {
 
-    private symbolStack: (Symbol | undefined)[] = [];
+    private symbolStack: (BaseSymbol | undefined)[] = [];
 
-    private currentSymbol: Symbol | undefined;
+    private currentSymbol: BaseSymbol | undefined;
 
     public static readonly _separator = "\t\r\n ,;";
 
@@ -141,7 +141,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     enterPredefined_name_relation(ctx: Predefined_name_relationContext) {
-        let symbolType: typeof Symbol | undefined;
+        let symbolType: typeof BaseSymbol | undefined;
         let device = ctx.predefined_name().getChild(0);
         if (device instanceof TerminalNode) {
             switch (device.symbol.type) {
@@ -256,7 +256,7 @@ export class CobolDetailsListener implements cobolListener {
         let programSymbol = firstContainingSymbol(this.currentSymbol, ProgramSymbol);
         if (programSymbol) {
             let name = unifyCobolName(ctx.file_description_entry().file_name().text);
-            let fileSymbols = programSymbol.getSymbolsOfType(FileSymbol).filter(x => x.name === name);
+            let fileSymbols = programSymbol.getAllSymbolsSync(FileSymbol).filter(x => x.name === name);
             if (fileSymbols.length === 1) {
                 this.promote(fileSymbols[0]);
                 return;
@@ -466,7 +466,7 @@ export class CobolDetailsListener implements cobolListener {
 
     //*****************************************************************************************************************************
 
-    private promoteNew<T extends Symbol>(t: new (...args: any[]) => T, enclosingCtx: ParserRuleContext, nameCtx?: ParserRuleContext, ...args: any[]): T {
+    private promoteNew<T extends BaseSymbol>(t: new (...args: any[]) => T, enclosingCtx: ParserRuleContext, nameCtx?: ParserRuleContext, ...args: any[]): T {
         let name = nameCtx ? unifyCobolName(CobolAnalisisHelper.stringLiteralContent(nameCtx.text)) : "";
         let symbol = this.create(this.currentSymbol, t, name, ...args);
         symbol.context = enclosingCtx;
@@ -477,12 +477,12 @@ export class CobolDetailsListener implements cobolListener {
         return this.currentSymbol as T;
     }
 
-    private promote(symbol?: Symbol) {
+    private promote(symbol?: BaseSymbol) {
         this.symbolStack.push(this.currentSymbol);
         this.currentSymbol = symbol;
     }
 
-    private create<T extends Symbol>(scope: Symbol | undefined, t: new (...args: any[]) => T, ...args: any[]) {
+    private create<T extends BaseSymbol>(scope: BaseSymbol | undefined, t: new (...args: any[]) => T, ...args: any[]) {
         while (scope != undefined) {
             if (scope instanceof ScopedSymbol) {
                 return this.symbolTable.addNewSymbolOfType(t, scope, ...args);
@@ -502,7 +502,7 @@ export class CobolDetailsListener implements cobolListener {
     }
 
     private promoteDataEntry<SymbT extends DataRecordSymbol>(
-            parentSymbol: Symbol | undefined,
+            parentSymbol: BaseSymbol | undefined,
             ctx: Data_description_entryContext | Report_group_data_description_entryContext | Screen_description_entryContext,
             symbType: new (...args: any[]) => SymbT,
             ): SymbT | undefined {

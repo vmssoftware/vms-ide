@@ -1,5 +1,5 @@
 
-import { DebugProtocol } from "vscode-debugprotocol";
+import { DebugProtocol } from "@vscode/debugprotocol";
 import { DebugConfiguration, WorkspaceFolder } from "vscode";
 
 /**

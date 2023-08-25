@@ -12,8 +12,8 @@ import {
     TerminatedEvent,
     Thread,
     logger,
-} from "vscode-debugadapter";
-import { DebugProtocol } from 'vscode-debugprotocol';
+} from "@vscode/debugadapter";
+import { DebugProtocol } from '@vscode/debugprotocol';
 import * as nls from "vscode-nls";
 
 import { LogFunction, Lock, Delay, ftpPathSeparator, LogType } from "../common/main";
@@ -298,7 +298,7 @@ export class PythonDebugSession extends LoggingDebugSession {
     protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
 
         // build and return the capabilities of this debug adapter:
-        response.body = Object.assign(response.body, this._capabilities);
+        response.body = Object.assign(response.body || {}, this._capabilities);
 
         this.sendResponse(response);
 

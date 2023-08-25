@@ -8,7 +8,7 @@ import { Subscribe } from "./subscribe";
  */
 export class WaitFireEventEmitter<T> {
 
-    private fireSoonHandle?: NodeJS.Timer;
+    private fireSoonHandle?: NodeJS.Timeout;
     private emitter = new EventEmitter();
     private event = Symbol();
 

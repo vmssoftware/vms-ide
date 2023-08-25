@@ -24,7 +24,7 @@ suite("LONG tests", function(this: Mocha.Suite) {
         let lognAsyncFnWithAwait = async () => {
             let count: number = 0;
             for(let i = 0; i < max && !stop; ++i) {
-                await new Promise(resolve => {
+                await new Promise<void>(resolve => {
                     setImmediate(() => {
                         resolve();
                     })

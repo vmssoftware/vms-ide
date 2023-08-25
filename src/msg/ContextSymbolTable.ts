@@ -1,4 +1,4 @@
-import { SymbolTable, Symbol, ScopedSymbol, SymbolTableOptions } from "antlr4-c3";
+import { SymbolTable, BaseSymbol, ScopedSymbol, SymbolTableOptions } from "antlr4-c3";
 import { ParserRuleContext } from "antlr4ts";
 import { SourceContext } from "./SourceContext";
 import { SymbolKind, SymbolInfo } from "./Facade";
@@ -20,7 +20,7 @@ export class ContextSymbolTable extends SymbolTable {
     }
 
     public addNewSymbol(kind: SymbolKind, name: string, ctx: ParserRuleContext) {
-        let symbol: Symbol;
+        let symbol: BaseSymbol;
         switch (kind) {
             default:
                 symbol = this.addNewSymbolOfType(OtherSymbol, undefined, name);
@@ -41,9 +41,9 @@ export class ContextSymbolTable extends SymbolTable {
         return symbol.context;
     }
 
-    public getSymbolInfo(symbol: string | Symbol): SymbolInfo | undefined {
-        if (!(symbol instanceof Symbol)) {
-            let temp = this.resolve(symbol);
+    public getSymbolInfo(symbol: string | BaseSymbol): SymbolInfo | undefined {
+        if (!(symbol instanceof BaseSymbol)) {
+            let temp = this.resolveSync(symbol);
             if (!temp) {
                 return undefined;
             }
@@ -51,7 +51,7 @@ export class ContextSymbolTable extends SymbolTable {
         }
 
         let kind = SourceContext.getKindFromSymbol(symbol);
-        let name = (symbol as Symbol).name;
+        let name = (symbol as BaseSymbol).name;
 
         let symbolTable = symbol.symbolTable as ContextSymbolTable;
         return {
@@ -64,10 +64,10 @@ export class ContextSymbolTable extends SymbolTable {
 
     }
 
-    private symbolsOfType<T extends Symbol>(t: new (...args: any[]) => T, localOnly: boolean = false): SymbolInfo[] {
+    private symbolsOfType<T extends BaseSymbol>(t: new (...args: any[]) => T, localOnly: boolean = false): SymbolInfo[] {
         var result: SymbolInfo[] = [];
 
-        let symbols = this.getAllSymbols(t, localOnly);
+        let symbols = this.getAllSymbolsSync(t, localOnly);
         for (let symbol of symbols) {
             let root = symbol.root as ContextSymbolTable;
             result.push({
@@ -122,7 +122,7 @@ export class ContextSymbolTable extends SymbolTable {
     public getSymbolOccurences(symbolName: string, localOnly: boolean): SymbolInfo[] {
         let result: SymbolInfo[] = [];
 
-        let symbols = this.getAllSymbols(Symbol, localOnly);
+        let symbols = this.getAllSymbolsSync(BaseSymbol, localOnly);
         for (let symbol of symbols) {
             let owner = (symbol.root as ContextSymbolTable).owner;
 
@@ -140,7 +140,7 @@ export class ContextSymbolTable extends SymbolTable {
                 }
 
                 if (symbol instanceof ScopedSymbol) {
-                    let references = symbol.getAllNestedSymbols(symbolName);
+                    let references = symbol.getAllNestedSymbolsSync(symbolName);
                     for (let reference of references) {
                         result.push({
                             kind: SourceContext.getKindFromSymbol(reference),
@@ -157,16 +157,16 @@ export class ContextSymbolTable extends SymbolTable {
         return result;
     }
 
-    private getSymbolOfType(name: string, kind: SymbolKind, localOnly: boolean): Symbol | undefined {
+    private getSymbolOfType(name: string, kind: SymbolKind, localOnly: boolean): BaseSymbol | undefined {
         switch (kind) {
             case SymbolKind.Other:
-                return this.resolve(name, localOnly) as OtherSymbol;
+                return this.resolveSync(name, localOnly) as OtherSymbol;
         }
         return undefined;
     }
 
 }
 
-export class OperatorSymbol extends Symbol { }
-export class OtherSymbol extends Symbol { }
+export class OperatorSymbol extends BaseSymbol { }
+export class OtherSymbol extends BaseSymbol { }
 export class VariableSymbol extends ScopedSymbol { }

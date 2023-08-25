@@ -31,20 +31,82 @@
             "type": "gulp",
             "task": "make-async",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "postinstall",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "CLD.antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "MSG.antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "MSGLex.antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "Pascal.antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "Cobol.antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "CobolLex.antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "CobolCopy.antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "cobol-make-async",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "cobol-g4-post-modified",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "Fortran.antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "Fortran.antlr4tsLex",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "Basic.antlr4ts",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "Basic.antlr4tsLex",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "postinstall",
+            "problemMatcher": [],
+            "label": ""
         }
-        , {"type": "npm", "script": "postinstall", "problemMatcher": [] }
-        , {"type": "npm", "script": "CLD.antlr4ts", "problemMatcher" : [] }
-        , {"type": "npm", "script": "MSG.antlr4ts", "problemMatcher" : [] }
-        , {"type": "npm", "script": "MSGLex.antlr4ts", "problemMatcher" : [] }
-        , {"type": "npm", "script": "Pascal.antlr4ts", "problemMatcher" : [] }
-        , {"type": "npm", "script": "Cobol.antlr4ts", "problemMatcher" : [] }
-        , {"type": "npm", "script": "CobolLex.antlr4ts", "problemMatcher" : [] }
-        , {"type": "npm", "script": "CobolCopy.antlr4ts", "problemMatcher" : [] }
-        , {"type": "npm", "script": "cobol-make-async", "problemMatcher" : [] }
-        , {"type": "npm", "script": "cobol-g4-post-modified", "problemMatcher" : [] }
-        , {"type": "npm", "script": "Fortran.antlr4ts", "problemMatcher" : [] }
-        , {"type": "npm", "script": "Fortran.antlr4tsLex", "problemMatcher" : [] }
-        , {"type": "npm", "script": "Basic.antlr4ts", "problemMatcher" : [] }
-        , {"type": "npm", "script": "Basic.antlr4tsLex", "problemMatcher" : [] }
     ]
 }

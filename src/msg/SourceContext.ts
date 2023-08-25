@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as nls from "vscode-nls";
 
-import { Symbol, CodeCompletionCore } from "antlr4-c3";
+import { BaseSymbol, CodeCompletionCore } from "antlr4-c3";
 import { ParseCancellationException, IntervalSet, Interval } from 'antlr4ts/misc';
 import { ParseTreeWalker, TerminalNode, ParseTree, ParseTreeListener } from 'antlr4ts/tree';
 import { msgParser, MsgContentContext } from "./msgParser";
@@ -13,7 +13,7 @@ import { ContextSymbolTable, OtherSymbol } from './ContextSymbolTable';
 import { AnalysisListener, VariableSource } from './AnalysisListener';
 import { LogFunction, LogType } from '../common/main';
 import { msgLex } from './msgLex';
-import { parseTreeFromPosition } from '../common/parser/Helpers';
+import { parseTreeFromPosition } from '../common/parser/helpers';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -120,7 +120,7 @@ export class SourceContext {
         }
     }
 
-    public static getKindFromSymbol(symbol: Symbol): SymbolKind {
+    public static getKindFromSymbol(symbol: BaseSymbol): SymbolKind {
         if (symbol instanceof OtherSymbol) {
             return SymbolKind.Other;
         }

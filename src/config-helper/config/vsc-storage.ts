@@ -58,7 +58,7 @@ export class VSCConfigStorage implements IConfigStorage {
                 const cfgKey = `${section}.${key}`;
                 try {
                     await configuration.update(cfgKey, data[key]);
-                } catch (err) {
+                } catch (err: any) {
                     this.logFn(LogType.debug, () => "update failed: " + cfgKey);
                     if (err instanceof Error) {
                         this.logFn(LogType.debug, () => err.message);

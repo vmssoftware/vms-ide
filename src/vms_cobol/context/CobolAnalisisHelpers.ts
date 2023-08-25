@@ -4,9 +4,9 @@ import { Qualified_data_itemContext } from "../parser/cobolParser";
 import { ParserRuleContext, Token } from "antlr4ts";
 import { ParseTree, TerminalNode } from "antlr4ts/tree";
 import { CobolSymbolTable } from "./CobolSymbolTable";
-import { Symbol } from "antlr4-c3";
+import { BaseSymbol } from "antlr4-c3";
 import { IDiagnosticEntry, EDiagnosticType } from "../../common/parser/Facade";
-import { mark, unifyCobolName } from "../../common/parser/Helpers";
+import { mark, unifyCobolName } from "../../common/parser/helpers";
 import { DataRecordSymbol, EDataUsage } from "./CobolSymbol";
 
 nls.config({messageFormat: nls.MessageFormat.both});
@@ -87,10 +87,10 @@ export class CobolAnalisisHelper {
     public verifyQualifiedName(
             identifierCtx ?: Qualified_data_itemContext,
             localOnly ?: boolean,
-            filterAllowed ?: (new (...args: any[]) => Symbol)[],
-            filterInclude ?: (new (...args: any[]) => Symbol)[],
-            filterExclude ?: (new (...args: any[]) => Symbol)[],
-            warningUndefined?: boolean): Symbol | undefined {
+            filterAllowed ?: (new (...args: any[]) => BaseSymbol)[],
+            filterInclude ?: (new (...args: any[]) => BaseSymbol)[],
+            filterExclude ?: (new (...args: any[]) => BaseSymbol)[],
+            warningUndefined?: boolean): BaseSymbol | undefined {
         if (identifierCtx) {
             return this.verifyNamePath(identifierCtx, identifierCtx.USER_DEFINED_WORD_(), localOnly, filterAllowed, filterInclude, filterExclude, warningUndefined);
         }
@@ -108,11 +108,11 @@ export class CobolAnalisisHelper {
     public verifyName(
         identifierCtx ?: ParserRuleContext | TerminalNode,
         localOnly ?: boolean,
-        filterAllowed ?: (new (...args: any[]) => Symbol)[],
-        filterInclude ?: (new (...args: any[]) => Symbol)[],
-        filterExclude ?: (new (...args: any[]) => Symbol)[],
+        filterAllowed ?: (new (...args: any[]) => BaseSymbol)[],
+        filterInclude ?: (new (...args: any[]) => BaseSymbol)[],
+        filterExclude ?: (new (...args: any[]) => BaseSymbol)[],
         warningUndefined?: boolean)
-                : Symbol | undefined {
+                : BaseSymbol | undefined {
         if (identifierCtx) {
             return this.verifyNamePath(identifierCtx, [identifierCtx], localOnly, filterAllowed, filterInclude, filterExclude, warningUndefined);
         }
@@ -132,14 +132,14 @@ export class CobolAnalisisHelper {
             ctx: ParserRuleContext | TerminalNode,
             namePath: ParseTree[],
             localOnly ?: boolean,
-            filterAllowed ?: (new (...args: any[]) => Symbol)[],
-            filterInclude ?: (new (...args: any[]) => Symbol)[],
-            filterExclude ?: (new (...args: any[]) => Symbol)[],
+            filterAllowed ?: (new (...args: any[]) => BaseSymbol)[],
+            filterInclude ?: (new (...args: any[]) => BaseSymbol)[],
+            filterExclude ?: (new (...args: any[]) => BaseSymbol)[],
             warningUndefined?: boolean)
-                : Symbol | undefined {
+                : BaseSymbol | undefined {
         let symbols = this.symbolTable.resolveIdentifier(namePath.map(x => unifyCobolName(CobolAnalisisHelper.stringLiteralContent(x.text))), ctx, localOnly);
         if (filterInclude && filterInclude.length > 0) {
-            let filteredSymbols: Symbol[] = [];
+            let filteredSymbols: BaseSymbol[] = [];
             for (let symbol of symbols) {
                 for (let t of filterInclude) {
                     if (symbol instanceof t) {
@@ -151,7 +151,7 @@ export class CobolAnalisisHelper {
             symbols = filteredSymbols;
         }
         if (filterExclude && filterExclude.length > 0) {
-            let filteredSymbols: Symbol[] = [];
+            let filteredSymbols: BaseSymbol[] = [];
             for (let symbol of symbols) {
                 if (!filterExclude.reduce((exclude, t) => exclude || (symbol instanceof t), false)) {
                     filteredSymbols.push(symbol);

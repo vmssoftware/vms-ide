@@ -80,8 +80,6 @@ async function createScopeFsWatchers(folder: WorkspaceFolder, sshHelper: SshHelp
             basename: false,
             dot: true,
             nocase: true,
-            nodupes: true,
-            unixify: false,
         };
         let {expandedMask: source , missed_curly_bracket: errSrc} = expandMask(ensured.projectSection.source);
         let {expandedMask: headers , missed_curly_bracket: errHdr} = expandMask(ensured.projectSection.headers);

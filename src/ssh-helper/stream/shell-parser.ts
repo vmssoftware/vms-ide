@@ -17,7 +17,7 @@ export class ShellParser extends Transform implements IShellParser {
     public lastError?: Error;
     public logFn: LogFunction;
 
-    protected timer?: NodeJS.Timer;
+    protected timer?: NodeJS.Timeout;
     protected is_closed = false;
 
     public static terminate_parser = false;

@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as nls from "vscode-nls";
 
-import { Symbol, CodeCompletionCore, ScopedSymbol } from "antlr4-c3";
+import { BaseSymbol, CodeCompletionCore, ScopedSymbol } from "antlr4-c3";
 import { ParseCancellationException, IntervalSet, Interval } from 'antlr4ts/misc';
 import { ParseTreeWalker, TerminalNode, ParseTree, ParseTreeListener } from 'antlr4ts/tree';
 import { cldParser, CldContentContext } from "./cldParser";
@@ -15,7 +15,7 @@ import { LogFunction, LogType } from '../common/main';
 import { VerbSymbol, TypeSymbol, TypeRefSymbol, SyntaxSymbol, BuiltInTypeSymbol, ParameterSymbol, QualifierSymbol, KeywordSymbol, ContextSymbolTable, LabelSymbol, EntitySymbol, EntityCollection, WithTypeReference } from './ContextSymbolTable';
 import { BuiltInValueTypes, symbolDescriptionFromEnum } from './Symbol';
 import { DetailsListener } from './DetailsListener';
-import { parseTreeFromPosition } from '../common/parser/Helpers';
+import { parseTreeFromPosition } from '../common/parser/helpers';
 
 nls.config({messageFormat: nls.MessageFormat.both});
 const localize = nls.loadMessageBundle();
@@ -45,7 +45,7 @@ export class SourceContext {
         this.symbolTable =  new ContextSymbolTable(this.sourceId, { allowDuplicateSymbols: true }, this);
 
         if (!SourceContext.globalSymbols.resolve("EOF")) {
-            SourceContext.globalSymbols.addNewSymbolOfType(Symbol, undefined, "EOF");
+            SourceContext.globalSymbols.addNewSymbolOfType(BaseSymbol, undefined, "EOF");
             for (const builtintype of BuiltInValueTypes) {
                 SourceContext.globalSymbols.addNewSymbolOfType(BuiltInTypeSymbol, undefined, builtintype);
             }
@@ -275,18 +275,18 @@ export class SourceContext {
                     if (callStack.ruleList.length > 0) {
                         rule = callStack.ruleList[callStack.ruleList.length-1];
                     }
-                    let symbols: Symbol[] = [];
+                    let symbols: BaseSymbol[] = [];
                     if (rule === cldParser.RULE_keywordSyntax ||
                         rule === cldParser.RULE_qualifierSyntax) {
                         // offer a syntaxes list
-                        symbols = this.symbolTable.getSymbolsOfType(SyntaxSymbol);
+                        symbols = this.symbolTable.getAllSymbolsSync(SyntaxSymbol);
                         result.length = 0;
                     } else if (rule === cldParser.RULE_keywordValueClauseType ||
                                rule === cldParser.RULE_parameterValueClauseType || 
                                rule === cldParser.RULE_qualifierValueClauseType ) {
                         // offer a types list
-                        symbols = this.symbolTable.getSymbolsOfType(TypeSymbol);
-                        symbols.push(...this.symbolTable.getAllSymbols(BuiltInTypeSymbol, false));
+                        symbols = this.symbolTable.getAllSymbolsSync(TypeSymbol);
+                        symbols.push(...this.symbolTable.getAllSymbolsSync(BuiltInTypeSymbol, false));
                         result.length = 0;
                     } else if (rule === cldParser.RULE_entity) {
                         // else find required scope symbols
@@ -315,7 +315,7 @@ export class SourceContext {
      * @param column 
      * @param symbols 
      */
-    public findTokenScopeSymbols(index: number, column: number, result: Symbol[]) {
+    public findTokenScopeSymbols(index: number, column: number, result: BaseSymbol[]) {
         if (!this.tokenStream) {
             return false;
         }
@@ -335,9 +335,9 @@ export class SourceContext {
             switch(token.type) {
                 case cldParser.A_OPEN:
                     // we only can catch this if we exactly inside the angle brackets
-                    result.push(...this.symbolTable.getSymbolsOfType(SyntaxSymbol));
-                    result.push(...this.symbolTable.getSymbolsOfType(VerbSymbol));
-                    result.push(...this.symbolTable.getSymbolsOfType(TypeSymbol));
+                    result.push(...this.symbolTable.getAllSymbolsSync(SyntaxSymbol));
+                    result.push(...this.symbolTable.getAllSymbolsSync(VerbSymbol));
+                    result.push(...this.symbolTable.getAllSymbolsSync(TypeSymbol));
                     // and we need to clear any previous predictions
                     return true;
                 case cldParser.P_OPEN:
@@ -397,7 +397,7 @@ export class SourceContext {
                 const defineCtx: ParserRuleContext | undefined = findDefineNameForContext(context.parent as ParserRuleContext);
                 if (defineCtx) {
                     // get define symbol as EntityCollection
-                    defSymbol = this.symbolTable.symbolWithContext(defineCtx) as EntityCollection;
+                    defSymbol = this.symbolTable.symbolWithContextSync(defineCtx) as EntityCollection;
                 }
             }
         }
@@ -452,12 +452,12 @@ export class SourceContext {
         return this.symbolTable.getSymbolInfo(this.symbolAtPosition(column, row));
     }
 
-    public symbolAtPosition(column: number, row: number): Symbol | undefined {
+    public symbolAtPosition(column: number, row: number): BaseSymbol | undefined {
         if (this.tree) {
             const context = parseTreeFromPosition(this.tree, column, row - 1);
             // we found a terminal rule, so get its parent to find symbol (because context of symbols is always ParserRule not TerminalNode)
             if (context && context.parent) {
-                return this.symbolTable.symbolWithContext(context.parent);
+                return this.symbolTable.symbolWithContextSync(context.parent);
             }
         }
         return undefined;

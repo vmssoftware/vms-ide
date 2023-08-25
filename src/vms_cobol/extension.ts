@@ -89,7 +89,7 @@ export async function activate(context: ExtensionContext) {
         }
     });
 
-    const changeTimers: Map<string, NodeJS.Timer> = new Map();   // Keyed by file name.
+    const changeTimers: Map<string, NodeJS.Timeout> = new Map();   // Keyed by file name.
 
     workspace.onDidChangeTextDocument((event: TextDocumentChangeEvent) => {
         if (event.contentChanges.length > 0) {

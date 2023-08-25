@@ -81,8 +81,6 @@ export async function findFiles(canReadDir: IReadDirectory,
         basename: false,
         dot: true,
         nocase: true,
-        nodupes: true,
-        unixify: false,
     };
     let {expandedMask: splitInclude , missed_curly_bracket} = expandMask(include);
     if (debugLog && missed_curly_bracket) {
