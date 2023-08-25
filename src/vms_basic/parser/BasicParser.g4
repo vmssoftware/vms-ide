@@ -824,6 +824,7 @@ statement
    | putStatement
    | randomStatement
    | remapStatement
+   | readStatement
    | resetStatement
    | restoreStatement
    | resumeStatement
