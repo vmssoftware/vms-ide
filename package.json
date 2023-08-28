@@ -10,7 +10,7 @@
         "url": "https://github.com/vmssoftware/vms-ide"
     },
     "engines": {
-        "vscode": "^1.60"
+        "vscode": "^1.81.0"
     },
     "categories": [
         "Debuggers",
