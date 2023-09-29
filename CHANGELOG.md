@@ -5,6 +5,7 @@ For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Ch
 * Missed READ stetement in BASIC syntax parser is added.
 * SSH issues with VS Code version > 1.81 installed are fixed.
 * Default 'algorithms' and 'kex' are removed form SSH configuration.
+* The 'skipSignatureVerification' SSH connection option is no longer used.
 
 ## 1.5.57
 * Make extension commands 'vmssoftware.synchronizer...' return string values.
