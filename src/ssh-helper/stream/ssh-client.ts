@@ -102,42 +102,42 @@ export class SshClient extends EventEmitter {
             this.logFn(LogType.debug, () => localize("debug.resolver", "no config resolved {0}", this.tag ? " " + this.tag : ""));
         } else {
             let newConfig = Object.assign({}, configResolved);
-            const defaultAlgorithms : IAlgorithms =
-                {
-                    serverHostKey:
-                        [
-                            "ssh-rsa",
-                            "ssh-dss",
-                            "ecdsa-sha2-nistp256",
-                            "ssh-ed25519",
-                        ],
-                    kex: 
-                        [
-                            "diffie-hellman-group1-sha1"
-                        ]
-                };
-            if (newConfig.algorithms) {
-                if (newConfig.algorithms.serverHostKey instanceof Array) {
-                    for (const serverHostKey of defaultAlgorithms.serverHostKey!) {
-                        if (!newConfig.algorithms.serverHostKey.includes(serverHostKey)) {
-                            newConfig.algorithms.serverHostKey.push(serverHostKey);
-                        }
-                    }
-                } else {
-                    newConfig.algorithms.serverHostKey = defaultAlgorithms.serverHostKey;
-                }
-                if (newConfig.algorithms.kex instanceof Array) {
-                    for (const kex of defaultAlgorithms.kex!) {
-                        if (!newConfig.algorithms.kex.includes(kex)) {
-                            newConfig.algorithms.kex.push(kex);
-                        }
-                    }
-                } else {
-                    newConfig.algorithms.kex = defaultAlgorithms.kex;
-                }
-            } else {
-                newConfig.algorithms = defaultAlgorithms;
-            }
+            // const defaultAlgorithms : IAlgorithms =
+            //     {
+            //         serverHostKey:
+            //             [
+            //                 "ssh-rsa",
+            //                 "ssh-dss",
+            //                 "ecdsa-sha2-nistp256",
+            //                 "ssh-ed25519",
+            //             ],
+            //         kex: 
+            //             [
+            //                 "diffie-hellman-group1-sha1"
+            //             ]
+            //     };
+            // if (newConfig.algorithms) {
+            //     if (newConfig.algorithms.serverHostKey instanceof Array) {
+            //         for (const serverHostKey of defaultAlgorithms.serverHostKey!) {
+            //             if (!newConfig.algorithms.serverHostKey.includes(serverHostKey)) {
+            //                 newConfig.algorithms.serverHostKey.push(serverHostKey);
+            //             }
+            //         }
+            //     } else {
+            //         newConfig.algorithms.serverHostKey = defaultAlgorithms.serverHostKey;
+            //     }
+            //     if (newConfig.algorithms.kex instanceof Array) {
+            //         for (const kex of defaultAlgorithms.kex!) {
+            //             if (!newConfig.algorithms.kex.includes(kex)) {
+            //                 newConfig.algorithms.kex.push(kex);
+            //             }
+            //         }
+            //     } else {
+            //         newConfig.algorithms.kex = defaultAlgorithms.kex;
+            //     }
+            // } else {
+            //     newConfig.algorithms = defaultAlgorithms;
+            // }
             if (newConfig.debug) {
                 newConfig.debug = (s: string) => this.debugLine(s);
             }

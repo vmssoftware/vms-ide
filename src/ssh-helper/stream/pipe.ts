@@ -70,6 +70,10 @@ export async function PipeFile(
             logFn(LogType.debug, () => localize("debug.dest_finished", "Destination finished."));
             done.release(); // release on dest finished
         });
+        dstStream.once("close", () => {
+            logFn(LogType.debug, () => localize("debug.dest_closed", "Destination closed."));
+            done.release(); // release on dest closed
+        });
         await done.acquire();
         logFn(LogType.debug, () => localize("debug.done", "Done {0}.", !errPassed));
         return !errPassed;

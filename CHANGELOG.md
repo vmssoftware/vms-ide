@@ -1,8 +1,10 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
 ## 1.5.58
-* Update versions.
-* Fix missed READ stetement in BASIC syntax parser.
+* Update versions of dependencies.
+* Missed READ stetement in BASIC syntax parser is added.
+* SSH issues with VS Code version > 1.81 installed are fixed.
+* Default 'algorithms' and 'kex' are removed form SSH configuration.
 
 ## 1.5.57
 * Make extension commands 'vmssoftware.synchronizer...' return string values.
