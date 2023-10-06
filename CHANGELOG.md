@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.59
+* The 'skipSignatureVerification' SSH connection option is now respected.
+
 ## 1.5.58
 * Update versions of dependencies.
 * Missed READ stetement in BASIC syntax parser is added.
