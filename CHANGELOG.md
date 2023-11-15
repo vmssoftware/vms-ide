@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.60
+* Allow using the agent for SSH connection.
+
 ## 1.5.59
 * The 'skipSignatureVerification' SSH connection option is now respected.
 

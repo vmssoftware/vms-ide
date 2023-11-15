@@ -1,3 +1,8 @@
 {
-    "vmssoftware.project-dep.buildName": "DEBUG"
+    "vmssoftware.project-dep.buildName": "DEBUG",
+    "search.exclude": {
+        "**/node_modules": false
+    },
+    "search.useGlobalIgnoreFiles": true,
+    "search.useIgnoreFiles": false
 }

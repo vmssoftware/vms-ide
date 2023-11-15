@@ -8,6 +8,7 @@ import { configApi } from "./config-api";
 import { ConnectConfigResolverImpl } from "./config-resolve/connect-config-resolver-impl";
 import { HostFiller } from "./config-resolve/host-filler";
 import { KeyFiller } from "./config-resolve/key-filler";
+import { AgentFiller } from "./config-resolve/agent-filler";
 import { PasswordVscodeFiller } from "./config-resolve/password-vscode-filler";
 import { ConnectionSection } from "./config/sections/connection";
 import { HostsSection } from "./config/sections/hosts";
@@ -231,7 +232,7 @@ async function ensureSettings(logFn: LogFunction, scope?: string): Promise<IEnsu
         HostsSection.is(hostsSection) &&
         TimeoutSection.is(timeoutSection) &&
         TerminalSection.is(terminalSection) ) {
-        const fillers = [new HostFiller(hostsSection, logFn), new KeyFiller(logFn), new PasswordVscodeFiller()];
+        const fillers = [new HostFiller(hostsSection, logFn), new KeyFiller(logFn), new AgentFiller(logFn), new PasswordVscodeFiller()];
         const connectConfigResolver = new ConnectConfigResolverImpl(fillers, timeoutSection.feedbackTimeout, logFn);
         return {
             configHelper,
