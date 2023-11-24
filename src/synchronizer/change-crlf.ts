@@ -1,7 +1,7 @@
 import { LogFunction, LogType } from "../common/main";
 
 import * as path from "path";
-import { EndOfLine, Range, TextEdit, Uri, workspace, WorkspaceEdit } from "vscode";
+import { commands, EndOfLine, Range, TextEdit, Uri, window, workspace, WorkspaceEdit } from "vscode";
 import { IEnsured } from "./ensure-settings";
 import { FsSource } from "./sync/fs-source";
 import { Synchronizer } from "./sync/synchronizer";
@@ -23,6 +23,7 @@ export class ChangeCrLf {
             const localSource = new FsSource(localPath, this.logFn);
             const fileNames = [ensured.projectSection.builders, ensured.projectSection.headers, ensured.projectSection.source].join(",");
             const fileEntries = await localSource.findFiles(fileNames, ensured.projectSection.exclude);
+            const openedDocs = workspace.textDocuments;
             if (fileEntries) {
                 for (const fileEntry of fileEntries) {
                     if (synchronizer.stopIssued) {
@@ -42,6 +43,12 @@ export class ChangeCrLf {
                             wsEdit.set(uri, [textEdit]);
                             await workspace.applyEdit(wsEdit);
                             await doc.save();
+                            if (!openedDocs.includes(doc)) {
+                                window.showTextDocument(doc, {preview: true, preserveFocus: false})
+                                    .then(() => {
+                                        return commands.executeCommand('workbench.action.closeActiveEditor');
+                                });
+                            }
                         }
                     } catch (err) {
                         this.logFn(LogType.error, () => `File ${fileEntry.filename}: ${err}`);
