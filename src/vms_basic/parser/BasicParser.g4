@@ -186,6 +186,7 @@ programUnit
 
 mainProgram
    : programStatement declarationOrStatement+ endProgramStatement
+   | declarationOrStatement+
    ;   
 
 programStatement

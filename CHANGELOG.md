@@ -1,5 +1,11 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.62
+* Fix BASIC grammar.
+
+## 1.5.61
+* SFTP always creates containig directory before the transfer a file.
+
 ## 1.5.60
 * Allow using the agent for SSH connection.
 

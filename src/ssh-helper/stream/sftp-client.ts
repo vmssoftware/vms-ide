@@ -200,10 +200,12 @@ export class SftpClient extends SshClient {
         if (await this.ensureSftp()) {
             if (this.sftp) {
                 directory = directory.replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
-                this.waitOperation.release();   // let getStat work
-                const stat = await this.getStat(directory);
-                await this.waitOperation.acquire();
-                if (!stat && this.client && this.enabled) {
+                // === Force directory creation ===
+                // this.waitOperation.release();   // let getStat work
+                // const stat = await this.getStat(directory);
+                // await this.waitOperation.acquire();
+                // if (!stat && this.client && this.enabled) {
+                if (this.client && this.enabled) {
                     const opName = localize("operation.createdir", "create directory {0} via sftp{1}", directory, this.tag ? " " + this.tag : "");
                     await new Promise<boolean>((resolve) => {
                         if (!this.sftp) {
