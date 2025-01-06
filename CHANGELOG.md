@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.63
+* Do not send the password in the terminal (for security reasons). The user must enter it himself.
+
 ## 1.5.62
 * Fix BASIC grammar.
 

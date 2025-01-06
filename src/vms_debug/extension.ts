@@ -115,7 +115,12 @@ async function createTerminal() : Promise<void>
 							const field = matchField[1];
 							let value = "";
 							if (field in connection) {
-								value = String((<any>connection)[field]);
+								if (field == "port") {
+									value = (<any>connection)[field] || "22";
+									value = String(value);
+								} else {
+									value = String((<any>connection)[field]);
+								}
 							}
 							const rgxReplace = RgxFromStr(matchField[0]);
 							commandT = commandT.replace(rgxReplace, value);

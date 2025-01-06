@@ -47,28 +47,30 @@ export class TerminalVMS
 
 		this.prompt = userName + "@" + host + "'s password:";
 
-		if((<any>terminal).onDidWriteData)
-		{
-			(<any>terminal).onDidWriteData((data: any) =>
-			{
-                if (passwordIsSet || !this.passwd) {
-                    return;
-                }
-                if (typeof data === "string") {
-                    content += data;
-                    if(content.includes(this.prompt))
-                    {
-                        passwordIsSet = true;
-                        terminal.sendText(this.passwd);
-                        this.logFn(LogType.debug, () => "password passed via onDidWriteData()");
-                    }
-                }
-			});
-		}
+		// onDidWriteData is deprecated since 1.39
+		// if((<any>terminal).onDidWriteData)
+		// {
+		// 	(<any>terminal).onDidWriteData((data: any) =>
+		// 	{
+        //         if (passwordIsSet || !this.passwd) {
+        //             return;
+        //         }
+        //         if (typeof data === "string") {
+        //             content += data;
+        //             if(content.includes(this.prompt))
+        //             {
+        //                 passwordIsSet = true;
+        //                 terminal.sendText(this.passwd);
+        //                 this.logFn(LogType.debug, () => "password passed via onDidWriteData()");
+        //             }
+        //         }
+		// 	});
+		// }
 
 		if (terminal)
 		{
-			terminal.sendText(`ssh -oHostKeyAlgorithms=+ssh-dss -p ${port} ${userName}@${host}`);
+			// Disable 'PubkeyAuthentication'
+			terminal.sendText(`ssh -oHostKeyAlgorithms=+ssh-dss -p ${port} -o PubkeyAuthentication=no ${userName}@${host}`);
 
 			if(password)
 			{
@@ -81,11 +83,12 @@ export class TerminalVMS
 
 			await configurationDone.wait(3000);
 
-			if(!passwordIsSet && this.passwd)
-			{
-				terminal.sendText(this.passwd);
-                this.logFn(LogType.debug, () => "password passed via start()");
-			}
+			// Do not send password here. SSH may be finished by error.
+			// if(!passwordIsSet && this.passwd)
+			// {
+			// 	terminal.sendText(this.passwd);
+            //     this.logFn(LogType.debug, () => "password passed via start()");
+			// }
 		}
 	}
 
