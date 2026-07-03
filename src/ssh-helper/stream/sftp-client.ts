@@ -36,11 +36,15 @@ export class SftpClient extends SshClient {
     public async createReadStream(file: string) {
         await this.waitOperation.acquire();
         let readStream: stream.Readable | undefined;
-        if (await this.ensureSftp()) {
-            if (this.sftp) {
-                const opt: ReadFileOptions = { encoding: "binary" };
-                readStream = this.sftp.createReadStream(file);
+        try {
+            if (await this.ensureSftp()) {
+                if (this.sftp) {
+                    const opt: ReadFileOptions = { encoding: "binary" };
+                    readStream = this.sftp.createReadStream(file);
+                }
             }
+        } catch(e) {
+            this.logFn(LogType.debug, () => String(e));
         }
         this.waitOperation.release();
         if (readStream) {
@@ -57,11 +61,20 @@ export class SftpClient extends SshClient {
     public async createWriteStream(file: string) {
         await this.waitOperation.acquire();
         let writeStream: stream.Writable | undefined;
-        if (await this.ensureSftp()) {
-            if (this.sftp) {
-                const opt: WriteFileOptions = { encoding: "binary" };
-                writeStream = this.sftp.createWriteStream(file, opt);
+        try {
+            if (await this.ensureSftp()) {
+                if (this.sftp) {
+                    const opt: WriteFileOptions = { encoding: "binary" };
+                    try {
+                        writeStream = this.sftp.createWriteStream(file, opt);
+                    }
+                    catch(e) {
+                        this.logFn(LogType.debug, () => String(e));
+                    }
+                }
             }
+        } catch(e) {
+            this.logFn(LogType.debug, () => String(e));
         }
         this.waitOperation.release();
         if (writeStream) {
@@ -78,25 +91,29 @@ export class SftpClient extends SshClient {
     public async getStat(file: string) {
         await this.waitOperation.acquire();
         let statRet: IStats | undefined;
-        if (await this.ensureSftp()) {
-            if (this.client && this.sftp) {
-                const opName = localize("operation.getstat", "get stat {0} via sftp{1}", file, this.tag ? " " + this.tag : "");
-                await new Promise<boolean>((resolve) => {
-                    if (!this.sftp) {
-                        resolve(false);
-                    } else {
-                        this.sftp.stat(file, (err, stat) => {
-                            if (err) {
-                                this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
-                                resolve(false);
-                            } else {
-                                statRet = stat;
-                                resolve(true);
-                            }
-                        });
-                    }
-                });
+        try {
+            if (await this.ensureSftp()) {
+                if (this.client && this.sftp) {
+                    const opName = localize("operation.getstat", "get stat {0} via sftp{1}", file, this.tag ? " " + this.tag : "");
+                    await new Promise<boolean>((resolve) => {
+                        if (!this.sftp) {
+                            resolve(false);
+                        } else {
+                            this.sftp.stat(file, (err, stat) => {
+                                if (err) {
+                                    this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
+                                    resolve(false);
+                                } else {
+                                    statRet = stat;
+                                    resolve(true);
+                                }
+                            });
+                        }
+                    });
+                }
             }
+        } catch(e) {
+            this.logFn(LogType.debug, () => String(e));
         }
         this.waitOperation.release();
         return statRet;
@@ -105,25 +122,29 @@ export class SftpClient extends SshClient {
     public async deleteFile(file: string) {
         let fileDeleted = false;
         await this.waitOperation.acquire();
-        if (await this.ensureSftp()) {
-            if (this.client && this.sftp) {
-                const opName = localize("operation.delete", "delete {0} via sftp{1}", file, this.tag ? " " + this.tag : "");
-                await new Promise<boolean>((resolve) => {
-                    if (!this.sftp) {
-                        resolve(false);
-                    } else {
-                        this.sftp.unlink(file, (err) => {
-                            if (err) {
-                                this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
-                                resolve(false);
-                            } else {
-                                fileDeleted = true;
-                                resolve(true);
-                            }
-                        });
-                    }
-                });
+        try {
+            if (await this.ensureSftp()) {
+                if (this.client && this.sftp) {
+                    const opName = localize("operation.delete", "delete {0} via sftp{1}", file, this.tag ? " " + this.tag : "");
+                    await new Promise<boolean>((resolve) => {
+                        if (!this.sftp) {
+                            resolve(false);
+                        } else {
+                            this.sftp.unlink(file, (err) => {
+                                if (err) {
+                                    this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
+                                    resolve(false);
+                                } else {
+                                    fileDeleted = true;
+                                    resolve(true);
+                                }
+                            });
+                        }
+                    });
+                }
             }
+        } catch(e) {
+            this.logFn(LogType.debug, () => String(e));
         }
         this.waitOperation.release();
         return fileDeleted;
@@ -131,24 +152,28 @@ export class SftpClient extends SshClient {
 
     public async setStat(file: string, stat: IInputAttributes) {
         await this.waitOperation.acquire();
-        if (await this.ensureSftp()) {
-            if (this.client && this.sftp) {
-                const opName = localize("operation.setstat", "set stat {0} via sftp{1}", file, this.tag ? " " + this.tag : "");
-                await new Promise<boolean>((resolve) => {
-                    if (!this.sftp) {
-                        resolve(false);
-                    } else {
-                        this.sftp.setstat(file, stat, (err) => {
-                            if (err) {
-                                this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
-                                resolve(false);
-                            } else {
-                                resolve(true);
-                            }
-                        });
-                    }
-                });
+        try {
+            if (await this.ensureSftp()) {
+                if (this.client && this.sftp) {
+                    const opName = localize("operation.setstat", "set stat {0} via sftp{1}", file, this.tag ? " " + this.tag : "");
+                    await new Promise<boolean>((resolve) => {
+                        if (!this.sftp) {
+                            resolve(false);
+                        } else {
+                            this.sftp.setstat(file, stat, (err) => {
+                                if (err) {
+                                    this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
+                                    resolve(false);
+                                } else {
+                                    resolve(true);
+                                }
+                            });
+                        }
+                    });
+                }
             }
+        } catch(e) {
+            this.logFn(LogType.debug, () => String(e));
         }
         this.waitOperation.release();
         return;
@@ -157,25 +182,29 @@ export class SftpClient extends SshClient {
     public async readDirectory(directory: string) {
         await this.waitOperation.acquire();
         let files: FileEntry[] | undefined;
-        if (await this.ensureSftp() && this.client && this.sftp) {
-            // set empty list => return 'undefined' only if stfp fails, but not if directory doesn't exist
-            files = [];
-            const opName = localize("operation.readdir", "read directory {0} via sftp{1}", directory, this.tag ? " " + this.tag : "");
-            await new Promise<boolean>((resolve) => {
-                if (!this.sftp) {
-                    resolve(false);
-                } else {
-                    this.sftp.readdir(directory, (err, list) => {
-                        if (err) {
-                            this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
-                            resolve(false);
-                        } else {
-                            files = list;
-                            resolve(true);
-                        }
-                    });
-                }
-            });
+        try {
+            if (await this.ensureSftp() && this.client && this.sftp) {
+                // set empty list => return 'undefined' only if stfp fails, but not if directory doesn't exist
+                files = [];
+                const opName = localize("operation.readdir", "read directory {0} via sftp{1}", directory, this.tag ? " " + this.tag : "");
+                await new Promise<boolean>((resolve) => {
+                    if (!this.sftp) {
+                        resolve(false);
+                    } else {
+                        this.sftp.readdir(directory, (err, list) => {
+                            if (err) {
+                                this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
+                                resolve(false);
+                            } else {
+                                files = list;
+                                resolve(true);
+                            }
+                        });
+                    }
+                });
+            }
+        } catch(e) {
+            this.logFn(LogType.debug, () => String(e));
         }
         this.waitOperation.release();
         if (files) {
@@ -197,33 +226,37 @@ export class SftpClient extends SshClient {
     public async ensureDirectory(directory: string) {
         let retCode = false;
         await this.waitOperation.acquire();
-        if (await this.ensureSftp()) {
-            if (this.sftp) {
-                directory = directory.replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
-                // === Force directory creation ===
-                // this.waitOperation.release();   // let getStat work
-                // const stat = await this.getStat(directory);
-                // await this.waitOperation.acquire();
-                // if (!stat && this.client && this.enabled) {
-                if (this.client && this.enabled) {
-                    const opName = localize("operation.createdir", "create directory {0} via sftp{1}", directory, this.tag ? " " + this.tag : "");
-                    await new Promise<boolean>((resolve) => {
-                        if (!this.sftp) {
-                            resolve(false);
-                        } else {
-                            this.sftp.mkdir(directory, (err) => {
-                                if (err) {
-                                    this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
-                                    resolve(false);
-                                } else {
-                                    retCode = true;
-                                    resolve(true);
-                                }
-                            });
-                        }
-                    });
+        try {
+            if (await this.ensureSftp()) {
+                if (this.sftp) {
+                    directory = directory.replace(trailingSepRg, "").replace(middleSepRg, ftpPathSeparator);
+                    // === Force directory creation ===
+                    // this.waitOperation.release();   // let getStat work
+                    // const stat = await this.getStat(directory);
+                    // await this.waitOperation.acquire();
+                    // if (!stat && this.client && this.enabled) {
+                    if (this.client && this.enabled) {
+                        const opName = localize("operation.createdir", "create directory {0} via sftp{1}", directory, this.tag ? " " + this.tag : "");
+                        await new Promise<boolean>((resolve) => {
+                            if (!this.sftp) {
+                                resolve(false);
+                            } else {
+                                this.sftp.mkdir(directory, (err) => {
+                                    if (err) {
+                                        this.logFn(LogType.debug, () => localize("debug.operation.error", "{0} error: {1}", opName, err.message));
+                                        resolve(false);
+                                    } else {
+                                        retCode = true;
+                                        resolve(true);
+                                    }
+                                });
+                            }
+                        });
+                    }
                 }
             }
+        } catch(e) {
+            this.logFn(LogType.debug, () => String(e));
         }
         this.waitOperation.release();
         return retCode;
