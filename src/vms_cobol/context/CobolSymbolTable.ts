@@ -430,7 +430,7 @@ export class CobolSymbolTable extends SymbolTable {
      * @param symbol 
      */
     public getSymbolNameDefinition(symbol: BaseSymbol): IDefinition | undefined {
-        if (symbol.getParentOfType(CobolSymbolTable) !== this) {
+        if (symbol.symbolTable !== this) {
             // from globals
             let globalDefs = CobolGlobals.definition(symbol);
             if (globalDefs && globalDefs.length > 0) {

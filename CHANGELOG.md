@@ -1,7 +1,7 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
 ## 1.5.64
-* Catch errors in synchronization.
+* Fix synchronization issues.
 
 ## 1.5.63
 * Do not send the password in the terminal (for security reasons). The user must enter it himself.
