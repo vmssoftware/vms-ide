@@ -1491,7 +1491,12 @@ export class VMSRuntime extends EventEmitter
 				let messageDebug = this.dbgParser.getDebugMessage();
 				let messageData = this.dbgParser.getDataMessage();
 				let messageDebugInfo = this.dbgParser.getDebugInfoMessage();
+				let messageUser = this.dbgParser.getUserMessage();
 
+                if (messageUser !== "") {
+                    vscode.debug.activeDebugConsole.append("\n");
+                    vscode.debug.activeDebugConsole.append(this.addColorToTerminalString(messageUser, 91));
+                }
 
 				if(messageCommand !== "")
 				{

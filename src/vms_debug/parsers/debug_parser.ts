@@ -6,6 +6,7 @@ import { Queue } from "../queue/queues";
 import { HolderDebugFileInfo } from "./debug_file_info";
 import { DebugVariable, HolderDebugVariableInfo, ReflectKind, VariableFileInfo } from "./debug_variable_info";
 import { ModuleInfoCache } from "./debug_module_info";
+import { OsCmdVMS } from "../command/os_commands";
 
 
 export enum MessageDebuger
@@ -152,6 +153,11 @@ export class DebugParser
 
 				case "":
 					this.queueMsgUser.push(this.displayDataString[1]);
+					break;
+
+				case OsCmdVMS.osTerminalType:
+				case OsCmdVMS.osTerminalShow:
+				case OsCmdVMS.osTerminalWidth:
 					break;
 
 				default:
@@ -1426,6 +1432,10 @@ export class DebugParser
 		while(this.queueMsgUser.size() > 0)
 		{
 			message += this.queueMsgUser.pop() + "\n";
+		}
+		// Do not display single prompt
+		if (message.trim() == "DBG>") {
+			message = "";
 		}
 
 		return message;
