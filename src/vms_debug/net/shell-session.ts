@@ -436,6 +436,10 @@ export class ShellSession
             }
         }
 
+        if (!check) {
+            check = !!data.trim().match(/^[X]\S\S\S-\S\S\S/);
+        }
+
         return check;
     }
 

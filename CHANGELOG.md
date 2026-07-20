@@ -1,5 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
+## 1.5.65
+* Enable OpenVMS developer versions.
+
 ## 1.5.64
 * Fix synchronization issues.
 
