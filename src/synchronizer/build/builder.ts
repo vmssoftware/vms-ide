@@ -1140,7 +1140,7 @@ export class Builder {
     private async runRemoteClean(scopeData: IScopeBuildData, buildCfg: IBuildConfigSection) {
         // decide what to clean
         let command = buildCfg.command;
-        if (isCommandDefault(command)) {
+        if (isCommandDefault(command) && scopeData.ensured.projectSection.outdir != "") {
             command = Builder.cleanCmd(scopeData.ensured.projectSection.outdir, buildCfg.label);
         } else if (isCommandCOM(command)) {
             command = '@' + command + Builder.cleanSuffix;
