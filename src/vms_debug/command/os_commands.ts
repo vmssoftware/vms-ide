@@ -3,8 +3,8 @@ import { CommandMessage } from "./debug_commands";
 export enum OsCmdVMS
 {
 	osLs = "dir",
-	osCd = "set def",
-	osHomeDir = "set def sys$login",
+	osCd = "set default",
+	osHomeDir = "set default sys$login",
 	osExit = "logout",
 	osKillProgram = "\x03",
 
@@ -22,7 +22,7 @@ export enum OsCmdVMS
 	osSetProcess = "set process/priv=",
 	osSetAcl = "SET ACL/OBJECT_TYPE=DEVICE/ACL=",
 	osSetProtection = "SET PROTECTION=",
-	osDefine = "DEFINE",
+	osDefine = "DEFINE/NOLOG",
 }
 
 
@@ -126,8 +126,8 @@ export class OsCommands
 		return new CommandMessage(OsCmdVMS.osSetProtection, `WORLD:RW/DEVICE ${terminalName}`);
 	}
 
-	public redefineStreemToTerminal(streem: string, terminalName: string) : CommandMessage
+	public defineLogicalName(logical: string, newName: string) : CommandMessage
 	{
-		return new CommandMessage(OsCmdVMS.osDefine, `${streem} ${terminalName}`);
+		return new CommandMessage(OsCmdVMS.osDefine, `${logical} "${newName}"`);
 	}
 }

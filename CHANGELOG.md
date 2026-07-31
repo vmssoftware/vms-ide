@@ -1,7 +1,8 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
 
 ## 1.5.65
-* Enable OpenVMS developer versions.
+* Enable OpenVMS developer versions for user program debugging.
+* Take care about DBG$INIT before the debugger starts.
 
 ## 1.5.64
 * Fix synchronization issues.

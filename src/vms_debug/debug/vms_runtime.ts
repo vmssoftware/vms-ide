@@ -1417,9 +1417,10 @@ export class VMSRuntime extends EventEmitter
 						this.shell.SendCommandToQueue(this.osCmd.setProcessPriv("share"));
 						this.shell.SendCommandToQueue(this.osCmd.setAclDevice(this.userName, this.terminalName));
 						this.shell.SendCommandToQueue(this.osCmd.setProtectionDeviceRW(this.terminalName));
-						this.shell.SendCommandToQueue(this.osCmd.redefineStreemToTerminal("DBG$INPUT", this.terminalName));
-						this.shell.SendCommandToQueue(this.osCmd.redefineStreemToTerminal("DBG$OUTPUT", this.terminalName));
-						this.shell.SendCommandToQueue(this.osCmd.redefineStreemToTerminal("DBG$ERROR", this.terminalName));
+						this.shell.SendCommandToQueue(this.osCmd.defineLogicalName("DBG$INPUT", this.terminalName));
+						this.shell.SendCommandToQueue(this.osCmd.defineLogicalName("DBG$OUTPUT", this.terminalName));
+						this.shell.SendCommandToQueue(this.osCmd.defineLogicalName("DBG$ERROR", this.terminalName));
+						this.shell.SendCommandToQueue(this.osCmd.defineLogicalName("DBG$INIT", "nl:"));
 						this.shell.SendCommandToQueue(this.osCmd.runDebug());
 					}
 				}
