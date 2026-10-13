@@ -121,6 +121,14 @@ export class Synchronizer {
                 this.sshHelper.getDefaultSftp(scope),
                 this.sshHelper.getDefaultVmsShell(scope),
             ]);
+        if (!shell) {
+            this.logFn(LogType.error, () => localize("shell.failed", "Could not create remote shell."));
+            return undefined;
+        }
+        if (!sftp) {
+            this.logFn(LogType.error, () => localize("sftp.failed", "Could not create SFTP connection."));
+            return undefined;
+        }
         if (sftp && shell) {
             return await this.isSupportSetFileTime(scope) // ensured.synchronizeSection.setTimeByShell
             ? new SftpSource(new VmsSftpClient(sftp), ensured.projectSection.root, this.logFn, ensured.synchronizeSection.setTimeAttempts)
@@ -767,6 +775,7 @@ export class Synchronizer {
                 } else {
                     const shell = await sshHelper.getDefaultVmsShell(scope);
                     if (!shell) {
+                        this.logFn(LogType.error, () => localize("shell.failed", "Could not create remote shell."));
                         return undefined;
                     }
                     shell.on("cleanClient", () => {

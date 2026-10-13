@@ -646,13 +646,16 @@ async function doUpload(ensured: IEnsured, logFn: LogFunction, forceZip = false,
         // this part is optional so do not return error if it occurs
         if (retCode && ensured.synchronizeSection.purge) {
             const converter = new VmsPathConverter(ensured.projectSection.root + ftpPathSeparator);
-            const sshHelperType = await GetSshHelperType();
+            const sshHelperType = GetSshHelperType();
             if (sshHelperType) {
                 const sshHelper = new sshHelperType(logFn);
                 const shell = await sshHelper.getDefaultVmsShell(ensured.scope);
                 if (shell) {
                     await shell.execCmd(purgeCmd(converter.disk, converter.bareDirectory));
                     shell.dispose();
+                } else {
+                    logFn(LogType.error, () => localize("shell.failed", "Could not create remote shell."));
+                    retCode = false;
                 }
             }
         }

@@ -1,5 +1,7 @@
 {
     "debug.disposing": "Освобождение ресурсов",
+    "shell.failed": "Could not create remote shell.",
+    "sftp.failed": "Could not create SFTP connection.",
     "output.download_manually": "Удалённый файл {0} новее, проверьте и загрузите его самостоятельно",
     "output.edit_count": "Отредактируйте и сохраните {0} файл(ов) самостоятельно",
     "cannot.find.remote": "Cannot find files on remote source",

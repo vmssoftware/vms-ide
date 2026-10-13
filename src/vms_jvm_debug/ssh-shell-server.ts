@@ -6,6 +6,10 @@ import { ISshShell } from "../ssh-helper/api";
 import { SimpleCmdClient } from "./simple-cmd-client";
 import { EventEmitter } from "vscode";
 
+import * as nls from "vscode-nls";
+
+nls.config({messageFormat: nls.MessageFormat.both});
+const localize = nls.loadMessageBundle();
 
 export class SshShellServer implements ICmdServer, ICmdClient {
 
@@ -113,6 +117,10 @@ export class SshShellServer implements ICmdServer, ICmdClient {
             const sshHelper = new sshHelperType(this.logFn);
             sshHelper.clearPasswordCache();
             this._shell = await sshHelper.getDefaultVmsShell(scope);
+            if (!this._shell) {
+                this.logFn(LogType.error, () => localize("shell.failed", "Could not create remote shell."));
+                return false;
+            }
             if (this._shell) {
                 this._shell.on("cleanClient", () => {
                     this.dispose();

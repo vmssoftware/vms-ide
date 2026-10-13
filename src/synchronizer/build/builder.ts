@@ -1371,6 +1371,7 @@ export class Builder {
             this.logFn(LogType.debug, () => localize("debug.create_shell", "Creating a builder shell."));
             const shell = await this.sshHelper.getDefaultVmsShell(scope);
             if (!shell) {
+                this.logFn(LogType.error, () => localize("shell.failed", "Could not create remote shell."));
                 return undefined;
             }
             shell.on("cleanClient", () => {

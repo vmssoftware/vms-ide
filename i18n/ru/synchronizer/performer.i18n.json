@@ -45,5 +45,6 @@
     "collect.status": "Подготовка к отладке...",
     "collect.success": "Подготовка к отладке завершена",
     "error.no_action": "Отсутсвует действие: {0}",
-    "error.action_in_progress": "Невозможно выполнить, т.к. другое действие в процессе: {0}"
+    "error.action_in_progress": "Невозможно выполнить, т.к. другое действие в процессе: {0}",
+    "shell.failed": "Could not create remote shell."
 }

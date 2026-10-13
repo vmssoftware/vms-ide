@@ -18,5 +18,6 @@
     "no_file": "Cannot find the file named {0}",
     "debug.cannot_get_ssh_helper": "Не удалось загрузить ssh-helper API",
     "output.install_ssh": "Установите плагин 'vmssoftware.ssh-helper'",
-    "debug.create_shell": "Создание shell для компиляции"
+    "debug.create_shell": "Создание shell для компиляции",
+    "shell.failed": "Could not create remote shell."
 }
