@@ -27,6 +27,10 @@ export class ShellParser extends Transform implements IShellParser {
         this.is_closed = false;
         // tslint:disable-next-line:no-empty
         this.logFn = logFn || (() => {});
+        if (this.timeout < 1000) 
+            this.timeout = 1000;
+        if (this.timeout > 10000) 
+            this.timeout = 10000;
         this.on("close", () => {
             this.logFn(LogType.debug, () => localize("debug.closed", "ShellParser{0}: closed", this.tag ? " " + this.tag : ""));
             this.setReady();

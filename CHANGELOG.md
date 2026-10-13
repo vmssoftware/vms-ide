@@ -1,4 +1,6 @@
 For detailed information see [ChangeLog](https://wiki.vmssoftware.com/VMS_IDE_Change_Log)
+## 1.5.66
+* Use timeout values, in [1:10] sec.
 
 ## 1.5.65
 * Enable OpenVMS developer versions for user program debugging.
