@@ -22,7 +22,7 @@ export class ShellParser extends Transform implements IShellParser {
 
     public static terminate_parser = false;
 
-    constructor(public timeout?: number, logFn?: LogFunction, public tag?: string) {
+    constructor(public timeout: number = 1000, logFn?: LogFunction, public tag?: string) {
         super();
         this.is_closed = false;
         // tslint:disable-next-line:no-empty
@@ -118,6 +118,6 @@ export class ShellParser extends Transform implements IShellParser {
             if (!this.lastError && !this.is_closed) {
                 this.setupTimer();
             }
-        }, 1000);
+        }, this.timeout);
     }
 }
